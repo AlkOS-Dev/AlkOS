@@ -1,7 +1,7 @@
 #include <init.hpp>
 
 /* Internal includes */
-#include <libssp.hpp>
+#include <libssp.h>
 
 /**
  * @brief Performs all high-level initialization not related to architecture

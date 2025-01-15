@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_TEST_TEST_MODULE_MACROS_HPP_
 
 #include <defines.hpp>
-#include <new.hpp>
+#include <extensions/new.hpp>
 #include <test_module/test_group_base.hpp>
 #include <test_module/test_module.hpp>
 

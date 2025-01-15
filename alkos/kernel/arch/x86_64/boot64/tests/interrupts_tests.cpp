@@ -1,7 +1,7 @@
 /* internal includes */
+#include <assert.h>
 #include <arch_utils.hpp>
 #include <bit.hpp>
-#include <kernel_assert.hpp>
 
 // ------------------------------
 // Preserve cpu state test

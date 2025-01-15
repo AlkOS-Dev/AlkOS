@@ -1,12 +1,10 @@
-//
-// Created by wookie on 12/14/24.
-//
-
 #ifndef ALKOS_MALLOC_H_
 #define ALKOS_MALLOC_H_
 
+#include <defines.h>
 #include <stddef.h>
 
+BEGIN_DECL_C
 /**
  * @brief Copy memory area
  *
@@ -30,6 +28,7 @@ void *memcpy(void *dest, const void *src, size_t n);
  */
 
 void *memmove(void *dest, const void *src, size_t n);
+
 /**
  * @brief Fill memory area with a constant byte
  *
@@ -54,5 +53,7 @@ void *memset(void *dest, int c, size_t n);
  * @note if n is 0, the function returns 0
  */
 int memcmp(const void *s1, const void *s2, size_t n);
+
+END_DECL_C
 
 #endif  // ALKOS_MALLOC_H_

@@ -2,10 +2,10 @@
 #include <stddef.h>
 
 /* internal include */
-#include <defines.hpp>
+#include <defines.h>
 
 #ifdef __ALKOS_KERNEL__
-#include "../../kernel/abi/panic.hpp"
+#include <panic.hpp>
 #endif
 
 // -------------------------------------------

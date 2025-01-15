@@ -3,16 +3,16 @@
 // ------------------------------
 
 /* main include */
-#include <libssp.hpp>
+#include <libssp.h>
 
 /* external includes */
 #include <stdint.h>
 
 /* internal includes */
-#include <defines.hpp>
+#include <defines.h>
 
 #ifdef __ALKOS_KERNEL__
-#include "../../kernel/abi/panic.hpp"
+#include "panic.hpp"
 #endif  // __ALKOS_KERNEL__
 
 #if __STDC_HOSTED__
@@ -36,7 +36,7 @@ volatile uintptr_t __stack_chk_guard = kStackChkGuard;
 
 static void __stack_chk_init_hosted() {}
 
-static __attribute__((noreturn)) void __stack_chk_fail_hosted() {}
+static NO_RET void __stack_chk_fail_hosted() {}
 
 #endif  // __STDC_HOSTED__
 
@@ -54,10 +54,7 @@ static void __stack_chk_init_kernel() {}
 /**
  * @todo Add some debug message about stack in future
  */
-API_CALL static __attribute__((noreturn)) void __stack_chk_fail_kernel()
-{
-    KernelPanic("Stack smashing detected");
-}
+WRAP_CALL NO_RET void __stack_chk_fail_kernel() { KernelPanic("Stack smashing detected"); }
 
 #endif  // __ALKOS_KERNEL__
 
@@ -78,7 +75,7 @@ void __stack_chk_init()
 #endif
 }
 
-extern "C" __attribute__((noreturn)) void __stack_chk_fail()
+extern "C" NO_RET void __stack_chk_fail()
 {
 #if __STDC_HOSTED__
 

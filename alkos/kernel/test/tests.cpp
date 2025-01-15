@@ -125,7 +125,7 @@ TEST(CppTest)
 extern void FloatExtensionTest();
 
 /**
- * @brief Test should not drop kernel panic due to enabled float extension
+ * @brief Test should not drop kernel panic due to enabled float extensions
  *
  * @note This test is architecture dependent, simply invokes floating point instructions
  */

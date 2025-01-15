@@ -1,36 +1,12 @@
-#ifndef KERNEL_INCLUDE_ASSERT_HPP_
-#define KERNEL_INCLUDE_ASSERT_HPP_
+#ifndef LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
+#define LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
 
+#include <assert.h>
+#include <defines.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <defines.hpp>
-#include <panic.hpp>
-#include <terminal.hpp>
-#include <test_module/test_module.hpp>
-#include <todo.hpp>
-#include <types.hpp>
-
-// ------------------------------
-// Int type asserts
-// ------------------------------
-
-#define FAIL_KERNEL(expr)                                                 \
-    KernelPanic("Assertion failed: " TOSTRING(expr) " at file: " __FILE__ \
-                                                    " and line: " TOSTRING(__LINE__));
-
-/* c-like debug only assert */
-#define ASSERT(expr)               \
-    if constexpr (kIsDebugBuild) { \
-        if (!(expr)) {             \
-            FAIL_KERNEL(expr);     \
-        }                          \
-    }
-
-/* Works also in release build */
-#define R_ASSERT(expr)     \
-    if (!(expr)) {         \
-        FAIL_KERNEL(expr); \
-    }
+#include <todo.h>
 
 // -------------------------------------
 // TODO: temporary print mechanism
@@ -43,13 +19,13 @@ static constexpr size_t kObjToHexBuffSize = 512;
 template <typename ObjT>
 void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size)
 {
-    ASSERT(buffer != nullptr);
-    ASSERT(buffer_size > 0);
+    assert(buffer != nullptr);
+    assert(buffer_size > 0);
 
-    const auto obj_bytes = reinterpret_cast<const u8 *>(&obj);
+    const auto obj_bytes = reinterpret_cast<const uint8_t *>(&obj);
     for (size_t i = 0; i < sizeof(ObjT); ++i) {
         const int bytes_written = snprintf(buffer, buffer_size, "%02X ", obj_bytes[i]);
-        ASSERT(
+        assert(
             bytes_written < static_cast<int>(buffer_size) &&
             "VerboseAssertDumpObjToHex buffer fully used!"
         );
@@ -72,28 +48,25 @@ FAST_CALL void VerboseAssertDumpObjToHex(const char *obj, char *buffer, const si
 static constexpr size_t kFailMsgBuffSize       = 2048;
 static constexpr size_t kFullAssertMsgBuffSize = 512 + kFailMsgBuffSize;
 
-template <bool kIsExpect>
+using ErrorHandlerFn = void (*)(const char *);
+
+template <ErrorHandlerFn Handler>
 FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *line)
 {
     char full_msg[kFullAssertMsgBuffSize];
     const int bytes_written = snprintf(
-        full_msg, kFullAssertMsgBuffSize, "%s failed at file: %s and line: %s\n%s\n",
-        kIsExpect ? "Check" : "Assert", file, line, msg
+        full_msg, kFullAssertMsgBuffSize, "Check failed at file: %s and line: %s\n%s\n", file, line,
+        msg
     );
-    ASSERT(
+    assert(
         bytes_written < static_cast<int>(kFullAssertMsgBuffSize) &&
         "VerboseAssertDump buffer fully used!"
     );
 
-    if constexpr (kIsExpect) {
-        test::g_testCheckFailed = true;
-        TerminalWriteString(full_msg);
-    } else {
-        KernelPanic(full_msg);
-    }
+    Handler(full_msg);
 }
 
-template <bool kIsExpect, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT>
+template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT>
 FAST_CALL void VerboseAssertTwoArgBase(
     const ExpectedT &expected, const ValueT &value, CheckerT checker, MsgGetterT msg_getter,
     const char *expected_str, const char *value_str, const char *file, const char *line
@@ -108,11 +81,11 @@ FAST_CALL void VerboseAssertTwoArgBase(
         VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
 
         msg_getter(fail_msg, kFailMsgBuffSize, expected_str, value_str, e_obj, v_obj);
-        VerboseAssertDump<kIsExpect>(fail_msg, file, line);
+        VerboseAssertDump<Handler>(fail_msg, file, line);
     }
 }
 
-template <bool kIsExpect, class ValueT, class CheckerT, class MsgGetterT>
+template <ErrorHandlerFn Handler, class ValueT, class CheckerT, class MsgGetterT>
 FAST_CALL void VerboseAssertOneArgBase(
     const ValueT &value, CheckerT checker, MsgGetterT msg_getter, const char *value_str,
     const char *file, const char *line
@@ -125,7 +98,7 @@ FAST_CALL void VerboseAssertOneArgBase(
         VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
 
         msg_getter(fail_msg, kFailMsgBuffSize, value_str, v_obj);
-        VerboseAssertDump<kIsExpect>(fail_msg, file, line);
+        VerboseAssertDump<Handler>(fail_msg, file, line);
     }
 }
 
@@ -133,13 +106,13 @@ FAST_CALL void VerboseAssertOneArgBase(
 // EQ Assert base
 // ------------------------------
 
-template <bool kIsExpect, class ExpectedT, class ValueT>
+template <ErrorHandlerFn Handler, class ExpectedT, class ValueT>
 FAST_CALL void VerboseAssertEq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         expected, value,
         [](const ExpectedT &e, const ValueT &v) {
             return e == v;
@@ -156,7 +129,7 @@ FAST_CALL void VerboseAssertEq(
                 "Which is: %s\n",
                 e_str, e_dump, v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertEq buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertEq buffer fully used!");
         },
         expected_str, value_str, file, line
     );
@@ -166,13 +139,13 @@ FAST_CALL void VerboseAssertEq(
 // NEQ Assert base
 // ------------------------------
 
-template <bool kIsExpect, class ExpectedT, class ValueT>
+template <ErrorHandlerFn Handler, class ExpectedT, class ValueT>
 FAST_CALL void VerboseAssertNeq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         expected, value,
         [](const ExpectedT &e, const ValueT &v) {
             return e != v;
@@ -189,7 +162,7 @@ FAST_CALL void VerboseAssertNeq(
                 "Which is: %s\n",
                 e_str, e_dump, v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertNeq buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertNeq buffer fully used!");
         },
         expected_str, value_str, file, line
     );
@@ -199,12 +172,12 @@ FAST_CALL void VerboseAssertNeq(
 // Zero Assert base
 // ------------------------------
 
-template <bool kIsExpect, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT>
 void VerboseAssertZero(
     const ValueT &value, const char *value_str, const char *file, const char *line
 )
 {
-    VerboseAssertOneArgBase<kIsExpect>(
+    VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) {
             return v == static_cast<ValueT>(0);
@@ -219,7 +192,7 @@ void VerboseAssertZero(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertTrue buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertTrue buffer fully used!");
         },
         value_str, file, line
     );
@@ -229,12 +202,12 @@ void VerboseAssertZero(
 // TRUE assert base
 // ------------------------------
 
-template <bool kIsExpect, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT>
 void VerboseAssertTrue(
     const ValueT &value, const char *value_str, const char *file, const char *line
 )
 {
-    VerboseAssertOneArgBase<kIsExpect>(
+    VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) {
             return v == true;
@@ -249,7 +222,7 @@ void VerboseAssertTrue(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertTrue buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertTrue buffer fully used!");
         },
         value_str, file, line
     );
@@ -259,12 +232,12 @@ void VerboseAssertTrue(
 // FALSE assert base
 // ------------------------------
 
-template <bool kIsExpect, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT>
 void VerboseAssertFalse(
     const ValueT &value, const char *value_str, const char *file, const char *line
 )
 {
-    VerboseAssertOneArgBase<kIsExpect>(
+    VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) {
             return v == false;
@@ -279,7 +252,7 @@ void VerboseAssertFalse(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertFalse buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertFalse buffer fully used!");
         },
         value_str, file, line
     );
@@ -289,12 +262,12 @@ void VerboseAssertFalse(
 // NOT_NULL assert base
 // ------------------------------
 
-template <bool kIsExpect, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT>
 void VerboseAssertNotNull(
     const ValueT &value, const char *value_str, const char *file, const char *line
 )
 {
-    VerboseAssertOneArgBase<kIsExpect>(
+    VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) {
             return v != nullptr;
@@ -308,7 +281,7 @@ void VerboseAssertNotNull(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertNotNull buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertNotNull buffer fully used!");
         },
         value_str, file, line
     );
@@ -318,12 +291,12 @@ void VerboseAssertNotNull(
 // NULL assert base
 // ------------------------------
 
-template <bool kIsExpect, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT>
 void VerboseAssertNull(
     const ValueT &value, const char *value_str, const char *file, const char *line
 )
 {
-    VerboseAssertOneArgBase<kIsExpect>(
+    VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) {
             return v == nullptr;
@@ -337,7 +310,7 @@ void VerboseAssertNull(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertNull buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertNull buffer fully used!");
         },
         value_str, file, line
     );
@@ -347,13 +320,13 @@ void VerboseAssertNull(
 // LT (Less Than) assert base
 // ------------------------------
 
-template <bool kIsExpect, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T>
 void VerboseAssertLt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const Val1T &v1, const Val2T &v2) {
             return v1 < v2;
@@ -370,7 +343,7 @@ void VerboseAssertLt(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertLt buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertLt buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -380,13 +353,13 @@ void VerboseAssertLt(
 // LE (Less Than or Equal) assert base
 // ------------------------------
 
-template <bool kIsExpect, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T>
 void VerboseAssertLe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const Val1T &v1, const Val2T &v2) {
             return v1 <= v2;
@@ -403,7 +376,7 @@ void VerboseAssertLe(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertLe buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertLe buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -413,13 +386,13 @@ void VerboseAssertLe(
 // GT (Greater Than) assert base
 // ------------------------------
 
-template <bool kIsExpect, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T>
 void VerboseAssertGt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const Val1T &v1, const Val2T &v2) {
             return v1 > v2;
@@ -436,7 +409,7 @@ void VerboseAssertGt(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertGt buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertGt buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -446,13 +419,13 @@ void VerboseAssertGt(
 // GE (Greater Than or Equal) assert base
 // ------------------------------
 
-template <bool kIsExpect, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T>
 void VerboseAssertGe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const Val1T &v1, const Val2T &v2) {
             return v1 >= v2;
@@ -469,7 +442,7 @@ void VerboseAssertGe(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertGe buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertGe buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -479,13 +452,13 @@ void VerboseAssertGe(
 // String Equal assert base
 // ------------------------------
 
-template <bool kIsExpect>
+template <ErrorHandlerFn Handler>
 void VerboseAssertStrEq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const char *v1, const char *v2) {
             return strcmp(v1, v2) == 0;
@@ -502,7 +475,7 @@ void VerboseAssertStrEq(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertStrEq buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertStrEq buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -512,13 +485,13 @@ void VerboseAssertStrEq(
 // String Not Equal assert base
 // ------------------------------
 
-template <bool kIsExpect>
+template <ErrorHandlerFn Handler>
 void VerboseAssertStrNeq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line
 )
 {
-    VerboseAssertTwoArgBase<kIsExpect>(
+    VerboseAssertTwoArgBase<Handler>(
         val1, val2,
         [](const char *v1, const char *v2) {
             return strcmp(v1, v2) != 0;
@@ -535,7 +508,7 @@ void VerboseAssertStrNeq(
                 "Which is: %s\n",
                 v1_str, v1_dump, v2_str, v2_dump
             );
-            ASSERT(bytes_written < size && "VerboseAssertStrNeq buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertStrNeq buffer fully used!");
         },
         val1_str, val2_str, file, line
     );
@@ -545,112 +518,60 @@ void VerboseAssertStrNeq(
 // Macro wrappers
 // ------------------------------
 
-#define BASE_ASSERT_EQ(is_active, expected, value, isExpect)                               \
+#define BASE_ASSERT_EQ(is_active, expected, value, handler)                                \
     if constexpr (is_active)                                                               \
-    VerboseAssertEq<isExpect>(                                                             \
+    VerboseAssertEq<handler>(                                                              \
         expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_NEQ(is_active, expected, value, isExpect)                              \
+#define BASE_ASSERT_NEQ(is_active, expected, value, handler)                               \
     if constexpr (is_active)                                                               \
-    VerboseAssertNeq<isExpect>(                                                            \
+    VerboseAssertNeq<handler>(                                                             \
         expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_TRUE(is_active, value, isExpect) \
+#define BASE_ASSERT_TRUE(is_active, value, handler) \
+    if constexpr (is_active)                        \
+    VerboseAssertTrue<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
+#define BASE_ASSERT_ZERO(is_active, value, handler) \
+    if constexpr (is_active)                        \
+    VerboseAssertZero<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
+#define BASE_ASSERT_FALSE(is_active, value, handler) \
     if constexpr (is_active)                         \
-    VerboseAssertTrue<isExpect>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_ZERO(is_active, value, isExpect) \
-    if constexpr (is_active)                         \
-    VerboseAssertZero<isExpect>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_FALSE(is_active, value, isExpect) \
-    if constexpr (is_active)                          \
-    VerboseAssertFalse<isExpect>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_NOT_NULL(is_active, value, isExpect) \
-    if constexpr (is_active)                             \
-    VerboseAssertNotNull<isExpect>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_NULL(is_active, value, isExpect) \
-    if constexpr (is_active)                         \
-    VerboseAssertNull<isExpect>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_LT(is_active, val1, val2, isExpect)                          \
+    VerboseAssertFalse<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
+#define BASE_ASSERT_NOT_NULL(is_active, value, handler) \
+    if constexpr (is_active)                            \
+    VerboseAssertNotNull<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
+#define BASE_ASSERT_NULL(is_active, value, handler) \
+    if constexpr (is_active)                        \
+    VerboseAssertNull<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
+#define BASE_ASSERT_LT(is_active, val1, val2, handler)                           \
     if constexpr (is_active)                                                     \
-    VerboseAssertLt<isExpect>(                                                   \
+    VerboseAssertLt<handler>(                                                    \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_LE(is_active, val1, val2, isExpect)                          \
+#define BASE_ASSERT_LE(is_active, val1, val2, handler)                           \
     if constexpr (is_active)                                                     \
-    VerboseAssertLe<isExpect>(                                                   \
+    VerboseAssertLe<handler>(                                                    \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_GT(is_active, val1, val2, isExpect)                          \
+#define BASE_ASSERT_GT(is_active, val1, val2, handler)                           \
     if constexpr (is_active)                                                     \
-    VerboseAssertGt<isExpect>(                                                   \
+    VerboseAssertGt<handler>(                                                    \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_GE(is_active, val1, val2, isExpect)                          \
+#define BASE_ASSERT_GE(is_active, val1, val2, handler)                           \
     if constexpr (is_active)                                                     \
-    VerboseAssertGe<isExpect>(                                                   \
+    VerboseAssertGe<handler>(                                                    \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_STREQ(is_active, val1, val2, isExpect)                       \
+#define BASE_ASSERT_STREQ(is_active, val1, val2, handler)                        \
     if constexpr (is_active)                                                     \
-    VerboseAssertStrEq<isExpect>(                                                \
+    VerboseAssertStrEq<handler>(                                                 \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
-#define BASE_ASSERT_STRNEQ(is_active, val1, val2, isExpect)                      \
+#define BASE_ASSERT_STRNEQ(is_active, val1, val2, handler)                       \
     if constexpr (is_active)                                                     \
-    VerboseAssertStrNeq<isExpect>(                                               \
+    VerboseAssertStrNeq<handler>(                                                \
         val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
     )
 
-// ------------------------------
-// Verbose asserts
-// ------------------------------
-
-/* usual C-style asserts */
-#define ASSERT_EQ(expected, value)  BASE_ASSERT_EQ(kIsDebugBuild, expected, value, false)
-#define ASSERT_NEQ(expected, value) BASE_ASSERT_NEQ(kIsDebugBuild, expected, value, false)
-#define ASSERT_ZERO(value)          BASE_ASSERT_ZERO(kIsDebugBuild, value, false)
-#define ASSERT_TRUE(value)          BASE_ASSERT_TRUE(kIsDebugBuild, value, false)
-#define ASSERT_FALSE(value)         BASE_ASSERT_FALSE(kIsDebugBuild, value, false)
-#define ASSERT_NOT_NULL(value)      BASE_ASSERT_NOT_NULL(kIsDebugBuild, value, false)
-#define ASSERT_NULL(value)          BASE_ASSERT_NULL(kIsDebugBuild, value, false)
-#define ASSERT_LT(val1, val2)       BASE_ASSERT_LT(kIsDebugBuild, val1, val2, false)
-#define ASSERT_LE(val1, val2)       BASE_ASSERT_LE(kIsDebugBuild, val1, val2, false)
-#define ASSERT_GT(val1, val2)       BASE_ASSERT_GT(kIsDebugBuild, val1, val2, false)
-#define ASSERT_GE(val1, val2)       BASE_ASSERT_GE(kIsDebugBuild, val1, val2, false)
-#define ASSERT_STREQ(val1, val2)    BASE_ASSERT_STREQ(kIsDebugBuild, val1, val2, false)
-#define ASSERT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(kIsDebugBuild, val1, val2, false)
-
-/* release build asserts */
-#define R_ASSERT_EQ(expected, value)  BASE_ASSERT_EQ(true, expected, value, false)
-#define R_ASSERT_NEQ(expected, value) BASE_ASSERT_NEQ(true, expected, value, false)
-#define R_ASSERT_ZERO(value)          BASE_ASSERT_ZERO(true, value, false)
-#define R_ASSERT_TRUE(value)          BASE_ASSERT_TRUE(true, value, false)
-#define R_ASSERT_FALSE(value)         BASE_ASSERT_FALSE(true, value, false)
-#define R_ASSERT_NOT_NULL(value)      BASE_ASSERT_NOT_NULL(true, value, false)
-#define R_ASSERT_NULL(value)          BASE_ASSERT_NULL(true, value, false)
-#define R_ASSERT_LT(val1, val2)       BASE_ASSERT_LT(true, val1, val2, false)
-#define R_ASSERT_LE(val1, val2)       BASE_ASSERT_LE(true, val1, val2, false)
-#define R_ASSERT_GT(val1, val2)       BASE_ASSERT_GT(true, val1, val2, false)
-#define R_ASSERT_GE(val1, val2)       BASE_ASSERT_GE(true, val1, val2, false)
-#define R_ASSERT_STREQ(val1, val2)    BASE_ASSERT_STREQ(true, val1, val2, false)
-#define R_ASSERT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(true, val1, val2, false)
-
-// ------------------------------
-// Expect definitions
-// ------------------------------
-
-#define EXPECT_EQ(expected, value)  BASE_ASSERT_EQ(true, expected, value, true)
-#define EXPECT_NEQ(expected, value) BASE_ASSERT_NEQ(true, expected, value, true)
-#define EXPECT_ZERO(value)          BASE_ASSERT_ZERO(true, value, true)
-#define EXPECT_TRUE(value)          BASE_ASSERT_TRUE(true, value, true)
-#define EXPECT_FALSE(value)         BASE_ASSERT_FALSE(true, value, true)
-#define EXPECT_NOT_NULL(value)      BASE_ASSERT_NOT_NULL(true, value, true)
-#define EXPECT_NULL(value)          BASE_ASSERT_NULL(true, value, true)
-#define EXPECT_LT(val1, val2)       BASE_ASSERT_LT(true, val1, val2, true)
-#define EXPECT_LE(val1, val2)       BASE_ASSERT_LE(true, val1, val2, true)
-#define EXPECT_GT(val1, val2)       BASE_ASSERT_GT(true, val1, val2, true)
-#define EXPECT_GE(val1, val2)       BASE_ASSERT_GE(true, val1, val2, true)
-#define EXPECT_STREQ(val1, val2)    BASE_ASSERT_STREQ(true, val1, val2, true)
-#define EXPECT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(true, val1, val2, true)
-
-#endif  // KERNEL_INCLUDE_ASSERT_HPP_
+#endif  // LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_

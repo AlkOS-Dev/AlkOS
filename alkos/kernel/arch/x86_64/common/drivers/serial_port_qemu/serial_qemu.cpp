@@ -4,9 +4,9 @@
  */
 
 /* internal includes */
+#include <assert.h>
 #include <debug.hpp>
 #include <io.hpp>
-#include <kernel_assert.hpp>
 #include <serial_port_qemu/serial_qemu.hpp>
 
 // ------------------------------

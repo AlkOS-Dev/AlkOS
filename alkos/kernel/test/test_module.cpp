@@ -1,7 +1,7 @@
 /* internal includes */
+#include <assert.h>
 #include <string.h>
 #include <arch_utils.hpp>
-#include <kernel_assert.hpp>
 #include <terminal.hpp>
 #include <test_module/test_module.hpp>
 

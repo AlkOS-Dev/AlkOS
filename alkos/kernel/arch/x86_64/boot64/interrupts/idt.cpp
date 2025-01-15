@@ -1,11 +1,11 @@
 /* internal includes */
+#include <assert.h>
 #include <memory.h>
 #include <arch_utils.hpp>
 #include <bit.hpp>
 #include <debug.hpp>
 #include <defines.hpp>
 #include <idt.hpp>
-#include <kernel_assert.hpp>
 #include <panic.hpp>
 
 /* crucial defines */

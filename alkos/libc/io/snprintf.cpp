@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-#include "defines.hpp"
+#include "defines.h"
 #include "math.h"
 #include "string.h"
 #include "types.h"
@@ -60,7 +60,7 @@ enum class LengthModifier {
     L = 'L',     // L
 };
 
-FAST_CALL static void PutChar(char *str, int &i, size_t size, char c)
+FAST_CALL void PutChar(char *str, int &i, size_t size, char c)
 {
     if (size > 0) {
         str[i < static_cast<int>(size) ? i : size - 1] = c;
@@ -710,13 +710,13 @@ static int ilog(double num, unsigned int base)
     return res;
 }
 
-FAST_CALL static bool IsNegative(double num)
+FAST_CALL bool IsNegative(double num)
 {
     auto intdbl = reinterpret_cast<uint64_t *>(&num);
     return (*intdbl & (1ULL << 63)) != 0;
 }
 
-FAST_CALL static bool IsSubnormal(double num)
+FAST_CALL bool IsSubnormal(double num)
 {
     auto intdbl         = reinterpret_cast<uint64_t *>(&num);
     const auto exponent = static_cast<short>(*intdbl >> 52 & 0x7FF);

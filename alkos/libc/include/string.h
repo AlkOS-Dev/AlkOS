@@ -1,8 +1,10 @@
 #ifndef LIBC_INCLUDE_STRING_H_
 #define LIBC_INCLUDE_STRING_H_
 
+#include <defines.h>
 #include <stddef.h>
 
+BEGIN_DECL_C
 /**
  *  Returns the length of the string `str`
  */
@@ -51,5 +53,7 @@ char *strchr(const char *str, int c);
  *  Returns a pointer to the last occurence of `c` in string `str`
  */
 char *strrchr(const char *str, int c);
+
+END_DECL_C
 
 #endif  // LIBC_INCLUDE_STRING_H_

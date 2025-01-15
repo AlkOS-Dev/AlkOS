@@ -1,4 +1,4 @@
-#include <kernel_assert.hpp>
+#include <assert.h>
 extern "C" void AvxFloatingPointTest(double a, double b);
 
 void FloatExtensionTest()

@@ -36,4 +36,6 @@ typedef unsigned char uptrdiff_t;
 #error "Unsupported uptrdiff_t size"
 #endif
 
+typedef size_t rsize_t;
+
 #endif  // LIBC_INCLUDE_TYPES_H_

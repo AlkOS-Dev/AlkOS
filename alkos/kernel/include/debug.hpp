@@ -1,10 +1,10 @@
 #ifndef KERNEL_INCLUDE_DEBUG_HPP_
 #define KERNEL_INCLUDE_DEBUG_HPP_
 
+#include <assert.h>
 #include <stdio.h>
 #include <debug_terminal.hpp>
 #include <defines.hpp>
-#include <kernel_assert.hpp>
 
 // ------------------------------
 // Traces
