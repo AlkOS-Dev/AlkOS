@@ -1,6 +1,6 @@
 
 /* internal includes */
-#include <apic/apic.hpp>
+#include <drivers/apic/apic.hpp>
 #include <todo.hpp>
 
 /**

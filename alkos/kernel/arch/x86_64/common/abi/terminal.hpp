@@ -1,23 +1,16 @@
+#ifndef ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_
+#define ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_
+
 /* internal includes */
 #include <defines.hpp>
 #include <terminal.hpp>
 
-#include <serial_port_qemu/serial_qemu.hpp>
+#include <drivers/serial_port_qemu/serial_qemu.hpp>
+#include <drivers/vga/vga.hpp>
 #include <todo.hpp>
-#include <vga/vga.hpp>
 
 extern "C" {
-void TerminalInit()
-{
-    /* Initialize VGA terminal -> when multiboot allows: TODO */
-    // VgaTerminalInit();
-
-    if constexpr (kUseDebugOutput) {
-        QemuTerminalInit();
-    }
-}
-
-void TerminalPutChar(const char c)
+WRAP_CALL void TerminalPutChar(const char c)
 {
     /* Put char to VGA terminal -> when multiboot allows: TODO */
     // VgaTerminalPutChar(c);
@@ -27,7 +20,7 @@ void TerminalPutChar(const char c)
     }
 }
 
-void TerminalWriteString(const char *data)
+WRAP_CALL void TerminalWriteString(const char *data)
 {
     /* Write string to VGA terminal -> when multiboot allows: TODO */
     // VgaTerminalWriteString(data);
@@ -37,7 +30,7 @@ void TerminalWriteString(const char *data)
     }
 }
 
-void TerminalWriteError(const char *data)
+WRAP_CALL void TerminalWriteError(const char *data)
 {
     /* Write error string to VGA terminal -> when multiboot allows: TODO */
     // VgaTerminalWriteError(data);
@@ -47,7 +40,7 @@ void TerminalWriteError(const char *data)
     }
 }
 
-char TerminalGetChar()
+WRAP_CALL char TerminalGetChar()
 {
     if constexpr (kUseDebugOutput) {
         return QemuTerminalGetChar();
@@ -57,7 +50,7 @@ char TerminalGetChar()
     return 'x';
 }
 
-size_t TerminalReadLine(char *buffer, const size_t size)
+WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
 {
     if constexpr (kUseDebugOutput) {
         return QemuTerminalReadLine(buffer, size);
@@ -67,3 +60,5 @@ size_t TerminalReadLine(char *buffer, const size_t size)
     return 0;
 }
 }
+
+#endif  // ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_

@@ -5,7 +5,7 @@
 #include <bit.hpp>
 #include <debug.hpp>
 #include <defines.hpp>
-#include <idt.hpp>
+#include <interrupts/idt.hpp>
 #include <panic.hpp>
 
 /* crucial defines */

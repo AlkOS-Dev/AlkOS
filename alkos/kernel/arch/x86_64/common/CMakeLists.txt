@@ -55,11 +55,9 @@ set_source_files_properties(${COMMON_ASM} PROPERTIES COMPILE_FLAGS "-f elf64")
 ############################### Adding Headers ###############################
 
 target_include_directories(arch.common PUBLIC
-        drivers
-        include
+    .
 )
 
 target_include_directories(arch.common.32 PUBLIC
-        drivers
-        include
+    .
 )

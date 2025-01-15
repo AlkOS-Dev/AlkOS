@@ -14,14 +14,14 @@ extern "C" {
  *
  * @note This function should block until something is read from the terminal.
  */
-size_t DebugTerminalReadLineArch_(char *buffer, size_t buffer_size);
+WRAP_CALL size_t DebugTerminalReadLineArch_(char *buffer, size_t buffer_size);
 
 /**
  * @brief Writes a string to the architecture-specific debug terminal.
  * @param buffer The string to be written.
  * @note This function should block until something is written to the terminal.
  */
-void DebugTerminalWriteArch_(const char *buffer);
+WRAP_CALL void DebugTerminalWriteArch_(const char *buffer);
 }
 
 WRAP_CALL void DebugTerminalWrite(const char *str)
@@ -39,5 +39,7 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
 
     return 0;
 }
+
+#include <abi/debug_terminal.hpp>
 
 #endif  // KERNEL_ABI_DEBUG_TERMINAL_HPP_

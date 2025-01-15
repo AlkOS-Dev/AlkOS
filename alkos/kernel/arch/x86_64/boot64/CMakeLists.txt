@@ -26,8 +26,7 @@ target_sources(alkos.kernel PRIVATE ${ARCH_SOURCES})
 ############################### Adding Headers ###############################
 
 target_include_directories(alkos.kernel PRIVATE
-        drivers
-        include
+        .
 )
 
 ################################ Linker Flags ################################

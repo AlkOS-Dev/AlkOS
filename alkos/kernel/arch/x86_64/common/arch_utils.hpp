@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_INCLUDE_ARCH_UTILS_HPP_
-#define ARCH_X86_64_INCLUDE_ARCH_UTILS_HPP_
+#ifndef ARCH_X86_64_ARCH_UTILS_HPP_
+#define ARCH_X86_64_ARCH_UTILS_HPP_
 
 #include <defines.hpp>
 #include <io.hpp>
@@ -118,4 +118,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ARCH_X86_64_INCLUDE_ARCH_UTILS_HPP_
+#endif  // ARCH_X86_64_ARCH_UTILS_HPP_

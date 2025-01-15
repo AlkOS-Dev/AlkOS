@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_INCLUDE_IO_HPP_
-#define ARCH_X86_64_INCLUDE_IO_HPP_
+#ifndef ARCH_X86_64_IO_HPP_
+#define ARCH_X86_64_IO_HPP_
 
 #include <defines.hpp>
 #include <types.hpp>
@@ -49,4 +49,4 @@ FAST_CALL void outl(const u16 port, const u32 v)
  */
 FAST_CALL void IoWait() { outb(0x80, 0); }
 
-#endif  // ARCH_X86_64_INCLUDE_IO_HPP_
+#endif  // ARCH_X86_64_IO_HPP_

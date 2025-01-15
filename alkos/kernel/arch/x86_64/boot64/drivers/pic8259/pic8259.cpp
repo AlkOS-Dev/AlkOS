@@ -1,7 +1,7 @@
 
 /* internal includes */
 #include <debug.hpp>
-#include <pic8259/pic8259.hpp>
+#include <drivers/pic8259/pic8259.hpp>
 #include <types.hpp>
 
 /**
