@@ -14,13 +14,13 @@ jobs:
         run: sudo scripts/cicd/build_and_run_tests.bash x86_64
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: last build log
           path: /tmp/alkOS_build.log
 
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: logs
           path: scripts/tests/test_framework/logs

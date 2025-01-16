@@ -54,7 +54,6 @@ set_target_properties(lib${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 target_include_directories(lib${LIB_NAME} PUBLIC
         include
-        ${SYSROOT}/usr/include
 )
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)

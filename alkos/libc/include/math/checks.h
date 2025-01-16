@@ -5,16 +5,17 @@
 #include <stdint.h>
 
 BEGIN_DECL_C
-CONSTEPXR int isnan(double num)
+
+CONSTEPXR int isnan(const double num)
 {
-    uint64_t *intdbl = (uint64_t *)(&num);
-    return ((*intdbl >> 52 & 0x7FF) == 0x7FF) && ((*intdbl & (-1ULL >> 12)) != 0);
+    const __DoubleBits bits{.d = num};
+    return ((bits.u >> 52 & 0x7FF) == 0x7FF) && ((bits.u & (-1ULL >> 12)) != 0);
 }
 
-CONSTEPXR int isinf(double num)
+CONSTEPXR int isinf(const double num)
 {
-    uint64_t *intdbl = (uint64_t *)(&num);
-    return ((*intdbl >> 52 & 0x7FF) == 0x7FF) && ((*intdbl & (-1ULL >> 12)) == 0);
+    const __DoubleBits bits{.d = num};
+    return ((bits.u >> 52 & 0x7FF) == 0x7FF) && ((bits.u & (-1ULL >> 12)) == 0);
 }
 
 END_DECL_C

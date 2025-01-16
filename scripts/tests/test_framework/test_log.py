@@ -11,7 +11,7 @@ class TestLog:
     def __init__(self) -> None:
         current_time = datetime.now()
 
-        self._dir = SCRIPT_DIRECTORY / "logs" / current_time.strftime("%Y_%m_%d_%H_%M_%S")
+        self._dir = SCRIPT_DIRECTORY / ".." / "test_framework_logs" / current_time.strftime("%Y_%m_%d_%H_%M_%S")
         self._dir.mkdir(parents=True, exist_ok=True)
         self._rep = 0
 

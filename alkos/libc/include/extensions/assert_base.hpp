@@ -35,11 +35,46 @@ void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size
     }
 }
 
-/* TODO: temporary overload for char* */
-FAST_CALL void VerboseAssertDumpObjToHex(const char *obj, char *buffer, const size_t buffer_size)
+FAST_CALL void VerboseAssertDumpObjToHex(const char *&obj, char *buffer, const size_t buffer_size)
 {
     strncpy(buffer, obj, buffer_size);
 }
+
+template <typename ObjT, const char *format>
+FAST_CALL void VerboseAssertDumpObjToHexSnprintf(
+    const ObjT &obj, char *buffer, const size_t buffer_size
+)
+{
+    assert(buffer != nullptr);
+    assert(buffer_size > 0);
+    snprintf(buffer, buffer_size, format, obj);
+}
+
+#define DEF_VERB_DUMP(type, format)                                                 \
+    FAST_CALL void VerboseAssertDumpObjToHex(                                       \
+        const type &obj, char *buffer, const size_t buffer_size                     \
+    )                                                                               \
+    {                                                                               \
+        static constexpr char kFormat[] = format;                                   \
+        VerboseAssertDumpObjToHexSnprintf<type, kFormat>(obj, buffer, buffer_size); \
+    }
+
+// Unsigned integers
+DEF_VERB_DUMP(uint8_t, "%u")
+DEF_VERB_DUMP(uint16_t, "%u")
+DEF_VERB_DUMP(uint32_t, "%u")
+DEF_VERB_DUMP(uint64_t, "%llu")
+
+// Signed integers
+DEF_VERB_DUMP(int8_t, "%d")
+DEF_VERB_DUMP(int16_t, "%d")
+DEF_VERB_DUMP(int32_t, "%d")
+DEF_VERB_DUMP(int64_t, "%lld")
+
+// Floating point
+DEF_VERB_DUMP(float, "%g")
+DEF_VERB_DUMP(double, "%g")
+DEF_VERB_DUMP(long double, "%Lg")
 
 // ------------------------------
 // Base for verbose asserts

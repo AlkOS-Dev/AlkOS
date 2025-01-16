@@ -17,4 +17,5 @@ sudo "${BUILD_AND_RUN_TESTS_DIR}/../env/install_deps_ubuntu.bash" --install -v
 "${BUILD_AND_RUN_TESTS_DIR}/../actions/build_alkos.bash" -v
 
 # Step 5: Run tests
-"${BUILD_AND_RUN_TESTS_DIR}/../actions/run_tests.bash"
+python "${BUILD_AND_RUN_TESTS_DIR}/../tests/runner.py"
+
