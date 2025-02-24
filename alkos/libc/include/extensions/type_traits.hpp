@@ -1350,7 +1350,35 @@ namespace std {
     /// Type relationships
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // ------------------------------
+    // std::is_base_of
+    // ------------------------------
 
+    namespace internal {
+        template<class T>
+        constexpr bool cast_func(T *a) {
+            return true;
+        }
+
+        template<class>
+        constexpr bool cast_func(void *) {
+            return false;
+        }
+
+        template<class Base, class Derived>
+        struct is_base_of_non_cv : bool_constant<
+            std::is_class_v<Base> && std::is_class_v<Derived> &&
+
+                > {
+        };
+    }
+
+    template<class Base, class Derived>
+    struct is_base_of : internal::is_base_of_non_cv<std::remove_cv_t<Base>, std::remove_cv_t<Derived> > {
+    };
+
+    template<class Base, class Derived>
+    constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 } // namespace std
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_

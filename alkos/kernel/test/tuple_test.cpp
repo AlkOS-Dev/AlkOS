@@ -62,7 +62,7 @@ TEST_F(TupleTest, TupleBindings) {
     // EXPECT_TRUE((std::is_same_v<const int, decltype(b)>));
     // EXPECT_TRUE((std::is_same_v<const int, decltype(c)>));
     //
-    // static constexpr const char *str = "abcd";
+    // static constexpr const char *str Operations on traits= "abcd";
     // const auto tuple1 = std::make_tuple(static_cast<int>(1), 1.0, 2.0f, str);
     //
     // const auto [d, e, f, g] = tuple1;
