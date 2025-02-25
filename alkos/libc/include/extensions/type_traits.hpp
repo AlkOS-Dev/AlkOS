@@ -22,12 +22,8 @@
 
 /**
  * TODOS: Missing implementations:
- * - std::result_of
- * - std::invoke_result
  * - std::common_reference
  * - std::common_type
- * - std::unwrap_reference
- * - std::unwrap_ref_decay
  * - Supported operations Category
  */
 namespace std
@@ -53,6 +49,7 @@ constexpr const T &max(const T &a, const T &b)
 
 template <class T, class U = T &&>
 U declval_base(int) noexcept;
+
 // kuba pietrzak
 template <class T>
 T declval_base(...) noexcept;
@@ -68,6 +65,7 @@ constexpr bool is_reference_wrapper_v = false;
 
 template <class T>
 constexpr bool is_reference_wrapper_v<reference_wrapper<T>> = true;
+
 struct failure_type {
     /* No type field should cause a compile-time error */
 };
@@ -76,7 +74,6 @@ template <class T>
 struct type_wrap {
     using type = T;
 };
-
 }  // namespace internal
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1085,7 +1082,7 @@ struct aligned_union {
 };
 
 template <std::size_t kLen, class T>
-struct aligned_union {
+struct aligned_union<kLen, T> {
     static constexpr std::size_t alignment_value = alignof(T);
     static constexpr std::size_t clamped_size    = sizeof(T);
 
@@ -1135,13 +1132,27 @@ using void_t = void;
 // std::unwrap_reference
 // ------------------------------
 
-// TODO
+template <class T>
+struct unwrap_reference {
+    using type = T;
+};
+
+template <class T>
+struct unwrap_reference<std::reference_wrapper<T>> {
+    using type = T &;
+};
+
+__DEF_CONSTEXPR_ACCESSOR_T(unwrap_reference)
 
 // ------------------------------
 // std::unwrap_ref_decay
 // ------------------------------
 
-// TODO
+template <class T>
+struct unwrap_ref_decay : std::unwrap_reference<std::decay_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR_T(unwrap_ref_decay)
 
 // ------------------------------
 // std::underlying_type
@@ -1164,76 +1175,6 @@ struct underlying_type : internal::underlying_type<T> {
 };
 
 __DEF_CONSTEXPR_ACCESSOR_T(underlying_type)
-
-// ------------------------------
-// std::invoke_result
-// ------------------------------
-
-namespace internal
-{
-struct invoke_test {
-    template <class F, class... Args>
-    static failure_type test(...)
-    {
-        return {};
-    }
-
-    template <class F, class... Args>
-    static auto test(int) -> type_wrap<decltype(declval<F>()(declval<Args>()...))>
-    {
-        return {};
-    }
-};
-
-template <bool kIsFunctor, bool kIsMemberFunction, class Fn, class... Args>
-struct invoke_result_typed {
-    /* Invalid type for true, true specialization - no type field */
-};
-
-template <class Fn, class... Args>
-struct invoke_result_typed<false, false, Fn, Args...> {
-    /* Usual function call */
-};
-
-template <class Fn, class... Args>
-struct invoke_result_typed<true, false, Fn, Args...> {
-    /* Member object pointer */
-};
-
-template <class Fn, class... Args>
-struct invoke_result_typed<false, true, Fn, Args...> {
-    /* Member function pointer */
-};
-
-template <typename Fn, typename... Args>
-struct invoke_result
-    : invoke_result_typed<
-          std::is_member_object_pointer_v<std::remove_reference_t<Fn>>,
-          std::is_member_function_pointer_v<std::remove_reference_t<Fn>>, Fn, Args...>::type {
-    /* Expects type field for correctness */
-};
-}  // namespace internal
-
-template <typename Fn, typename... Args>
-struct invoke_result : internal::invoke_result<Fn, Args...> {
-};
-
-template <class F, class... ArgTypes>
-using invoke_result_t = typename invoke_result<F, ArgTypes...>::type;
-
-// ------------------------------
-// std::result_of
-// ------------------------------
-
-template <class>
-struct result_of;
-
-template <class F, class... Args>
-struct result_of<F(Args...)> : internal::invoke_result<F, Args...> {
-};
-
-template <class T>
-using result_of_t = typename result_of<T>::type;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Property queries
@@ -1337,11 +1278,7 @@ NODSCRD constexpr bool is_pointer_interconvertible_with_class(Mem T::*mp) noexce
 // std::conjunction
 // ------------------------------
 
-template <class T, class... Types>
-struct conjunction : std::conditional_t<T::value, conjunction<Types...>, T> {
-};
-
-template <>
+template <class...>
 struct conjunction : std::true_type {
 };
 
@@ -1349,19 +1286,23 @@ template <class T>
 struct conjunction<T> : T {
 };
 
+template <class T, class... Types>
+struct conjunction<T, Types...> : std::conditional_t<T::value, conjunction<Types...>, T> {
+};
+
 template <class... Types>
-constexpr bool conjunction_v = conjunction<Types>::value;
+constexpr bool conjunction_v = conjunction<Types...>::value;
 
 // ------------------------------
 // std::disjunction
 // ------------------------------
 
-template <class T, class... Types>
-struct disjunction<T, Types...> : std::conditional_t<T::value, T, disjunction<T...>> {
+template <class...>
+struct disjunction : std::false_type {
 };
 
-template <>
-struct disjunction : std::false_type {
+template <class T, class... Types>
+struct disjunction<T, Types...> : std::conditional_t<T::value, T, disjunction<Types...>> {
 };
 
 template <class T>
@@ -1369,7 +1310,7 @@ struct disjunction<T> : T {
 };
 
 template <class... Types>
-constexpr bool disjunction_v = disjunction<Types>::value;
+constexpr bool disjunction_v = disjunction<Types...>::value;
 
 // ------------------------------
 // std::negation
@@ -1494,13 +1435,254 @@ struct is_pointer_interconvertible_base_of
     : bool_constant<is_pointer_interconvertible_base_of_v<Base, Derived>> {
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Transformation cont...
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ------------------------------
+// std::invoke_result
+// ------------------------------
+
+namespace internal
+{
+template <bool kIsFunctor, bool kIsMemberFunction, class Fn, class... Args>
+struct invoke_result_typed {
+    /* Invalid type for true, true specialization - no type field */
+};
+
+template <class MemPtr, class Arg>
+struct invoke_mem_obj;
+
+template <class MemPtr, class ArgT>
+struct invoke_mem_obj_ref {
+    private:
+    template <class F, class T>
+    static type_wrap<decltype(declval<T>().*declval<F>())> test(int)
+    {
+        return {};
+    }
+
+    template <class F, class T>
+    static failure_type test(...)
+    {
+        return {};
+    }
+
+    public:
+    using type = decltype(test<MemPtr, ArgT>(0));
+};
+
+template <class MemPtr, class ArgT>
+struct invoke_mem_obj_deref {
+    private:
+    template <class F, class T>
+    static type_wrap<decltype(*declval<T>().*declval<F>())> test(int)
+    {
+        return {};
+    }
+
+    template <class F, class T>
+    static failure_type test(...)
+    {
+        return {};
+    }
+
+    public:
+    using type = decltype(test<MemPtr, ArgT>(0));
+};
+
+template <class Result, class Class, class Arg>
+struct invoke_mem_obj<Result Class::*, Arg> {
+    using arg_t     = std::remove_cvref_t<Arg>;
+    using mem_ptr_t = Result Class::*;
+    using type      = typename std::conditional_t<
+             std::is_same_v<arg_t, Class> || std::is_base_of_v<Class, arg_t>,
+             invoke_mem_obj_ref<mem_ptr_t, arg_t>, invoke_mem_obj_deref<mem_ptr_t, arg_t>>::type;
+};
+
+template <class Fn, class Arg>
+struct invoke_result_typed<true, false, Fn, Arg>
+    : invoke_mem_obj<std::decay_t<Fn>, std::decay_t<Arg>> {
+    /* Member object pointer */
+};
+
+template <class MemPtr, class Arg, class... Args>
+struct invoke_mem_fun;
+
+template <class MemPtr, class Arg, class... Args>
+struct invoke_mem_fun_ref {
+    private:
+    template <class F, class T, class... ArgsT>
+    static type_wrap<decltype(declval<T>().*declval<F>(declval<ArgsT>()...))> test(int)
+    {
+        return {};
+    }
+
+    template <class F, class T, class... ArgsT>
+    static failure_type test(...)
+    {
+        return {};
+    }
+
+    public:
+    using type = decltype(test<MemPtr, Arg, Args...>(0));
+};
+
+template <class MemPtr, class Arg, class... Args>
+struct invoke_mem_fun_deref {
+    private:
+    template <class F, class T, class... ArgsT>
+    static type_wrap<decltype(*declval<T>().*declval<F>(declval<ArgsT>()...))> test(int)
+    {
+        return {};
+    }
+
+    template <class F, class T, class... ArgsT>
+    static failure_type test(...)
+    {
+        return {};
+    }
+
+    public:
+    using type = decltype(test<MemPtr, Arg, Args...>(0));
+};
+
+template <class Result, class Class, class Arg, class... Args>
+struct invoke_mem_fun<Result Class::*, Arg, Args...> {
+    using arg_t     = std::remove_reference_t<Arg>;
+    using mem_ptr_t = Result Class::*;
+    using type      = typename std::conditional_t<
+             std::is_base_of_v<Class, arg_t>, invoke_mem_fun_ref<mem_ptr_t, arg_t, Args...>,
+             invoke_mem_fun_deref<mem_ptr_t, arg_t, Args...>>::type;
+};
+
+template <class Fn, class Arg, class... Args>
+struct invoke_result_typed<false, true, Fn, Args...>
+    : invoke_mem_fun<std::decay_t<Fn>, remove_reference_t<Arg>, Args...> {
+    /* Member function pointer */
+};
+
+template <class Fn, class... Args>
+struct invoke_result_typed<false, false, Fn, Args...> {
+    private:
+    template <class F, class... ArgsT>
+    static failure_type test(...)
+    {
+        return {};
+    }
+
+    template <class F, class... ArgsT>
+    static auto test(int) -> type_wrap<decltype(declval<F>()(declval<ArgsT>()...))>
+    {
+        return {};
+    }
+
+    public:
+    /* Usual function call */
+    using type = decltype(test<Fn, Args...>(0));
+};
+
+template <typename Fn, typename... Args>
+struct invoke_result
+    : invoke_result_typed<
+          std::is_member_object_pointer_v<std::remove_reference_t<Fn>>,
+          std::is_member_function_pointer_v<std::remove_reference_t<Fn>>, Fn, Args...>::type {
+    /* Expects type field for correctness */
+};
+}  // namespace internal
+
+template <typename Fn, typename... Args>
+struct invoke_result : internal::invoke_result<Fn, Args...> {
+};
+
+template <class F, class... ArgTypes>
+using invoke_result_t = typename invoke_result<F, ArgTypes...>::type;
+
+// ------------------------------
+// std::result_of
+// ------------------------------
+
+template <class>
+struct result_of;
+
+template <class F, class... Args>
+struct result_of<F(Args...)> : internal::invoke_result<F, Args...> {
+};
+
+template <class T>
+using result_of_t = typename result_of<T>::type;
+
 // ------------------------------
 // std::is_invocable
 // ------------------------------
 
+namespace internal
+{
+template <class Result, class Ret, bool = is_void_v<Ret>>
+struct is_invocable : false_type {
+    /* for _r */
+    using nothrow = false_type;
+
+    /* INVALID invoke expressions */
+};
+
+template <class Result, class Ret>
+struct is_invocable<Result, Ret, true> : true_type {
+    /* for _r */
+    using nothrow = true_type;
+
+    /* VALID invoke expressions */
+};
+
+/* Implicit conversions to INVOKE<R> */
+template <class Result, class Ret>
+struct is_invocable<Result, Ret, false> {
+    private:
+    // INVOKE<R> is valid
+
+    /* declval wout reference */
+    static Result get() noexcept;
+
+    /* test if some type is convertible to T */
+    template <class T>
+    static void test_impl_conv(T &&) noexcept
+    {
+    }
+
+    template <
+        class T, bool kNoexcept = noexcept(test_impl_conv<T>(get())),
+        class        = decltype(test_impl_conv<T>(get())),
+        bool kDangle = __reference_converts_from_temporary(T, Result)>
+    static bool_constant<kNoexcept && !kDangle> test(int)
+    {
+        return {};
+    }
+
+    template <class T, bool = false>
+    static false_type test(...)
+    {
+        return {};
+    }
+
+    public:
+    using type = decltype(test<Ret, true>(0));
+
+    /* for _r */
+    using nothrow = decltype(test<Ret>(0));
+};
+}  // namespace internal
+
+template <class Fn, class... Args>
+struct is_invocable : internal::is_invocable<invoke_result_t<Fn, Args...>, void>::type {
+};
+
 // ------------------------------
 // std::is_invocable_r
 // ------------------------------
+
+template <class Ret, class Fn, class... Args>
+struct is_invocable_r : internal::is_invocable<invoke_result_t<Fn, Args...>, Ret>::type {
+};
 
 // ------------------------------
 // std::is_nothrow_invocable
