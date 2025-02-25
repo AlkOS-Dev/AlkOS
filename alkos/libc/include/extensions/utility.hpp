@@ -28,5 +28,22 @@ NODSCRD FORCE_INLINE_F constexpr remove_reference_t<T> &&move(T &&t) noexcept
 {
     return static_cast<remove_reference_t<T> &&>(t);
 }
+
+/* declval */
+namespace internal
+{
+template <class T, class U = T &&>
+U declval(int) noexcept;
+
+template <class T>
+T declval(...) noexcept;
+}  // namespace internal
+
+template <typename T>
+auto declval() noexcept -> decltype(internal::declval<T>(0))
+{
+    static_assert(false, "declval should not be used");
+    return internal::declval<T>();
+}
 }  // namespace std
 #endif  // LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
