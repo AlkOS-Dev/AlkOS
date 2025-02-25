@@ -266,8 +266,7 @@ struct remove_reference<T &&> {
     using type = T;
 };
 
-template <class T>
-using remove_reference_t = typename remove_reference<T>::type;
+__DEF_CONSTEXPR_ACCESSOR_T(remove_reference)
 
 // -------------------------------
 // std::add_lvalue_reference
