@@ -53,7 +53,7 @@ constexpr const T &max(const T &a, const T &b)
 
 template <class T, class U = T &&>
 U declval_base(int) noexcept;
-
+// kuba pietrzak
 template <class T>
 T declval_base(...) noexcept;
 
