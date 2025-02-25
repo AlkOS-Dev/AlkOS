@@ -32,6 +32,17 @@
  */
 namespace std
 {
+// ------------------------------
+// Forward Declarations
+// ------------------------------
+
+template <class T>
+struct reference_wrapper;
+
+// ------------------------------
+// Internal helpers
+// ------------------------------
+
 namespace internal
 {
 template <class T>
@@ -51,6 +62,21 @@ auto declval() noexcept -> decltype(internal::declval_base<T>(0))
 {
     return internal::declval_base<T>();
 }
+
+template <class>
+constexpr bool is_reference_wrapper_v = false;
+
+template <class T>
+constexpr bool is_reference_wrapper_v<reference_wrapper<T>> = true;
+struct failure_type {
+    /* No type field should cause a compile-time error */
+};
+
+template <class T>
+struct type_wrap {
+    using type = T;
+};
+
 }  // namespace internal
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1145,8 +1171,69 @@ __DEF_CONSTEXPR_ACCESSOR_T(underlying_type)
 
 namespace internal
 {
+struct invoke_test {
+    template <class F, class... Args>
+    static failure_type test(...)
+    {
+        return {};
+    }
 
-}
+    template <class F, class... Args>
+    static auto test(int) -> type_wrap<decltype(declval<F>()(declval<Args>()...))>
+    {
+        return {};
+    }
+};
+
+template <bool kIsFunctor, bool kIsMemberFunction, class Fn, class... Args>
+struct invoke_result_typed {
+    /* Invalid type for true, true specialization - no type field */
+};
+
+template <class Fn, class... Args>
+struct invoke_result_typed<false, false, Fn, Args...> {
+    /* Usual function call */
+};
+
+template <class Fn, class... Args>
+struct invoke_result_typed<true, false, Fn, Args...> {
+    /* Member object pointer */
+};
+
+template <class Fn, class... Args>
+struct invoke_result_typed<false, true, Fn, Args...> {
+    /* Member function pointer */
+};
+
+template <typename Fn, typename... Args>
+struct invoke_result
+    : invoke_result_typed<
+          std::is_member_object_pointer_v<std::remove_reference_t<Fn>>,
+          std::is_member_function_pointer_v<std::remove_reference_t<Fn>>, Fn, Args...>::type {
+    /* Expects type field for correctness */
+};
+}  // namespace internal
+
+template <typename Fn, typename... Args>
+struct invoke_result : internal::invoke_result<Fn, Args...> {
+};
+
+template <class F, class... ArgTypes>
+using invoke_result_t = typename invoke_result<F, ArgTypes...>::type;
+
+// ------------------------------
+// std::result_of
+// ------------------------------
+
+template <class>
+struct result_of;
+
+template <class F, class... Args>
+struct result_of<F(Args...)> : internal::invoke_result<F, Args...> {
+};
+
+template <class T>
+using result_of_t = typename result_of<T>::type;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Property queries
