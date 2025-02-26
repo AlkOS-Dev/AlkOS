@@ -282,7 +282,7 @@ void VerboseAssertFalse(
                 msg, size,
                 "Check failed (FALSE)!\n"
                 "Given value was supposed to be equal to false!\n"
-                "Expected value: True\n"
+                "Expected value: false\n"
                 "Actual value: %s\n"
                 "Which is: %s\n",
                 v_str, v_dump

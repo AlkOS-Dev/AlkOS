@@ -1340,7 +1340,7 @@ __DEF_CONSTEXPR_ACCESSOR(negation)
 namespace internal
 {
 template <class T>
-constexpr bool cast_func(T *a)
+constexpr bool cast_func(T *)
 {
     return true;
 }
@@ -1354,7 +1354,7 @@ constexpr bool cast_func(void *)
 template <class Base, class Derived>
 struct is_base_of_non_cv : bool_constant<
                                std::is_class_v<Base> && std::is_class_v<Derived> &&
-                               cast_func<Base *>(static_cast<Derived *>(nullptr))> {
+                               cast_func<Base>(static_cast<Derived *>(nullptr))> {
 };
 }  // namespace internal
 

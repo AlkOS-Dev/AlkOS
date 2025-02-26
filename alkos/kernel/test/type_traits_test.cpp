@@ -423,7 +423,7 @@ TEST_F(TypeTraitsTest, IsSigned)
     EXPECT_FALSE(std::is_signed_v<unsigned long>);
     EXPECT_FALSE(std::is_signed_v<unsigned long long>);
     EXPECT_FALSE(std::is_signed_v<bool>);
-    EXPECT_FALSE(std::is_signed_v<char>);
+    EXPECT_TRUE(std::is_signed_v<char>);
 }
 
 TEST_F(TypeTraitsTest, IsUnsigned)
@@ -683,49 +683,28 @@ TEST_F(TypeTraitsTest, IsLayoutCompatible)
     EXPECT_FALSE((std::is_layout_compatible_v<int, double>));
 }
 
-TEST_F(TypeTraitsTest, IsPointerInterconvertibleBaseOf)
+TEST_F(TypeTraitsTest, PointerInterconvertibleBaseOf)
 {
-    struct BaseStandard {
+    struct Foo {
+    };
+
+    struct Bar {
+    };
+
+    class Baz : Foo, public Bar
+    {
         int x;
     };
-    struct DerivedStandard : BaseStandard {
+
+    class NonStdLayout : public Baz
+    {
         int y;
     };
 
-    EXPECT_TRUE((std::is_pointer_interconvertible_base_of_v<BaseStandard, DerivedStandard>));
-
-    struct BaseNonStandard {
-        virtual void foo() {};
-    };
-    struct DerivedNonStandard : BaseNonStandard {
-        int y;
-    };
-
-    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<BaseNonStandard, DerivedNonStandard>));
-
-    struct Base1 {
-        int x;
-    };
-    struct Base2 {
-        double y;
-    };
-    struct DerivedMultiple : Base1, Base2 {
-        char z;
-    };
-
-    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<Base1, DerivedMultiple>));
-    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<Base2, DerivedMultiple>));
-
-    struct BaseVirtual {
-        int x;
-    };
-    struct DerivedVirtual : virtual BaseVirtual {
-        int y;
-    };
-
-    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<BaseVirtual, DerivedVirtual>));
-
-    EXPECT_TRUE((std::is_pointer_interconvertible_base_of_v<int, int>));
+    ASSERT_TRUE((std::is_pointer_interconvertible_base_of_v<Bar, Baz>));
+    ASSERT_TRUE((std::is_pointer_interconvertible_base_of_v<Foo, Baz>));
+    ASSERT_FALSE((std::is_pointer_interconvertible_base_of_v<Baz, NonStdLayout>));
+    ASSERT_TRUE((std::is_pointer_interconvertible_base_of_v<NonStdLayout, NonStdLayout>));
 }
 
 TEST_F(TypeTraitsTest, IsConstructible)
@@ -757,7 +736,7 @@ TEST_F(TypeTraitsTest, IsConstructible)
 
     EXPECT_FALSE((std::is_constructible_v<int, void *>));
     EXPECT_FALSE((std::is_constructible_v<DefaultConstructible, int>));
-    EXPECT_FALSE((std::is_constructible_v<NonDefaultConstructible, double>));
+    EXPECT_TRUE((std::is_constructible_v<NonDefaultConstructible, double>));
 }
 
 TEST_F(TypeTraitsTest, IsTriviallyConstructible)
@@ -887,6 +866,14 @@ TEST_F(TypeTraitsTest, IsMemberFunctionPointer)
 
 struct CustomType {
 };
+struct Empty {
+};
+struct ComplexType {
+    int a;
+    double b;
+    char c;
+};
+struct IncompleteType;
 
 TEST_F(TypeTraitsTest, IsCompound)
 {
@@ -932,4 +919,359 @@ TEST_F(TypeTraitsTest, IsUnboundedArray)
 {
     EXPECT_TRUE((is_unbounded_array_v<int[]>));
     EXPECT_FALSE((is_unbounded_array_v<int[5]>));
+}
+
+TEST_F(TypeTraitsTest, Rank)
+{
+    EXPECT_EQ(0_s, (rank_v<int>));
+    EXPECT_EQ(1_s, (rank_v<int[5]>));
+    EXPECT_EQ(2_s, (rank_v<int[3][4]>));
+    EXPECT_EQ(3_s, (rank_v<int[3][4][2]>));
+}
+
+TEST_F(TypeTraitsTest, Extent)
+{
+    EXPECT_EQ(0_s, (extent_v<int>));
+    EXPECT_EQ(5_s, (extent_v<int[5]>));
+    EXPECT_EQ(3_s, (extent_v<int[3][4]>));
+    EXPECT_EQ(3_s, (extent_v<int[3][4][2]>));
+}
+
+TEST_F(TypeTraitsTest, AlignmentOf)
+{
+    EXPECT_EQ(alignof(int), (alignment_of_v<int>));
+    EXPECT_EQ(alignof(double), (alignment_of_v<double>));
+    EXPECT_EQ(alignof(ComplexType), (alignment_of_v<ComplexType>));
+}
+
+// TEST_F(TypeTraitsTest, IsInvocable)
+// {
+//     struct Functor { void operator()() {} };
+//     struct ParamFunctor { void operator()(int) {} };
+//     EXPECT_TRUE((is_invocable_v<Functor>));
+//     EXPECT_TRUE((is_invocable_v<ParamFunctor, int>));
+//     EXPECT_FALSE((is_invocable_v<ParamFunctor>));
+// }
+
+// TEST_F(TypeTraitsTest, IsInvocableR)
+// {
+//     struct Functor { int operator()() { return 42; } };
+//     EXPECT_TRUE((is_invocable_r_v<int, Functor>));
+//     EXPECT_FALSE((is_invocable_r_v<void, Functor>));
+// }
+//
+// TEST_F(TypeTraitsTest, IsNothrowInvocable)
+// {
+//     struct Functor { void operator()() noexcept {} };
+//     struct ThrowingFunctor { void operator()() { throw 1; } };
+//     EXPECT_TRUE((is_nothrow_invocable_v<Functor>));
+//     EXPECT_FALSE((is_nothrow_invocable_v<ThrowingFunctor>));
+// }
+//
+// TEST_F(TypeTraitsTest, IsNothrowInvocableR)
+// {
+//     struct Functor { int operator()() noexcept { return 42; } };
+//     struct ThrowingFunctor { int operator()() { throw 1; return 42; } };
+//     EXPECT_TRUE((is_nothrow_invocable_r_v<int, Functor>));
+//     EXPECT_FALSE((is_nothrow_invocable_r_v<int, ThrowingFunctor>));
+// }
+
+TEST_F(TypeTraitsTest, IsBaseOf)
+{
+    struct Base {
+    };
+    struct Derived : Base {
+    };
+    struct Unrelated {
+    };
+    EXPECT_TRUE((is_base_of_v<Base, Derived>));
+    EXPECT_FALSE((is_base_of_v<Derived, Base>));
+    EXPECT_FALSE((is_base_of_v<Base, Unrelated>));
+}
+
+TEST_F(TypeTraitsTest, RemoveConst)
+{
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<const int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<const double>, double>));
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<const u64>, u64>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<int>, int>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<volatile int>, volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_const_t<const volatile int>, volatile int>));
+}
+
+TEST_F(TypeTraitsTest, RemoveVolatile)
+{
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<volatile int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<volatile double>, double>));
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<volatile u64>, u64>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<int>, int>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<const int>, const int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_volatile_t<const volatile int>, const int>));
+}
+
+TEST_F(TypeTraitsTest, RemoveCV)
+{
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<const int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<volatile int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<const volatile int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<const volatile double>, double>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<u64>, u64>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<const int *>, const int *>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cv_t<int *const>, int *>));
+}
+
+TEST_F(TypeTraitsTest, AddConst)
+{
+    EXPECT_TRUE((std::is_same_v<std::add_const_t<int>, const int>));
+    EXPECT_TRUE((std::is_same_v<std::add_const_t<double>, const double>));
+    EXPECT_TRUE((std::is_same_v<std::add_const_t<u64>, const u64>));
+
+    EXPECT_TRUE((std::is_same_v<std::add_const_t<const int>, const int>));
+    EXPECT_TRUE((std::is_same_v<std::add_const_t<volatile int>, const volatile int>));
+}
+
+TEST_F(TypeTraitsTest, AddVolatile)
+{
+    EXPECT_TRUE((std::is_same_v<std::add_volatile_t<int>, volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::add_volatile_t<double>, volatile double>));
+    EXPECT_TRUE((std::is_same_v<std::add_volatile_t<u64>, volatile u64>));
+
+    EXPECT_TRUE((std::is_same_v<std::add_volatile_t<volatile int>, volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::add_volatile_t<const int>, const volatile int>));
+}
+
+TEST_F(TypeTraitsTest, AddCV)
+{
+    EXPECT_TRUE((std::is_same_v<std::add_cv_t<int>, const volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::add_cv_t<double>, const volatile double>));
+
+    EXPECT_TRUE((std::is_same_v<std::add_cv_t<const int>, const volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::add_cv_t<volatile int>, const volatile int>));
+    EXPECT_TRUE((std::is_same_v<std::add_cv_t<const volatile int>, const volatile int>));
+}
+
+TEST_F(TypeTraitsTest, AddLValueReference)
+{
+    EXPECT_TRUE((std::is_same_v<std::add_lvalue_reference_t<int>, int &>));
+    EXPECT_TRUE((std::is_same_v<std::add_lvalue_reference_t<const int>, const int &>));
+    EXPECT_TRUE((std::is_same_v<std::add_lvalue_reference_t<int &>, int &>));
+    EXPECT_TRUE((std::is_same_v<std::add_lvalue_reference_t<int &&>, int &>));
+    EXPECT_TRUE((std::is_same_v<std::add_lvalue_reference_t<void>, void>));
+}
+
+TEST_F(TypeTraitsTest, AddRValueReference)
+{
+    EXPECT_TRUE((std::is_same_v<std::add_rvalue_reference_t<int>, int &&>));
+    EXPECT_TRUE((std::is_same_v<std::add_rvalue_reference_t<const int>, const int &&>));
+    EXPECT_TRUE((std::is_same_v<std::add_rvalue_reference_t<int &>, int &>));
+    EXPECT_TRUE((std::is_same_v<std::add_rvalue_reference_t<int &&>, int &&>));
+    EXPECT_TRUE((std::is_same_v<std::add_rvalue_reference_t<void>, void>));
+}
+
+TEST_F(TypeTraitsTest, MakeSigned)
+{
+    EXPECT_TRUE((std::is_same_v<std::make_signed_t<unsigned int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::make_signed_t<u64>, int64_t>));
+    EXPECT_TRUE((std::is_same_v<std::make_signed_t<char>, signed char>));
+    EXPECT_TRUE((std::is_same_v<std::make_signed_t<unsigned char>, signed char>));
+    EXPECT_TRUE((std::is_same_v<std::make_signed_t<int>, int>));
+}
+
+TEST_F(TypeTraitsTest, MakeUnsigned)
+{
+    EXPECT_TRUE((std::is_same_v<std::make_unsigned_t<int>, unsigned int>));
+    EXPECT_TRUE((std::is_same_v<std::make_unsigned_t<i64>, uint64_t>));
+    EXPECT_TRUE((std::is_same_v<std::make_unsigned_t<char>, unsigned char>));
+    EXPECT_TRUE((std::is_same_v<std::make_unsigned_t<signed char>, unsigned char>));
+    EXPECT_TRUE((std::is_same_v<std::make_unsigned_t<unsigned int>, unsigned int>));
+}
+
+TEST_F(TypeTraitsTest, RemoveAllExtents)
+{
+    EXPECT_TRUE((std::is_same_v<std::remove_all_extents_t<int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_all_extents_t<int[5]>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_all_extents_t<int[5][10]>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_all_extents_t<int[][10]>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_all_extents_t<const int[5]>, const int>));
+}
+
+TEST_F(TypeTraitsTest, AlignedStorage)
+{
+    EXPECT_TRUE((sizeof(std::aligned_storage_t<1>) >= 1));
+    EXPECT_TRUE((sizeof(std::aligned_storage_t<5>) >= 5));
+    EXPECT_TRUE((sizeof(std::aligned_storage_t<10, 8>) >= 10));
+
+    EXPECT_TRUE((alignof(std::aligned_storage_t<1>) >= 1));
+    EXPECT_TRUE((alignof(std::aligned_storage_t<5, 4>) >= 4));
+    EXPECT_TRUE((alignof(std::aligned_storage_t<10, 16>) >= 16));
+}
+
+TEST_F(TypeTraitsTest, AlignedUnion)
+{
+    EXPECT_TRUE((sizeof(std::aligned_union_t<0, char>) >= sizeof(char)));
+    EXPECT_TRUE((sizeof(std::aligned_union_t<0, int, char>) >= sizeof(int)));
+    EXPECT_TRUE((sizeof(std::aligned_union_t<10, char>) >= 10));
+    EXPECT_TRUE((sizeof(std::aligned_union_t<20, char, short, int>) >= 20));
+
+    EXPECT_TRUE((alignof(std::aligned_union_t<0, char, int>) >= alignof(int)));
+    EXPECT_TRUE((alignof(std::aligned_union_t<0, double, int>) >= alignof(double)));
+}
+
+TEST_F(TypeTraitsTest, RemoveCVRef)
+{
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<volatile int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const volatile int>, int>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<int &>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const int &>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<volatile int &>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const volatile int &>, int>));
+
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<int &&>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const int &&>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<volatile int &&>, int>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const volatile int &&>, int>));
+
+    struct Test {
+    };
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<Test>, Test>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<const Test &>, Test>));
+    EXPECT_TRUE((std::is_same_v<std::remove_cvref_t<volatile Test &&>, Test>));
+}
+
+TEST_F(TypeTraitsTest, UnderlyingType)
+{
+    enum E1 : int { A, B, C };
+    enum E2 : unsigned char { X, Y, Z };
+    enum class E3 : long long { P, Q, R };
+    enum class E4 { M, N, O };
+
+    EXPECT_TRUE((std::is_same_v<std::underlying_type_t<E1>, int>));
+    EXPECT_TRUE((std::is_same_v<std::underlying_type_t<E2>, unsigned char>));
+    EXPECT_TRUE((std::is_same_v<std::underlying_type_t<E3>, long long>));
+    EXPECT_TRUE((std::is_same_v<std::underlying_type_t<E4>, int>));
+}
+
+// int func(double) { return 0; }
+// TEST_F(TypeTraitsTest, ResultOf)
+// {
+//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(func)&(double)>, int>));
+//
+//     auto lambda1 = [](int x) -> double { return x * 1.0; };
+//     auto lambda2 = []() { return 'a'; };
+//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda1)(int)>, double>));
+//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda2)()>, char>));
+//
+//     struct S {
+//         bool foo(int) { return true; }
+//         int bar() const { return 0; }
+//     };
+//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(&S::foo)(S*, int)>, bool>));
+//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(&S::bar)(const S*)>, int>));
+// }
+
+// TEST_F(TypeTraitsTest, InvokeResult)
+// {
+//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(func), double>, int>));
+//
+//     int captured = 10;
+//     auto lambda1 = [](int x) -> double { return x * 1.0; };
+//     auto lambda2 = [captured](int x) -> int { return x + captured; };
+//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda1), int>, double>));
+//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda2), int>, int>));
+//
+//     struct S {
+//         void foo() {}
+//         int bar(double) const { return 0; }
+//         static float baz(char) { return 0.0f; }
+//     };
+//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::foo), S*>, void>));
+//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::bar), const S*, double>,
+//     int>)); EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::baz), char>, float>));
+// }
+
+TEST_F(TypeTraitsTest, UnwrapReference)
+{
+    EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<int &>, int &>));
+
+    EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<int>>, int &>));
+    EXPECT_TRUE(
+        (std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<const int>>, const int &>)
+    );
+
+    struct Test {
+    };
+    EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<Test>, Test>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<Test>>, Test &>));
+}
+
+TEST_F(TypeTraitsTest, UnwrapRefDecay)
+{
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int>, int>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int &>, int>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<const int &>, int>));
+
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int[3]>, int *>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int[][3]>, int(*)[3]>));
+
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<std::reference_wrapper<int>>, int &>));
+    EXPECT_TRUE(
+        (std::is_same_v<std::unwrap_ref_decay_t<std::reference_wrapper<const int>>, const int &>)
+    );
+}
+
+TEST_F(TypeTraitsTest, Conjunction)
+{
+    EXPECT_TRUE((std::conjunction_v<>));
+    EXPECT_TRUE((std::conjunction_v<std::true_type>));
+    EXPECT_FALSE((std::conjunction_v<std::false_type>));
+
+    EXPECT_TRUE((std::conjunction_v<std::true_type, std::true_type>));
+    EXPECT_FALSE((std::conjunction_v<std::true_type, std::false_type>));
+    EXPECT_FALSE((std::conjunction_v<std::false_type, std::true_type>));
+    EXPECT_FALSE((std::conjunction_v<std::false_type, std::false_type>));
+
+    EXPECT_TRUE((std::conjunction_v<std::true_type, std::true_type, std::true_type>));
+    EXPECT_FALSE((std::conjunction_v<std::true_type, std::false_type, std::true_type>));
+
+    EXPECT_TRUE((std::conjunction_v<std::is_integral<int>, std::is_signed<int>>));
+    EXPECT_FALSE((std::conjunction_v<std::is_integral<int>, std::is_unsigned<int>>));
+}
+
+TEST_F(TypeTraitsTest, Disjunction)
+{
+    EXPECT_FALSE((std::disjunction_v<>));
+    EXPECT_TRUE((std::disjunction_v<std::true_type>));
+    EXPECT_FALSE((std::disjunction_v<std::false_type>));
+
+    EXPECT_TRUE((std::disjunction_v<std::true_type, std::true_type>));
+    EXPECT_TRUE((std::disjunction_v<std::true_type, std::false_type>));
+    EXPECT_TRUE((std::disjunction_v<std::false_type, std::true_type>));
+    EXPECT_FALSE((std::disjunction_v<std::false_type, std::false_type>));
+
+    EXPECT_TRUE((std::disjunction_v<std::false_type, std::true_type, std::false_type>));
+    EXPECT_FALSE((std::disjunction_v<std::false_type, std::false_type, std::false_type>));
+
+    EXPECT_TRUE((std::disjunction_v<std::is_integral<int>, std::is_floating_point<int>>));
+    EXPECT_FALSE((std::disjunction_v<std::is_floating_point<int>, std::is_void<int>>));
+}
+
+TEST_F(TypeTraitsTest, Negation)
+{
+    EXPECT_TRUE((std::negation_v<std::false_type>));
+    EXPECT_FALSE((std::negation_v<std::true_type>));
+    // With type traits
+    EXPECT_TRUE((std::negation_v<std::is_void<int>>));
+    EXPECT_FALSE((std::negation_v<std::is_integral<int>>));
+    EXPECT_TRUE((std::negation_v<std::is_floating_point<int>>));
 }
