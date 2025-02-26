@@ -944,37 +944,51 @@ TEST_F(TypeTraitsTest, AlignmentOf)
     EXPECT_EQ(alignof(ComplexType), (alignment_of_v<ComplexType>));
 }
 
-// TEST_F(TypeTraitsTest, IsInvocable)
-// {
-//     struct Functor { void operator()() {} };
-//     struct ParamFunctor { void operator()(int) {} };
-//     EXPECT_TRUE((is_invocable_v<Functor>));
-//     EXPECT_TRUE((is_invocable_v<ParamFunctor, int>));
-//     EXPECT_FALSE((is_invocable_v<ParamFunctor>));
-// }
+TEST_F(TypeTraitsTest, IsInvocable)
+{
+    struct Functor {
+        void operator()() {}
+    };
+    struct ParamFunctor {
+        void operator()(int) {}
+    };
+    EXPECT_TRUE((is_invocable_v<Functor>));
+    EXPECT_TRUE((is_invocable_v<ParamFunctor, int>));
+    EXPECT_FALSE((is_invocable_v<ParamFunctor>));
+}
 
-// TEST_F(TypeTraitsTest, IsInvocableR)
-// {
-//     struct Functor { int operator()() { return 42; } };
-//     EXPECT_TRUE((is_invocable_r_v<int, Functor>));
-//     EXPECT_FALSE((is_invocable_r_v<void, Functor>));
-// }
-//
-// TEST_F(TypeTraitsTest, IsNothrowInvocable)
-// {
-//     struct Functor { void operator()() noexcept {} };
-//     struct ThrowingFunctor { void operator()() { throw 1; } };
-//     EXPECT_TRUE((is_nothrow_invocable_v<Functor>));
-//     EXPECT_FALSE((is_nothrow_invocable_v<ThrowingFunctor>));
-// }
-//
-// TEST_F(TypeTraitsTest, IsNothrowInvocableR)
-// {
-//     struct Functor { int operator()() noexcept { return 42; } };
-//     struct ThrowingFunctor { int operator()() { throw 1; return 42; } };
-//     EXPECT_TRUE((is_nothrow_invocable_r_v<int, Functor>));
-//     EXPECT_FALSE((is_nothrow_invocable_r_v<int, ThrowingFunctor>));
-// }
+TEST_F(TypeTraitsTest, IsInvocableR)
+{
+    struct Functor {
+        int operator()() { return 42; }
+    };
+    EXPECT_TRUE((is_invocable_r_v<int, Functor>));
+    EXPECT_FALSE((is_invocable_r_v<void, Functor>));
+}
+
+TEST_F(TypeTraitsTest, IsNothrowInvocable)
+{
+    struct Functor {
+        void operator()() noexcept {}
+    };
+    struct ThrowingFunctor {
+        void operator()() {}
+    };
+    EXPECT_TRUE((is_nothrow_invocable_v<Functor>));
+    EXPECT_FALSE((is_nothrow_invocable_v<ThrowingFunctor>));
+}
+
+TEST_F(TypeTraitsTest, IsNothrowInvocableR)
+{
+    struct Functor {
+        int operator()() noexcept { return 42; }
+    };
+    struct ThrowingFunctor {
+        int operator()() { return 42; }
+    };
+    EXPECT_TRUE((is_nothrow_invocable_r_v<int, Functor>));
+    EXPECT_FALSE((is_nothrow_invocable_r_v<int, ThrowingFunctor>));
+}
 
 TEST_F(TypeTraitsTest, IsBaseOf)
 {
@@ -1161,43 +1175,51 @@ TEST_F(TypeTraitsTest, UnderlyingType)
     EXPECT_TRUE((std::is_same_v<std::underlying_type_t<E4>, int>));
 }
 
-// int func(double) { return 0; }
-// TEST_F(TypeTraitsTest, ResultOf)
-// {
-//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(func)&(double)>, int>));
-//
-//     auto lambda1 = [](int x) -> double { return x * 1.0; };
-//     auto lambda2 = []() { return 'a'; };
-//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda1)(int)>, double>));
-//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda2)()>, char>));
-//
-//     struct S {
-//         bool foo(int) { return true; }
-//         int bar() const { return 0; }
-//     };
-//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(&S::foo)(S*, int)>, bool>));
-//     EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(&S::bar)(const S*)>, int>));
-// }
+int func(double) { return 0; }
+TEST_F(TypeTraitsTest, ResultOf)
+{
+    EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(func) &(double)>, int>));
 
-// TEST_F(TypeTraitsTest, InvokeResult)
-// {
-//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(func), double>, int>));
-//
-//     int captured = 10;
-//     auto lambda1 = [](int x) -> double { return x * 1.0; };
-//     auto lambda2 = [captured](int x) -> int { return x + captured; };
-//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda1), int>, double>));
-//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda2), int>, int>));
-//
-//     struct S {
-//         void foo() {}
-//         int bar(double) const { return 0; }
-//         static float baz(char) { return 0.0f; }
-//     };
-//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::foo), S*>, void>));
-//     EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::bar), const S*, double>,
-//     int>)); EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::baz), char>, float>));
-// }
+    auto lambda1 = [](int x) -> double {
+        return x * 1.0;
+    };
+    auto lambda2 = []() {
+        return 'a';
+    };
+    EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda1)(int)>, double>));
+    EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype(lambda2)()>, char>));
+
+    struct S {
+        bool foo(int) { return true; }
+        int bar() const { return 0; }
+    };
+    EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype (&S::foo)(S *, int)>, bool>));
+    EXPECT_TRUE((std::is_same_v<std::result_of_t<decltype (&S::bar)(const S *)>, int>));
+}
+
+TEST_F(TypeTraitsTest, InvokeResult)
+{
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(func), double>, int>));
+
+    int captured = 10;
+    auto lambda1 = [](int x) -> double {
+        return x * 1.0;
+    };
+    auto lambda2 = [captured](int x) -> int {
+        return x + captured;
+    };
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda1), int>, double>));
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(lambda2), int>, int>));
+
+    struct S {
+        void foo() {}
+        int bar(double) const { return 0; }
+        static float baz(char) { return 0.0f; }
+    };
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::foo), S *>, void>));
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::bar), const S *, double>, int>));
+    EXPECT_TRUE((std::is_same_v<std::invoke_result_t<decltype(&S::baz), char>, float>));
+}
 
 TEST_F(TypeTraitsTest, UnwrapReference)
 {
@@ -1282,11 +1304,6 @@ TEST_F(TypeTraitsTest, IsConstantEvaluated)
 
     EXPECT_TRUE(compile_time);
     EXPECT_FALSE(runtime);
-
-    constexpr auto test_constexpr = []() {
-        return std::is_constant_evaluated();
-    };
-    EXPECT_TRUE(test_constexpr());
 
     auto test_runtime = []() {
         return std::is_constant_evaluated();
