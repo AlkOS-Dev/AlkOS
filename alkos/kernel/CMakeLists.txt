@@ -58,7 +58,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SYSROOT}/boot)
 
 # NOTE: kernel should not include any architecture specific code
 # including assembly
-file(GLOB KERNEL_SOURCES
+file(GLOB_RECURSE KERNEL_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
@@ -116,9 +116,13 @@ if(NOT DEFINED ARCH_QEMU_COMMAND OR NOT DEFINED ARCH_QEMU_NORMAL_FLAGS OR NOT DE
     message(FATAL_ERROR "ARCH_QEMU_COMMAND, ARCH_QEMU_NORMAL_FLAGS, ARCH_QEMU_TEST_FLAGS are not defined")
 endif ()
 
+################################# ThirdParty #################################
+
+add_subdirectory(thirdparty)
+
 ################################## Linking ###################################
 
-target_link_libraries(alkos.kernel PRIVATE libk gcc)
+target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES})
 
 ############################## Post Arch Action ##############################
 
