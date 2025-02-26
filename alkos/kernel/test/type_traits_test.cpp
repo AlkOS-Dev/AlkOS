@@ -1270,8 +1270,26 @@ TEST_F(TypeTraitsTest, Negation)
 {
     EXPECT_TRUE((std::negation_v<std::false_type>));
     EXPECT_FALSE((std::negation_v<std::true_type>));
-    // With type traits
     EXPECT_TRUE((std::negation_v<std::is_void<int>>));
     EXPECT_FALSE((std::negation_v<std::is_integral<int>>));
     EXPECT_TRUE((std::negation_v<std::is_floating_point<int>>));
+}
+
+TEST_F(TypeTraitsTest, IsConstantEvaluated)
+{
+    constexpr bool compile_time = std::is_constant_evaluated();
+    bool runtime                = std::is_constant_evaluated();
+
+    EXPECT_TRUE(compile_time);
+    EXPECT_FALSE(runtime);
+
+    constexpr auto test_constexpr = []() {
+        return std::is_constant_evaluated();
+    };
+    EXPECT_TRUE(test_constexpr());
+
+    auto test_runtime = []() {
+        return std::is_constant_evaluated();
+    };
+    EXPECT_FALSE(test_runtime());
 }
