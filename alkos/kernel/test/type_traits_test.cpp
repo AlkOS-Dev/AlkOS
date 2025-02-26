@@ -1,5 +1,7 @@
-#include <test_module/test.hpp>
 #include <extensions/type_traits.hpp>
+#include <test_module/test.hpp>
+
+using namespace std;
 
 class TypeTraitsTest : public TestGroupBase
 {
@@ -187,29 +189,32 @@ TEST_F(TypeTraitsTest, IsRvalueReference)
     EXPECT_FALSE(std::is_rvalue_reference_v<int>);
 }
 
-TEST_F(TypeTraitsTest, IsVoid) {
+TEST_F(TypeTraitsTest, IsVoid)
+{
     EXPECT_TRUE(std::is_void_v<void>);
     EXPECT_TRUE(std::is_void_v<const void>);
     EXPECT_TRUE(std::is_void_v<const volatile void>);
     EXPECT_FALSE(std::is_void_v<int>);
     EXPECT_FALSE(std::is_void_v<const int>);
     EXPECT_FALSE(std::is_void_v<const volatile int>);
-    EXPECT_FALSE(std::is_void_v<void*>);
+    EXPECT_FALSE(std::is_void_v<void *>);
     EXPECT_TRUE(std::is_void_v<volatile void>);
     EXPECT_FALSE(std::is_void_v<std::is_void<void>>);
 }
 
-TEST_F(TypeTraitsTest, IsNullPtr) {
+TEST_F(TypeTraitsTest, IsNullPtr)
+{
     EXPECT_TRUE(std::is_null_pointer_v<std::nullptr_t>);
     EXPECT_TRUE(std::is_null_pointer_v<const std::nullptr_t>);
     EXPECT_TRUE(std::is_null_pointer_v<const volatile std::nullptr_t>);
     EXPECT_TRUE(std::is_null_pointer_v<decltype(nullptr)>);
     EXPECT_FALSE(std::is_null_pointer_v<int>);
     EXPECT_FALSE(std::is_null_pointer_v<const int>);
-    EXPECT_FALSE(std::is_null_pointer_v<void*>);
+    EXPECT_FALSE(std::is_null_pointer_v<void *>);
 }
 
-TEST_F(TypeTraitsTest, IsIntegral) {
+TEST_F(TypeTraitsTest, IsIntegral)
+{
     EXPECT_TRUE(std::is_integral_v<int>);
     EXPECT_TRUE(std::is_integral_v<unsigned int>);
     EXPECT_TRUE(std::is_integral_v<short>);
@@ -230,13 +235,14 @@ TEST_F(TypeTraitsTest, IsIntegral) {
     EXPECT_FALSE(std::is_integral_v<double>);
     EXPECT_FALSE(std::is_integral_v<long double>);
     EXPECT_FALSE(std::is_integral_v<void>);
-    EXPECT_FALSE(std::is_integral_v<int*>);
-    EXPECT_FALSE(std::is_integral_v<int&>);
+    EXPECT_FALSE(std::is_integral_v<int *>);
+    EXPECT_FALSE(std::is_integral_v<int &>);
     EXPECT_FALSE(std::is_integral_v<int[]>);
     EXPECT_FALSE(std::is_integral_v<int(int)>);
 }
 
-TEST_F(TypeTraitsTest, IsFloatingPoint) {
+TEST_F(TypeTraitsTest, IsFloatingPoint)
+{
     EXPECT_TRUE(std::is_floating_point_v<float>);
     EXPECT_TRUE(std::is_floating_point_v<double>);
     EXPECT_TRUE(std::is_floating_point_v<long double>);
@@ -250,8 +256,8 @@ TEST_F(TypeTraitsTest, IsFloatingPoint) {
     EXPECT_FALSE(std::is_floating_point_v<long long>);
     EXPECT_FALSE(std::is_floating_point_v<unsigned long long>);
     EXPECT_FALSE(std::is_floating_point_v<void>);
-    EXPECT_FALSE(std::is_floating_point_v<float*>);
-    EXPECT_FALSE(std::is_floating_point_v<float&>);
+    EXPECT_FALSE(std::is_floating_point_v<float *>);
+    EXPECT_FALSE(std::is_floating_point_v<float &>);
     EXPECT_FALSE(std::is_floating_point_v<float[]>);
     EXPECT_FALSE(std::is_floating_point_v<float(float)>);
 }
@@ -261,13 +267,10 @@ union SampleUnion {
     float b;
 };
 
-enum SampleEnum {
-    Value1,
-    Value2,
-    Value3
-};
+enum SampleEnum { Value1, Value2, Value3 };
 
-TEST_F(TypeTraitsTest, IsUnion) {
+TEST_F(TypeTraitsTest, IsUnion)
+{
     EXPECT_TRUE(std::is_union_v<SampleUnion>);
     EXPECT_FALSE(std::is_union_v<int>);
     EXPECT_FALSE(std::is_union_v<float>);
@@ -275,7 +278,8 @@ TEST_F(TypeTraitsTest, IsUnion) {
     EXPECT_FALSE(std::is_union_v<void>);
 }
 
-TEST_F(TypeTraitsTest, IsEnum) {
+TEST_F(TypeTraitsTest, IsEnum)
+{
     EXPECT_TRUE(std::is_enum_v<SampleEnum>);
     EXPECT_FALSE(std::is_enum_v<int>);
     EXPECT_FALSE(std::is_enum_v<float>);
@@ -283,7 +287,8 @@ TEST_F(TypeTraitsTest, IsEnum) {
     EXPECT_FALSE(std::is_enum_v<void>);
 }
 
-TEST_F(TypeTraitsTest, IsPointer) {
+TEST_F(TypeTraitsTest, IsPointer)
+{
     EXPECT_TRUE(std::is_pointer_v<int *>);
     EXPECT_TRUE(std::is_pointer_v<const int *>);
     EXPECT_TRUE(std::is_pointer_v<int *const>);
@@ -300,14 +305,21 @@ TEST_F(TypeTraitsTest, IsPointer) {
     EXPECT_FALSE(std::is_pointer_v<std::nullptr_t>);
 }
 
-TEST_F(TypeTraitsTest, IsClass) {
-    struct A {};
-    class B {};
-    union U { int a; };
+TEST_F(TypeTraitsTest, IsClass)
+{
+    struct A {
+    };
+    class B
+    {
+    };
+    union U {
+        int a;
+    };
     enum E { Value1, Value2 };
     enum class C {};
 
-    auto lambda = [](){};
+    auto lambda = []() {
+    };
 
     EXPECT_TRUE((std::is_class_v<A>));
     EXPECT_TRUE((std::is_class_v<B>));
@@ -321,8 +333,8 @@ TEST_F(TypeTraitsTest, IsClass) {
 
     EXPECT_FALSE((std::is_class_v<int>));
     EXPECT_FALSE((std::is_class_v<double>));
-    EXPECT_FALSE((std::is_class_v<int*>));
-    EXPECT_FALSE((std::is_class_v<int&>));
+    EXPECT_FALSE((std::is_class_v<int *>));
+    EXPECT_FALSE((std::is_class_v<int &>));
 }
 
 struct TestClass {
@@ -330,7 +342,8 @@ struct TestClass {
     void func() {}
 };
 
-TEST_F(TypeTraitsTest, IsFundamental) {
+TEST_F(TypeTraitsTest, IsFundamental)
+{
     EXPECT_TRUE(std::is_fundamental_v<int>);
     EXPECT_TRUE(std::is_fundamental_v<float>);
     EXPECT_TRUE(std::is_fundamental_v<double>);
@@ -339,30 +352,32 @@ TEST_F(TypeTraitsTest, IsFundamental) {
     EXPECT_TRUE(std::is_fundamental_v<void>);
     EXPECT_TRUE(std::is_fundamental_v<std::nullptr_t>);
 
-    EXPECT_FALSE(std::is_fundamental_v<int*>);
-    EXPECT_FALSE(std::is_fundamental_v<int&>);
+    EXPECT_FALSE(std::is_fundamental_v<int *>);
+    EXPECT_FALSE(std::is_fundamental_v<int &>);
     EXPECT_FALSE(std::is_fundamental_v<int[]>);
     EXPECT_FALSE(std::is_fundamental_v<int(int)>);
     EXPECT_FALSE(std::is_fundamental_v<TestClass>);
 }
 
-TEST_F(TypeTraitsTest, IsMemberPointer) {
+TEST_F(TypeTraitsTest, IsMemberPointer)
+{
     EXPECT_TRUE(std::is_member_pointer_v<int TestClass::*>);
     EXPECT_TRUE(std::is_member_pointer_v<void (TestClass::*)()>);
 
-    EXPECT_FALSE(std::is_member_pointer_v<int*>);
+    EXPECT_FALSE(std::is_member_pointer_v<int *>);
     EXPECT_FALSE(std::is_member_pointer_v<int>);
     EXPECT_FALSE(std::is_member_pointer_v<void()>);
 }
 
-TEST_F(TypeTraitsTest, IsScalar) {
+TEST_F(TypeTraitsTest, IsScalar)
+{
     EXPECT_TRUE(std::is_scalar_v<int>);
     EXPECT_TRUE(std::is_scalar_v<float>);
     EXPECT_TRUE(std::is_scalar_v<double>);
     EXPECT_TRUE(std::is_scalar_v<char>);
     EXPECT_TRUE(std::is_scalar_v<bool>);
     EXPECT_TRUE(std::is_scalar_v<std::nullptr_t>);
-    EXPECT_TRUE(std::is_scalar_v<int*>);
+    EXPECT_TRUE(std::is_scalar_v<int *>);
     EXPECT_TRUE(std::is_scalar_v<int TestClass::*>);
     EXPECT_TRUE(std::is_scalar_v<void (TestClass::*)()>);
 
@@ -372,8 +387,10 @@ TEST_F(TypeTraitsTest, IsScalar) {
     EXPECT_FALSE(std::is_scalar_v<TestClass>);
 }
 
-TEST_F(TypeTraitsTest, IsObject) {
-    struct TestClass {};
+TEST_F(TypeTraitsTest, IsObject)
+{
+    struct TestClass {
+    };
     union TestUnion {
         int a;
         float b;
@@ -383,15 +400,16 @@ TEST_F(TypeTraitsTest, IsObject) {
     EXPECT_TRUE(std::is_object_v<float>);
     EXPECT_TRUE(std::is_object_v<TestClass>);
     EXPECT_TRUE(std::is_object_v<TestUnion>);
-    EXPECT_TRUE(std::is_object_v<int*>);
+    EXPECT_TRUE(std::is_object_v<int *>);
     EXPECT_TRUE(std::is_object_v<int[10]>);
 
     EXPECT_FALSE(std::is_object_v<void>);
-    EXPECT_FALSE(std::is_object_v<int&>);
+    EXPECT_FALSE(std::is_object_v<int &>);
     EXPECT_FALSE(std::is_object_v<int(int)>);
 }
 
-TEST_F(TypeTraitsTest, IsSigned) {
+TEST_F(TypeTraitsTest, IsSigned)
+{
     EXPECT_TRUE(std::is_signed_v<int>);
     EXPECT_TRUE(std::is_signed_v<short>);
     EXPECT_TRUE(std::is_signed_v<long>);
@@ -408,7 +426,8 @@ TEST_F(TypeTraitsTest, IsSigned) {
     EXPECT_FALSE(std::is_signed_v<char>);
 }
 
-TEST_F(TypeTraitsTest, IsUnsigned) {
+TEST_F(TypeTraitsTest, IsUnsigned)
+{
     EXPECT_TRUE(std::is_unsigned_v<unsigned int>);
     EXPECT_TRUE(std::is_unsigned_v<unsigned short>);
     EXPECT_TRUE(std::is_unsigned_v<unsigned long>);
@@ -425,28 +444,492 @@ TEST_F(TypeTraitsTest, IsUnsigned) {
     EXPECT_FALSE(std::is_unsigned_v<long double>);
 }
 
-TEST_F(TypeTraitsTest, IsAbstract) {
-    struct AbstractBase { virtual void func() = 0; };
-    struct Derived : AbstractBase { void func() override {} };
+TEST_F(TypeTraitsTest, IsAbstract)
+{
+    struct AbstractBase {
+        virtual void func() = 0;
+    };
+    struct Derived : AbstractBase {
+        void func() override {}
+    };
 
     EXPECT_TRUE(std::is_abstract_v<AbstractBase>);
     EXPECT_FALSE(std::is_abstract_v<Derived>);
 }
 
-TEST_F(TypeTraitsTest, IsPolymorphic) {
-    struct Base { virtual void func() {} };
-    struct Derived : Base {};
-    struct NonVirtual {};
+TEST_F(TypeTraitsTest, IsPolymorphic)
+{
+    struct Base {
+        virtual void func() {}
+    };
+    struct Derived : Base {
+    };
+    struct NonVirtual {
+    };
 
     EXPECT_TRUE(std::is_polymorphic_v<Base>);
     EXPECT_TRUE(std::is_polymorphic_v<Derived>);
     EXPECT_FALSE(std::is_polymorphic_v<NonVirtual>);
 }
 
-TEST_F(TypeTraitsTest, IsFinal) {
-    struct Regular {};
-    struct FinalClass final {};
+TEST_F(TypeTraitsTest, IsFinal)
+{
+    struct Regular {
+    };
+    struct FinalClass final {
+    };
 
     EXPECT_FALSE(std::is_final_v<Regular>);
     EXPECT_TRUE(std::is_final_v<FinalClass>);
+}
+
+TEST_F(TypeTraitsTest, HasVirtualDestructor)
+{
+    struct Base {
+        virtual ~Base() {}
+    };
+    struct Derived : Base {
+    };
+    struct NonVirtualDestructor {
+        ~NonVirtualDestructor() {}
+    };
+
+    EXPECT_TRUE(std::has_virtual_destructor_v<Base>);
+    EXPECT_TRUE(std::has_virtual_destructor_v<Derived>);
+    EXPECT_FALSE(std::has_virtual_destructor_v<NonVirtualDestructor>);
+    EXPECT_FALSE(std::has_virtual_destructor_v<int>);
+    EXPECT_FALSE(std::has_virtual_destructor_v<void>);
+}
+
+TEST_F(TypeTraitsTest, IsStandardLayout)
+{
+    struct StandardLayoutStruct {
+        int x;
+        double y;
+    };
+    struct EmptyStruct {
+    };
+
+    EXPECT_TRUE(std::is_standard_layout_v<int>);
+    EXPECT_TRUE(std::is_standard_layout_v<double>);
+    EXPECT_TRUE(std::is_standard_layout_v<StandardLayoutStruct>);
+    EXPECT_TRUE(std::is_standard_layout_v<EmptyStruct>);
+    EXPECT_TRUE(std::is_standard_layout_v<int[10]>);
+
+    struct NonStandardLayout1 {
+        virtual void foo() {}
+    };
+    struct Base {
+        int x;
+    };
+    struct Derived : Base {
+        int y;
+    };
+    struct NonStandardLayout2 {
+        private:
+        int x;
+
+        public:
+        double y;
+    };
+
+    EXPECT_FALSE(std::is_standard_layout_v<NonStandardLayout1>);
+    EXPECT_FALSE(std::is_standard_layout_v<Derived>);
+    EXPECT_FALSE(std::is_standard_layout_v<NonStandardLayout2>);
+}
+
+TEST_F(TypeTraitsTest, IsTriviallyCopyable)
+{
+    struct TriviallyCopyable {
+        int x;
+        double y;
+    };
+
+    EXPECT_TRUE(std::is_trivially_copyable_v<int>);
+    EXPECT_TRUE(std::is_trivially_copyable_v<double>);
+    EXPECT_TRUE(std::is_trivially_copyable_v<TriviallyCopyable>);
+    EXPECT_TRUE(std::is_trivially_copyable_v<int[10]>);
+
+    struct NonTriviallyCopyable1 {
+        int *ptr;
+        NonTriviallyCopyable1(const NonTriviallyCopyable1 &other) { ptr = new int(*other.ptr); }
+        ~NonTriviallyCopyable1() { delete ptr; }
+    };
+
+    struct NonTriviallyCopyable2 {
+        char *buffer;
+        NonTriviallyCopyable2() : buffer(nullptr) {}
+        NonTriviallyCopyable2(const NonTriviallyCopyable2 &other)
+        {
+            if (other.buffer) {
+                size_t len = 0;
+                while (other.buffer[len]) len++;
+                buffer = new char[len + 1];
+                for (size_t i = 0; i <= len; i++) buffer[i] = other.buffer[i];
+            }
+        }
+        ~NonTriviallyCopyable2() { delete[] buffer; }
+    };
+
+    EXPECT_FALSE(std::is_trivially_copyable_v<NonTriviallyCopyable1>);
+    EXPECT_FALSE(std::is_trivially_copyable_v<NonTriviallyCopyable2>);
+}
+
+TEST_F(TypeTraitsTest, IsTrivial)
+{
+    struct TrivialType {
+        int x;
+        double y;
+    };
+
+    EXPECT_TRUE(std::is_trivial_v<int>);
+    EXPECT_TRUE(std::is_trivial_v<double>);
+    EXPECT_TRUE(std::is_trivial_v<TrivialType>);
+    EXPECT_TRUE(std::is_trivial_v<int[10]>);
+
+    struct NonTrivialType1 {
+        NonTrivialType1() {}
+    };
+
+    struct NonTrivialType2 {
+        int *data;
+        NonTrivialType2() : data(new int(0)) {}
+        ~NonTrivialType2() { delete data; }
+    };
+
+    struct NonTrivialType3 {
+        virtual void foo() {}
+    };
+
+    EXPECT_FALSE(std::is_trivial_v<NonTrivialType1>);
+    EXPECT_FALSE(std::is_trivial_v<NonTrivialType2>);
+    EXPECT_FALSE(std::is_trivial_v<NonTrivialType3>);
+}
+
+TEST_F(TypeTraitsTest, IsPOD)
+{
+    struct PODType {
+        int x;
+        double y;
+    };
+
+    EXPECT_TRUE(std::is_pod_v<int>);
+    EXPECT_TRUE(std::is_pod_v<double>);
+    EXPECT_TRUE(std::is_pod_v<PODType>);
+    EXPECT_TRUE(std::is_pod_v<int[10]>);
+
+    struct NonPODType1 {
+        NonPODType1() {}
+    };
+
+    struct NonPODType2 {
+        int *data;
+        NonPODType2() : data(new int(0)) {}
+        ~NonPODType2() { delete data; }
+    };
+
+    struct NonPODType3 {
+        virtual void foo() {}
+    };
+
+    EXPECT_FALSE(std::is_pod_v<NonPODType1>);
+    EXPECT_FALSE(std::is_pod_v<NonPODType2>);
+    EXPECT_FALSE(std::is_pod_v<NonPODType3>);
+}
+
+TEST_F(TypeTraitsTest, IsLayoutCompatible)
+{
+    struct A {
+        int x;
+    };
+    struct B {
+        int x;
+    };
+
+    struct C {
+        int x;
+        double y;
+    };
+    struct D {
+        int x;
+        double y;
+    };
+
+    struct E {
+        int x;
+        double y;
+    };
+    struct F {
+        int x;
+        float y;
+    };
+
+    struct G {
+        int x;
+        char padding[4];
+        double y;
+    };
+    struct H {
+        int x;
+        double y;
+    };
+
+    EXPECT_TRUE((std::is_layout_compatible_v<A, B>));
+    EXPECT_TRUE((std::is_layout_compatible_v<C, D>));
+    EXPECT_TRUE((std::is_layout_compatible_v<int, int>));
+
+    EXPECT_FALSE((std::is_layout_compatible_v<E, F>));
+    EXPECT_FALSE((std::is_layout_compatible_v<G, H>));
+    EXPECT_FALSE((std::is_layout_compatible_v<int, double>));
+}
+
+TEST_F(TypeTraitsTest, IsPointerInterconvertibleBaseOf)
+{
+    struct BaseStandard {
+        int x;
+    };
+    struct DerivedStandard : BaseStandard {
+        int y;
+    };
+
+    EXPECT_TRUE((std::is_pointer_interconvertible_base_of_v<BaseStandard, DerivedStandard>));
+
+    struct BaseNonStandard {
+        virtual void foo() {};
+    };
+    struct DerivedNonStandard : BaseNonStandard {
+        int y;
+    };
+
+    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<BaseNonStandard, DerivedNonStandard>));
+
+    struct Base1 {
+        int x;
+    };
+    struct Base2 {
+        double y;
+    };
+    struct DerivedMultiple : Base1, Base2 {
+        char z;
+    };
+
+    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<Base1, DerivedMultiple>));
+    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<Base2, DerivedMultiple>));
+
+    struct BaseVirtual {
+        int x;
+    };
+    struct DerivedVirtual : virtual BaseVirtual {
+        int y;
+    };
+
+    EXPECT_FALSE((std::is_pointer_interconvertible_base_of_v<BaseVirtual, DerivedVirtual>));
+
+    EXPECT_TRUE((std::is_pointer_interconvertible_base_of_v<int, int>));
+}
+
+TEST_F(TypeTraitsTest, IsConstructible)
+{
+    struct DefaultConstructible {
+        int x;
+        DefaultConstructible() : x(0) {}
+    };
+
+    struct NonDefaultConstructible {
+        int x;
+        NonDefaultConstructible() = delete;
+        explicit NonDefaultConstructible(int val) : x(val) {}
+    };
+
+    struct ConvertibleFromInt {
+        int x;
+        ConvertibleFromInt(int val) : x(val) {}
+    };
+
+    EXPECT_TRUE((std::is_constructible_v<int>));
+    EXPECT_TRUE((std::is_constructible_v<DefaultConstructible>));
+    EXPECT_FALSE((std::is_constructible_v<NonDefaultConstructible>));
+
+    EXPECT_TRUE((std::is_constructible_v<int, int>));
+    EXPECT_TRUE((std::is_constructible_v<double, int>));
+    EXPECT_TRUE((std::is_constructible_v<NonDefaultConstructible, int>));
+    EXPECT_TRUE((std::is_constructible_v<ConvertibleFromInt, int>));
+
+    EXPECT_FALSE((std::is_constructible_v<int, void *>));
+    EXPECT_FALSE((std::is_constructible_v<DefaultConstructible, int>));
+    EXPECT_FALSE((std::is_constructible_v<NonDefaultConstructible, double>));
+}
+
+TEST_F(TypeTraitsTest, IsTriviallyConstructible)
+{
+    struct TrivialDefault {
+        int x;
+    };
+
+    struct NonTrivialDefault {
+        int x;
+        NonTrivialDefault() { x = 10; }
+    };
+
+    struct TrivialCopy {
+        int x;
+    };
+
+    struct NonTrivialCopy {
+        int x;
+        NonTrivialCopy(const NonTrivialCopy &other) { x = other.x; }
+    };
+
+    EXPECT_TRUE((std::is_trivially_constructible_v<int>));
+    EXPECT_TRUE((std::is_trivially_constructible_v<TrivialDefault>));
+    EXPECT_FALSE((std::is_trivially_constructible_v<NonTrivialDefault>));
+
+    EXPECT_TRUE((std::is_trivially_constructible_v<int, const int &>));
+    EXPECT_TRUE((std::is_trivially_constructible_v<TrivialCopy, const TrivialCopy &>));
+    EXPECT_FALSE((std::is_trivially_constructible_v<NonTrivialCopy, const NonTrivialCopy &>));
+
+    EXPECT_TRUE((std::is_trivially_constructible_v<double, int>));
+    EXPECT_FALSE((std::is_trivially_constructible_v<int *, int>));
+}
+
+TEST_F(TypeTraitsTest, IsNothrowConstructible)
+{
+    struct NothrowDefault {
+        NothrowDefault() noexcept = default;
+    };
+
+    struct ThrowingDefault {
+        ThrowingDefault() {}
+    };
+
+    struct ExplicitThrowingDefault {
+        ExplicitThrowingDefault() noexcept(false) {}
+    };
+
+    struct NothrowConversion {
+        NothrowConversion(int) noexcept {}
+    };
+
+    struct ThrowingConversion {
+        ThrowingConversion(int) {}
+    };
+
+    EXPECT_TRUE((std::is_nothrow_constructible_v<int>));
+    EXPECT_TRUE((std::is_nothrow_constructible_v<NothrowDefault>));
+    EXPECT_FALSE((std::is_nothrow_constructible_v<ThrowingDefault>));
+    EXPECT_FALSE((std::is_nothrow_constructible_v<ExplicitThrowingDefault>));
+
+    EXPECT_TRUE((std::is_nothrow_constructible_v<int, int>));
+    EXPECT_TRUE((std::is_nothrow_constructible_v<NothrowConversion, int>));
+    EXPECT_FALSE((std::is_nothrow_constructible_v<ThrowingConversion, int>));
+}
+
+TEST_F(TypeTraitsTest, IsAssignable)
+{
+    struct HasAssignmentOperator {
+        HasAssignmentOperator &operator=(const HasAssignmentOperator &) { return *this; }
+        HasAssignmentOperator &operator=(int) { return *this; }
+    };
+
+    struct DeletedAssignmentOperator {
+        DeletedAssignmentOperator &operator=(const DeletedAssignmentOperator &) = delete;
+    };
+
+    struct ConstMember {
+        const int x;
+    };
+
+    EXPECT_TRUE((std::is_assignable_v<int &, int>));
+    EXPECT_TRUE((std::is_assignable_v<double &, int>));
+    EXPECT_TRUE((std::is_assignable_v<HasAssignmentOperator &, HasAssignmentOperator>));
+    EXPECT_TRUE((std::is_assignable_v<HasAssignmentOperator &, int>));
+
+    EXPECT_FALSE((std::is_assignable_v<int &, void *>));
+    EXPECT_FALSE((std::is_assignable_v<DeletedAssignmentOperator &, DeletedAssignmentOperator>));
+    EXPECT_FALSE((std::is_assignable_v<ConstMember &, ConstMember>));
+    EXPECT_FALSE((std::is_assignable_v<const int &, int>));
+
+    EXPECT_FALSE((std::is_assignable_v<int, int>));
+}
+
+TEST_F(TypeTraitsTest, IsMemberFunctionPointer)
+{
+    class TestClass
+    {
+        public:
+        void memberFunction() {}
+        int memberFunctionWithReturn() { return 0; }
+        void memberFunctionWithArgs(int, double) {}
+        void constMemberFunction() const {}
+        static void staticMemberFunction() {}
+
+        int memberVariable;
+    };
+
+    EXPECT_TRUE((std::is_member_function_pointer_v<void (TestClass::*)()>));
+    EXPECT_TRUE((std::is_member_function_pointer_v<int (TestClass::*)()>));
+    EXPECT_TRUE((std::is_member_function_pointer_v<void (TestClass::*)(int, double)>));
+    EXPECT_TRUE((std::is_member_function_pointer_v<void (TestClass::*)() const>));
+
+    EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunction)>));
+    EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunctionWithReturn)>)
+    );
+    EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunctionWithArgs)>));
+    EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::constMemberFunction)>));
+
+    EXPECT_FALSE((std::is_member_function_pointer_v<void (*)()>));
+    EXPECT_FALSE((std::is_member_function_pointer_v<decltype(&TestClass::staticMemberFunction)>));
+    EXPECT_FALSE((std::is_member_function_pointer_v<decltype(&TestClass::memberVariable)>));
+    EXPECT_FALSE((std::is_member_function_pointer_v<int TestClass::*>));
+    EXPECT_FALSE((std::is_member_function_pointer_v<int>));
+    EXPECT_FALSE((std::is_member_function_pointer_v<TestClass>));
+}
+
+struct CustomType {
+};
+
+TEST_F(TypeTraitsTest, IsCompound)
+{
+    EXPECT_TRUE((is_compound_v<CustomType>));
+    EXPECT_FALSE((is_compound_v<int>));
+    EXPECT_FALSE((is_compound_v<void>));
+}
+
+TEST_F(TypeTraitsTest, IsArithmetic)
+{
+    EXPECT_TRUE((is_arithmetic_v<int>));
+    EXPECT_TRUE((is_arithmetic_v<double>));
+    EXPECT_FALSE((is_arithmetic_v<CustomType>));
+    EXPECT_FALSE((is_arithmetic_v<void>));
+}
+
+TEST_F(TypeTraitsTest, IsVolatile)
+{
+    EXPECT_TRUE((is_volatile_v<volatile int>));
+    EXPECT_FALSE((is_volatile_v<int>));
+}
+
+TEST_F(TypeTraitsTest, IsAggregate)
+{
+    struct Aggregate {
+        int a;
+        double b;
+    };
+    struct NonAggregate {
+        NonAggregate() {}
+    };
+    EXPECT_TRUE((is_aggregate_v<Aggregate>));
+    EXPECT_FALSE((is_aggregate_v<NonAggregate>));
+}
+
+TEST_F(TypeTraitsTest, IsBoundedArray)
+{
+    EXPECT_TRUE((is_bounded_array_v<int[5]>));
+    EXPECT_FALSE((is_bounded_array_v<int[]>));
+}
+
+TEST_F(TypeTraitsTest, IsUnboundedArray)
+{
+    EXPECT_TRUE((is_unbounded_array_v<int[]>));
+    EXPECT_FALSE((is_unbounded_array_v<int[5]>));
 }

@@ -1954,6 +1954,9 @@ template <class T>
 struct has_virtual_destructor : std::bool_constant<__has_virtual_destructor(T)> {
 };
 
+template <class T>
+constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
+
 // ------------------------------
 // std::is_swappable_with
 // ------------------------------
