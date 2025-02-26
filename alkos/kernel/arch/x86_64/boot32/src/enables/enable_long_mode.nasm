@@ -4,8 +4,8 @@
           EFER_MSR            equ 0xC0000080
 
           section .text
-          global enable_long_mode
-enable_long_mode:
+          global EnableLongMode
+EnableLongMode:
           ; Set the LME (Long Mode Enable) bit in the
           ; EFER (Extended Feature Enable Register)
           ; MSR (Model Specific Register)

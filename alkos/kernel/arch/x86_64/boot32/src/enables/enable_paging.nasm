@@ -9,8 +9,8 @@
           extern p4_table_loader
 
           section .text
-          global enable_paging
-enable_paging:
+          global EnablePaging
+EnablePaging:
           ; Enable PAE
           mov eax, cr4
           or eax, PAE_BIT

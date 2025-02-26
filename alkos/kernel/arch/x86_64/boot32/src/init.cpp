@@ -8,17 +8,16 @@
 #include <paging.hpp>
 #include <terminal.hpp>
 
-// External functions defined in assembly or C
-extern "C" int check_cpuid();
-extern "C" int check_long_mode();
+// External functions defined in assembly
+extern "C" int CheckCpuId();
+extern "C" int CheckLongMode();
 
-extern "C" void enable_paging();
-extern "C" void enable_long_mode();
-// extern "C" void enter_kernel(
-//     void* higher_32_bits_of_kernel_entry_address, void* lower_32_bits_of_kernel_entry_address,
-//     void* loader_data_address
-//);
-extern "C" void enter_kernel(void* kernel_entry, void* loader_data_address);
+extern "C" void EnablePaging();
+extern "C" void EnableLongMode();
+extern "C" void EnterKernel(
+    void* higher_32_bits_of_kernel_entry_address, void* lower_32_bits_of_kernel_entry_address,
+    void* loader_data_address
+);
 
 // Buffer for text output
 char text_buffer[1024];
@@ -55,13 +54,13 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Checking for hardware features");
 
     TRACE_INFO("Checking for CPUID...");
-    if (check_cpuid()) {
+    if (CheckCpuId()) {
         KernelPanic("CPUID check failed!");
     }
     TRACE_SUCCESS("CPUID check passed!");
 
     TRACE_INFO("Checking for long mode...");
-    if (check_long_mode()) {
+    if (CheckLongMode()) {
         KernelPanic("Long mode check failed!");
     }
     TRACE_SUCCESS("Long mode check passed!");
@@ -79,11 +78,11 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     ///////////////////////////// Enabling Hardware //////////////////////////////
     TRACE_INFO("Enabling long mode...");
-    enable_long_mode();
+    EnableLongMode();
     TRACE_SUCCESS("Long mode enabled!");
 
     TRACE_INFO("Enabling paging...");
-    enable_paging();
+    EnablePaging();
     TRACE_SUCCESS("Paging enabled!");
 
     TRACE_INFO("Finished hardware features setup for 32-bit mode.");
@@ -93,7 +92,6 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     TRACE_INFO("Parsing Multiboot2 tags...");
 
-    ///////////////// Finding Kernel Module in Multiboot Struct //////////////////
     auto* kernel_module = reinterpret_cast<multiboot_tag_module*>(
         FindTagInMultibootInfo(multiboot_info_addr, MULTIBOOT_TAG_TYPE_MODULE)
     );
@@ -109,38 +107,26 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     TRACE_INFO("Kernel module start: 0x%X", kernel_module_start);
     TRACE_INFO("Kernel module end: 0x%X", kernel_module_end);
-    //    TRACE_INFO("Identity mapping %x-%x", kernel_module_start, kernel_module_end);
-    //     Cast to u64 with first 32 bits zeroed
-    //    u64 kernel_module_start_u64 = reinterpret_cast<u64>(kernel_module_start) & k32BitMask;
-    //    u64 kernel_module_end_u64   = reinterpret_cast<u64>(kernel_module_end) & k32BitMask;
-    // TODO: Just name it temp identity map since it doesn't and won't map kernel binary code
-    // This usage her maps kernel elf file, not the kernel itself
-    //    IndentityMapKernelMemory(kernel_module_start_u64, kernel_module_end_u64);
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading kernel module...");
     void* kernel_entry_relative_to_elf_start =
-        // TODO rework the loading to load the kernel to some cool physical address
         LoadElf64Module(kernel_module_start, kernel_module_end);
     if (kernel_entry_relative_to_elf_start == nullptr) {
         KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Kernel module loaded!");
 
-    // TODO: Map the higher half of virtual memory to the cool physical address of kernel executable
-    // This maps the elf file, which is not the exec, this is my mistake
-    //    MapKernelMemoryToHigherHalf(kernel_module_start_u64, kernel_module_end_u64);
-
     ///////////////////// Initializing LoaderData Structure //////////////////////
-    loader_data.multiboot_info_addr         = (u32)multiboot_info_addr;
-    loader_data.multiboot_header_start_addr = (u32)multiboot_header_start;
-    loader_data.multiboot_header_end_addr   = (u32)multiboot_header_end;
-    loader_data.loader_start_addr           = (u32)loader_start;
-    loader_data.loader_end_addr             = (u32)loader_end;
+    loader_data.multiboot_info_addr         = reinterpret_cast<u32>(multiboot_info_addr);
+    loader_data.multiboot_header_start_addr = reinterpret_cast<u32>(multiboot_header_start);
+    loader_data.multiboot_header_end_addr   = reinterpret_cast<u32>(multiboot_header_end);
+    loader_data.loader_start_addr           = reinterpret_cast<u32>(loader_start);
+    loader_data.loader_end_addr             = reinterpret_cast<u32>(loader_end);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     // Convert addresses to hexadecimal strings
-    TRACE_INFO("LoaderData Address: 0x%X", (u32)&loader_data);
+    TRACE_INFO("LoaderData Address: 0x%X", reinterpret_cast<u32>(&loader_data));
     TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data.multiboot_info_addr);
     TRACE_INFO(
         "LoaderData multiboot_header_start_addr: 0x%X", loader_data.multiboot_header_start_addr
@@ -151,10 +137,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     //////////////////////////// Jumping to 64-bit Kernel /////////////////////////
     TRACE_INFO("Jumping to 64-bit kernel...");
-    // TODO: Rework this to actually use this signature, this is half finished
-    enter_kernel(reinterpret_cast<void*>(kernel_entry_relative_to_elf_start), &loader_data);
-    //    enter_kernel(
-    //        reinterpret_cast<void*>(kHigherHalfOffset >> 32), kernel_entry_relative_to_elf_start,
-    //        &loader_data
-    //    );
+
+    // TODO: EnterKernel uses only the lower 32 bits, make it use the higher 32 bits too
+    EnterKernel(0, kernel_entry_relative_to_elf_start, &loader_data);
 }

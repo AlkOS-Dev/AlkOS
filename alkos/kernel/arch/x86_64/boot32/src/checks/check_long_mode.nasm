@@ -4,8 +4,8 @@
           LONG_MODE_BIT equ 1 << 29
 
           section .text
-          global check_long_mode
-check_long_mode:
+          global CheckLongMode
+CheckLongMode:
           ; Check the highest possible function supported by CPUID
 
           ; Source: Intel® 64 and IA-32 Architectures Software Developer’s Manual

@@ -1,8 +1,8 @@
           bits 32
 
           section .text
-          global check_cpuid
-check_cpuid:
+          global CheckCpuId
+CheckCpuId:
           ; Check if CPUID is supported by flipping the ID bit (bit 21) in
           ; the FLAGS register. If we can flip it, CPUID is avaliable.
 
