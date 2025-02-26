@@ -84,8 +84,11 @@ struct tuple_element<kIdx, const volatile T> {
 // tuple
 // ------------------------------
 
+template <typename... Args>
+struct __BaseTuple;
+
 template <typename T, typename... Args>
-struct __BaseTuple {
+struct __BaseTuple<T, Args...> {
     static constexpr size_t Size = 1 + sizeof...(Args);
 
     /* 1. Default constructor */
@@ -134,10 +137,15 @@ struct __BaseTuple {
     NODSCRD FORCE_INLINE_F constexpr const auto &get() const
     {
         static_assert(Index < Size, "Index out of range");
-        if constexpr (Index == 0) {
+
+        if constexpr (sizeof...(Args) == 0) {
             return m_value;
         } else {
-            return m_next.template get<Index - 1>();
+            if constexpr (Index == 0) {
+                return m_value;
+            } else {
+                return m_next.template get<Index - 1>();
+            }
         }
     }
 
@@ -145,10 +153,15 @@ struct __BaseTuple {
     NODSCRD FORCE_INLINE_F constexpr auto &get()
     {
         static_assert(Index < Size, "Index out of range");
-        if constexpr (Index == 0) {
+
+        if constexpr (sizeof...(Args) == 0) {
             return m_value;
         } else {
-            return m_next.template get<Index - 1>();
+            if constexpr (Index == 0) {
+                return m_value;
+            } else {
+                return m_next.template get<Index - 1>();
+            }
         }
     }
 
@@ -157,58 +170,11 @@ struct __BaseTuple {
     __BaseTuple<Args...> m_next{};
 };
 
-template <typename T>
-struct __BaseTuple<T> {
-    /* 1. Default constructor */
-    FORCE_INLINE_F constexpr __BaseTuple() = default;
-
-    /* 2. Usual types */
-    FORCE_INLINE_F constexpr __BaseTuple(const T &value) : m_value(value) {}
-
-    /*3. Copy/move constructor */
+template <>
+struct __BaseTuple<> {
+    FORCE_INLINE_F constexpr __BaseTuple()                         = default;
     FORCE_INLINE_F constexpr __BaseTuple(const __BaseTuple &other) = default;
-
-    FORCE_INLINE_F constexpr __BaseTuple(__BaseTuple &&other) = default;
-
-    /* 4. R-Value construction */
-    template <typename U>
-    FORCE_INLINE_F constexpr __BaseTuple(U &&value) : m_value(std::forward<U>(value))
-    {
-    }
-
-    /* 5. Other tuple construction */
-    template <typename U>
-    FORCE_INLINE_F constexpr __BaseTuple(const __BaseTuple<U> &other)
-        : m_value(other.template get<0>())
-    {
-    }
-
-    template <typename U>
-    FORCE_INLINE_F constexpr __BaseTuple(__BaseTuple<U> &&other)
-        : m_value(std::move(other.template get<0>()))
-    {
-    }
-
-    // ------------------------------
-    // Methods
-    // ------------------------------
-
-    template <size_t Index>
-    NODSCRD FORCE_INLINE_F constexpr const T &get() const
-    {
-        static_assert(Index == 0, "Index out of range");
-        return m_value;
-    }
-
-    template <size_t Index>
-    NODSCRD FORCE_INLINE_F constexpr T &get()
-    {
-        static_assert(Index == 0, "Index out of range");
-        return m_value;
-    }
-
-    protected:
-    T m_value;
+    FORCE_INLINE_F constexpr __BaseTuple(__BaseTuple &&other)      = default;
 };
 
 template <typename... Args>
@@ -340,7 +306,7 @@ class tuple : public __BaseTuple<Args...>
     FORCE_INLINE_F constexpr explicit(!(std::is_convertible_v<const Args &, Args> && ...))
         tuple(const Args &...args
         ) noexcept((std::is_nothrow_constructible_v<Args, const Args &> && ...))
-        requires(std::is_constructible_v<Args, const Args &> && ...)
+        requires(sizeof...(Args) != 0 && (std::is_constructible_v<Args, const Args &> && ...))
         : __BaseTuple<Args...>(args...)
     {
     }

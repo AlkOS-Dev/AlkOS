@@ -138,7 +138,7 @@ TEST_F(TupleTest, TupleHelpers)
     auto t2    = std::make_tuple(arr, 5);
     EXPECT_TRUE((std::is_same_v<int*, std::tuple_element_t<0, decltype(t2)>>));
 
-    // TODO:
+    // TODO: when reference support added
     // // Test make_tuple with references using std::ref and std::cref
     // int x = 42;
     // auto t3 = std::make_tuple(std::ref(x), std::cref(x));
@@ -191,41 +191,41 @@ TEST_F(TupleTest, TupleHelpers)
 //     EXPECT_TRUE(tuple3 >= tuple1);
 // }
 
-// TEST_F(TupleTest, TupleCopyMove)
-// {
-//     auto original = std::make_tuple(42, 3.14, "test");
-//     auto copy = original;
-//
-//     EXPECT_EQ(std::get<0>(original), std::get<0>(copy));
-//     EXPECT_EQ(std::get<1>(original), std::get<1>(copy));
-//     EXPECT_STREQ(std::get<2>(original), std::get<2>(copy));
-//
-//     std::get<0>(copy) = 100;
-//
-//     EXPECT_EQ(42, std::get<0>(original));
-//     EXPECT_STREQ("test", std::get<2>(original));
-//
-//     auto movable = std::make_tuple(42, 3.14, "test");
-//     auto moved = std::move(movable);
-//
-//     EXPECT_EQ(42, std::get<0>(moved));
-//     EXPECT_EQ(3.14, std::get<1>(moved));
-//     EXPECT_STREQ("test", std::get<2>(moved));
-//
-//     auto assigned = std::tuple(moved);
-//
-//     EXPECT_EQ(42, std::get<0>(assigned));
-//     EXPECT_EQ(3.14, std::get<1>(assigned));
-//     EXPECT_STREQ("test", std::get<2>(assigned));
-//
-//     // TODO
-//     // auto target = std::make_tuple(0, 0.0, "");
-//     // target = std::make_tuple(100, 2.71, "moved");
-//     //
-//     // EXPECT_EQ(100, std::get<0>(target));
-//     // EXPECT_EQ(2.71, std::get<1>(target));
-//     // EXPECT_STREQ("moved", std::get<2>(target));
-// }
+TEST_F(TupleTest, TupleCopyMove)
+{
+    auto original = std::make_tuple(42, 3.14, "test");
+    auto copy     = original;
+
+    EXPECT_EQ(std::get<0>(original), std::get<0>(copy));
+    EXPECT_EQ(std::get<1>(original), std::get<1>(copy));
+    EXPECT_STREQ(std::get<2>(original), std::get<2>(copy));
+
+    std::get<0>(copy) = 100;
+
+    EXPECT_EQ(42, std::get<0>(original));
+    EXPECT_STREQ("test", std::get<2>(original));
+
+    auto movable = std::make_tuple(42, 3.14, "test");
+    auto moved   = std::move(movable);
+
+    EXPECT_EQ(42, std::get<0>(moved));
+    EXPECT_EQ(3.14, std::get<1>(moved));
+    EXPECT_STREQ("test", std::get<2>(moved));
+
+    auto assigned = std::tuple(moved);
+
+    EXPECT_EQ(42, std::get<0>(assigned));
+    EXPECT_EQ(3.14, std::get<1>(assigned));
+    EXPECT_STREQ("test", std::get<2>(assigned));
+
+    // TODO: when copy and move assignment operators are added
+    // auto target = std::make_tuple(0, 0.0, "");
+    // target = std::make_tuple(100, 2.71, "moved");
+    //
+    // EXPECT_EQ(100, std::get<0>(target));
+    // EXPECT_EQ(2.71, std::get<1>(target));
+    // EXPECT_STREQ("moved", std::get<2>(target));
+}
 
 TEST_F(TupleTest, TupleEmptyConstruction)
 {
