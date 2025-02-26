@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <string.h>
 #include <test_module/test.hpp>
 
 class MemTest : public TestGroupBase

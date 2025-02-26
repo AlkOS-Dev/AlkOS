@@ -7,6 +7,13 @@ size_t strlen(const char *str)
     return s - str;
 }
 
+size_t strnlen(const char *str, size_t n)
+{
+    const char *s;
+    for (s = str; *s && s - str < n; ++s) continue;
+    return s - str;
+}
+
 char *strcpy(char *dest, const char *src)
 {
     char *tmp = dest;
