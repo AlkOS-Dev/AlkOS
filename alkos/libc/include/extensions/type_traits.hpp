@@ -1446,7 +1446,7 @@ struct is_pointer_interconvertible_base_of
 namespace internal
 {
 template <bool kIsFunctor, bool kIsMemberFunction, class Fn, class... Args>
-struct invoke_result_typed {
+struct inspect_invoke_typed {
     /* Invalid type for true, true specialization - no type field */
 };
 
@@ -1468,8 +1468,21 @@ struct invoke_mem_obj_ref {
         return {};
     }
 
+    template <class F, class T>
+    constexpr static bool test_noexcept(int) noexcept
+    {
+        return noexcept(declval<T>().*declval<F>());
+    }
+
+    template <class F, class T>
+    constexpr static bool test_noexcept(...)
+    {
+        return false;
+    }
+
     public:
-    using type = decltype(test<MemPtr, ArgT>(0));
+    using type                    = decltype(test<MemPtr, ArgT>(0));
+    static constexpr bool nothrow = test_noexcept<MemPtr, ArgT>(0);
 };
 
 template <class MemPtr, class ArgT>
@@ -1487,8 +1500,21 @@ struct invoke_mem_obj_deref {
         return {};
     }
 
+    template <class F, class T>
+    static bool test_noexcept(int) noexcept
+    {
+        return noexcept(*declval<T>().*declval<F>());
+    }
+
+    template <class F, class T>
+    static bool test_noexcept(...)
+    {
+        return false;
+    }
+
     public:
-    using type = decltype(test<MemPtr, ArgT>(0));
+    using type                    = decltype(test<MemPtr, ArgT>(0));
+    static constexpr bool nothrow = test_noexcept<MemPtr, ArgT>(0);
 };
 
 template <class Result, class Class, class Arg>
@@ -1501,7 +1527,7 @@ struct invoke_mem_obj<Result Class::*, Arg> {
 };
 
 template <class Fn, class Arg>
-struct invoke_result_typed<true, false, Fn, Arg>
+struct inspect_invoke_typed<true, false, Fn, Arg>
     : invoke_mem_obj<std::decay_t<Fn>, std::decay_t<Arg>> {
     /* Member object pointer */
 };
@@ -1524,8 +1550,21 @@ struct invoke_mem_fun_ref {
         return {};
     }
 
+    template <class F, class T, class... ArgsT>
+    constexpr static bool test_noexcept(int) noexcept
+    {
+        return noexcept(declval<T>().*declval<F>(declval<ArgsT>()...));
+    }
+
+    template <class F, class T, class... ArgsT>
+    constexpr static bool test_noexcept(...)
+    {
+        return false;
+    }
+
     public:
-    using type = decltype(test<MemPtr, Arg, Args...>(0));
+    using type                    = decltype(test<MemPtr, Arg, Args...>(0));
+    static constexpr bool nothrow = test_noexcept<MemPtr, Arg, Args...>(0);
 };
 
 template <class MemPtr, class Arg, class... Args>
@@ -1543,8 +1582,21 @@ struct invoke_mem_fun_deref {
         return {};
     }
 
+    template <class F, class T, class... ArgsT>
+    constexpr static bool test_noexcept(int) noexcept
+    {
+        return noexcept(declval<T>().*declval<F>(declval<ArgsT>()...));
+    }
+
+    template <class F, class T, class... ArgsT>
+    constexpr static bool test_noexcept(...)
+    {
+        return false;
+    }
+
     public:
-    using type = decltype(test<MemPtr, Arg, Args...>(0));
+    using type                    = decltype(test<MemPtr, Arg, Args...>(0));
+    static constexpr bool nothrow = test_noexcept<MemPtr, Arg, Args...>(0);
 };
 
 template <class Result, class Class, class Arg, class... Args>
@@ -1557,13 +1609,13 @@ struct invoke_mem_fun<Result Class::*, Arg, Args...> {
 };
 
 template <class Fn, class Arg, class... Args>
-struct invoke_result_typed<false, true, Fn, Args...>
+struct inspect_invoke_typed<false, true, Fn, Arg, Args...>
     : invoke_mem_fun<std::decay_t<Fn>, remove_reference_t<Arg>, Args...> {
     /* Member function pointer */
 };
 
 template <class Fn, class... Args>
-struct invoke_result_typed<false, false, Fn, Args...> {
+struct inspect_invoke_typed<false, false, Fn, Args...> {
     private:
     template <class F, class... ArgsT>
     static failure_type test(...)
@@ -1577,22 +1629,35 @@ struct invoke_result_typed<false, false, Fn, Args...> {
         return {};
     }
 
+    template <class F, class... ArgsT>
+    constexpr static bool test_noexcept(int) noexcept
+    {
+        return noexcept(declval<F>()(declval<ArgsT>()...));
+    }
+
+    template <class F, class... ArgsT>
+    constexpr static bool test_noexcept(...)
+    {
+        return false;
+    }
+
     public:
     /* Usual function call */
-    using type = decltype(test<Fn, Args...>(0));
+    using type                    = decltype(test<Fn, Args...>(0));
+    static constexpr bool nothrow = test_noexcept<Fn, Args...>(0);
 };
 
 template <typename Fn, typename... Args>
-struct invoke_result
-    : invoke_result_typed<
+struct inspect_invoke
+    : inspect_invoke_typed<
           std::is_member_object_pointer_v<std::remove_reference_t<Fn>>,
-          std::is_member_function_pointer_v<std::remove_reference_t<Fn>>, Fn, Args...>::type {
+          std::is_member_function_pointer_v<std::remove_reference_t<Fn>>, Fn, Args...> {
     /* Expects type field for correctness */
 };
 }  // namespace internal
 
 template <typename Fn, typename... Args>
-struct invoke_result : internal::invoke_result<Fn, Args...> {
+struct invoke_result : internal::inspect_invoke<Fn, Args...>::type {
 };
 
 template <class F, class... ArgTypes>
@@ -1606,7 +1671,7 @@ template <class>
 struct result_of;
 
 template <class F, class... Args>
-struct result_of<F(Args...)> : internal::invoke_result<F, Args...> {
+struct result_of<F(Args...)> : internal::inspect_invoke<F, Args...> {
 };
 
 template <class T>
@@ -1676,6 +1741,9 @@ template <class Fn, class... Args>
 struct is_invocable : internal::is_invocable<invoke_result_t<Fn, Args...>, void>::type {
 };
 
+template <class Fn, class... Args>
+constexpr bool is_invocable_v = is_invocable<Fn, Args...>::value;
+
 // ------------------------------
 // std::is_invocable_r
 // ------------------------------
@@ -1684,13 +1752,33 @@ template <class Ret, class Fn, class... Args>
 struct is_invocable_r : internal::is_invocable<invoke_result_t<Fn, Args...>, Ret>::type {
 };
 
+template <class Ret, class Fn, class... Args>
+constexpr bool is_invocable_r_v = is_invocable_r<Ret, Fn, Args...>::value;
+
 // ------------------------------
 // std::is_nothrow_invocable
 // ------------------------------
 
+template <class Fn, class... Args>
+struct is_nothrow_invocable
+    : bool_constant<is_invocable_v<Fn, Args...> && internal::inspect_invoke<Fn, Args...>::nothrow> {
+};
+
+template <class Fn, class... Args>
+constexpr bool is_nothrow_invocable_v = is_nothrow_invocable<Fn, Args...>::value;
+
 // ------------------------------
 // std::is_nothrow_invocable_r
 // ------------------------------
+
+template <class Ret, class Fn, class... Args>
+struct is_nothrow_invocable_r
+    : bool_constant<
+          is_invocable_r_v<Ret, Fn, Args...> && internal::inspect_invoke<Fn, Args...>::nothrow> {
+};
+
+template <class Ret, class Fn, class... Args>
+constexpr bool is_nothrow_invocable_r_v = is_nothrow_invocable_r<Ret, Fn, Args...>::value;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Supported operations
