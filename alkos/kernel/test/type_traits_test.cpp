@@ -963,7 +963,9 @@ TEST_F(TypeTraitsTest, IsInvocableR)
         int operator()() { return 42; }
     };
     EXPECT_TRUE((is_invocable_r_v<int, Functor>));
-    EXPECT_FALSE((is_invocable_r_v<void, Functor>));
+    EXPECT_TRUE((is_invocable_r_v<long, Functor>));
+    EXPECT_TRUE((is_invocable_r_v<void, Functor>));
+    EXPECT_FALSE((is_invocable_r_v<Functor, Functor>));
 }
 
 TEST_F(TypeTraitsTest, IsNothrowInvocable)

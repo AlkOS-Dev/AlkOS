@@ -1662,7 +1662,7 @@ template <class>
 struct result_of;
 
 template <class F, class... Args>
-struct result_of<F(Args...)> : internal::inspect_invoke<F, Args...> {
+struct result_of<F(Args...)> : internal::inspect_invoke<F, Args...>::type {
 };
 
 template <class T>
@@ -1698,25 +1698,26 @@ struct is_invocable<Result, Ret, false, void_t<typename Result::type>> {
     private:
     // INVOKE<R> is valid
 
+    using ResultType = typename Result::type;
     /* declval wout reference */
-    static Result get() noexcept;
+    static ResultType get() noexcept;
 
     /* test if some type is convertible to T */
     template <class T>
-    static void test_impl_conv(T &&) noexcept
+    static void test_impl_conv(type_identity_t<T>) noexcept
     {
     }
 
     template <
         class T, bool kNoexcept = noexcept(test_impl_conv<T>(get())),
         class        = decltype(test_impl_conv<T>(get())),
-        bool kDangle = __reference_converts_from_temporary(T, Result)>
+        bool kDangle = __reference_converts_from_temporary(T, ResultType)>
     static bool_constant<kNoexcept && !kDangle> test(int)
     {
         return {};
     }
 
-    template <class T, bool = false>
+    template <class, bool = false>
     static false_type test(...)
     {
         return {};
