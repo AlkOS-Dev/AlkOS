@@ -21,11 +21,18 @@
     using name##_t = typename name<T>::type;
 
 /**
- * TODOS: Missing implementations:
+ * TODO: Missing implementations:
  * - std::common_reference
  * - std::common_type
- * - Supported operations Category
+ * - std::is_swappable
+ * - std::is_swappable_with
+ * - std::is_nothrow_swappable
+ * - std::is_nothrow_swappable_with
+ * - std::is_destructible
+ * - std::is_nothrow_destructible
+ * - std::is_trivially_destructible
  */
+
 namespace std
 {
 // ------------------------------
@@ -1824,9 +1831,171 @@ template <class T>
 struct is_nothrow_default_constructible : std::is_nothrow_constructible<T> {
 };
 
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_default_constructible)
+
 // ------------------------------
 // Type copy construction
 // ------------------------------
+
+template <class T>
+struct is_copy_constructible : is_constructible<T, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_copy_constructible)
+
+template <class T>
+struct is_trivially_copy_constructible
+    : is_trivially_constructible<T, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_trivially_copy_constructible)
+
+template <class T>
+struct is_nothrow_copy_constructible
+    : is_nothrow_constructible<T, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_copy_constructible)
+
+// ------------------------------
+// Type move construction
+// ------------------------------
+
+template <class T>
+struct is_move_constructible : is_constructible<T, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_move_constructible)
+
+template <class T>
+struct is_trivially_move_constructible : is_trivially_constructible<T, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_trivially_move_constructible)
+
+template <class T>
+struct is_nothrow_move_constructible : is_nothrow_constructible<T, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_move_constructible)
+
+// ------------------------------
+// Type assignment
+// ------------------------------
+
+#define __DEF_COMPLETE_2_ARG_TYPE_TRAIT(name, func) \
+    template <class T, class U>                     \
+    struct name : std::bool_constant<func(T, U)> {  \
+    };                                              \
+                                                    \
+    template <class T, class U>                     \
+    constexpr bool name##_v = name<T, U>::value;
+
+__DEF_COMPLETE_2_ARG_TYPE_TRAIT(is_assignable, __is_assignable)
+
+__DEF_COMPLETE_2_ARG_TYPE_TRAIT(is_trivially_assignable, __is_trivially_assignable)
+
+__DEF_COMPLETE_2_ARG_TYPE_TRAIT(is_nothrow_assignable, __is_nothrow_assignable)
+
+// ------------------------------
+// type copy assignment
+// ------------------------------
+
+template <class T>
+struct is_copy_assignable
+    : is_assignable<add_lvalue_reference_t<T>, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_copy_assignable)
+
+template <class T>
+struct is_trivially_copy_assignable
+    : is_trivially_assignable<add_lvalue_reference_t<T>, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_trivially_copy_assignable)
+
+template <class T>
+struct is_nothrow_copy_assignable
+    : is_nothrow_assignable<add_lvalue_reference_t<T>, add_lvalue_reference_t<add_const_t<T>>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_copy_assignable)
+
+// ------------------------------
+// Type move assignment
+// ------------------------------
+
+template <class T>
+struct is_move_assignable : is_assignable<add_lvalue_reference_t<T>, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_move_assignable)
+
+template <class T>
+struct is_trivially_move_assignable
+    : is_trivially_assignable<add_lvalue_reference_t<T>, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_trivially_move_assignable)
+
+template <class T>
+struct is_nothrow_move_assignable
+    : is_nothrow_assignable<add_lvalue_reference_t<T>, add_rvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_move_assignable)
+
+// ---------------------------------
+// std::has_virtual_destructor
+// ---------------------------------
+
+template <class T>
+struct has_virtual_destructor : std::bool_constant<__has_virtual_destructor(T)> {
+};
+
+// ------------------------------
+// std::is_swappable_with
+// ------------------------------
+
+// TODO
+
+// ------------------------------
+// std::is_swappable
+// ------------------------------
+
+// TODO
+
+// -------------------------------
+// std::is_nothrow_swappable
+// -------------------------------
+
+// TODO
+
+// ------------------------------------
+// std::is_nothrow_swappable_with
+// ------------------------------------
+
+// TODO
+
+// ------------------------------
+// std::is_destructible
+// ------------------------------
+
+// TODO
+
+// ------------------------------------
+// std::is_trivially_destructible
+// ------------------------------------
+
+// TODO
+
+// ----------------------------------
+// std::is_nothrow_destructible
+// ----------------------------------
+
+// TODO
+
 }  // namespace std
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
