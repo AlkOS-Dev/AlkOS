@@ -76,7 +76,7 @@
 #define ASSERT_GE(val1, val2)     BASE_ASSERT_GE(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
 #define ASSERT_STREQ(val1, val2)  BASE_ASSERT_STREQ(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
 #define ASSERT_STRNEQ(val1, val2) BASE_ASSERT_STRNEQ(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
-#define ASSERT_ALWAYS(msg) ASSERT(false && msg)
+#define ASSERT_ALWAYS(msg)        ASSERT(false && msg)
 
 /* release build asserts */
 #define R_ASSERT_EQ(expected, value)  BASE_ASSERT_EQ(true, expected, value, __ASSERT_FAIL_FUNC)
@@ -92,7 +92,7 @@
 #define R_ASSERT_GE(val1, val2)       BASE_ASSERT_GE(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STREQ(val1, val2)    BASE_ASSERT_STREQ(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(true, val1, val2, __ASSERT_FAIL_FUNC)
-#define R_ASSERT_ALWAYS(msg) R_ASSERT(false && msg)
+#define R_ASSERT_ALWAYS(msg)          R_ASSERT(false && msg)
 
 #endif  // __cplusplus
 

@@ -46,7 +46,4 @@ class AlignedTestClass : public TestGroupBase
     alignas(256) char m_mem[256];
 };
 
-TEST_F(AlignedTestClass, TestAlignas)
-{
-    R_ASSERT_EQ(0_s, reinterpret_cast<size_t>(m_mem) % 256_s);
-}
+TEST_F(AlignedTestClass, TestAlignas) { R_ASSERT_EQ(0_s, reinterpret_cast<size_t>(m_mem) % 256_s); }

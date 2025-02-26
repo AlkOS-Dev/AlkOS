@@ -251,10 +251,7 @@ TEST_F(SnprintfTest, ComplexCombinations)
     VerifyOutput("%d %i %u %x %X", "42 42 42 2a 2A", 42, 42, 42u, 42, 42);
 
     // Length modifier combinations
-    VerifyOutput(
-        "%ld %lld %hd %zd", "42 42 42 42", 42L, 42LL, static_cast<short>(42),
-        42_s
-    );
+    VerifyOutput("%ld %lld %hd %zd", "42 42 42 42", 42L, 42LL, static_cast<short>(42), 42_s);
 }
 
 TODO_BY_THE_END_OF_MILESTONE0
