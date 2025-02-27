@@ -28,6 +28,7 @@ extern const char multiboot_header_end[];
 extern const char loader_start[];
 extern const char loader_end[];
 
+// Pre-allocated memory for the loader memory manager
 extern byte kLoaderPreAllocatedMemory[];
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
@@ -35,6 +36,12 @@ LoaderData loader_data;
 
 // Helper
 static constexpr u64 k32BitMask = 0x00000000FFFFFFFF;
+
+/*
+ * Maximum number of memory map entries that can be handled by the loader.
+ * If there are more entries, the loader will panic.
+ */
+static constexpr u32 kMaxMemoryMapEntries = 1e3;
 
 extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_addr)
 {
@@ -69,15 +76,17 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Enabling hardware features...");
 
     ////////////////////// Setting up Paging Structures ////////////////////////
-    TRACE_INFO("Identity mapping first 4 GiB of memory...");
+    TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
 
     static constexpr u32 k1GiB = 1 << 30;
 
-    for (u32 i = 0; i < 4; i++) {
+    for (u32 i = 0; i < 512; i++) {
+        u64 addr_64bit = static_cast<u64>(i) * k1GiB;
         loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
-            i * k1GiB, 0, i * k1GiB, 0, 0
+            addr_64bit, addr_64bit,
+            LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
         );
     }
 
@@ -102,6 +111,48 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     /////////////////////// Preparation for jump to 64 bit ///////////////////////
     TRACE_INFO("Starting 64-bit kernel...");
+
+    TRACE_INFO("Searching for memory map tag...");
+    auto* mmap_tag = reinterpret_cast<multiboot_tag_mmap*>(FindTagInMultibootInfo(
+        reinterpret_cast<void*>(multiboot_info_addr), MULTIBOOT_TAG_TYPE_MMAP
+    ));
+    if (mmap_tag == nullptr) {
+        KernelPanic("Memory map tag not found!");
+    }
+    TRACE_INFO("Memory map tag found!");
+
+    u64 total_memory_size      = 0;
+    u32 num_memory_map_entries = 0;
+
+    /// "Lower" memory is frequently required for drivers / special purposes, therefore
+    /// we sort the memory map entries in descending order and allocate the upper memory first.
+    multiboot_memory_map_t* descending_sorted_mmap_entries[kMaxMemoryMapEntries];
+
+    WalkMemoryMap(mmap_tag, [&](multiboot_memory_map_t* mmap_entry) {
+        if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
+            total_memory_size += mmap_entry->len;
+
+            descending_sorted_mmap_entries[num_memory_map_entries++] = mmap_entry;
+            u32 i                                                    = num_memory_map_entries - 1;
+            while (i > 0 && descending_sorted_mmap_entries[i]->addr >
+                                descending_sorted_mmap_entries[i - 1]->addr) {
+                multiboot_memory_map_t* temp_entry    = descending_sorted_mmap_entries[i];
+                descending_sorted_mmap_entries[i]     = descending_sorted_mmap_entries[i - 1];
+                descending_sorted_mmap_entries[i - 1] = temp_entry;
+                i--;
+            }
+        }
+    });
+
+    for (u32 i = 0; i < num_memory_map_entries; i++) {
+        TRACE_INFO(
+            "Memory region: addr=0x%llX, len=%llu MB, type=%u",
+            descending_sorted_mmap_entries[i]->addr, descending_sorted_mmap_entries[i]->len >> 20,
+            descending_sorted_mmap_entries[i]->type
+        );
+    }
+
+    TRACE_INFO("Total memory size: %d MB", total_memory_size >> 20);
 
     TRACE_INFO("Parsing Multiboot2 tags...");
 

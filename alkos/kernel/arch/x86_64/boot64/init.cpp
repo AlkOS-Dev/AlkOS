@@ -73,23 +73,5 @@ extern "C" void PreKernelInit(LoaderData *loader_data)
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
 
-    TRACE_INFO("Mapping physical memory...");
-    auto *mmap_tag = reinterpret_cast<multiboot_tag_mmap *>(FindTagInMultibootInfo(
-        reinterpret_cast<void *>(loader_data->multiboot_info_addr), MULTIBOOT_TAG_TYPE_MMAP
-    ));
-    if (mmap_tag == nullptr) {
-        KernelPanic("Memory map tag not found!");
-    }
-    TRACE_INFO("Memory map tag found!");
-
-    uint64_t total_memory_size = 0;
-    WalkMemoryMap(mmap_tag, [&total_memory_size](multiboot_memory_map_t *mmap_entry) {
-        if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            total_memory_size += mmap_entry->len;
-        }
-    });
-
-    TRACE_INFO("Total memory size: %d MB", total_memory_size / 1024 / 1024);
-
     TRACE_INFO("Pre-kernel initialization finished.");
 }

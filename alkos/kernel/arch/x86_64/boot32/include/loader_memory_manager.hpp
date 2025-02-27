@@ -254,10 +254,7 @@ class LoaderMemoryManager
     PML4_t* GetPml4Table();
 
     template <PageSize page_size>
-    void MapVirtualMemoryToPhysical(
-        u32 virtual_address_lower, u32 virtual_address_upper, u32 physical_address_lower,
-        u32 physical_address_upper, u64 flags = 0
-    );
+    void MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags);
 
     u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
 

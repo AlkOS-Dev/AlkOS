@@ -7,8 +7,7 @@
 
 template <LoaderMemoryManager::PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
-    u32 virtual_address_lower, u32 virtual_address_upper, u32 physical_address_lower,
-    u32 physical_address_upper, u64 flags
+    u64 virtual_address, u64 physical_address, u64 flags
 )
 {
     static constexpr u32 kIndexMask     = 0x1FF;
@@ -16,30 +15,16 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
                                           : (page_size == PageSize::Page2M) ? 21
                                                                             : 30;
     static constexpr u64 kAlignmentMask = (1ULL << kPageShift) - 1;
+    static constexpr u32 k32BitMask     = (1ULL << 32) - 1;
 
-    R_ASSERT_ZERO(virtual_address_lower & kAlignmentMask);  // Virtual address must be page aligned
-    R_ASSERT_ZERO(
-        physical_address_lower & kAlignmentMask
-    );  // Physical address must be page aligned
-
-    u64 phys_addr = (static_cast<u64>(physical_address_upper) << 32) | physical_address_lower;
+    R_ASSERT_ZERO(virtual_address & kAlignmentMask);   // Virtual address must be page aligned
+    R_ASSERT_ZERO(physical_address & kAlignmentMask);  // Physical address must be page aligned
 
     // Calculate the indexes for each level of the page table
-    u32 pml4_index = (virtual_address_upper >> (39 - 32)) & kIndexMask;
-    u32 pml3_index = (virtual_address_lower >> 30) & kIndexMask;
-    u32 pml2_index = (virtual_address_lower >> 21) & kIndexMask;
-    u32 pml1_index = (virtual_address_lower >> 12) & kIndexMask;
-
-    TRACE_INFO(
-        "Mapping virtual address: 0x%08x%08x to physical address: 0x%08x%08x with flags: 0x%08x",
-        virtual_address_upper, virtual_address_lower, physical_address_upper,
-        physical_address_lower, flags
-    );
-
-    TRACE_INFO(
-        "PML4 Index: %d, PML3 Index: %d, PML2 Index: %d, PML1 Index: %d", pml4_index, pml3_index,
-        pml2_index, pml1_index
-    );
+    u32 pml4_index = (virtual_address >> 39) & kIndexMask;
+    u32 pml3_index = (virtual_address >> 30) & kIndexMask;
+    u32 pml2_index = (virtual_address >> 21) & kIndexMask;
+    u32 pml1_index = (virtual_address >> 12) & kIndexMask;
 
     // Ensure PML4 entry points to the correct PDPT
     PML4_t *pml4_table = GetPml4Table();
@@ -64,10 +49,9 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         casted_pml3_table[pml3_index].present   = 1;
         casted_pml3_table[pml3_index].writable  = 1;
         casted_pml3_table[pml3_index].page_size = 1;
-        casted_pml3_table[pml3_index].frame     = phys_addr >> kPageShift;
+        casted_pml3_table[pml3_index].frame     = physical_address >> kPageShift;
         u64 *entry = reinterpret_cast<u64 *>(&casted_pml3_table[pml3_index]);
         *entry |= flags;
-        TRACE_INFO("PML3 Entry: 0x%016x", *entry);
         return;
     }
 
@@ -89,7 +73,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         casted_pml2_table[pml2_index].present   = 1;
         casted_pml2_table[pml2_index].writable  = 1;
         casted_pml2_table[pml2_index].page_size = 1;
-        casted_pml2_table[pml2_index].frame     = phys_addr >> kPageShift;
+        casted_pml2_table[pml2_index].frame     = physical_address >> kPageShift;
         u64 *entry = reinterpret_cast<u64 *>(&casted_pml2_table[pml2_index]);
         *entry |= flags;
         return;
@@ -108,7 +92,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     auto p1_entry = reinterpret_cast<PML1Entry *>(pml2_table[pml2_index].frame << kAddressOffset);
     p1_entry[pml1_index].present  = 1;
     p1_entry[pml1_index].writable = 1;
-    p1_entry[pml1_index].frame    = phys_addr >> kPageShift;
+    p1_entry[pml1_index].frame    = physical_address >> kPageShift;
     u64 *entry                    = reinterpret_cast<u64 *>(&p1_entry[pml1_index]);
     *entry |= flags;
 }
