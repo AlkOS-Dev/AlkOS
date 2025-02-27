@@ -52,7 +52,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         casted_pml3_table[pml3_index].present   = 1;
         casted_pml3_table[pml3_index].writable  = 1;
         casted_pml3_table[pml3_index].page_size = 1;
-        casted_pml3_table[pml3_index].frame     = phys_addr >> 30;
+        casted_pml3_table[pml3_index].frame     = phys_addr >> kPageShift;
         u64 *entry = reinterpret_cast<u64 *>(&casted_pml3_table[pml3_index]);
         *entry |= flags;
         return;
@@ -76,7 +76,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         casted_pml2_table[pml2_index].present   = 1;
         casted_pml2_table[pml2_index].writable  = 1;
         casted_pml2_table[pml2_index].page_size = 1;
-        casted_pml2_table[pml2_index].frame     = phys_addr >> 21;
+        casted_pml2_table[pml2_index].frame     = phys_addr >> kPageShift;
         u64 *entry = reinterpret_cast<u64 *>(&casted_pml2_table[pml2_index]);
         *entry |= flags;
         return;
@@ -95,7 +95,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     auto p1_entry = reinterpret_cast<PML1Entry *>(pml2_table[pml2_index].frame << kAddressOffset);
     p1_entry[pml1_index].present  = 1;
     p1_entry[pml1_index].writable = 1;
-    p1_entry[pml1_index].frame    = phys_addr >> 12;
+    p1_entry[pml1_index].frame    = phys_addr >> kPageShift;
     u64 *entry                    = reinterpret_cast<u64 *>(&p1_entry[pml1_index]);
     *entry |= flags;
 }

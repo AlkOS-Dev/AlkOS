@@ -65,7 +65,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Enabling hardware features...");
 
     ////////////////////// Setting up Paging Structures ////////////////////////
-    LoaderMemoryManager loader_memory_manager{};
+    LoaderMemoryManager loader_memory_manager;
 
     TRACE_INFO("Identity mapping first 4 GiB of memory...");
 
