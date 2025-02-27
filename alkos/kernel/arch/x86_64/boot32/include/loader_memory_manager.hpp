@@ -10,6 +10,11 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     //                                Internal Types                                //
     //------------------------------------------------------------------------------//
+    static constexpr u32 kMaxPmlTablesToStore = 100;
+    static constexpr u32 kNumEntriesPerPml    = 512;
+    static constexpr u32 kPml4Index           = 0;
+
+    // TODO: Move this somewhere else
 
     // Source: Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume 3
     // (3A, 3B & 3C): System Programming Guide
@@ -197,10 +202,18 @@ class LoaderMemoryManager
                                   ///< this entry)
     };
 
+    typedef u64 PMLTable_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
+    typedef PMLTable_t PML4_t;
+    typedef PMLTable_t PML3_t;
+    typedef PMLTable_t PML2_t;
+    typedef PMLTable_t PML1_t;
+
     public:
     //------------------------------------------------------------------------------//
     //                        Class Creation and Destruction                        //
     //------------------------------------------------------------------------------//
+
+    LoaderMemoryManager();
 
     //------------------------------------------------------------------------------//
     //                                Public Methods                                //
@@ -218,6 +231,10 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     //                                Private Fields                                //
     //------------------------------------------------------------------------------//
+
+    PMLTable_t buffer_[kMaxPmlTablesToStore];  ///< A buffer to store PML tables as new physical
+                                               ///< memory is allocated using the memory manager
+    u32 num_pml_tables_stored_;                ///< The number of PML tables stored in the buffer
 
     //------------------------------------------------------------------------------//
     //                                   Helpers                                    //
