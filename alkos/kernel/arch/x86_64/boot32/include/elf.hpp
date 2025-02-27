@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "types.hpp"
+
 // ELF-64 Structures
 
 // Taken from glibc https://github.com/lattera/glibc/blob/master/elf/elf.h#L60

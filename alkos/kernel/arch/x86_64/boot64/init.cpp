@@ -15,7 +15,6 @@
 #include <interrupts/idt.hpp>
 #include <loader_data.hpp>
 #include <multiboot2_extensions.hpp>
-#include <physical_memory_manager.hpp>
 #include <terminal.hpp>
 
 /* external init procedures */

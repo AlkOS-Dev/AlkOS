@@ -6,10 +6,7 @@
           extern GDT64.Pointer
           extern GDT64.Data
 
-          ; Message
-          extern MESSAGE_INFO_IN_64
-
-          ; Totally basic initialization that must be done before calling _init
+          ; 64-bit part of Pre-Kernel Initialization
           extern PreKernelInit
 
           ; GCC compiler global constructors initialization
@@ -40,13 +37,11 @@ boot64:
 
           sub rsp, 32 ; shadow space
 
-
-          ; There all basic initialization should be done
           mov rdi, 0
           mov edi, r10d
-          call PreKernelInit
+          call PreKernelInit ; 64-bit part of Pre-Kernel Initialization
 
-          ; Invoke global constructors
+          ; Invoke CXX global constructors
           call _init
 
           ; Call actual kernel entry point

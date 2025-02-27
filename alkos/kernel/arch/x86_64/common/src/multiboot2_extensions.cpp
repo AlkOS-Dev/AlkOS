@@ -4,8 +4,6 @@
 #include <types.hpp>
 #include "debug.hpp"
 
-extern char text_buffer[1024];
-
 multiboot_tag *FindTagInMultibootInfo(void *multiboot_info_addr, uint32_t type)
 {
     TRACE_INFO("Searching for tag type: %s", GetTagName(type));

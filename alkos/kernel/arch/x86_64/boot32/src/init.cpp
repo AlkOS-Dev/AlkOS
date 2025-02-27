@@ -7,6 +7,7 @@
 #include <multiboot2_extensions.hpp>
 #include <paging.hpp>
 #include <terminal.hpp>
+#include "loader_memory_manager.hpp"
 
 // External functions defined in assembly
 extern "C" int CheckCpuId();
@@ -18,9 +19,6 @@ extern "C" void EnterKernel(
     void* higher_32_bits_of_kernel_entry_address, void* lower_32_bits_of_kernel_entry_address,
     void* loader_data_address
 );
-
-// Buffer for text output
-char text_buffer[1024];
 
 // External symbols defined in the linker script
 extern const char multiboot_header_start[];

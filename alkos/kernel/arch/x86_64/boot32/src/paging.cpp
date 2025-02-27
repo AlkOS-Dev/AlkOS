@@ -146,25 +146,26 @@ void MapVirtualMemoryToPhysical(
 
     // Ensure PML4 entry points to the correct PDPT
     if (!(p4_table[p4_index] & PRESENT_BIT)) {
-        p4_table[p4_index] = ((u64)p3_table) | PRESENT_BIT | WRITE_BIT;
+        p4_table[p4_index] = reinterpret_cast<u64>(p3_table) | PRESENT_BIT | WRITE_BIT;
     }
 
     // Ensure PDPT entry points to the correct PD
     if (!(p3_table[p3_index] & PRESENT_BIT)) {
-        p3_table[p3_index] = ((u64)p2_table) | PRESENT_BIT | WRITE_BIT;
+        p3_table[p3_index] = reinterpret_cast<u64>(p2_table) | PRESENT_BIT | WRITE_BIT;
     }
 
     if (flags & HUGE_PAGE_BIT) {
-        p2_table[p2_index] = (u64)(physical_address_lower | ((u64)physical_address_upper << 32)) |
-                             PRESENT_BIT | WRITE_BIT | flags;
+        p2_table[p2_index] = physical_address_lower |
+                             static_cast<u64>(physical_address_upper) << 32 | PRESENT_BIT |
+                             WRITE_BIT | flags;
         return;
     }
 
     // Ensure PD entry points to the correct PT
     if (!(p2_table[p2_index] & PRESENT_BIT)) {
-        p2_table[p2_index] = ((u64)p1_table) | PRESENT_BIT | WRITE_BIT;
+        p2_table[p2_index] = reinterpret_cast<u64>(p1_table) | PRESENT_BIT | WRITE_BIT;
     }
 
-    p1_table[p1_index] = (u64)(physical_address_lower | ((u64)physical_address_upper << 32)) |
+    p1_table[p1_index] = physical_address_lower | static_cast<u64>(physical_address_upper) << 32 |
                          PRESENT_BIT | WRITE_BIT | flags;
 }
