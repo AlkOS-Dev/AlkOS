@@ -113,7 +113,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Starting 64-bit kernel...");
 
     TRACE_INFO("Searching for memory map tag...");
-    auto* mmap_tag = reinterpret_cast<multiboot_tag_mmap*>(FindTagInMultibootInfo(
+    auto* mmap_tag = reinterpret_cast<multiboot::tag_mmap_t*>(multiboot::FindTagInMultibootInfo(
         reinterpret_cast<void*>(multiboot_info_addr), MULTIBOOT_TAG_TYPE_MMAP
     ));
     if (mmap_tag == nullptr) {
@@ -126,9 +126,9 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     /// "Lower" memory is frequently required for drivers / special purposes, therefore
     /// we sort the memory map entries in descending order and allocate the upper memory first.
-    multiboot_memory_map_t* descending_sorted_mmap_entries[kMaxMemoryMapEntries];
+    multiboot::memory_map_t* descending_sorted_mmap_entries[kMaxMemoryMapEntries];
 
-    WalkMemoryMap(mmap_tag, [&](multiboot_memory_map_t* mmap_entry) {
+    WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) {
         if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
             total_memory_size += mmap_entry->len;
 
@@ -136,7 +136,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
             u32 i                                                    = num_memory_map_entries - 1;
             while (i > 0 && descending_sorted_mmap_entries[i]->addr >
                                 descending_sorted_mmap_entries[i - 1]->addr) {
-                multiboot_memory_map_t* temp_entry    = descending_sorted_mmap_entries[i];
+                multiboot::memory_map_t* temp_entry   = descending_sorted_mmap_entries[i];
                 descending_sorted_mmap_entries[i]     = descending_sorted_mmap_entries[i - 1];
                 descending_sorted_mmap_entries[i - 1] = temp_entry;
                 i--;
@@ -156,8 +156,8 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     TRACE_INFO("Parsing Multiboot2 tags...");
 
-    auto* kernel_module = reinterpret_cast<multiboot_tag_module*>(
-        FindTagInMultibootInfo(multiboot_info_addr, MULTIBOOT_TAG_TYPE_MODULE)
+    auto* kernel_module = reinterpret_cast<multiboot::tag_module_t*>(
+        multiboot::FindTagInMultibootInfo(multiboot_info_addr, MULTIBOOT_TAG_TYPE_MODULE)
     );
     if (kernel_module == nullptr) {
         KernelPanic("Kernel module not found in multiboot tags!");

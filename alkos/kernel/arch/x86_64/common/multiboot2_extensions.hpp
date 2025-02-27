@@ -4,6 +4,9 @@
 #include <multiboot2.h>
 #include <types.hpp>
 
+namespace multiboot
+{
+
 /**
  * @brief Get the tag name from the tag type.
  *
@@ -20,10 +23,10 @@ const char* GetTagName(u32 type);
  *
  * @return multiboot_tag* The tag if found, nullptr otherwise.
  */
-multiboot_tag* FindTagInMultibootInfo(void* multiboot_info_addr, u32 type);
+tag_t* FindTagInMultibootInfo(void* multiboot_info_addr, u32 type);
 
 template <typename Callback>
-concept MemoryMapCallback = requires(Callback cb, multiboot_memory_map_t* entry) {
+concept MemoryMapCallback = requires(Callback cb, memory_map_t* entry) {
     { cb(entry) };
 };
 
@@ -34,7 +37,9 @@ concept MemoryMapCallback = requires(Callback cb, multiboot_memory_map_t* entry)
  * @param callback The callback function that accepts a memory map entry.
  */
 template <MemoryMapCallback Callback>
-void WalkMemoryMap(multiboot_tag_mmap* mmap_tag, Callback callback);
+void WalkMemoryMap(tag_mmap_t* mmap_tag, Callback callback);
+
+}  // namespace multiboot
 
 #include <multiboot2_extensions.tpp>
 
