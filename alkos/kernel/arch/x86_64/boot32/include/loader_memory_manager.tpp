@@ -1,8 +1,9 @@
 #ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_TPP_
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_TPP_
 
-#include "assert.h"
-#include "memory.h"
+#include <assert.h>
+#include <memory.h>
+#include "debug.hpp"
 
 template <LoaderMemoryManager::PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
@@ -28,6 +29,17 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u32 pml3_index = (virtual_address_lower >> 30) & kIndexMask;
     u32 pml2_index = (virtual_address_lower >> 21) & kIndexMask;
     u32 pml1_index = (virtual_address_lower >> 12) & kIndexMask;
+
+    TRACE_INFO(
+        "Mapping virtual address: 0x%08x%08x to physical address: 0x%08x%08x with flags: 0x%08x",
+        virtual_address_upper, virtual_address_lower, physical_address_upper,
+        physical_address_lower, flags
+    );
+
+    TRACE_INFO(
+        "PML4 Index: %d, PML3 Index: %d, PML2 Index: %d, PML1 Index: %d", pml4_index, pml3_index,
+        pml2_index, pml1_index
+    );
 
     // Ensure PML4 entry points to the correct PDPT
     PML4_t *pml4_table = GetPml4Table();
@@ -55,6 +67,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         casted_pml3_table[pml3_index].frame     = phys_addr >> kPageShift;
         u64 *entry = reinterpret_cast<u64 *>(&casted_pml3_table[pml3_index]);
         *entry |= flags;
+        TRACE_INFO("PML3 Entry: 0x%016x", *entry);
         return;
     }
 

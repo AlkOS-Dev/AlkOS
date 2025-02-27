@@ -1,6 +1,12 @@
 #include "loader_memory_manager.hpp"
 #include "assert.h"
+#include "debug.hpp"
+#include "extensions/new.hpp"
 #include "memory.h"
+
+// Note: The alignment here is a strict requirement for the PML tables and if the
+// initial object is not aligned, the PML tables will not be aligned either.
+byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)] __attribute__((aligned(4096)));
 
 LoaderMemoryManager::LoaderMemoryManager()
 {

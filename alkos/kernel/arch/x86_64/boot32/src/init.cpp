@@ -1,12 +1,14 @@
-#include <multiboot2.h>
-#include <arch_utils.hpp>
-#include <debug.hpp>
-#include <defines.hpp>
-#include <elf.hpp>
-#include <loader_data.hpp>
-#include <multiboot2_extensions.hpp>
-#include <terminal.hpp>
+#include <extensions/new.hpp>
+
+#include "arch_utils.hpp"
+#include "debug.hpp"
+#include "defines.hpp"
+#include "elf.hpp"
+#include "loader_data.hpp"
 #include "loader_memory_manager.hpp"
+#include "multiboot2.h"
+#include "multiboot2_extensions.hpp"
+#include "terminal.hpp"
 
 // External functions defined in assembly
 extern "C" int CheckCpuId();
@@ -25,6 +27,8 @@ extern const char multiboot_header_end[];
 
 extern const char loader_start[];
 extern const char loader_end[];
+
+extern byte kLoaderPreAllocatedMemory[];
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
 LoaderData loader_data;
@@ -65,20 +69,24 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Enabling hardware features...");
 
     ////////////////////// Setting up Paging Structures ////////////////////////
-    LoaderMemoryManager loader_memory_manager;
-
     TRACE_INFO("Identity mapping first 4 GiB of memory...");
 
-    static constexpr u32 k1GiB = 1024 * 1024 * 1024;
+    auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
 
-    for (u32 i = 0; i < k1GiB; i += 0x1000) {
-        loader_memory_manager.MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-            i, 0, i, 0, LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
+    static constexpr u32 k1GiB = 1 << 30;
+
+    for (u32 i = 0; i < 4; i++) {
+        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
+            i * k1GiB, 0, i * k1GiB, 0, 0
         );
     }
 
+    TRACE_INFO(
+        "Checking loader_memory_manager validity, num_pml_tables_stored_: %d",
+        loader_memory_manager->GetNumPmlTablesStored()
+    );
+
     TRACE_SUCCESS("Identity mapping complete!");
-    KernelPanic("Not implemented!");
 
     ///////////////////////////// Enabling Hardware //////////////////////////////
 
@@ -87,7 +95,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_SUCCESS("Long mode enabled!");
 
     TRACE_INFO("Enabling paging...");
-    EnablePaging(reinterpret_cast<void*>(loader_memory_manager.GetPml4Table()));
+    EnablePaging(reinterpret_cast<void*>(loader_memory_manager->GetPml4Table()));
     TRACE_SUCCESS("Paging enabled!");
 
     TRACE_INFO("Finished hardware features setup for 32-bit mode.");

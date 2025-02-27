@@ -259,6 +259,8 @@ class LoaderMemoryManager
         u32 physical_address_upper, u64 flags = 0
     );
 
+    u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
+
     //------------------------------------------------------------------------------//
     //                                Public Fields                                 //
     //------------------------------------------------------------------------------//

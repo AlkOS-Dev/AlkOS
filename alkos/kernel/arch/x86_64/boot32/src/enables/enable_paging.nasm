@@ -11,6 +11,9 @@
           ; void EnablePaging(void* pml4_table)
           ;                   [ebp + 8]
 EnablePaging:
+          push ebp
+          mov ebp, esp
+
           ; Enable PAE
           mov eax, cr4
           or eax, PAE_BIT
@@ -28,4 +31,6 @@ EnablePaging:
           mov cr0, eax
 
           mov eax, 0
+
+          pop ebp
           ret
