@@ -10,7 +10,7 @@
  * @param type The tag type.
  * @return const char* The tag name.
  */
-const char* GetTagName(unsigned int type);
+const char* GetTagName(u32 type);
 
 /**
  * @brief Find a tag in the multiboot info.

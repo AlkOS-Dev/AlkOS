@@ -12,7 +12,10 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     static constexpr u32 kMaxPmlTablesToStore = 100;
     static constexpr u32 kNumEntriesPerPml    = 512;
-    static constexpr u32 kPml4Index           = 0;
+    static constexpr u32 kPml4Index           = 0;  ///< Must be 0
+
+    public:
+    enum class PageSize { Page4k, Page2M, Page1G };
 
     // TODO: Move this somewhere else
 
@@ -21,6 +24,28 @@ class LoaderMemoryManager
 
     // Note: In the manual, some fields are bounded by M = MAXPHYADDR, where M is the maximum
     // physical address width supported by the processor. This is 52 for 4-level paging.
+
+    static constexpr u32 kAddressOffset =
+        12;  ///< The offset of the address in the page table entry
+
+    // PML Flags
+    // This is a list of flags that can be set in the page table entries.
+    // They have to exist even though i used bitfields in the structs, because they are used as
+    // input to set the flags in the page table entries in functions like
+    // MapVirtualMemoryToPhysical.
+
+    // TODO: Include all of them
+    static constexpr u32 kPresentBit             = 1;        ///< Present bit
+    static constexpr u32 kWriteBit               = 1 << 1;   ///< Write bit
+    static constexpr u32 kUserAccessibleBit      = 1 << 2;   ///< User accessible bit
+    static constexpr u32 kWriteThroughCachingBit = 1 << 3;   ///< Write-through caching bit
+    static constexpr u32 kDisableCacheBit        = 1 << 4;   ///< Disable cache bit
+    static constexpr u32 kAccessedBit            = 1 << 5;   ///< Accessed bit
+    static constexpr u32 kDirtyBit               = 1 << 6;   ///< Dirty bit
+    static constexpr u32 kGlobalBit              = 1 << 8;   ///< Global bit
+    static constexpr u32 kPatBit                 = 1 << 12;  ///< PAT bit
+    static constexpr u32 kHlatRestartBit         = 1 << 13;  ///< HLAT restart bit
+    static constexpr u32 kHugePageBit            = 1 << 7;   ///< Huge page bit
 
     // Table 5-15. Format of a PML4 Entry (PML4E) that References a Page-Directory-Pointer Table
     struct PML4Entry {
@@ -43,10 +68,10 @@ class LoaderMemoryManager
                                ///< linear address translation is restarted with ordinary paging)
         u64 frame : 40;  ///< Physical address of the 4-KByte aligned page-directory-pointer table
                          ///< referenced by this entry
-        u64 reserved : 11;   ///< Must be 0
-        u64 no_execute : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction fetches
-                             ///< are not allowed from the 512-GByte region controlled by this
-                             ///< entry)
+        u64 reserved : 11;        ///< Must be 0
+        u64 execute_disable : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction
+                                  ///< fetches are not allowed from the 512-GByte region controlled
+                                  ///< by this entry)
     } PACK;
 
     // Table 5-16. Format of a Page-Directory-Pointer-Table Entry (PDPTE) that Maps a 1-GByte Page
@@ -105,9 +130,10 @@ class LoaderMemoryManager
                                ///< linear address translation is restarted with ordinary paging)
         u64 frame : 40;  ///< Physical address of the 4-KByte aligned page directory referenced by
                          ///< this entry
-        u64 ignored_3 : 11;  ///< Must be 0
-        u64 no_execute : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction fetches
-                             ///< are not allowed from the 1-GByte region controlled by this entry)
+        u64 ignored_3 : 11;       ///< Must be 0
+        u64 execute_disable : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction
+                                  ///< fetches are not allowed from the 1-GByte region controlled by
+                                  ///< this entry)
     } PACK;
 
     // Table 5-18. Format of a Page-Directory Entry (PDE) that Maps a 2-MByte Page
@@ -165,9 +191,10 @@ class LoaderMemoryManager
                                ///< linear address translation is restarted with ordinary paging)
         u64 frame : 40;  ///< Physical address of the 4-KByte aligned page table referenced by this
                          ///< entry
-        u64 ignored_3 : 11;  ///< Ignored (usable by software)
-        u64 no_execute : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction fetches
-                             ///< are not allowed from the 2-MByte region controlled by this entry)
+        u64 ignored_3 : 11;       ///< Ignored (usable by software)
+        u64 execute_disable : 1;  ///< If IA32_EFER.NXE = 1, execute-disable (if 1, instruction
+                                  ///< fetches are not allowed from the 2-MByte region controlled by
+                                  ///< this entry)
     } PACK;
 
     // Table 5-20. Format of a Page-Table Entry (PTE) that Maps a 4-KByte Page
@@ -219,6 +246,19 @@ class LoaderMemoryManager
     //                                Public Methods                                //
     //------------------------------------------------------------------------------//
 
+    /**
+     * @brief Get the PML4 table.
+     *
+     * @return PML4_t* The PML4 table.
+     */
+    PML4_t* GetPml4Table();
+
+    template <PageSize page_size>
+    void MapVirtualMemoryToPhysical(
+        u32 virtual_address_lower, u32 virtual_address_upper, u32 physical_address_lower,
+        u32 physical_address_upper, u64 flags = 0
+    );
+
     //------------------------------------------------------------------------------//
     //                                Public Fields                                 //
     //------------------------------------------------------------------------------//
@@ -232,13 +272,15 @@ class LoaderMemoryManager
     //                                Private Fields                                //
     //------------------------------------------------------------------------------//
 
-    PMLTable_t buffer_[kMaxPmlTablesToStore];  ///< A buffer to store PML tables as new physical
-                                               ///< memory is allocated using the memory manager
-    u32 num_pml_tables_stored_;                ///< The number of PML tables stored in the buffer
+    PMLTable_t buffer_[kMaxPmlTablesToStore]{};  ///< A buffer to store PML tables as new physical
+                                                 ///< memory is allocated using the memory manager
+    u32 num_pml_tables_stored_{};                ///< The number of PML tables stored in the buffer
 
     //------------------------------------------------------------------------------//
     //                                   Helpers                                    //
     //------------------------------------------------------------------------------//
 };
+
+#include "loader_memory_manager.tpp"
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_HPP_

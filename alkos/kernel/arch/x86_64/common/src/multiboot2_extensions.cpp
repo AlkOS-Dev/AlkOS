@@ -4,7 +4,7 @@
 #include <types.hpp>
 #include "debug.hpp"
 
-multiboot_tag *FindTagInMultibootInfo(void *multiboot_info_addr, uint32_t type)
+multiboot_tag *FindTagInMultibootInfo(void *multiboot_info_addr, u32 type)
 {
     TRACE_INFO("Searching for tag type: %s", GetTagName(type));
     for (auto *tag =
@@ -22,7 +22,7 @@ multiboot_tag *FindTagInMultibootInfo(void *multiboot_info_addr, uint32_t type)
     return nullptr;
 }
 
-const char *GetTagName(unsigned int type)
+const char *GetTagName(u32 type)
 {
     switch (type) {
         case MULTIBOOT_TAG_TYPE_END:

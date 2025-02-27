@@ -6,10 +6,10 @@
 
           EFER_MSR            equ 0xC0000080
 
-          extern p4_table_loader
-
           section .text
           global EnablePaging
+          ; void EnablePaging(void* pml4_table)
+          ;                   [ebp + 8]
 EnablePaging:
           ; Enable PAE
           mov eax, cr4
@@ -17,7 +17,7 @@ EnablePaging:
           mov cr4, eax
 
           ; Load the PML4 table into CR3
-          mov eax, p4_table_loader
+          mov eax, [ebp + 8]
           mov cr3, eax
 
           ; Note: Processors starting from Ice Lake support 5-level paging
