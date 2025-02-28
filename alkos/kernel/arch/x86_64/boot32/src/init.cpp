@@ -37,12 +37,6 @@ LoaderData loader_data;
 // Helper
 static constexpr u64 k32BitMask = 0x00000000FFFFFFFF;
 
-/*
- * Maximum number of memory map entries that can be handled by the loader.
- * If there are more entries, the loader will panic.
- */
-static constexpr u32 kMaxMemoryMapEntries = 1e3;
-
 extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_addr)
 {
     TerminalInit();
@@ -112,49 +106,33 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     /////////////////////// Preparation for jump to 64 bit ///////////////////////
     TRACE_INFO("Starting 64-bit kernel...");
 
+    TRACE_INFO("Parsing Multiboot2 tags...");
+
     TRACE_INFO("Searching for memory map tag...");
     auto* mmap_tag = reinterpret_cast<multiboot::tag_mmap_t*>(multiboot::FindTagInMultibootInfo(
         reinterpret_cast<void*>(multiboot_info_addr), MULTIBOOT_TAG_TYPE_MMAP
     ));
-    if (mmap_tag == nullptr) {
-        KernelPanic("Memory map tag not found!");
-    }
+    ASSERT_NOT_NULL(mmap_tag);
     TRACE_INFO("Memory map tag found!");
-
-    u64 total_memory_size      = 0;
-    u32 num_memory_map_entries = 0;
-
-    /// "Lower" memory is frequently required for drivers / special purposes, therefore
-    /// we sort the memory map entries in descending order and allocate the upper memory first.
-    multiboot::memory_map_t* descending_sorted_mmap_entries[kMaxMemoryMapEntries];
 
     WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) {
         if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            total_memory_size += mmap_entry->len;
-
-            descending_sorted_mmap_entries[num_memory_map_entries++] = mmap_entry;
-            u32 i                                                    = num_memory_map_entries - 1;
-            while (i > 0 && descending_sorted_mmap_entries[i]->addr >
-                                descending_sorted_mmap_entries[i - 1]->addr) {
-                multiboot::memory_map_t* temp_entry   = descending_sorted_mmap_entries[i];
-                descending_sorted_mmap_entries[i]     = descending_sorted_mmap_entries[i - 1];
-                descending_sorted_mmap_entries[i - 1] = temp_entry;
-                i--;
-            }
+            TRACE_INFO(
+                "Memory region: 0x%llX-0x%llX, length: %llu bytes", mmap_entry->addr,
+                mmap_entry->addr + mmap_entry->len, mmap_entry->len
+            );
+            loader_memory_manager->AddMemoryMapEntry(mmap_entry);
+            TRACE_INFO("Memory region added to memory manager.");
         }
     });
 
-    for (u32 i = 0; i < num_memory_map_entries; i++) {
-        TRACE_INFO(
-            "Memory region: addr=0x%llX, len=%llu MB, type=%u",
-            descending_sorted_mmap_entries[i]->addr, descending_sorted_mmap_entries[i]->len >> 20,
-            descending_sorted_mmap_entries[i]->type
-        );
-    }
+    loader_memory_manager->WalkFreeMemoryRegions([](FreeMemoryRegion_t& region) {
+        TRACE_INFO("Free memory region: 0x%llX-0x%llX", region.addr, region.addr + region.length);
+    });
 
-    TRACE_INFO("Total memory size: %d MB", total_memory_size >> 20);
-
-    TRACE_INFO("Parsing Multiboot2 tags...");
+    TRACE_INFO(
+        "Total available memory: %llu MB", loader_memory_manager->GetAvailableMemoryBytes() >> 20
+    );
 
     auto* kernel_module = reinterpret_cast<multiboot::tag_module_t*>(
         multiboot::FindTagInMultibootInfo(multiboot_info_addr, MULTIBOOT_TAG_TYPE_MODULE)
@@ -166,16 +144,34 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     TRACE_INFO("Kernel module type: %d", kernel_module->type);
     TRACE_INFO("Kernel module size: %d", kernel_module->size);
-    byte* kernel_module_start = reinterpret_cast<byte*>(kernel_module->mod_start);
-    byte* kernel_module_end   = reinterpret_cast<byte*>(kernel_module->mod_end);
+    byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
+    byte* kernel_module_end_addr   = reinterpret_cast<byte*>(kernel_module->mod_end);
 
-    TRACE_INFO("Kernel module start: 0x%X", kernel_module_start);
-    TRACE_INFO("Kernel module end: 0x%X", kernel_module_end);
+    TRACE_INFO("Kernel module start: 0x%X", kernel_module_start_addr);
+    TRACE_INFO("Kernel module end: 0x%X", kernel_module_end_addr);
+
+    u64 elf_lower_bound = 0;
+    u64 elf_upper_bound = 0;
+    elf::GetElf64ProgramBounds(kernel_module_start_addr, elf_lower_bound, elf_upper_bound);
+    u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
+
+    TRACE_INFO(
+        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
+        elf_effective_size >> 10
+    );
+
+    static constexpr u64 kUpperCanonicalAddress = (~1ULL) << 46;
+
+    TRACE_INFO("Mapping kernel module to upper memory starting at 0x%llX", kUpperCanonicalAddress);
+
+    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
+        kUpperCanonicalAddress, elf_upper_bound - elf_lower_bound, 0
+    );
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading kernel module...");
-    void* kernel_entry_relative_to_elf_start = elf::LoadElf64(kernel_module_start);
-    if (kernel_entry_relative_to_elf_start == nullptr) {
+    u64 kernel_entry_relative_to_elf_start_addr = elf::LoadElf64(kernel_module_start_addr);
+    if (kernel_entry_relative_to_elf_start_addr == 0) {
         KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Kernel module loaded!");
@@ -202,5 +198,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Jumping to 64-bit kernel...");
 
     // TODO: EnterKernel uses only the lower 32 bits, make it use the higher 32 bits too
-    EnterKernel(0, kernel_entry_relative_to_elf_start, &loader_data);
+    EnterKernel(
+        0, kernel_module_start_addr + kernel_entry_relative_to_elf_start_addr, &loader_data
+    );
 }

@@ -5,12 +5,12 @@
 namespace elf
 {
 
-void* LoadElf64(const byte* elf_start)
+u64 LoadElf64(const byte* elf_start)
 {
     TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
         TRACE_ERROR("Invalid ELF-64.");
-        return nullptr;
+        return 0;
     }
 
     auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
@@ -56,14 +56,19 @@ void* LoadElf64(const byte* elf_start)
 
     if (header_64->entry_point_virtual_address == 0) {
         TRACE_ERROR("ELF entry point is null.");
-        return nullptr;
+        return 0;
     }
 
     TRACE_SUCCESS(
         "ELF-64 module loaded successfully. Entry point: 0x%X",
         static_cast<u32>(header_64->entry_point_virtual_address)
     );
-    return reinterpret_cast<void*>(header_64->entry_point_virtual_address);
+
+    u32 elf_start_as_u32 = reinterpret_cast<u32>(elf_start);
+    u64 entry_point_relative_to_elf_start =
+        header_64->entry_point_virtual_address - static_cast<u64>(elf_start_as_u32);
+
+    return entry_point_relative_to_elf_start;
 }
 
 void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr)

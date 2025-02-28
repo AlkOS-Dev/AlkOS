@@ -2,17 +2,38 @@
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_HPP_
 
 #include "defines.hpp"
+#include "multiboot2.h"
+#include "multiboot2_extensions.hpp"
 #include "types.hpp"
+
+struct FreeMemoryRegion_t {
+    u64 addr;
+    u64 length;
+} PACK;
+
+template <typename Callback>
+concept FreeMemoryRegionCallback =
+    requires(Callback cb, FreeMemoryRegion_t& region) { cb(region); };
 
 class LoaderMemoryManager
 {
     private:
-    //------------------------------------------------------------------------------//
-    //                                Internal Types                                //
-    //------------------------------------------------------------------------------//
+    //------------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------------
+
     static constexpr u32 kMaxPmlTablesToStore = 100;
     static constexpr u32 kNumEntriesPerPml    = 512;
-    static constexpr u32 kPml4Index           = 0;  ///< Must be 0
+    /*
+     * Maximum number of memory map entries that can be handled by the loader.
+     * If there are more entries, the loader will panic.
+     */
+    static constexpr u32 kMaxMemoryMapEntries = 1e3;
+
+    //------------------------------------------------------------------------------//
+    // Internal Types
+    //------------------------------------------------------------------------------//
+    static constexpr u32 kPml4Index = 0;  ///< Must be 0
 
     public:
     enum class PageSize { Page4k, Page2M, Page1G };
@@ -237,13 +258,13 @@ class LoaderMemoryManager
 
     public:
     //------------------------------------------------------------------------------//
-    //                        Class Creation and Destruction                        //
+    // Class Creation and Destruction
     //------------------------------------------------------------------------------//
 
     LoaderMemoryManager();
 
     //------------------------------------------------------------------------------//
-    //                                Public Methods                                //
+    // Public Methods
     //------------------------------------------------------------------------------//
 
     /**
@@ -255,28 +276,51 @@ class LoaderMemoryManager
 
     template <PageSize page_size>
     void MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags);
+    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags);
 
-    u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
+    [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
+
+    template <FreeMemoryRegionCallback Callback>
+    void WalkFreeMemoryRegions(Callback callback)
+    {
+        TRACE_INFO("Walking free memory regions...");
+        for (u32 i = 0; i < num_free_memory_regions_; i++) {
+            callback(descending_sorted_mmap_entries[i]);
+        }
+        TRACE_INFO("Free memory regions walk complete!");
+    }
+
+    void AddMemoryMapEntry(multiboot::memory_map_t* mmap_entry);
+
+    [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
 
     //------------------------------------------------------------------------------//
-    //                                Public Fields                                 //
+    // Public Fields
     //------------------------------------------------------------------------------//
 
     private:
     //------------------------------------------------------------------------------//
-    //                               Private Methods                                //
+    // Private Methods
     //------------------------------------------------------------------------------//
 
     //------------------------------------------------------------------------------//
-    //                                Private Fields                                //
+    // Private Fields
     //------------------------------------------------------------------------------//
 
     PMLTable_t buffer_[kMaxPmlTablesToStore]{};  ///< A buffer to store PML tables as new physical
                                                  ///< memory is allocated using the memory manager
     u32 num_pml_tables_stored_{};                ///< The number of PML tables stored in the buffer
 
+    /// "Lower" memory is frequently required for drivers / special purposes, therefore
+    /// we sort the memory map entries in descending order and allocate the upper memory first.
+    FreeMemoryRegion_t descending_sorted_mmap_entries[kMaxMemoryMapEntries]{};
+    u32 used_free_memory_regions_ = 0;
+    u32 num_free_memory_regions_  = 0;
+
+    u64 available_memory_bytes_ = 0;
+
     //------------------------------------------------------------------------------//
-    //                                   Helpers                                    //
+    // Helper Functions
     //------------------------------------------------------------------------------//
 };
 
