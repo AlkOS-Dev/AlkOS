@@ -67,7 +67,7 @@ struct ProgramHeaderEntry64_t {
 } __attribute__((packed));
 
 // Function to load ELF-64 kernel
-u64 LoadElf64(const byte* elf_start);
+u64 LoadElf64(const byte* elf_start_virtual_address, u64 destination_begin_virtual_address);
 
 bool IsValidElf64(const byte* elf_start);
 

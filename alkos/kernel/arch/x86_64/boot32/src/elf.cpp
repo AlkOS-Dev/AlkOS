@@ -5,7 +5,13 @@
 namespace elf
 {
 
-u64 LoadElf64(const byte* elf_start)
+namespace
+{
+extern "C" void memcpy64(u32 dest_lo, u32 dest_hi, u32 src_lo, u32 src_hi, u32 n_lo, u32 n_hi);
+extern "C" void memset64(u32 dest_lo, u32 dest_hi, u32 c, u32 n_lo, u32 n_hi);
+}  // namespace
+
+u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 {
     TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
@@ -18,6 +24,16 @@ u64 LoadElf64(const byte* elf_start)
         elf_start + header_64->program_header_table_file_offset
     );
 
+    u64 elf_base = ~0ULL;
+    for (u16 i = 0; i < header_64->program_header_table_entry_count; i++) {
+        const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
+        if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
+            if (program_header_entry->virtual_address < elf_base) {
+                elf_base = program_header_entry->virtual_address;
+            }
+        }
+    }
+
     // Iterate through program headers
     for (u16 i = 0; i < header_64->program_header_table_entry_count; i++) {
         const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
@@ -26,31 +42,38 @@ u64 LoadElf64(const byte* elf_start)
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
             TRACE_INFO("Loading segment %d...", i + 1);
 
-            u32 segment_dest      = static_cast<u32>(program_header_entry->virtual_address);
-            u32 segment_dest_size = static_cast<u32>(program_header_entry->size_in_memory_bytes);
-            u32 segment_source =
-                static_cast<u32>(reinterpret_cast<u32>(elf_start) + program_header_entry->offset);
-            u32 segment_source_size = static_cast<u32>(program_header_entry->size_in_file_bytes);
+            u64 segment_dest = destination_begin_virtual_address +
+                               (program_header_entry->virtual_address - elf_base);
+            u64 segment_dest_size = program_header_entry->size_in_memory_bytes;
+            u64 segment_source    = reinterpret_cast<u64>(elf_start) + program_header_entry->offset;
+            u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
             TRACE_INFO(
-                "Segment %d: dest=0x%X, dest_size=0x%X, source=0x%X, source_size=0x%X", i + 1,
-                segment_dest, segment_dest_size, segment_source, segment_source_size
+                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX, source_size=0x%llu "
+                "KB",
+                i + 1, segment_dest, segment_dest_size << 10, segment_source,
+                segment_source_size << 10
             );
 
-            memcpy(
-                reinterpret_cast<void*>(segment_dest), reinterpret_cast<void*>(segment_source),
-                segment_source_size
+            memcpy64(
+                static_cast<u32>(segment_dest & 0xFFFFFFFF), static_cast<u32>(segment_dest >> 32),
+                static_cast<u32>(segment_source & 0xFFFFFFFF),
+                static_cast<u32>(segment_source >> 32),
+                static_cast<u32>(segment_source_size & 0xFFFFFFFF),
+                static_cast<u32>(segment_source_size >> 32)
             );
 
             // Zero out the remaining memory (For things like .bss sections, etc.)
             if (segment_dest_size > segment_source_size) {
-                memset(
-                    reinterpret_cast<void*>(segment_dest + segment_source_size), 0,
-                    segment_dest_size - segment_source_size
+                memset64(
+                    static_cast<u32>(segment_dest & 0xFFFFFFFF),
+                    static_cast<u32>(segment_dest >> 32), 0,
+                    static_cast<u32>(segment_dest_size & 0xFFFFFFFF),
+                    static_cast<u32>(segment_dest_size >> 32)
                 );
             }
 
-            TRACE_SUCCESS("Loaded LOAD segment %d successfully.", i + 1);
+            TRACE_SUCCESS("Segment %d loaded.", i + 1);
         }
     }
 
@@ -59,16 +82,11 @@ u64 LoadElf64(const byte* elf_start)
         return 0;
     }
 
-    TRACE_SUCCESS(
-        "ELF-64 module loaded successfully. Entry point: 0x%X",
-        static_cast<u32>(header_64->entry_point_virtual_address)
-    );
+    u64 adjusted_entry_point =
+        destination_begin_virtual_address + (header_64->entry_point_virtual_address - elf_base);
 
-    u32 elf_start_as_u32 = reinterpret_cast<u32>(elf_start);
-    u64 entry_point_relative_to_elf_start =
-        header_64->entry_point_virtual_address - static_cast<u64>(elf_start_as_u32);
-
-    return entry_point_relative_to_elf_start;
+    TRACE_SUCCESS("ELF-64 loaded. Entry point: 0x%llX", adjusted_entry_point);
+    return adjusted_entry_point;
 }
 
 void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr)

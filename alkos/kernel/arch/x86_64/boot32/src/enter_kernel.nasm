@@ -9,12 +9,16 @@
           ; void EnterKernel(void *higher_32_bits_of_kernel_entry, void *lower_32_bits_of_kernel_entry, void *loader_data)
           ;                  [ebp + 8]                             [ebp + 12]                           [ebp + 16]
 EnterKernel:
-          ; TODO: High address of k_ptr is not set (from ebp + 8)
           push ebp
           mov ebp, esp
 
-          mov esi, [ebp + 12] ; Kernel entry point
-          mov [k_ptr], esi
+          ; Retrieve the high 32 bits
+          mov eax, [ebp+8]       ; high part
+          mov [k_ptr+4], eax     ; store into the upper 32 bits of k_ptr
+
+          ; Retrieve the low 32 bits
+          mov esi, [ebp+12]      ; low part
+          mov [k_ptr], esi       ; store into the lower 32 bits of k_ptr
 
           lgdt [GDT64.Pointer]
 
@@ -22,13 +26,14 @@ EnterKernel:
           mov ss, ax
           mov ds, ax
           mov es, ax
-          jmp GDT64.Code:.jmp_kernel
-.jmp_kernel:                  ; https://wiki.osdev.org/Creating_a_64-bit_kernel_using_a_separate_loader
-          mov edi, [ebp + 16] ; LoaderData address
-          mov eax, [k_ptr]    ; This is transformed to mov rax, [k_ptr] and uses the double word reserved below
-          dd 0                ; Trick the processor, contains high address of k_ptr
-          jmp eax             ; This part is plain bad, tricking the processor is not the best thing to do here
+          jmp GDT64.Code:jmp_kernel
 
           section .data
           align 16
-k_ptr:    dd 0
+k_ptr:    dq 0
+
+          bits 64
+jmp_kernel:                  ; https://wiki.osdev.org/Creating_a_64-bit_kernel_using_a_separate_loader
+          mov edi, [ebp + 16] ; LoaderData address
+          mov rax, [k_ptr]    ; Kernel entry address
+          jmp rax

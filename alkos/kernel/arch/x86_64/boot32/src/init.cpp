@@ -73,16 +73,19 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
+    loader_memory_manager->DumpPmlTables();
 
     static constexpr u32 k1GiB = 1 << 30;
 
-    for (u32 i = 0; i < 512; i++) {
+    for (u32 i = 0; i < 4; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
         loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
             addr_64bit, addr_64bit,
             LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
         );
     }
+
+    loader_memory_manager->DumpPmlTables();
 
     TRACE_INFO(
         "Checking loader_memory_manager validity, num_pml_tables_stored_: %d",
@@ -126,6 +129,8 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
         }
     });
 
+    loader_memory_manager->DumpMemoryMap();
+
     loader_memory_manager->WalkFreeMemoryRegions([](FreeMemoryRegion_t& region) {
         TRACE_INFO("Free memory region: 0x%llX-0x%llX", region.addr, region.addr + region.length);
     });
@@ -165,15 +170,19 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Mapping kernel module to upper memory starting at 0x%llX", kUpperCanonicalAddress);
 
     loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        kUpperCanonicalAddress, elf_upper_bound - elf_lower_bound, 0
+        kUpperCanonicalAddress, elf_effective_size, 0
     );
+
+    loader_memory_manager->DumpPmlTables();
+    //    loader_memory_manager->DumpMemoryMap();
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading kernel module...");
-    u64 kernel_entry_relative_to_elf_start_addr = elf::LoadElf64(kernel_module_start_addr);
-    if (kernel_entry_relative_to_elf_start_addr == 0) {
+    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, kUpperCanonicalAddress);
+    if (kernel_entry_point == 0) {
         KernelPanic("Failed to load kernel module!");
     }
+    TRACE_INFO("Kernel entry point: 0x%llX", kernel_entry_point);
     TRACE_SUCCESS("Kernel module loaded!");
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
@@ -197,8 +206,10 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     //////////////////////////// Jumping to 64-bit Kernel /////////////////////////
     TRACE_INFO("Jumping to 64-bit kernel...");
 
+    KernelPanic("Not implemented yet!");
     // TODO: EnterKernel uses only the lower 32 bits, make it use the higher 32 bits too
     EnterKernel(
-        0, kernel_module_start_addr + kernel_entry_relative_to_elf_start_addr, &loader_data
+        (void*)static_cast<u32>(kernel_entry_point >> 32),
+        (void*)static_cast<u32>(kernel_entry_point & k32BitMask), &loader_data
     );
 }

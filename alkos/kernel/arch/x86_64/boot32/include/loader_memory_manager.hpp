@@ -294,6 +294,9 @@ class LoaderMemoryManager
 
     [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
 
+    void DumpMemoryMap();
+    void DumpPmlTables();
+
     //------------------------------------------------------------------------------//
     // Public Fields
     //------------------------------------------------------------------------------//

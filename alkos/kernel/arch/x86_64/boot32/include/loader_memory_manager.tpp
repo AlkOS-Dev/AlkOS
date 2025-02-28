@@ -29,7 +29,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     PML4_t *pml4_table = GetPml4Table();
     ASSERT_NOT_NULL(pml4_table);
 
-    auto *pml4_entry = reinterpret_cast<PML4Entry *>(&pml4_table[pml4_index]);
+    auto *pml4_entry = reinterpret_cast<PML4Entry *>(&(*pml4_table)[pml4_index]);
     if (!pml4_entry->present) {
         // Allocate a new PML3 table
         ASSERT(num_pml_tables_stored_ < kMaxPmlTablesToStore);
