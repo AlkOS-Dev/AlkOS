@@ -8,11 +8,12 @@ namespace elf
 namespace
 {
 // TODO: This is just bad and doesn't even work. Figure out a better way to do this.
+// Problem: memcpy and memset just can't handle a 64-bit address space in 32-bit mode.
 extern "C" void memcpy64(u32 dest_lo, u32 dest_hi, u32 src_lo, u32 src_hi, u32 n_lo, u32 n_hi);
 extern "C" void memset64(u32 dest_lo, u32 dest_hi, u32 c, u32 n_lo, u32 n_hi);
 }  // namespace
 
-u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
+u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address = 0)
 {
     TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
@@ -33,6 +34,9 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
                 elf_base = program_header_entry->virtual_address;
             }
         }
+    }
+    if (destination_begin_virtual_address == 0) {
+        destination_begin_virtual_address = elf_base;
     }
 
     // Iterate through program headers
@@ -56,21 +60,16 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
                 segment_source_size << 10
             );
 
-            memcpy64(
-                static_cast<u32>(segment_dest & 0xFFFFFFFF), static_cast<u32>(segment_dest >> 32),
-                static_cast<u32>(segment_source & 0xFFFFFFFF),
-                static_cast<u32>(segment_source >> 32),
-                static_cast<u32>(segment_source_size & 0xFFFFFFFF),
-                static_cast<u32>(segment_source_size >> 32)
+            memcpy(
+                reinterpret_cast<void*>(segment_dest),
+                reinterpret_cast<const void*>(segment_source), segment_source_size
             );
 
             // Zero out the remaining memory (For things like .bss sections, etc.)
             if (segment_dest_size > segment_source_size) {
-                memset64(
-                    static_cast<u32>(segment_dest & 0xFFFFFFFF),
-                    static_cast<u32>(segment_dest >> 32), 0,
-                    static_cast<u32>(segment_dest_size & 0xFFFFFFFF),
-                    static_cast<u32>(segment_dest_size >> 32)
+                memset(
+                    reinterpret_cast<void*>(segment_dest + segment_source_size), 0,
+                    segment_dest_size - segment_source_size
                 );
             }
 

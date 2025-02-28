@@ -178,7 +178,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading kernel module...");
-    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, kUpperCanonicalAddress);
+    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, 0);
     if (kernel_entry_point == 0) {
         KernelPanic("Failed to load kernel module!");
     }
