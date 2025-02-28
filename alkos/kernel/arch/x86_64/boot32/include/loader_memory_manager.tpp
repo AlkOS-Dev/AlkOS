@@ -15,7 +15,6 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
                                           : (page_size == PageSize::Page2M) ? 21
                                                                             : 30;
     static constexpr u64 kAlignmentMask = (1ULL << kPageShift) - 1;
-    static constexpr u32 k32BitMask     = (1ULL << 32) - 1;
 
     R_ASSERT_ZERO(virtual_address & kAlignmentMask);   // Virtual address must be page aligned
     R_ASSERT_ZERO(physical_address & kAlignmentMask);  // Physical address must be page aligned

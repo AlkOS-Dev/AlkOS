@@ -5,10 +5,13 @@
 
 #include "types.hpp"
 
+namespace elf
+{
 // ELF-64 Structures
 
 // Taken from glibc https://github.com/lattera/glibc/blob/master/elf/elf.h#L60
 // And https://krinkinmu.github.io/2020/11/15/loading-elf-image.html
+// Modified to fit the needs of the project, mostly made it more verbose and added comments.
 
 /**
  * @brief ELF-64 header structure
@@ -18,21 +21,21 @@
  * The program header table contains information about the segments in the file.
  * The entry point of the program is also stored in this header. Among other useful information.
  */
-struct Elf64_Ehdr {
-    unsigned char e_ident[16];  ///< Magic number and other info
-    u16 e_type;                 ///< Object file type
-    u16 e_machine;              ///< Architecture
-    u32 e_version;              ///< Object file version
-    u64 e_entry;                ///< Entry point virtual address
-    u64 e_phoff;                ///< Program header table file offset
-    u64 e_shoff;                ///< Section header table file offset
-    u32 e_flags;                ///< Processor-specific flags
-    u16 e_ehsize;               ///< ELF header size in bytes
-    u16 e_phentsize;            ///< Program header table entry size
-    u16 e_phnum;                ///< Program header table entry count
-    u16 e_shentsize;            ///< Section header table entry size
-    u16 e_shnum;                ///< Section header table entry count
-    u16 e_shstrndx;             ///< Section header string table index
+struct Header64_t {
+    byte identifier[16];  ///< Magic number and other info
+    u16 type;
+    u16 machine_architecture;
+    u32 object_file_version;
+    u64 entry_point_virtual_address;
+    u64 program_header_table_file_offset;
+    u64 section_header_table_file_offset;
+    u32 flags;  ///< Processor-specific flags
+    u16 header_size_bytes;
+    u16 program_header_entry_size_bytes;
+    u16 program_header_table_entry_count;
+    u16 section_header_table_entry_size_bytes;
+    u16 section_header_table_entry_count;
+    u16 section_header_string_table_index;
 
     static constexpr byte kElfMagic0 = 0x7F;  ///< ELF identification magic number byte 0
     static constexpr byte kElfMagic1 = 'E';   ///< ELF identification magic number byte 1
@@ -51,19 +54,25 @@ struct Elf64_Ehdr {
  * the file, the size in memory, and the alignment etc.
  *
  */
-struct Elf64_Phdr {
-    u32 p_type;    ///< Segment type
-    u32 p_flags;   ///< Segment flags
-    u64 p_offset;  ///< Segment file offset
-    u64 p_vaddr;   ///< Segment virtual address
-    u64 p_paddr;   ///< Segment physical address
-    u64 p_filesz;  ///< Segment size in file
-    u64 p_memsz;   ///< Segment size in memory
-    u64 p_align;   ///< Segment alignment
+struct ProgramHeaderEntry64_t {
+    u32 type;                  ///< Segment type
+    u32 flags;                 ///< Segment flags
+    u64 offset;                ///< Segment file offset
+    u64 virtual_address;       ///< Segment virtual address
+    u64 physical_address;      ///< Segment physical address
+    u64 size_in_file_bytes;    ///< Segment size in file
+    u64 size_in_memory_bytes;  ///< Segment size in memory
+    u64 alignment_bytes;       ///< Segment alignment
     static constexpr u32 kLoadableSegmentType = 1;
 } __attribute__((packed));
 
 // Function to load ELF-64 kernel
-void* LoadElf64Module(byte* elf_start, const byte* elf_end);
+void* LoadElf64Module(const byte* elf_start);
+
+bool IsValidElf64(const byte* elf_start);
+
+void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr);
+
+}  // namespace elf
 
 #endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_ELF_HPP_

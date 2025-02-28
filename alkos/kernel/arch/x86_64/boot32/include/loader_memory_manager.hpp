@@ -17,7 +17,7 @@ class LoaderMemoryManager
     public:
     enum class PageSize { Page4k, Page2M, Page1G };
 
-    // TODO: Move this somewhere else
+    // TODO: Move this somewhere else (common namespace?)
 
     // Source: Intel® 64 and IA-32 Architectures Software Developer’s Manual, Volume 3
     // (3A, 3B & 3C): System Programming Guide
