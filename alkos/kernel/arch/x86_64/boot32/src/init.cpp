@@ -182,7 +182,6 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     if (kernel_entry_point == 0) {
         KernelPanic("Failed to load kernel module!");
     }
-    TRACE_INFO("Kernel entry point: 0x%llX", kernel_entry_point);
     TRACE_SUCCESS("Kernel module loaded!");
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
@@ -206,8 +205,11 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     //////////////////////////// Jumping to 64-bit Kernel /////////////////////////
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    KernelPanic("Not implemented yet!");
-    // TODO: EnterKernel uses only the lower 32 bits, make it use the higher 32 bits too
+    TRACE_INFO(
+        "Kernel entry point: 0x%X-%X", static_cast<u32>(kernel_entry_point >> 32),
+        static_cast<u32>(kernel_entry_point & k32BitMask)
+    );
+
     EnterKernel(
         (void*)static_cast<u32>(kernel_entry_point >> 32),
         (void*)static_cast<u32>(kernel_entry_point & k32BitMask), &loader_data
