@@ -13,14 +13,14 @@ void* LoadElf64(const byte* elf_start)
         return nullptr;
     }
 
-    auto* header_64         = reinterpret_cast<const Header64_t*>(elf_start);
-    auto* program_header_64 = reinterpret_cast<const ProgramHeaderEntry64_t*>(
+    auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
+    auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
         elf_start + header_64->program_header_table_file_offset
     );
 
     // Iterate through program headers
     for (u16 i = 0; i < header_64->program_header_table_entry_count; i++) {
-        const ProgramHeaderEntry64_t* program_header_entry = &program_header_64[i];
+        const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
 
         // Only load segments that should be loaded into memory
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
@@ -75,23 +75,25 @@ void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr
         return;
     }
 
-    auto* header_64               = reinterpret_cast<const Header64_t*>(elf_start);
-    auto* program_header_entry_64 = reinterpret_cast<const ProgramHeaderEntry64_t*>(
+    auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
+    auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
         elf_start + header_64->program_header_table_file_offset
     );
 
     for (u16 i = 0; i < header_64->program_header_table_entry_count; i++) {
-        const ProgramHeaderEntry64_t* phdr = &program_header_entry_64[i];
+        const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
 
-        if (phdr->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
+        if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
             if (start_addr == reinterpret_cast<u64>(nullptr) ||
-                phdr->virtual_address < start_addr) {
-                start_addr = phdr->virtual_address;
+                program_header_entry->virtual_address < start_addr) {
+                start_addr = program_header_entry->virtual_address;
             }
 
             if (end_addr == reinterpret_cast<u64>(nullptr) ||
-                phdr->virtual_address + phdr->size_in_memory_bytes > end_addr) {
-                end_addr = phdr->virtual_address + phdr->size_in_memory_bytes;
+                program_header_entry->virtual_address + program_header_entry->size_in_memory_bytes >
+                    end_addr) {
+                end_addr = program_header_entry->virtual_address +
+                           program_header_entry->size_in_memory_bytes;
             }
         }
     }
