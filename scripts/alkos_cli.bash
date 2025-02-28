@@ -8,7 +8,6 @@ readonly ALK_OS_CLI_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/$(basename "$0")"
 # Script paths
 readonly ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/install_toolchain.bash"
 readonly ALK_OS_CLI_BUILD_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/build_alkos.bash"
-readonly ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/env/install_deps_arch.bash"
 readonly ALK_OS_CLI_QEMU_RUN_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/run_alkos.bash"
 readonly ALK_OS_CLI_CONFIGURE_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/configure.bash"
 readonly ALK_OS_CLI_CONF_PATH="${ALK_OS_CLI_SCRIPT_DIR}/conf.bash"
@@ -17,6 +16,12 @@ readonly ALK_OS_CLI_SETUP_HOOKS_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/git-hooks/
 # Import utilities
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/pretty_print.bash"
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/helpers.bash"
+
+# Install dependencies scripts dictionary
+declare -A INSTALL_DEPS_SCRIPT_PATH_DICT=(
+    [arch]="env/install_deps_arch.bash"
+    [ubuntu]="env/install_deps_ubuntu.bash"
+)
 
 # Default configuration
 declare -A CONFIG=(
@@ -133,15 +138,17 @@ run_default_configuration() {
 
 install_dependencies() {
     if [[ ${CONFIG[install_deps]} == true ]]; then
-        pretty_info "Installing system dependencies"
-        check_runs_on_arch
-        if [[ $? -ne 0 ]]; then
-            dump_error "Dependencies installation only supported on Arch Linux"
-            exit 1
-        fi
+      pretty_info "Installing system dependencies"
 
-        base_runner "Failed to install dependencies" true \
-            "${ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH}" --install ${CONFIG[verbose]}
+      local distro=$(get_supported_distro_name)
+      if [[ -z $distro ]]; then
+        dump_error "Dependencies installation is not supported on this distribution"
+        exit 1
+      fi
+
+      local install_script_path="${ALK_OS_CLI_SCRIPT_DIR}/${INSTALL_DEPS_SCRIPT_PATH_DICT[$distro]}"
+      base_runner "Failed to install dependencies" true \
+        "${install_script_path}" --install ${CONFIG[verbose]}
     fi
 }
 
