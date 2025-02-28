@@ -10,8 +10,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run tests for x86_64
-        run: sudo scripts/cicd/build_and_run_tests.bash x86_64
+      - name: Prepare environment for x86_64
+        uses: ./.github/actions/prepare_env
+        with:
+          arch: x86_64
+
+      - name: Build and run tests
+        uses: ./.github/actions/build_and_run_tests
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

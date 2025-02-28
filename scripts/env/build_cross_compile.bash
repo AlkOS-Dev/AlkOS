@@ -3,9 +3,9 @@
 CROSS_COMPILE_BUILD_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CROSS_COMPILE_BUILD_SCRIPT_PATH="${CROSS_COMPILE_BUILD_SCRIPT_DIR}/$(basename "$0")"
 
-CROSS_COMPILE_BUILD_BIN_UTILS_VER="2.43.1"
-CROSS_COMPILE_BUILD_GDB_VER="15.2"
-CROSS_COMPILE_BUILD_GCC_VER="14.2.0"
+CROSS_COMPILE_BUILD_BIN_UTILS_VER=""
+CROSS_COMPILE_BUILD_GDB_VER=""
+CROSS_COMPILE_BUILD_GCC_VER=""
 CROSS_COMPILE_BUILD_TARGET=x86_64-elf
 
 CROSS_COMPILE_BUILD_POSITIONAL_ARGS=()
@@ -37,6 +37,31 @@ runner() {
     base_runner "${dump_info}" "${CROSS_COMPILE_BUILD_VERBOSE}" "$@"
 }
 
+load_toolchain_versions() {
+    local toolchain_versions_file="${CROSS_COMPILE_BUILD_SCRIPT_DIR}/toolchain_versions.txt"
+
+    if ! [ -f "${toolchain_versions_file}" ]; then
+        dump_error "Toolchain versions file not found: ${toolchain_versions_file}"
+    fi
+
+    while IFS='=' read -r key value; do
+        case "${key,,}" in
+            binutils)
+                CROSS_COMPILE_BUILD_BIN_UTILS_VER="${value}"
+                ;;
+            gcc)
+                CROSS_COMPILE_BUILD_GCC_VER="${value}"
+                ;;
+            gdb)
+                CROSS_COMPILE_BUILD_GDB_VER="${value}"
+                ;;
+            *)
+                dump_error "Unknown toolchain version: ${key}-${value}"
+                ;;
+        esac
+    done < "${toolchain_versions_file}"
+}
+
 prepare_directory() {
     assert_argument_provided "$1"
     local dir="$1"
@@ -58,7 +83,7 @@ download_source() {
 
     if ! [ -f "${name}" ]; then
         pretty_info "Downloading ${name}"
-        runner "Failed to download ${name}" wget "${link}"
+        runner "Failed to download ${name}" wget --no-verbose --show-progress --progress=bar:force:noscroll "${link}"
         pretty_success "${name} downloaded correctly"
     else
         pretty_info "Skipping... ${name} already downloaded"
@@ -249,6 +274,7 @@ process_args() {
 main() {
     parse_args "$@"
     process_args
+    load_toolchain_versions
     run_build
 }
 

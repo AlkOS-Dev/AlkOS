@@ -1,0 +1,50 @@
+name: Prepare environment
+description: Prepare the environment for the build
+
+inputs:
+  arch:
+    description: The architecture of the build tools
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install packages
+      shell: bash
+      run: sudo "$GITHUB_WORKSPACE/scripts/env/install_deps_ubuntu.bash" --install -v
+
+    - name: Configure environment
+      env:
+        ARCH: ${{ inputs.arch }}
+      shell: bash
+      run: sudo "$GITHUB_WORKSPACE/scripts/configure.bash" "$ARCH" debug_qemu_tests -v
+
+    - name: Cache toolchain
+      uses: actions/cache@v4
+      id: cache-build-tools
+      with:
+        key: tools-${{ inputs.arch }}-${{ hashFiles('scripts/env/toolchain_versions.txt') }}
+        path: ${{ github.workspace }}/tools
+
+    - name: Build toolchain
+      env:
+        TOOLCHAIN_PATH: ${{ github.workspace }}/tools
+        BUILD_PATH: ${{ github.workspace }}/build
+        ARCH: ${{ inputs.arch }}
+        BUILD_TOOLS_CACHE_HIT: ${{ steps.cache-build-tools.outputs.cache-hit }}
+      shell: bash
+      run: |
+        if [[ $BUILD_TOOLS_CACHE_HIT == 'true' ]]; then
+          echo "Toolchain is cached, skipping build"      
+          if [[ $ARCH == 'x86_64' ]]; then
+            echo "Adding x86 toolchain paths to the PATH"
+            echo "::add-path::$TOOLCHAIN_PATH/i386-elf/bin"
+            echo "::add-path::$TOOLCHAIN_PATH/x86_64-elf/bin"
+          else
+            echo "Unsupported arch"
+            exit 1
+          fi     
+        else
+          echo "Building toolchain"
+          sudo "$GITHUB_WORKSPACE/scripts/env/install_toolchain" "$TOOLCHAIN_PATH" "$BUILD_PATH" "$ARCH" -v
+        fi
