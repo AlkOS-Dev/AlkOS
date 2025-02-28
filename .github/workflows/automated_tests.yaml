@@ -15,17 +15,24 @@ jobs:
         with:
           arch: x86_64
 
-      - name: Build and run tests
-        uses: ./.github/actions/build_and_run_tests
+      - name: Build AlkOS
+        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
 
-      - name: Upload build artifacts
+      - name: Run tests
+        run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: last build log
-          path: /tmp/alkOS_build.log
+          name: alkos_build
+          path: |
+            /tmp/alkOS_build.log
+            build/alkos/alkos.iso
+          compression-level: 9
 
-      - name: Upload test artifacts
+      - name: Upload tests artifact
         uses: actions/upload-artifact@v4
         with:
-          name: logs
-          path: scripts/tests/test_framework/logs
+          name: tests_logs
+          path: scripts/tests/test_framework_logs
+          compression-level: 9

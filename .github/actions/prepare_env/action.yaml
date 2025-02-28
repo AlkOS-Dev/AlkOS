@@ -24,7 +24,7 @@ runs:
       id: cache-build-tools
       with:
         key: tools-${{ inputs.arch }}-${{ hashFiles('scripts/env/toolchain_versions.txt') }}
-        path: ${{ github.workspace }}/tools
+        path: tools
 
     - name: Build toolchain
       env:
@@ -38,13 +38,13 @@ runs:
           echo "Toolchain is cached, skipping build"      
           if [[ $ARCH == 'x86_64' ]]; then
             echo "Adding x86 toolchain paths to the PATH"
-            echo "::add-path::$TOOLCHAIN_PATH/i386-elf/bin"
-            echo "::add-path::$TOOLCHAIN_PATH/x86_64-elf/bin"
+            echo "$TOOLCHAIN_PATH/i386-elf/bin" >> $GITHUB_PATH
+            echo "$TOOLCHAIN_PATH/x86_64-elf/bin" >> $GITHUB_PATH
           else
             echo "Unsupported arch"
             exit 1
           fi     
         else
           echo "Building toolchain"
-          sudo "$GITHUB_WORKSPACE/scripts/env/install_toolchain" "$TOOLCHAIN_PATH" "$BUILD_PATH" "$ARCH" -v
+          sudo "$GITHUB_WORKSPACE/scripts/env/install_toolchain.bash" "$TOOLCHAIN_PATH" "$BUILD_PATH" "$ARCH" -v
         fi

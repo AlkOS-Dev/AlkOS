@@ -38,10 +38,12 @@ runner() {
 }
 
 load_toolchain_versions() {
+    pretty_info "Loading toolchain versions"
     local toolchain_versions_file="${CROSS_COMPILE_BUILD_SCRIPT_DIR}/toolchain_versions.txt"
 
     if ! [ -f "${toolchain_versions_file}" ]; then
-        dump_error "Toolchain versions file not found: ${toolchain_versions_file}"
+        pretty_error "Toolchain versions file not found: ${toolchain_versions_file}"
+        exit 1
     fi
 
     while IFS='=' read -r key value; do
@@ -56,10 +58,16 @@ load_toolchain_versions() {
                 CROSS_COMPILE_BUILD_GDB_VER="${value}"
                 ;;
             *)
-                dump_error "Unknown toolchain version: ${key}-${value}"
+                pretty_error "Unknown toolchain version: ${key}-${value}"
+                exit 1
                 ;;
         esac
     done < "${toolchain_versions_file}"
+
+    pretty_success "Toolchain versions loaded correctly"
+    pretty_info "Binutils version: ${CROSS_COMPILE_BUILD_BIN_UTILS_VER}"
+    pretty_info "GCC version: ${CROSS_COMPILE_BUILD_GCC_VER}"
+    pretty_info "GDB version: ${CROSS_COMPILE_BUILD_GDB_VER}"
 }
 
 prepare_directory() {
