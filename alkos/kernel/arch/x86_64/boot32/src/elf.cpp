@@ -5,11 +5,11 @@
 namespace elf
 {
 
-void* LoadElf64Module(const byte* elf_start)
+void* LoadElf64(const byte* elf_start)
 {
-    TRACE_INFO("Loading ELF-64 module...");
+    TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
-        TRACE_ERROR("Invalid ELF-64 module.");
+        TRACE_ERROR("Invalid ELF-64.");
         return nullptr;
     }
 
