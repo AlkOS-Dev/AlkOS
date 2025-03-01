@@ -16,4 +16,8 @@
 /* should be changed when timezones are implemented */
 #define TODO_TIMEZONES
 
+#define TODO_FULL_TUPLE_SUPPORT
+
+#define TODO_LIBCPP_COMPLIANCE
+
 #endif  // LIBC_INCLUDE_TODO_H_

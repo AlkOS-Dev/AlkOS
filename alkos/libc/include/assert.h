@@ -19,12 +19,14 @@
 
 /* usual kernel assert macro */
 #ifdef NDEBUG
-#define ASSERT(expr) ((void)0)
+#define ASSERT(expr)     ((void)0)
+#define FAIL_ALWAYS(msg) ((void)0)
 #else
 #define ASSERT(expr)         \
     if (!(expr)) {           \
         __FAIL_KERNEL(expr); \
     }
+#define FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 #endif  // NDEBUG
 
 /* usual kernel working in release assert macro */
@@ -32,6 +34,7 @@
     if (!(expr)) {           \
         __FAIL_KERNEL(expr); \
     }
+#define R_FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 
 /* libc default assert macro */
 #define assert(expr) ASSERT(expr)
@@ -45,9 +48,11 @@
 #define __ASSERT_FAIL_FUNC TODO_USERSPACE
 
 #ifdef NDEBUG
-#define assert(expr) ((void)0)
+#define assert(expr)     ((void)0)
+#define FAIL_ALWAYS(msg) ((void)0)
 #else
-#define assert(expr) TODO_USERSPACE
+#define assert(expr)     TODO_USERSPACE
+#define FAIL_ALWAYS(msg) TODO_USERSPACE
 #endif  // NDEBUG
 
 #endif
@@ -76,7 +81,6 @@
 #define ASSERT_GE(val1, val2)     BASE_ASSERT_GE(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
 #define ASSERT_STREQ(val1, val2)  BASE_ASSERT_STREQ(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
 #define ASSERT_STRNEQ(val1, val2) BASE_ASSERT_STRNEQ(kIsDebugBuild, val1, val2, __ASSERT_FAIL_FUNC)
-#define ASSERT_ALWAYS(msg)        ASSERT(false && msg)
 
 /* release build asserts */
 #define R_ASSERT_EQ(expected, value)  BASE_ASSERT_EQ(true, expected, value, __ASSERT_FAIL_FUNC)
@@ -92,7 +96,6 @@
 #define R_ASSERT_GE(val1, val2)       BASE_ASSERT_GE(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STREQ(val1, val2)    BASE_ASSERT_STREQ(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(true, val1, val2, __ASSERT_FAIL_FUNC)
-#define R_ASSERT_ALWAYS(msg)          R_ASSERT(false && msg)
 
 #endif  // __cplusplus
 

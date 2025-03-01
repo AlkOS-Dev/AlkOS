@@ -15,7 +15,7 @@ class StringTest : public TestGroupBase
 
 TEST_F(StringTest, Strlen)
 {
-    R_ASSERT_EQ(13_s, strlen("Hello, World!"));
+    R_ASSERT_EQ(13_size, strlen("Hello, World!"));
     R_ASSERT_ZERO(strlen(""));
 }
 

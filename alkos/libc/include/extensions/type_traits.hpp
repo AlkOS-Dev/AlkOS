@@ -1,6 +1,7 @@
 #ifndef LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
 #define LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
 
+#include <todo.h>
 #include <extensions/cstddef.hpp>
 #include <extensions/defines.hpp>
 
@@ -20,6 +21,7 @@
     template <class T>                   \
     using name##_t = typename name<T>::type;
 
+TODO_LIBCPP_COMPLIANCE
 /**
  * TODO: Missing implementations:
  * - std::common_reference
@@ -95,8 +97,8 @@ struct integral_constant {
     static constexpr T value = v;
     using value_type         = T;
     using type               = integral_constant;
-    NODSCRD FORCE_INLINE_F constexpr operator value_type() const noexcept { return value; }
-    NODSCRD FORCE_INLINE_F constexpr value_type operator()() const noexcept { return value; }
+    NODISCARD FORCE_INLINE_F constexpr operator value_type() const noexcept { return value; }
+    NODISCARD FORCE_INLINE_F constexpr value_type operator()() const noexcept { return value; }
 };
 
 // ------------------------------
@@ -1251,7 +1253,7 @@ constexpr std::size_t extent_v = extent<T, N>::value;
 // std::is_constant_evaluated()
 // ----------------------------------
 
-NODSCRD constexpr bool is_constant_evaluated() noexcept
+NODISCARD constexpr bool is_constant_evaluated() noexcept
 {
     return __builtin_is_constant_evaluated();
 }
@@ -1261,7 +1263,7 @@ NODSCRD constexpr bool is_constant_evaluated() noexcept
 // ----------------------------------
 
 template <typename S1, typename S2, typename M1, typename M2>
-NODSCRD constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept
+NODISCARD constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept
 {
     return __builtin_is_corresponding_member(m1, m2);
 }
@@ -1271,7 +1273,7 @@ NODSCRD constexpr bool is_corresponding_member(M1 S1::*m1, M2 S2::*m2) noexcept
 // --------------------------------------------
 
 template <typename T, typename Mem>
-NODSCRD constexpr bool is_pointer_interconvertible_with_class(Mem T::*mp) noexcept
+NODISCARD constexpr bool is_pointer_interconvertible_with_class(Mem T::*mp) noexcept
 {
     return __builtin_is_pointer_interconvertible_with_class(mp);
 }
@@ -1779,6 +1781,7 @@ constexpr bool is_nothrow_invocable_r_v = is_nothrow_invocable_r<Ret, Fn, Args..
 /// Supported operations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+TODO_LIBCPP_COMPLIANCE
 /**
  * TODO: Add static assert for complete type
  */

@@ -134,7 +134,7 @@ struct __BaseTuple<T, Args...> {
     // ------------------------------
 
     template <size_t Index>
-    NODSCRD FORCE_INLINE_F constexpr const auto &get() const
+    NODISCARD FORCE_INLINE_F constexpr const auto &get() const
     {
         static_assert(Index < Size, "Index out of range");
 
@@ -150,7 +150,7 @@ struct __BaseTuple<T, Args...> {
     }
 
     template <size_t Index>
-    NODSCRD FORCE_INLINE_F constexpr auto &get()
+    NODISCARD FORCE_INLINE_F constexpr auto &get()
     {
         static_assert(Index < Size, "Index out of range");
 
@@ -247,6 +247,7 @@ class tuple : public __BaseTuple<Args...>
         }
 
         if constexpr (sizeof...(Args) < 4) {
+            TODO_LIBCPP_COMPLIANCE
             /* TODO: allocators check */
         }
 
@@ -351,7 +352,7 @@ class tuple : public __BaseTuple<Args...>
 // ------------------------------
 
 template <typename... Args>
-NODSCRD FORCE_INLINE_F constexpr tuple<remove_reference_t<decay_t<Args>>...> make_tuple(
+NODISCARD FORCE_INLINE_F constexpr tuple<remove_reference_t<decay_t<Args>>...> make_tuple(
     Args &&...args
 )
 {
@@ -366,7 +367,7 @@ NODSCRD FORCE_INLINE_F constexpr tuple<remove_reference_t<decay_t<Args>>...> mak
 // NOTE: required for structured bindings
 
 template <size_t Index, typename... Args>
-NODSCRD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::type &get(
+NODISCARD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::type &get(
     tuple<Args...> &tup
 ) noexcept
 {
@@ -374,7 +375,7 @@ NODSCRD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::
 }
 
 template <size_t Index, typename... Args>
-NODSCRD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args...>>::type &get(
+NODISCARD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args...>>::type &get(
     const tuple<Args...> &tup
 ) noexcept
 {
@@ -382,7 +383,7 @@ NODSCRD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args.
 }
 
 template <size_t Index, typename... Args>
-NODSCRD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::type &&get(
+NODISCARD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::type &&get(
     tuple<Args...> &&tup
 ) noexcept
 {
@@ -391,7 +392,7 @@ NODSCRD FORCE_INLINE_F constexpr typename tuple_element<Index, tuple<Args...>>::
 }
 
 template <size_t Index, typename... Args>
-NODSCRD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args...>>::type &&get(
+NODISCARD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args...>>::type &&get(
     const tuple<Args...> &&tup
 ) noexcept
 {
@@ -404,7 +405,7 @@ NODSCRD FORCE_INLINE_F constexpr const typename tuple_element<Index, tuple<Args.
 // ------------------------------
 
 template <class T, class... Args>
-NODSCRD FORCE_INLINE_F constexpr T &get(tuple<Args...> &tuple) noexcept
+NODISCARD FORCE_INLINE_F constexpr T &get(tuple<Args...> &tuple) noexcept
 {
     static_assert(
         TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
@@ -414,7 +415,7 @@ NODSCRD FORCE_INLINE_F constexpr T &get(tuple<Args...> &tuple) noexcept
 }
 
 template <class T, class... Args>
-NODSCRD FORCE_INLINE_F constexpr const T &get(const tuple<Args...> &tuple) noexcept
+NODISCARD FORCE_INLINE_F constexpr const T &get(const tuple<Args...> &tuple) noexcept
 {
     static_assert(
         TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
@@ -424,7 +425,7 @@ NODSCRD FORCE_INLINE_F constexpr const T &get(const tuple<Args...> &tuple) noexc
 }
 
 template <class T, class... Args>
-NODSCRD FORCE_INLINE_F constexpr T &&get(tuple<Args...> &&tuple) noexcept
+NODISCARD FORCE_INLINE_F constexpr T &&get(tuple<Args...> &&tuple) noexcept
 {
     static_assert(
         TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
@@ -434,7 +435,7 @@ NODSCRD FORCE_INLINE_F constexpr T &&get(tuple<Args...> &&tuple) noexcept
 }
 
 template <class T, class... Args>
-NODSCRD FORCE_INLINE_F constexpr const T &&get(const tuple<Args...> &&tuple) noexcept
+NODISCARD FORCE_INLINE_F constexpr const T &&get(const tuple<Args...> &&tuple) noexcept
 {
     static_assert(
         TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"

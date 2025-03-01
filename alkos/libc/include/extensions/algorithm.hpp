@@ -1,6 +1,8 @@
 #ifndef LIBC_INCLUDE_EXTENSIONS_ALGORITHM_HPP_
 #define LIBC_INCLUDE_EXTENSIONS_ALGORITHM_HPP_
 
+#include <todo.h>
+
 namespace std
 {
 
@@ -20,13 +22,8 @@ constexpr const T& max(const T& a, const T& b, Compare comp)
     return (comp(a, b)) ? b : a;
 }
 
-// TODO:
-// template<class T>
-// constexpr T max(std::initializer_list<T> ilist)
-
-// TODO:
-// template<class T, class Compare>
-// constexpr T max(std::initializer_list<T> ilist, Compare comp)
+TODO_LIBCPP_COMPLIANCE
+// TODO: Implement std::max with initializer list
 
 };  // namespace std
 

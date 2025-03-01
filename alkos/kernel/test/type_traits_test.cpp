@@ -923,18 +923,18 @@ TEST_F(TypeTraitsTest, IsUnboundedArray)
 
 TEST_F(TypeTraitsTest, Rank)
 {
-    EXPECT_EQ(0_s, (rank_v<int>));
-    EXPECT_EQ(1_s, (rank_v<int[5]>));
-    EXPECT_EQ(2_s, (rank_v<int[3][4]>));
-    EXPECT_EQ(3_s, (rank_v<int[3][4][2]>));
+    EXPECT_EQ(0_size, (rank_v<int>));
+    EXPECT_EQ(1_size, (rank_v<int[5]>));
+    EXPECT_EQ(2_size, (rank_v<int[3][4]>));
+    EXPECT_EQ(3_size, (rank_v<int[3][4][2]>));
 }
 
 TEST_F(TypeTraitsTest, Extent)
 {
-    EXPECT_EQ(0_s, (extent_v<int>));
-    EXPECT_EQ(5_s, (extent_v<int[5]>));
-    EXPECT_EQ(3_s, (extent_v<int[3][4]>));
-    EXPECT_EQ(3_s, (extent_v<int[3][4][2]>));
+    EXPECT_EQ(0_size, (extent_v<int>));
+    EXPECT_EQ(5_size, (extent_v<int[5]>));
+    EXPECT_EQ(3_size, (extent_v<int[3][4]>));
+    EXPECT_EQ(3_size, (extent_v<int[3][4][2]>));
 }
 
 TEST_F(TypeTraitsTest, AlignmentOf)

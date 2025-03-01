@@ -1,6 +1,7 @@
 #ifndef LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 #define LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 
+#include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/utility.hpp>
 
@@ -14,6 +15,8 @@ namespace TemplateLib
 
 template <
     class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class DefaultFuncT, class... Args>
+    requires concepts_ext::Callable<DefaultFuncT, Args...> &&
+             concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr void RolledSwitch(
     DefaultFuncT &&default_func, FuncT &&func, const uint64_t value, Args &&...args
 ) noexcept
@@ -36,6 +39,8 @@ FAST_CALL constexpr void RolledSwitch(
 
 template <
     class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class DefaultFuncT, class... Args>
+    requires concepts_ext::Callable<DefaultFuncT, Args...> &&
+             concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr auto RolledSwitchReturnable(
     DefaultFuncT &&default_func, FuncT &&func, const uint64_t value, Args &&...args
 ) noexcept
@@ -55,24 +60,26 @@ FAST_CALL constexpr auto RolledSwitchReturnable(
 }
 
 template <class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class... Args>
+    requires concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr void RolledSwitch(FuncT &&func, const uint64_t value, Args &&...args) noexcept
 {
     RolledSwitch<ExprT, kMaxValue, kStep>(
         []() constexpr FORCE_INLINE_L {
-            R_ASSERT_ALWAYS("Switch out of range error...");
+            R_FAIL_ALWAYS("Switch out of range error...");
         },
         std::forward<FuncT>(func), value, std::forward<Args>(args)...
     );
 }
 
 template <class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class... Args>
+    requires concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr auto RolledSwitchReturnable(
     FuncT &&func, const uint64_t value, Args &&...args
 ) noexcept
 {
     return RolledSwitchReturnable<ExprT, kMaxValue, kStep>(
         []() constexpr FORCE_INLINE_L {
-            R_ASSERT_ALWAYS("Switch out of range error...");
+            R_FAIL_ALWAYS("Switch out of range error...");
         },
         std::forward<FuncT>(func), value, std::forward<Args>(args)...
     );
@@ -169,7 +176,7 @@ struct IterateTypes {
 };
 
 template <class T, class... Args>
-NODSCRD FAST_CALL constexpr size_t GetTypeIndexInTypes()
+NODISCARD FAST_CALL constexpr size_t GetTypeIndexInTypes()
 {
     static_assert(HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple");
     size_t idx{};

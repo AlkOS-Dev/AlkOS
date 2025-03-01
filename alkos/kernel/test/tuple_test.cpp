@@ -12,7 +12,7 @@ TEST_F(TupleTest, TupleBasics)
     EXPECT_EQ(1, std::get<0>(tuple));
     EXPECT_EQ(2, std::get<1>(tuple));
     EXPECT_EQ(3, std::get<2>(tuple));
-    EXPECT_EQ(3_s, std::tuple_size<decltype(tuple)>::value);
+    EXPECT_EQ(3_size, std::tuple_size<decltype(tuple)>::value);
 
     EXPECT_TRUE((std::is_same_v<const int, std::tuple_element_t<0, decltype(tuple)>>));
     EXPECT_TRUE((std::is_same_v<const int, std::tuple_element_t<1, decltype(tuple)>>));
@@ -42,7 +42,7 @@ TEST_F(TupleTest, TupleMixedTypes)
     EXPECT_TRUE((std::is_same_v<const float, std::tuple_element_t<2, decltype(tuple1)>>));
     EXPECT_TRUE((std::is_same_v<const char* const, std::tuple_element_t<3, decltype(tuple1)>>));
 
-    EXPECT_EQ(4_s, std::tuple_size_v<decltype(tuple1)>);
+    EXPECT_EQ(4_size, std::tuple_size_v<decltype(tuple1)>);
 }
 
 TEST_F(TupleTest, TupleGet)
@@ -138,7 +138,7 @@ TEST_F(TupleTest, TupleHelpers)
     auto t2    = std::make_tuple(arr, 5);
     EXPECT_TRUE((std::is_same_v<int*, std::tuple_element_t<0, decltype(t2)>>));
 
-    // TODO: when reference support added
+    TODO_FULL_TUPLE_SUPPORT
     // // Test make_tuple with references using std::ref and std::cref
     // int x = 42;
     // auto t3 = std::make_tuple(std::ref(x), std::cref(x));
@@ -152,7 +152,7 @@ TEST_F(TupleTest, TupleHelpers)
     // std::tuple_element_t<1, decltype(t3)>>));
 }
 
-// TODO:
+TODO_FULL_TUPLE_SUPPORT
 // TEST_F(TupleTest, TupleComparison)
 // {
 //     auto tuple1 = std::make_tuple(1, 2.0, "a");
@@ -218,7 +218,7 @@ TEST_F(TupleTest, TupleCopyMove)
     EXPECT_EQ(3.14, std::get<1>(assigned));
     EXPECT_STREQ("test", std::get<2>(assigned));
 
-    // TODO: when copy and move assignment operators are added
+    TODO_FULL_TUPLE_SUPPORT
     // auto target = std::make_tuple(0, 0.0, "");
     // target = std::make_tuple(100, 2.71, "moved");
     //
@@ -230,7 +230,7 @@ TEST_F(TupleTest, TupleCopyMove)
 TEST_F(TupleTest, TupleEmptyConstruction)
 {
     std::tuple<> emptyTuple{};
-    EXPECT_EQ(0_s, std::tuple_size_v<decltype(emptyTuple)>);
+    EXPECT_EQ(0_size, std::tuple_size_v<decltype(emptyTuple)>);
 
     std::tuple<int, double, const char*> defaultTuple{};
     EXPECT_EQ(0, std::get<0>(defaultTuple));
