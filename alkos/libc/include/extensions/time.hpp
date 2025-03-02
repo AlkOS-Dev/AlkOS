@@ -72,4 +72,8 @@ FAST_CALL uint64_t CalculateYears30MoreWLeaps(const uint64_t time_left)
     return {};
 }
 
+NODISCARD int64_t CalculateMondayBasedWeek(const tm &time);
+
+NODISCARD int64_t CalculateSundayBasedWeek(const tm &time);
+
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

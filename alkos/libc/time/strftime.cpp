@@ -1,8 +1,10 @@
 #include <assert.h>
 #include <time.h>
-#include <extensions/time.hpp>
+
+#include <sys/calls.h>
 
 #include <extensions/internal/formats.hpp>
+#include <extensions/time.hpp>
 
 class StrfTimeWriter final
 {
@@ -142,56 +144,18 @@ class StrfTimeWriter final
     FORCE_INLINE_F void y_Format_()
     {
         const uintmax_t nums = time_ptr_->tm_year % 100;
-
-        if (nums < 10) {
-            WriteZeroBoundaryCheck_();
-        }
-
-        WriteUint_(nums);
+        Write2Digits_(nums);
     }
 
-    FORCE_INLINE_F void m_Format_()
-    {
-        if (time_ptr_->tm_mon < 10) {
-            WriteZeroBoundaryCheck_();
-        }
+    FORCE_INLINE_F void m_Format_() { Write2Digits_(time_ptr_->tm_mon + 1); }
 
-        WriteUint_(time_ptr_->tm_mon + 1);
-    }
+    FORCE_INLINE_F void d_Format_() { Write2Digits_(time_ptr_->tm_mday); }
 
-    FORCE_INLINE_F void d_Format_()
-    {
-        if (time_ptr_->tm_mday < 10) {
-            WriteZeroBoundaryCheck_();
-        }
+    FORCE_INLINE_F void H_Format_() { Write2Digits_(time_ptr_->tm_hour); }
 
-        WriteUint_(time_ptr_->tm_mday);
-    }
+    FORCE_INLINE_F void M_Format_() { Write2Digits_(time_ptr_->tm_min); }
 
-    FORCE_INLINE_F void H_Format_()
-    {
-        if (time_ptr_->tm_hour < 10) {
-            WriteZeroBoundaryCheck_();
-        }
-        WriteUint_(time_ptr_->tm_hour);
-    }
-
-    FORCE_INLINE_F void M_Format_()
-    {
-        if (time_ptr_->tm_min < 10) {
-            WriteZeroBoundaryCheck_();
-        }
-        WriteUint_(time_ptr_->tm_min);
-    }
-
-    FORCE_INLINE_F void S_Format_()
-    {
-        if (time_ptr_->tm_sec < 10) {
-            WriteZeroBoundaryCheck_();
-        }
-
-        WriteUint_(time_ptr_->tm_sec);
-    }
+    FORCE_INLINE_F void S_Format_() { Write2Digits_(time_ptr_->tm_sec); }
 
     FORCE_INLINE_F void A_Format_()
     {
@@ -235,33 +199,124 @@ class StrfTimeWriter final
     FORCE_INLINE_F void D_Format_()
     {
         m_Format_();
+        WriteChar_('/');
         d_Format_();
+        WriteChar_('/');
         y_Format_();
     }
 
-    FORCE_INLINE_F void F_Format_() {}
-    FORCE_INLINE_F void I_Format_() {}
-    FORCE_INLINE_F void j_Format_() {}
-    FORCE_INLINE_F void p_Format_() {}
-    FORCE_INLINE_F void R_Format_() {}
-    FORCE_INLINE_F void T_Format_() {}
-    FORCE_INLINE_F void U_Format_() {}
-    FORCE_INLINE_F void W_Format_() {}
-    FORCE_INLINE_F void w_Format_() {}
-    FORCE_INLINE_F void x_Format_() {}
-    FORCE_INLINE_F void X_Format_() {}
-    FORCE_INLINE_F void Z_Format_() {}
-    FORCE_INLINE_F void z_Format_() {}
+    FORCE_INLINE_F void F_Format_()
+    {
+        m_Format_();
+        WriteChar_('-');
+        d_Format_();
+        WriteChar_('-');
+        Y_Format_();
+    }
 
-    FORCE_INLINE_F void Percent_Format_() { buf_[written_++] = '%'; }
+    FORCE_INLINE_F void I_Format_() { Write2Digits_(time_ptr_->tm_hour % 12); }
+
+    FORCE_INLINE_F void j_Format_()
+    {
+        if (time_ptr_->tm_yday < 100) {
+            WriteZeroBoundaryCheck_();
+        }
+
+        if (time_ptr_->tm_yday < 10) {
+            WriteZeroBoundaryCheck_();
+        }
+
+        WriteUint_(time_ptr_->tm_yday);
+    }
+
+    FORCE_INLINE_F void p_Format_()
+    {
+        const char* am_pm = time_ptr_->tm_hour < 12 ? "AM" : "PM";
+        WriteString_(am_pm);
+    }
+
+    FORCE_INLINE_F void R_Format_()
+    {
+        H_Format_();
+        WriteChar_(':');
+        M_Format_();
+    }
+
+    FORCE_INLINE_F void T_Format_()
+    {
+        H_Format_();
+        WriteChar_(':');
+        M_Format_();
+        WriteChar_(':');
+        S_Format_();
+    }
+
+    FORCE_INLINE_F void U_Format_()
+    {
+        const int64_t sunday_based_week = CalculateSundayBasedWeek(*time_ptr_);
+        Write2Digits_(sunday_based_week);
+    }
+
+    FORCE_INLINE_F void W_Format_()
+    {
+        const int64_t monday_based_week = CalculateMondayBasedWeek(*time_ptr_);
+        Write2Digits_(monday_based_week);
+    }
+
+    FORCE_INLINE_F void w_Format_() { WriteUint_(time_ptr_->tm_wday); }
+
+    FORCE_INLINE_F void x_Format_()
+    {
+        TODO_LOCALE_SUPPORT
+        D_Format_();
+    }
+
+    FORCE_INLINE_F void X_Format_()
+    {
+        TODO_LOCALE_SUPPORT
+        I_Format_();
+        p_Format_();
+    }
+
+    FORCE_INLINE_F void Z_Format_()
+    {
+        const auto time_zone = GetTimezoneSysCall();
+
+        int64_t offset = time_zone.west_offset_minutes;
+        if (time_ptr_->tm_isdst && time_zone.dst_time_offset_minutes) {
+            offset += time_zone.dst_time_offset_minutes;
+        }
+
+        const bool is_negative = offset < 0;
+        WriteChar_(is_negative ? '-' : '+');
+
+        if (offset < 1000) {
+            WriteChar_('0');
+        }
+
+        if (offset < 100) {
+            WriteChar_('0');
+        }
+
+        if (offset < 10) {
+            WriteChar_('0');
+        }
+
+        WriteUint_(is_negative ? -offset : offset);
+    }
+
+    FORCE_INLINE_F void z_Format_()
+    {
+        TODO_LOCALE_SUPPORT
+        Z_Format_();
+    }
+
+    FORCE_INLINE_F void Percent_Format_() { WriteChar_('%'); }
 
     FORCE_INLINE_F void InvalidFormat_()
     {
-        buf_[written_++] = '%';
-
-        if (written_ < size_) {
-            buf_[written_++] = *(format_ - 1);
-        }
+        WriteChar_('%');
+        WriteChar_(*(format_ - 1));
     }
 
     FORCE_INLINE_F void WriteUint_(const uintmax_t num)
@@ -269,18 +324,29 @@ class StrfTimeWriter final
         written_ += FormatUIntWoutNullTerm(num, buf_ + written_, size_ - written_);
     }
 
-    FORCE_INLINE_F void WriteZeroBoundaryCheck_()
+    FORCE_INLINE_F void WriteChar_(const char c)
     {
         if (written_ < size_) {
-            buf_[written_++] = '0';
+            buf_[written_++] = c;
         }
     }
+
+    FORCE_INLINE_F void WriteZeroBoundaryCheck_() { WriteChar_('0'); }
 
     FORCE_INLINE_F void WriteString_(const char* str)
     {
         while (*str != '\0' && written_ < size_) {
             buf_[written_++] = *(str++);
         }
+    }
+
+    FORCE_INLINE_F void Write2Digits_(const uintmax_t num)
+    {
+        if (num < 10) {
+            WriteZeroBoundaryCheck_();
+        }
+
+        WriteUint_(num);
     }
 
     char* const buf_;

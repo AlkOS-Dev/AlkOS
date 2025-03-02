@@ -5,12 +5,42 @@
 // Constants
 // ------------------------------
 
-static uint16_t kDaysInMonth[2][13]{
+static constexpr uint16_t kDaysInMonth[2][13]{
     /* Normal Year */
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
     /* Leap Year */
     {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366},
 };
+
+// ------------------------------
+// static functions
+// ------------------------------
+
+FAST_CALL int64_t SumUpDays_(const int64_t year)
+{
+    const int64_t years_adjusted = year - 1;
+
+    return years_adjusted * 365 + years_adjusted / 4 - years_adjusted / 100 + years_adjusted / 400;
+}
+
+WRAP_CALL int64_t SumUpDays_(const tm &time_ptr)
+{
+    return SumUpDays_(time_ptr.tm_year + kTmBaseYear);
+}
+
+FAST_CALL int64_t GetWeekdayJan1_(const int64_t days_since_century)
+{
+    return (days_since_century + 1) % 7;
+}
+
+/**
+ * @note: Includes the current day
+ */
+FAST_CALL int64_t SumYearDays_(const tm &time_ptr)
+{
+    const bool is_leap = IsTmYearLeap(time_ptr.tm_year);
+    return kDaysInMonth[is_leap][time_ptr.tm_mon] + time_ptr.tm_mday;
+}
 
 // ------------------------------
 // Implementations
@@ -63,4 +93,21 @@ uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone
     }
 
     return time;
+}
+
+int64_t CalculateMondayBasedWeek(const tm &time)
+{
+    const int64_t jan1_weekday = GetWeekdayJan1_(SumUpDays_(time));
+    const int64_t days         = SumYearDays_(time) - 1;
+    const int64_t monday_based = jan1_weekday == 0 ? 6 : jan1_weekday - 1;
+
+    return (days + monday_based) / 7;
+}
+
+int64_t CalculateSundayBasedWeek(const tm &time)
+{
+    const int64_t jan1_weekday = GetWeekdayJan1_(SumUpDays_(time));
+    const int64_t days         = SumYearDays_(time) - 1;
+
+    return (days + jan1_weekday) / 7;
 }

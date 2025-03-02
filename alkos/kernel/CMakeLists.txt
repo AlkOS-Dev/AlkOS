@@ -61,7 +61,7 @@ file(GLOB KERNEL_SOURCES
 )
 
 if (ENABLE_TESTS)
-    file(GLOB KERNEL_TEST_SOURCES
+    file(GLOB_RECURSE KERNEL_TEST_SOURCES
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"
     )
