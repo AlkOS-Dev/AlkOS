@@ -44,7 +44,7 @@ class StrftimeTestFixture : public TestGroupBase
 
 TEST_F(StrftimeTestFixture, BasicDateFormats)
 {
-    tm date = CreateTm(2024, 3, 15, 14, 30, 45);
+    tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
     VerifyStrftime(date, "%Y-%m-%d", "2024-03-15");
     VerifyStrftime(date, "%d/%m/%Y", "15/03/2024");
@@ -55,7 +55,7 @@ TEST_F(StrftimeTestFixture, BasicDateFormats)
 
 TEST_F(StrftimeTestFixture, BasicTimeFormats)
 {
-    tm date = CreateTm(2024, 3, 15, 14, 30, 45);
+    tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
     VerifyStrftime(date, "%H:%M:%S", "14:30:45");
     VerifyStrftime(date, "%I:%M:%S %p", "02:30:45 PM");
@@ -66,7 +66,7 @@ TEST_F(StrftimeTestFixture, BasicTimeFormats)
 
 TEST_F(StrftimeTestFixture, CombinedDateTimeFormats)
 {
-    tm date = CreateTm(2024, 3, 15, 14, 30, 45);
+    tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
     VerifyStrftime(date, "%Y-%m-%d %H:%M:%S", "2024-03-15 14:30:45");
     VerifyStrftime(date, "%a %b %d %T %Y", "Fri Mar 15 14:30:45 2024");
@@ -80,24 +80,24 @@ TEST_F(StrftimeTestFixture, CombinedDateTimeFormats)
 TEST_F(StrftimeTestFixture, WeekNumbers)
 {
     // ISO week numbers (%V) - Week containing Jan 4
-    VerifyStrftime(CreateTm(2024, 1, 1), "%G-W%V-%u", "2024-W01-1");  // Monday of week 1
+    VerifyStrftime(CreateTm(2024, 1, 1, 1), "%G-W%V-%u", "2024-W01-1");  // Monday of week 1
     VerifyStrftime(
-        CreateTm(2023, 1, 1), "%G-W%V-%u", "2022-W52-7"
+        CreateTm(2023, 1, 1, 0), "%G-W%V-%u", "2022-W52-7"
     );  // Sunday of week 52 (prev year)
     VerifyStrftime(
-        CreateTm(2024, 12, 31), "%G-W%V-%u", "2025-W01-2"
+        CreateTm(2024, 12, 31, 2), "%G-W%V-%u", "2025-W01-2"
     );  // Tuesday of week 1 (next year)
 
     // Sunday-based week numbers (%U) - First Sunday starts week 1
     VerifyStrftime(
-        CreateTm(2024, 1, 1), "%Y-WU%U-%w", "2024-WU00-1"
+        CreateTm(2024, 1, 1, 1), "%Y-WU%U-%w", "2024-WU00-1"
     );  // Monday before first Sunday
-    VerifyStrftime(CreateTm(2024, 1, 7), "%Y-WU%U-%w", "2024-WU01-0");  // First Sunday = week 1
+    VerifyStrftime(CreateTm(2024, 1, 7, 0), "%Y-WU%U-%w", "2024-WU01-0");  // First Sunday = week 1
 
     // Monday-based week numbers (%W) - First Monday starts week 1
-    VerifyStrftime(CreateTm(2024, 1, 1), "%Y-WW%W-%w", "2024-WW01-1");  // First Monday = week 1
+    VerifyStrftime(CreateTm(2024, 1, 1, 1), "%Y-WW%W-%w", "2024-WW01-1");  // First Monday = week 1
     VerifyStrftime(
-        CreateTm(2023, 1, 1), "%Y-WW%W-%w", "2023-WW00-0"
+        CreateTm(2023, 1, 1, 0), "%Y-WW%W-%w", "2023-WW00-0"
     );  // Sunday before first Monday
 }
 
@@ -109,32 +109,38 @@ TEST_F(StrftimeTestFixture, LeapYears)
 {
     // February 29 in leap years
     VerifyStrftime(
-        CreateTm(2020, 2, 29), "%Y-%m-%d is day %j of the year", "2020-02-29 is day 060 of the year"
+        CreateTm(2020, 2, 29, 6), "%Y-%m-%d is day %j of the year",
+        "2020-02-29 is day 060 of the year"
     );
     VerifyStrftime(
-        CreateTm(2024, 2, 29), "%Y-%m-%d is day %j of the year", "2024-02-29 is day 060 of the year"
+        CreateTm(2024, 2, 29, 4), "%Y-%m-%d is day %j of the year",
+        "2024-02-29 is day 060 of the year"
     );
 
     // February 28 in non-leap year vs leap year
     VerifyStrftime(
-        CreateTm(2023, 2, 28), "%Y-%m-%d is day %j of the year", "2023-02-28 is day 059 of the year"
+        CreateTm(2023, 2, 28, 2), "%Y-%m-%d is day %j of the year",
+        "2023-02-28 is day 059 of the year"
     );
     VerifyStrftime(
-        CreateTm(2024, 2, 28), "%Y-%m-%d is day %j of the year", "2024-02-28 is day 059 of the year"
+        CreateTm(2024, 2, 28, 3), "%Y-%m-%d is day %j of the year",
+        "2024-02-28 is day 059 of the year"
     );
 
     // March 1 in non-leap year vs leap year
     VerifyStrftime(
-        CreateTm(2023, 3, 1), "%Y-%m-%d is day %j of the year", "2023-03-01 is day 060 of the year"
+        CreateTm(2023, 3, 1, 3), "%Y-%m-%d is day %j of the year",
+        "2023-03-01 is day 060 of the year"
     );
     VerifyStrftime(
-        CreateTm(2024, 3, 1), "%Y-%m-%d is day %j of the year", "2024-03-01 is day 061 of the year"
+        CreateTm(2024, 3, 1, 5), "%Y-%m-%d is day %j of the year",
+        "2024-03-01 is day 061 of the year"
     );
 }
 
 TEST_F(StrftimeTestFixture, FormatSpecifiers)
 {
-    tm date = CreateTm(2024, 3, 15, 14, 30, 45);
+    tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
     VerifyStrftime(date, "Century: %C", "Century: 20");
     VerifyStrftime(date, "Year without century: %y", "Year without century: 24");
