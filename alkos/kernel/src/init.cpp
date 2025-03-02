@@ -14,5 +14,5 @@ void KernelInit()
     __stack_chk_init();
 
     /* Initialize the timing system */
-    InitTiming();
+    timing::InitTiming();
 }

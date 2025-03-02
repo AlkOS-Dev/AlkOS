@@ -31,16 +31,14 @@ inline void operator delete[](void *, size_t, std::align_val_t) noexcept {}
 /* Be careful with aligned allocations as it may need more space than sizeof() */
 inline void *operator new(size_t, std::align_val_t al, void *ptr)
 {
-    const size_t offset =
-        static_cast<size_t>(al) - (reinterpret_cast<size_t>(ptr) % static_cast<size_t>(al));
-    return reinterpret_cast<char *>(ptr) + offset;
+    ASSERT_EQ(0_size, reinterpret_cast<size_t>(ptr) % static_cast<size_t>(al));
+    return ptr;
 }
 
 inline void *operator new[](size_t, std::align_val_t al, void *ptr)
 {
-    const size_t offset =
-        static_cast<size_t>(al) - (reinterpret_cast<size_t>(ptr) % static_cast<size_t>(al));
-    return reinterpret_cast<char *>(ptr) + offset;
+    ASSERT_EQ(0_size, reinterpret_cast<size_t>(ptr) % static_cast<size_t>(al));
+    return ptr;
 }
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_NEW_HPP_

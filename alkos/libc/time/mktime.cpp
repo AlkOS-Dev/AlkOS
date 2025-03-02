@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <time.h>
 #include <extensions/time.hpp>
-#include <time_internal.hpp>
 
 // ------------------------------
 // Constants
@@ -50,11 +49,11 @@ static uint64_t ConvertDateTime(const tm &date_time)
     time -= kPosixEpochTmSecondDiff;
 
     /* adjust by timezone */
-    time -= static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
-
-    if (date_time.tm_isdst > 0) {
-        time -= static_cast<int64_t>(__GetDstTimezoneOffsetNs() / kNanosInSecond);
-    }
+    // time -= static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
+    //
+    // if (date_time.tm_isdst > 0) {
+    //     time -= static_cast<int64_t>(__GetDstTimezoneOffsetNs() / kNanosInSecond);
+    // }
 
     if (date_time.tm_isdst < 0) {
         /* TODO: here we should try to determine if DST is in effect */
