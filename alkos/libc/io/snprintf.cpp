@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <extensions/internal/formats.hpp>
 
 #include "defines.h"
 #include "math.h"
@@ -9,7 +10,6 @@
 #include "types.h"
 
 static size_t GetDecimal(char **str);
-static void ReverseString(char *str, size_t len);
 static size_t RemoveTrailingZeros(char *str);
 static void ShiftStringRight(char *str);
 static int RoundFormattedDoubleDecimal(char *str, bool scientific);
@@ -26,7 +26,6 @@ static char *FormatHex(
 static char *FormatOct(
     uintmax_t num, char *str, bool prefix, int precision, bool zeroPadding, int width
 );
-static char *FormatUInt(uintmax_t num, char *str);
 
 template <bool scientific>
 static char *FormatDouble(
@@ -557,17 +556,6 @@ static size_t GetDecimal(char **str)
     return i;
 }
 
-static void ReverseString(char *str, size_t len)
-{
-    if (!len)
-        return;
-    for (size_t i = 0, j = len - 1; i < j; i++, j--) {
-        char tmp = str[i];
-        str[i]   = str[j];
-        str[j]   = tmp;
-    }
-}
-
 static void ShiftStringRight(char *str)
 {
     size_t len = strlen(str);
@@ -816,28 +804,6 @@ static char *FormatOct(
 
     if (prefix) {
         str[i++] = '0';
-    }
-
-    str[i] = '\0';
-
-    ReverseString(str, i);
-
-    return str;
-}
-
-static char *FormatUInt(uintmax_t num, char *str)
-{
-    int i = 0;
-
-    if (num == 0) {
-        str[i++] = '0';
-        str[i]   = '\0';
-
-        return str;
-    }
-
-    for (; num; num /= 10) {
-        str[i++] = '0' + num % 10;
     }
 
     str[i] = '\0';
