@@ -18,13 +18,13 @@ source "${ALK_OS_CLI_SCRIPT_DIR}/utils/pretty_print.bash"
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/helpers.bash"
 
 # Install dependencies scripts dictionary
-declare -A INSTALL_DEPS_SCRIPT_PATH_DICT=(
+declare -A ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH_DICT=(
     [arch]="env/install_deps_arch.bash"
     [ubuntu]="env/install_deps_ubuntu.bash"
 )
 
 # Default configuration
-declare -A CONFIG=(
+declare -A ALK_OS_CLI_CONFIG=(
     [run]=false
     [install_toolchain]=false
     [install_deps]=false
@@ -75,20 +75,20 @@ parse_args() {
                 exit 0
                 ;;
             -r|--run)
-                CONFIG[run]=true
+                ALK_OS_CLI_CONFIG[run]=true
                 shift
                 ;;
             -i|--install)
                 case $2 in
                     toolchain)
-                        CONFIG[install_toolchain]=true
+                        ALK_OS_CLI_CONFIG[install_toolchain]=true
                         ;;
                     deps)
-                        CONFIG[install_deps]=true
+                        ALK_OS_CLI_CONFIG[install_deps]=true
                         ;;
                     all)
-                        CONFIG[install_toolchain]=true
-                        CONFIG[install_deps]=true
+                        ALK_OS_CLI_CONFIG[install_toolchain]=true
+                        ALK_OS_CLI_CONFIG[install_deps]=true
                         ;;
                     *)
                         dump_error "Invalid install component: $2"
@@ -98,15 +98,15 @@ parse_args() {
                 shift 2
                 ;;
             -v|--verbose)
-                CONFIG[verbose]="-v"
+                ALK_OS_CLI_CONFIG[verbose]="-v"
                 shift
                 ;;
             -c|--configure)
-                CONFIG[configure]=true
+                ALK_OS_CLI_CONFIG[configure]=true
                 shift
                 ;;
             -g|--git-hooks)
-                CONFIG[setup_hooks]=true
+                ALK_OS_CLI_CONFIG[setup_hooks]=true
                 shift
                 ;;
             *)
@@ -118,26 +118,26 @@ parse_args() {
 }
 
 validate_args() {
-    if [[ ${CONFIG[run]} == false ]] &&
-       [[ ${CONFIG[install_toolchain]} == false ]] &&
-       [[ ${CONFIG[install_deps]} == false ]] &&
-       [[ ${CONFIG[configure]} == false ]] &&
-       [[ ${CONFIG[setup_hooks]} == false ]]; then
+    if [[ ${ALK_OS_CLI_CONFIG[run]} == false ]] &&
+       [[ ${ALK_OS_CLI_CONFIG[install_toolchain]} == false ]] &&
+       [[ ${ALK_OS_CLI_CONFIG[install_deps]} == false ]] &&
+       [[ ${ALK_OS_CLI_CONFIG[configure]} == false ]] &&
+       [[ ${ALK_OS_CLI_CONFIG[setup_hooks]} == false ]]; then
         dump_error "No action specified. Use --run, --install, --configure or --git-hooks."
         exit 1
     fi
 }
 
 run_default_configuration() {
-    if [[ ${CONFIG[configure]} == true ]]; then
+    if [[ ${ALK_OS_CLI_CONFIG[configure]} == true ]]; then
         pretty_info "Running default configuration"
         base_runner "Failed to run default configuration" true \
-            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug_qemu ${CONFIG[verbose]}
+            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug_qemu ${ALK_OS_CLI_CONFIG[verbose]}
     fi
 }
 
 install_dependencies() {
-    if [[ ${CONFIG[install_deps]} == true ]]; then
+    if [[ ${ALK_OS_CLI_CONFIG[install_deps]} == true ]]; then
       pretty_info "Installing system dependencies"
 
       local distro=$(get_supported_distro_name)
@@ -146,9 +146,9 @@ install_dependencies() {
         exit 1
       fi
 
-      local install_script_path="${ALK_OS_CLI_SCRIPT_DIR}/${INSTALL_DEPS_SCRIPT_PATH_DICT[$distro]}"
+      local install_script_path="${ALK_OS_CLI_SCRIPT_DIR}/${ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH_DICT[$distro]}"
       base_runner "Failed to install dependencies" true \
-        "${install_script_path}" --install ${CONFIG[verbose]}
+        "${install_script_path}" --install ${ALK_OS_CLI_CONFIG[verbose]}
     fi
 }
 
@@ -160,21 +160,21 @@ validate_configuration_exists() {
 }
 
 install_toolchain() {
-    if [[ ${CONFIG[install_toolchain]} == true ]]; then
+    if [[ ${ALK_OS_CLI_CONFIG[install_toolchain]} == true ]]; then
         validate_configuration_exists
 
-        pretty_info "Installing cross-compile toolchain for ${CONFIG[arch]}"
+        pretty_info "Installing cross-compile toolchain for ${ALK_OS_CLI_CONFIG[arch]}"
         base_runner "Failed to install cross-compile toolchain" true \
-            "${ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH}" ${CONFIG[verbose]}
+            "${ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH}" ${ALK_OS_CLI_CONFIG[verbose]}
     fi
 }
 
 build_and_run() {
-    if [[ ${CONFIG[run]} == true ]]; then
+    if [[ ${ALK_OS_CLI_CONFIG[run]} == true ]]; then
         validate_configuration_exists
 
         pretty_info "Building AlkOS..."
-        base_runner "Failed to build AlkOS" true "${ALK_OS_CLI_BUILD_SCRIPT_PATH}" ${CONFIG[verbose]}
+        base_runner "Failed to build AlkOS" true "${ALK_OS_CLI_BUILD_SCRIPT_PATH}" ${ALK_OS_CLI_CONFIG[verbose]}
 
         pretty_info "Running AlkOS in QEMU"
         base_runner "Failed to run AlkOS in QEMU" true "${ALK_OS_CLI_QEMU_RUN_SCRIPT_PATH}" --verbose
@@ -182,7 +182,7 @@ build_and_run() {
 }
 
 setup_git_hooks() {
-  if [[ ${CONFIG[setup_hooks]} == true ]]; then
+  if [[ ${ALK_OS_CLI_CONFIG[setup_hooks]} == true ]]; then
     base_runner "Failed to setup git-hooks" true "${ALK_OS_CLI_SETUP_HOOKS_SCRIPT_PATH}"
   fi
 }

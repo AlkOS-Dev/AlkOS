@@ -64,6 +64,21 @@ load_toolchain_versions() {
         esac
     done < "${toolchain_versions_file}"
 
+    if [ -z "${CROSS_COMPILE_BUILD_BIN_UTILS_VER}" ]; then
+        pretty_error "Binutils version not found"
+        exit 1
+    fi
+
+    if [ -z "${CROSS_COMPILE_BUILD_GCC_VER}" ]; then
+        pretty_error "GCC version not found"
+        exit 1
+    fi
+
+    if [ -z "${CROSS_COMPILE_BUILD_GDB_VER}" ]; then
+        pretty_error "GDB version not found"
+        exit 1
+    fi
+
     pretty_success "Toolchain versions loaded correctly"
     pretty_info "Binutils version: ${CROSS_COMPILE_BUILD_BIN_UTILS_VER}"
     pretty_info "GCC version: ${CROSS_COMPILE_BUILD_GCC_VER}"
