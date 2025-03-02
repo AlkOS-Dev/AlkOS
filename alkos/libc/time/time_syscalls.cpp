@@ -5,29 +5,30 @@
 
 #ifdef __ALKOS_KERNEL__
 
+#include <modules/timing.hpp>
+
 // ----------------------------------------
 // Internal kernel use implementation
 // ----------------------------------------
 
 void GetDayTimeSysCall(TimerVal* time, Timezone* time_zone)
 {
-    assert(time != nullptr && time_zone != nullptr);
+    assert(time != nullptr || time_zone != nullptr);
 
-    GetTimezoneSysCall(time_zone);
+    if (time_zone != nullptr) {
+        GetTimezoneSysCall(time_zone);
+    }
+
+    if (time != nullptr) {
+        time->seconds     = TimingModule::Get().GetDayTime().GetTime();
+        time->nanoseconds = 0;
+    }
 }
 
 void GetTimezoneSysCall(Timezone* time_zone)
 {
     assert(time_zone != nullptr);
-
-    TODO_TIMEZONES
-
-    /* Hard coded Poland */
-    static constexpr uint64_t kPolandOffset = 1;
-    time_zone->west_offset_seconds          = kPolandOffset * kSecondsInHour;
-
-    /* TODO: temporarily disable DST */
-    time_zone->dst_time_offset_seconds = 0;
+    *time_zone = TimingModule::Get().GetDayTime().GetTimezone();
 }
 
 #else

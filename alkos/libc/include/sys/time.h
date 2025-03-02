@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 typedef struct Timezone {
-    int32_t west_offset_seconds;
-    int32_t dst_time_offset_seconds;
+    int32_t west_offset_minutes;
+    int32_t dst_time_offset_minutes;
     int32_t dst_time_start_seconds;
     int32_t dst_time_end_seconds;
 } timezone;

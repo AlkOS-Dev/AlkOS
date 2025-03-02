@@ -13,7 +13,7 @@ class TimingModule : TemplateLib::StaticSingletonHelper
     TimingModule() noexcept;
 
     public:
-    FORCE_INLINE_F DayTime& GetTime() noexcept { return day_time_; }
+    FORCE_INLINE_F DayTime& GetDayTime() noexcept { return day_time_; }
 
     private:
     DayTime day_time_{};
