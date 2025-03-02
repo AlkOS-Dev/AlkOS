@@ -1,7 +1,7 @@
 #include <assert.h>
+#include <sys/calls.h>
 #include <time.h>
 #include <extensions/time.hpp>
-#include <time_internal.hpp>
 
 // ------------------------------
 // Constants
@@ -22,7 +22,7 @@ tm *localtime_r(const time_t *timer, tm *result)
     uint64_t time_left = *timer;
 
     /* add local time offset */
-    time_left += static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
+    // time_left += static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
 
     const uint64_t years = time_left >= kLeap30Posix ? CalculateYears30MoreWLeaps(time_left)
                                                      : CalculateYears30LessWLeaps(time_left);
