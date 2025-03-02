@@ -3,6 +3,7 @@
 
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/new.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/utility.hpp>
 
@@ -216,7 +217,7 @@ template <class T>
     requires DerivedFromHelper<T>
 class StaticSingleton
 {
-    struct InstanceHelper : T {
+    struct InstanceHelper final : T {
         /* Makes protected constructor accessible */
 
         template <class... Args>

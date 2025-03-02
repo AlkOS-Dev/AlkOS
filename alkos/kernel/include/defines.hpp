@@ -26,10 +26,4 @@ static constexpr bool kIsAlkosTestBuild = true;
 static constexpr bool kIsAlkosTestBuild = false;
 #endif  // __ALKOS_TESTS_BUILD__
 
-#ifdef NDEBUG
-static constexpr bool kIsDebugBuild = false;
-#else
-static constexpr bool kIsDebugBuild = true;
-#endif  // NDEBUG
-
 #endif  // KERNEL_INCLUDE_DEFINES_HPP_

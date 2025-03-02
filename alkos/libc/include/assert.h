@@ -63,6 +63,7 @@
 
 #ifdef __cplusplus
 
+#include <defines.hpp>
 #include <extensions/assert_base.hpp>
 
 /* usual C-style asserts */

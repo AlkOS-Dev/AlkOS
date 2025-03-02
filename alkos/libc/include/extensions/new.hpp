@@ -1,6 +1,7 @@
 #ifndef LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
 #define LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
 
+#include <assert.h>
 #include <stddef.h>
 
 namespace std

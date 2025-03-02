@@ -4,6 +4,12 @@
 #include <defines.h>
 #include <stddef.h>
 
+#ifdef NDEBUG
+static constexpr bool kIsDebugBuild = false;
+#else
+static constexpr bool kIsDebugBuild = true;
+#endif  // NDEBUG
+
 #define NODISCARD [[nodiscard]]
 
 constexpr size_t operator""_size(const char* str, const size_t len)

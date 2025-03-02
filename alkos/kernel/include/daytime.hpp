@@ -1,8 +1,0 @@
-#ifndef ALKOS_INCLUDE_DAYTIME_HPP_
-#define ALKOS_INCLUDE_DAYTIME_HPP_
-
-class DayTime
-{
-};
-
-#endif  // ALKOS_INCLUDE_DAYTIME_HPP_

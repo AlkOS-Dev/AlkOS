@@ -1,8 +1,5 @@
-#include <time.h>
-#include <timers.hpp>
-#include <timing.hpp>
+#include <modules/timing.hpp>
 
-namespace timing
-{
-void InitTiming() {}
-}  // namespace timing
+#include <debug.hpp>
+
+internal::TimingModule::TimingModule() noexcept { TRACE_INFO("TimingModule::TimingModule()"); }

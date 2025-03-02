@@ -2,7 +2,7 @@
 
 /* Internal includes */
 #include <libssp.h>
-#include <timing.hpp>
+#include <modules/timing.hpp>
 
 /**
  * @brief Performs all high-level initialization not related to architecture
@@ -14,5 +14,5 @@ void KernelInit()
     __stack_chk_init();
 
     /* Initialize the timing system */
-    timing::InitTiming();
+    TimingModule::Init();
 }
