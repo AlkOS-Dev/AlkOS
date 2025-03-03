@@ -3,7 +3,7 @@
 #include <todo.h>
 #include <extensions/time.hpp>
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 
 #include <modules/timing.hpp>
 
@@ -39,4 +39,4 @@ void GetTimezoneSysCall(Timezone* time_zone)
 
 TODO_USERSPACE
 
-#endif  // __ALKOS_KERNEL__
+#endif  // __ALKOS_LIBK__

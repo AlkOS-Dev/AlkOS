@@ -1,5 +1,5 @@
 #include <modules/timing.hpp>
 
-#include <debug.hpp>
+#include <extensions/debug.hpp>
 
 internal::TimingModule::TimingModule() noexcept { TRACE_INFO("TimingModule::TimingModule()"); }

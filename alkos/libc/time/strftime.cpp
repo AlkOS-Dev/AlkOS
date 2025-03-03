@@ -133,11 +133,33 @@ class StrfTimeWriter final
             case '%':
                 Percent_Format_();
                 break;
+            case 'e':
+                e_Format_();
+                break;
+            case 'h':
+                h_Format_();
+                break;
+            case 'g':
+                g_Format_();
+                break;
+            case 'G':
+                G_Format_();
+                break;
+            case 'u':
+                u_Format_();
+                break;
+            case 'V':
+                V_Format_();
+                break;
             default:
                 InvalidFormat_();
                 break;
         }
     }
+
+    // ------------------------------
+    // Standard C formats
+    // ------------------------------
 
     FORCE_INLINE_F void Y_Format_() { WriteUint_(kTmBaseYear + time_ptr_->tm_year); }
 
@@ -156,6 +178,16 @@ class StrfTimeWriter final
     FORCE_INLINE_F void M_Format_() { Write2Digits_(time_ptr_->tm_min); }
 
     FORCE_INLINE_F void S_Format_() { Write2Digits_(time_ptr_->tm_sec); }
+
+    FORCE_INLINE_F void e_Format_()
+    {
+        if (time_ptr_->tm_mday < 10) {
+            WriteChar_(' ');
+        }
+        WriteUint_(time_ptr_->tm_mday);
+    }
+
+    FORCE_INLINE_F void h_Format_() { b_Format_(); }
 
     FORCE_INLINE_F void A_Format_()
     {
@@ -318,6 +350,26 @@ class StrfTimeWriter final
         WriteChar_('%');
         WriteChar_(*(format_ - 1));
     }
+
+    // ------------------------------
+    // ISO 8601
+    // ------------------------------
+
+    FORCE_INLINE_F void G_Format_() {}
+
+    FORCE_INLINE_F void g_Format_() {}
+
+    FORCE_INLINE_F void V_Format_() {}
+
+    FORCE_INLINE_F void u_Format_()
+    {
+        const int64_t iso_weekday = time_ptr_->tm_wday == 0 ? 6 : time_ptr_->tm_wday - 1;
+        WriteUint_(iso_weekday + 1);
+    }
+
+    // ------------------------------
+    // Helpers
+    // ------------------------------
 
     FORCE_INLINE_F void WriteUint_(const uintmax_t num)
     {

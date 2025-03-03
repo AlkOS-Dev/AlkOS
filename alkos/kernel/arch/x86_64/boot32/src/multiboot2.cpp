@@ -2,7 +2,7 @@
 #include <tags.hpp>
 #include <terminal.hpp>
 #include <types.hpp>
-#include "debug.hpp"
+#include "extensions/debug.hpp"
 
 extern char text_buffer[1024];
 

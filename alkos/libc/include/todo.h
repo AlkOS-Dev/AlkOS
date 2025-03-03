@@ -24,4 +24,6 @@
 
 #define TODO_LOCALE_SUPPORT
 
+#define TODO_STREAMS
+
 #endif  // LIBC_INCLUDE_TODO_H_

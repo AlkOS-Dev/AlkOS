@@ -7,7 +7,7 @@
 // Kernel Asserts
 // ------------------------------
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 
 #include <panic.hpp>
 

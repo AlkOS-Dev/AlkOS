@@ -12,7 +12,7 @@ endif ()
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     set(LIB_NAME "k")
-    add_compile_definitions(__ALKOS_KERNEL__=1)
+    add_compile_definitions(__ALKOS_LIBK__=1)
 
     if (USE_DEBUG_OUTPUT)
         message(STATUS "Enabled debug output for libc...")

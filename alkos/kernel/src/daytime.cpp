@@ -1,4 +1,4 @@
-#include <debug.hpp>
+#include <extensions/debug.hpp>
 #include <time/daytime.hpp>
 #include <timers.hpp>
 

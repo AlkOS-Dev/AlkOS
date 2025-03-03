@@ -1,8 +1,8 @@
 #include <multiboot2.h>
 #include <arch_utils.hpp>
-#include <debug.hpp>
 #include <defines.hpp>
 #include <elf.hpp>
+#include <extensions/debug.hpp>
 #include <loader_data.hpp>
 #include <tags.hpp>
 #include <terminal.hpp>

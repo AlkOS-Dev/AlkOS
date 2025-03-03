@@ -8,8 +8,8 @@
 class StrftimeTestFixture : public TestGroupBase
 {
     protected:
-    static const size_t kBufferSize = 128;
-    char buffer_[kBufferSize];
+    static constexpr size_t kBufferSize = 128;
+    char buffer_[kBufferSize]{};
 
     static tm CreateTm(
         const int year, const int month, const int day, const int wday, const int hour = 0,
@@ -29,12 +29,13 @@ class StrftimeTestFixture : public TestGroupBase
         return time;
     }
 
-#define VerifyStrftime(time, format, expected)                               \
-    {                                                                        \
-        memset(buffer_, 0, kBufferSize);                                     \
-        const size_t result = strftime(buffer_, kBufferSize, format, &time); \
-        EXPECT_GT(result, 0);                                                \
-        EXPECT_STREQ(expected, buffer_);                                     \
+#define VerifyStrftime(time, format, expected)                                     \
+    {                                                                              \
+        const auto local_time = time;                                              \
+        memset(buffer_, 0, kBufferSize);                                           \
+        const size_t result = strftime(buffer_, kBufferSize, format, &local_time); \
+        EXPECT_GT(result, 0);                                                      \
+        EXPECT_STREQ(expected, buffer_);                                           \
     }
 };
 

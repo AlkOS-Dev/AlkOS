@@ -11,6 +11,7 @@ endif ()
 ############################ Compile Definitions #############################
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
+add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
 
 if (ENABLE_TESTS)
     message(STATUS "Tests enabled...")
