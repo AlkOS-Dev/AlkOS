@@ -1,6 +1,6 @@
 name: Automated Tests
 
-on: [push]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   Tests:
@@ -10,17 +10,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run tests for x86_64
-        run: sudo scripts/cicd/build_and_run_tests.bash x86_64
+      - name: Prepare environment for x86_64
+        uses: ./.github/actions/prepare_env
+        with:
+          arch: x86_64
 
-      - name: Upload build artifacts
+      - name: Build AlkOS
+        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
+
+      - name: Run tests
+        run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
+
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: last build log
-          path: /tmp/alkOS_build.log
+          name: alkos_build
+          path: |
+            /tmp/alkOS_build.log
+            build/alkos/alkos.iso
+          compression-level: 9
 
-      - name: Upload test artifacts
+      - name: Upload tests artifact
         uses: actions/upload-artifact@v4
         with:
-          name: logs
-          path: scripts/tests/test_framework/logs
+          name: tests_logs
+          path: scripts/tests/test_framework_logs
+          compression-level: 9
