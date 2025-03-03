@@ -1,6 +1,8 @@
 #ifndef LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 #define LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
+#include <todo.h>
+
 TODO_STREAMS
 /* Note: Currently works only in kernel code due to lack of libc terminal abstractions */
 #if defined(__USE_DEBUG_TRACES__) && defined(__ALKOS_KERNEL__)

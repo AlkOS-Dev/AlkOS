@@ -4,13 +4,8 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
-#include <extensions/defines.hpp>
-
-#ifdef __ALKOS_KERNEL__
 #include <extensions/debug.hpp>
-#else
-#define TRACE_INFO(...)
-#endif
+#include <extensions/defines.hpp>
 
 // ------------------------------
 // Time constants
@@ -101,6 +96,8 @@ FAST_CALL int64_t CalculateDayOfWeek(const tm &time)
     return total_days % 7;
 }
 
+NODISCARD bool ValidateTm(const tm &time_ptr);
+
 /* Posix time helpers */
 FAST_CALL uint64_t CalculateYears30LessWLeaps(const uint64_t time_left) { return {}; }
 
@@ -119,11 +116,14 @@ FAST_CALL uint64_t CalculateYears30MoreWLeaps(const uint64_t time_left)
 
 NODISCARD FAST_CALL int64_t CalculateMondayBasedWeek(const tm &time)
 {
-    const int64_t jan1_weekday              = GetWeekdayJan1_(time.tm_year);
+    const int64_t jan1_weekday              = GetWeekdayJan1_(SumUpDays_(time));
     const int64_t days                      = SumYearDays_(time) - 1;
     const int64_t monday_based_jan1_weekday = jan1_weekday == 1   ? 7
                                               : jan1_weekday == 0 ? 6
                                                                   : jan1_weekday - 1;
+
+    TRACE_INFO("jan1_weekday = %lu", jan1_weekday);
+    TRACE_INFO("Jan1_weekday_monday_based: %lu", monday_based_jan1_weekday);
 
     return (days + monday_based_jan1_weekday) / 7;
 }

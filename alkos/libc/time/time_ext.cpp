@@ -54,6 +54,16 @@ uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone
     return time;
 }
 
+bool ValidateTm(const tm &time_ptr)
+{
+    return time_ptr.tm_hour >= 0 && time_ptr.tm_hour <= 23 && time_ptr.tm_min >= 0 &&
+           time_ptr.tm_min <= 59 && time_ptr.tm_sec >= 0 && time_ptr.tm_sec <= 60 &&
+           time_ptr.tm_mon >= 0 && time_ptr.tm_mon <= 11 && time_ptr.tm_mday >= 1 &&
+           time_ptr.tm_mday <= 31 && time_ptr.tm_year >= 0 && time_ptr.tm_year <= 9999 &&
+           time_ptr.tm_wday >= 0 && time_ptr.tm_wday <= 6 && time_ptr.tm_yday >= 0 &&
+           time_ptr.tm_yday <= 365;
+}
+
 int64_t CalculateIsoBasedWeek(const tm &time)
 {
     // Convert Sunday from 0 to 7 for ISO calculations

@@ -26,4 +26,6 @@
 
 #define TODO_STREAMS
 
+#define TODO_LIBC_EXT1
+
 #endif  // LIBC_INCLUDE_TODO_H_

@@ -60,15 +60,15 @@ TEST_F(WeekCalculationTest, MondayBasedWeek)
     VerifyMondayBasedWeek(2025, 1, 6, 1);  // Monday starts week 1
 
     // Mid-year dates
-    VerifyMondayBasedWeek(2025, 6, 15, 24);
-    VerifyMondayBasedWeek(2025, 6, 16, 25);
+    VerifyMondayBasedWeek(2025, 6, 15, 23);
+    VerifyMondayBasedWeek(2025, 6, 16, 24);
 
     // Year boundaries
-    VerifyMondayBasedWeek(2024, 12, 30, 52);  // Monday of last week of 2024
-    VerifyMondayBasedWeek(2024, 12, 31, 52);  // Tuesday of last week of 2024
+    VerifyMondayBasedWeek(2024, 12, 30, 52);  // Monday of last week of 2024 // L
+    VerifyMondayBasedWeek(2024, 12, 31, 52);  // Tuesday of last week of 2024 // L
 
     // Leap year tests (2024 is a leap year)
-    VerifyMondayBasedWeek(2024, 2, 29, 8);
+    VerifyMondayBasedWeek(2024, 2, 29, 8);  // L
 
     // First day of week
     VerifyMondayBasedWeek(2025, 3, 3, 9);  // A Monday (first day of week)
