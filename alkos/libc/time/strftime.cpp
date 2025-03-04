@@ -151,6 +151,9 @@ class StrfTimeWriter final
             case 'V':
                 V_Format_();
                 break;
+            case 'r':
+                r_Format();
+                break;
             default:
                 InvalidFormat_();
                 break;
@@ -226,7 +229,7 @@ class StrfTimeWriter final
         WriteString_(kMonths[time_ptr_->tm_mon]);
     }
 
-    FORCE_INLINE_F void C_Format_() {}
+    FORCE_INLINE_F void C_Format_() { Write2Digits_(19 + time_ptr_->tm_year / 100); }
 
     FORCE_INLINE_F void D_Format_()
     {
@@ -239,11 +242,11 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void F_Format_()
     {
+        Y_Format_();
+        WriteChar_('-');
         m_Format_();
         WriteChar_('-');
         d_Format_();
-        WriteChar_('-');
-        Y_Format_();
     }
 
     FORCE_INLINE_F void I_Format_() { Write2Digits_(time_ptr_->tm_hour % 12); }
@@ -351,15 +354,38 @@ class StrfTimeWriter final
         WriteChar_(*(format_ - 1));
     }
 
+    FORCE_INLINE_F void r_Format()
+    {
+        I_Format_();
+        WriteChar_(':');
+        M_Format_();
+        WriteChar_(':');
+        S_Format_();
+        WriteChar_(' ');
+        p_Format_();
+    }
+
     // ------------------------------
     // ISO 8601
     // ------------------------------
 
-    FORCE_INLINE_F void G_Format_() {}
+    FORCE_INLINE_F void G_Format_()
+    {
+        const int64_t iso_year = CalculateIsoBasedYear(*time_ptr_);
+        WriteUint_(iso_year);
+    }
 
-    FORCE_INLINE_F void g_Format_() {}
+    FORCE_INLINE_F void g_Format_()
+    {
+        const int64_t iso_year = CalculateIsoBasedYear(*time_ptr_);
+        Write2Digits_(iso_year % 100);
+    }
 
-    FORCE_INLINE_F void V_Format_() {}
+    FORCE_INLINE_F void V_Format_()
+    {
+        const int64_t iso_week = CalculateIsoBasedWeek(*time_ptr_);
+        Write2Digits_(iso_week);
+    }
 
     FORCE_INLINE_F void u_Format_()
     {

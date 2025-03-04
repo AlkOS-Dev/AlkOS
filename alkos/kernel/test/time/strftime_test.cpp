@@ -5,7 +5,7 @@
 #include <extensions/time.hpp>
 #include <test_module/test.hpp>
 
-class StrftimeTestFixture : public TestGroupBase
+class StrftimeTest : public TestGroupBase
 {
     protected:
     static constexpr size_t kBufferSize = 128;
@@ -25,6 +25,7 @@ class StrftimeTestFixture : public TestGroupBase
         time.tm_sec   = sec;
         time.tm_isdst = -1;
         time.tm_wday  = wday;
+        time.tm_yday  = static_cast<int>(SumYearDays(time));
 
         return time;
     }
@@ -43,7 +44,7 @@ class StrftimeTestFixture : public TestGroupBase
 // Basic Format Tests
 // ------------------------------
 
-TEST_F(StrftimeTestFixture, BasicDateFormats)
+TEST_F(StrftimeTest, BasicDateFormats)
 {
     tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
@@ -54,7 +55,7 @@ TEST_F(StrftimeTestFixture, BasicDateFormats)
     VerifyStrftime(date, "%A, %B %d, %Y", "Friday, March 15, 2024");
 }
 
-TEST_F(StrftimeTestFixture, BasicTimeFormats)
+TEST_F(StrftimeTest, BasicTimeFormats)
 {
     tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
@@ -65,7 +66,7 @@ TEST_F(StrftimeTestFixture, BasicTimeFormats)
     VerifyStrftime(date, "%T", "14:30:45");
 }
 
-TEST_F(StrftimeTestFixture, CombinedDateTimeFormats)
+TEST_F(StrftimeTest, CombinedDateTimeFormats)
 {
     tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 
@@ -78,7 +79,7 @@ TEST_F(StrftimeTestFixture, CombinedDateTimeFormats)
 // Week Number Tests
 // ------------------------------
 
-TEST_F(StrftimeTestFixture, WeekNumbers)
+TEST_F(StrftimeTest, WeekNumbers)
 {
     // ISO week numbers (%V) - Week containing Jan 4
     VerifyStrftime(CreateTm(2024, 1, 1, 1), "%G-W%V-%u", "2024-W01-1");  // Monday of week 1
@@ -106,7 +107,7 @@ TEST_F(StrftimeTestFixture, WeekNumbers)
 // Special Cases Tests
 // ------------------------------
 
-TEST_F(StrftimeTestFixture, LeapYears)
+TEST_F(StrftimeTest, LeapYears)
 {
     // February 29 in leap years
     VerifyStrftime(
@@ -139,7 +140,7 @@ TEST_F(StrftimeTestFixture, LeapYears)
     );
 }
 
-TEST_F(StrftimeTestFixture, FormatSpecifiers)
+TEST_F(StrftimeTest, FormatSpecifiers)
 {
     tm date = CreateTm(2024, 3, 15, 5, 14, 30, 45);  // Friday
 

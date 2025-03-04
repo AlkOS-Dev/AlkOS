@@ -66,30 +66,33 @@ bool ValidateTm(const tm &time_ptr)
 
 int64_t CalculateIsoBasedWeek(const tm &time)
 {
-    const int64_t jan1_weekday            = GetWeekdayJan1_(SumUpDays_(time));
+    const int64_t jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
     const int64_t normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
 
     /* Check if current year starts with first week or week from previous year */
-    const int64_t days_in_first_week = 8 - normalized_jan1_weekday;
-    const bool is_first_week_year    = days_in_first_week >= 4;
+    const int64_t days_in_first_week      = 8 - normalized_jan1_weekday;
+    const bool is_first_week_in_this_year = days_in_first_week >= 4;
 
     /* Check for first days in year */
-    const int64_t days_sum = SumYearDays_(time);
+    const int64_t days_sum = SumYearDays(time);
 
-    if (const bool is_in_first_days = days_sum <= days_in_first_week;
-        !is_first_week_year && is_in_first_days) {
-        /* Extract week number from previous year if first week is not 4 days long */
-        tm time_prev{};
-        time_prev.tm_year = time.tm_year - 1;
-        time_prev.tm_mon  = 11;
-        time_prev.tm_mday = 31;
+    if (const bool is_in_first_days = days_sum <= days_in_first_week) {
+        if (!is_first_week_in_this_year) {
+            /* Extract week number from previous year if first week is not 4 days long */
+            tm time_prev{};
+            time_prev.tm_year = time.tm_year - 1;
+            time_prev.tm_mon  = 11;
+            time_prev.tm_mday = 31;
 
-        return CalculateIsoBasedWeek(time_prev);
+            return CalculateIsoBasedWeek(time_prev);
+        }
+
+        return 1;
     }
 
     /* Check for last week of year for correction */
     const int64_t total_years_days           = IsTmYearLeap(time) ? 366 : 365;
-    const int64_t days_except_first_week     = days_sum - days_in_first_week;
+    const int64_t days_except_first_week     = total_years_days - days_in_first_week;
     const int64_t days_in_last_not_full_week = days_except_first_week % 7;
     const int64_t days_before_last_week      = total_years_days - days_in_last_not_full_week;
     const bool is_last_not_full_week_from_next_year =
@@ -100,9 +103,46 @@ int64_t CalculateIsoBasedWeek(const tm &time)
         /* Extract week number from next year if last week is shorter than 4 days */
         tm time_next{};
         time_next.tm_year = time.tm_year + 1;
-        time_next.tm_mon  = 1;
+        time_next.tm_mon  = 0;
         time_next.tm_mday = 1;
 
         return CalculateIsoBasedWeek(time_next);
     }
+
+    return 1 + is_first_week_in_this_year + (days_sum - days_in_first_week - 1) / 7;
+}
+
+int64_t CalculateIsoBasedYear(const tm &time)
+{
+    const int64_t jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
+    const int64_t normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
+
+    /* Check if current year starts with first week or week from previous year */
+    const int64_t days_in_first_week = 8 - normalized_jan1_weekday;
+
+    /* Check for first days in year */
+    const int64_t days_sum = SumYearDays(time);
+    if (days_sum <= days_in_first_week) {
+        if (const bool is_first_week_in_this_year = days_in_first_week >= 4;
+            !is_first_week_in_this_year) {
+            return kTmBaseYear + time.tm_year - 1;
+        }
+
+        return kTmBaseYear + time.tm_year;
+    }
+
+    /* Check for last week of year for correction */
+    const int64_t total_years_days           = IsTmYearLeap(time) ? 366 : 365;
+    const int64_t days_except_first_week     = total_years_days - days_in_first_week;
+    const int64_t days_in_last_not_full_week = days_except_first_week % 7;
+    const int64_t days_before_last_week      = total_years_days - days_in_last_not_full_week;
+    const bool is_last_not_full_week_from_next_year =
+        days_in_last_not_full_week < 4 && days_in_last_not_full_week > 0;
+
+    /* calculate last week separately */
+    if (is_last_not_full_week_from_next_year && days_sum > days_before_last_week) {
+        return kTmBaseYear + time.tm_year + 1;
+    }
+
+    return kTmBaseYear + time.tm_year;
 }

@@ -66,22 +66,22 @@ WRAP_CALL bool IsTmYearLeap(const tm &time) { return IsLeapYear(time.tm_year + k
 
 NODISCARD uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone);
 
-FAST_CALL int64_t SumUpDays_(const int64_t year)
+FAST_CALL int64_t SumUpDays(const int64_t year)
 {
     const int64_t years_adjusted = year - 1;
 
     return years_adjusted * 365 + years_adjusted / 4 - years_adjusted / 100 + years_adjusted / 400;
 }
 
-WRAP_CALL int64_t SumUpDays_(const tm &time_ptr)
+WRAP_CALL int64_t SumUpDays(const tm &time_ptr)
 {
-    return SumUpDays_(time_ptr.tm_year + kTmBaseYear);
+    return SumUpDays(time_ptr.tm_year + kTmBaseYear);
 }
 
 /**
  * @note 0 = Sunday, 1 = Monday, ..., 6 = Saturday
  */
-FAST_CALL int64_t GetWeekdayJan1_(const int64_t days_since_century)
+FAST_CALL int64_t GetWeekdayJan1(const int64_t days_since_century)
 {
     return (days_since_century + 1) % 7;
 }
@@ -89,7 +89,7 @@ FAST_CALL int64_t GetWeekdayJan1_(const int64_t days_since_century)
 /**
  * @note: Includes the current day
  */
-FAST_CALL int64_t SumYearDays_(const tm &time_ptr)
+FAST_CALL int64_t SumYearDays(const tm &time_ptr)
 {
     const bool is_leap = IsTmYearLeap(time_ptr.tm_year);
     return kDaysInMonth[is_leap][time_ptr.tm_mon] + time_ptr.tm_mday;
@@ -100,7 +100,7 @@ FAST_CALL int64_t SumYearDays_(const tm &time_ptr)
  */
 FAST_CALL int64_t CalculateDayOfWeek(const tm &time)
 {
-    const int64_t total_days = GetWeekdayJan1_(SumUpDays_(time)) + SumYearDays_(time);
+    const int64_t total_days = GetWeekdayJan1(SumUpDays(time)) + SumYearDays(time);
     return total_days % 7;
 }
 
@@ -124,8 +124,8 @@ FAST_CALL uint64_t CalculateYears30MoreWLeaps(const uint64_t time_left)
 
 NODISCARD FAST_CALL int64_t CalculateMondayBasedWeek(const tm &time)
 {
-    const int64_t jan1_weekday              = GetWeekdayJan1_(SumUpDays_(time));
-    const int64_t days                      = SumYearDays_(time) - 1;
+    const int64_t jan1_weekday              = GetWeekdayJan1(SumUpDays(time));
+    const int64_t days                      = SumYearDays(time) - 1;
     const int64_t monday_based_jan1_weekday = jan1_weekday == 1   ? 7
                                               : jan1_weekday == 0 ? 6
                                                                   : jan1_weekday - 1;
@@ -138,13 +138,15 @@ NODISCARD FAST_CALL int64_t CalculateMondayBasedWeek(const tm &time)
 
 NODISCARD FAST_CALL int64_t CalculateSundayBasedWeek(const tm &time)
 {
-    const int64_t jan1_weekday         = GetWeekdayJan1_(SumUpDays_(time));
-    const int64_t days                 = SumYearDays_(time) - 1;
+    const int64_t jan1_weekday         = GetWeekdayJan1(SumUpDays(time));
+    const int64_t days                 = SumYearDays(time) - 1;
     const int64_t sunday_based_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
 
     return (days + sunday_based_weekday) / 7;
 }
 
 NODISCARD int64_t CalculateIsoBasedWeek(const tm &time);
+
+NODISCARD int64_t CalculateIsoBasedYear(const tm &time);
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
