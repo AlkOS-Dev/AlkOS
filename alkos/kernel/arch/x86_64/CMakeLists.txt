@@ -7,22 +7,28 @@ set(BOOTABLE_KERNEL_EXECUTABLE "")
 
 ################################### Boot32 ###################################
 
-add_subdirectory(boot32)
-set_target_properties(alkos.loader PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader"
+add_subdirectory(loader32)
+set_target_properties(alkos.loader32 PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader32"
 )
 
 # Retrieve the bootable kernel executable
-set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader)
+set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
 
 ################################### Boot64 ###################################
 
-add_subdirectory(boot64)
+add_subdirectory(loader64)
+set(KERNEL_MODULES ${KERNEL_MODULES} alkos.loader64)
+
+################################### Kernel ###################################
+
+add_subdirectory(kernel)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.kernel)
 
 ################################### Common ###################################
 
-add_subdirectory(common)
+add_subdirectory(common-loader-32-64-kernel)
+add_subdirectory(common-loader-64-kernel)
 
 ############################### Error Checking ###############################
 
@@ -42,8 +48,3 @@ set(CRTN_OBJ "${CRTN_OBJ}" PARENT_SCOPE)
 
 set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
 set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
-
-########################## Link arch common ##########################
-
-target_link_libraries(alkos.kernel PRIVATE arch.common)
-target_link_libraries(alkos.loader PRIVATE arch.common.32)

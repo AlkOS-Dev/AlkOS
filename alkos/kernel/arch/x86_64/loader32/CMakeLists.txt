@@ -1,4 +1,4 @@
-message(STATUS "Configuring boot32")
+message(STATUS "Configuring x86_64 32-bit loader")
 
 ############################## Finding Sources ###############################
 
@@ -16,7 +16,7 @@ file(GLOB_RECURSE ARCH_ASM_32
 
 #################################### Exec ####################################
 
-add_executable(alkos.loader
+add_executable(alkos.loader32
         ${ARCH_SOURCES_32}
         ${ARCH_ASM_32}
 )
@@ -26,11 +26,12 @@ set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_
 
 ############################### Applying Flags ###############################
 
-target_compile_definitions(alkos.loader PRIVATE __USE_DEBUG_OUTPUT__=1)
+target_compile_definitions(alkos.loader32 PRIVATE __USE_DEBUG_OUTPUT__=1)
 
 ############################## Finding Headers ###############################
 
-target_include_directories(alkos.loader PRIVATE include)
+target_include_directories(alkos.loader32 PRIVATE include)
+target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
 
@@ -45,7 +46,7 @@ set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> 
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld")
 message(STATUS "32 bit link script: ${LINKER_SCRIPT}")
 
-target_link_options(alkos.loader PRIVATE
+target_link_options(alkos.loader32 PRIVATE
         -T ${LINKER_SCRIPT}     # Linker script
         -nostdlib               # No standard libs
         -z max-page-size=0x1000 # Maximum page size (For 1k alignment)
@@ -53,16 +54,16 @@ target_link_options(alkos.loader PRIVATE
         -lgcc                   # Link against GCC
 )
 
-target_compile_definitions(alkos.loader PUBLIC
+target_compile_definitions(alkos.loader32 PUBLIC
         __i386__=1
 )
 
-target_link_libraries(alkos.loader PRIVATE
+target_link_libraries(alkos.loader32 PRIVATE
         gcc
-        arch.common.32
+        arch.common.all.32
         libk.32
 )
 
 ################################## Install ###################################
 
-install(TARGETS alkos.loader DESTINATION .) # Installs to SYSROOT (CMAKE_INSTALL_PREFIX)\
+install(TARGETS alkos.loader32 DESTINATION .) # Installs to SYSROOT (CMAKE_INSTALL_PREFIX)\

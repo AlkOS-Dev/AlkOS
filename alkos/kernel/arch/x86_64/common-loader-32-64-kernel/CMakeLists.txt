@@ -23,29 +23,29 @@ file(GLOB_RECURSE COMMON_ASM_32
 
 ############################## Preparing targets ###############################
 
-add_library(arch.common OBJECT
+add_library(arch.common.all.64 OBJECT
         ${COMMON_SOURCES}
         ${COMMON_ASM}
 )
 
-add_library(arch.common.32 OBJECT
+add_library(arch.common.all.32 OBJECT
         ${COMMON_SOURCES}
         ${COMMON_ASM_32}
 )
 
 ############################# Linking libraries ##############################
 
-target_link_libraries(arch.common PRIVATE
+target_link_libraries(arch.common.all.64 PRIVATE
         libk
 )
 
-target_link_libraries(arch.common.32 PRIVATE
+target_link_libraries(arch.common.all.32 PRIVATE
         libk.32
 )
 
 ############################### Applying Flags ###############################
 
-target_compile_options(arch.common.32 PRIVATE "-m32")
+target_compile_options(arch.common.all.32 PRIVATE "-m32")
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 
@@ -54,10 +54,10 @@ set_source_files_properties(${COMMON_ASM} PROPERTIES COMPILE_FLAGS "-f elf64")
 
 ############################### Adding Headers ###############################
 
-target_include_directories(arch.common PUBLIC
+target_include_directories(arch.common.all.64 PUBLIC
     .
 )
 
-target_include_directories(arch.common.32 PUBLIC
+target_include_directories(arch.common.all.32 PUBLIC
     .
 )

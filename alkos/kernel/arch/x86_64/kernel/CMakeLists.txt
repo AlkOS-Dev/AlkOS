@@ -1,4 +1,4 @@
-message(STATUS "Configuring boot64")
+message(STATUS "Configuring x86_64 kernel")
 
 ############################## Finding Sources ###############################
 
@@ -55,3 +55,10 @@ set(CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/c
 set(CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crtn.nasm.o" PARENT_SCOPE)
 
 add_dependencies(alkos.kernel alkos.kernel.crts)
+
+############################### Link Libraries ###############################
+
+target_link_libraries(alkos.kernel PRIVATE
+        arch.common.all.64
+        arch.common.kernel-loader.64
+)

@@ -10,18 +10,15 @@
 #include <multiboot2.h>
 #include <arch_utils.hpp>
 #include <debug.hpp>
-#include <drivers/pic8259/pic8259.hpp>
-#include <init.hpp>
-#include <interrupts/idt.hpp>
 #include <loader_data.hpp>
 #include <multiboot2_extensions.hpp>
 #include <terminal.hpp>
+#include <interrupts/idt.hpp>
+#include <drivers/pic8259/pic8259.hpp>
 
 /* external init procedures */
 extern "C" void enable_osxsave();
-
 extern "C" void enable_sse();
-
 extern "C" void enable_avx();
 
 extern "C" void PreKernelInit(LoaderData *loader_data)
@@ -32,7 +29,8 @@ extern "C" void PreKernelInit(LoaderData *loader_data)
     TRACE_INFO("Checking for LoaderData...");
     TRACE_INFO("LoaderData Address: 0x%X", loader_data);
     if (loader_data == nullptr) {
-        KernelPanic("LoaderData not found!");
+        TRACE_ERROR("LoaderData check failed!");
+        OsHangNoInterrupts();
     }
     TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data->multiboot_info_addr);
     TRACE_INFO(
@@ -73,5 +71,4 @@ extern "C" void PreKernelInit(LoaderData *loader_data)
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
 
-    TRACE_INFO("Pre-kernel initialization finished.");
-}
+    TRACE_INFO("Pre-kernel initialization finished.");}
