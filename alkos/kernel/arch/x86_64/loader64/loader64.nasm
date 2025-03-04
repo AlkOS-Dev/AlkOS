@@ -12,9 +12,6 @@
           section .text
           bits 64
 boot64:
-;          ; TODO Remap the kernel to the higher half / setup paging again
-;          ; TODO Use Multiboot2 information to get the memory map and other information
-;          ; Then clear both multiboot header and loader from memory
           mov esp, stack_top
           mov ebp, esp
 

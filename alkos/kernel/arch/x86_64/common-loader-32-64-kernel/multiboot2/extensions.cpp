@@ -1,5 +1,5 @@
-#include <multiboot2.h>
-#include <multiboot2_extensions.hpp>
+#include <multiboot2/multiboot2.h>
+#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include <types.hpp>
 #include "debug.hpp"

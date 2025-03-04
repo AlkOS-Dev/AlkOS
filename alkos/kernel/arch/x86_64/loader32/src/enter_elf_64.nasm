@@ -14,10 +14,10 @@ loader_data_ptr: dq 0          ; To preserve the loader_data pointer for 64-bit 
 kernel_stack:       resb 4096     ; 4KB temporary stack
 
           section .text
-          global EnterKernel
-          ; void EnterKernel(void *kernel_entry_high, void *kernel_entry_low, void *loader_data)
+          global EnterElf64
+          ; void EnterElf64(void *kernel_entry_high, void *kernel_entry_low, void *loader_data)
           ;                  [ebp+8]                  [ebp+12]                [ebp+16]
-EnterKernel:
+EnterElf64:
           push ebp
           mov ebp, esp
 
@@ -46,19 +46,18 @@ EnterKernel:
           mov ebx, eax
 
           ; Far jump to switch into 64-bit mode
-          jmp GDT64.Code:jmp_kernel
+          jmp GDT64.Code:jmp_elf
 
           [bits 64]
-          jmp_kernel:
-              [bits 64]
-              ; Set the new 64-bit stack pointer using the value passed in EBX
-              mov rax, rbx
-              mov rsp, rax
+jmp_elf:
+          ; Set the new 64-bit stack pointer using the value passed in EBX
+          mov rax, rbx
+          mov rsp, rax
 
-              ; Load loader_data pointer into rdi
-              mov rdi, [loader_data_ptr]
+          ; Load loader_data pointer into rdi
+          mov rdi, [loader_data_ptr]
 
-              ; Load the 64-bit kernel entry address from k_ptr
-              mov rax, [k_ptr]
-              ; Jump to the kernel entry point
-              jmp rax
+          ; Load the 64-bit kernel entry address from k_ptr
+          mov rax, [k_ptr]
+          ; Jump to the kernel entry point
+          jmp rax

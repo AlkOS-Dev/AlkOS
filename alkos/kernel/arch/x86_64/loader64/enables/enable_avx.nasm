@@ -13,10 +13,10 @@
     FAIL_AVX   db "Missing AVX feature set. Unable to start...", 0
 
     section .text
-    global enable_avx
+    global EnableAVX
 
 ; NOTE: Should be called ONLY after enable_osxsave
-enable_avx:
+EnableAVX:
     ; query the cpu for supported features
     mov eax, FEATURE_FLAG
     cpuid

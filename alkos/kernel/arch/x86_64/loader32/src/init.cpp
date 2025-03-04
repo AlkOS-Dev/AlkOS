@@ -3,11 +3,11 @@
 #include "arch_utils.hpp"
 #include "debug.hpp"
 #include "defines.hpp"
-#include "elf.hpp"
+#include "elf/elf64.hpp"
 #include "loader_data.hpp"
 #include "loader_memory_manager.hpp"
-#include "multiboot2.h"
-#include "multiboot2_extensions.hpp"
+#include "multiboot2/extensions.hpp"
+#include "multiboot2/multiboot2.h"
 #include "terminal.hpp"
 
 // External functions defined in assembly
@@ -16,8 +16,8 @@ extern "C" int CheckLongMode();
 
 extern "C" void EnablePaging(void* pml4_table_address);
 extern "C" void EnableLongMode();
-extern "C" void EnterKernel(
-    void* higher_32_bits_of_kernel_entry_address, void* lower_32_bits_of_kernel_entry_address,
+extern "C" void EnterElf64(
+    void* higher_32_bits_of_entry_address, void* lower_32_bits_of_entry_address,
     void* loader_data_address
 );
 
@@ -174,7 +174,6 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     );
 
     loader_memory_manager->DumpPmlTables();
-    //    loader_memory_manager->DumpMemoryMap();
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading kernel module...");
@@ -202,7 +201,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("LoaderData loader_start_addr: 0x%X", loader_data.loader_start_addr);
     TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data.loader_end_addr);
 
-    //////////////////////////// Jumping to 64-bit Kernel /////////////////////////
+    //////////////////////////// Jumping to 64-bit /////////////////////////
     TRACE_INFO("Jumping to 64-bit kernel...");
 
     TRACE_INFO(
@@ -210,7 +209,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
         static_cast<u32>(kernel_entry_point & k32BitMask)
     );
 
-    EnterKernel(
+    EnterElf64(
         (void*)static_cast<u32>(kernel_entry_point >> 32),
         (void*)static_cast<u32>(kernel_entry_point & k32BitMask), &loader_data
     );

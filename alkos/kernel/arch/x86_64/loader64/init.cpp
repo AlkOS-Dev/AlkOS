@@ -7,19 +7,19 @@
 #endif
 
 /* internal includes */
-#include <multiboot2.h>
+#include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
 #include <debug.hpp>
-#include <loader_data.hpp>
-#include <multiboot2_extensions.hpp>
-#include <terminal.hpp>
-#include <interrupts/idt.hpp>
 #include <drivers/pic8259/pic8259.hpp>
+#include <interrupts/idt.hpp>
+#include <loader_data.hpp>
+#include <multiboot2/extensions.hpp>
+#include <terminal.hpp>
 
 /* external init procedures */
-extern "C" void enable_osxsave();
-extern "C" void enable_sse();
-extern "C" void enable_avx();
+extern "C" void EnableOsxsave();
+extern "C" void EnableSSE();
+extern "C" void EnableAVX();
 
 extern "C" void PreKernelInit(LoaderData *loader_data)
 {
@@ -49,15 +49,15 @@ extern "C" void PreKernelInit(LoaderData *loader_data)
 
     /* NOTE: sequence is important */
     TRACE_INFO("Setting up OS XSAVE...");
-    enable_osxsave();
+    EnableOsxsave();
     TRACE_SUCCESS("OS XSAVE setup complete!");
 
     TRACE_INFO("Setting up SSE...");
-    enable_sse();
+    EnableSSE();
     TRACE_SUCCESS("SSE setup complete!");
 
     TRACE_INFO("Setting up AVX...");
-    enable_avx();
+    EnableAVX();
     TRACE_SUCCESS("AVX setup complete!");
 
     TRACE_INFO("Setting up PIC units...");
@@ -71,4 +71,5 @@ extern "C" void PreKernelInit(LoaderData *loader_data)
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
 
-    TRACE_INFO("Pre-kernel initialization finished.");}
+    TRACE_INFO("Pre-kernel initialization finished.");
+}

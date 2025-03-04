@@ -2,8 +2,8 @@
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_HPP_
 
 #include "defines.hpp"
-#include "multiboot2.h"
-#include "multiboot2_extensions.hpp"
+#include "multiboot2/extensions.hpp"
+#include "multiboot2/multiboot2.h"
 #include "types.hpp"
 
 struct FreeMemoryRegion_t {

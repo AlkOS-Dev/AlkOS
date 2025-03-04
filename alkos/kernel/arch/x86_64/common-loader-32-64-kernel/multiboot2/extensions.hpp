@@ -1,7 +1,7 @@
 #ifndef ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_
 #define ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_
 
-#include <multiboot2.h>
+#include <multiboot2/multiboot2.h>
 #include <types.hpp>
 
 namespace multiboot
@@ -41,6 +41,6 @@ void WalkMemoryMap(tag_mmap_t* mmap_tag, Callback callback);
 
 }  // namespace multiboot
 
-#include <multiboot2_extensions.tpp>
+#include "extensions.tpp"
 
 #endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_

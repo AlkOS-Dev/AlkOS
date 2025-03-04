@@ -18,14 +18,14 @@
     FAIL_SSE   db "Missing SEE feature set. Unable to start...", 0
 
     section .text
-    global enable_sse
+    global EnableSSE
 
 ; According to intel manual page: 3570 (15.1.3 - Initialization of the SSE Extensions)
 ; TODO:
 ; 1. SSE CONTEXT SWITCHING
 ; 2. SSE EXCEPTION HANDLING
 ; 3. SSE BEHAVIOR
-enable_sse:
+EnableSSE:
     ; query the cpu for supported features
     mov eax, FEATURE_FLAG
     cpuid

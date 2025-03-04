@@ -1,19 +1,11 @@
 #include <memory.h>
 #include <debug.hpp>
-#include <elf.hpp>
+#include <elf/elf64.hpp>
 
 namespace elf
 {
 
-namespace
-{
-// TODO: This is just bad and doesn't even work. Figure out a better way to do this.
-// Problem: memcpy and memset just can't handle a 64-bit address space in 32-bit mode.
-extern "C" void memcpy64(u32 dest_lo, u32 dest_hi, u32 src_lo, u32 src_hi, u32 n_lo, u32 n_hi);
-extern "C" void memset64(u32 dest_lo, u32 dest_hi, u32 c, u32 n_lo, u32 n_hi);
-}  // namespace
-
-u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address = 0)
+u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 {
     TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
