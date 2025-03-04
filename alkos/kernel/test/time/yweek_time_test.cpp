@@ -57,28 +57,17 @@ TEST_F(WeekCalculationTest, MondayBasedWeek)
     VerifyMondayBasedWeek(2025, 1, 3, 0);
     VerifyMondayBasedWeek(2025, 1, 4, 0);
     VerifyMondayBasedWeek(2025, 1, 5, 0);
-    VerifyMondayBasedWeek(2025, 1, 6, 1);  // Monday starts week 1
+    VerifyMondayBasedWeek(2025, 1, 6, 1);
 
-    // Mid-year dates
     VerifyMondayBasedWeek(2025, 6, 15, 23);
     VerifyMondayBasedWeek(2025, 6, 16, 24);
-
-    // Year boundaries
-    VerifyMondayBasedWeek(2024, 12, 30, 52);  // Monday of last week of 2024 // L
-    VerifyMondayBasedWeek(2024, 12, 31, 52);  // Tuesday of last week of 2024 // L
-
-    // Leap year tests (2024 is a leap year)
-    VerifyMondayBasedWeek(2024, 2, 29, 8);  // L
-
-    // First day of week
-    VerifyMondayBasedWeek(2025, 3, 3, 9);  // A Monday (first day of week)
-
-    // Last day of week
-    VerifyMondayBasedWeek(2025, 3, 9, 9);  // A Sunday (last day of week)
-
-    // Full week at month boundary
-    VerifyMondayBasedWeek(2025, 4, 30, 17);  // Wednesday
-    VerifyMondayBasedWeek(2025, 5, 1, 17);   // Thursday
+    VerifyMondayBasedWeek(2024, 12, 30, 53);  // Monday of last week of 2024
+    VerifyMondayBasedWeek(2024, 12, 31, 53);  // Tuesday of last week of 2024
+    VerifyMondayBasedWeek(2024, 2, 29, 9);
+    VerifyMondayBasedWeek(2025, 3, 3, 9);
+    VerifyMondayBasedWeek(2025, 3, 9, 9);
+    VerifyMondayBasedWeek(2025, 4, 30, 17);
+    VerifyMondayBasedWeek(2025, 5, 1, 17);
 }
 
 // ------------------------------
@@ -88,31 +77,19 @@ TEST_F(WeekCalculationTest, MondayBasedWeek)
 TEST_F(WeekCalculationTest, SundayBasedWeek)
 {
     // First week of 2025 (Jan 1st is Wednesday)
-    VerifySundayBasedWeek(2025, 1, 1, 1);  // In week 1 (after first Sunday)
-    VerifySundayBasedWeek(2025, 1, 4, 1);  // Saturday of week 1
-    VerifySundayBasedWeek(2025, 1, 5, 2);  // Sunday starts week 2
+    VerifySundayBasedWeek(2025, 1, 1, 0);
+    VerifySundayBasedWeek(2025, 1, 4, 0);
+    VerifySundayBasedWeek(2025, 1, 5, 1);
 
-    // Mid-year dates
-    VerifySundayBasedWeek(2025, 6, 14, 24);
-    VerifySundayBasedWeek(2025, 6, 15, 25);  // Sunday starts new week
-
-    // Year boundaries
-    VerifySundayBasedWeek(2024, 12, 29, 53);  // Sunday of last week of 2024
-    VerifySundayBasedWeek(2024, 12, 31, 53);  // Tuesday of last week of 2024
-    VerifySundayBasedWeek(2025, 1, 1, 1);     // First week of 2025
-
-    // Leap year tests (2024 is a leap year)
-    VerifySundayBasedWeek(2024, 2, 29, 9);
-
-    // First day of week
-    VerifySundayBasedWeek(2025, 3, 2, 10);  // A Sunday (first day of week)
-
-    // Last day of week
-    VerifySundayBasedWeek(2025, 3, 8, 10);  // A Saturday (last day of week)
-
-    // Full week at month boundary
-    VerifySundayBasedWeek(2025, 4, 30, 18);  // Wednesday
-    VerifySundayBasedWeek(2025, 5, 1, 18);   // Thursday
+    VerifySundayBasedWeek(2025, 6, 14, 23);
+    VerifySundayBasedWeek(2025, 6, 15, 24);   // Sunday starts new week
+    VerifySundayBasedWeek(2024, 12, 29, 52);  // Sunday of last week of 2024
+    VerifySundayBasedWeek(2024, 12, 31, 52);  // Tuesday of last week of 2024
+    VerifySundayBasedWeek(2024, 2, 29, 8);
+    VerifySundayBasedWeek(2025, 3, 2, 9);    // A Sunday (first day of week)
+    VerifySundayBasedWeek(2025, 3, 8, 9);    // A Saturday (last day of week)
+    VerifySundayBasedWeek(2025, 4, 30, 17);  // Wednesday
+    VerifySundayBasedWeek(2025, 5, 1, 17);   // Thursday
 }
 
 // ------------------------------

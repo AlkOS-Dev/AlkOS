@@ -27,6 +27,10 @@ errno_t asctime_s(char *buf, const rsize_t bufsz, const tm *time_ptr)
         return EOVERFLOW;
     }
 
+    if (buf == nullptr) {
+        return EOVERFLOW;
+    }
+
     if (!ValidateTm(*time_ptr)) {
         if (buf != nullptr && bufsz > 0) {
             buf[0] = '\0';
@@ -34,5 +38,7 @@ errno_t asctime_s(char *buf, const rsize_t bufsz, const tm *time_ptr)
         return EINVAL;
     }
 
-    return {};
+    strftime(buf, bufsz, "%a %b %d %H:%M:%S %C%y", time_ptr);
+
+    return NO_ERROR;
 }
