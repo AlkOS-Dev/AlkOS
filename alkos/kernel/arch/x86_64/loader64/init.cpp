@@ -21,7 +21,7 @@ extern "C" void EnableOsxsave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 
-extern "C" void PreKernelInit(LoaderData *loader_data)
+extern "C" void PreKernelInit(LoaderData_32_64_Pass *loader_data)
 {
     TerminalInit();
     TRACE_INFO("In 64 bit mode");

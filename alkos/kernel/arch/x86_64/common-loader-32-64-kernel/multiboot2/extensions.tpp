@@ -6,6 +6,26 @@
 namespace multiboot
 {
 
+template <class Tag, TagFilter<Tag> auto Filter>
+Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
+{
+    const u32 kType      = TagNumber<Tag>::value;
+    const char *kTagName = TagNumber<Tag>::kTagName;
+    static_assert(kType != TagNumber<Tag>::kInvalidTagNumber, "Invalid tag type!");
+
+    TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
+    for (auto *tag = reinterpret_cast<tag_t *>(static_cast<char *>(multiboot_info_addr) + 8);
+         tag->type != MULTIBOOT_TAG_TYPE_END;
+         tag = reinterpret_cast<tag_t *>(reinterpret_cast<u8 *>(tag) + ((tag->size + 7) & ~7))) {
+        if (tag->type == kType && Filter(reinterpret_cast<Tag *>(tag))) {
+            TRACE_SUCCESS("Found tag type: %s", kTagName);
+            return reinterpret_cast<Tag *>(tag);
+        }
+    }
+    TRACE_ERROR("Tag type: %s not found!", GetTagName(kType));
+    return nullptr;
+}
+
 template <MemoryMapCallback Callback>
 void WalkMemoryMap(tag_mmap_t *mmap_tag, Callback callback)
 {

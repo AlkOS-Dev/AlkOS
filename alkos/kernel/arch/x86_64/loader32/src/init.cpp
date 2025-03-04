@@ -32,7 +32,7 @@ extern const char loader_end[];
 extern byte kLoaderPreAllocatedMemory[];
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
-LoaderData loader_data;
+LoaderData_32_64_Pass loader_data;
 
 // Helper
 static constexpr u64 k32BitMask = 0x00000000FFFFFFFF;
@@ -112,9 +112,10 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Parsing Multiboot2 tags...");
 
     TRACE_INFO("Searching for memory map tag...");
-    auto* mmap_tag = reinterpret_cast<multiboot::tag_mmap_t*>(multiboot::FindTagInMultibootInfo(
-        reinterpret_cast<void*>(multiboot_info_addr), MULTIBOOT_TAG_TYPE_MMAP
-    ));
+    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
+        reinterpret_cast<void*>(multiboot_info_addr)
+    );
+
     ASSERT_NOT_NULL(mmap_tag);
     TRACE_INFO("Memory map tag found!");
 
@@ -139,18 +140,19 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
         "Total available memory: %llu MB", loader_memory_manager->GetAvailableMemoryBytes() >> 20
     );
 
-    auto* kernel_module = reinterpret_cast<multiboot::tag_module_t*>(
-        multiboot::FindTagInMultibootInfo(multiboot_info_addr, MULTIBOOT_TAG_TYPE_MODULE)
-    );
-    if (kernel_module == nullptr) {
+    auto* loader64_module = multiboot::FindTagInMultibootInfo<
+        multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
+            return tag->type == MULTIBOOT_TAG_TYPE_MODULE;
+        }>(multiboot_info_addr);
+    if (loader64_module == nullptr) {
         KernelPanic("Kernel module not found in multiboot tags!");
     }
     TRACE_SUCCESS("Found kernel module in multiboot tags!");
 
-    TRACE_INFO("Kernel module type: %d", kernel_module->type);
-    TRACE_INFO("Kernel module size: %d", kernel_module->size);
-    byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
-    byte* kernel_module_end_addr   = reinterpret_cast<byte*>(kernel_module->mod_end);
+    TRACE_INFO("Kernel module type: %d", loader64_module->type);
+    TRACE_INFO("Kernel module size: %d", loader64_module->size);
+    byte* kernel_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
+    byte* kernel_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
 
     TRACE_INFO("Kernel module start: 0x%X", kernel_module_start_addr);
     TRACE_INFO("Kernel module end: 0x%X", kernel_module_end_addr);

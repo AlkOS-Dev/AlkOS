@@ -7,21 +7,6 @@
 namespace multiboot
 {
 
-tag_t *FindTagInMultibootInfo(void *multiboot_info_addr, uint32_t type)
-{
-    TRACE_INFO("Searching for tag type: %s", GetTagName(type));
-    for (auto *tag = reinterpret_cast<tag_t *>(static_cast<char *>(multiboot_info_addr) + 8);
-         tag->type != MULTIBOOT_TAG_TYPE_END;
-         tag = reinterpret_cast<tag_t *>(reinterpret_cast<u8 *>(tag) + ((tag->size + 7) & ~7))) {
-        if (tag->type == type) {
-            TRACE_SUCCESS("Found tag type: %s", GetTagName(type));
-            return tag;
-        }
-    }
-    TRACE_ERROR("Tag type: %s not found!", GetTagName(type));
-    return nullptr;
-}
-
 const char *GetTagName(u32 type)
 {
     switch (type) {
