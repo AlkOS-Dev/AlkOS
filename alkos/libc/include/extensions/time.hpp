@@ -62,6 +62,8 @@ FAST_CALL bool IsLeapYear(const int64_t year)
 
 WRAP_CALL bool IsTmYearLeap(const int64_t year) { return IsLeapYear(year + kTmBaseYear); }
 
+WRAP_CALL bool IsTmYearLeap(const tm &time) { return IsLeapYear(time.tm_year + kTmBaseYear); }
+
 NODISCARD uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone);
 
 FAST_CALL int64_t SumUpDays_(const int64_t year)
@@ -76,6 +78,9 @@ WRAP_CALL int64_t SumUpDays_(const tm &time_ptr)
     return SumUpDays_(time_ptr.tm_year + kTmBaseYear);
 }
 
+/**
+ * @note 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+ */
 FAST_CALL int64_t GetWeekdayJan1_(const int64_t days_since_century)
 {
     return (days_since_century + 1) % 7;
@@ -90,9 +95,12 @@ FAST_CALL int64_t SumYearDays_(const tm &time_ptr)
     return kDaysInMonth[is_leap][time_ptr.tm_mon] + time_ptr.tm_mday;
 }
 
+/**
+ * @note 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+ */
 FAST_CALL int64_t CalculateDayOfWeek(const tm &time)
 {
-    const int64_t total_days = SumUpDays_(time) + SumYearDays_(time) - 1;
+    const int64_t total_days = GetWeekdayJan1_(SumUpDays_(time)) + SumYearDays_(time);
     return total_days % 7;
 }
 

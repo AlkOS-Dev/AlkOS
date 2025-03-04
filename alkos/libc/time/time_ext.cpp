@@ -66,71 +66,43 @@ bool ValidateTm(const tm &time_ptr)
 
 int64_t CalculateIsoBasedWeek(const tm &time)
 {
-    // Convert Sunday from 0 to 7 for ISO calculations
-    int64_t day_of_week = CalculateDayOfWeek(time);
-    if (day_of_week == 0) {
-        day_of_week = 7;
+    const int64_t jan1_weekday            = GetWeekdayJan1_(SumUpDays_(time));
+    const int64_t normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
+
+    /* Check if current year starts with first week or week from previous year */
+    const int64_t days_in_first_week = 8 - normalized_jan1_weekday;
+    const bool is_first_week_year    = days_in_first_week >= 4;
+
+    /* Check for first days in year */
+    const int64_t days_sum = SumYearDays_(time);
+
+    if (const bool is_in_first_days = days_sum <= days_in_first_week;
+        !is_first_week_year && is_in_first_days) {
+        /* Extract week number from previous year if first week is not 4 days long */
+        tm time_prev{};
+        time_prev.tm_year = time.tm_year - 1;
+        time_prev.tm_mon  = 11;
+        time_prev.tm_mday = 31;
+
+        return CalculateIsoBasedWeek(time_prev);
     }
 
-    const int64_t day_of_year = SumYearDays_(time);
+    /* Check for last week of year for correction */
+    const int64_t total_years_days           = IsTmYearLeap(time) ? 366 : 365;
+    const int64_t days_except_first_week     = days_sum - days_in_first_week;
+    const int64_t days_in_last_not_full_week = days_except_first_week % 7;
+    const int64_t days_before_last_week      = total_years_days - days_in_last_not_full_week;
+    const bool is_last_not_full_week_from_next_year =
+        days_in_last_not_full_week < 4 && days_in_last_not_full_week > 0;
 
-    // Convert Sunday from 0 to 7 for ISO calculations
-    int64_t jan1_weekday = GetWeekdayJan1_(SumUpDays_(time));
-    if (jan1_weekday == 0) {
-        jan1_weekday = 7;
+    /* calculate last week separately */
+    if (is_last_not_full_week_from_next_year && days_sum > days_before_last_week) {
+        /* Extract week number from next year if last week is shorter than 4 days */
+        tm time_next{};
+        time_next.tm_year = time.tm_year + 1;
+        time_next.tm_mon  = 1;
+        time_next.tm_mday = 1;
+
+        return CalculateIsoBasedWeek(time_next);
     }
-
-    int64_t week_num = (day_of_year + 7 - day_of_week + (jan1_weekday - 1)) / 7;
-
-    if (jan1_weekday > 4) {
-        // The first week does not contain a Thursday, so the first Thursday is in week 2
-        // Days before the first Thursday belong to the last week of the previous year
-        if (day_of_year < (8 - jan1_weekday)) {
-            // This date belongs to the last week of the previous year
-            tm prev_year_last_day = time;
-            prev_year_last_day.tm_year -= 1;
-            prev_year_last_day.tm_mon  = 11;
-            prev_year_last_day.tm_mday = 31;
-
-            return CalculateIsoBasedWeek(prev_year_last_day);
-        }
-    } else {
-        // The first week contains a Thursday, so it's week 1
-        week_num = 1 + (day_of_year - 1 + (jan1_weekday - 1)) / 7;
-    }
-
-    // Check if we're in the first week of the next year
-    if (week_num > 52) {
-        // Get the weekday of January 1st of the next year
-        tm next_year_first_day;
-        next_year_first_day.tm_year = time.tm_year + 1;
-        next_year_first_day.tm_mon  = 0;
-        next_year_first_day.tm_mday = 1;
-
-        int64_t next_jan1_weekday = GetWeekdayJan1_(SumUpDays_(next_year_first_day));
-        if (next_jan1_weekday == 0) {
-            next_jan1_weekday = 7;
-        }
-
-        // If January 1st of next year is on Monday to Thursday, then the current date
-        // belongs to week 1 of next year
-        if (next_jan1_weekday <= 4) {
-            if (day_of_year >= (365 + IsTmYearLeap(time.tm_year) - 7 + day_of_week)) {
-                return 1;
-            }
-        }
-    }
-
-    // Handle the case for the last week of the previous year
-    if (week_num == 0) {
-        // Get the weekday of December 31st of the previous year
-        tm prev_year_last_day;
-        prev_year_last_day.tm_year = time.tm_year - 1;
-        prev_year_last_day.tm_mon  = 11;
-        prev_year_last_day.tm_mday = 31;
-
-        return CalculateIsoBasedWeek(prev_year_last_day);
-    }
-
-    return week_num;
 }
