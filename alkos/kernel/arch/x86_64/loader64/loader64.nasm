@@ -8,10 +8,10 @@
 
           extern PreKernelInit
 
-          global boot64
+          global loader64
           section .text
           bits 64
-boot64:
+loader64:
           mov esp, stack_top
           mov ebp, esp
 

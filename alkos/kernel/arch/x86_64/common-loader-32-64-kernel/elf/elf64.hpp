@@ -72,7 +72,6 @@ u64 LoadElf64(const byte* elf_start_virtual_address, u64 destination_begin_virtu
 bool IsValidElf64(const byte* elf_start);
 
 void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr);
-
 }  // namespace elf
 
 #endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_ELF_HPP_

@@ -93,6 +93,15 @@ if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
     message(FATAL_ERROR "No primary kernel executable defined")
 endif ()
 
+message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")
+message(STATUS "Kernel modules: ${KERNEL_MODULES}")
+message(STATUS "Kernel commands: ${KERNEL_COMMANDS}")
+
+# Check if KERNEL_MODULES and KERNEL_COMMANDS are the same size and defined
+if (NOT DEFINED KERNEL_COMMANDS AND NOT DEFINED KERNEL_MODULES)
+    message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS are not defined")
+endif ()
+
 ################################## Linking ###################################
 
 target_link_libraries(alkos.kernel PRIVATE libk gcc)
@@ -135,3 +144,4 @@ ${CRTN_OBJ} \
 
 set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
 set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
+set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)

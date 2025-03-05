@@ -310,17 +310,19 @@ class LoaderMemoryManager
     // Private Fields
     //------------------------------------------------------------------------------//
 
+    // NOTE: The alignment is necessary here to make this class work in both 32-bit and 64-bit
+
     PMLTable_t buffer_[kMaxPmlTablesToStore]{};  ///< A buffer to store PML tables as new physical
                                                  ///< memory is allocated using the memory manager
-    u32 num_pml_tables_stored_{};                ///< The number of PML tables stored in the buffer
+    alignas(64) u64 num_pml_tables_stored_{};                ///< The number of PML tables stored in the buffer
 
     /// "Lower" memory is frequently required for drivers / special purposes, therefore
     /// we sort the memory map entries in descending order and allocate the upper memory first.
-    FreeMemoryRegion_t descending_sorted_mmap_entries[kMaxMemoryMapEntries]{};
-    u32 used_free_memory_regions_ = 0;
-    u32 num_free_memory_regions_  = 0;
+    alignas(64) FreeMemoryRegion_t descending_sorted_mmap_entries[kMaxMemoryMapEntries]{};
+    alignas(64) u64 used_free_memory_regions_ = 0;
+    alignas(64) u64 num_free_memory_regions_  = 0;
 
-    u64 available_memory_bytes_ = 0;
+    alignas(64) u64 available_memory_bytes_ = 0;
 
     //------------------------------------------------------------------------------//
     // Helper Functions

@@ -14,8 +14,8 @@
 ; undefined behavior.
 
           section   .text
-          global    boot32
-boot32:
+          global    loader32
+loader32:
           ; The bootloader has loaded us into 32-bit protected mode on a x86
           ; machine. Interrupts are disabled. Paging is disabled. The processor
           ; state is as defined in the multiboot standard. The kernel has full

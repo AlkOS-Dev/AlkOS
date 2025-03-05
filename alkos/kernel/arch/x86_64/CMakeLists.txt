@@ -3,27 +3,35 @@ message(STATUS "Configuring for x86_64")
 ############################# Arch Dependent Vars ############################
 
 set(KERNEL_MODULES "")
+set(KERNEL_COMMANDS "") # Kernel commands for the bootloader, has to be same size as KERNEL_MODULES
 set(BOOTABLE_KERNEL_EXECUTABLE "")
 
 ################################### Boot32 ###################################
 
 add_subdirectory(loader32)
+# Retrieve the bootable kernel executable
+set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
 set_target_properties(alkos.loader32 PROPERTIES
         IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader32"
 )
-
-# Retrieve the bootable kernel executable
-set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
 
 ################################### Boot64 ###################################
 
 add_subdirectory(loader64)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.loader64)
+set_target_properties(alkos.loader64 PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader64"
+)
+seT(KERNEL_COMMANDS ${KERNEL_COMMANDS} "loader64")
 
 ################################### Kernel ###################################
 
 add_subdirectory(kernel)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.kernel)
+set(KERNEL_COMMANDS ${KERNEL_COMMANDS} "kernel")
+set_target_properties(alkos.kernel PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.kernel"
+)
 
 ################################### Common ###################################
 
@@ -48,3 +56,4 @@ set(CRTN_OBJ "${CRTN_OBJ}" PARENT_SCOPE)
 
 set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
 set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
+set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)

@@ -113,6 +113,7 @@ message(STATUS "Using run_alkos script: ${RUN_ALKOS_SCRIPT_PATH}")
 
 # This is not a workaround, this is genuinely how you pass arguments to a bash script from CMake
 string(REPLACE ";" " " KERNEL_MODULES_FORMATTED "${KERNEL_MODULES}")
+string(REPLACE ";" " " KERNEL_COMMANDS_FORMATTED "${KERNEL_COMMANDS}")
 
 ################################################################################
 #                                  Conf file                                   #
@@ -131,6 +132,7 @@ file(APPEND "${BASH_CONF_FILE}" "export CONF_BOOTABLE_KERNEL_EXEC=\"${BOOTABLE_K
 file(APPEND "${BASH_CONF_FILE}" "export CONF_ISO_PATH=\"${ALKOS_ISO_PATH}\"\n")
 file(APPEND "${BASH_CONF_FILE}" "export CONF_BIN_PATH=\"${ALKOS_KERNEL_PATH}\"\n")
 file(APPEND "${BASH_CONF_FILE}" "export CONF_KERNEL_MODULES=\"${KERNEL_MODULES_FORMATTED}\"\n")
+file(APPEND "${BASH_CONF_FILE}" "export CONF_KERNEL_COMMANDS=\"${KERNEL_COMMANDS_FORMATTED}\"\n")
 file(APPEND "${BASH_CONF_FILE}" "export CONF_BUILD_DIR=\"${CMAKE_BUILD_DIR}\"\n")
 file(APPEND "${BASH_CONF_FILE}" "export CONF_TOOL_DIR=\"${TOOL_BINARIES_DIR}\"\n")
 file(APPEND "${BASH_CONF_FILE}" "")

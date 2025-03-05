@@ -1,10 +1,9 @@
 OUTPUT_FORMAT("elf64-x86-64")
-ENTRY(boot64)
+ENTRY(loader64)
 
 SECTIONS
 {
-	. = 100m; /* This is chosen to be far enough from loader to avoid conflicts, but is arbitrary */
-
+          . = 100m;
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text)

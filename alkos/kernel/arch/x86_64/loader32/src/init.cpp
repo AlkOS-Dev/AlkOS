@@ -5,7 +5,7 @@
 #include "defines.hpp"
 #include "elf/elf64.hpp"
 #include "loader_data.hpp"
-#include "loader_memory_manager.hpp"
+#include "loader_memory_manager/loader_memory_manager.hpp"
 #include "multiboot2/extensions.hpp"
 #include "multiboot2/multiboot2.h"
 #include "terminal.hpp"
@@ -73,6 +73,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
+    TRACE_SUCCESS("Loader memory manager created!");
     loader_memory_manager->DumpPmlTables();
 
     static constexpr u32 k1GiB = 1 << 30;
@@ -142,24 +143,25 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     auto* loader64_module = multiboot::FindTagInMultibootInfo<
         multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
-            return tag->type == MULTIBOOT_TAG_TYPE_MODULE;
+            TRACE_INFO("Checking tag: %s", tag->cmdline);
+            return strcmp(tag->cmdline, "loader64") == 0;
         }>(multiboot_info_addr);
     if (loader64_module == nullptr) {
-        KernelPanic("Kernel module not found in multiboot tags!");
+        KernelPanic("loader64 module not found in multiboot tags!");
     }
-    TRACE_SUCCESS("Found kernel module in multiboot tags!");
+    TRACE_SUCCESS("Found loader64 module in multiboot tags!");
 
-    TRACE_INFO("Kernel module type: %d", loader64_module->type);
-    TRACE_INFO("Kernel module size: %d", loader64_module->size);
-    byte* kernel_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
-    byte* kernel_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
+    TRACE_INFO("Module type: %d", loader64_module->type);
+    TRACE_INFO("Module size: %d", loader64_module->size);
+    byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
+    byte* loadeR_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
 
-    TRACE_INFO("Kernel module start: 0x%X", kernel_module_start_addr);
-    TRACE_INFO("Kernel module end: 0x%X", kernel_module_end_addr);
+    TRACE_INFO("Module start: 0x%X", loader_module_start_addr);
+    TRACE_INFO("Module end: 0x%X", loadeR_module_end_addr);
 
     u64 elf_lower_bound = 0;
     u64 elf_upper_bound = 0;
-    elf::GetElf64ProgramBounds(kernel_module_start_addr, elf_lower_bound, elf_upper_bound);
+    elf::GetElf64ProgramBounds(loader_module_start_addr, elf_lower_bound, elf_upper_bound);
     u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
 
     TRACE_INFO(
@@ -167,23 +169,13 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
         elf_effective_size >> 10
     );
 
-    static constexpr u64 kUpperCanonicalAddress = (~1ULL) << 46;
-
-    TRACE_INFO("Mapping kernel module to upper memory starting at 0x%llX", kUpperCanonicalAddress);
-
-    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        kUpperCanonicalAddress, elf_effective_size, 0
-    );
-
-    loader_memory_manager->DumpPmlTables();
-
     /////////////////////////// Loading Kernel Module ////////////////////////////
-    TRACE_INFO("Loading kernel module...");
-    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, 0);
+    TRACE_INFO("Loading module...");
+    u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);
     if (kernel_entry_point == 0) {
         KernelPanic("Failed to load kernel module!");
     }
-    TRACE_SUCCESS("Kernel module loaded!");
+    TRACE_SUCCESS("Module loaded!");
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
     loader_data.multiboot_info_addr         = reinterpret_cast<u32>(multiboot_info_addr);
@@ -191,6 +183,7 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     loader_data.multiboot_header_end_addr   = reinterpret_cast<u32>(multiboot_header_end);
     loader_data.loader_start_addr           = reinterpret_cast<u32>(loader_start);
     loader_data.loader_end_addr             = reinterpret_cast<u32>(loader_end);
+    loader_data.loader_memory_manager_addr  = reinterpret_cast<u64>(loader_memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     // Convert addresses to hexadecimal strings

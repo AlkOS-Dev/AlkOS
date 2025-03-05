@@ -1,5 +1,5 @@
 OUTPUT_FORMAT("elf32-i386")
-ENTRY(boot32)
+ENTRY(loader32)
 
 SECTIONS
 {
