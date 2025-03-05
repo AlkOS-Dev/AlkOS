@@ -2,6 +2,7 @@
 #define ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_TPP_
 
 #include <debug.hpp>
+#include "todo.hpp"
 
 namespace multiboot
 {
@@ -13,12 +14,14 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
     const char *kTagName = TagNumber<Tag>::kTagName;
     static_assert(kType != TagNumber<Tag>::kInvalidTagNumber, "Invalid tag type!");
 
-    TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+    //    TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
     for (auto *tag = reinterpret_cast<tag_t *>(static_cast<char *>(multiboot_info_addr) + 8);
          tag->type != MULTIBOOT_TAG_TYPE_END;
          tag = reinterpret_cast<tag_t *>(reinterpret_cast<u8 *>(tag) + ((tag->size + 7) & ~7))) {
         if (tag->type == kType && Filter(reinterpret_cast<Tag *>(tag))) {
-            TRACE_SUCCESS("Found tag type: %s", kTagName);
+            TODO_WHEN_DEBUGGING_FRAMEWORK
+            //            TRACE_SUCCESS("Found tag type: %s", kTagName);
             return reinterpret_cast<Tag *>(tag);
         }
     }
@@ -29,7 +32,8 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
 template <MemoryMapCallback Callback>
 void WalkMemoryMap(tag_mmap_t *mmap_tag, Callback callback)
 {
-    TRACE_INFO("Walking memory map...");
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+    //    TRACE_INFO("Walking memory map...");
     for (auto *mmap_entry = reinterpret_cast<memory_map_t *>(mmap_tag->entries);
          reinterpret_cast<u8 *>(mmap_entry) < reinterpret_cast<u8 *>(mmap_tag) + mmap_tag->size;
          mmap_entry = reinterpret_cast<memory_map_t *>(
@@ -37,7 +41,7 @@ void WalkMemoryMap(tag_mmap_t *mmap_tag, Callback callback)
          )) {
         callback(mmap_entry);
     }
-    TRACE_SUCCESS("Memory map walk complete!");
+    //    TRACE_SUCCESS("Memory map walk complete!");
 }
 
 }  // namespace multiboot

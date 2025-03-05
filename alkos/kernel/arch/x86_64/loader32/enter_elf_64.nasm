@@ -1,4 +1,6 @@
           [bits 32]
+          ; This is a function that switches to 64-bit mode and jumps to some program entry point while
+          ; preserving the loader_data pointer.
 
           extern GDT64.Pointer
           extern GDT64.Data
@@ -40,7 +42,7 @@ EnterElf64:
           mov ds, ax
           mov es, ax
 
-          ; Set up a new stack pointer for 64-bit mode.
+          ; Set up a new stack pointer for 64-bit mode (temporary stack)
           lea eax, [kernel_stack + 4096]  ; new stack top
           ; Save it in EBX (which will be preserved across the far jump)
           mov ebx, eax

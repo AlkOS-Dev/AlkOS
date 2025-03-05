@@ -6,14 +6,11 @@
 #include "elf/elf64.hpp"
 #include "loader_data.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"
-#include "multiboot2/extensions.hpp"
-#include "multiboot2/multiboot2.h"
 #include "terminal.hpp"
 
 // External functions defined in assembly
 extern "C" int CheckCpuId();
 extern "C" int CheckLongMode();
-
 extern "C" void EnablePaging(void* pml4_table_address);
 extern "C" void EnableLongMode();
 extern "C" void EnterElf64(
@@ -74,24 +71,17 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
 
     auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
     TRACE_SUCCESS("Loader memory manager created!");
-    loader_memory_manager->DumpPmlTables();
 
     static constexpr u32 k1GiB = 1 << 30;
-
-    for (u32 i = 0; i < 4; i++) {
+    for (u32 i = 0; i < 512; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
         loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
             addr_64bit, addr_64bit,
             LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
         );
     }
-
-    loader_memory_manager->DumpPmlTables();
-
-    TRACE_INFO(
-        "Checking loader_memory_manager validity, num_pml_tables_stored_: %d",
-        loader_memory_manager->GetNumPmlTablesStored()
-    );
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+//    loader_memory_manager->DumpPmlTables();
 
     TRACE_SUCCESS("Identity mapping complete!");
 
@@ -116,34 +106,35 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
         reinterpret_cast<void*>(multiboot_info_addr)
     );
+    if (mmap_tag == nullptr) {
+        KernelPanic("Memory map tag not found in multiboot tags!");
+    }
+    TRACE_SUCCESS("Memory map tag found!");
 
-    ASSERT_NOT_NULL(mmap_tag);
-    TRACE_INFO("Memory map tag found!");
-
+    TRACE_INFO("Adding available memory regions to memory manager...");
     WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) {
         if (mmap_entry->type == MULTIBOOT_MEMORY_AVAILABLE) {
-            TRACE_INFO(
-                "Memory region: 0x%llX-0x%llX, length: %llu bytes", mmap_entry->addr,
-                mmap_entry->addr + mmap_entry->len, mmap_entry->len
-            );
             loader_memory_manager->AddMemoryMapEntry(mmap_entry);
-            TRACE_INFO("Memory region added to memory manager.");
+            TRACE_INFO(
+                "Memory region: 0x%llX-0x%llX, length: %llu bytes - Added to memory manager",
+                mmap_entry->addr, mmap_entry->addr + mmap_entry->len, mmap_entry->len
+            );
         }
     });
-
-    loader_memory_manager->DumpMemoryMap();
-
-    loader_memory_manager->WalkFreeMemoryRegions([](FreeMemoryRegion_t& region) {
-        TRACE_INFO("Free memory region: 0x%llX-0x%llX", region.addr, region.addr + region.length);
-    });
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+//    loader_memory_manager->DumpMemoryMap();
 
     TRACE_INFO(
         "Total available memory: %llu MB", loader_memory_manager->GetAvailableMemoryBytes() >> 20
     );
 
+    //////////////////////////// Loading Loader64 Module //////////////////////////
+
+    TRACE_INFO("Searching for loader64 module...");
     auto* loader64_module = multiboot::FindTagInMultibootInfo<
         multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
-            TRACE_INFO("Checking tag: %s", tag->cmdline);
+              TODO_WHEN_DEBUGGING_FRAMEWORK
+//            TRACE_INFO("Checking tag with cmd: %s", tag->cmdline);
             return strcmp(tag->cmdline, "loader64") == 0;
         }>(multiboot_info_addr);
     if (loader64_module == nullptr) {
@@ -151,23 +142,24 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     }
     TRACE_SUCCESS("Found loader64 module in multiboot tags!");
 
-    TRACE_INFO("Module type: %d", loader64_module->type);
-    TRACE_INFO("Module size: %d", loader64_module->size);
+    TODO_WHEN_DEBUGGING_FRAMEWORK
     byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
     byte* loadeR_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
-
-    TRACE_INFO("Module start: 0x%X", loader_module_start_addr);
-    TRACE_INFO("Module end: 0x%X", loadeR_module_end_addr);
+//    TRACE_INFO("Module type: %d", loader64_module->type);
+//    TRACE_INFO("Module size: %d", loader64_module->size);
+//    TRACE_INFO("Module start: 0x%X", loader_module_start_addr);
+//    TRACE_INFO("Module end: 0x%X", loadeR_module_end_addr);
 
     u64 elf_lower_bound = 0;
     u64 elf_upper_bound = 0;
     elf::GetElf64ProgramBounds(loader_module_start_addr, elf_lower_bound, elf_upper_bound);
     u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
 
-    TRACE_INFO(
-        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
-        elf_effective_size >> 10
-    );
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+//    TRACE_INFO(
+//        "Module ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
+//        elf_effective_size >> 10
+//    );
 
     /////////////////////////// Loading Kernel Module ////////////////////////////
     TRACE_INFO("Loading module...");
@@ -186,23 +178,25 @@ extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_a
     loader_data.loader_memory_manager_addr  = reinterpret_cast<u64>(loader_memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
+    TODO_WHEN_DEBUGGING_FRAMEWORK
     // Convert addresses to hexadecimal strings
-    TRACE_INFO("LoaderData Address: 0x%X", reinterpret_cast<u32>(&loader_data));
-    TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data.multiboot_info_addr);
-    TRACE_INFO(
-        "LoaderData multiboot_header_start_addr: 0x%X", loader_data.multiboot_header_start_addr
-    );
-    TRACE_INFO("LoaderData multiboot_header_end_addr: 0x%X", loader_data.multiboot_header_end_addr);
-    TRACE_INFO("LoaderData loader_start_addr: 0x%X", loader_data.loader_start_addr);
-    TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data.loader_end_addr);
+//    TRACE_INFO("LoaderData Address: 0x%X", reinterpret_cast<u32>(&loader_data));
+//    TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data.multiboot_info_addr);
+//    TRACE_INFO(
+//        "LoaderData multiboot_header_start_addr: 0x%X", loader_data.multiboot_header_start_addr
+//    );
+//    TRACE_INFO("LoaderData multiboot_header_end_addr: 0x%X", loader_data.multiboot_header_end_addr);
+//    TRACE_INFO("LoaderData loader_start_addr: 0x%X", loader_data.loader_start_addr);
+//    TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data.loader_end_addr);
 
     //////////////////////////// Jumping to 64-bit /////////////////////////
-    TRACE_INFO("Jumping to 64-bit kernel...");
+    TRACE_INFO("Jumping to 64-bit loader...");
 
-    TRACE_INFO(
-        "Kernel entry point: 0x%X-%X", static_cast<u32>(kernel_entry_point >> 32),
-        static_cast<u32>(kernel_entry_point & k32BitMask)
-    );
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+//    TRACE_INFO(
+//        "Kernel entry point: 0x%X-%X", static_cast<u32>(kernel_entry_point >> 32),
+//        static_cast<u32>(kernel_entry_point & k32BitMask)
+//    );
 
     EnterElf64(
         (void*)static_cast<u32>(kernel_entry_point >> 32),

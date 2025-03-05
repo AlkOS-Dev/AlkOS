@@ -1,12 +1,14 @@
 #include <memory.h>
 #include <debug.hpp>
 #include <elf/elf64.hpp>
+#include "todo.hpp"
 
 namespace elf
 {
 
 u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 {
+    TODO_WHEN_DEBUGGING_FRAMEWORK
     TRACE_INFO("Loading ELF-64 ...");
     if (!IsValidElf64(elf_start)) {
         TRACE_ERROR("Invalid ELF-64.");
@@ -37,7 +39,8 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 
         // Only load segments that should be loaded into memory
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
-            TRACE_INFO("Loading segment %d...", i + 1);
+            TODO_WHEN_DEBUGGING_FRAMEWORK
+            //            TRACE_INFO("Loading segment %d...", i + 1);
 
             u64 segment_dest = destination_begin_virtual_address +
                                (program_header_entry->virtual_address - elf_base);
@@ -45,12 +48,12 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
             u64 segment_source    = reinterpret_cast<u64>(elf_start) + program_header_entry->offset;
             u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
-            TRACE_INFO(
-                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX, source_size=0x%llu "
-                "KB",
-                i + 1, segment_dest, segment_dest_size << 10, segment_source,
-                segment_source_size << 10
-            );
+            TODO_WHEN_DEBUGGING_FRAMEWORK
+            //            TRACE_INFO(
+            //                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX,
+            //                source_size=0x%llu " "KB", i + 1, segment_dest, segment_dest_size <<
+            //                10, segment_source, segment_source_size << 10
+            //            );
 
             memcpy(
                 reinterpret_cast<void*>(segment_dest),
@@ -65,7 +68,8 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
                 );
             }
 
-            TRACE_SUCCESS("Segment %d: loaded.", i + 1);
+            TODO_WHEN_DEBUGGING_FRAMEWORK
+            //            TRACE_SUCCESS("Segment %d: loaded.", i + 1);
         }
     }
 

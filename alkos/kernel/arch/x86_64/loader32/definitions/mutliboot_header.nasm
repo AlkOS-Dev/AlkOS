@@ -1,4 +1,7 @@
           bits 32
+          ; This file defines the multiboot header for the 32-bit loader
+          ; It is directly included in the linker script and is placed at the beginning of the kernel image
+          ; It is used to signify a multiboot2 compliant kernel image and request information from the bootloader
 
           ; Constants for Multiboot header
           MULTIBOOT_HEADER_MAGIC equ 0xE85250D6

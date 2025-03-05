@@ -31,7 +31,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
     static constexpr u32 k4kPageSizeBytes     = 1 << 12;
     static constexpr u32 k4kPageAlignmentMask = k4kPageSizeBytes - 1;
 
-    TRACE_INFO("Starting to map virtual memory range using internal memory map...");
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+    //    TRACE_INFO("Starting to map virtual memory range using internal memory map...");
 
     ASSERT_ZERO(virtual_address & k4kPageAlignmentMask);  // Virtual address must be page aligned
     ASSERT_GE(available_memory_bytes_, size_bytes);
@@ -120,6 +121,7 @@ void LoaderMemoryManager::DumpMemoryMap()
             descending_sorted_mmap_entries[i].addr, descending_sorted_mmap_entries[i].length << 10
         );
     }
+    TRACE_SUCCESS("Memory map dump complete!");
 }
 void LoaderMemoryManager::DumpPmlTables()
 {
