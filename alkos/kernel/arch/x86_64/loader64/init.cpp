@@ -134,5 +134,7 @@ extern "C" void PreKernelInit(LoaderData_32_64_Pass* loader_data)
     TRACE_SUCCESS("Module loaded!");
 
     TRACE_INFO("Jumping to 64-bit kernel...");
+
+    // TODO: Make this pass the loader data
     EnterKernel(kernel_entry_point);
 }

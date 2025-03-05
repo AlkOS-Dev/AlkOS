@@ -13,12 +13,12 @@
           ; Kernel Entry Point
           extern KernelMain
 
-          global boot64
+          global alkos.entry
           section .text
           bits 64
-boot64:
-;          mov esp, stack_top
-;          mov ebp, esp
+alkos.entry:
+          mov esp, stack_top
+          mov ebp, esp
 
           ; Invoke CXX global constructors
           call _init
