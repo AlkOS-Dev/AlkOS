@@ -314,7 +314,7 @@ class LoaderMemoryManager
 
     PMLTable_t buffer_[kMaxPmlTablesToStore]{};  ///< A buffer to store PML tables as new physical
                                                  ///< memory is allocated using the memory manager
-    alignas(64) u64 num_pml_tables_stored_{};                ///< The number of PML tables stored in the buffer
+    alignas(64) u64 num_pml_tables_stored_{};    ///< The number of PML tables stored in the buffer
 
     /// "Lower" memory is frequently required for drivers / special purposes, therefore
     /// we sort the memory map entries in descending order and allocate the upper memory first.
