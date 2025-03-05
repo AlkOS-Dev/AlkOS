@@ -102,6 +102,14 @@ if (NOT DEFINED KERNEL_COMMANDS AND NOT DEFINED KERNEL_MODULES)
     message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS are not defined")
 endif ()
 
+list(LENGTH KERNEL_MODULES KERNEL_MODULES_LENGTH)
+list(LENGTH KERNEL_COMMANDS KERNEL_COMMANDS_LENGTH)
+
+# Check if the two lists are the same size
+if(NOT KERNEL_MODULES_LENGTH EQUAL KERNEL_COMMANDS_LENGTH)
+    message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS have different sizes: ${KERNEL_MODULES_LENGTH} vs ${KERNEL_COMMANDS_LENGTH}")
+endif()
+
 ################################## Linking ###################################
 
 target_link_libraries(alkos.kernel PRIVATE libk gcc)
