@@ -9,11 +9,12 @@ namespace multiboot
 {
 
 // callback that returns true if the tag is the one we are looking for and false otherwise
-TODO_WHEN_TYPETRAITS_MERGED  // Add -> std::convertible_to<bool> to the concept
-    template <class FilterT, class TagT>
-    concept TagFilter = requires(FilterT filter, TagT* tag) {
-        { filter(tag) };
-    };
+TODO_WHEN_TYPETRAITS_MERGED
+// Add -> std::convertible_to<bool> to the concept
+template <class FilterT, class TagT>
+concept TagFilter = requires(FilterT filter, TagT* tag) {
+    { filter(tag) };
+};
 
 // Primary template defaults to 0. This can't be enforced with a concept because
 // tags do not have a common base class. (framebuffer_t)
