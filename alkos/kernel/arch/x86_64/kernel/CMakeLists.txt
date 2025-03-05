@@ -40,6 +40,10 @@ target_link_options(alkos.kernel PRIVATE
         -lgcc                   # Link against GCC
 )
 
+######################### Setting Custom Properties ##########################
+
+set_target_properties(alkos.kernel PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 ########################## CXX Global Constructors ###########################
 
 set(SRTI_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cxx/crti.nasm")
