@@ -9,7 +9,7 @@ namespace multiboot
 {
 
 // callback that returns true if the tag is the one we are looking for and false otherwise
-TODO_WHEN_TYPETRAITS_MERGED
+// TODO_WHEN_TYPETRAITS_MERGED
 // Add -> std::convertible_to<bool> to the concept
 template <class FilterT, class TagT>
 concept TagFilter = requires(FilterT filter, TagT* tag) {
