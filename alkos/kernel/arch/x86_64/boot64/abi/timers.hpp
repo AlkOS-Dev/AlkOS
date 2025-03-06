@@ -16,7 +16,7 @@ WRAP_CALL time_t QuerySystemTime()
     const tm rtcTime = ReadRtcTime();
 
     if (kSystemClockInUtc) {
-        return ConvertDateTimeToSeconds(rtcTime, DayTime::kUtcTimezone);
+        return ConvertDateTimeToSeconds(rtcTime, timing_constants::kUtcTimezone);
     }
 
     return ConvertDateTimeToSeconds(rtcTime, TimingModule::Get().GetDayTime().GetTimezone());

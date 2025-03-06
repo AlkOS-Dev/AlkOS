@@ -2,7 +2,7 @@
 #define ALKOS_INCLUDE_MODULES_TIMING_HPP_
 
 #include <extensions/template_lib.hpp>
-
+#include <modules/timing_constants.hpp>
 #include <time/daytime.hpp>
 
 namespace internal
@@ -13,10 +13,10 @@ class TimingModule : TemplateLib::StaticSingletonHelper
     TimingModule() noexcept;
 
     public:
-    FORCE_INLINE_F DayTime& GetDayTime() noexcept { return day_time_; }
+    FORCE_INLINE_F timing::DayTime& GetDayTime() noexcept { return day_time_; }
 
     private:
-    DayTime day_time_{};
+    timing::DayTime day_time_{};
 };
 }  // namespace internal
 

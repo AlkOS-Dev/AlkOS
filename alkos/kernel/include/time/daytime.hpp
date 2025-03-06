@@ -4,21 +4,12 @@
 #include <sys/time.h>
 #include <time.h>
 #include <extensions/time.hpp>
+#include <modules/timing_constants.hpp>
 
+TIMING_DECL_START
 class DayTime
 {
     public:
-    // ------------------------------
-    // static fields
-    // ------------------------------
-
-    static constexpr Timezone kUtcTimezone = {
-        .west_offset_minutes     = 0,
-        .dst_time_offset_minutes = 0,
-        .dst_time_start_seconds  = -1,
-        .dst_time_end_seconds    = -1,
-    };
-
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -53,5 +44,6 @@ class DayTime
         .dst_time_end_seconds    = -1,
     };
 };
+TIMING_DECL_END
 
 #endif  // ALKOS_INCLUDE_TIME_DAYTIME_HPP_

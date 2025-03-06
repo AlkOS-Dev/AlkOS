@@ -2,6 +2,8 @@
 #include <time/daytime.hpp>
 #include <timers.hpp>
 
+USE_TIMING
+
 // ------------------------------
 // Implementations
 // ------------------------------

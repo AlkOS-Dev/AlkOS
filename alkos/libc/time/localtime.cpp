@@ -26,7 +26,6 @@ tm *localtime_r(const time_t *timer, tm *result)
 
     const u64 years = time_left >= kLeap30Posix ? CalculateYears30MoreWLeaps(time_left)
                                                 : CalculateYears30LessWLeaps(time_left);
-
     return {};
 }
 
