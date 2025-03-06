@@ -1,28 +1,29 @@
 #include <assert.h>
 #include <extensions/time.hpp>
+#include <extensions/types.hpp>
 
 // ------------------------------
 // Implementations
 // ------------------------------
 
-uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone)
+u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone)
 {
-    const int64_t is_month_negative = date_time.tm_mon < 0;
+    const i64 is_month_negative = date_time.tm_mon < 0;
 
     /* when month is negative, we goes backward */
-    const int64_t month_remainder = (date_time.tm_mon % 12) + is_month_negative * 12;
-    const int64_t month_years     = date_time.tm_mon / 12;
-    const int64_t years           = date_time.tm_year + month_years;
+    const i64 month_remainder = (date_time.tm_mon % 12) + is_month_negative * 12;
+    const i64 month_years     = date_time.tm_mon / 12;
+    const i64 years           = date_time.tm_year + month_years;
 
     /* we should not count the current month */
-    const int64_t days = kDaysInMonth[IsTmYearLeap(years)][month_remainder];
+    const i64 days = kDaysInMonth[IsTmYearLeap(years)][month_remainder];
 
-    int64_t time = date_time.tm_sec;
-    time += static_cast<int64_t>(date_time.tm_min) * kSecondsInMinute;
-    time += static_cast<int64_t>(date_time.tm_hour) * kSecondsInHour;
-    time += static_cast<int64_t>(date_time.tm_mday - 1) * kSecondsInDay;
-    time += static_cast<int64_t>(days) * kSecondsInDay;
-    time += static_cast<int64_t>(years) * kSecondsInUsualYear;
+    i64 time = date_time.tm_sec;
+    time += static_cast<i64>(date_time.tm_min) * kSecondsInMinute;
+    time += static_cast<i64>(date_time.tm_hour) * kSecondsInHour;
+    time += static_cast<i64>(date_time.tm_mday - 1) * kSecondsInDay;
+    time += static_cast<i64>(days) * kSecondsInDay;
+    time += static_cast<i64>(years) * kSecondsInUsualYear;
 
     /* adjust by leap years */
     time += years / 4 * kSecondsInDay;
@@ -33,11 +34,11 @@ uint64_t ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone
     time -= kPosixEpochTmSecondDiff;
 
     /* adjust by timezone */
-    time -= static_cast<int64_t>(time_zone.west_offset_minutes * kSecondsInMinute);
+    time -= static_cast<i64>(time_zone.west_offset_minutes * kSecondsInMinute);
 
     /* adjust by DST */
     if (date_time.tm_isdst > 0 && time_zone.dst_time_offset_minutes != 0) {
-        time -= static_cast<int64_t>(time_zone.dst_time_offset_minutes * kSecondsInMinute);
+        time -= static_cast<i64>(time_zone.dst_time_offset_minutes * kSecondsInMinute);
     }
 
     /* determine if DST is in effect */
@@ -64,17 +65,17 @@ bool ValidateTm(const tm &time_ptr)
            time_ptr.tm_yday <= 365;
 }
 
-int64_t CalculateIsoBasedWeek(const tm &time)
+i64 CalculateIsoBasedWeek(const tm &time)
 {
-    const int64_t jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
-    const int64_t normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
+    const i64 jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
+    const i64 normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
 
     /* Check if current year starts with first week or week from previous year */
-    const int64_t days_in_first_week      = 8 - normalized_jan1_weekday;
+    const i64 days_in_first_week          = 8 - normalized_jan1_weekday;
     const bool is_first_week_in_this_year = days_in_first_week >= 4;
 
     /* Check for first days in year */
-    const int64_t days_sum = SumYearDays(time);
+    const i64 days_sum = SumYearDays(time);
 
     if (const bool is_in_first_days = days_sum <= days_in_first_week) {
         if (!is_first_week_in_this_year) {
@@ -91,10 +92,10 @@ int64_t CalculateIsoBasedWeek(const tm &time)
     }
 
     /* Check for last week of year for correction */
-    const int64_t total_years_days           = IsTmYearLeap(time) ? 366 : 365;
-    const int64_t days_except_first_week     = total_years_days - days_in_first_week;
-    const int64_t days_in_last_not_full_week = days_except_first_week % 7;
-    const int64_t days_before_last_week      = total_years_days - days_in_last_not_full_week;
+    const i64 total_years_days           = IsTmYearLeap(time) ? 366 : 365;
+    const i64 days_except_first_week     = total_years_days - days_in_first_week;
+    const i64 days_in_last_not_full_week = days_except_first_week % 7;
+    const i64 days_before_last_week      = total_years_days - days_in_last_not_full_week;
     const bool is_last_not_full_week_from_next_year =
         days_in_last_not_full_week < 4 && days_in_last_not_full_week > 0;
 
@@ -112,16 +113,16 @@ int64_t CalculateIsoBasedWeek(const tm &time)
     return 1 + is_first_week_in_this_year + (days_sum - days_in_first_week - 1) / 7;
 }
 
-int64_t CalculateIsoBasedYear(const tm &time)
+i64 CalculateIsoBasedYear(const tm &time)
 {
-    const int64_t jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
-    const int64_t normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
+    const i64 jan1_weekday            = GetWeekdayJan1(SumUpDays(time));
+    const i64 normalized_jan1_weekday = jan1_weekday == 0 ? 7 : jan1_weekday;
 
     /* Check if current year starts with first week or week from previous year */
-    const int64_t days_in_first_week = 8 - normalized_jan1_weekday;
+    const i64 days_in_first_week = 8 - normalized_jan1_weekday;
 
     /* Check for first days in year */
-    const int64_t days_sum = SumYearDays(time);
+    const i64 days_sum = SumYearDays(time);
     if (days_sum <= days_in_first_week) {
         if (const bool is_first_week_in_this_year = days_in_first_week >= 4;
             !is_first_week_in_this_year) {
@@ -132,10 +133,10 @@ int64_t CalculateIsoBasedYear(const tm &time)
     }
 
     /* Check for last week of year for correction */
-    const int64_t total_years_days           = IsTmYearLeap(time) ? 366 : 365;
-    const int64_t days_except_first_week     = total_years_days - days_in_first_week;
-    const int64_t days_in_last_not_full_week = days_except_first_week % 7;
-    const int64_t days_before_last_week      = total_years_days - days_in_last_not_full_week;
+    const i64 total_years_days           = IsTmYearLeap(time) ? 366 : 365;
+    const i64 days_except_first_week     = total_years_days - days_in_first_week;
+    const i64 days_in_last_not_full_week = days_except_first_week % 7;
+    const i64 days_before_last_week      = total_years_days - days_in_last_not_full_week;
     const bool is_last_not_full_week_from_next_year =
         days_in_last_not_full_week < 4 && days_in_last_not_full_week > 0;
 

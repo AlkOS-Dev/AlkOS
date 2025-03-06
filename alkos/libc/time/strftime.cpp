@@ -288,13 +288,13 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void U_Format_()
     {
-        const int64_t sunday_based_week = CalculateSundayBasedWeek(*time_ptr_);
+        const i64 sunday_based_week = CalculateSundayBasedWeek(*time_ptr_);
         Write2Digits_(sunday_based_week);
     }
 
     FORCE_INLINE_F void W_Format_()
     {
-        const int64_t monday_based_week = CalculateMondayBasedWeek(*time_ptr_);
+        const i64 monday_based_week = CalculateMondayBasedWeek(*time_ptr_);
         Write2Digits_(monday_based_week);
     }
 
@@ -317,7 +317,7 @@ class StrfTimeWriter final
     {
         const auto time_zone = GetTimezoneSysCall();
 
-        int64_t offset = time_zone.west_offset_minutes;
+        i64 offset = time_zone.west_offset_minutes;
         if (time_ptr_->tm_isdst && time_zone.dst_time_offset_minutes) {
             offset += time_zone.dst_time_offset_minutes;
         }
@@ -371,25 +371,25 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void G_Format_()
     {
-        const int64_t iso_year = CalculateIsoBasedYear(*time_ptr_);
+        const i64 iso_year = CalculateIsoBasedYear(*time_ptr_);
         WriteUint_(iso_year);
     }
 
     FORCE_INLINE_F void g_Format_()
     {
-        const int64_t iso_year = CalculateIsoBasedYear(*time_ptr_);
+        const i64 iso_year = CalculateIsoBasedYear(*time_ptr_);
         Write2Digits_(iso_year % 100);
     }
 
     FORCE_INLINE_F void V_Format_()
     {
-        const int64_t iso_week = CalculateIsoBasedWeek(*time_ptr_);
+        const i64 iso_week = CalculateIsoBasedWeek(*time_ptr_);
         Write2Digits_(iso_week);
     }
 
     FORCE_INLINE_F void u_Format_()
     {
-        const int64_t iso_weekday = time_ptr_->tm_wday == 0 ? 6 : time_ptr_->tm_wday - 1;
+        const i64 iso_weekday = time_ptr_->tm_wday == 0 ? 6 : time_ptr_->tm_wday - 1;
         WriteUint_(iso_weekday + 1);
     }
 
