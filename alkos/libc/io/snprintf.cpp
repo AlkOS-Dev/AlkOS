@@ -2,6 +2,7 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+#include <extensions/types.hpp>
 
 #include "defines.h"
 #include "math.h"
@@ -712,13 +713,13 @@ static int ilog(double num, unsigned int base)
 
 FAST_CALL bool IsNegative(double num)
 {
-    auto intdbl = reinterpret_cast<u64_t *>(&num);
+    auto intdbl = reinterpret_cast<u64 *>(&num);
     return (*intdbl & (1ULL << 63)) != 0;
 }
 
 FAST_CALL bool IsSubnormal(double num)
 {
-    auto intdbl         = reinterpret_cast<u64_t *>(&num);
+    auto intdbl         = reinterpret_cast<u64 *>(&num);
     const auto exponent = static_cast<short>(*intdbl >> 52 & 0x7FF);
     const auto mantisa  = *intdbl & (-1ULL >> 12);
     return (exponent == 0 && mantisa != 0);

@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#include <extensions/time.hpp>
+#include <extensions/types.hpp>
 
 // ------------------------------
 // Time constants
