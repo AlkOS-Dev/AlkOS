@@ -1,8 +1,8 @@
 #include <multiboot2.h>
+#include <extensions/debug.hpp>
+#include <extensions/types.hpp>
 #include <tags.hpp>
 #include <terminal.hpp>
-#include <types.hpp>
-#include "extensions/debug.hpp"
 
 extern char text_buffer[1024];
 

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <defines.hpp>
 #include <drivers/vga/vga.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 /**
  * @file vga.cpp

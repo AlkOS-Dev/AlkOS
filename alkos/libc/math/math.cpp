@@ -1,9 +1,10 @@
 #include <math.h>
 #include <stdint.h>
+#include <extensions/types.hpp>
 
 double modf(double num, double *integralPart)
 {
-    auto intdbl         = reinterpret_cast<uint64_t *>(&num);
+    auto intdbl         = reinterpret_cast<u64 *>(&num);
     const auto exponent = static_cast<short>((*intdbl >> 52 & 0x7FF) - 1023);
 
     // No integral part
@@ -19,7 +20,7 @@ double modf(double num, double *integralPart)
     }
 
     // Mantissa mask
-    const uint64_t mask = -1ULL >> 12 >> exponent;
+    const u64 mask = -1ULL >> 12 >> exponent;
 
     // No fractional part
     if ((*intdbl & mask) == 0) {
@@ -27,7 +28,7 @@ double modf(double num, double *integralPart)
         return 0.0;
     }
 
-    uint64_t tmp  = *intdbl & ~mask;
+    u64 tmp       = *intdbl & ~mask;
     *integralPart = *reinterpret_cast<double *>(&tmp);
 
     return num - *integralPart;

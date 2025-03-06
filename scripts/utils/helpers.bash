@@ -79,9 +79,6 @@ add_to_user_env_path() {
     fi
 }
 
-check_runs_on_arch() {
-    if ! grep "Arch" /etc/os-release 2>/dev/null 1>/dev/null; then
-      return 1
-    fi
-    return 0
+get_supported_distro_name() {
+    cat /etc/*-release | tr [:upper:] [:lower:] | grep -Poi '(arch|ubuntu)' | uniq
 }
