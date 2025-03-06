@@ -34,8 +34,8 @@ typedef struct tm {
      * negative if no information is available*/
 } tm;
 
-typedef uint64_t time_t;
-typedef uint64_t clock_t;
+typedef unsigned long long time_t;
+typedef unsigned long long clock_t;
 
 typedef struct timespec {
     time_t tv_sec; /* seconds */

@@ -2,7 +2,7 @@
 #define ARCH_X86_64_IO_HPP_
 
 #include <defines.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 FAST_CALL byte inb(const u16 port)
 {

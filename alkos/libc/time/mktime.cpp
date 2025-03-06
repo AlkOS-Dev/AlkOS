@@ -9,9 +9,9 @@
 // Constants
 // ------------------------------
 
-static constexpr uint64_t kConversionFailed = static_cast<uint64_t>(-1);
+static constexpr u64 kConversionFailed = static_cast<u64>(-1);
 
-static uint16_t kDaysInMonth[2][13]{
+static u16 kDaysInMonth[2][13]{
     /* Normal Year */
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
     /* Leap Year */
@@ -22,24 +22,24 @@ static uint16_t kDaysInMonth[2][13]{
 // static functions
 // ------------------------------
 
-static uint64_t ConvertDateTime(const tm &date_time)
+static u64 ConvertDateTime(const tm &date_time)
 {
-    const int64_t is_month_negative = date_time.tm_mon < 0;
+    const i64 is_month_negative = date_time.tm_mon < 0;
 
     /* when month is negative, we goes backward */
-    const int64_t month_remainder = (date_time.tm_mon % 12) + is_month_negative * 12;
-    const int64_t month_years     = date_time.tm_mon / 12;
-    const int64_t years           = date_time.tm_year + month_years;
+    const i64 month_remainder = (date_time.tm_mon % 12) + is_month_negative * 12;
+    const i64 month_years     = date_time.tm_mon / 12;
+    const i64 years           = date_time.tm_year + month_years;
 
     /* we should not count the current month */
-    const int64_t days = kDaysInMonth[IsTmYearLeap(years)][month_remainder];
+    const i64 days = kDaysInMonth[IsTmYearLeap(years)][month_remainder];
 
-    int64_t time = date_time.tm_sec;
-    time += static_cast<int64_t>(date_time.tm_min) * kSecondsInMinute;
-    time += static_cast<int64_t>(date_time.tm_hour) * kSecondsInHour;
-    time += static_cast<int64_t>(date_time.tm_mday - 1) * kSecondsInDay;
-    time += static_cast<int64_t>(days) * kSecondsInDay;
-    time += static_cast<int64_t>(years) * kSecondsInUsualYear;
+    i64 time = date_time.tm_sec;
+    time += static_cast<i64>(date_time.tm_min) * kSecondsInMinute;
+    time += static_cast<i64>(date_time.tm_hour) * kSecondsInHour;
+    time += static_cast<i64>(date_time.tm_mday - 1) * kSecondsInDay;
+    time += static_cast<i64>(days) * kSecondsInDay;
+    time += static_cast<i64>(years) * kSecondsInUsualYear;
 
     /* adjust by leap years */
     time += years / 4 * kSecondsInDay;
@@ -50,10 +50,10 @@ static uint64_t ConvertDateTime(const tm &date_time)
     time -= kPosixEpochTmSecondDiff;
 
     /* adjust by timezone */
-    time -= static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
+    time -= static_cast<i64>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
 
     if (date_time.tm_isdst > 0) {
-        time -= static_cast<int64_t>(__GetDstTimezoneOffsetNs() / kNanosInSecond);
+        time -= static_cast<i64>(__GetDstTimezoneOffsetNs() / kNanosInSecond);
     }
 
     if (date_time.tm_isdst < 0) {

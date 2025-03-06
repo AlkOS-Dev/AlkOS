@@ -3,6 +3,7 @@
 
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/types.hpp>
 #include <extensions/utility.hpp>
 
 #include <assert.h>
@@ -13,12 +14,11 @@ namespace TemplateLib
 // Rolled Switch
 // ------------------------------
 
-template <
-    class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class DefaultFuncT, class... Args>
+template <class ExprT, u64 kMaxValue, u64 kStep, class FuncT, class DefaultFuncT, class... Args>
     requires concepts_ext::Callable<DefaultFuncT, Args...> &&
              concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr void RolledSwitch(
-    DefaultFuncT &&default_func, FuncT &&func, const uint64_t value, Args &&...args
+    DefaultFuncT &&default_func, FuncT &&func, const u64 value, Args &&...args
 ) noexcept
 {
     if (value == kMaxValue) {
@@ -37,12 +37,11 @@ FAST_CALL constexpr void RolledSwitch(
     default_func(std::forward<Args>(args)...);
 }
 
-template <
-    class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class DefaultFuncT, class... Args>
+template <class ExprT, u64 kMaxValue, u64 kStep, class FuncT, class DefaultFuncT, class... Args>
     requires concepts_ext::Callable<DefaultFuncT, Args...> &&
              concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr auto RolledSwitchReturnable(
-    DefaultFuncT &&default_func, FuncT &&func, const uint64_t value, Args &&...args
+    DefaultFuncT &&default_func, FuncT &&func, const u64 value, Args &&...args
 ) noexcept
 {
     if (value == kMaxValue) {
@@ -59,9 +58,9 @@ FAST_CALL constexpr auto RolledSwitchReturnable(
     return default_func(std::forward<Args>(args)...);
 }
 
-template <class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class... Args>
+template <class ExprT, u64 kMaxValue, u64 kStep, class FuncT, class... Args>
     requires concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
-FAST_CALL constexpr void RolledSwitch(FuncT &&func, const uint64_t value, Args &&...args) noexcept
+FAST_CALL constexpr void RolledSwitch(FuncT &&func, const u64 value, Args &&...args) noexcept
 {
     RolledSwitch<ExprT, kMaxValue, kStep>(
         []() constexpr FORCE_INLINE_L {
@@ -71,10 +70,10 @@ FAST_CALL constexpr void RolledSwitch(FuncT &&func, const uint64_t value, Args &
     );
 }
 
-template <class ExprT, uint64_t kMaxValue, uint64_t kStep, class FuncT, class... Args>
+template <class ExprT, u64 kMaxValue, u64 kStep, class FuncT, class... Args>
     requires concepts_ext::RolledSwitchFunctor<FuncT, ExprT, Args...>
 FAST_CALL constexpr auto RolledSwitchReturnable(
-    FuncT &&func, const uint64_t value, Args &&...args
+    FuncT &&func, const u64 value, Args &&...args
 ) noexcept
 {
     return RolledSwitchReturnable<ExprT, kMaxValue, kStep>(

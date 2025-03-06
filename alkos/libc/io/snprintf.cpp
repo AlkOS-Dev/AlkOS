@@ -712,13 +712,13 @@ static int ilog(double num, unsigned int base)
 
 FAST_CALL bool IsNegative(double num)
 {
-    auto intdbl = reinterpret_cast<uint64_t *>(&num);
+    auto intdbl = reinterpret_cast<u64_t *>(&num);
     return (*intdbl & (1ULL << 63)) != 0;
 }
 
 FAST_CALL bool IsSubnormal(double num)
 {
-    auto intdbl         = reinterpret_cast<uint64_t *>(&num);
+    auto intdbl         = reinterpret_cast<u64_t *>(&num);
     const auto exponent = static_cast<short>(*intdbl >> 52 & 0x7FF);
     const auto mantisa  = *intdbl & (-1ULL >> 12);
     return (exponent == 0 && mantisa != 0);

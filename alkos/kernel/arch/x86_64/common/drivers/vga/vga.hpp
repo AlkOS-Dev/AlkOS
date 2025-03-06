@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_DRIVERS_VGA_VGA_HPP_
 #define KERNEL_ARCH_X86_64_DRIVERS_VGA_VGA_HPP_
 
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 /**
  * @file vga.hpp

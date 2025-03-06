@@ -2,7 +2,7 @@
 #define KERNEL_ABI_DEBUG_TERMINAL_HPP_
 
 #include <defines.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 /* Should be implemented inside architecture-specific code */
 extern "C" {

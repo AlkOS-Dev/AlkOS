@@ -1,13 +1,14 @@
 #include <assert.h>
 #include <time.h>
 #include <extensions/time.hpp>
+#include <extensions/types.hpp>
 #include <time_internal.hpp>
 
 // ------------------------------
 // Constants
 // ------------------------------
 
-static constexpr uint64_t kLeap30Posix = 30 * kSecondsInUsualYear + (28 / 4) * kSecondsInDay;
+static constexpr u64 kLeap30Posix = 30 * kSecondsInUsualYear + (28 / 4) * kSecondsInDay;
 
 // ------------------------------
 // static functions
@@ -19,13 +20,13 @@ static constexpr uint64_t kLeap30Posix = 30 * kSecondsInUsualYear + (28 / 4) * k
 
 tm *localtime_r(const time_t *timer, tm *result)
 {
-    uint64_t time_left = *timer;
+    u64 time_left = *timer;
 
     /* add local time offset */
     time_left += static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
 
-    const uint64_t years = time_left >= kLeap30Posix ? CalculateYears30MoreWLeaps(time_left)
-                                                     : CalculateYears30LessWLeaps(time_left);
+    const u64 years = time_left >= kLeap30Posix ? CalculateYears30MoreWLeaps(time_left)
+                                                : CalculateYears30LessWLeaps(time_left);
 
     return {};
 }

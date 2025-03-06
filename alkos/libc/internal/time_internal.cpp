@@ -1,21 +1,22 @@
 #include <todo.h>
 #include <extensions/time.hpp>
+#include <extensions/types.hpp>
 #include <time_internal.hpp>
 
-uint64_t __GetLocalTimezoneOffsetNs()
+u64 __GetLocalTimezoneOffsetNs()
 {
     TODO_TIMEZONES
     /* Hard coded UTC */
-    static constexpr uint64_t kUctOffset = 1;
+    static constexpr u64 kUctOffset = 1;
 
     return kNanosInSecond * kSecondsInHour * kUctOffset;
 }
 
-uint64_t __GetDstTimezoneOffsetNs()
+u64 __GetDstTimezoneOffsetNs()
 {
     TODO_TIMEZONES
     /* Hard coded Poland */
-    static constexpr uint64_t kPolandOffset = 1;
+    static constexpr u64 kPolandOffset = 1;
 
     return kNanosInSecond * kSecondsInHour * kPolandOffset;
 }

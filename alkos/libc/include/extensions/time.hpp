@@ -4,31 +4,32 @@
 #include <stdint.h>
 #include <time.h>
 
+#include <extensions/time.hpp>
+
 // ------------------------------
 // Time constants
 // ------------------------------
 
 /* usual time constants */
-static constexpr int64_t kTmBaseYear    = 1900;
-static constexpr int64_t kTmBaseYearMod = kTmBaseYear % 400;
+static constexpr i64 kTmBaseYear    = 1900;
+static constexpr i64 kTmBaseYearMod = kTmBaseYear % 400;
 
-static constexpr int64_t kSecondsInMinute    = 60;
-static constexpr int64_t kSecondsInHour      = kSecondsInMinute * 60;
-static constexpr int64_t kSecondsInDay       = kSecondsInHour * 24;
-static constexpr int64_t kSecondsInUsualYear = kSecondsInDay * 365;
+static constexpr i64 kSecondsInMinute    = 60;
+static constexpr i64 kSecondsInHour      = kSecondsInMinute * 60;
+static constexpr i64 kSecondsInDay       = kSecondsInHour * 24;
+static constexpr i64 kSecondsInUsualYear = kSecondsInDay * 365;
 
-static constexpr uint64_t kNanosInSecond = 1'000'000'000;
+static constexpr u64 kNanosInSecond = 1'000'000'000;
 
 /* posix epoch */
-static constexpr int64_t kPosixEpoch = 1970;
+static constexpr i64 kPosixEpoch = 1970;
 
-static constexpr uint64_t kPosixYearsToFirstLeap    = 2;
-static constexpr uint64_t kPosixYearsToFirstLeap100 = 30;
-static constexpr uint64_t kPosixYearsToFirstLeap400 = 30;
+static constexpr u64 kPosixYearsToFirstLeap    = 2;
+static constexpr u64 kPosixYearsToFirstLeap100 = 30;
+static constexpr u64 kPosixYearsToFirstLeap400 = 30;
 
-static constexpr uint64_t kPosixEpochTmSecondDiff =
-    (kPosixEpoch - kTmBaseYear) * kSecondsInUsualYear +
-    ((kPosixEpoch - kTmBaseYear) / 4) * kSecondsInDay;
+static constexpr u64 kPosixEpochTmSecondDiff = (kPosixEpoch - kTmBaseYear) * kSecondsInUsualYear +
+                                               ((kPosixEpoch - kTmBaseYear) / 4) * kSecondsInDay;
 
 // ------------------------------
 // mktime constants
@@ -40,25 +41,25 @@ static constexpr time_t kMktimeFailed = static_cast<time_t>(-1);
 // Functions
 // ------------------------------
 
-FAST_CALL bool IsLeapYear(const int64_t year)
+FAST_CALL bool IsLeapYear(const i64 year)
 {
     return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 }
 
-WRAP_CALL bool IsTmYearLeap(const int64_t year) { return IsLeapYear(year + kTmBaseYear); }
+WRAP_CALL bool IsTmYearLeap(const i64 year) { return IsLeapYear(year + kTmBaseYear); }
 
 /* Posix time helpers */
-FAST_CALL uint64_t CalculateYears30LessWLeaps(const uint64_t time_left) { return {}; }
+FAST_CALL u64 CalculateYears30LessWLeaps(const u64 time_left) { return {}; }
 
-FAST_CALL uint64_t CalculateYears30MoreWLeaps(const uint64_t time_left)
+FAST_CALL u64 CalculateYears30MoreWLeaps(const u64 time_left)
 {
-    static constexpr uint64_t kDown = 400 * kSecondsInUsualYear + 97 * kSecondsInDay;
+    static constexpr u64 kDown = 400 * kSecondsInUsualYear + 97 * kSecondsInDay;
 
-    const uint64_t up       = time_left + 110 * kSecondsInDay;
-    const uint64_t estimate = 400 * (kSecondsInUsualYear + kSecondsInDay);
+    const u64 up       = time_left + 110 * kSecondsInDay;
+    const u64 estimate = 400 * (kSecondsInUsualYear + kSecondsInDay);
 
-    const uint64_t low  = (up - estimate) / kDown;
-    const uint64_t high = up / kDown;
+    const u64 low  = (up - estimate) / kDown;
+    const u64 high = up / kDown;
 
     return {};
 }
