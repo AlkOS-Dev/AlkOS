@@ -12,7 +12,7 @@ double difftime(const time_t time_end, const time_t time_beg)
 
 time_t time(time_t *arg)
 {
-    timer_val tv;
+    time_val tv;
     GetDayTimeSysCall(&tv, nullptr);
 
     if (arg != nullptr) {

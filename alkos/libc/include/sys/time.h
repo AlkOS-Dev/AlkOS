@@ -11,9 +11,9 @@ typedef struct Timezone {
     i16 dst_time_end_seconds;
 } timezone;
 
-typedef struct TimerVal {
+typedef struct TimeVal {
     u64 seconds;
     u64 nanoseconds;
-} timer_val;
+} time_val;
 
 #endif  // LIBC_INCLUDE_SYS_TIME_H_

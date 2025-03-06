@@ -23,32 +23,35 @@ using test::TestGroupBase;
 
 #define ___TEST_TEST_NAME(fixture, test_name) fixture##_##test_name
 
-#define ___TEST_F(fixture, test_name, expect_fail, add_func)                             \
-    class ___TEST_TEST_CLASS_NAME(fixture, test_name) final : public fixture             \
-    {                                                                                    \
-        public:                                                                          \
-        ___TEST_TEST_CLASS_NAME(fixture, test_name)()           = default;               \
-        ~___TEST_TEST_CLASS_NAME(fixture, test_name)() override = default;               \
-        void SetExpectFail_() override { g_expectFail = expect_fail; }                   \
-        void Run_() override;                                                            \
-                                                                                         \
-        private:                                                                         \
-        static const bool registered_;                                                   \
-    };                                                                                   \
-                                                                                         \
-    static TestGroupBase* ___TEST_TEST_FACTORY_NAME(fixture, test_name)(void* mem)       \
-    {                                                                                    \
-        return new (mem) ___TEST_TEST_CLASS_NAME(fixture, test_name)();                  \
-    }                                                                                    \
-                                                                                         \
-    const bool ___TEST_TEST_CLASS_NAME(fixture, test_name)::registered_ = []() -> bool { \
-        add_func(                                                                        \
-            TOSTRING(___TEST_TEST_NAME(fixture, test_name)),                             \
-            ___TEST_TEST_FACTORY_NAME(fixture, test_name)                                \
-        );                                                                               \
-        return true;                                                                     \
-    }();                                                                                 \
-                                                                                         \
+#define ___TEST_F(fixture, test_name, expect_fail, add_func)                                       \
+    class ___TEST_TEST_CLASS_NAME(fixture, test_name) final : public fixture                       \
+    {                                                                                              \
+        public:                                                                                    \
+        ___TEST_TEST_CLASS_NAME(fixture, test_name)()           = default;                         \
+        ~___TEST_TEST_CLASS_NAME(fixture, test_name)() override = default;                         \
+        void SetExpectFail_() override { g_expectFail = expect_fail; }                             \
+        void Run_() override;                                                                      \
+                                                                                                   \
+        private:                                                                                   \
+        static const bool registered_;                                                             \
+    };                                                                                             \
+                                                                                                   \
+    static TestGroupBase* ___TEST_TEST_FACTORY_NAME(fixture, test_name)(void* mem)                 \
+    {                                                                                              \
+        static constexpr size_t kAlignment = alignof(___TEST_TEST_CLASS_NAME(fixture, test_name)); \
+        const size_t offset = kAlignment - (reinterpret_cast<size_t>(mem) % kAlignment);           \
+        void* aligned_mem   = reinterpret_cast<void*>(reinterpret_cast<size_t>(mem) + offset);     \
+        return new (aligned_mem) ___TEST_TEST_CLASS_NAME(fixture, test_name)();                    \
+    }                                                                                              \
+                                                                                                   \
+    const bool ___TEST_TEST_CLASS_NAME(fixture, test_name)::registered_ = []() -> bool {           \
+        add_func(                                                                                  \
+            TOSTRING(___TEST_TEST_NAME(fixture, test_name)),                                       \
+            ___TEST_TEST_FACTORY_NAME(fixture, test_name)                                          \
+        );                                                                                         \
+        return true;                                                                               \
+    }();                                                                                           \
+                                                                                                   \
     void ___TEST_TEST_CLASS_NAME(fixture, test_name)::Run_()
 
 // ------------------------------------

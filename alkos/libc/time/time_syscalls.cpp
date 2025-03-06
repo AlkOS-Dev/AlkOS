@@ -11,7 +11,7 @@
 // Internal kernel use implementation
 // ----------------------------------------
 
-void GetDayTimeSysCall(TimerVal* time, Timezone* time_zone)
+void GetDayTimeSysCall(TimeVal* time, Timezone* time_zone)
 {
     assert(time != nullptr || time_zone != nullptr);
 
