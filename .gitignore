@@ -46,6 +46,7 @@ tools
 .venv
 __pycache__
 logs
+test_framework_logs
 
 # build configuration
 conf.bash

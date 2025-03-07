@@ -66,7 +66,7 @@ void TestModule::RunTestModule()
         QemuShutdown();
     }
 
-    TestSpec *test = FindTestFunction(buff);
+    const TestSpec *test = FindTestFunction(buff);
 
     if (test == nullptr) {
         TerminalWriteError("[TEST] [FAIL] Test not found...\n");
@@ -127,6 +127,7 @@ void TestModule::RunTest_(const TestSpec *test)
     /* mark that the test is already started */
     g_testStarted = true;
     test_obj->Run();
+    delete test_obj;
 
     if (g_expectFail && !g_testCheckFailed) {
         /* test was expected to fail */

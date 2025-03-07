@@ -9,7 +9,6 @@ target_compile_options(lib${LIB_NAME}.32 PRIVATE -m32)
 
 target_include_directories(lib${LIB_NAME}.32 PUBLIC
         ../../include
-        ${SYSROOT}/usr/include
 )
 
 ################################# Dependencies ################################

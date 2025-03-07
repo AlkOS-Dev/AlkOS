@@ -68,7 +68,6 @@ target_compile_options(lib${LIB_NAME}.32 PRIVATE
 
 target_include_directories(lib${LIB_NAME} PUBLIC
         include
-        ${SYSROOT}/usr/include
 )
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)

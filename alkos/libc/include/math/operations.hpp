@@ -7,11 +7,11 @@
 BEGIN_DECL_C
 double modf(double num, double *integralPart);
 
-CONSTEPXR double fabs(double num)
+CONSTEPXR double fabs(const double num)
 {
-    uint64_t *intdbl = (uint64_t *)(&num);
-    *intdbl &= ~(1ULL << 63);
-    return num;
+    __DoubleBits bits{.d = num};
+    bits.u &= ~(1ULL << 63);
+    return bits.d;
 }
 
 END_DECL_C

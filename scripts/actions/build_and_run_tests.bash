@@ -16,4 +16,5 @@ fi
 "${BUILD_AND_RUN_TESTS_DIR}/../actions/build_alkos.bash" -v
 
 # Step 3: Run tests
-"${BUILD_AND_RUN_TESTS_DIR}/../actions/run_tests.bash"
+shift
+"${BUILD_AND_RUN_TESTS_DIR}/../actions/run_tests.bash" "$@"
