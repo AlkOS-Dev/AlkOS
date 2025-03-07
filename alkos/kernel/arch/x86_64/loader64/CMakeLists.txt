@@ -17,10 +17,6 @@ add_executable(alkos.loader64
         ${ARCH_SOURCES}
 )
 
-######################### Setting Custom Properties ##########################
-
-set_target_properties(alkos.loader64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 ############################### Applying Flags ###############################
 
 target_compile_definitions(alkos.loader64 PRIVATE __USE_DEBUG_OUTPUT__=1)

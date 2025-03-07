@@ -40,7 +40,7 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
         // Only load segments that should be loaded into memory
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
             TODO_WHEN_DEBUGGING_FRAMEWORK
-            //            TRACE_INFO("Loading segment %d...", i + 1);
+            TRACE_INFO("Loading segment %d...", i + 1);
 
             u64 segment_dest = destination_begin_virtual_address +
                                (program_header_entry->virtual_address - elf_base);
@@ -49,11 +49,12 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
             u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
             TODO_WHEN_DEBUGGING_FRAMEWORK
-            //            TRACE_INFO(
-            //                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX,
-            //                source_size=0x%llu " "KB", i + 1, segment_dest, segment_dest_size <<
-            //                10, segment_source, segment_source_size << 10
-            //            );
+            TRACE_INFO(
+                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX, source_size=0x%llu "
+                "KB",
+                i + 1, segment_dest, segment_dest_size << 10, segment_source,
+                segment_source_size << 10
+            );
 
             memcpy(
                 reinterpret_cast<void*>(segment_dest),
@@ -69,7 +70,7 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
             }
 
             TODO_WHEN_DEBUGGING_FRAMEWORK
-            //            TRACE_SUCCESS("Segment %d: loaded.", i + 1);
+            TRACE_SUCCESS("Segment %d: loaded.", i + 1);
         }
     }
 
@@ -87,7 +88,7 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 
 void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr)
 {
-    start_addr = reinterpret_cast<u64>(nullptr);
+    start_addr = static_cast<u64>(~0);
     end_addr   = reinterpret_cast<u64>(nullptr);
 
     if (!IsValidElf64(elf_start)) {

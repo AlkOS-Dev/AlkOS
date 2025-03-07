@@ -12,17 +12,13 @@ extern "C" void NO_RET KernelPanic(const char *msg)
     TerminalWriteError(msg);
     TerminalWriteError("\n");
 
-#ifndef __i386__
-    /* Tests are supposed to run only in x86_64 target */
-
+#if defined(__i386__)
+    OsHang();
+#else
     if constexpr (kIsAlkosTestBuild) {
-        /* When running tests */
         test::OnKernelPanic();
     } else {
-        /* Usual situation */
         OsHang();
     }
-#else
-    OsHang();
 #endif
 }

@@ -3,7 +3,17 @@ ENTRY(alkos.entry)
 
 SECTIONS
 {
-	. = 100m; /* This is chosen to be far enough from loader to avoid conflicts, but is arbitrary */
+	. = 0xFFFFFFFF80000000;
+
+	.init BLOCK(4K) : ALIGN(4K)
+          {
+                    *(.init)
+          }
+
+          .fini BLOCK(4K) : ALIGN(4K)
+          {
+                    *(.fini)
+          }
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{

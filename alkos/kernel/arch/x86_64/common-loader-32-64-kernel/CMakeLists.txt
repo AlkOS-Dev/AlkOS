@@ -43,6 +43,20 @@ target_link_libraries(arch.common.all.32 PRIVATE
         libk.32
 )
 
+######################### Setting Custom Properties ##########################
+
+target_compile_options(arch.common.all.64 PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
+        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
+        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+)
+target_compile_options(arch.common.all.32 PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
+        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+)
+
+
 ############################### Applying Flags ###############################
 
 target_compile_options(arch.common.all.32 PRIVATE "-m32")

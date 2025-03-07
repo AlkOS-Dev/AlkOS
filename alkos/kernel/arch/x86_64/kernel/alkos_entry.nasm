@@ -17,8 +17,8 @@
           section .text
           bits 64
 alkos.entry:
-          mov esp, stack_top
-          mov ebp, esp
+          mov rsp, stack_top
+          mov rbp, rsp
 
           ; Invoke CXX global constructors
           call _init

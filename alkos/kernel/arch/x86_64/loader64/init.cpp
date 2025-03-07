@@ -106,14 +106,14 @@ extern "C" void PreKernelInit(LoaderData_32_64_Pass* loader_data)
     TRACE_SUCCESS("ELF bounds obtained!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO(
-    //        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
-    //        elf_effective_size >> 10
-    //    );
+    TRACE_INFO(
+        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
+        elf_effective_size >> 10
+    );
 
     auto* loader_memory_manager =
         reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
-    static constexpr u64 kUpperCanonicalAddress = (~1ULL) << 46;
+    static constexpr u64 kUpperCanonicalAddress = 0xFFFFFFFF80000000;
 
     TRACE_INFO("Mapping kernel module to upper memory starting at 0x%llX", kUpperCanonicalAddress);
     loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
@@ -127,11 +127,13 @@ extern "C" void PreKernelInit(LoaderData_32_64_Pass* loader_data)
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
 
     TRACE_INFO("Loading module...");
-    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, kUpperCanonicalAddress);
+    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, 0);
     if (kernel_entry_point == 0) {
         KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Module loaded!");
+
+    TRACE_INFO("Loading module at 0x%llX", kernel_entry_point);
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 

@@ -21,6 +21,16 @@ add_library(arch.common.kernel-loader.64 OBJECT
         ${COMMON_ASM}
 )
 
+######################### Setting Custom Properties ##########################
+
+target_compile_options(arch.common.kernel-loader.64 PRIVATE
+        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
+        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
+        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
+        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+)
+
+
 ############################# Linking libraries ##############################
 
 target_link_libraries(arch.common.kernel-loader.64 PRIVATE

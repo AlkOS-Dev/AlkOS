@@ -139,7 +139,7 @@ endif ()
 
 set(CMAKE_CXX_LINKER_LAUNCHER "/bin/bash -c")
 set(CMAKE_CXX_LINK_EXECUTABLE
-"/bin/bash -c \"${CMAKE_CXX_COMPILER} <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \
+"/bin/bash -c \"${CMAKE_CXX_COMPILER} -mcmodel=kernel <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \
 ${CRTI_OBJ} \
 \$\(${CMAKE_C_COMPILER} -print-file-name=crtbegin.o\) \
 <OBJECTS> \
