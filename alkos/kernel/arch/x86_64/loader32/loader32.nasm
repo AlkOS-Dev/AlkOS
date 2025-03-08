@@ -7,7 +7,7 @@
           ; and any code it provides as part of itself.
 
           ; Includes
-          extern PreKernelInit
+          extern MainLoader32
 
           ; Stack
           extern stack_bottom
@@ -28,4 +28,4 @@ loader32:
 
           push ebx ; Multiboot info
           push eax ; Magic number
-          call PreKernelInit ; This delegates the work to a C function to avoid nasm
+          call MainLoader32 ; Delegate the work to CXX code

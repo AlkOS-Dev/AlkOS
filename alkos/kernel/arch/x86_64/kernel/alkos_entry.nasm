@@ -10,6 +10,9 @@
           extern _init
           extern _fini
 
+          ; Pre-Kernel Initialization that couldn't be in loaders
+          extern PreKernelInit
+
           ; Kernel Entry Point
           extern KernelMain
 
@@ -19,6 +22,8 @@
 alkos.entry:
           mov rsp, stack_top
           mov rbp, rsp
+
+          call PreKernelInit
 
           ; Invoke CXX global constructors
           call _init

@@ -10,21 +10,16 @@
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
 #include <debug.hpp>
-#include <drivers/pic8259/pic8259.hpp>
 #include <elf/elf64.hpp>
-#include <interrupts/idt.hpp>
 #include <loader_data.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
-#include "loader_memory_manager/loader_memory_manager.hpp"
+#include <loader_memory_manager/loader_memory_manager.hpp>
 
 /* external init procedures */
-extern "C" void EnableOsxsave();
-extern "C" void EnableSSE();
-extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-extern "C" void PreKernelInit(LoaderData_32_64_Pass* loader_data)
+extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
 {
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
@@ -50,35 +45,6 @@ extern "C" void PreKernelInit(LoaderData_32_64_Pass* loader_data)
     //    TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data->loader_end_addr);
     //
     TRACE_INFO("Starting pre-kernel initialization");
-
-    TRACE_INFO("Starting to setup CPU features");
-    BlockHardwareInterrupts();
-
-    /* NOTE: sequence is important */
-    TRACE_INFO("Setting up OS XSAVE...");
-    EnableOsxsave();
-    TRACE_SUCCESS("OS XSAVE setup complete!");
-
-    TRACE_INFO("Setting up SSE...");
-    EnableSSE();
-    TRACE_SUCCESS("SSE setup complete!");
-
-    TRACE_INFO("Setting up AVX...");
-    EnableAVX();
-    TRACE_SUCCESS("AVX setup complete!");
-
-    TRACE_INFO("Setting up PIC units...");
-    InitPic8259(kIrq1Offset, kIrq2Offset);
-    TRACE_SUCCESS("PIC units setup complete!");
-
-    TRACE_INFO("Setting up IDT...");
-    IdtInit();
-    TRACE_SUCCESS("IDT setup complete!");
-
-    EnableHardwareInterrupts();
-    TRACE_INFO("Finished cpu features setup.");
-
-    TRACE_INFO("Pre-kernel initialization finished.");
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 

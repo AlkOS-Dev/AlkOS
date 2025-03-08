@@ -6,7 +6,7 @@
           extern GDT64.Pointer
           extern GDT64.Data
 
-          extern PreKernelInit
+          extern MainLoader64
 
           global loader64
           section .text
@@ -28,7 +28,7 @@ loader64:
 
           mov rdi, 0
           mov edi, r10d
-          call PreKernelInit ; 64-bit part of Pre-Kernel Initialization
+          call MainLoader64 ; Delegate the work to CXX code
 
           ; Infinite loop
           cli

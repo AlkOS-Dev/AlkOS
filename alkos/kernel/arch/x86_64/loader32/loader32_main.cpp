@@ -34,7 +34,7 @@ LoaderData_32_64_Pass loader_data;
 // Helper
 static constexpr u64 k32BitMask = 0x00000000FFFFFFFF;
 
-extern "C" void PreKernelInit(uint32_t boot_loader_magic, void* multiboot_info_addr)
+extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
 {
     TerminalInit();
     TRACE_INFO("In 32 bit mode");
