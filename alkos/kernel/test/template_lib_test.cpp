@@ -118,32 +118,32 @@ TEST_F(TemplateLibTest, HasDuplicateTypesTest)
 
 TEST_F(TemplateLibTest, TypeListTest)
 {
-    using TestList1 = TypeList<0, int, double, float>;
-    EXPECT_TRUE((std::is_same_v<TestList1::type, int>));
+    using TestList1 = TypeList<int, double, float>::Iterator<0>::type;
+    EXPECT_TRUE((std::is_same_v<TestList1, int>));
 
-    using TestList2 = TypeList<1, int, double, float>;
-    EXPECT_TRUE((std::is_same_v<TestList2::type, double>));
+    using TestList2 = TypeList<int, double, float>::Iterator<1>::type;
+    EXPECT_TRUE((std::is_same_v<TestList2, double>));
 
-    using TestList3 = TypeList<2, int, double, float>;
-    EXPECT_TRUE((std::is_same_v<TestList3::type, float>));
+    using TestList3 = TypeList<int, double, float>::Iterator<2>::type;
+    EXPECT_TRUE((std::is_same_v<TestList3, float>));
 }
 
 TEST_F(TemplateLibTest, TypeListSizeTest)
 {
-    using TestList = TypeList<0, int, double, float>;
-    EXPECT_EQ(TestList::size, 3_size);
+    constexpr size_t size = TypeList<int, double, float>::kSize;
+    EXPECT_EQ(size, 3_size);
 }
 
 template <size_t N>
-using TypeIterator = TypeList<N, int, double, float>;
+using NewTypeIterator = typename TypeList<int, double, float>::Iterator<N>;
 
 TEST_F(TemplateLibTest, TypeListOutOfBoundsTest)
 {
     // This test should fail to compile if uncommented
-    // using type = TypeList<3, int, double, float>::type;
+    // using type = TypeList<int, double, float>::Iterator<3>::type;
 }
 
-struct TestFunctor {
+struct NewTestFunctor {
     template <size_t Index, typename T>
     void operator()() const
     {
@@ -157,28 +157,11 @@ struct TestFunctor {
     }
 };
 
-TEST_F(TemplateLibTest, IterateTypeListTest)
-{
-    IterateTypeList<2, TypeIterator>::Apply(TestFunctor{});
-}
+TEST_F(TemplateLibTest, ApplyTest) { TypeList<int, double, float>::Apply(NewTestFunctor{}); }
 
-struct TestFunctorTypes {
-    template <size_t Index, typename T>
-    void operator()() const
-    {
-        if constexpr (Index == 0) {
-            EXPECT_TRUE((std::is_same_v<T, int>));
-        } else if constexpr (Index == 1) {
-            EXPECT_TRUE((std::is_same_v<T, double>));
-        } else if constexpr (Index == 2) {
-            EXPECT_TRUE((std::is_same_v<T, float>));
-        }
-    }
-};
-
-TEST_F(TemplateLibTest, IterateTypesTest)
+TEST_F(TemplateLibTest, ApplyWithNTest)
 {
-    IterateTypes<int, double, float>::Apply(TestFunctor{});
+    TypeList<int, double, float>::Apply<2>(NewTestFunctor{});
 }
 
 TEST_F(TemplateLibTest, GetTypeIndexTest)

@@ -1,6 +1,8 @@
 #ifndef ALKOS_INCLUDE_MODULES_TIMING_CONSTANTS_HPP_
 #define ALKOS_INCLUDE_MODULES_TIMING_CONSTANTS_HPP_
 
+#include <sys/time.h>
+
 #define TIMING_DECL_START \
     namespace timing      \
     {
