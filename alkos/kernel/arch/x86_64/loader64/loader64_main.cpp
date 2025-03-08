@@ -12,9 +12,9 @@
 #include <debug.hpp>
 #include <elf/elf64.hpp>
 #include <loader_data.hpp>
+#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
-#include <loader_memory_manager/loader_memory_manager.hpp>
 
 /* external init procedures */
 extern "C" void EnterKernel(u64 kernel_entry_addr);
