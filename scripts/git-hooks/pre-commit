@@ -36,7 +36,7 @@ fi
 
 
 # Retrieve the list of staged C++ files based on the defined pattern
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E "$CPP_PATTERN" || true)
+STAGED_FILES=$(git diff --cached -z --name-only --diff-filter=ACM | grep -z -i -E "$CPP_PATTERN" || true)
 
 # Exit early if no C++ files are staged
 if [ -z "$STAGED_FILES" ]; then
@@ -46,18 +46,18 @@ fi
 
 # Display the files that will be formatted
 log "Running clang-format on the following files:"
-echo "$STAGED_FILES"
+echo "$STAGED_FILES" | tr '\0' '\n'
 
 # Run clang-format
-echo "$STAGED_FILES" | xargs -P "$NUM_CORES" -n 1 clang-format -style="$CLANG_FORMAT_STYLE" -i || {
+echo "$STAGED_FILES" | tr '\0' '\n' | xargs -0 -P "$NUM_CORES" -n 1 clang-format -style="$CLANG_FORMAT_STYLE" -i || {
   log "clang-format failed"
   exit 1
 }
 
 
 # Re-add the formatted files to the staging area
-echo "$STAGED_FILES" | xargs git add || {
-  log "Failed to read formatted files to staging area"
+echo "$STAGED_FILES" | tr '\0' '\n' | xargs -0 git add || {
+  log "Failed to re-add formatted files to the staging area"
   exit 1
 }
 
