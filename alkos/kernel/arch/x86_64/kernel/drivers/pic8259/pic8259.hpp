@@ -2,10 +2,10 @@
 #define KERNEL_ARCH_X86_64_DRIVERS_PIC8259_PIC8259_HPP_
 
 /* internal includes */
-#include <bit.hpp>
 #include <defines.hpp>
+#include <extensions/bit.hpp>
 #include <io.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 /**
  * @file pic8259.hpp

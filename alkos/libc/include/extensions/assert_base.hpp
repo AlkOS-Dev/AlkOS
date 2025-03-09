@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <todo.h>
+#include <extensions/types.hpp>
 
 // -------------------------------------
 // TODO: temporary print mechanism
@@ -22,7 +23,7 @@ void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size
     assert(buffer != nullptr);
     assert(buffer_size > 0);
 
-    const auto obj_bytes = reinterpret_cast<const uint8_t *>(&obj);
+    const auto obj_bytes = reinterpret_cast<const u8 *>(&obj);
     for (size_t i = 0; i < sizeof(ObjT); ++i) {
         const int bytes_written = snprintf(buffer, buffer_size, "%02X ", obj_bytes[i]);
         assert(
@@ -36,6 +37,13 @@ void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size
 }
 
 FAST_CALL void VerboseAssertDumpObjToHex(const char *&obj, char *buffer, const size_t buffer_size)
+{
+    strncpy(buffer, obj, buffer_size);
+}
+
+FAST_CALL void VerboseAssertDumpObjToHex(
+    const char *const &obj, char *buffer, const size_t buffer_size
+)
 {
     strncpy(buffer, obj, buffer_size);
 }
@@ -60,16 +68,16 @@ FAST_CALL void VerboseAssertDumpObjToHexSnprintf(
     }
 
 // Unsigned integers
-DEF_VERB_DUMP(uint8_t, "%u")
-DEF_VERB_DUMP(uint16_t, "%u")
-DEF_VERB_DUMP(uint32_t, "%u")
-DEF_VERB_DUMP(uint64_t, "%llu")
+DEF_VERB_DUMP(u8, "%u")
+DEF_VERB_DUMP(u16, "%u")
+DEF_VERB_DUMP(u32, "%u")
+DEF_VERB_DUMP(u64, "%llu")
 
 // Signed integers
-DEF_VERB_DUMP(int8_t, "%d")
-DEF_VERB_DUMP(int16_t, "%d")
-DEF_VERB_DUMP(int32_t, "%d")
-DEF_VERB_DUMP(int64_t, "%lld")
+DEF_VERB_DUMP(i8, "%d")
+DEF_VERB_DUMP(i16, "%d")
+DEF_VERB_DUMP(i32, "%d")
+DEF_VERB_DUMP(i64, "%lld")
 
 // Floating point
 DEF_VERB_DUMP(float, "%g")
@@ -282,7 +290,7 @@ void VerboseAssertFalse(
                 msg, size,
                 "Check failed (FALSE)!\n"
                 "Given value was supposed to be equal to false!\n"
-                "Expected value: True\n"
+                "Expected value: false\n"
                 "Actual value: %s\n"
                 "Which is: %s\n",
                 v_str, v_dump

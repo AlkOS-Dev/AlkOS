@@ -2,9 +2,9 @@
 #include <assert.h>
 #include <memory.h>
 #include <arch_utils.hpp>
-#include <bit.hpp>
-#include <debug.hpp>
 #include <defines.hpp>
+#include <extensions/bit.hpp>
+#include <extensions/debug.hpp>
 #include <interrupts/idt.hpp>
 #include <panic.hpp>
 

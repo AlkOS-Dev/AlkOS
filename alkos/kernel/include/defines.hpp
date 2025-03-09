@@ -2,7 +2,7 @@
 #define KERNEL_INCLUDE_DEFINES_HPP_
 
 /* defines from libc */
-#include <defines.h>
+#include <extensions/defines.hpp>
 
 // ------------------------------------
 // Macro to constexpr conversions
@@ -25,11 +25,5 @@ static constexpr bool kIsAlkosTestBuild = true;
 #else
 static constexpr bool kIsAlkosTestBuild = false;
 #endif  // __ALKOS_TESTS_BUILD__
-
-#ifdef NDEBUG
-static constexpr bool kIsDebugBuild = false;
-#else
-static constexpr bool kIsDebugBuild = true;
-#endif  // NDEBUG
 
 #endif  // KERNEL_INCLUDE_DEFINES_HPP_

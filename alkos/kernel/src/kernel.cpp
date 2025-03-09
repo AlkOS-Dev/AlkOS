@@ -2,7 +2,7 @@
 
 /* internal includes */
 #include <assert.h>
-#include <debug.hpp>
+#include <extensions/debug.hpp>
 #include <loader64_main.hpp>
 #include <terminal.hpp>
 

@@ -7,7 +7,7 @@
 BEGIN_DECL_C
 double modf(double num, double *integralPart);
 
-CONSTEPXR double fabs(const double num)
+CONSTEXPR double fabs(const double num)
 {
     __DoubleBits bits{.d = num};
     bits.u &= ~(1ULL << 63);

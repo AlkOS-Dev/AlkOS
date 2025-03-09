@@ -1,8 +1,8 @@
 
 /* internal includes */
-#include <debug.hpp>
 #include <drivers/pic8259/pic8259.hpp>
-#include <types.hpp>
+#include <extensions/debug.hpp>
+#include <extensions/types.hpp>
 
 /**
  * @file pic8259.cpp

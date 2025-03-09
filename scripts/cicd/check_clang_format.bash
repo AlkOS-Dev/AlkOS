@@ -2,26 +2,16 @@
 
 CHECK_CLANG_FORMAT_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CHECK_CLANG_FORMAT_FORMAT_FILE="${CHECK_CLANG_FORMAT_SCRIPT_DIR}/../../.clang-format"
+CHECK_CLANG_FORMAT_UTILS_DIR="${CHECK_CLANG_FORMAT_SCRIPT_DIR}/../utils/clang_format_utils.bash"
 
-declare -a DIRS=(
-    "${CHECK_CLANG_FORMAT_SCRIPT_DIR}/../../alkos/kernel"
-    "${CHECK_CLANG_FORMAT_SCRIPT_DIR}/../../alkos/libc"
-)
-
-find_files() {
-  local files=()
-  for dir in "${DIRS[@]}"; do
-    files+=($(find "$dir" -type f \( -iname "*.cpp" -o -iname "*.c" -o -iname "*.h" -o -iname "*.hpp" \)))
-  done
-  echo "${files[@]}"
-}
+source $CHECK_CLANG_FORMAT_UTILS_DIR
 
 check_clang_format() {
   local files=("$@")
 
   echo "Checking clang-format using $(nproc) CPU cores..."
 
-  parallel -j $(nproc) --halt now,fail=1 clang-format -style=file --dry-run -Werror ::: "${files[@]}"
+  parallel -j $(nproc) --halt now,fail=1 clang-format -style="file:${CHECK_CLANG_FORMAT_FORMAT_FILE}" --dry-run -Werror ::: "${files[@]}"
 
   if [ $? -ne 0 ]; then
     echo "Some files are not correctly clang-formatted."

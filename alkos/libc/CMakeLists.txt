@@ -12,7 +12,7 @@ endif ()
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     set(LIB_NAME "k")
-    add_compile_definitions(__ALKOS_KERNEL__=1)
+    add_compile_definitions(__ALKOS_LIBK__=1)
 
     if (USE_DEBUG_OUTPUT)
         message(STATUS "Enabled debug output for libc...")
@@ -68,6 +68,10 @@ target_compile_options(lib${LIB_NAME}.32 PRIVATE
 
 target_include_directories(lib${LIB_NAME} PUBLIC
         include
+)
+
+target_include_directories(lib${LIB_NAME} PRIVATE
+        internal
 )
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)

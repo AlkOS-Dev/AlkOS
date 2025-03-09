@@ -1,9 +1,25 @@
 #include <assert.h>
-#include <stdint.h>
+#include <errno.h>
+#include <sys/calls.h>
 #include <time.h>
+#include <extensions/time.hpp>
 
-time_t mktime(struct tm *time_ptr)
+// ------------------------------
+// Implementation
+// ------------------------------
+
+time_t mktime(tm *time_ptr)
 {
-    assert(false && "Not implemented!");
-    return time_t{};
+    const auto time_zone = GetTimezoneSysCall();
+    const time_t t       = ConvertDateTimeToSeconds(*time_ptr, time_zone);
+
+    if (t == kConversionFailed) {
+        errno = EOVERFLOW;
+        return kMktimeFailed;
+    }
+
+    /* TODO: use localtime to adjust tm structure */
+    localtime_r(&t, time_ptr);
+
+    return t;
 }

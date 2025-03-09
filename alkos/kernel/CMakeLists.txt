@@ -13,6 +13,7 @@ endif ()
 ############################ Compile Definitions #############################
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
+add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
 
 if (ENABLE_TESTS)
     message(STATUS "Tests enabled...")
@@ -63,7 +64,7 @@ file(GLOB KERNEL_SOURCES
 )
 
 if (ENABLE_TESTS)
-    file(GLOB KERNEL_TEST_SOURCES
+    file(GLOB_RECURSE KERNEL_TEST_SOURCES
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"
     )
@@ -81,7 +82,6 @@ add_executable(alkos.kernel
 ############################### Adding Headers ###############################
 
 include_directories(include)
-include_directories(${SYSROOT}/usr/include)
 include_directories(test)
 include_directories(abi)
 

@@ -6,13 +6,13 @@
 
 BEGIN_DECL_C
 
-CONSTEPXR int isnan(const double num)
+CONSTEXPR int isnan(const double num)
 {
     const __DoubleBits bits{.d = num};
     return ((bits.u >> 52 & 0x7FF) == 0x7FF) && ((bits.u & (-1ULL >> 12)) != 0);
 }
 
-CONSTEPXR int isinf(const double num)
+CONSTEXPR int isinf(const double num)
 {
     const __DoubleBits bits{.d = num};
     return ((bits.u >> 52 & 0x7FF) == 0x7FF) && ((bits.u & (-1ULL >> 12)) == 0);

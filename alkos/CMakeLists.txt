@@ -99,6 +99,7 @@ set(MAKE_ISO_SCRIPT_PATH ${CMAKE_SOURCE_DIR}/../scripts/actions/make_iso.bash)
 set(RUN_ALKOS_SCRIPT_PATH ${CMAKE_SOURCE_DIR}/../scripts/actions/run_alkos.bash)
 set(ALKOS_ISO_PATH ${CMAKE_BINARY_DIR}/alkos.iso)
 set(ALKOS_KERNEL_PATH ${CMAKE_BINARY_DIR}/sysroot/boot/alkos.kernel)
+set(RUN_ALKOS_TESTS_SCRIPT_PATH ${CMAKE_SOURCE_DIR}/../scripts/actions/run_tests.bash)
 
 if (NOT EXISTS ${MAKE_ISO_SCRIPT_PATH})
     message(FATAL_ERROR "make_iso script not found: ${MAKE_ISO_SCRIPT_PATH}")
@@ -167,3 +168,12 @@ add_custom_target(mount
         COMMAND sudo mount -o loop ${ALKOS_ISO_PATH} /mnt
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
+
+if (ENABLE_TESTS)
+    separate_arguments(SPLIT_TEST_ARGS UNIX_COMMAND "${CMAKE_TEST_ARGS}")
+    add_custom_target(tests
+            COMMAND ${RUN_ALKOS_TESTS_SCRIPT_PATH} ${SPLIT_TEST_ARGS}
+            DEPENDS iso
+    )
+endif ()
+
