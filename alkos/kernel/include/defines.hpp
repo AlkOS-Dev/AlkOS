@@ -2,7 +2,7 @@
 #define KERNEL_INCLUDE_DEFINES_HPP_
 
 /* defines from libc */
-#include <defines.h>
+#include <extensions/defines.hpp>
 
 // ------------------------------------
 // Macro to constexpr conversions

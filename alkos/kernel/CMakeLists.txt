@@ -79,7 +79,6 @@ add_executable(alkos.kernel
 ############################### Adding Headers ###############################
 
 include_directories(include)
-include_directories(${SYSROOT}/usr/include)
 include_directories(test)
 include_directories(abi)
 

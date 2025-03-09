@@ -2,7 +2,7 @@
 #define KERNEL_ABI_INIT_HPP_
 
 #include <loader_data.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 /**
  * @brief Performs all necessary hardware initialization on the system.

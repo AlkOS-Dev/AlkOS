@@ -2,7 +2,7 @@
 #define ARCH_X86_64_INTERRUPTS_IDT_HPP_
 
 #include <defines.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 // ------------------------------
 // Crucial defines

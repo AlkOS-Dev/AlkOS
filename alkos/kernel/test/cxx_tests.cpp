@@ -1,5 +1,7 @@
 #include <test_module/test.hpp>
 
+#include <extensions/defines.hpp>
+
 class TestClass
 {
     public:
@@ -46,5 +48,5 @@ class AlignedTestClass : public TestGroupBase
 
 TEST_F(AlignedTestClass, TestAlignas)
 {
-    R_ASSERT_EQ(static_cast<size_t>(0), reinterpret_cast<size_t>(m_mem) % 256);
+    R_ASSERT_EQ(0_size, reinterpret_cast<size_t>(m_mem) % 256_size);
 }

@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_NEW_HPP_
-#define LIBC_INCLUDE_NEW_HPP_
+#ifndef LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
+#define LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
 
 #include <stddef.h>
 
@@ -43,4 +43,4 @@ inline void *operator new[](size_t, std::align_val_t al, void *ptr)
     return reinterpret_cast<char *>(ptr) + offset;
 }
 
-#endif  // LIBC_INCLUDE_NEW_HPP_
+#endif  // LIBC_INCLUDE_EXTENSIONS_NEW_HPP_

@@ -1,20 +1,38 @@
 #include <assert.h>
 #include <time.h>
+#include <extensions/time.hpp>
+#include <extensions/types.hpp>
+#include <time_internal.hpp>
 
-struct tm *localtime_s(const time_t *timer, struct tm *result)
+// ------------------------------
+// Constants
+// ------------------------------
+
+static constexpr u64 kLeap30Posix = 30 * kSecondsInUsualYear + (28 / 4) * kSecondsInDay;
+
+// ------------------------------
+// static functions
+// ------------------------------
+
+// ------------------------------
+// Implementation
+// ------------------------------
+
+tm *localtime_r(const time_t *timer, tm *result)
 {
-    assert(false && "Not implemented!");
-    return nullptr;
+    u64 time_left = *timer;
+
+    /* add local time offset */
+    time_left += static_cast<int64_t>(__GetLocalTimezoneOffsetNs() / kNanosInSecond);
+
+    const u64 years = time_left >= kLeap30Posix ? CalculateYears30MoreWLeaps(time_left)
+                                                : CalculateYears30LessWLeaps(time_left);
+
+    return {};
 }
 
-struct tm *localtime_r(const time_t *timer, struct tm *result)
+tm *localtime(const time_t *timer)
 {
-    assert(false && "Not implemented!");
-    return nullptr;
-}
-
-struct tm *localtime(const time_t *timer)
-{
-    assert(false && "Not implemented!");
-    return nullptr;
+    static tm buffer;
+    return localtime_r(timer, &buffer);
 }

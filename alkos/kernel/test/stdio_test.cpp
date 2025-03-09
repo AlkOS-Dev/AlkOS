@@ -226,8 +226,8 @@ TEST_F(SnprintfTest, LengthModifiers)
     VerifyOutput("%hi", "42", static_cast<short>(42));
 
     // Size_t
-    VerifyOutput("%zu", "42", static_cast<size_t>(42));
-    VerifyOutput("%zd", "42", static_cast<size_t>(42));
+    VerifyOutput("%zu", "42", 42_size);
+    VerifyOutput("%zd", "42", 42_size);
 
     // Ptrdiff_t
     VerifyOutput("%td", "42", static_cast<ptrdiff_t>(42));
@@ -251,10 +251,7 @@ TEST_F(SnprintfTest, ComplexCombinations)
     VerifyOutput("%d %i %u %x %X", "42 42 42 2a 2A", 42, 42, 42u, 42, 42);
 
     // Length modifier combinations
-    VerifyOutput(
-        "%ld %lld %hd %zd", "42 42 42 42", 42L, 42LL, static_cast<short>(42),
-        static_cast<size_t>(42)
-    );
+    VerifyOutput("%ld %lld %hd %zd", "42 42 42 42", 42L, 42LL, static_cast<short>(42), 42_size);
 }
 
 TODO_BY_THE_END_OF_MILESTONE0
