@@ -1,6 +1,6 @@
 name: Automated Tests
 
-on: [push, pull_request, workflow_dispatch]
+on: [push, workflow_dispatch]
 
 jobs:
   Tests:
@@ -21,7 +21,16 @@ jobs:
       - name: Run tests
         run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
 
+      - name: Print build log on failure
+        if: failure()
+        run: cat /tmp/alkOS_build.log
+
+      - name: Print test logs on failure
+        if: failure()
+        run: cat scripts/tests/test_framework_logs/*
+
       - name: Upload build artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: alkos_build
@@ -31,6 +40,7 @@ jobs:
           compression-level: 9
 
       - name: Upload tests artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tests_logs
