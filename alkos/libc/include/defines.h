@@ -68,7 +68,7 @@ static constexpr bool kIsKernel = false;
 
 /* constexpr */
 #ifdef __cplusplus
-#define CONSTEPXR static constexpr
+#define CONSTEXPR static constexpr
 #else
 #define CONSTEXPR static inline
 #endif  // __cplusplus

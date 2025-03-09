@@ -19,12 +19,14 @@
 
 /* usual kernel assert macro */
 #ifdef NDEBUG
-#define ASSERT(expr) ((void)0)
+#define ASSERT(expr)     ((void)0)
+#define FAIL_ALWAYS(msg) ((void)0)
 #else
 #define ASSERT(expr)         \
     if (!(expr)) {           \
         __FAIL_KERNEL(expr); \
     }
+#define FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 #endif  // NDEBUG
 
 /* usual kernel working in release assert macro */
@@ -32,6 +34,7 @@
     if (!(expr)) {           \
         __FAIL_KERNEL(expr); \
     }
+#define R_FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 
 /* libc default assert macro */
 #define assert(expr) ASSERT(expr)
@@ -45,9 +48,11 @@
 #define __ASSERT_FAIL_FUNC TODO_USERSPACE
 
 #ifdef NDEBUG
-#define assert(expr) ((void)0)
+#define assert(expr)     ((void)0)
+#define FAIL_ALWAYS(msg) ((void)0)
 #else
-#define assert(expr) TODO_USERSPACE
+#define assert(expr)     TODO_USERSPACE
+#define FAIL_ALWAYS(msg) TODO_USERSPACE
 #endif  // NDEBUG
 
 #endif

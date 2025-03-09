@@ -3,7 +3,7 @@
 
 #include <defines.hpp>
 #include <io.hpp>
-#include <types.hpp>
+#include "extensions/types.hpp"
 
 static constexpr u64 kCmosAddressPort = 0x70;
 static constexpr u64 kCmosDataPort    = 0x71;

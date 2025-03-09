@@ -11,6 +11,10 @@ target_include_directories(lib${LIB_NAME}.32 PUBLIC
         ../../include
 )
 
+target_include_directories(lib${LIB_NAME}.32 PRIVATE
+        ../../internal
+)
+
 ################################# Dependencies ################################
 
 add_dependencies(lib${LIB_NAME}.32 lib${LIB_NAME})

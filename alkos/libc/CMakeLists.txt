@@ -56,6 +56,10 @@ target_include_directories(lib${LIB_NAME} PUBLIC
         include
 )
 
+target_include_directories(lib${LIB_NAME} PRIVATE
+        internal
+)
+
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)
 
 ############################### Processing output ###############################

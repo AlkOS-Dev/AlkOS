@@ -13,4 +13,11 @@
 #define TODO_BY_THE_END_OF_MILESTONE0
 #define TODO_BY_THE_END_OF_MILESTONE1
 
+/* should be changed when timezones are implemented */
+#define TODO_TIMEZONES
+
+#define TODO_FULL_TUPLE_SUPPORT
+
+#define TODO_LIBCPP_COMPLIANCE
+
 #endif  // LIBC_INCLUDE_TODO_H_

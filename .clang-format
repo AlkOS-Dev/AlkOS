@@ -17,3 +17,4 @@ AllowShortLambdasOnASingleLine: None
 AllowShortLoopsOnASingleLine: true
 EmptyLineBeforeAccessModifier: Always
 InsertNewlineAtEOF: true
+NamespaceIndentation: None

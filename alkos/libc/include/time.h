@@ -34,8 +34,8 @@ typedef struct tm {
      * negative if no information is available*/
 } tm;
 
-typedef uint64_t time_t;
-typedef uint64_t clock_t;
+typedef unsigned long long time_t;
+typedef unsigned long long clock_t;
 
 typedef struct timespec {
     time_t tv_sec; /* seconds */
@@ -92,9 +92,6 @@ struct tm *localtime(const time_t *timer);
 
 /* C23 */
 struct tm *localtime_r(const time_t *timer, struct tm *result);
-
-/* C11 */
-struct tm *localtime_s(const time_t *__restrict__ timer, struct tm *__restrict__ result);
 
 time_t mktime(struct tm *time_ptr);
 
