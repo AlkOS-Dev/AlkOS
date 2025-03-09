@@ -399,7 +399,7 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void WriteUint_(const uintmax_t num)
     {
-        written_ += FormatUIntWoutNullTerm(num, buf_ + written_, size_ - written_);
+        written_ += FormatUIntWithoutNullTerminator(num, buf_ + written_, size_ - written_);
     }
 
     FORCE_INLINE_F void WriteChar_(const char c)
