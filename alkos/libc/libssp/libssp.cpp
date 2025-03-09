@@ -11,9 +11,9 @@
 /* internal includes */
 #include <defines.h>
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 #include "panic.hpp"
-#endif  // __ALKOS_KERNEL__
+#endif  // __ALKOS_LIBK__
 
 #if __STDC_HOSTED__
 #error "NOT IMPLEMENTED"
@@ -44,7 +44,7 @@ static NO_RET void __stack_chk_fail_hosted() {}
 // Kernel implementation
 // ------------------------------
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 
 /**
  * @todo Implement this when random number generator is implemented
@@ -56,7 +56,7 @@ static void __stack_chk_init_kernel() {}
  */
 WRAP_CALL NO_RET void __stack_chk_fail_kernel() { KernelPanic("Stack smashing detected"); }
 
-#endif  // __ALKOS_KERNEL__
+#endif  // __ALKOS_LIBK__
 
 // ------------------------------
 // libssp implementation

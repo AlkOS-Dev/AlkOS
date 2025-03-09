@@ -5,8 +5,8 @@
 
 /* internal includes */
 #include <assert.h>
-#include <debug.hpp>
 #include <drivers/serial_port_qemu/serial_qemu.hpp>
+#include <extensions/debug.hpp>
 #include <io.hpp>
 
 // ------------------------------

@@ -3,6 +3,7 @@
 
 #include <defines.h>
 #include <stdint.h>
+#include <extensions/types.hpp>
 
 /**********************************************
  * Constants
@@ -29,7 +30,7 @@
 
 union __DoubleBits {
     double d;
-    uint64_t u;
+    u64 u;
 };
 
 /**********************************************

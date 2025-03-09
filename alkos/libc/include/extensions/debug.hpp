@@ -1,5 +1,11 @@
-#ifndef KERNEL_INCLUDE_DEBUG_HPP_
-#define KERNEL_INCLUDE_DEBUG_HPP_
+#ifndef LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#define LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+
+#include <todo.h>
+
+TODO_STREAMS
+/* Note: Currently works only in kernel code due to lack of libc terminal abstractions */
+#if defined(__USE_DEBUG_TRACES__) && defined(__ALKOS_KERNEL__)
 
 #include <assert.h>
 #include <stdio.h>
@@ -26,8 +32,6 @@ FAST_CALL constexpr void FormatTrace(const char* format, Args... args)
     DebugTerminalWrite(buffer);
 }
 
-#ifdef __USE_DEBUG_TRACES__
-
 #define TRACE(message, ...) FormatTrace(message __VA_OPT__(, ) __VA_ARGS__)
 
 #else
@@ -47,4 +51,4 @@ FAST_CALL constexpr void FormatTrace(const char* format, Args... args)
 #define TRACE_INFO(message, ...)    TRACE(TRACE_FORMAT_INFO(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_SUCCESS(message, ...) TRACE(TRACE_FORMAT_SUCCESS(message) __VA_OPT__(, ) __VA_ARGS__)
 
-#endif  // KERNEL_INCLUDE_DEBUG_HPP_
+#endif  // LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_

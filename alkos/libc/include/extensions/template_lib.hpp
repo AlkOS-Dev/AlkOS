@@ -3,6 +3,8 @@
 
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/new.hpp>
+#include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
 
@@ -188,5 +190,87 @@ NODISCARD FAST_CALL constexpr size_t GetTypeIndexInTypes()
 
     return idx;
 }
+
+// ------------------------------
+// Static singleton
+// ------------------------------
+
+class StaticSingletonHelper
+{
+    public:
+    StaticSingletonHelper(StaticSingletonHelper const &)            = delete;
+    StaticSingletonHelper &operator=(StaticSingletonHelper const &) = delete;
+
+    StaticSingletonHelper(StaticSingletonHelper &&)            = delete;
+    StaticSingletonHelper &operator=(StaticSingletonHelper &&) = delete;
+
+    protected:
+    /* Non instantiable */
+    StaticSingletonHelper() = default;
+};
+
+template <class T>
+concept DerivedFromHelper = std::is_base_of_v<StaticSingletonHelper, T>;
+
+template <class T>
+    requires DerivedFromHelper<T>
+class StaticSingleton
+{
+    struct InstanceHelper final : T {
+        /* Makes protected constructor accessible */
+
+        template <class... Args>
+        explicit InstanceHelper(Args &&...args) noexcept : T(std::forward<Args>(args)...)
+        {
+        }
+    };
+
+    public:
+    // ------------------------------------
+    // Static Accessors and Utilities
+    // ------------------------------------
+
+    FORCE_INLINE_F static T &Get() noexcept
+    {
+        assert(is_instance_inited_ && "Not inited Singleton instance!");
+        return *reinterpret_cast<T *>(instance_memory_);
+    }
+
+    FORCE_INLINE_F static void Destroy() noexcept
+    {
+        Get().~T();
+        is_instance_inited_ = false;
+    }
+
+    FORCE_INLINE_F static bool IsInited() noexcept { return is_instance_inited_; }
+
+    template <class... Args>
+    FORCE_INLINE_F static T &Init(Args &&...args) noexcept
+    {
+        assert(!IsInited() && "Singleton instance already inited!");
+        auto ptr = new (instance_memory_) InstanceHelper(std::forward<Args>(args)...);
+        assert(ptr == reinterpret_cast<T *>(instance_memory_));
+
+        is_instance_inited_ = true;
+        return Get();
+    }
+
+    protected:
+    // ------------------------------
+    // Static memory
+    // ------------------------------
+
+    static bool is_instance_inited_;
+    alignas(alignof(T)) static unsigned char instance_memory_[sizeof(T)];
+};
+
+template <typename T>
+    requires DerivedFromHelper<T>
+bool StaticSingleton<T>::is_instance_inited_ = false;
+
+template <typename T>
+    requires DerivedFromHelper<T>
+unsigned char StaticSingleton<T>::instance_memory_[sizeof(T)]{};
+
 }  // namespace TemplateLib
 #endif  // LIBC_INCLUDE_TEMPLATE_LIB_HPP_

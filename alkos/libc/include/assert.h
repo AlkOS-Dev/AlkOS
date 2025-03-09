@@ -7,7 +7,7 @@
 // Kernel Asserts
 // ------------------------------
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 
 #include <panic.hpp>
 
@@ -63,6 +63,7 @@
 
 #ifdef __cplusplus
 
+#include <defines.hpp>
 #include <extensions/assert_base.hpp>
 
 /* usual C-style asserts */

@@ -2,6 +2,8 @@
 #include <drivers/cmos/rtc.hpp>
 #include <todo.hpp>
 
+#include <extensions/time.hpp>
+
 // ------------------------------
 // RTC registers
 // ------------------------------
@@ -137,5 +139,7 @@ tm ReadRtcTime()
         }
     }
 
+    /* Adjust year to match tm struct */
+    time.time.tm_year -= kTmBaseYear;
     return time.time;
 }
