@@ -11,17 +11,11 @@ set(BOOTABLE_KERNEL_EXECUTABLE "")
 add_subdirectory(loader32)
 # Retrieve the bootable kernel executable
 set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
-set_target_properties(alkos.loader32 PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader32"
-)
 
 ################################### Boot64 ###################################
 
 add_subdirectory(loader64)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.loader64)
-set_target_properties(alkos.loader64 PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.loader64"
-)
 seT(KERNEL_COMMANDS ${KERNEL_COMMANDS} "loader64")
 
 ################################### Kernel ###################################
@@ -29,13 +23,10 @@ seT(KERNEL_COMMANDS ${KERNEL_COMMANDS} "loader64")
 add_subdirectory(kernel)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.kernel)
 set(KERNEL_COMMANDS ${KERNEL_COMMANDS} "kernel")
-set_target_properties(alkos.kernel PROPERTIES
-        IMPORTED_LOCATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/alkos.kernel"
-)
 
 ################################### Common ###################################
 
-add_subdirectory(common-loader-32-64-kernel)
+add_subdirectory(common-loader-all)
 add_subdirectory(common-loader-64-kernel)
 
 ############################### Error Checking ###############################

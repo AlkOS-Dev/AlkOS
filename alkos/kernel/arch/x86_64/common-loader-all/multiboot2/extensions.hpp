@@ -63,7 +63,6 @@ DEFINE_TAG_NUMBER(tag_load_base_addr_t, MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR);
  */
 const char* GetTagName(u32 type);
 
-// TODO
 /**
  * @brief Find a tag in the multiboot info.
  *

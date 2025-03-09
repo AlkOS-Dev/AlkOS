@@ -46,7 +46,3 @@ target_link_libraries(alkos.loader64 PRIVATE
         arch.common.all.64
         arch.common.kernel-loader.64
 )
-
-################################## Install ###################################
-
-install(TARGETS alkos.loader64 DESTINATION .) # Installs to SYSROOT (CMAKE_INSTALL_PREFIX)

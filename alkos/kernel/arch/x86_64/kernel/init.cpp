@@ -19,7 +19,7 @@
 #include "loader_memory_manager/loader_memory_manager.hpp"
 
 /* external init procedures */
-extern "C" void EnableOsxsave();
+extern "C" void EnableOSXSave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
@@ -57,7 +57,7 @@ extern "C" void PreKernelInit(LoaderDataKernelPass* loader_data)
 
     /* NOTE: sequence is important */
     TRACE_INFO("Setting up OS XSAVE...");
-    EnableOsxsave();
+    EnableOSXSave();
     TRACE_SUCCESS("OS XSAVE setup complete!");
 
     TRACE_INFO("Setting up SSE...");

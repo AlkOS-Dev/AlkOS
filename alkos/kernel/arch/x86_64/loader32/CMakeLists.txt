@@ -63,7 +63,3 @@ target_link_libraries(alkos.loader32 PRIVATE
         arch.common.all.32
         libk.32
 )
-
-################################## Install ###################################
-
-install(TARGETS alkos.loader32 DESTINATION .) # Installs to SYSROOT (CMAKE_INSTALL_PREFIX)\

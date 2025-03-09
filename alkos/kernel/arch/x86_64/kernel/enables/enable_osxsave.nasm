@@ -22,10 +22,10 @@
     FAIL_OSXSAVE_AVX db "Missing AVX support in OSXSAVE feature set. Unable to start...", 0
 
     section .text
-    global EnableOsxsave
+    global EnableOSXSave
 
 ; Intel manual page 319 (Chapter 13 - Managing State Using the XSAVE Feature Set)
-EnableOsxsave:
+EnableOSXSave:
     mov rax, FEATURE_CPUID_FLAG
     cpuid
 

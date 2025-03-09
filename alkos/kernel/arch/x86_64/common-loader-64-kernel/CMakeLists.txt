@@ -1,4 +1,4 @@
-message(STATUS "Configuring common")
+message(STATUS "Configuring common-loader-64-kernel")
 
 ############################## Finding Sources ###############################
 

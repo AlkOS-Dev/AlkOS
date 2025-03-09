@@ -29,6 +29,8 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
             }
         }
     }
+
+    // If the destination address is not specified, load the ELF at the base address
     if (destination_begin_virtual_address == 0) {
         destination_begin_virtual_address = elf_base;
     }

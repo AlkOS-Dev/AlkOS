@@ -9,7 +9,6 @@
 extern "C" void NO_RET KernelPanic(const char *msg)
 {
     TerminalWriteError("[ KERNEL PANIC ]\n");
-    TerminalWriteError(" Kernel Panic Kernel ");
     TerminalWriteError(msg);
     TerminalWriteError("\n");
 

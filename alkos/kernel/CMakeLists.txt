@@ -1,3 +1,5 @@
+message(STATUS "Configuring kernel...")
+
 ############################### Error Checking ###############################
 
 if (NOT DEFINED SYSROOT)
@@ -137,9 +139,11 @@ if (NOT DEFINED CRTI_OBJ  OR NOT DEFINED CRTN_OBJ)
     message(FATAL_ERROR "One of: crti.o, crtn.o is not defined. Those should be defined in the ARCH CMakeLists.txt file")
 endif ()
 
+# TODO: I have no idea, but maybe -mcmodel=kernel is needed here. It appears to work without it
+# but I'm not sure if it's correct and I don't know what is the correct way to pass the flag here
 set(CMAKE_CXX_LINKER_LAUNCHER "/bin/bash -c")
 set(CMAKE_CXX_LINK_EXECUTABLE
-"/bin/bash -c \"${CMAKE_CXX_COMPILER} -mcmodel=kernel <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \
+"/bin/bash -c \"${CMAKE_CXX_COMPILER} <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \
 ${CRTI_OBJ} \
 \$\(${CMAKE_C_COMPILER} -print-file-name=crtbegin.o\) \
 <OBJECTS> \

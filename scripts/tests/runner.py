@@ -42,7 +42,6 @@ TEST_RUNS: list[TestRun] = [
         [
             "SnprintfTest_BufferSizeHandling",  # Fails <- issue added on low prio
             "SnprintfTest_EdgeCases",  # Fails <- issue added on low prio
-            # "TestGroupBase_SimpleExceptionTest"
         ]
     )
 ]

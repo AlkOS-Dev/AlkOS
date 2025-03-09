@@ -103,6 +103,6 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    // TODO: Make this pass the loader data
+    // TODO: Make this pass the loader data - (When implementing physical memory manager)
     EnterKernel(kernel_entry_point);
 }

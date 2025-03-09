@@ -26,6 +26,8 @@ struct PACK LoaderData_32_64_Pass {
     u64 loader_memory_manager_addr;   // The address of the loader memory manager
 };
 
+/// This is the structure that is passed from the 64 bit loader to the kernel
+/// It is unused for now but will be used in physical memory management update
 struct PACK LoaderDataKernelPass {
     u64 dummy;
 };

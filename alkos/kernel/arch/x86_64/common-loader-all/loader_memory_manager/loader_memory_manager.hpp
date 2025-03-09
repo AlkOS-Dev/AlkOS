@@ -6,15 +6,31 @@
 #include "multiboot2/multiboot2.h"
 #include "types.hpp"
 
+/**
+ * @brief Structure representing a free memory region.
+ *
+ * Contains the physical start address and the region's length.
+ */
 struct FreeMemoryRegion_t {
     u64 addr;
     u64 length;
 } PACK;
 
+/**
+ * @brief Concept for a callback function to process a FreeMemoryRegion_t.
+ *
+ * The callback must be callable with a reference to a FreeMemoryRegion_t.
+ */
 template <typename Callback>
 concept FreeMemoryRegionCallback =
     requires(Callback cb, FreeMemoryRegion_t& region) { cb(region); };
 
+/**
+ * @brief LoaderMemoryManager manages the mapping of virtual to physical memory.
+ *
+ * It handles the creation and storage of paging tables (PML) and provides
+ * functions to map virtual ranges, walk free memory regions, and dump debug
+ */
 class LoaderMemoryManager
 {
     private:
@@ -22,11 +38,13 @@ class LoaderMemoryManager
     // Constants
     //------------------------------------------------------------------------------
 
-    static constexpr u32 kMaxPmlTablesToStore = 100;
-    static constexpr u32 kNumEntriesPerPml    = 512;
-    /*
-     * Maximum number of memory map entries that can be handled by the loader.
-     * If there are more entries, the loader will panic.
+    static constexpr u32 kMaxPmlTablesToStore = 100; ///< Maximum number of PML tables to store.
+    static constexpr u32 kNumEntriesPerPml    = 512; ///< Number of entries in a PML table.
+
+    /**
+     * @brief Maximum number of memory map entries the loader can handle.
+     *
+     * If the number of entries exceeds this value, the loader will panic.
      */
     static constexpr u32 kMaxMemoryMapEntries = 1e3;
 
@@ -250,6 +268,7 @@ class LoaderMemoryManager
                                   ///< this entry)
     };
 
+    /// Type for a page table represented as an array of 512 entries, aligned to 4096 bytes.
     typedef u64 PMLTable_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
     typedef PMLTable_t PML4_t;
     typedef PMLTable_t PML3_t;
@@ -261,6 +280,11 @@ class LoaderMemoryManager
     // Class Creation and Destruction
     //------------------------------------------------------------------------------//
 
+    /**
+     * @brief Constructs the LoaderMemoryManager.
+     *
+     * Initializes the internal PML tables and clears the free memory regions.
+     */
     LoaderMemoryManager();
 
     //------------------------------------------------------------------------------//
@@ -274,12 +298,41 @@ class LoaderMemoryManager
      */
     PML4_t* GetPml4Table();
 
+    /**
+     * @brief Maps a single virtual address to a physical address.
+     *
+     * This is a template function where the page size can be specified.
+     *
+     * @tparam page_size Page size to be used in mapping.
+     * @param virtual_address Virtual address to map.
+     * @param physical_address Physical address to map to.
+     * @param flags Mapping flags.
+     */
     template <PageSize page_size>
     void MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags);
+
+    /**
+     * @brief Maps a virtual memory range to physical memory.
+     *
+     * Maps the given virtual address range using free memory regions and updates
+     * the paging structures.
+     *
+     * @param virtual_address Starting virtual address (must be page aligned).
+     * @param bound Number of bytes to map.
+     * @param flags Flags applied to the page table entries.
+     */
     void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags);
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
 
+    /**
+     * @brief Iterates over each free memory region.
+     *
+     * Applies the given callback to each free memory region.
+     *
+     * @tparam Callback Type of the callback satisfying FreeMemoryRegionCallback.
+     * @param callback Function to invoke for each free memory region.
+     */
     template <FreeMemoryRegionCallback Callback>
     void WalkFreeMemoryRegions(Callback callback)
     {
@@ -290,6 +343,13 @@ class LoaderMemoryManager
         TRACE_INFO("Free memory regions walk complete!");
     }
 
+    /**
+     * @brief Adds a memory map entry provided by the bootloader.
+     *
+     * Updates the internal free memory regions sorted in descending order.
+     *
+     * @param mmap_entry Pointer to the memory map entry.
+     */
     void AddMemoryMapEntry(multiboot::memory_map_t* mmap_entry);
 
     [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
