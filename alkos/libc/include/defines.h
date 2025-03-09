@@ -1,7 +1,7 @@
 #ifndef LIBC_INCLUDE_DEFINES_HPP_
 #define LIBC_INCLUDE_DEFINES_HPP_
 
-#if !defined(__ALKOS_KERNEL__) && !__STDC_HOSTED__
+#if !defined(__ALKOS_LIBK__) && !__STDC_HOSTED__
 #error "Missing environment definition"
 #endif
 
@@ -11,7 +11,7 @@
 
 #ifdef __cplusplus
 
-#ifdef __ALKOS_KERNEL__
+#ifdef __ALKOS_LIBK__
 static constexpr bool kIsKernel = true;
 #else
 static constexpr bool kIsKernel = false;

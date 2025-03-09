@@ -198,3 +198,34 @@ TEST_F(TemplateLibTest, GetTypeIndexFailsOnDuplicates)
     // This should fail to compile due to static_assert
     // constexpr size_t index = GetTypeIndexInTypes<int, int, int, float>();
 }
+
+TEST_F(TemplateLibTest, StaticSingletonTest)
+{
+    class TestSingleton : public StaticSingletonHelper
+    {
+        protected:
+        TestSingleton(int a) { value = a; }
+
+        public:
+        int value;
+    };
+
+    StaticSingleton<TestSingleton>::Init(10);
+    ASSERT_EQ(10, StaticSingleton<TestSingleton>::Get().value);
+}
+
+TEST_F(TemplateLibTest, StaticSingletonAlignTest)
+{
+    class TestSingleton : public StaticSingletonHelper
+    {
+        protected:
+        TestSingleton() = default;
+
+        public:
+        alignas(512) char tab[1024];
+    };
+
+    const TestSingleton *addr = &StaticSingleton<TestSingleton>::Init();
+    const uint64_t align      = reinterpret_cast<uint64_t>(addr) % 512;
+    ASSERT_EQ(0LLU, align);
+}

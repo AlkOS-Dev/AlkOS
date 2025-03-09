@@ -8,8 +8,8 @@
 
 /* internal includes */
 #include <arch_utils.hpp>
-#include <debug.hpp>
 #include <drivers/pic8259/pic8259.hpp>
+#include <extensions/debug.hpp>
 #include <init.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_data.hpp>

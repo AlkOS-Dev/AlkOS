@@ -1,7 +1,7 @@
 #include <memory.h>
 #include <arch_utils.hpp>
-#include <debug.hpp>
 #include <elf.hpp>
+#include <extensions/debug.hpp>
 #include <tags.hpp>
 #include <terminal.hpp>
 

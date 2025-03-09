@@ -41,6 +41,13 @@ FAST_CALL void VerboseAssertDumpObjToHex(const char *&obj, char *buffer, const s
     strncpy(buffer, obj, buffer_size);
 }
 
+FAST_CALL void VerboseAssertDumpObjToHex(
+    const char *const &obj, char *buffer, const size_t buffer_size
+)
+{
+    strncpy(buffer, obj, buffer_size);
+}
+
 template <typename ObjT, const char *format>
 FAST_CALL void VerboseAssertDumpObjToHexSnprintf(
     const ObjT &obj, char *buffer, const size_t buffer_size
