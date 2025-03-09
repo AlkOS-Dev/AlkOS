@@ -7,6 +7,7 @@
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/time.hpp>
+#include <extensions/types.hpp>
 
 // ------------------------------
 // Time constants
