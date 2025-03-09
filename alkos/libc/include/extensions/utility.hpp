@@ -6,7 +6,10 @@
 
 namespace std
 {
-/* STL forward */
+// ------------------------------
+// std::forward
+// ------------------------------
+
 template <typename T>
 NODISCARD FORCE_INLINE_F constexpr T &&forward(remove_reference_t<T> &t) noexcept
 {
@@ -22,14 +25,20 @@ NODISCARD FORCE_INLINE_F constexpr T &&forward(remove_reference_t<T> &&t) noexce
     return static_cast<T &&>(t);
 }
 
-/* STL move */
+// ------------------------------
+// std::move
+// ------------------------------
+
 template <typename T>
 NODISCARD FORCE_INLINE_F constexpr remove_reference_t<T> &&move(T &&t) noexcept
 {
     return static_cast<remove_reference_t<T> &&>(t);
 }
 
-/* declval */
+// ------------------------------
+// std::declval
+// ------------------------------
+
 namespace internal
 {
 template <class T, class U = T &&>
@@ -45,5 +54,39 @@ auto declval() noexcept -> decltype(internal::declval<T>(0))
     static_assert(false, "declval should not be used");
     return internal::declval<T>();
 }
+
+// ------------------------------
+// std::swap
+// ------------------------------
+
+namespace internal
+{
+template <class T, size_t N>
+using arr_t = T[N];
+}
+
+template <class T, size_t N>
+TODO_LIBCPP_COMPLIANCE
+    // requires std::is_swapable_v<T>
+    //  noexcept(...)
+    constexpr void
+    swap(internal::arr_t<T, N> &a, internal::arr_t<T, N> &b)
+{
+    for (size_t idx = 0; idx < N; ++idx) {
+        std::swap(a[idx], b[idx]);
+    }
+}
+
+template <class T>
+    requires std::is_move_constructible_v<T> && std::is_move_assignable_v<T>
+constexpr void swap(
+    T &a, T &b
+) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
+{
+    T tmp = std::move(a);
+    a     = std::move(b);
+    b     = std::move(tmp);
+}
+
 }  // namespace std
 #endif  // LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
