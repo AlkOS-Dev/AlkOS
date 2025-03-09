@@ -11,8 +11,8 @@ NUM_CORES=$(nproc || echo 1)
 # Supported C++ file extensions (space-separated)
 CPP_EXTENSIONS="cpp cc c h hpp cuh tpp"
 
-# Regular expression pattern to match C++ files
-CPP_PATTERN='\.('"$(echo $CPP_EXTENSIONS | tr ' ' '|')"')$'
+# Regular expression pattern to match C++ files (case insensitive)
+CPP_PATTERN='\.('"$(echo "$CPP_EXTENSIONS" | tr ' ' '|')"')$'
 
 # Clang-Format style configuration file
 CLANG_FORMAT_STYLE="file"
@@ -34,29 +34,27 @@ if ! command -v clang-format &> /dev/null; then
   exit 1
 fi
 
-
-# Retrieve the list of staged C++ files based on the defined pattern
-STAGED_FILES=$(git diff --cached -z --name-only --diff-filter=ACM | grep -z -i -E "$CPP_PATTERN" || true)
+# Use readarray to store null-delimited file names in an array
+readarray -d '' staged_files < <(git diff --cached -z --name-only --diff-filter=ACM | grep -z -i -E "$CPP_PATTERN" || true)
 
 # Exit early if no C++ files are staged
-if [ -z "$STAGED_FILES" ]; then
+if [ ${#staged_files[@]} -eq 0 ]; then
   log "No staged C++ files to format"
   exit 0
 fi
 
 # Display the files that will be formatted
 log "Running clang-format on the following files:"
-echo "$STAGED_FILES" | tr '\0' '\n'
+printf '%s\n' "${staged_files[@]}"
 
-# Run clang-format
-echo "$STAGED_FILES" | tr '\0' '\n' | xargs -0 -P "$NUM_CORES" -n 1 clang-format -style="$CLANG_FORMAT_STYLE" -i || {
+# Run clang-format in parallel using null-delimited input
+printf '%s\0' "${staged_files[@]}" | xargs -0 -P "$NUM_CORES" -n 1 clang-format -style="$CLANG_FORMAT_STYLE" -i || {
   log "clang-format failed"
   exit 1
 }
 
-
 # Re-add the formatted files to the staging area
-echo "$STAGED_FILES" | tr '\0' '\n' | xargs -0 git add || {
+printf '%s\0' "${staged_files[@]}" | xargs -0 git add || {
   log "Failed to re-add formatted files to the staging area"
   exit 1
 }

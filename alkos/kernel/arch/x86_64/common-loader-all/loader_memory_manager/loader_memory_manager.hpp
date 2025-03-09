@@ -38,8 +38,8 @@ class LoaderMemoryManager
     // Constants
     //------------------------------------------------------------------------------
 
-    static constexpr u32 kMaxPmlTablesToStore = 100; ///< Maximum number of PML tables to store.
-    static constexpr u32 kNumEntriesPerPml    = 512; ///< Number of entries in a PML table.
+    static constexpr u32 kMaxPmlTablesToStore = 100;  ///< Maximum number of PML tables to store.
+    static constexpr u32 kNumEntriesPerPml    = 512;  ///< Number of entries in a PML table.
 
     /**
      * @brief Maximum number of memory map entries the loader can handle.
