@@ -37,6 +37,7 @@ target_link_libraries(arch.common.kernel-loader.64 PRIVATE
         libk
         arch.common.all.64
 )
+
 ############################### Applying Flags ###############################
 
 set_source_files_properties(${COMMON_ASM} PROPERTIES COMPILE_FLAGS "-f elf64")

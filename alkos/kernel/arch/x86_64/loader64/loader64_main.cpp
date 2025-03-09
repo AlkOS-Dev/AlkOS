@@ -9,8 +9,8 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <debug.hpp>
 #include <elf/elf64.hpp>
+#include <extensions/debug.hpp>
 #include <loader_data.hpp>
 #include <loader_memory_manager/loader_memory_manager.hpp>
 #include <multiboot2/extensions.hpp>
@@ -61,13 +61,9 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
     }
     TRACE_SUCCESS("Found kernel module in multiboot tags!");
 
-    u64 elf_lower_bound = 0;
-    u64 elf_upper_bound = 0;
-
     TRACE_INFO("Getting ELF bounds...");
-    elf::GetElf64ProgramBounds(
-        reinterpret_cast<byte*>(kernel_module->mod_start), elf_lower_bound, elf_upper_bound
-    );
+    auto [elf_lower_bound, elf_upper_bound] =
+        elf::GetElf64ProgramBounds(reinterpret_cast<byte*>(kernel_module->mod_start));
     u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
     TRACE_SUCCESS("ELF bounds obtained!");
 

@@ -1,7 +1,7 @@
-#ifndef ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_TPP_
-#define ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_TPP_
+#ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_TPP_
+#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_TPP_
 
-#include <debug.hpp>
+#include <extensions/debug.hpp>
 #include "todo.hpp"
 
 namespace multiboot
@@ -25,7 +25,7 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
             return reinterpret_cast<Tag *>(tag);
         }
     }
-    TRACE_ERROR("Tag type: %s not found!", GetTagName(kType));
+    TRACE_ERROR("Tag type: %s not found!", kTagName);
     return nullptr;
 }
 

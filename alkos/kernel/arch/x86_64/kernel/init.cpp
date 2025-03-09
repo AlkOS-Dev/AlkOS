@@ -9,9 +9,9 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <debug.hpp>
 #include <drivers/pic8259/pic8259.hpp>
 #include <elf/elf64.hpp>
+#include <extensions/debug.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_data.hpp>
 #include <multiboot2/extensions.hpp>

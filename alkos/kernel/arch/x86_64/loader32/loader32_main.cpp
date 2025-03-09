@@ -1,9 +1,9 @@
 #include <extensions/new.hpp>
 
 #include "arch_utils.hpp"
-#include "debug.hpp"
 #include "defines.hpp"
 #include "elf/elf64.hpp"
+#include "extensions/debug.hpp"
 #include "loader_data.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"
 #include "terminal.hpp"
@@ -150,10 +150,8 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     //    TRACE_INFO("Module start: 0x%X", loader_module_start_addr);
     //    TRACE_INFO("Module end: 0x%X", loadeR_module_end_addr);
 
-    u64 elf_lower_bound = 0;
-    u64 elf_upper_bound = 0;
-    elf::GetElf64ProgramBounds(loader_module_start_addr, elf_lower_bound, elf_upper_bound);
-    u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
+    auto [elf_lower_bound, elf_upper_bound] = elf::GetElf64ProgramBounds(loader_module_start_addr);
+    u64 elf_effective_size                  = elf_upper_bound - elf_lower_bound;
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    TRACE_INFO(

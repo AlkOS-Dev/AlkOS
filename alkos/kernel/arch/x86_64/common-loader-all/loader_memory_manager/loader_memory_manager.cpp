@@ -1,6 +1,6 @@
 #include "loader_memory_manager.hpp"
 #include "assert.h"
-#include "debug.hpp"
+#include "extensions/debug.hpp"
 #include "extensions/new.hpp"
 #include "memory.h"
 

@@ -1,6 +1,7 @@
 #include <memory.h>
-#include <debug.hpp>
 #include <elf/elf64.hpp>
+#include <extensions/bit.hpp>
+#include <extensions/debug.hpp>
 #include "todo.hpp"
 
 namespace elf
@@ -20,7 +21,7 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
         elf_start + header_64->program_header_table_file_offset
     );
 
-    u64 elf_base = ~0ULL;
+    u64 elf_base = kFullMask<u64>;
     for (u16 i = 0; i < header_64->program_header_table_entry_count; i++) {
         const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
@@ -88,13 +89,13 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
     return adjusted_entry_point;
 }
 
-void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr)
+std::tuple<u64, u64> GetElf64ProgramBounds(const byte* elf_start)
 {
-    start_addr = static_cast<u64>(~0);
-    end_addr   = reinterpret_cast<u64>(nullptr);
+    u64 start_addr = static_cast<u64>(kFullMask<u64>);
+    u64 end_addr   = reinterpret_cast<u64>(nullptr);
 
     if (!IsValidElf64(elf_start)) {
-        return;
+        return std::make_tuple(start_addr, end_addr);
     }
 
     auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
@@ -119,6 +120,8 @@ void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr
             }
         }
     }
+
+    return std::make_tuple(start_addr, end_addr);
 }
 
 bool IsValidElf64(const byte* elf_start)

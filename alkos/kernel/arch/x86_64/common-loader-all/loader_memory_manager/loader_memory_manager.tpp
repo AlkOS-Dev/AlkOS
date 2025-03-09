@@ -3,7 +3,7 @@
 
 #include <assert.h>
 #include <memory.h>
-#include "debug.hpp"
+#include "extensions/debug.hpp"
 
 template <LoaderMemoryManager::PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(

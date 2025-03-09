@@ -100,8 +100,8 @@ message(STATUS "Kernel modules: ${KERNEL_MODULES}")
 message(STATUS "Kernel commands: ${KERNEL_COMMANDS}")
 
 # Check if KERNEL_MODULES and KERNEL_COMMANDS are the same size and defined
-if (NOT DEFINED KERNEL_COMMANDS AND NOT DEFINED KERNEL_MODULES)
-    message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS are not defined")
+if (NOT DEFINED KERNEL_COMMANDS OR NOT DEFINED KERNEL_MODULES)
+    message(FATAL_ERROR "KERNEL_MODULES or KERNEL_COMMANDS are not defined")
 endif ()
 
 list(LENGTH KERNEL_MODULES KERNEL_MODULES_LENGTH)
@@ -139,8 +139,6 @@ if (NOT DEFINED CRTI_OBJ  OR NOT DEFINED CRTN_OBJ)
     message(FATAL_ERROR "One of: crti.o, crtn.o is not defined. Those should be defined in the ARCH CMakeLists.txt file")
 endif ()
 
-# TODO: I have no idea, but maybe -mcmodel=kernel is needed here. It appears to work without it
-# but I'm not sure if it's correct and I don't know what is the correct way to pass the flag here
 set(CMAKE_CXX_LINKER_LAUNCHER "/bin/bash -c")
 set(CMAKE_CXX_LINK_EXECUTABLE
 "/bin/bash -c \"${CMAKE_CXX_COMPILER} <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \

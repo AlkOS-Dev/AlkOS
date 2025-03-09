@@ -2,9 +2,9 @@
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_HPP_
 
 #include "defines.hpp"
+#include "extensions/types.hpp"
 #include "multiboot2/extensions.hpp"
 #include "multiboot2/multiboot2.h"
-#include "types.hpp"
 
 /**
  * @brief Structure representing a free memory region.

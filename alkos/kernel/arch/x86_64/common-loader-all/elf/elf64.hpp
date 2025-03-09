@@ -1,9 +1,10 @@
-#ifndef ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_ELF_HPP_
-#define ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_ELF_HPP_
+#ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ELF_ELF64_HPP_
+#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ELF_ELF64_HPP_
 
 #include <stdint.h>
 
-#include "types.hpp"
+#include "extensions/tuple.hpp"
+#include "extensions/types.hpp"
 
 namespace elf
 {
@@ -96,8 +97,8 @@ bool IsValidElf64(const byte* elf_start);
  * @param[out] start_addr Set to the lowest virtual address found.
  * @param[out] end_addr Set to the highest virtual address plus its size.
  */
-void GetElf64ProgramBounds(const byte* elf_start, u64& start_addr, u64& end_addr);
+std::tuple<u64, u64> GetElf64ProgramBounds(const byte* elf_start);
 
 }  // namespace elf
 
-#endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_ELF_HPP_
+#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ELF_ELF64_HPP_

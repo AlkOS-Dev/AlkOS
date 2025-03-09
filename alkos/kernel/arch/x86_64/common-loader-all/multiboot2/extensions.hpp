@@ -1,28 +1,29 @@
-#ifndef ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_
-#define ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_
+#ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_HPP_
+#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_HPP_
 
 #include <multiboot2/multiboot2.h>
+#include <extensions/concepts.hpp>
+#include <extensions/type_traits.hpp>
+#include <extensions/types.hpp>
 #include <todo.hpp>
-#include <types.hpp>
 
 namespace multiboot
 {
 
-// callback that returns true if the tag is the one we are looking for and false otherwise
-TODO_WHEN_TYPETRAITS_MERGED
-// Add -> std::convertible_to<bool> to the concept
+/// Callback that returns true if the tag is the one we are looking for and false otherwise
 template <class FilterT, class TagT>
 concept TagFilter = requires(FilterT filter, TagT* tag) {
-    { filter(tag) };
+    { filter(tag) } -> std::convertible_to<bool>;
 };
+
+static constexpr u32 kInvalidTagNumber = kFullMask<u32>;
 
 // Primary template defaults to 0. This can't be enforced with a concept because
 // tags do not have a common base class. (framebuffer_t)
 template <class TagType>
 struct TagNumber {
-    static constexpr u32 kInvalidTagNumber = ~0u;
-    static constexpr u32 value             = kInvalidTagNumber;
-    static constexpr const char* kTagName  = "INVALID_TAG";
+    static constexpr u32 value            = kInvalidTagNumber;
+    static constexpr const char* kTagName = "INVALID_TAG";
 };
 
 // Macro to conveniently specialize TagNumber for a given tag structure and its constant.
@@ -56,14 +57,6 @@ DEFINE_TAG_NUMBER(tag_efi64_ih_t, MULTIBOOT_TAG_TYPE_EFI64_IH);
 DEFINE_TAG_NUMBER(tag_load_base_addr_t, MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR);
 
 /**
- * @brief Get the tag name from the tag type.
- *
- * @param type The tag type.
- * @return const char* The tag name.
- */
-const char* GetTagName(u32 type);
-
-/**
  * @brief Find a tag in the multiboot info.
  *
  * @param multiboot_info_addr The address of the multiboot info.
@@ -93,4 +86,4 @@ void WalkMemoryMap(tag_mmap_t* mmap_tag, Callback callback);
 
 #include "extensions.tpp"
 
-#endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_HPP_
+#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_HPP_
