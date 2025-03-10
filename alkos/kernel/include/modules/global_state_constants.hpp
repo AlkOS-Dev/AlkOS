@@ -6,7 +6,7 @@
 namespace global_state_constants
 {
 
-enum class SettingsType : u32 {
+enum class SettingsType : size_t {
     kIsDayTimeClockInUTC,
     kLastSettingsType,
 };

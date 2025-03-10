@@ -4,18 +4,16 @@
 #include <time.h>
 #include <drivers/cmos/rtc.hpp>
 #include <extensions/time.hpp>
+#include <modules/global_state.hpp>
 #include <modules/timing.hpp>
 #include <timers.hpp>
 #include <todo.hpp>
 
 WRAP_CALL time_t QuerySystemTime()
 {
-    TODO_SETTINGS_MANAGEMENT
-    static constexpr bool kSystemClockInUtc = true;
-
     const tm rtcTime = ReadRtcTime();
 
-    if (kSystemClockInUtc) {
+    if (GetSetting<global_state_constants::SettingsType::kIsDayTimeClockInUTC>()) {
         return ConvertDateTimeToSeconds(rtcTime, timing_constants::kUtcTimezone);
     }
 
