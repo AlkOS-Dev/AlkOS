@@ -358,11 +358,11 @@ class StaticEventTable : MoveOnly
         node->event       = std::move(event);
         node->next        = nullptr;
 
-        NodeT *&cur_node = events_[idx];
-        while (cur_node) {
-            cur_node = cur_node->next;
+        NodeT **cur_node = &events_[idx];
+        while (*cur_node) {
+            cur_node = &(*cur_node)->next;
         }
-        cur_node = node;
+        *cur_node = node;
     }
 
     template <size_t idx, class... Args>

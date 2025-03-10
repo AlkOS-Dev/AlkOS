@@ -35,23 +35,23 @@ TEST_F(TemplateLibTest, RolledSwitchTest)
 
     // Test case where value matches max value
     RolledSwitch<int, kMaxValue, kStep>(DefaultFunc, TestFunc{}, 10, result);
-    EXPECT_EQ(result, 10);
+    EXPECT_EQ(10, result);
 
     // Test case where value is within range but not max
     RolledSwitch<int, kMaxValue, kStep>(DefaultFunc, TestFunc{}, 8, result);
-    EXPECT_EQ(result, 8);
+    EXPECT_EQ(8, result);
 
     // Test case where value does not match any case (fallback)
     RolledSwitch<int, kMaxValue, kStep>(DefaultFunc, TestFunc{}, 7, result);
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(-1, result);
 
     // Test case where value is bigger than kMaxValue
     RolledSwitch<int, kMaxValue, kStep>(DefaultFunc, TestFunc{}, 11, result);
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(-1, result);
 
     // Test case where value is zero
     RolledSwitch<int, kMaxValue, kStep>(DefaultFunc, TestFunc{}, 0, result);
-    EXPECT_EQ(result, 0);
+    EXPECT_EQ(0, result);
 }
 
 TEST_F(TemplateLibTest, RolledSwitchReturnable)
@@ -62,31 +62,31 @@ TEST_F(TemplateLibTest, RolledSwitchReturnable)
     // Test case for RolledSwitchReturnable with a matching value
     int returnResult =
         RolledSwitchReturnable<int, kMaxValue, kStep>(DefaultFuncReturn, TestFuncReturn{}, 10);
-    EXPECT_EQ(returnResult, 10);
+    EXPECT_EQ(10, returnResult);
 
     // Test case for RolledSwitchReturnable with a non-matching value (fallback)
     returnResult =
         RolledSwitchReturnable<int, kMaxValue, kStep>(DefaultFuncReturn, TestFuncReturn{}, 7);
-    EXPECT_EQ(returnResult, -1);
+    EXPECT_EQ(-1, returnResult);
 
     // Test case for RolledSwitchReturnable with a value bigger than kMaxValue
     returnResult =
         RolledSwitchReturnable<int, kMaxValue, kStep>(DefaultFuncReturn, TestFuncReturn{}, 11);
-    EXPECT_EQ(returnResult, -1);
+    EXPECT_EQ(-1, returnResult);
 
     // Test case where value is zero
     returnResult =
         RolledSwitchReturnable<int, kMaxValue, kStep>(DefaultFuncReturn, TestFuncReturn{}, 0);
-    EXPECT_EQ(returnResult, 0);
+    EXPECT_EQ(0, returnResult);
 }
 
 TEST_F(TemplateLibTest, CountTypeTest)
 {
-    EXPECT_EQ((CountType<int, int, float, double>()), 1_size);
-    EXPECT_EQ((CountType<int, float, double>()), 0_size);
-    EXPECT_EQ((CountType<int, int, int, int>()), 3_size);
-    EXPECT_EQ((CountType<char, char, int, char, double, char>()), 3_size);
-    EXPECT_EQ((CountType<float, int, double, float, float, float>()), 3_size);
+    EXPECT_EQ(1_size, (CountType<int, int, float, double>()));
+    EXPECT_EQ(0_size, (CountType<int, float, double>()));
+    EXPECT_EQ(3_size, (CountType<int, int, int, int>()));
+    EXPECT_EQ(3_size, (CountType<char, char, int, char, double, char>()));
+    EXPECT_EQ(3_size, (CountType<float, int, double, float, float, float>()));
 }
 
 TEST_F(TemplateLibTest, HasTypeTest)
@@ -131,7 +131,7 @@ TEST_F(TemplateLibTest, TypeListTest)
 TEST_F(TemplateLibTest, TypeListSizeTest)
 {
     constexpr size_t size = TypeList<int, double, float>::kSize;
-    EXPECT_EQ(size, 3_size);
+    EXPECT_EQ(3_size, size);
 }
 
 template <size_t N>
@@ -167,13 +167,13 @@ TEST_F(TemplateLibTest, ApplyWithNTest)
 TEST_F(TemplateLibTest, GetTypeIndexTest)
 {
     constexpr size_t index1 = GetTypeIndexInTypes<int, int, float, double>();
-    EXPECT_EQ(index1, 0_size);
+    EXPECT_EQ(0_size, index1);
 
     constexpr size_t index2 = GetTypeIndexInTypes<float, int, float, double>();
-    EXPECT_EQ(index2, 1_size);
+    EXPECT_EQ(1_size, index2);
 
     constexpr size_t index3 = GetTypeIndexInTypes<double, int, float, double>();
-    EXPECT_EQ(index3, 2_size);
+    EXPECT_EQ(2_size, index3);
 }
 
 TEST_F(TemplateLibTest, GetTypeIndexFailsOnDuplicates)
@@ -258,22 +258,22 @@ TEST_F(TemplateLibTest, StaticEventTableTest)
     eventTable.RegisterEvent<1>(EventCallback{&counters, IncrementCounter3});
 
     eventTable.Notify<0>(10);
-    EXPECT_EQ(counters.count1, 1);
-    EXPECT_EQ(counters.count2, 1);
-    EXPECT_EQ(counters.count3, 0);
-    EXPECT_EQ(counters.totalSum, 10 + 10 * 2);  // 30
+    EXPECT_EQ(1, counters.count1);
+    EXPECT_EQ(1, counters.count2);
+    EXPECT_EQ(0, counters.count3);
+    EXPECT_EQ(10 + 10 * 2, counters.totalSum);  // 30
 
     eventTable.Notify<1>(10);
-    EXPECT_EQ(counters.count1, 1);
-    EXPECT_EQ(counters.count2, 1);
-    EXPECT_EQ(counters.count3, 1);
-    EXPECT_EQ(counters.totalSum, 30 + 10 * 3);  // 60
+    EXPECT_EQ(1, counters.count1);
+    EXPECT_EQ(1, counters.count2);
+    EXPECT_EQ(1, counters.count3);
+    EXPECT_EQ(30 + 10 * 3, counters.totalSum);  // 60
 
     eventTable.Notify<0>(5);
-    EXPECT_EQ(counters.count1, 2);
-    EXPECT_EQ(counters.count2, 2);
-    EXPECT_EQ(counters.count3, 1);
-    EXPECT_EQ(counters.totalSum, 60 + 5 + 5 * 2);  // 75
+    EXPECT_EQ(2, counters.count1);
+    EXPECT_EQ(2, counters.count2);
+    EXPECT_EQ(1, counters.count3);
+    EXPECT_EQ(60 + 5 + 5 * 2, counters.totalSum);  // 75
 }
 
 struct TestData {
@@ -287,17 +287,17 @@ TEST_F(TemplateLibTest, SettingsTest)
 
     Settings<TestTypeList> settings({42, 3.14f, TestData{100}});
 
-    EXPECT_EQ(settings.Get<0>(), 42);
-    EXPECT_EQ(settings.Get<1>(), 3.14f);
-    EXPECT_EQ(settings.Get<2>().value, 100);
+    EXPECT_EQ(42, settings.Get<0>());
+    EXPECT_EQ(3.14f, settings.Get<1>());
+    EXPECT_EQ(100, settings.Get<2>().value);
 
     settings.Set<0>(100);
     settings.Set<1>(2.71f);
     settings.Set<2>(TestData{200});
 
-    EXPECT_EQ(settings.Get<0>(), 100);
-    EXPECT_EQ(settings.Get<1>(), 2.71f);
-    EXPECT_EQ(settings.Get<2>().value, 200);
+    EXPECT_EQ(100, settings.Get<0>());
+    EXPECT_EQ(2.71f, settings.Get<1>());
+    EXPECT_EQ(200, settings.Get<2>().value);
 }
 
 using TestTypeList = TypeList<int, float, TestData>;
@@ -330,21 +330,21 @@ TEST_F(TemplateLibTest, SettingsWithEventsTest)
     settings.RegisterEvent<2>(DataChangedCallback);
 
     settings.SetAndNotify<0>(100);
-    EXPECT_EQ(g_counters.intChanged, 1);
-    EXPECT_EQ(settings.Get<0>(), 100);
+    EXPECT_EQ(1, g_counters.intChanged);
+    EXPECT_EQ(100, settings.Get<0>());
 
     settings.SetAndNotify<1>(2.71f);
-    EXPECT_EQ(g_counters.floatValue, 2.71f);
-    EXPECT_EQ(settings.Get<1>(), 2.71f);
+    EXPECT_EQ(2.71f, g_counters.floatValue);
+    EXPECT_EQ(2.71f, settings.Get<1>());
 
     settings.SetAndNotify<2>(TestData{200});
-    EXPECT_EQ(g_counters.dataChanged, 1);
-    EXPECT_EQ(settings.Get<2>().value, 200);
+    EXPECT_EQ(1, g_counters.dataChanged);
+    EXPECT_EQ(200, settings.Get<2>().value);
 
     settings.SetAndNotify<0>(200);
     settings.SetAndNotify<0>(300);
-    EXPECT_EQ(g_counters.intChanged, 3);
-    EXPECT_EQ(settings.Get<0>(), 300);
+    EXPECT_EQ(3, g_counters.intChanged);
+    EXPECT_EQ(300, settings.Get<0>());
 }
 
 int g_changeCounter = 0;
@@ -362,19 +362,21 @@ TEST_F(TemplateLibTest, EmptySettingsTest)
 TEST_F(TemplateLibTest, SingleTypeSettingsTest)
 {
     using SingleTypeList = TypeList<int>;
+
+    /* TODO: Strange constructor behavior */
     Settings<SingleTypeList> singleSettings(std::tuple{42});
 
-    EXPECT_EQ(singleSettings.Get<0>(), 42);
+    EXPECT_EQ(42, singleSettings.Get<0>());
 
     singleSettings.Set<0>(100);
-    EXPECT_EQ(singleSettings.Get<0>(), 100);
+    EXPECT_EQ(100, singleSettings.Get<0>());
 
     g_changeCounter = 0;
     singleSettings.RegisterEvent<0>(ChangeCounterCallback);
 
     singleSettings.SetAndNotify<0>(200);
-    EXPECT_EQ(g_changeCounter, 1);
-    EXPECT_EQ(singleSettings.Get<0>(), 200);
+    EXPECT_EQ(1, g_changeCounter);
+    EXPECT_EQ(200, singleSettings.Get<0>());
 }
 
 int g_counter1 = 0;
@@ -399,12 +401,12 @@ TEST_F(TemplateLibTest, MultipleEventSubscribersTest)
     settings.RegisterEvent<0>(Counter3Callback);
 
     settings.SetAndNotify<0>(100);
-    EXPECT_EQ(g_counter1, 1);
-    EXPECT_EQ(g_counter2, 1);
-    EXPECT_EQ(g_counter3, 1);
+    EXPECT_EQ(1, g_counter1);
+    EXPECT_EQ(1, g_counter2);
+    EXPECT_EQ(1, g_counter3);
 
     settings.SetAndNotify<0>(200);
-    EXPECT_EQ(g_counter1, 2);
-    EXPECT_EQ(g_counter2, 2);
-    EXPECT_EQ(g_counter3, 2);
+    EXPECT_EQ(2, g_counter1);
+    EXPECT_EQ(2, g_counter2);
+    EXPECT_EQ(2, g_counter3);
 }
