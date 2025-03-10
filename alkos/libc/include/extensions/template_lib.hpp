@@ -404,7 +404,8 @@ class Settings : public NoCopy
     // Class creation
     // ------------------------------
 
-    constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
+    explicit constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
+    explicit constexpr Settings(const TupleT &settings) : settings_(settings) {}
 
     // ------------------------------
     // Class methods
