@@ -1,16 +1,15 @@
 #ifndef LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 #define LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 
+#include <assert.h>
+#include <extensions/array.hpp>
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/internal/tuple_base.hpp>
 #include <extensions/new.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
-
-#include <extensions/internal/tuple_base.hpp>
-
-#include <assert.h>
 
 namespace TemplateLib
 {
@@ -323,18 +322,41 @@ class Settings : public NoCopy
     // Class creation
     // ------------------------------
 
-    // constexpr Settings(TupleT&& settings, )
+    constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
 
     // ------------------------------
     // Class methods
     // ------------------------------
 
-    //    template<class T>
-    //    requires std::is_convertible_v<T, size_t>
-    //    FORCE_INLINE_F static constexpr auto GetSetting(const T t_item_idx) {
-    //        const size_t idx = static_cast<size_t>(t_item_idx);
-    //        const
-    //    }
+    template <class T>
+        requires std::is_convertible_v<T, size_t>
+    FORCE_INLINE_F constexpr auto Get(const T t_item_idx)
+    {
+        const size_t idx = static_cast<size_t>(t_item_idx);
+
+        ASSERT_LT(idx, TypeListT::kSize);
+        return std::get<idx>(settings_);
+    }
+
+    template <class T, class U>
+        requires std::is_convertible_v<T, size_t>
+    FORCE_INLINE_F constexpr void Set(const T t_item_idx, U &&value)
+    {
+        const size_t idx = static_cast<size_t>(t_item_idx);
+
+        ASSERT_LT(idx, TypeListT::kSize);
+        std::get<idx>(settings_) = std::forward<U>(value);
+    }
+
+    template <class T, class U>
+        requires std::is_convertible_v<T, size_t>
+    FORCE_INLINE_F constexpr void Set(const T t_item_idx, const U &value)
+    {
+        const size_t idx = static_cast<size_t>(t_item_idx);
+
+        ASSERT_LT(idx, TypeListT::kSize);
+        std::get<idx>(settings_) = std::forward<U>(value);
+    }
 
     // ------------------------------
     // Class fields
