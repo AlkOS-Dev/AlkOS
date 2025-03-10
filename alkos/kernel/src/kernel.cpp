@@ -3,8 +3,8 @@
 /* internal includes */
 #include <assert.h>
 #include <extensions/debug.hpp>
-#include <loader64_main.hpp>
-#include <terminal.hpp>
+#include "init.hpp"
+#include "terminal.hpp"
 
 static void KernelRun() { TerminalWriteString("Hello from AlkOS!\n"); }
 

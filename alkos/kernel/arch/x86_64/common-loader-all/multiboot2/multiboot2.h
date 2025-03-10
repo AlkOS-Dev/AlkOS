@@ -30,70 +30,69 @@ namespace multiboot
 #ifndef MULTIBOOT_HEADER
 #define MULTIBOOT_HEADER 1
 
-/*  How many bytes from the start of the file we search for the header. */
-#define MULTIBOOT_SEARCH       32768
-#define MULTIBOOT_HEADER_ALIGN 8
+// How many bytes from the start of the file we search for the header.
+static constexpr u32 kMultibootSearch      = 32768;
+static constexpr u32 kMultibootHeaderAlign = 8;
 
-/*  The magic field should contain this. */
-#define MULTIBOOT2_HEADER_MAGIC 0xe85250d6
+// The magic field should contain this.
+static constexpr u32 kMultiboot2HeaderMagic = 0xe85250d6;
 
-/*  This should be in %eax. */
-#define MULTIBOOT2_BOOTLOADER_MAGIC 0x36d76289
+// This should be in %eax.
+static constexpr u32 kMultiboot2BootloaderMagic = 0x36d76289;
 
-/*  Alignment of multiboot modules. */
-#define MULTIBOOT_MOD_ALIGN 0x00001000
+// Alignment of multiboot modules.
+static constexpr u32 kMultibootModAlign = 0x00001000;
 
-/*  Alignment of the multiboot info structure. */
-#define MULTIBOOT_INFO_ALIGN 0x00000008
+// Alignment of the multiboot info structure.
+static constexpr u32 kMultibootInfoAlign = 0x00000008;
 
-/*  Flags set in the ’flags’ member of the multiboot header. */
+// Flags set in the \'flags\' member of the multiboot header.
+static constexpr u32 kMultibootTagAlign              = 8;
+static constexpr u32 kMultibootTagTypeEnd            = 0;
+static constexpr u32 kMultibootTagTypeCmdline        = 1;
+static constexpr u32 kMultibootTagTypeBootLoaderName = 2;
+static constexpr u32 kMultibootTagTypeModule         = 3;
+static constexpr u32 kMultibootTagTypeBasicMeminfo   = 4;
+static constexpr u32 kMultibootTagTypeBootdev        = 5;
+static constexpr u32 kMultibootTagTypeMmap           = 6;
+static constexpr u32 kMultibootTagTypeVbe            = 7;
+static constexpr u32 kMultibootTagTypeFramebuffer    = 8;
+static constexpr u32 kMultibootTagTypeElfSections    = 9;
+static constexpr u32 kMultibootTagTypeApm            = 10;
+static constexpr u32 kMultibootTagTypeEfi32          = 11;
+static constexpr u32 kMultibootTagTypeEfi64          = 12;
+static constexpr u32 kMultibootTagTypeSmbios         = 13;
+static constexpr u32 kMultibootTagTypeAcpiOld        = 14;
+static constexpr u32 kMultibootTagTypeAcpiNew        = 15;
+static constexpr u32 kMultibootTagTypeNetwork        = 16;
+static constexpr u32 kMultibootTagTypeEfiMmap        = 17;
+static constexpr u32 kMultibootTagTypeEfiBs          = 18;
+static constexpr u32 kMultibootTagTypeEfi32Ih        = 19;
+static constexpr u32 kMultibootTagTypeEfi64Ih        = 20;
+static constexpr u32 kMultibootTagTypeLoadBaseAddr   = 21;
 
-#define MULTIBOOT_TAG_ALIGN                 8
-#define MULTIBOOT_TAG_TYPE_END              0
-#define MULTIBOOT_TAG_TYPE_CMDLINE          1
-#define MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME 2
-#define MULTIBOOT_TAG_TYPE_MODULE           3
-#define MULTIBOOT_TAG_TYPE_BASIC_MEMINFO    4
-#define MULTIBOOT_TAG_TYPE_BOOTDEV          5
-#define MULTIBOOT_TAG_TYPE_MMAP             6
-#define MULTIBOOT_TAG_TYPE_VBE              7
-#define MULTIBOOT_TAG_TYPE_FRAMEBUFFER      8
-#define MULTIBOOT_TAG_TYPE_ELF_SECTIONS     9
-#define MULTIBOOT_TAG_TYPE_APM              10
-#define MULTIBOOT_TAG_TYPE_EFI32            11
-#define MULTIBOOT_TAG_TYPE_EFI64            12
-#define MULTIBOOT_TAG_TYPE_SMBIOS           13
-#define MULTIBOOT_TAG_TYPE_ACPI_OLD         14
-#define MULTIBOOT_TAG_TYPE_ACPI_NEW         15
-#define MULTIBOOT_TAG_TYPE_NETWORK          16
-#define MULTIBOOT_TAG_TYPE_EFI_MMAP         17
-#define MULTIBOOT_TAG_TYPE_EFI_BS           18
-#define MULTIBOOT_TAG_TYPE_EFI32_IH         19
-#define MULTIBOOT_TAG_TYPE_EFI64_IH         20
-#define MULTIBOOT_TAG_TYPE_LOAD_BASE_ADDR   21
+static constexpr u32 kMultibootHeaderTagEnd                = 0;
+static constexpr u32 kMultibootHeaderTagInformationRequest = 1;
+static constexpr u32 kMultibootHeaderTagAddress            = 2;
+static constexpr u32 kMultibootHeaderTagEntryAddress       = 3;
+static constexpr u32 kMultibootHeaderTagConsoleFlags       = 4;
+static constexpr u32 kMultibootHeaderTagFramebuffer        = 5;
+static constexpr u32 kMultibootHeaderTagModuleAlign        = 6;
+static constexpr u32 kMultibootHeaderTagEfiBs              = 7;
+static constexpr u32 kMultibootHeaderTagEntryAddressEfi32  = 8;
+static constexpr u32 kMultibootHeaderTagEntryAddressEfi64  = 9;
+static constexpr u32 kMultibootHeaderTagRelocatable        = 10;
 
-#define MULTIBOOT_HEADER_TAG_END                 0
-#define MULTIBOOT_HEADER_TAG_INFORMATION_REQUEST 1
-#define MULTIBOOT_HEADER_TAG_ADDRESS             2
-#define MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS       3
-#define MULTIBOOT_HEADER_TAG_CONSOLE_FLAGS       4
-#define MULTIBOOT_HEADER_TAG_FRAMEBUFFER         5
-#define MULTIBOOT_HEADER_TAG_MODULE_ALIGN        6
-#define MULTIBOOT_HEADER_TAG_EFI_BS              7
-#define MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS_EFI32 8
-#define MULTIBOOT_HEADER_TAG_ENTRY_ADDRESS_EFI64 9
-#define MULTIBOOT_HEADER_TAG_RELOCATABLE         10
+static constexpr u32 kMultibootArchitectureI386   = 0;
+static constexpr u32 kMultibootArchitectureMips32 = 4;
+static constexpr u32 kMultibootHeaderTagOptional  = 1;
 
-#define MULTIBOOT_ARCHITECTURE_I386   0
-#define MULTIBOOT_ARCHITECTURE_MIPS32 4
-#define MULTIBOOT_HEADER_TAG_OPTIONAL 1
+static constexpr u32 kMultibootLoadPreferenceNone = 0;
+static constexpr u32 kMultibootLoadPreferenceLow  = 1;
+static constexpr u32 kMultibootLoadPreferenceHigh = 2;
 
-#define MULTIBOOT_LOAD_PREFERENCE_NONE 0
-#define MULTIBOOT_LOAD_PREFERENCE_LOW  1
-#define MULTIBOOT_LOAD_PREFERENCE_HIGH 2
-
-#define MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED   1
-#define MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED 2
+static constexpr u32 kMultibootConsoleFlagsConsoleRequired  = 1;
+static constexpr u32 kMultibootConsoleFlagsEgaTextSupported = 2;
 
 #ifndef ASM_FILE
 
@@ -182,13 +181,13 @@ struct color_t {
 struct mmap_entry_t {
     u64 addr;
     u64 len;
-#define MULTIBOOT_MEMORY_AVAILABLE        1
-#define MULTIBOOT_MEMORY_RESERVED         2
-#define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE 3
-#define MULTIBOOT_MEMORY_NVS              4
-#define MULTIBOOT_MEMORY_BADRAM           5
     u32 type;
     u32 zero;
+    static constexpr u32 kMemoryAvailable       = 1;
+    static constexpr u32 kMemoryReserved        = 2;
+    static constexpr u32 kMemoryAcpiReclaimable = 3;
+    static constexpr u32 kMemoryNvs             = 4;
+    static constexpr u32 kMemoryBadram          = 5;
 };
 typedef struct mmap_entry_t memory_map_t;
 

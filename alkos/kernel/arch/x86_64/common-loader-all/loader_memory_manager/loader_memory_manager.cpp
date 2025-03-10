@@ -1,12 +1,12 @@
 #include "loader_memory_manager.hpp"
-#include "assert.h"
-#include "extensions/debug.hpp"
-#include "extensions/new.hpp"
-#include "memory.h"
+#include <assert.h>
+#include <memory.h>
+#include <extensions/debug.hpp>
+#include <extensions/new.hpp>
 
 // Note: The alignment here is a strict requirement for the PML tables and if the
 // initial object is not aligned, the PML tables will not be aligned either.
-byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)] __attribute__((aligned(4096)));
+alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)];
 
 LoaderMemoryManager::LoaderMemoryManager()
 {
@@ -28,13 +28,12 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
     u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
-    static constexpr u32 k4kPageSizeBytes     = 1 << 12;
-    static constexpr u32 k4kPageAlignmentMask = k4kPageSizeBytes - 1;
+    static constexpr u32 k4kPageSizeBytes = 1 << 12;
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    TRACE_INFO("Starting to map virtual memory range using internal memory map...");
 
-    ASSERT_ZERO(virtual_address & k4kPageAlignmentMask);  // Virtual address must be page aligned
+    ASSERT(IsAligned(virtual_address, k4kPageSizeBytes));
     ASSERT_GE(available_memory_bytes_, size_bytes);
 
     u64 mapped_bytes = 0;
@@ -47,9 +46,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
             }
 
             u64 current_physical_address = descending_sorted_mmap_entries[i].addr;
-            u64 aligned_physical_address =
-                (current_physical_address + k4kPageAlignmentMask) & ~k4kPageAlignmentMask;
-            u32 offset_from_alignment = aligned_physical_address - current_physical_address;
+            u64 aligned_physical_address = AlignUp(current_physical_address, k4kPageSizeBytes);
+            u32 offset_from_alignment    = aligned_physical_address - current_physical_address;
 
             if (offset_from_alignment > 0) {
                 if (descending_sorted_mmap_entries[i].length < offset_from_alignment) {

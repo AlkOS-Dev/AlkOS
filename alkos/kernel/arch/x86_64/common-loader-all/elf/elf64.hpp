@@ -36,11 +36,7 @@ struct Header64_t {
     u16 section_header_table_entry_count;       ///< Number of entries in the section header table.
     u16 section_header_string_table_index;      ///< Section header string table index.
 
-    static constexpr byte kElfMagic0 = 0x7F;  ///< ELF identification magic number byte 0
-    static constexpr byte kElfMagic1 = 'E';   ///< ELF identification magic number byte 1
-    static constexpr byte kElfMagic2 = 'L';   ///< ELF identification magic number byte 2
-    static constexpr byte kElfMagic3 = 'F';   ///< ELF identification magic number byte 3
-
+    static constexpr byte kMagic[4] = {0x7F, 'E', 'L', 'F'};  ///< ELF identification magic number
     static constexpr u16 kSupportedMachine = 0x3E;  ///< Supported machine type (EM_X86_64).
 } PACK;
 

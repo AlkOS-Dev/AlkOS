@@ -154,15 +154,16 @@ build_binutils() {
 
 build_libgcc_with_retry_x86_64_fix() {
     # https://wiki.osdev.org/Building_libgcc_for_mcmodel%3Dkernel
-    # TODO: Use runner function
     pretty_info "Building libgcc with retry logic"
-    if ! make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'; then
+
+    attempt_runner "Libgcc build failed due to PIC issues" \
+        make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
+    if [ $? -ne 0 ]; then
         pretty_info "Libgcc build failed due to PIC issues; applying sed fix."
         sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "${CROSS_COMPILE_BUILD_TARGET}/libgcc/Makefile"
         pretty_info "Retrying libgcc build after sed fix."
-        if ! make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'; then
-            dump_error "Failed to build libgcc even after applying the sed fix."
-        fi
+        attempt_runner "Failed to build libgcc even after applying the sed fix" \
+            make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     fi
     pretty_success "libgcc built correctly"
 }

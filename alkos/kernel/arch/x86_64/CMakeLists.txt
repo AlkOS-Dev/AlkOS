@@ -5,6 +5,9 @@ message(STATUS "Configuring for x86_64")
 set(KERNEL_MODULES "")
 set(KERNEL_COMMANDS "") # Kernel commands for the bootloader, has to be same size as KERNEL_MODULES
 set(BOOTABLE_KERNEL_EXECUTABLE "")
+set(ARCH_QEMU_COMMAND "qemu-system-x86_64")
+set(ARCH_QEMU_NORMAL_FLAGS "-serial stdio -enable-kvm -cpu host -display default,show-cursor=on -m 4G")
+set(ARCH_QEMU_TEST_FLAGS "-serial stdio -enable-kvm -cpu host -display none -m 4G")
 
 ################################### Boot32 ###################################
 
@@ -48,3 +51,7 @@ set(CRTN_OBJ "${CRTN_OBJ}" PARENT_SCOPE)
 set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
 set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
 set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)
+
+set(ARCH_QEMU_COMMAND ${ARCH_QEMU_COMMAND} PARENT_SCOPE)
+set(ARCH_QEMU_NORMAL_FLAGS ${ARCH_QEMU_NORMAL_FLAGS} PARENT_SCOPE)
+set(ARCH_QEMU_TEST_FLAGS ${ARCH_QEMU_TEST_FLAGS} PARENT_SCOPE)

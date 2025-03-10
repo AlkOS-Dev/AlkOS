@@ -16,9 +16,10 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
-    for (auto *tag = reinterpret_cast<tag_t *>(static_cast<char *>(multiboot_info_addr) + 8);
-         tag->type != MULTIBOOT_TAG_TYPE_END;
-         tag = reinterpret_cast<tag_t *>(reinterpret_cast<u8 *>(tag) + ((tag->size + 7) & ~7))) {
+    for (auto *tag = reinterpret_cast<tag_t *>(static_cast<byte *>(multiboot_info_addr) + 8);
+         tag->type != kMultibootTagTypeEnd;
+         tag =
+             reinterpret_cast<tag_t *>(reinterpret_cast<uintptr_t>(tag) + AlignUp(tag->size, 8))) {
         if (tag->type == kType && Filter(reinterpret_cast<Tag *>(tag))) {
             TODO_WHEN_DEBUGGING_FRAMEWORK
             //            TRACE_SUCCESS("Found tag type: %s", kTagName);
@@ -35,9 +36,10 @@ void WalkMemoryMap(tag_mmap_t *mmap_tag, Callback callback)
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    TRACE_INFO("Walking memory map...");
     for (auto *mmap_entry = reinterpret_cast<memory_map_t *>(mmap_tag->entries);
-         reinterpret_cast<u8 *>(mmap_entry) < reinterpret_cast<u8 *>(mmap_tag) + mmap_tag->size;
+         reinterpret_cast<uintptr_t>(mmap_entry) <
+         reinterpret_cast<uintptr_t>(mmap_tag) + mmap_tag->size;
          mmap_entry = reinterpret_cast<memory_map_t *>(
-             reinterpret_cast<u8 *>(mmap_entry) + mmap_tag->entry_size
+             reinterpret_cast<uintptr_t>(mmap_entry) + mmap_tag->entry_size
          )) {
         callback(mmap_entry);
     }
@@ -46,4 +48,4 @@ void WalkMemoryMap(tag_mmap_t *mmap_tag, Callback callback)
 
 }  // namespace multiboot
 
-#endif  // ALK_OS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_MULTIBOOT2_EXTENSIONS_TPP_
+#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_TPP_

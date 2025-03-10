@@ -10,13 +10,10 @@
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
 #include <drivers/pic8259/pic8259.hpp>
-#include <elf/elf64.hpp>
 #include <extensions/debug.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_data.hpp>
-#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
-#include "loader_memory_manager/loader_memory_manager.hpp"
 
 /* external init procedures */
 extern "C" void EnableOSXSave();

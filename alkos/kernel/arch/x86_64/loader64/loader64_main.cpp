@@ -12,26 +12,23 @@
 #include <elf/elf64.hpp>
 #include <extensions/debug.hpp>
 #include <loader_data.hpp>
-#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
+#include "loader64_kernel_constants.hpp"
+#include "loader_memory_manager/loader_memory_manager.hpp"
 
 /* external init procedures */
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
+static bool ValidateLoaderData(LoaderData_32_64_Pass* loader_data)
 {
-    TerminalInit();
-    TRACE_INFO("In 64 bit mode");
-
     TRACE_INFO("Checking for LoaderData...");
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("LoaderData Address: 0x%X", loader_data);
     if (loader_data == nullptr) {
         TRACE_ERROR("LoaderData check failed!");
-        OsHangNoInterrupts();
+        return false;
     }
     TRACE_SUCCESS("LoaderData found passed!");
+
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data->multiboot_info_addr);
     //    TRACE_INFO(
@@ -44,22 +41,42 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
     //    TRACE_INFO("LoaderData loader_start_addr: 0x%X", loader_data->loader_start_addr);
     //    TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data->loader_end_addr);
     //
-    TRACE_INFO("Starting pre-kernel initialization");
 
-    TRACE_INFO("Jumping to 64-bit kernel...");
+    return true;
+}
 
+static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
+{
     TRACE_INFO("Finding kernel module in multiboot tags...");
     auto* kernel_module = multiboot::FindTagInMultibootInfo<
         multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
             TODO_WHEN_DEBUGGING_FRAMEWORK
             //            TRACE_INFO("Checking tag with cmdline: %s", tag->cmdline);
             return strcmp(tag->cmdline, "kernel") == 0;
-        }>(reinterpret_cast<void*>(loader_data->multiboot_info_addr));
+        }>(reinterpret_cast<void*>(multiboot_info_addr));
     if (kernel_module == nullptr) {
-        TRACE_ERROR("Kernel module not found in multiboot tags!");
-        OsHangNoInterrupts();
+        KernelPanic("Kernel module not found in multiboot tags!");
     }
     TRACE_SUCCESS("Found kernel module in multiboot tags!");
+
+    return kernel_module;
+}
+
+extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
+{
+    TerminalInit();
+    TRACE_INFO("In 64 bit mode");
+
+    if (!ValidateLoaderData(loader_data)) {
+        KernelPanic("LoaderData check failed!");
+    }
+
+    TRACE_INFO("Jumping to 64-bit kernel...");
+
+    auto* loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+
+    auto* kernel_module = FindKernelModule(loader_data->multiboot_info_addr);
 
     TRACE_INFO("Getting ELF bounds...");
     auto [elf_lower_bound, elf_upper_bound] =
@@ -73,13 +90,11 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
         elf_effective_size >> 10
     );
 
-    auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
-    static constexpr u64 kUpperCanonicalAddress = 0xFFFFFFFF80000000;
-
-    TRACE_INFO("Mapping kernel module to upper memory starting at 0x%llX", kUpperCanonicalAddress);
+    TRACE_INFO(
+        "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStartShared
+    );
     loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        kUpperCanonicalAddress, elf_effective_size, 0
+        kKernelVirtualAddressStartShared, elf_effective_size, 0
     );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 

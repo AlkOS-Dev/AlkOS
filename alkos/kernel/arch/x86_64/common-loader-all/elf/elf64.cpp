@@ -1,5 +1,6 @@
 #include <memory.h>
 #include <elf/elf64.hpp>
+#include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include "todo.hpp"
@@ -107,17 +108,11 @@ std::tuple<u64, u64> GetElf64ProgramBounds(const byte* elf_start)
         const ProgramHeaderEntry64_t* program_header_entry = &program_header_table[i];
 
         if (program_header_entry->type == ProgramHeaderEntry64_t::kLoadableSegmentType) {
-            if (start_addr == reinterpret_cast<u64>(nullptr) ||
-                program_header_entry->virtual_address < start_addr) {
-                start_addr = program_header_entry->virtual_address;
-            }
-
-            if (end_addr == reinterpret_cast<u64>(nullptr) ||
-                program_header_entry->virtual_address + program_header_entry->size_in_memory_bytes >
-                    end_addr) {
-                end_addr = program_header_entry->virtual_address +
-                           program_header_entry->size_in_memory_bytes;
-            }
+            start_addr = std::min(start_addr, program_header_entry->virtual_address);
+            end_addr   = std::max(
+                end_addr,
+                program_header_entry->virtual_address + program_header_entry->size_in_memory_bytes
+            );
         }
     }
 
@@ -133,10 +128,7 @@ bool IsValidElf64(const byte* elf_start)
 
     const auto* elf_header64 = reinterpret_cast<const Header64_t*>(elf_start);
 
-    if (!(elf_header64->identifier[0] == Header64_t::kElfMagic0 &&
-          elf_header64->identifier[1] == Header64_t::kElfMagic1 &&
-          elf_header64->identifier[2] == Header64_t::kElfMagic2 &&
-          elf_header64->identifier[3] == Header64_t::kElfMagic3)) {
+    if (memcmp(elf_header64->identifier, Header64_t::kMagic, sizeof(Header64_t::kMagic)) != 0) {
         TRACE_ERROR("ELF magic number not found.");
         return false;
     }

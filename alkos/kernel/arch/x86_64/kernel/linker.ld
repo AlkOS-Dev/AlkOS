@@ -1,9 +1,11 @@
 OUTPUT_FORMAT("elf64-x86-64")
 ENTRY(alkos.entry)
 
+kKernelBase = 0xFFFFFFFF80000000;
+
 SECTIONS
 {
-	. = 0xFFFFFFFF80000000;
+	. = kKernelBase;
 
 	.init BLOCK(4K) : ALIGN(4K)
           {
@@ -38,4 +40,8 @@ SECTIONS
 		*(COMMON)
 		*(.bss)
 	}
+
+	/* Provide the start and end symbols for the kernel */
+	PROVIDE(kKernelVirtualAddressStart = kKernelBase);
+	PROVIDE(kKernelVirtualAddressEnd = .);
 }

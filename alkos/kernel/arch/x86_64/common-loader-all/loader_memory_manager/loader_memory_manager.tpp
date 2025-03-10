@@ -1,5 +1,5 @@
-#ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_TPP_
-#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_TPP_
+#ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
+#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
 
 #include <assert.h>
 #include <memory.h>
@@ -16,8 +16,9 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
                                                                             : 30;
     static constexpr u64 kAlignmentMask = (1ULL << kPageShift) - 1;
 
-    R_ASSERT_ZERO(virtual_address & kAlignmentMask);   // Virtual address must be page aligned
-    R_ASSERT_ZERO(physical_address & kAlignmentMask);  // Physical address must be page aligned
+    // Both addresses must be aligned to the page size
+    R_ASSERT(IsAligned(physical_address, 1 << kPageShift));
+    R_ASSERT(IsAligned(virtual_address, 1 << kPageShift));
 
     // Calculate the indexes for each level of the page table
     u32 pml4_index = (virtual_address >> 39) & kIndexMask;
@@ -96,4 +97,4 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     *entry |= flags;
 }
 
-#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_BOOT32_INCLUDE_LOADER_MEMORY_MANAGER_TPP_
+#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_

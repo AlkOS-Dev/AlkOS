@@ -30,7 +30,6 @@ target_compile_definitions(alkos.loader32 PRIVATE __USE_DEBUG_OUTPUT__=1)
 
 ############################## Finding Headers ###############################
 
-target_include_directories(alkos.loader32 PRIVATE include)
 target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
