@@ -9,7 +9,7 @@ class TemplateLibTest : public TestGroupBase
 
 struct TestFunc {
     template <uint64_t N>
-    void operator()(int &out) const
+    void operator()(int& out) const
     {
         out = static_cast<int>(N);
     }
@@ -23,7 +23,7 @@ struct TestFuncReturn {
     }
 };
 
-void DefaultFunc(int &out) { out = -1; }
+void DefaultFunc(int& out) { out = -1; }
 
 int DefaultFuncReturn() { return -1; }
 
@@ -208,7 +208,203 @@ TEST_F(TemplateLibTest, StaticSingletonAlignTest)
         alignas(512) char tab[1024];
     };
 
-    const TestSingleton *addr = &StaticSingleton<TestSingleton>::Init();
+    const TestSingleton* addr = &StaticSingleton<TestSingleton>::Init();
     const uint64_t align      = reinterpret_cast<uint64_t>(addr) % 512;
     ASSERT_EQ(0LLU, align);
+}
+
+using EventCallbackFunc = void (*)(int);
+struct CallbackCounters {
+    int count1{};
+    int count2{};
+    int count3{};
+    int totalSum{};
+};
+
+static void IncrementCounter1(CallbackCounters* counters, int value)
+{
+    counters->count1++;
+    counters->totalSum += value;
+}
+
+static void IncrementCounter2(CallbackCounters* counters, int value)
+{
+    counters->count2++;
+    counters->totalSum += value * 2;
+}
+
+static void IncrementCounter3(CallbackCounters* counters, int value)
+{
+    counters->count3++;
+    counters->totalSum += value * 3;
+}
+
+TEST_F(TemplateLibTest, StaticEventTableTest)
+{
+    constexpr size_t kTableSize = 3;
+
+    struct EventCallback {
+        CallbackCounters* counters;
+        void (*func)(CallbackCounters*, int);
+
+        void operator()(int value) const { func(counters, value); }
+    };
+
+    StaticEventTable<kTableSize, EventCallback> eventTable;
+    CallbackCounters counters{};
+
+    eventTable.RegisterEvent<0>(EventCallback{&counters, IncrementCounter1});
+    eventTable.RegisterEvent<0>(EventCallback{&counters, IncrementCounter2});
+    eventTable.RegisterEvent<1>(EventCallback{&counters, IncrementCounter3});
+
+    eventTable.Notify<0>(10);
+    EXPECT_EQ(counters.count1, 1);
+    EXPECT_EQ(counters.count2, 1);
+    EXPECT_EQ(counters.count3, 0);
+    EXPECT_EQ(counters.totalSum, 10 + 10 * 2);  // 30
+
+    eventTable.Notify<1>(10);
+    EXPECT_EQ(counters.count1, 1);
+    EXPECT_EQ(counters.count2, 1);
+    EXPECT_EQ(counters.count3, 1);
+    EXPECT_EQ(counters.totalSum, 30 + 10 * 3);  // 60
+
+    eventTable.Notify<0>(5);
+    EXPECT_EQ(counters.count1, 2);
+    EXPECT_EQ(counters.count2, 2);
+    EXPECT_EQ(counters.count3, 1);
+    EXPECT_EQ(counters.totalSum, 60 + 5 + 5 * 2);  // 75
+}
+
+struct TestData {
+    int value;
+    bool operator==(const TestData& other) const { return value == other.value; }
+};
+
+TEST_F(TemplateLibTest, SettingsTest)
+{
+    using TestTypeList = TypeList<int, float, TestData>;
+
+    Settings<TestTypeList> settings({42, 3.14f, TestData{100}});
+
+    EXPECT_EQ(settings.Get<0>(), 42);
+    EXPECT_EQ(settings.Get<1>(), 3.14f);
+    EXPECT_EQ(settings.Get<2>().value, 100);
+
+    settings.Set<0>(100);
+    settings.Set<1>(2.71f);
+    settings.Set<2>(TestData{200});
+
+    EXPECT_EQ(settings.Get<0>(), 100);
+    EXPECT_EQ(settings.Get<1>(), 2.71f);
+    EXPECT_EQ(settings.Get<2>().value, 200);
+}
+
+using TestTypeList = TypeList<int, float, TestData>;
+struct EventCounters {
+    int intChanged   = 0;
+    float floatValue = 0.0f;
+    int dataChanged  = 0;
+};
+
+// Global data for callback functions
+EventCounters g_counters;
+Settings<TypeList<int, float, TestData>>* g_settings_ptr = nullptr;
+
+// Callback functions
+void IntChangedCallback() { g_counters.intChanged++; }
+
+void FloatValueCallback() { g_counters.floatValue = g_settings_ptr->Get<1>(); }
+
+void DataChangedCallback() { g_counters.dataChanged++; }
+
+TEST_F(TemplateLibTest, SettingsWithEventsTest)
+{
+    g_counters = EventCounters{};
+
+    Settings<TestTypeList> settings({42, 3.14f, TestData{100}});
+    g_settings_ptr = &settings;
+
+    settings.RegisterEvent<0>(IntChangedCallback);
+    settings.RegisterEvent<1>(FloatValueCallback);
+    settings.RegisterEvent<2>(DataChangedCallback);
+
+    settings.SetAndNotify<0>(100);
+    EXPECT_EQ(g_counters.intChanged, 1);
+    EXPECT_EQ(settings.Get<0>(), 100);
+
+    settings.SetAndNotify<1>(2.71f);
+    EXPECT_EQ(g_counters.floatValue, 2.71f);
+    EXPECT_EQ(settings.Get<1>(), 2.71f);
+
+    settings.SetAndNotify<2>(TestData{200});
+    EXPECT_EQ(g_counters.dataChanged, 1);
+    EXPECT_EQ(settings.Get<2>().value, 200);
+
+    settings.SetAndNotify<0>(200);
+    settings.SetAndNotify<0>(300);
+    EXPECT_EQ(g_counters.intChanged, 3);
+    EXPECT_EQ(settings.Get<0>(), 300);
+}
+
+int g_changeCounter = 0;
+
+void ChangeCounterCallback() { g_changeCounter++; }
+
+TEST_F(TemplateLibTest, EmptySettingsTest)
+{
+    /* Compilation check */
+    using EmptyTypeList = TypeList<>;
+    [[maybe_unused]] Settings<EmptyTypeList> emptySettings({});
+    EXPECT_TRUE(true);
+}
+
+TEST_F(TemplateLibTest, SingleTypeSettingsTest)
+{
+    using SingleTypeList = TypeList<int>;
+    Settings<SingleTypeList> singleSettings(std::tuple{42});
+
+    EXPECT_EQ(singleSettings.Get<0>(), 42);
+
+    singleSettings.Set<0>(100);
+    EXPECT_EQ(singleSettings.Get<0>(), 100);
+
+    g_changeCounter = 0;
+    singleSettings.RegisterEvent<0>(ChangeCounterCallback);
+
+    singleSettings.SetAndNotify<0>(200);
+    EXPECT_EQ(g_changeCounter, 1);
+    EXPECT_EQ(singleSettings.Get<0>(), 200);
+}
+
+int g_counter1 = 0;
+int g_counter2 = 0;
+int g_counter3 = 0;
+
+void Counter1Callback() { g_counter1++; }
+void Counter2Callback() { g_counter2++; }
+void Counter3Callback() { g_counter3++; }
+
+TEST_F(TemplateLibTest, MultipleEventSubscribersTest)
+{
+    using TestTypeList = TypeList<int>;
+    Settings<TestTypeList> settings(std::tuple<int>{42});
+
+    g_counter1 = 0;
+    g_counter2 = 0;
+    g_counter3 = 0;
+
+    settings.RegisterEvent<0>(Counter1Callback);
+    settings.RegisterEvent<0>(Counter2Callback);
+    settings.RegisterEvent<0>(Counter3Callback);
+
+    settings.SetAndNotify<0>(100);
+    EXPECT_EQ(g_counter1, 1);
+    EXPECT_EQ(g_counter2, 1);
+    EXPECT_EQ(g_counter3, 1);
+
+    settings.SetAndNotify<0>(200);
+    EXPECT_EQ(g_counter1, 2);
+    EXPECT_EQ(g_counter2, 2);
+    EXPECT_EQ(g_counter3, 2);
 }

@@ -163,8 +163,11 @@ struct TypeList {
     // iterators
     // ------------------------------
 
+    template <size_t N, class... Ts>
+    struct TypeListIter;
+
     template <size_t N, class T, class... Ts>
-    struct TypeListIter {
+    struct TypeListIter<N, T, Ts...> {
         static constexpr size_t kSize = sizeof...(Ts) + 1;
 
         static_assert(N < kSize, "Index out of range");
@@ -176,6 +179,12 @@ struct TypeList {
         static constexpr size_t kSize = sizeof...(Ts) + 1;
 
         using type = T;
+    };
+
+    template <size_t N>
+    struct TypeListIter<N> {
+        static constexpr size_t kSize = 0;
+        using type                    = void;
     };
 
     // ------------------------------
@@ -388,8 +397,8 @@ template <class TypeListT>
 class Settings : public NoCopy
 {
     public:
-    using TupleT = TypeListT::Tuple;
-    using EvenT  = void (*)();
+    using TupleT = typename TypeListT::Tuple;
+    using EventT = void (*)();
 
     // ------------------------------
     // Class creation
@@ -405,45 +414,45 @@ class Settings : public NoCopy
     FORCE_INLINE_F constexpr auto Get()
     {
         static_assert(idx < TypeListT::kSize, "Index out of range");
-        return std::get<idx>(settings_);
+        return settings_.template get<idx>();
     }
 
     template <size_t idx, class U>
     FORCE_INLINE_F constexpr void Set(U &&value)
     {
         static_assert(idx < TypeListT::kSize, "Index out of range");
-        std::get<idx>(settings_) = std::forward<U>(value);
+        settings_.template get<idx>() = std::forward<U>(value);
     }
 
     template <size_t idx, class U>
     FORCE_INLINE_F constexpr void Set(const U &value)
     {
         static_assert(idx < TypeListT::kSize, "Index out of range");
-        std::get<idx>(settings_) = std::forward<U>(value);
+        settings_.template get<idx>() = std::forward<U>(value);
     }
 
     template <size_t idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(U &&value)
     {
         static_assert(idx < TypeListT::kSize, "Index out of range");
-        std::get<idx>(settings_) = std::forward<U>(value);
+        settings_.template get<idx>() = std::forward<U>(value);
 
-        event_table_.Notify();
+        event_table_.template Notify<idx>();
     }
 
     template <size_t idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(const U &value)
     {
         static_assert(idx < TypeListT::kSize, "Index out of range");
-        std::get<idx>(settings_) = std::forward<U>(value);
+        settings_.template get<idx>() = std::forward<U>(value);
 
-        event_table_.Notify();
+        event_table_.template Notify<idx>();
     }
 
     template <size_t idx>
-    FORCE_INLINE_F void RegisterEvent(EvenT event)
+    FORCE_INLINE_F void RegisterEvent(EventT &&event)
     {
-        event_table_.template RegisterEvent<idx>(event);
+        event_table_.template RegisterEvent<idx>(std::move(event));
     }
 
     // ------------------------------
@@ -452,7 +461,7 @@ class Settings : public NoCopy
 
     private:
     TupleT settings_;
-    StaticEventTable<TypeListT::kSize, EvenT> event_table_{};
+    StaticEventTable<TypeListT::kSize, EventT> event_table_{};
 };
 
 }  // namespace TemplateLib
