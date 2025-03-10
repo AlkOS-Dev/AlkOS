@@ -1,6 +1,7 @@
 #ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_CONCEPTS_HPP_
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_CONCEPTS_HPP_
 
+#include <multiboot2/multiboot2.h>
 #include <extensions/type_traits.hpp>
 
 namespace multiboot
