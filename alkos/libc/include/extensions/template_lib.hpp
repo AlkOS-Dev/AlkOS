@@ -29,6 +29,23 @@ struct NoCopy {
 };
 
 // ------------------------------
+// MoveOnly
+// ------------------------------
+
+struct MoveOnly {
+    MoveOnly()  = default;
+    ~MoveOnly() = default;
+
+    /* remove copying */
+    MoveOnly(const MoveOnly &)            = delete;
+    MoveOnly &operator=(const MoveOnly &) = delete;
+
+    /* allow moving */
+    MoveOnly(MoveOnly &&)            = default;
+    MoveOnly &operator=(MoveOnly &&) = default;
+};
+
+// ------------------------------
 // Rolled Switch
 // ------------------------------
 
@@ -294,22 +311,16 @@ template <typename T>
 unsigned char StaticSingleton<T>::instance_memory_[sizeof(T)]{};
 
 // ------------------------------
-// Settings
+// EventTable
 // ------------------------------
 
-template <class TypeListT>
-    requires IsTypeList_v<TypeListT>
-class Settings : public NoCopy
+template <size_t kSize, class EvenT>
+class StaticEventTable : MoveOnly
 {
     // ------------------------------
     // internals
     // ------------------------------
 
-    public:
-    using EvenT  = void (*)();
-    using TupleT = TypeListT::Tuple;
-
-    private:
     struct NodeT {
         EvenT event;
         NodeT *next;
@@ -317,7 +328,69 @@ class Settings : public NoCopy
 
     static constexpr size_t kMaxEvents = 256;
 
+    // ------------------------------
+    // Class construction
+    // ------------------------------
+
     public:
+    StaticEventTable() noexcept  = default;
+    ~StaticEventTable() noexcept = default;
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    template <size_t idx>
+    void RegisterEvent(EvenT &&event)
+    {
+        static_assert(idx < kSize, "Index out of range");
+
+        NodeT *const node = &events_mem_[events_mem_top_++];
+        node->event       = std::move(event);
+        node->next        = nullptr;
+
+        NodeT *&cur_node = events_[idx];
+        while (cur_node) {
+            cur_node = cur_node->next;
+        }
+        cur_node = node;
+    }
+
+    template <size_t idx, class... Args>
+        requires std::is_invocable_v<EvenT, Args...>
+    void Notify(Args &&...args)
+    {
+        static_assert(idx < kSize, "Index out of range");
+
+        NodeT *cur_node = events_[idx];
+        while (cur_node) {
+            cur_node->event(args...);
+            cur_node = cur_node->next;
+        }
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    NodeT *events_[kSize]{};
+    NodeT events_mem_[kMaxEvents];
+    size_t events_mem_top_{};
+};
+
+// ------------------------------
+// Settings
+// ------------------------------
+
+template <class TypeListT>
+    requires IsTypeList_v<TypeListT>
+class Settings : public NoCopy
+{
+    public:
+    using TupleT = TypeListT::Tuple;
+    using EvenT  = void (*)();
+
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -328,34 +401,49 @@ class Settings : public NoCopy
     // Class methods
     // ------------------------------
 
-    template <class T>
-        requires std::is_convertible_v<T, size_t>
-    FORCE_INLINE_F constexpr auto Get(const T t_item_idx)
+    template <size_t idx>
+    FORCE_INLINE_F constexpr auto Get()
     {
-        const size_t idx = static_cast<size_t>(t_item_idx);
-
-        ASSERT_LT(idx, TypeListT::kSize);
+        static_assert(idx < TypeListT::kSize, "Index out of range");
         return std::get<idx>(settings_);
     }
 
-    template <class T, class U>
-        requires std::is_convertible_v<T, size_t>
-    FORCE_INLINE_F constexpr void Set(const T t_item_idx, U &&value)
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void Set(U &&value)
     {
-        const size_t idx = static_cast<size_t>(t_item_idx);
-
-        ASSERT_LT(idx, TypeListT::kSize);
+        static_assert(idx < TypeListT::kSize, "Index out of range");
         std::get<idx>(settings_) = std::forward<U>(value);
     }
 
-    template <class T, class U>
-        requires std::is_convertible_v<T, size_t>
-    FORCE_INLINE_F constexpr void Set(const T t_item_idx, const U &value)
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void Set(const U &value)
     {
-        const size_t idx = static_cast<size_t>(t_item_idx);
-
-        ASSERT_LT(idx, TypeListT::kSize);
+        static_assert(idx < TypeListT::kSize, "Index out of range");
         std::get<idx>(settings_) = std::forward<U>(value);
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void SetAndNotify(U &&value)
+    {
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        std::get<idx>(settings_) = std::forward<U>(value);
+
+        event_table_.Notify();
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void SetAndNotify(const U &value)
+    {
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        std::get<idx>(settings_) = std::forward<U>(value);
+
+        event_table_.Notify();
+    }
+
+    template <size_t idx>
+    FORCE_INLINE_F void RegisterEvent(EvenT event)
+    {
+        event_table_.template RegisterEvent<idx>(event);
     }
 
     // ------------------------------
@@ -364,9 +452,7 @@ class Settings : public NoCopy
 
     private:
     TupleT settings_;
-    NodeT *events_[TypeListT::kSize]{};
-    NodeT events_mem_[kMaxEvents];
-    size_t events_mem_top_{};
+    StaticEventTable<TypeListT::kSize, EvenT> event_table_{};
 };
 
 }  // namespace TemplateLib
