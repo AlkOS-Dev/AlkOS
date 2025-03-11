@@ -19,7 +19,7 @@ WRAP_CALL time_t QuerySystemTime(const timezone& tz)
         return buffer;
     }());
 
-    return ConvertDateTimeToSeconds(rtcTime, tz);
+    return ConvertDateTimeToPosix(rtcTime, tz);
 }
 
 #endif  // ARCH_X86_64_ABI_TIMERS_HPP_

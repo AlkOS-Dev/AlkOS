@@ -6,7 +6,7 @@
 // Implementations
 // ------------------------------
 
-u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone)
+u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone)
 {
     const i64 is_month_negative = date_time.tm_mon < 0;
 

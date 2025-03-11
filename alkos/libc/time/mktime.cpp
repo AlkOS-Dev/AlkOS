@@ -11,7 +11,7 @@
 time_t mktime(tm *time_ptr)
 {
     const auto time_zone = GetTimezoneSysCall();
-    const time_t t       = ConvertDateTimeToSeconds(*time_ptr, time_zone);
+    const time_t t       = ConvertDateTimeToPosix(*time_ptr, time_zone);
 
     if (t == kConversionFailed) {
         errno = EOVERFLOW;

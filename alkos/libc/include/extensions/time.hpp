@@ -65,7 +65,7 @@ WRAP_CALL bool IsTmYearLeap(const i64 year) { return IsLeapYear(year + kTmBaseYe
 
 WRAP_CALL bool IsTmYearLeap(const tm &time) { return IsLeapYear(time.tm_year + kTmBaseYear); }
 
-NODISCARD u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone);
+NODISCARD u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone);
 
 FAST_CALL i64 SumUpDays(const i64 year)
 {

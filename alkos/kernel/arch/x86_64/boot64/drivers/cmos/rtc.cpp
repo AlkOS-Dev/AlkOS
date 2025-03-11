@@ -141,8 +141,10 @@ tm ReadRtcTime()
 
     /* Adjust year to match tm struct */
     time.time.tm_year -= kTmBaseYear;
-    /* Adjust motnth to match tm struct */
+    /* Adjust month to match tm struct */
     time.time.tm_mon -= 1;
+    /* Adjust day to match tm struct */
+    time.time.tm_mday += 1;
 
     return time.time;
 }
