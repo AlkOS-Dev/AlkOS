@@ -4,14 +4,21 @@
 #include <time.h>
 #include <drivers/cmos/rtc.hpp>
 #include <extensions/time.hpp>
-#include <modules/global_state.hpp>
 #include <modules/timing.hpp>
 #include <timers.hpp>
-#include <todo.hpp>
 
 WRAP_CALL time_t QuerySystemTime(const timezone& tz)
 {
+    static constexpr size_t kBuffSize = 64;
+    [[maybe_unused]] char buffer[kBuffSize];
+
     const tm rtcTime = ReadRtcTime();
+
+    TRACE_INFO("Time loaded from CMOS: %s", [&] {
+        strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n", &rtcTime);
+        return buffer;
+    }());
+
     return ConvertDateTimeToSeconds(rtcTime, tz);
 }
 
