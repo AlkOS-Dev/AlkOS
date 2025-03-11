@@ -45,9 +45,10 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
                 continue;
             }
 
-            u64 current_physical_address = descending_sorted_mmap_entries[i].addr;
-            u64 aligned_physical_address = AlignUp(current_physical_address, k4kPageSizeBytes);
-            u32 offset_from_alignment    = aligned_physical_address - current_physical_address;
+            const u64 current_physical_address = descending_sorted_mmap_entries[i].addr;
+            const u64 aligned_physical_address =
+                AlignUp(current_physical_address, k4kPageSizeBytes);
+            const u32 offset_from_alignment = aligned_physical_address - current_physical_address;
 
             if (offset_from_alignment > 0) {
                 if (descending_sorted_mmap_entries[i].length < offset_from_alignment) {
@@ -61,7 +62,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
             // Try to map as many pages as possible from the current memory region
             while (descending_sorted_mmap_entries[i].length >= k4kPageSizeBytes &&
                    mapped_bytes < size_bytes) {
-                u64 current_virtual_address = virtual_address + mapped_bytes;
+                const u64 current_virtual_address = virtual_address + mapped_bytes;
                 MapVirtualMemoryToPhysical<PageSize::Page4k>(
                     current_virtual_address, descending_sorted_mmap_entries[i].addr, flags
                 );

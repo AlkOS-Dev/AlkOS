@@ -21,10 +21,10 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     R_ASSERT(IsAligned(virtual_address, 1 << kPageShift));
 
     // Calculate the indexes for each level of the page table
-    u32 pml4_index = (virtual_address >> 39) & kIndexMask;
-    u32 pml3_index = (virtual_address >> 30) & kIndexMask;
-    u32 pml2_index = (virtual_address >> 21) & kIndexMask;
-    u32 pml1_index = (virtual_address >> 12) & kIndexMask;
+    const u32 pml4_index = (virtual_address >> 39) & kIndexMask;
+    const u32 pml3_index = (virtual_address >> 30) & kIndexMask;
+    const u32 pml2_index = (virtual_address >> 21) & kIndexMask;
+    const u32 pml1_index = (virtual_address >> 12) & kIndexMask;
 
     // Ensure PML4 entry points to the correct PDPT
     PML4_t *pml4_table = GetPml4Table();

@@ -17,8 +17,8 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
         return 0;
     }
 
-    auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
-    auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
+    const auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
+    const auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
         elf_start + header_64->program_header_table_file_offset
     );
 
@@ -46,11 +46,12 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
             TODO_WHEN_DEBUGGING_FRAMEWORK
             TRACE_INFO("Loading segment %d...", i + 1);
 
-            u64 segment_dest = destination_begin_virtual_address +
-                               (program_header_entry->virtual_address - elf_base);
-            u64 segment_dest_size = program_header_entry->size_in_memory_bytes;
-            u64 segment_source    = reinterpret_cast<u64>(elf_start) + program_header_entry->offset;
-            u64 segment_source_size = program_header_entry->size_in_file_bytes;
+            const u64 segment_dest = destination_begin_virtual_address +
+                                     (program_header_entry->virtual_address - elf_base);
+            const u64 segment_dest_size = program_header_entry->size_in_memory_bytes;
+            const u64 segment_source =
+                reinterpret_cast<u64>(elf_start) + program_header_entry->offset;
+            const u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
             TODO_WHEN_DEBUGGING_FRAMEWORK
             TRACE_INFO(
@@ -83,7 +84,7 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
         return 0;
     }
 
-    u64 adjusted_entry_point =
+    const u64 adjusted_entry_point =
         destination_begin_virtual_address + (header_64->entry_point_virtual_address - elf_base);
 
     TRACE_SUCCESS("ELF-64 loaded. Entry point: 0x%llX", adjusted_entry_point);
@@ -99,8 +100,8 @@ std::tuple<u64, u64> GetElf64ProgramBounds(const byte* elf_start)
         return std::make_tuple(start_addr, end_addr);
     }
 
-    auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
-    auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
+    const auto* header_64            = reinterpret_cast<const Header64_t*>(elf_start);
+    const auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry64_t*>(
         elf_start + header_64->program_header_table_file_offset
     );
 
