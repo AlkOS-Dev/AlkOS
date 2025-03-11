@@ -5,7 +5,7 @@
 # ===============================
 
 TARGET_FOLDER="."
-FILE_EXTENSIONS=("cpp" "cc" "c" "h" "hpp")
+FILE_EXTENSIONS=("cpp" "cc" "c" "h" "hpp" "tpp")
 CLANG_FORMAT_STYLE="file"
 
 # ===============================

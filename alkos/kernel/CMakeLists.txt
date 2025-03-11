@@ -1,3 +1,5 @@
+message(STATUS "Configuring kernel...")
+
 ############################### Error Checking ###############################
 
 if (NOT DEFINED SYSROOT)
@@ -93,6 +95,27 @@ if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
     message(FATAL_ERROR "No primary kernel executable defined")
 endif ()
 
+message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")
+message(STATUS "Kernel modules: ${KERNEL_MODULES}")
+message(STATUS "Kernel commands: ${KERNEL_COMMANDS}")
+
+# Check if KERNEL_MODULES and KERNEL_COMMANDS are the same size and defined
+if (NOT DEFINED KERNEL_COMMANDS OR NOT DEFINED KERNEL_MODULES)
+    message(FATAL_ERROR "KERNEL_MODULES or KERNEL_COMMANDS are not defined")
+endif ()
+
+list(LENGTH KERNEL_MODULES KERNEL_MODULES_LENGTH)
+list(LENGTH KERNEL_COMMANDS KERNEL_COMMANDS_LENGTH)
+
+# Check if the two lists are the same size
+if(NOT KERNEL_MODULES_LENGTH EQUAL KERNEL_COMMANDS_LENGTH)
+    message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS have different sizes: ${KERNEL_MODULES_LENGTH} vs ${KERNEL_COMMANDS_LENGTH}")
+endif()
+
+if(NOT DEFINED ARCH_QEMU_COMMAND OR NOT DEFINED ARCH_QEMU_NORMAL_FLAGS OR NOT DEFINED ARCH_QEMU_TEST_FLAGS)
+    message(FATAL_ERROR "ARCH_QEMU_COMMAND, ARCH_QEMU_NORMAL_FLAGS, ARCH_QEMU_TEST_FLAGS are not defined")
+endif ()
+
 ################################## Linking ###################################
 
 target_link_libraries(alkos.kernel PRIVATE libk gcc)
@@ -135,3 +158,8 @@ ${CRTN_OBJ} \
 
 set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
 set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
+set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)
+
+set(ARCH_QEMU_COMMAND ${ARCH_QEMU_COMMAND} PARENT_SCOPE)
+set(ARCH_QEMU_NORMAL_FLAGS ${ARCH_QEMU_NORMAL_FLAGS} PARENT_SCOPE)
+set(ARCH_QEMU_TEST_FLAGS ${ARCH_QEMU_TEST_FLAGS} PARENT_SCOPE)

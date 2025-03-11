@@ -1,13 +1,8 @@
-#include <init.hpp>
-
 /* Internal includes */
+#include "init.hpp"
 #include <libssp.h>
 #include <modules/timing.hpp>
 
-/**
- * @brief Performs all high-level initialization not related to architecture
- * @note  MUST ALWAYS be invoked after the PreKernelInit function
- */
 void KernelInit()
 {
     /* Initialize the stack protection */

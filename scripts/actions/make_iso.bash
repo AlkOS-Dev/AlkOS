@@ -9,5 +9,25 @@ verify_conf_var_exists CONF_SYSROOT
 verify_conf_var_exists CONF_ISO_PATH
 verify_conf_var_exists CONF_KERNEL_MODULES
 verify_conf_var_exists CONF_BOOTABLE_KERNEL_EXEC
+verify_conf_var_exists CONF_KERNEL_COMMANDS
 
-"${MAKE_ISO_ACTION_DIR}/../install/make_iso.bash" "${CONF_ISO_PATH}" "${CONF_SYSROOT}" -e "${CONF_BOOTABLE_KERNEL_EXEC}" -m "${CONF_KERNEL_MODULES}" "$@"
+# Split the CONF_KERNEL_MODULES and CONF_KERNEL_COMMANDS into arrays
+IFS=' ' read -r -a modules <<< "$CONF_KERNEL_MODULES"
+IFS=' ' read -r -a commands <<< "$CONF_KERNEL_COMMANDS"
+
+# Check if both arrays have the same number of elements
+if [ ${#modules[@]} -ne ${#commands[@]} ]; then
+  echo "Error: The number of kernel modules and commands do not match."
+  exit 1
+fi
+
+# Combine the arrays into a single tuple string "module/command"
+tuple_str=""
+for i in "${!modules[@]}"; do
+  tuple_str+="${modules[$i]}/${commands[$i]} "
+done
+# Trim any trailing whitespace
+tuple_str=$(echo "$tuple_str" | sed 's/[[:space:]]*$//')
+
+# Call the make_iso script with the tuple string for modules
+"${MAKE_ISO_ACTION_DIR}/../install/make_iso.bash" "${CONF_ISO_PATH}" "${CONF_SYSROOT}" -e "${CONF_BOOTABLE_KERNEL_EXEC}" -m "${tuple_str}" "$@"
