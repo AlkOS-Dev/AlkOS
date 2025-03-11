@@ -62,7 +62,7 @@ FAST_CALL NumT &SetBitValue(NumT &num, const u16 bit, const bool val)
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
-FAST_CALL bool IsAligned(const NumT num, const size_t alignment)
+FAST_CALL constexpr bool IsAligned(const NumT num, const size_t alignment)
 {
     return (num & (alignment - 1)) == 0;
 }
@@ -70,35 +70,35 @@ FAST_CALL bool IsAligned(const NumT num, const size_t alignment)
 // Overload for pointer types
 template <typename PtrT>
     requires std::is_pointer_v<PtrT>
-FAST_CALL bool IsAligned(const PtrT *ptr, const size_t alignment)
+FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
 {
     return IsAligned(reinterpret_cast<uintptr_t>(ptr), alignment);
 }
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr NumT AlignUp(NumT num, const size_t alignment)
+FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 {
     return (num + alignment - 1) & ~(alignment - 1);
 }
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr NumT AlignDown(NumT num, const size_t alignment)
+FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
 {
     return num & ~(alignment - 1);
 }
 
 template <typename PtrT>
     requires std::is_pointer_v<PtrT>
-FAST_CALL constexpr PtrT AlignUp(PtrT ptr, const size_t alignment)
+FAST_CALL constexpr PtrT AlignUp(const PtrT ptr, const size_t alignment)
 {
     return reinterpret_cast<PtrT>(AlignUp(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
 template <typename PtrT>
     requires std::is_pointer_v<PtrT>
-FAST_CALL constexpr PtrT AlignDown(PtrT ptr, const size_t alignment)
+FAST_CALL constexpr PtrT AlignDown(const PtrT ptr, const size_t alignment)
 {
     return reinterpret_cast<PtrT>(AlignDown(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
