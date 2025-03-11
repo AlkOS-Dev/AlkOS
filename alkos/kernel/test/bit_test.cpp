@@ -97,3 +97,66 @@ TEST_F(BitManipTest, SetBitValue)
     SetBitValue(val16, 0, false);
     EXPECT_EQ(val16, kMsb<u16>);
 }
+
+class AlignementTest : public TestGroupBase
+{
+};
+
+TEST_F(AlignementTest, IsAligned_GivenUnalignedValue_ReturnsFalse)
+{
+    EXPECT_FALSE(IsAligned(3u, 4));
+    EXPECT_FALSE(IsAligned(15u, 8));
+}
+
+TEST_F(AlignementTest, IsAligned_GivenAlignedValue_ReturnsTrue)
+{
+    EXPECT_TRUE(IsAligned(4u, 4));
+    EXPECT_TRUE(IsAligned(16u, 8));
+}
+
+TEST_F(AlignementTest, IsAligned_GivenUnalignedPointer_ReturnsFalse)
+{
+    auto unaligned_ptr = reinterpret_cast<byte *>(uintptr_t(0x1003));
+    EXPECT_FALSE(IsAligned(unaligned_ptr, 4));
+}
+
+TEST_F(AlignementTest, IsAligned_GivenAlignedPointer_ReturnsTrue)
+{
+    auto aligned_ptr = reinterpret_cast<byte *>(uintptr_t(0x1004));
+    EXPECT_TRUE(IsAligned(aligned_ptr, 4));
+}
+
+TEST_F(AlignementTest, AlignDown_GivenUnalignedValue_ReturnsAlignedValue)
+{
+    EXPECT_EQ(AlignDown(0x101u, 16), 0x100u);
+    EXPECT_EQ(AlignDown(0x1FFu, 16), 0x1F0u);
+}
+
+TEST_F(AlignementTest, AlignDown_GivenAlignedValue_ReturnsSameValue)
+{
+    EXPECT_EQ(AlignDown(0x100u, 16), 0x100u);
+}
+
+TEST_F(AlignementTest, AlignUp_GivenUnalignedValue_ReturnsAlignedValue)
+{
+    EXPECT_EQ(AlignUp(0x101u, 16), 0x110u);
+    EXPECT_EQ(AlignUp(0x1F1u, 16), 0x200u);
+}
+
+TEST_F(AlignementTest, AlignUp_GivenAlignedValue_ReturnsSameValue)
+{
+    EXPECT_EQ(AlignUp(0x100u, 16), 0x100u);
+}
+
+TEST_F(AlignementTest, AlignUp_GivenUnalignedPointer_ReturnsAlignedPointer)
+{
+    auto unaligned_ptr = reinterpret_cast<char *>(uintptr_t(0x1003));
+    auto aligned_ptr   = AlignUp(unaligned_ptr, 4);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(aligned_ptr), uintptr_t(0x1004));
+}
+
+TEST_F(AlignementTest, AlignUp_GivenAlignedPointer_ReturnsSamePointer)
+{
+    auto aligned_ptr = reinterpret_cast<char *>(uintptr_t(0x1004));
+    EXPECT_EQ(AlignUp(aligned_ptr, 4), aligned_ptr);
+}

@@ -5,10 +5,15 @@ RUN_ALKOS_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/nul
 RUN_ALKOS_SCRIPT_PATH="${RUN_ALKOS_SCRIPT_DIR}/$(basename "$0")"
 RUN_ALKOS_SCRIPT_SOURCE_DIR="${RUN_ALKOS_SCRIPT_DIR}/../.."
 
+source "${RUN_ALKOS_SCRIPT_DIR}/../utils/conf_handlers.bash"
+source_conf_file
+verify_conf_var_exists CONF_QEMU_COMMAND
+verify_conf_var_exists CONF_QEMU_NORMAL_FLAGS
+
 # qemu command
-RUN_ALKOS_SCRIPT_QEMU_COMMAND="qemu-system-x86_64"
+RUN_ALKOS_SCRIPT_QEMU_COMMAND="${CONF_QEMU_COMMAND}"
 RUN_ALKOS_SCRIPT_GDB_ARGS="-s -S"
-RUN_ALKOS_SCRIPT_QEMU_ARGS="-serial stdio -enable-kvm -cpu host -display default,show-cursor=on"
+RUN_ALKOS_SCRIPT_QEMU_ARGS="${CONF_QEMU_NORMAL_FLAGS}"
 
 # Flags
 RUN_ALKOS_SCRIPT_VERBOSE=false

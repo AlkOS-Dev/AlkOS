@@ -40,6 +40,8 @@ extern "C" void __cxa_guard_abort(__guard *)
 #endif
 }
 
+extern "C" void __cxa_atexit(void) {}
+
 // -----------------------------------
 // New and delete implementation
 // -----------------------------------
