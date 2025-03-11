@@ -9,15 +9,10 @@
 #include <timers.hpp>
 #include <todo.hpp>
 
-WRAP_CALL time_t QuerySystemTime()
+WRAP_CALL time_t QuerySystemTime(const timezone& tz)
 {
     const tm rtcTime = ReadRtcTime();
-
-    if (GetSetting<global_state_constants::SettingsType::kIsDayTimeClockInUTC>()) {
-        return ConvertDateTimeToSeconds(rtcTime, timing_constants::kUtcTimezone);
-    }
-
-    return ConvertDateTimeToSeconds(rtcTime, TimingModule::Get().GetDayTime().GetTimezone());
+    return ConvertDateTimeToSeconds(rtcTime, tz);
 }
 
 #endif  // ARCH_X86_64_ABI_TIMERS_HPP_

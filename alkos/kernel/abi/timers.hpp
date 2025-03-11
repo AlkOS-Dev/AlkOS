@@ -1,6 +1,7 @@
 #ifndef KERNEL_ABI_TIMERS_HPP_
 #define KERNEL_ABI_TIMERS_HPP_
 
+#include <sys/time.h>
 #include <time.h>
 #include <defines.hpp>
 
@@ -10,7 +11,7 @@
  * @note It will be used during the boot process and periodically to update the system time and
  *       get rid of any time drift created possibly by inaccurate timers. Returns POSIX time value.
  */
-WRAP_CALL time_t QuerySystemTime();
+WRAP_CALL time_t QuerySystemTime(const timezone& tz);
 
 #include <abi/timers.hpp>
 

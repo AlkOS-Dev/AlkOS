@@ -12,13 +12,25 @@ namespace internal
 {
 class GlobalStateModule : TemplateLib::StaticSingletonHelper
 {
+    // -------------------------------------
+    // Protected singleton constructor
+    // -------------------------------------
+
     protected:
     GlobalStateModule() noexcept;
+
+    // ------------------------------
+    // Getters
+    // ------------------------------
 
     public:
     using SettingsT = TemplateLib::Settings<global_state_constants::GlobalSettingsTypes>;
 
     NODISCARD FORCE_INLINE_F SettingsT& GetSettings() noexcept { return settings_; }
+
+    // ------------------------------
+    // Module fields
+    // ------------------------------
 
     private:
     SettingsT settings_;

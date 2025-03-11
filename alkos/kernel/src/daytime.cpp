@@ -16,6 +16,10 @@ DayTime::DayTime()
 
 void DayTime::SyncWithHardware()
 {
-    time_ = QuerySystemTime();
+    const timezone& tz = GetSetting<global_state_constants::SettingsType::kIsDayTimeClockInUTC>()
+                             ? timing_constants::kUtcTimezone
+                             : GetTimezone();
+
+    time_ = QuerySystemTime(tz);
     TRACE_INFO("Synced system time with hardware: %lu", time_);
 }
