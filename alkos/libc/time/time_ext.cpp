@@ -227,7 +227,6 @@ std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time)
 
         /* Adjust by leap years div 400 */
         local_time_left -= years / 400 * kSecondsInDay;
-        local_time_left -= (years > 0) * kSecondsInDay; /* We start from year 2000 */
 
         /* prepare for next iteration */
         years -= 1;

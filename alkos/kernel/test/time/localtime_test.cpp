@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <memory.h>
 #include <time.h>
-#include <extensions/time.hpp>
 #include <test_module/test.hpp>
 
 class LocaltimeTest : public TestGroupBase
@@ -32,7 +31,6 @@ class LocaltimeTest : public TestGroupBase
     }
 };
 
-// Macros for testing localtime (without while loop)
 #define VERIFY_LOCALTIME(                                                         \
     timestamp, exp_year, exp_month, exp_day, exp_hour, exp_min, exp_sec, exp_wday \
 )                                                                                 \
@@ -67,37 +65,29 @@ TEST_F(LocaltimeTest, BasicLocaltimeConversion)
 
 TEST_F(LocaltimeTest, ManualTimestamps)
 {
-    // Test timestamps defined directly without using mktime
+    // 2024-02-15 12:10:45 UTC
+    static constexpr time_t feb15_timestamp = 1707999045;
+    VERIFY_LOCALTIME(feb15_timestamp, 2024, 2, 15, 13, 10, 45, 4);  // Thursday
 
-    // 2024-02-15 12:30:45 UTC is 1707999045
-    // In Warsaw (UTC+1 in February), this should be 13:30:45
-    time_t feb15_timestamp = 1707999045;
-    VERIFY_LOCALTIME(feb15_timestamp, 2024, 2, 15, 13, 30, 45, 4);  // Thursday
+    // 2024-06-15 12:10:45 UTC
+    static constexpr time_t jun15_timestamp = 1718457045;
+    VERIFY_LOCALTIME(jun15_timestamp, 2024, 6, 15, 14, 10, 45, 6);  // Saturday
 
-    // 2024-06-15 12:30:45 UTC is 1718457045
-    // In Warsaw (UTC+2 in June), this should be 14:30:45
-    time_t jun15_timestamp = 1718457045;
-    VERIFY_LOCALTIME(jun15_timestamp, 2024, 6, 15, 14, 30, 45, 6);  // Saturday
+    //  30 March 2024 22:59:59 UTC
+    static constexpr time_t dst_start_utc = 1711839599;
+    VERIFY_LOCALTIME(dst_start_utc, 2024, 3, 30, 23, 59, 59, 6);  // Saturday
 
-    // 2024-03-31 00:59:59 UTC is 1711839599
-    // In Warsaw, this is just before DST starts, should be 01:59:59 CET
-    time_t dst_start_utc = 1711839599;
-    VERIFY_LOCALTIME(dst_start_utc, 2024, 3, 31, 1, 59, 59, 0);  // Sunday
+    //  Saturday, 30 March 2024 23:00:00 UTC
+    static constexpr time_t after_dst_utc = 1711839600;
+    VERIFY_LOCALTIME(after_dst_utc, 2024, 3, 31, 0, 0, 0, 0);  // Saturday
 
-    // 2024-03-31 01:00:00 UTC is 1711839600
-    // In Warsaw, this is right after DST starts, should be 03:00:00 CEST
-    time_t after_dst_utc = 1711839600;
-    VERIFY_LOCALTIME(after_dst_utc, 2024, 3, 31, 3, 0, 0, 0);  // Sunday
+    // Monday, 28 October 2024 14:59:59
+    static constexpr time_t before_dst_end_utc = 1730127599;
+    VERIFY_LOCALTIME(before_dst_end_utc, 2024, 10, 28, 15, 59, 59, 1);  // Monday
 
-    // 2024-10-27 00:59:59 UTC is 1730127599
-    // In Warsaw (still in CEST), this should be 02:59:59
-    time_t before_dst_end_utc = 1730127599;
-    VERIFY_LOCALTIME(before_dst_end_utc, 2024, 10, 27, 2, 59, 59, 0);  // Sunday
-
-    // 2024-10-27 01:30:00 UTC is 1730129400
-    // After DST ends, this should be 02:30:00 CET
-    time_t after_dst_end_utc = 1730129400;
-    VERIFY_LOCALTIME(after_dst_end_utc, 2024, 10, 27, 2, 30, 0, 0);  // Sunday
+    // 2024-10-27 01:30:00 UTC
+    static constexpr time_t after_dst_end_utc = 1730129400;
+    VERIFY_LOCALTIME(after_dst_end_utc, 2024, 10, 28, 16, 30, 0, 1);  // Monday
 }
 
 // ------------------------------
@@ -118,17 +108,16 @@ TEST_F(LocaltimeTest, LeapYears)
     EXPECT_EQ(13, leap_info->tm_hour);
     EXPECT_EQ(0, leap_info->tm_min);
     EXPECT_EQ(0, leap_info->tm_sec);
-    EXPECT_EQ(4, leap_info->tm_wday);   // Thursday
-    EXPECT_EQ(60, leap_info->tm_yday);  // Day 60 in leap year
+    EXPECT_EQ(4, leap_info->tm_wday);  // Thursday
+    EXPECT_EQ(59, leap_info->tm_yday);
 
-    // Day after February in non-leap year vs leap year
     time_t non_leap_mar1     = CreateTimestamp(2023, 3, 1, 12, 0, 0);
     struct tm* non_leap_info = localtime(&non_leap_mar1);
-    EXPECT_EQ(60, non_leap_info->tm_yday);  // Day 60 in non-leap year
+    EXPECT_EQ(59, non_leap_info->tm_yday);
 
     time_t leap_mar1          = CreateTimestamp(2024, 3, 1, 12, 0, 0);
     struct tm* leap_mar1_info = localtime(&leap_mar1);
-    EXPECT_EQ(61, leap_mar1_info->tm_yday);  // Day 61 in leap year
+    EXPECT_EQ(60, leap_mar1_info->tm_yday);
 }
 
 TEST_F(LocaltimeTest, HistoricalDates)
@@ -142,8 +131,6 @@ TEST_F(LocaltimeTest, HistoricalDates)
     static constexpr time_t y2k_timestamp = 946684799;
     VERIFY_LOCALTIME(y2k_timestamp, 2000, 1, 1, 0, 59, 59, 6);  // Saturday
 }
-
-TEST_F(LocaltimeTest, tmp) {}
 
 TEST_F(LocaltimeTest, LocaltimeVsGmtime)
 {
@@ -195,5 +182,5 @@ TEST_F(LocaltimeTest, DateComponents)
     EXPECT_EQ(30, timeinfo->tm_min);
     EXPECT_EQ(45, timeinfo->tm_sec);
     EXPECT_EQ(1, timeinfo->tm_wday);    // Monday
-    EXPECT_EQ(197, timeinfo->tm_yday);  // Day 197 of the year
+    EXPECT_EQ(196, timeinfo->tm_yday);  // Day 197 of the year
 }
