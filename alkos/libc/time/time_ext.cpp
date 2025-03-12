@@ -162,27 +162,9 @@ tm *localtime_r(const time_t *timer, tm *result, const timezone &time_zone)
     result->tm_year = static_cast<int>(kPosixToTmYearDiff + years);
 
     /* Check if DST is in effect */
-    if (time_zone.dst_time_start_seconds < time_zone.dst_time_end_seconds) {
-        /* Continuous DST */
-
-        if (time_left >= time_zone.dst_time_start_seconds &&
-            time_left < time_zone.dst_time_end_seconds) {
-            result->tm_isdst = 1;
-            time_left += time_zone.dst_time_offset_minutes * kSecondsInMinute;
-        } else {
-            result->tm_isdst = 0;
-        }
-    } else {
-        /* Spans over the year */
-
-        if (time_left >= time_zone.dst_time_start_seconds ||
-            time_left < time_zone.dst_time_end_seconds) {
-            result->tm_isdst = 1;
-            time_left += time_zone.dst_time_offset_minutes * kSecondsInMinute;
-        } else {
-            result->tm_isdst = 0;
-        }
-    }
+    const u64 dst_offset = GetDSTOffset(time_left, time_zone);
+    time_left += dst_offset;
+    result->tm_isdst = static_cast<int>(dst_offset != 0_u64 ? 1_u64 : dst_offset);
 
     /* Apply days */
     const u64 days = time_left / kSecondsInDay;
@@ -206,7 +188,99 @@ tm *localtime_r(const time_t *timer, tm *result, const timezone &time_zone)
     const auto [month, day] = CalculateMonthAndDaysFromPosix(days, IsTmYearLeap(*result));
     result->tm_mon          = static_cast<int>(month - 1);
     result->tm_mday         = static_cast<int>(day);
-    result->tm_wday         = static_cast<int>(CalculateSundayBasedWeek(*result));
+    result->tm_wday         = static_cast<int>(CalculateDayOfWeek(*result));
 
     return result;
+}
+
+std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(const u64 days, const bool is_leap_year)
+{
+    ASSERT_LT(days, 366_u64);
+
+    for (size_t idx = 1; idx < 12; ++idx) {
+        if (days < kDaysInMonth[is_leap_year][idx]) {
+            return {idx, days - kDaysInMonth[is_leap_year][idx - 1] + 1};
+        }
+    }
+
+    return {12, days - kDaysInMonth[is_leap_year][11] + 1};
+}
+
+std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time)
+{
+    i64 local_time_left;
+    i64 years = static_cast<i64>((time - kFirst30PosixYears) / kSecondsInUsualYear);
+    [[maybe_unused]] i64 iterations = 0;
+
+    do {
+        ASSERT_LT(iterations++, 5);
+
+        local_time_left = static_cast<i64>(time - kFirst30PosixYears);
+
+        local_time_left -= years * kSecondsInUsualYear;
+
+        /* Adjust by leap years div 4 */
+        local_time_left -= years / 4 * kSecondsInDay;
+
+        /* Adjust by leap years div 100 */
+        local_time_left += years / 100 * kSecondsInDay;
+
+        /* Adjust by leap years div 400 */
+        local_time_left -= years / 400 * kSecondsInDay;
+        local_time_left -= (years > 0) * kSecondsInDay; /* We start from year 2000 */
+
+        /* prepare for next iteration */
+        years -= 1;
+    } while (local_time_left < 0);
+
+    ASSERT_GE(local_time_left, 0_i64);
+    return {years + 1 + 30, static_cast<u64>(local_time_left)};
+}
+
+std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time)
+{
+    i64 local_time_left;
+    i64 years                       = time / kSecondsInUsualYear;
+    [[maybe_unused]] i64 iterations = 0;
+
+    do {
+        ASSERT_LT(iterations++, 2);
+
+        local_time_left = static_cast<i64>(time);
+
+        local_time_left -= years * kSecondsInUsualYear;
+
+        /* Adjust by leap years */
+        local_time_left -= years > 2 ? (years - 2) / 4 * kSecondsInDay : 0;
+
+        /* prepare for next iteration */
+        years -= 1;
+    } while (local_time_left < 0);
+
+    return {years + 1, static_cast<u64>(local_time_left)};
+}
+
+u64 GetDSTOffset(u64 time, const timezone &time_zone)
+{
+    if (time_zone.dst_time_offset_minutes == 0) {
+        return 0;
+    }
+
+    if (time_zone.dst_time_start_seconds < time_zone.dst_time_end_seconds) {
+        /* Continuous DST */
+
+        if (time >= time_zone.dst_time_start_seconds && time < time_zone.dst_time_end_seconds) {
+            return time_zone.dst_time_offset_minutes * kSecondsInMinute;
+        } else {
+            return 0;
+        }
+    } else {
+        /* Spans over the year */
+
+        if (time >= time_zone.dst_time_start_seconds || time < time_zone.dst_time_end_seconds) {
+            return time_zone.dst_time_offset_minutes * kSecondsInMinute;
+        } else {
+            return 0;
+        }
+    }
 }

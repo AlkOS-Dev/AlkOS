@@ -23,7 +23,7 @@ TODO_STREAMS
 
 static constexpr size_t kTraceBufferSize = 4096;
 template <typename... Args>
-FAST_CALL constexpr void FormatTrace(const char* format, Args... args)
+void FormatTrace(const char* format, Args... args)
 {
     char buffer[kTraceBufferSize];
 

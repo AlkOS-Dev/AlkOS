@@ -109,71 +109,22 @@ FAST_CALL constexpr i64 SumYearDays(const tm &time_ptr)
  */
 FAST_CALL constexpr i64 CalculateDayOfWeek(const tm &time)
 {
-    const i64 total_days = GetWeekdayJan1(SumUpDays(time)) + SumYearDays(time);
+    const i64 total_days = GetWeekdayJan1(SumUpDays(time)) + SumYearDays(time) - 1;
     return total_days % 7;
 }
 
 NODISCARD bool ValidateTm(const tm &time_ptr);
 
-/* [years, time_left] */
-NODISCARD FAST_CALL constexpr std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time_left)
+/* [years, time] */
+NODISCARD std::tuple<u64, u64> CalculateYears30LessWLeaps(u64 time);
+
+/* [years, time] */
+NODISCARD std::tuple<u64, u64> CalculateYears30MoreWLeaps(u64 time);
+
+NODISCARD FAST_CALL std::tuple<u64, u64> CalculateYearsFromPosix(const u64 time)
 {
-    i64 local_time_left;
-    i64 years                       = time_left / kSecondsInUsualYear;
-    [[maybe_unused]] i64 iterations = 0;
-
-    do {
-        assert(iterations++ < 2);
-
-        local_time_left = static_cast<i64>(time_left);
-
-        local_time_left -= years * kSecondsInUsualYear;
-
-        /* Adjust by leap years */
-        local_time_left -= years > 2 ? (years - 2) / 4 * kSecondsInDay : 0;
-
-        /* prepare for next iteration */
-        years -= 1;
-    } while (local_time_left < 0);
-
-    return {years + 1, static_cast<u64>(local_time_left)};
-}
-
-/* [years, time_left] */
-NODISCARD FAST_CALL constexpr std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time_left)
-{
-    i64 local_time_left;
-    i64 years                       = (time_left - 30) / kSecondsInUsualYear;
-    [[maybe_unused]] i64 iterations = 0;
-
-    do {
-        assert(iterations++ < 5);
-
-        local_time_left = static_cast<i64>(time_left);
-
-        local_time_left -= years * kSecondsInUsualYear;
-
-        /* Adjust by leap years div 4 */
-        local_time_left -= years / 4 * kSecondsInDay;
-
-        /* Adjust by leap years div 100 */
-        local_time_left += years / 100 * kSecondsInDay;
-
-        /* Adjust by leap years div 400 */
-        local_time_left -= years / 400 * kSecondsInDay;
-        local_time_left -= kSecondsInDay; /* We start from year 2000 */
-
-        /* prepare for next iteration */
-        years -= 1;
-    } while (local_time_left < 0);
-
-    return {years + 1 + 30, static_cast<u64>(local_time_left)};
-}
-
-NODISCARD FAST_CALL std::tuple<u64, u64> CalculateYearsFromPosix(const u64 time_left)
-{
-    return time_left >= kFirst30PosixYears ? CalculateYears30MoreWLeaps(time_left)
-                                           : CalculateYears30LessWLeaps(time_left);
+    return time >= kFirst30PosixYears ? CalculateYears30MoreWLeaps(time)
+                                      : CalculateYears30LessWLeaps(time);
 }
 
 NODISCARD FAST_CALL i64 CalculateMondayBasedWeek(const tm &time)
@@ -201,20 +152,9 @@ NODISCARD i64 CalculateIsoBasedWeek(const tm &time);
 NODISCARD i64 CalculateIsoBasedYear(const tm &time);
 
 /* [month, day] */
-NODISCARD FAST_CALL std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(
-    const u64 days, const bool is_leap_year
-)
-{
-    ASSERT_LT(days, 366_u64);
+NODISCARD std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(u64 days, bool is_leap_year);
 
-    for (size_t idx = 1; idx < 12; ++idx) {
-        if (days < kDaysInMonth[is_leap_year][idx]) {
-            return {idx, days - kDaysInMonth[is_leap_year][idx - 1] + 1};
-        }
-    }
-
-    return {12, days - kDaysInMonth[is_leap_year][11] + 1};
-}
+NODISCARD u64 GetDSTOffset(u64 time, const timezone &tz);
 
 tm *localtime_r(const time_t *timer, tm *result, const timezone &tz);
 
