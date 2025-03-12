@@ -1,6 +1,7 @@
 #ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 
+#include "../../../../../cmake-build-debug/sysroot/usr/include/extensions/tuple.hpp"
 #include "defines.hpp"
 #include "extensions/types.hpp"
 #include "multiboot2/extensions.hpp"
@@ -40,6 +41,8 @@ class LoaderMemoryManager
 
     static constexpr u32 kMaxPmlTablesToStore = 100;  ///< Maximum number of PML tables to store.
     static constexpr u32 kNumEntriesPerPml    = 512;  ///< Number of entries in a PML table.
+    static constexpr u32 kMaxProtectedMemoryRegions =
+        1e2;  ///< Maximum number of protected memory regions.
 
     /**
      * @brief Maximum number of memory map entries the loader can handle.
@@ -51,6 +54,8 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     // Internal Types
     //------------------------------------------------------------------------------//
+
+    private:
     static constexpr u32 kPml4Index = 0;  ///< Must be 0
 
     public:
@@ -321,9 +326,14 @@ class LoaderMemoryManager
      * @param bound Number of bytes to map.
      * @param flags Flags applied to the page table entries.
      */
-    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags);
+    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags = 0);
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
+
+    /**
+     * @brief Enum to specify the direction of the walk.
+     */
+    enum class WalkDirection { Ascending, Descending };
 
     /**
      * @brief Iterates over each free memory region.
@@ -333,24 +343,30 @@ class LoaderMemoryManager
      * @tparam Callback Type of the callback satisfying FreeMemoryRegionCallback.
      * @param callback Function to invoke for each free memory region.
      */
-    template <FreeMemoryRegionCallback Callback>
+    template <
+        FreeMemoryRegionCallback Callback, WalkDirection direction = WalkDirection::Descending>
     void WalkFreeMemoryRegions(Callback callback)
     {
         TRACE_INFO("Walking free memory regions...");
-        for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            callback(descending_sorted_mmap_entries[i]);
+        switch (direction) {
+            case WalkDirection::Ascending: {
+                for (u32 i = 0; i < num_free_memory_regions_; i++) {
+                    callback(descending_sorted_mmap_entries[i]);
+                }
+                break;
+            }
+            case WalkDirection::Descending: {
+                for (u32 i = num_free_memory_regions_; i > 0; i--) {
+                    callback(descending_sorted_mmap_entries[i - 1]);
+                }
+                break;
+            }
         }
         TRACE_INFO("Free memory regions walk complete!");
     }
 
-    /**
-     * @brief Adds a memory map entry provided by the bootloader.
-     *
-     * Updates the internal free memory regions sorted in descending order.
-     *
-     * @param mmap_entry Pointer to the memory map entry.
-     */
-    void AddMemoryMapEntry(multiboot::memory_map_t* mmap_entry);
+    void AddFreeMemoryRegion(u64 start_addr, u64 end_addr);
+    void MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr);
 
     [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
 
@@ -365,6 +381,8 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     // Private Methods
     //------------------------------------------------------------------------------//
+
+    void UseFrontOfFreeMemoryRegion(u64 region_index, u64 size_bytes);
 
     //------------------------------------------------------------------------------//
     // Private Fields

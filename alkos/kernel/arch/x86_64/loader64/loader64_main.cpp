@@ -9,21 +9,27 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
+#include <definitions/loader32_data.hpp>
+#include <definitions/loader64_data.hpp>
 #include <elf/elf64.hpp>
 #include <extensions/debug.hpp>
-#include <loader_data.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
+#include "definitions/page_buffer.hpp"
 #include "loader64_kernel_constants.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"
 
-/* external init procedures */
-extern "C" void EnterKernel(u64 kernel_entry_addr);
+using namespace loader64;
 
-static bool ValidateLoaderData(LoaderData_32_64_Pass* loader_data)
+/* external init procedures */
+extern "C" void EnterKernel(u64 kernel_entry_addr, LoaderData* loader_data_kernel);
+
+LoaderData loader_data;
+
+static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
 {
     TRACE_INFO("Checking for LoaderData...");
-    if (loader_data == nullptr) {
+    if (loader_data_32_64 == nullptr) {
         TRACE_ERROR("LoaderData check failed!");
         return false;
     }
@@ -45,6 +51,58 @@ static bool ValidateLoaderData(LoaderData_32_64_Pass* loader_data)
     return true;
 }
 
+static u64 GetTotalMemoryBytes(multiboot::tag_mmap_t* mmap_tag)
+{
+    u64 total_memory_bytes = 0;
+    multiboot::WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
+        if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
+            total_memory_bytes += mmap_entry->len;
+        }
+    });
+
+    return total_memory_bytes;
+}
+
+static PageBufferParams_t CreatePageBuffer(
+    u64 address_to_create_at, u64 memory_size_to_handle_bytes, u64 page_size,
+    LoaderMemoryManager* loader_memory_manager
+)
+{
+    PageBufferParams_t page_buffer_params;
+    page_buffer_params.buffer_addr            = address_to_create_at;
+    page_buffer_params.total_size_num_pages   = memory_size_to_handle_bytes / page_size;
+    page_buffer_params.current_size_num_pages = 0;
+
+    page_buffer_params.buffer_addr =
+        AlignUp(page_buffer_params.buffer_addr, loader64::kPhysicalPageSize);
+    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
+        page_buffer_params.buffer_addr, page_buffer_params.total_size_num_pages * sizeof(u64)
+    );
+
+    return page_buffer_params;
+}
+
+static void FillPageBuffer(
+    PageBufferParams_t& page_buffer_params, LoaderMemoryManager* loader_memory_manager
+)
+{
+    loader_memory_manager->WalkFreeMemoryRegions([&](FreeMemoryRegion_t& region) {
+        TRACE_INFO(
+            "Region: 0x%llX-0x%llX, length: %llu kB", region.addr, region.addr + region.length,
+            region.length >> 10
+        );
+        u64* buffer           = reinterpret_cast<u64*>(page_buffer_params.buffer_addr);
+        u64 region_start_addr = AlignUp(region.addr, loader64::kPhysicalPageSize);
+        for (u64 i = region_start_addr; i < region_start_addr + region.length;
+             i += loader64::kPhysicalPageSize) {
+            R_ASSERT(
+                page_buffer_params.current_size_num_pages < page_buffer_params.total_size_num_pages
+            );
+            buffer[page_buffer_params.current_size_num_pages++] = i;
+        }
+    });
+}
+
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
 {
     TRACE_INFO("Finding kernel module in multiboot tags...");
@@ -62,21 +120,21 @@ static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
     return kernel_module;
 }
 
-extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
+extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
 {
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
-    if (!ValidateLoaderData(loader_data)) {
+    if (!ValidateLoaderData(loader_data_32_64)) {
         KernelPanic("LoaderData check failed!");
     }
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
     auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+        reinterpret_cast<LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr);
 
-    auto* kernel_module = FindKernelModule(loader_data->multiboot_info_addr);
+    auto* kernel_module = FindKernelModule(loader_data_32_64->multiboot_info_addr);
 
     TRACE_INFO("Getting ELF bounds...");
     auto [elf_lower_bound, elf_upper_bound] =
@@ -85,10 +143,10 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
     TRACE_SUCCESS("ELF bounds obtained!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    TRACE_INFO(
-        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
-        elf_effective_size >> 10
-    );
+    //    TRACE_INFO(
+    //        "ELF bounds: 0x%llX-0x%llX, size %llu Kb", elf_lower_bound, elf_upper_bound,
+    //        elf_effective_size >> 10
+    //    );
 
     TRACE_INFO(
         "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStartShared
@@ -96,10 +154,20 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
     loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
         kKernelVirtualAddressStartShared, elf_effective_size, 0
     );
+
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    loader_memory_manager->DumpPmlTables();
+
+    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
+        reinterpret_cast<void*>(loader_data_32_64->multiboot_info_addr)
+    );
+
+    u64 total_memory_bytes = GetTotalMemoryBytes(mmap_tag);
+
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+    TRACE_INFO("Total available memory: %llu MB", total_memory_bytes >> 20);
 
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
 
@@ -114,6 +182,5 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    // TODO: Make this pass the loader data - (When implementing physical memory manager)
-    EnterKernel(kernel_entry_point);
+    EnterKernel(kernel_entry_point, &loader_data);
 }

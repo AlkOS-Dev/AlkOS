@@ -3,6 +3,7 @@
 
 #include <extensions/bit.hpp>
 #include <extensions/concepts.hpp>
+#include <extensions/tuple.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include "multiboot2/concepts.hpp"
@@ -72,6 +73,8 @@ Tag* FindTagInMultibootInfo(void* multiboot_info_addr);
  */
 template <MemoryMapCallback Callback>
 void WalkMemoryMap(tag_mmap_t* mmap_tag, Callback callback);
+
+std::tuple<u64, u64> GetMultibootStructureBounds(void* multiboot_info_addr);
 
 }  // namespace multiboot
 

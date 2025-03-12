@@ -2,9 +2,9 @@
 
 #include "arch_utils.hpp"
 #include "defines.hpp"
+#include "definitions/loader32_data.hpp"
 #include "elf/elf64.hpp"
 #include "extensions/debug.hpp"
-#include "loader_data.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"
 #include "terminal.hpp"
 
@@ -29,7 +29,7 @@ extern const char loader_end[];
 extern byte kLoaderPreAllocatedMemory[];
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
-LoaderData_32_64_Pass loader_data;
+loader32::LoaderData loader_data;
 
 static void MultibootCheck(u32 boot_loader_magic)
 {
@@ -77,14 +77,16 @@ static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
     TRACE_SUCCESS("Identity mapping complete!");
 }
 
-static void AddingMemoryToManagerFromMap(
+static void InitializeMemoryManagerWithFreeMemoryRegions(
     LoaderMemoryManager* loader_memory_manager, multiboot::tag_mmap_t* mmap_tag
 )
 {
     TRACE_INFO("Adding available memory regions to memory manager...");
     WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
         if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
-            loader_memory_manager->AddMemoryMapEntry(mmap_entry);
+            loader_memory_manager->AddFreeMemoryRegion(
+                mmap_entry->addr, mmap_entry->addr + mmap_entry->len
+            );
             TRACE_INFO(
                 "Memory region: 0x%llX-0x%llX, length: %llu bytes - Added to memory manager",
                 mmap_entry->addr, mmap_entry->addr + mmap_entry->len, mmap_entry->len
@@ -176,7 +178,15 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     TRACE_INFO("Starting 64-bit kernel...");
 
     auto* mmap_tag = GetMemoryMapTag(multiboot_info_addr);
-    AddingMemoryToManagerFromMap(loader_memory_manager, mmap_tag);
+    InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        static_cast<u64>(reinterpret_cast<u32>(loader_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader_end))
+    );
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
+        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end))
+    );
 
     //////////////////////////// Loading Loader64 Module //////////////////////////
 
@@ -184,12 +194,14 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     u64 kernel_entry_point = LoadLoader64Module(loader64_module);
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
-    loader_data.multiboot_info_addr         = reinterpret_cast<u32>(multiboot_info_addr);
-    loader_data.multiboot_header_start_addr = reinterpret_cast<u32>(multiboot_header_start);
-    loader_data.multiboot_header_end_addr   = reinterpret_cast<u32>(multiboot_header_end);
-    loader_data.loader_start_addr           = reinterpret_cast<u32>(loader_start);
-    loader_data.loader_end_addr             = reinterpret_cast<u32>(loader_end);
-    loader_data.loader_memory_manager_addr  = reinterpret_cast<u64>(loader_memory_manager);
+    loader_data.multiboot_info_addr = static_cast<u64>(reinterpret_cast<u32>(multiboot_info_addr));
+    loader_data.multiboot_header_start_addr =
+        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
+    loader_data.multiboot_header_end_addr =
+        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
+    loader_data.loader32_start_addr        = static_cast<u64>(reinterpret_cast<u32>(loader_start));
+    loader_data.loader32_end_addr          = static_cast<u64>(reinterpret_cast<u32>(loader_end));
+    loader_data.loader_memory_manager_addr = reinterpret_cast<u64>(loader_memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     TODO_WHEN_DEBUGGING_FRAMEWORK

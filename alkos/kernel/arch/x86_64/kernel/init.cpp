@@ -9,10 +9,10 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
+#include <definitions/loader64_data.hpp>
 #include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
 #include <interrupts/idt.hpp>
-#include <loader_data.hpp>
 #include <terminal.hpp>
 
 /* external init procedures */
@@ -21,14 +21,19 @@ extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-extern "C" void PreKernelInit(LoaderDataKernelPass* loader_data)
+extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 {
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
     TRACE_INFO("Checking for LoaderData...");
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("LoaderData Address: 0x%X", loader_data);
+    TRACE_INFO("LoaderData Address: 0x%X", loader_data);
+    TRACE_INFO("LoaderData buffer_addr: 0x%X", loader_data->page_buffer_params.buffer_addr);
+    TRACE_INFO(
+        "LoaderData total_size_num_pages: %llu",
+        loader_data->page_buffer_params.total_size_num_pages
+    );
     // TODO: For now, loader_data is garbage, it's not passed from the 64-bit loader
     //    if (loader_data == nullptr) {
     //        TRACE_ERROR("LoaderData check failed!");

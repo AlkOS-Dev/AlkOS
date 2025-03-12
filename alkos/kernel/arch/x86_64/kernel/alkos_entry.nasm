@@ -23,6 +23,7 @@ alkos.entry:
           mov rsp, stack_top
           mov rbp, rsp
 
+          ; LoaderData *loader_data = rdi
           call PreKernelInit
 
           ; Invoke CXX global constructors
