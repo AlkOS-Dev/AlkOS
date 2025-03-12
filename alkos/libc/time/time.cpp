@@ -15,6 +15,11 @@ double difftime(const time_t time_end, const time_t time_beg)
 time_t time(time_t *arg)
 {
     const auto tv = GetClockValueSysCall(ClockType::kTimeUtc);
+
+    if (arg != nullptr) {
+        *arg = tv.seconds;
+    }
+
     return tv.seconds;
 }
 

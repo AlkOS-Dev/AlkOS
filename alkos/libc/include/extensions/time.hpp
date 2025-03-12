@@ -205,7 +205,7 @@ NODISCARD FAST_CALL std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(
     const u64 days, const bool is_leap_year
 )
 {
-    ASSERT_LT(days, 366);
+    ASSERT_LT(days, 366_u64);
 
     for (size_t idx = 1; idx < 12; ++idx) {
         if (days < kDaysInMonth[is_leap_year][idx]) {
@@ -215,5 +215,7 @@ NODISCARD FAST_CALL std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(
 
     return {12, days - kDaysInMonth[is_leap_year][11] + 1};
 }
+
+tm *localtime_r(const time_t *timer, tm *result, const timezone &tz);
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

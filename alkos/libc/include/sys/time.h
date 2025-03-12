@@ -21,8 +21,8 @@ enum ClockType {
 typedef struct Timezone {
     i16 west_offset_minutes;
     i16 dst_time_offset_minutes;
-    i16 dst_time_start_seconds;
-    i16 dst_time_end_seconds;
+    u16 dst_time_start_seconds;
+    u16 dst_time_end_seconds;
 } timezone;
 
 typedef struct TimeVal {

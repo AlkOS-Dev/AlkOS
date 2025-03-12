@@ -26,7 +26,10 @@ void DayTime::SyncWithHardware()
 
     time_ = QuerySystemTime(tz);
     TRACE_INFO("Synced system time with hardware: %lu, %s", time_, [&] {
-        strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n", localtime(&time_));
+        tm time;
+        strftime(
+            buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n", localtime_r(&time_, &time, GetTimezone())
+        );
         return buffer;
     }());
 }

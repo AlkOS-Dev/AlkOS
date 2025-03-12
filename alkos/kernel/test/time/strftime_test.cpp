@@ -35,7 +35,7 @@ class StrftimeTest : public TestGroupBase
         const auto local_time = time;                                              \
         memset(buffer_, 0, kBufferSize);                                           \
         const size_t result = strftime(buffer_, kBufferSize, format, &local_time); \
-        EXPECT_GT(result, 0);                                                      \
+        EXPECT_GT(result, 0_size);                                                 \
         EXPECT_STREQ(expected, buffer_);                                           \
     }
 };

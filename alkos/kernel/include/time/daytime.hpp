@@ -40,8 +40,8 @@ class DayTime
     timezone time_zone_{
         .west_offset_minutes     = kPolandOffset * kMinutesInHour,
         .dst_time_offset_minutes = 0,
-        .dst_time_start_seconds  = -1,
-        .dst_time_end_seconds    = -1,
+        .dst_time_start_seconds  = static_cast<u16>(-1),
+        .dst_time_end_seconds    = static_cast<u16>(-1),
     };
 };
 TIMING_DECL_END
