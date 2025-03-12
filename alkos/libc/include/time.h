@@ -85,9 +85,6 @@ struct tm *gmtime(const time_t *timer);
 /* C23 */
 struct tm *gmtime_r(const time_t *timer, struct tm *result);
 
-/* C11 */
-struct tm *gmtime_s(const time_t *__restrict__ timer, struct tm *__restrict__ result);
-
 struct tm *localtime(const time_t *timer);
 
 /* C23 */

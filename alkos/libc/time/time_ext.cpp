@@ -148,12 +148,12 @@ i64 CalculateIsoBasedYear(const tm &time)
     return kTmBaseYear + time.tm_year;
 }
 
-tm *localtime_r(const time_t *timer, tm *result, const timezone &time_zone)
+tm *ConvertFromPosixToTm(const time_t *timer, tm *result, const timezone &tz)
 {
     u64 time_left = *timer;
 
     /* add local time offset */
-    time_left += time_zone.west_offset_minutes * kSecondsInMinute;
+    time_left += tz.west_offset_minutes * kSecondsInMinute;
 
     const auto [years, time_left_after_years] = CalculateYearsFromPosix(time_left);
 
@@ -162,7 +162,7 @@ tm *localtime_r(const time_t *timer, tm *result, const timezone &time_zone)
     result->tm_year = static_cast<int>(kPosixToTmYearDiff + years);
 
     /* Check if DST is in effect */
-    const u64 dst_offset = GetDSTOffset(time_left, time_zone);
+    const u64 dst_offset = GetDSTOffset(time_left, tz);
     time_left += dst_offset;
     result->tm_isdst = static_cast<int>(dst_offset != 0_u64 ? 1_u64 : dst_offset);
 

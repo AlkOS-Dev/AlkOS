@@ -50,6 +50,13 @@ static constexpr u16 kDaysInMonth[2][13]{
     {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366},
 };
 
+static constexpr Timezone kUtcTimezone = {
+    .west_offset_minutes     = 0,
+    .dst_time_offset_minutes = 0,
+    .dst_time_start_seconds  = static_cast<u16>(-1),
+    .dst_time_end_seconds    = static_cast<u16>(-1),
+};
+
 // ------------------------------
 // mktime constants
 // ------------------------------
@@ -156,6 +163,6 @@ NODISCARD std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(u64 days, bool is_
 
 NODISCARD u64 GetDSTOffset(u64 time, const timezone &tz);
 
-tm *localtime_r(const time_t *timer, tm *result, const timezone &tz);
+tm *ConvertFromPosixToTm(const time_t *timer, tm *result, const timezone &tz);
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

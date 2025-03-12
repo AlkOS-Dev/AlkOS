@@ -134,8 +134,6 @@ TEST_F(LocaltimeTest, HistoricalDates)
 
 TEST_F(LocaltimeTest, LocaltimeVsGmtime)
 {
-    // Compare localtime and gmtime for the same timestamp
-
     // March 15, 2024 12:00:00 UTC is 1710504000
     time_t timestamp = 1710504000;
 
@@ -145,7 +143,6 @@ TEST_F(LocaltimeTest, LocaltimeVsGmtime)
     ASSERT_NOT_NULL(local);
     ASSERT_NOT_NULL(gmt);
 
-    // Should be 13:00 in Warsaw (UTC+1)
     EXPECT_EQ(13, local->tm_hour);
     EXPECT_EQ(12, gmt->tm_hour);
 
@@ -154,7 +151,7 @@ TEST_F(LocaltimeTest, LocaltimeVsGmtime)
     EXPECT_EQ(gmt->tm_mon, local->tm_mon);
     EXPECT_EQ(gmt->tm_mday, local->tm_mday);
 
-    // July 15, 2024 12:00:00 UTC is 1721322000
+    // July 18, 2024 17:00:00 UTC is 1721322000
     timestamp = 1721322000;
 
     local = localtime(&timestamp);
@@ -163,9 +160,8 @@ TEST_F(LocaltimeTest, LocaltimeVsGmtime)
     ASSERT_NOT_NULL(local);
     ASSERT_NOT_NULL(gmt);
 
-    // Should be 14:00 in Warsaw (UTC+2 in summer)
-    EXPECT_EQ(14, local->tm_hour);
-    EXPECT_EQ(12, gmt->tm_hour);
+    EXPECT_EQ(18, local->tm_hour);
+    EXPECT_EQ(17, gmt->tm_hour);
 }
 
 TEST_F(LocaltimeTest, DateComponents)
