@@ -163,6 +163,19 @@ NODISCARD std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(u64 days, bool is_
 
 NODISCARD u64 GetDSTOffset(u64 time, const timezone &tz);
 
-tm *ConvertFromPosixToTm(const time_t *timer, tm *result, const timezone &tz);
+tm *ConvertFromPosixToTm(time_t timer, tm &result, const timezone &tz);
+
+NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const timezone &time_zone)
+{
+    const time_t t = ConvertDateTimeToPosix(time_ptr, time_zone);
+
+    if (t == kConversionFailed) {
+        errno = EOVERFLOW;
+        return kMktimeFailed;
+    }
+
+    ConvertFromPosixToTm(t, time_ptr, time_zone);
+    return t;
+}
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

@@ -4,7 +4,7 @@
 
 struct tm *gmtime_r(const time_t *timer, struct tm *result)
 {
-    return ConvertFromPosixToTm(timer, result, kUtcTimezone);
+    return ConvertFromPosixToTm(*timer, *result, kUtcTimezone);
 }
 
 struct tm *gmtime(const time_t *timer)

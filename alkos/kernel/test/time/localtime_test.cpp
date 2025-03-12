@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <memory.h>
 #include <time.h>
+#include <extensions/time.hpp>
 #include <test_module/test.hpp>
 
 class LocaltimeTest : public TestGroupBase
@@ -27,7 +28,7 @@ class LocaltimeTest : public TestGroupBase
         /* TODO: Enable dst guess when possible */
         timeinfo.tm_isdst = 0;
 
-        return mktime(&timeinfo);
+        return MkTimeFromTimeZone(timeinfo, kUtcTimezone);
     }
 };
 
@@ -53,10 +54,10 @@ class LocaltimeTest : public TestGroupBase
 TEST_F(LocaltimeTest, BasicLocaltimeConversion)
 {
     time_t timestamp = CreateTimestamp(2024, 1, 15, 12, 30, 45);
-    VERIFY_LOCALTIME(timestamp, 2024, 1, 15, 12, 30, 45, 1);  // Monday
+    VERIFY_LOCALTIME(timestamp, 2024, 1, 15, 13, 30, 45, 1);  // Monday
 
     timestamp = CreateTimestamp(2024, 7, 15, 12, 30, 45);
-    VERIFY_LOCALTIME(timestamp, 2024, 7, 15, 12, 30, 45, 1);  // Monday
+    VERIFY_LOCALTIME(timestamp, 2024, 7, 15, 13, 30, 45, 1);  // Monday
 }
 
 // ------------------------------
@@ -174,7 +175,7 @@ TEST_F(LocaltimeTest, DateComponents)
     EXPECT_EQ(2024 - 1900, timeinfo->tm_year);
     EXPECT_EQ(7 - 1, timeinfo->tm_mon);
     EXPECT_EQ(15, timeinfo->tm_mday);
-    EXPECT_EQ(12, timeinfo->tm_hour);
+    EXPECT_EQ(13, timeinfo->tm_hour);
     EXPECT_EQ(30, timeinfo->tm_min);
     EXPECT_EQ(45, timeinfo->tm_sec);
     EXPECT_EQ(1, timeinfo->tm_wday);    // Monday

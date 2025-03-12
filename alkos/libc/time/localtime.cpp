@@ -8,7 +8,7 @@
 tm *localtime_r(const time_t *timer, tm *result)
 {
     const auto time_zone = GetTimezoneSysCall();
-    return ConvertFromPosixToTm(timer, result, time_zone);
+    return ConvertFromPosixToTm(*timer, *result, time_zone);
 }
 
 tm *localtime(const time_t *timer)

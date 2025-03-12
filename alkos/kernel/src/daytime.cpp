@@ -29,7 +29,7 @@ void DayTime::SyncWithHardware()
         tm time;
         strftime(
             buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n",
-            ConvertFromPosixToTm(&time_, &time, GetTimezone())
+            ConvertFromPosixToTm(time_, time, GetTimezone())
         );
         return buffer;
     }());
