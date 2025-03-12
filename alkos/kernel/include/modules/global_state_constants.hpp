@@ -7,7 +7,7 @@ namespace global_state_constants
 {
 
 enum class SettingsType : size_t {
-    kIsDayTimeClockInUTC,
+    kIsDayTimeClockInUTC, /* Is true when hardware stores datetime as UTC */
     kLastSettingsType,
 };
 
