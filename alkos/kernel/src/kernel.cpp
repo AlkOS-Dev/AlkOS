@@ -1,3 +1,4 @@
+#include <time.h>
 #include <test_module/test_module.hpp>
 
 /* internal includes */
@@ -6,7 +7,17 @@
 #include <init.hpp>
 #include <terminal.hpp>
 
-static void KernelRun() { TerminalWriteString("Hello from AlkOS!\n"); }
+static void KernelRun()
+{
+    static constexpr size_t kBuffSize = 256;
+    char buff[kBuffSize]{};
+
+    const auto t = time(nullptr);
+    strftime(buff, kBuffSize, "Today we have: %Y-%m-%d %H:%M:%S\n", localtime(&t));
+
+    TerminalWriteString("Hello from AlkOS!\n");
+    TerminalWriteString(buff);
+}
 
 extern "C" void KernelMain()
 {

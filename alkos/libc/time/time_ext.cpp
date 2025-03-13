@@ -150,7 +150,7 @@ i64 CalculateIsoBasedYear(const tm &time)
 
 std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(const u64 days, const bool is_leap_year)
 {
-    ASSERT_LT(days, 366_u64);
+    ASSERT_LT(days, is_leap_year ? 366_u64 : 365_u64);
 
     for (size_t idx = 1; idx < 12; ++idx) {
         if (days < kDaysInMonth[is_leap_year][idx]) {
@@ -194,7 +194,7 @@ std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time)
 std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time)
 {
     i64 local_time_left;
-    i64 years                       = time / kSecondsInUsualYear;
+    i64 years                       = static_cast<i64>(time / kSecondsInUsualYear);
     [[maybe_unused]] i64 iterations = 0;
 
     do {
@@ -205,7 +205,7 @@ std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time)
         local_time_left -= years * kSecondsInUsualYear;
 
         /* Adjust by leap years */
-        local_time_left -= years > 2 ? (years - 2) / 4 * kSecondsInDay : 0;
+        local_time_left -= years > 2 ? ((years + 1) / 4) * kSecondsInDay : 0;
 
         /* prepare for next iteration */
         years -= 1;
@@ -254,6 +254,7 @@ tm *ConvertFromPosixToTm(const time_t timer, tm &result, const timezone &tz)
 
     /* Check if DST is in effect */
     const u64 dst_offset = GetDSTOffset(time_left, tz);
+
     time_left += dst_offset;
     result.tm_isdst = static_cast<int>(dst_offset != 0_u64 ? 1_u64 : dst_offset);
 

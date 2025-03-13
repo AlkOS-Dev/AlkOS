@@ -175,6 +175,8 @@ NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const timezone &time
     }
 
     ConvertFromPosixToTm(t, time_ptr, time_zone);
+    ASSERT_EQ(ConvertDateTimeToPosix(time_ptr, time_zone), t);
+
     return t;
 }
 
