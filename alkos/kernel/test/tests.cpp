@@ -1,3 +1,4 @@
+#include <extensions/initializer_list.hpp>
 #include <test_module/test.hpp>
 
 // ------------------------------

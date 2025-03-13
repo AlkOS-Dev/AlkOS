@@ -59,6 +59,17 @@ auto declval() noexcept -> decltype(internal::declval<T>(0))
 // std::swap
 // ------------------------------
 
+template <class T>
+    requires std::is_move_constructible_v<T> && std::is_move_assignable_v<T>
+constexpr void swap(
+    T &a, T &b
+) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
+{
+    T tmp = std::move(a);
+    a     = std::move(b);
+    b     = std::move(tmp);
+}
+
 namespace internal
 {
 template <class T, size_t N>
@@ -75,17 +86,6 @@ TODO_LIBCPP_COMPLIANCE
     for (size_t idx = 0; idx < N; ++idx) {
         std::swap(a[idx], b[idx]);
     }
-}
-
-template <class T>
-    requires std::is_move_constructible_v<T> && std::is_move_assignable_v<T>
-constexpr void swap(
-    T &a, T &b
-) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
-{
-    T tmp = std::move(a);
-    a     = std::move(b);
-    b     = std::move(tmp);
 }
 
 }  // namespace std

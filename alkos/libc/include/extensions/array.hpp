@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <memory.h>
 #include <extensions/cstddef.hpp>
+#include <extensions/initializer_list.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/utility.hpp>
 
@@ -33,14 +34,6 @@ struct array {
     TODO_LIBCPP_COMPLIANCE
     using reverse_iterator       = iterator;
     using const_reverse_iterator = const_iterator;
-
-    // ------------------------------
-    // Constructors
-    // ------------------------------
-
-    constexpr array()                             = default;
-    constexpr ~array()                            = default;
-    constexpr array& operator=(const array& arrr) = default;
 
     // ------------------------------
     // Capacity
@@ -139,7 +132,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr const_pointer data() const noexcept
     {
-        return static_cast<pointer>(mem_);
+        return static_cast<const_pointer>(mem_);
     }
 
     // ------------------------------
@@ -206,8 +199,9 @@ NODISCARD constexpr bool operator==(const array<U, M>& a, const array<U, M>& b) 
         if (a[i] != b[i]) {
             return false;
         }
-        return true;
     }
+
+    return true;
 }
 
 // ------------------------------
