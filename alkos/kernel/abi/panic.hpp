@@ -18,6 +18,7 @@ FAST_CALL void KernelPanicFormat(const char *fmt, Args... args)
     char buffer[kKernelPanicPrintBuffSize];
 
     snprintf(buffer, kKernelPanicPrintBuffSize, fmt, args...);
+
     KernelPanic(buffer);
 }
 

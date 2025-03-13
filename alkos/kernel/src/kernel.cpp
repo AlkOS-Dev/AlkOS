@@ -4,8 +4,8 @@
 /* internal includes */
 #include <assert.h>
 #include <extensions/debug.hpp>
-#include <init.hpp>
-#include <terminal.hpp>
+#include "init.hpp"
+#include "terminal.hpp"
 
 static void KernelRun()
 {

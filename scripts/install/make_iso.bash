@@ -30,9 +30,9 @@ help() {
   echo "Creates a .iso for alkOS from the sysroot directory"
   echo "Where:"
   echo "  iso_file  - Path to the .iso file to create (Positional, must be provided)"
-  echo "  sysroot  - Path to the sysroot directory of alkOS (Positional, must be provided)"
+  echo "  sysroot   - Path to the sysroot directory of alkOS (Positional, must be provided)"
   echo "  --exec_name | -e - Name of the executable in sysroot/boot to boot (default: alkos.kernel)"
-  echo "  --modules  | -m - Space-separated list of modules in sysroot/boot to load with the kernel"
+  echo "  --modules  | -m - Space-separated list of tuples in the form module_name/module_command"
   echo "  --verbose  | -v - Enable verbose output"
 }
 
@@ -90,11 +90,15 @@ process_args() {
   # Replace the kernel executable placeholder in the GRUB contents
   MAKE_ISO_SCRIPT_GRUB_CONTENTS="${MAKE_ISO_SCRIPT_GRUB_CONTENTS//${MAKE_ISO_SCRIPT_BOOTABLE_TOKEN}/${MAKE_ISO_SCRIPT_EXECUTABLE_NAME}}"
 
-  # Replace the modules placeholder in the GRUB contents
+  # Replace the modules placeholder in the GRUB contents with tuple parsing
   if [ -n "$MAKE_ISO_SCRIPT_MODULES_LIST" ]; then
     local MODULES_LINES=""
-    for module in $MAKE_ISO_SCRIPT_MODULES_LIST; do
-      MODULES_LINES+="  module2 /boot/${module}\n"
+    # Iterate over each tuple provided
+    for mod_tuple in $MAKE_ISO_SCRIPT_MODULES_LIST; do
+      # Split the tuple into module_name and module_command based on the '/'
+      module_name="${mod_tuple%%/*}"
+      module_cmd="${mod_tuple##*/}"
+      MODULES_LINES+="  module2 /boot/${module_name} ${module_cmd}\n"
     done
     MAKE_ISO_SCRIPT_GRUB_CONTENTS="${MAKE_ISO_SCRIPT_GRUB_CONTENTS//${MAKE_ISO_SCRIPT_MODULES_TOKEN}/$(echo -e "${MODULES_LINES}")}"
   else

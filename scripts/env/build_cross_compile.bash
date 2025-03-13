@@ -152,6 +152,22 @@ build_binutils() {
     pretty_success "Binutils build completed"
 }
 
+build_libgcc_with_retry_x86_64_fix() {
+    # https://wiki.osdev.org/Building_libgcc_for_mcmodel%3Dkernel
+    pretty_info "Building libgcc with retry logic"
+
+    attempt_runner "Libgcc build failed due to PIC issues" \
+        make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
+    if [ $? -ne 0 ]; then
+        pretty_info "Libgcc build failed due to PIC issues; applying sed fix."
+        sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "${CROSS_COMPILE_BUILD_TARGET}/libgcc/Makefile"
+        pretty_info "Retrying libgcc build after sed fix."
+        attempt_runner "Failed to build libgcc even after applying the sed fix" \
+            make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
+    fi
+    pretty_success "libgcc built correctly"
+}
+
 build_gcc() {
     local gcc_dir="${CROSS_COMPILE_BUILD_BUILD_DIR}/build_gcc"
     local gcc_name="gcc-${CROSS_COMPILE_BUILD_GCC_VER}"
@@ -172,7 +188,11 @@ build_gcc() {
     pretty_success "GCC built correctly"
 
     pretty_info "Building libgcc"
-    runner "Failed to build libgcc" make -j "${PROC_COUNT}" all-target-libgcc
+    if [ "$CROSS_COMPILE_BUILD_TARGET" = "x86_64-elf" ]; then
+            build_libgcc_with_retry_x86_64_fix
+    else
+        runner "Failed to build libgcc" make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-mno-red-zone'
+    fi
     pretty_success "libgcc built correctly"
 
     pretty_info "Installing GCC"
