@@ -19,7 +19,8 @@ class TimeTConversionTest : public TestGroupBase
         const int sec = 0
     )
     {
-        struct tm timeinfo{};
+        struct tm timeinfo;
+
         timeinfo.tm_year = year - 1900;
         timeinfo.tm_mon  = month - 1;
         timeinfo.tm_mday = day;
