@@ -10,7 +10,7 @@
 static void KernelRun()
 {
     static constexpr size_t kBuffSize = 256;
-    char buff[kBuffSize]{};
+    char buff[kBuffSize];
 
     const auto t = time(nullptr);
     strftime(buff, kBuffSize, "Today we have: %Y-%m-%d %H:%M:%S\n", localtime(&t));
