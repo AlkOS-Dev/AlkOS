@@ -65,6 +65,11 @@ TEST_F(MkTimeTest, BasicMkTimeConversion)
     static constexpr time_t summer_expected = 1721066245;  // 2024-07-15 17:57:25 UTC TODO: no dst
 
     VERIFY_MKTIME(t2, summer_expected, 2024, 7, 15, 18, 57, 25, 1);  // Monday
+
+    struct tm t3                           = CreateTimeInfo(2025, 1, 1, 12, 0, 0);
+    static constexpr time_t month_expected = 1735729200;  // 2025-01-01 11:00:00 UTC
+
+    VERIFY_MKTIME(t3, month_expected, 2025, 1, 1, 12, 0, 0, 3);  // Wednesday
 }
 
 // ------------------------------

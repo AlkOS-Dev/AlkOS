@@ -26,9 +26,9 @@ u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone)
     time += static_cast<i64>(years) * kSecondsInUsualYear;
 
     /* adjust by leap years */
-    time += years / 4 * kSecondsInDay;
-    time -= years / 100 * kSecondsInDay;
-    time += years / 400 * kSecondsInDay;
+    time += (years - 1) / 4 * kSecondsInDay;
+    time -= (years - 1) / 100 * kSecondsInDay;
+    time += (300 + years - 1) / 400 * kSecondsInDay;
 
     /* adjust to fit in posix */
     time -= kPosixEpochTmSecondDiff;
@@ -175,13 +175,16 @@ std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time)
         local_time_left -= years * kSecondsInUsualYear;
 
         /* Adjust by leap years div 4 */
-        local_time_left -= years / 4 * kSecondsInDay;
+        local_time_left -= (years - 1) / 4 * kSecondsInDay;
 
         /* Adjust by leap years div 100 */
-        local_time_left += years / 100 * kSecondsInDay;
+        local_time_left += (years - 1) / 100 * kSecondsInDay;
 
         /* Adjust by leap years div 400 */
-        local_time_left -= years / 400 * kSecondsInDay;
+        local_time_left -= (years - 1) / 400 * kSecondsInDay;
+
+        /* Adjust for year 2k */
+        local_time_left -= (years > 0) * kSecondsInDay;
 
         /* prepare for next iteration */
         years -= 1;
