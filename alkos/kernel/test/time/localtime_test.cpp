@@ -146,9 +146,9 @@ TEST_F(TimeTConversionTest, ManualTimestamps)
     VERIFY_LOCALTIME(after_dst_end_utc, 2024, 10, 28, 16, 30, 0, 1);  // Monday
     VERIFY_GMTIME(after_dst_end_utc, 2024, 10, 28, 15, 30, 0, 1);     // Monday
 
-    static constexpr time_t first_day_2k25 = 1735729200;  // 2025-01-01 11:00:00 UTC
-    //    VERIFY_LOCALTIME(first_day_2k25, 2025, 1, 1, 12, 0, 0, 3);  // Wednesday
-    VERIFY_GMTIME(first_day_2k25, 2025, 1, 1, 11, 0, 0, 3);  // Wednesday
+    static constexpr time_t first_day_2k25 = 1735729200;        // 2025-01-01 11:00:00 UTC
+    VERIFY_LOCALTIME(first_day_2k25, 2025, 1, 1, 12, 0, 0, 3);  // Wednesday
+    VERIFY_GMTIME(first_day_2k25, 2025, 1, 1, 11, 0, 0, 3);     // Wednesday
 }
 
 // ------------------------------
