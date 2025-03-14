@@ -16,8 +16,8 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEAS
     # Remove unwanted optimisations
     set(SPEED_FLAGS "${SPEED_FLAGS} -fno-strict-aliasing") # ERROR
     set(SPEED_FLAGS "${SPEED_FLAGS} -fno-omit-frame-pointer") # UNSAFE
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-loop-vectorize") # ERROR
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-slp-vectorize") # ERROR
+    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-loop-vectorize") # ERROR TODO
+    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-slp-vectorize") # ERROR TODO
     set(SPEED_FLAGS "${SPEED_FLAGS} -fno-delete-null-pointer-checks") # UNSAFE
 
     # Add tempting ones
