@@ -295,7 +295,8 @@ class StaticSingleton
     FORCE_INLINE_F static T &Init(Args &&...args) noexcept
     {
         assert(!IsInited() && "Singleton instance already inited!");
-        auto ptr = new (instance_memory_) InstanceHelper(std::forward<Args>(args)...);
+        [[maybe_unused]] auto ptr =
+            new (instance_memory_) InstanceHelper(std::forward<Args>(args)...);
         assert(ptr == reinterpret_cast<T *>(instance_memory_));
 
         is_instance_inited_ = true;

@@ -27,7 +27,7 @@ void FormatTrace(const char* format, Args... args)
 {
     char buffer[kTraceBufferSize];
 
-    const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
+    [[maybe_unused]] const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
     DebugTerminalWrite(buffer);
 }
