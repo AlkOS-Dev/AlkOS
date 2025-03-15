@@ -1,0 +1,22 @@
+name: Regression Tests
+
+on: [push, workflow_dispatch]
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Prepare environment for x86_64
+        uses: ./.github/actions/prepare_env
+        with:
+          arch: x86_64
+
+      - name: Run debug regression tests
+        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
+
+      - name: Run release regression tests
+        run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
