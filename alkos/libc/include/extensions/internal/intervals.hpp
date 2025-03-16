@@ -7,9 +7,14 @@ namespace internal
 {
 
 // TODO : Make Tests
-inline bool Intersects(i64 start1, i64 end1, i64 start2, i64 end2)
+inline bool DoIntervalsOverlap(i64 start1, i64 end1, i64 start2, i64 end2)
 {
     return start1 <= end2 && end1 >= start2;
+}
+
+inline bool DoOpenIntervalsOverlap(i64 start1, i64 end1, i64 start2, i64 end2)
+{
+    return start1 < end2 && end1 > start2;
 }
 
 }  // namespace internal

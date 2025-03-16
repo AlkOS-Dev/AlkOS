@@ -23,6 +23,9 @@ using namespace loader64;
 
 /* external init procedures */
 extern "C" void EnterKernel(u64 kernel_entry_addr, LoaderData* loader_data_kernel);
+extern const char loader64_start[];
+extern const char loader64_end[];
+extern byte kLoaderPreAllocatedMemory[];
 
 LoaderData loader_data;
 
@@ -63,45 +66,47 @@ static u64 GetTotalMemoryBytes(multiboot::tag_mmap_t* mmap_tag)
     return total_memory_bytes;
 }
 
-static PageBufferParams_t CreatePageBuffer(
-    u64 address_to_create_at, u64 memory_size_to_handle_bytes, u64 page_size,
-    LoaderMemoryManager* loader_memory_manager
-)
-{
-    PageBufferParams_t page_buffer_params;
-    page_buffer_params.buffer_addr            = address_to_create_at;
-    page_buffer_params.total_size_num_pages   = memory_size_to_handle_bytes / page_size;
-    page_buffer_params.current_size_num_pages = 0;
-
-    page_buffer_params.buffer_addr =
-        AlignUp(page_buffer_params.buffer_addr, loader64::kPhysicalPageSize);
-    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        page_buffer_params.buffer_addr, page_buffer_params.total_size_num_pages * sizeof(u64)
-    );
-
-    return page_buffer_params;
-}
-
-static void FillPageBuffer(
-    PageBufferParams_t& page_buffer_params, LoaderMemoryManager* loader_memory_manager
-)
-{
-    loader_memory_manager->WalkFreeMemoryRegions([&](FreeMemoryRegion_t& region) {
-        TRACE_INFO(
-            "Region: 0x%llX-0x%llX, length: %llu kB", region.addr, region.addr + region.length,
-            region.length >> 10
-        );
-        u64* buffer           = reinterpret_cast<u64*>(page_buffer_params.buffer_addr);
-        u64 region_start_addr = AlignUp(region.addr, loader64::kPhysicalPageSize);
-        for (u64 i = region_start_addr; i < region_start_addr + region.length;
-             i += loader64::kPhysicalPageSize) {
-            R_ASSERT(
-                page_buffer_params.current_size_num_pages < page_buffer_params.total_size_num_pages
-            );
-            buffer[page_buffer_params.current_size_num_pages++] = i;
-        }
-    });
-}
+// TODO
+// static PageBufferParams_t CreatePageBuffer(
+//    u64 address_to_create_at, u64 memory_size_to_handle_bytes, u64 page_size,
+//    LoaderMemoryManager* loader_memory_manager
+//)
+//{
+//    PageBufferParams_t page_buffer_params;
+//    page_buffer_params.buffer_addr            = address_to_create_at;
+//    page_buffer_params.total_size_num_pages   = memory_size_to_handle_bytes / page_size;
+//    page_buffer_params.current_size_num_pages = 0;
+//
+//    page_buffer_params.buffer_addr =
+//        AlignUp(page_buffer_params.buffer_addr, loader64::kPhysicalPageSize);
+//    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
+//        page_buffer_params.buffer_addr, page_buffer_params.total_size_num_pages * sizeof(u64)
+//    );
+//
+//    return page_buffer_params;
+//}
+//
+// static void FillPageBuffer(
+//    PageBufferParams_t& page_buffer_params, LoaderMemoryManager* loader_memory_manager
+//)
+//{
+//    loader_memory_manager->WalkFreeMemoryRegions([&](FreeMemoryRegion_t& region) {
+//        TRACE_INFO(
+//            "Region: 0x%llX-0x%llX, length: %llu kB", region.addr, region.addr + region.length,
+//            region.length >> 10
+//        );
+//        u64* buffer           = reinterpret_cast<u64*>(page_buffer_params.buffer_addr);
+//        u64 region_start_addr = AlignUp(region.addr, loader64::kPhysicalPageSize);
+//        for (u64 i = region_start_addr; i < region_start_addr + region.length;
+//             i += loader64::kPhysicalPageSize) {
+//            R_ASSERT(
+//                page_buffer_params.current_size_num_pages <
+//                page_buffer_params.total_size_num_pages
+//            );
+//            buffer[page_buffer_params.current_size_num_pages++] = i;
+//        }
+//    });
+//}
 
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
 {
@@ -133,6 +138,18 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
 
     auto* loader_memory_manager =
         reinterpret_cast<LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr);
+    // Loader32 has served its purpose, we can now free its memory
+    loader_memory_manager->AddFreeMemoryRegion(
+        loader_data_32_64->loader32_start_addr, loader_data_32_64->loader32_end_addr
+    );
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(kLoaderPreAllocatedMemory),
+        reinterpret_cast<u64>(kLoaderPreAllocatedMemory) + sizeof(LoaderMemoryManager)
+    );
+    // Loader64 needs to be protected from being overwritten
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
+    );
 
     auto* kernel_module = FindKernelModule(loader_data_32_64->multiboot_info_addr);
 
@@ -178,9 +195,9 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     }
     TRACE_SUCCESS("Module loaded!");
 
-    TRACE_INFO("Loading module at 0x%llX", kernel_entry_point);
+    TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", kernel_entry_point);
 
-    TRACE_INFO("Jumping to 64-bit kernel...");
-
+    // We don't really care about the loader memory manager internals anymore
+    // Kernel will use the unmodified memory manager either way
     EnterKernel(kernel_entry_point, &loader_data);
 }

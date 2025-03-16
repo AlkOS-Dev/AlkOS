@@ -116,12 +116,11 @@ void LoaderMemoryManager::UseFrontOfFreeMemoryRegion(u64 region_index, u64 size_
 }
 void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
 {
-    return;  // TODO
     bool found_intersection = true;
     while (found_intersection) {
         found_intersection = false;
         for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            if (internal::Intersects(
+            if (internal::DoOpenIntervalsOverlap(
                     static_cast<i64>(descending_sorted_mmap_entries[i].addr),
                     static_cast<i64>(
                         descending_sorted_mmap_entries[i].addr +
@@ -129,9 +128,53 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
                     ),
                     static_cast<i64>(start_addr), static_cast<i64>(end_addr)
                 )) {
+                TRACE_INFO(
+                    "Found intersection of 0x%llX-0x%llX with 0x%llX-0x%llX", start_addr, end_addr,
+                    descending_sorted_mmap_entries[i].addr,
+                    descending_sorted_mmap_entries[i].addr +
+                        descending_sorted_mmap_entries[i].length
+                );
                 found_intersection = true;
                 // Delete the not free part of the memory region
-                // TODO
+
+                // Case 0: The memory region completely encompasses the free memory region
+                if (start_addr <= descending_sorted_mmap_entries[i].addr &&
+                    end_addr >= descending_sorted_mmap_entries[i].addr +
+                                    descending_sorted_mmap_entries[i].length) {
+                    available_memory_bytes_ -= descending_sorted_mmap_entries[i].length;
+                    descending_sorted_mmap_entries[i].length = 0;
+                }
+
+                // Case 1: The left part of the memory region is not free
+                if (start_addr < descending_sorted_mmap_entries[i].addr) {
+                    descending_sorted_mmap_entries[i].addr = end_addr;
+                    u64 lost_memory = end_addr - descending_sorted_mmap_entries[i].addr;
+                    R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
+                    descending_sorted_mmap_entries[i].length -= lost_memory;
+                    available_memory_bytes_ -= lost_memory;
+                }
+                // Case 2: The right part of the memory region is not free
+                else if (end_addr > descending_sorted_mmap_entries[i].addr) {
+                    u64 lost_memory = descending_sorted_mmap_entries[i].addr +
+                                      descending_sorted_mmap_entries[i].length - start_addr;
+                    R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
+                    descending_sorted_mmap_entries[i].length =
+                        start_addr - descending_sorted_mmap_entries[i].addr;
+                    available_memory_bytes_ -= lost_memory;
+                }
+
+                // Case 3: The memory region is completely inside the free memory region
+                if (start_addr > descending_sorted_mmap_entries[i].addr &&
+                    end_addr < descending_sorted_mmap_entries[i].addr +
+                                   descending_sorted_mmap_entries[i].length) {
+                    // Split the free memory region into two
+                    AddFreeMemoryRegion(
+                        end_addr, descending_sorted_mmap_entries[i].addr +
+                                      descending_sorted_mmap_entries[i].length
+                    );
+                    descending_sorted_mmap_entries[i].length =
+                        start_addr - descending_sorted_mmap_entries[i].addr;
+                }
             }
         }
     }

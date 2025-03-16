@@ -22,8 +22,8 @@ extern "C" void EnterElf64(
 extern const char multiboot_header_start[];
 extern const char multiboot_header_end[];
 
-extern const char loader_start[];
-extern const char loader_end[];
+extern const char loader32_start[];
+extern const char loader32_end[];
 
 // Pre-allocated memory for the loader memory manager
 extern byte kLoaderPreAllocatedMemory[];
@@ -180,12 +180,18 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     auto* mmap_tag = GetMemoryMapTag(multiboot_info_addr);
     InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
     loader_memory_manager->MarkMemoryAreaNotFree(
-        static_cast<u64>(reinterpret_cast<u32>(loader_start)),
-        static_cast<u64>(reinterpret_cast<u32>(loader_end))
+        static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader32_end))
     );
     loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end))
+    );
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory)),
+        static_cast<u64>(
+            reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(LoaderMemoryManager)
+        )
     );
 
     //////////////////////////// Loading Loader64 Module //////////////////////////
@@ -199,8 +205,8 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
     loader_data.multiboot_header_end_addr =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
-    loader_data.loader32_start_addr        = static_cast<u64>(reinterpret_cast<u32>(loader_start));
-    loader_data.loader32_end_addr          = static_cast<u64>(reinterpret_cast<u32>(loader_end));
+    loader_data.loader32_start_addr = static_cast<u64>(reinterpret_cast<u32>(loader32_start));
+    loader_data.loader32_end_addr   = static_cast<u64>(reinterpret_cast<u32>(loader32_end));
     loader_data.loader_memory_manager_addr = reinterpret_cast<u64>(loader_memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
