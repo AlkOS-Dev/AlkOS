@@ -32,7 +32,7 @@ jobs:
 
       - name: Upload debug logs on failure
         if: steps.debug_tests.outcome != 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debug-logs
           path: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Upload release logs on failure
         if: steps.release_tests.outcome != 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release-logs
           path: |
