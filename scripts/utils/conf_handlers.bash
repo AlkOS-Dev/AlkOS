@@ -12,6 +12,14 @@ verify_conf_file_exists() {
   fi
 }
 
+is_conf_file_present() {
+  if [ -f "${CONF_HANDLER_CONF_FILE_PATH}" ] ; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 verify_conf_var_exists() {
   local var_name="$1"
 

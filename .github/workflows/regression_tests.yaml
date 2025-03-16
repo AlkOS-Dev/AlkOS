@@ -16,7 +16,56 @@ jobs:
           arch: x86_64
 
       - name: Run debug regression tests
-        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
+        id: debug_tests
+        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash x86_64"
+        continue-on-error: true
+
+      - name: Display debug logs on failure
+        if: steps.debug_tests.outcome != 'success'
+        run: |
+          echo "::group::Debug Build Log"
+          cat /tmp/alkOS_build.log || echo "Build log not found"
+          echo "::endgroup::"
+          echo "::group::Debug Regression Log"
+          cat /tmp/alkOS_regression.log || echo "Regression log not found"
+          echo "::endgroup::"
+
+      - name: Upload debug logs on failure
+        if: steps.debug_tests.outcome != 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-logs
+          path: |
+            /tmp/alkOS_build.log
+            /tmp/alkOS_regression.log
+          retention-days: 7
 
       - name: Run release regression tests
-        run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
+        id: release_tests
+        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash x86_64"
+        if: steps.debug_tests.outcome == 'success'
+        continue-on-error: true
+
+      - name: Display release logs on failure
+        if: steps.release_tests.outcome != 'success'
+        run: |
+          echo "::group::Release Build Log"
+          cat /tmp/alkOS_build.log || echo "Build log not found"
+          echo "::endgroup::"
+          echo "::group::Release Regression Log"
+          cat /tmp/alkOS_regression.log || echo "Regression log not found"
+          echo "::endgroup::"
+
+      - name: Upload release logs on failure
+        if: steps.release_tests.outcome != 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-logs
+          path: |
+            /tmp/alkOS_build.log
+            /tmp/alkOS_regression.log
+          retention-days: 7
+
+      - name: Fail workflow if any tests failed
+        if: steps.debug_tests.outcome != 'success' || steps.release_tests.outcome != 'success'
+        run: exit 1
