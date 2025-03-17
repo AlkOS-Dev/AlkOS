@@ -45,6 +45,27 @@ static bool ValidateLoaderData(LoaderData_32_64_Pass* loader_data)
     return true;
 }
 
+static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
+{
+    TRACE_INFO("Finding ACPI tag in multiboot tags...");
+    auto* new_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_new_acpi_t>(
+        reinterpret_cast<void*>(multiboot_info_addr)
+    );
+    if (new_acpi_tag == nullptr) {
+        TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
+        auto* old_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_old_acpi_t>(
+            reinterpret_cast<void*>(multiboot_info_addr)
+        );
+        if (old_acpi_tag == nullptr) {
+            KernelPanic("ACPI1.0 tag not found in multiboot tags!");
+        }
+        new_acpi_tag = reinterpret_cast<multiboot::tag_new_acpi_t*>(old_acpi_tag);
+    }
+    TRACE_SUCCESS("Found ACPI tag in multiboot tags!");
+
+    return new_acpi_tag;
+}
+
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
 {
     TRACE_INFO("Finding kernel module in multiboot tags...");
@@ -97,6 +118,13 @@ extern "C" void MainLoader64(LoaderData_32_64_Pass* loader_data)
         kKernelVirtualAddressStartShared, elf_effective_size, 0
     );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
+
+    TRACE_INFO("Mapping ACPI tables...");
+    auto* acpi_tag = FindAcpiTag(loader_data->multiboot_info_addr);
+    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
+        kACPIRsdpAddrShared, acpi_tag->size - sizeof(multiboot::tag_new_acpi_t), 0
+    );
+    TRACE_SUCCESS("ACPI tables mapped!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
     //    loader_memory_manager->DumpPmlTables();

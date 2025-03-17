@@ -4,6 +4,7 @@
 
 #include <modules/global_state.hpp>
 #include <modules/timing.hpp>
+#include <acpi/acpi.hpp>
 
 void KernelInit()
 {
@@ -15,4 +16,7 @@ void KernelInit()
 
     /* Initialize the timing system */
     TimingModule::Init();
+
+    /* Initialize ACPI */
+    ACPI::Init();
 }
