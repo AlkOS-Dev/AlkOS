@@ -25,10 +25,6 @@ jobs:
         if: failure()
         run: cat /tmp/alkOS_build.log
 
-      - name: Print test logs on failure
-        if: failure()
-        run: cat scripts/tests/test_framework_logs/*
-
       - name: Upload build artifact
         if: always()
         uses: actions/upload-artifact@v4
