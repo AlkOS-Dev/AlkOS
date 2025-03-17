@@ -43,7 +43,7 @@ jobs:
       - name: Run release regression tests
         id: release_tests
         run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64
-        if: steps.debug_tests.outcome == 'success'
+        if: always()
         continue-on-error: true
 
       - name: Display release logs on failure
