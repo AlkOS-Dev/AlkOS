@@ -2,26 +2,26 @@
 #define LIBC_INCLUDE_CTYPE_H_
 
 #include <defines.h>
-#include <stdint.h>
+#include <extensions/types.hpp>
 
-namespace __ctype
+namespace internal
 {
 
-CONSTEXPR uint8_t kLower      = 0x01;
-CONSTEXPR uint8_t kDigit      = 0x10;
-CONSTEXPR uint8_t kUpper      = 0x02;
-CONSTEXPR uint8_t kSpace      = 0x20;
-CONSTEXPR uint8_t kXDigit     = 0x04;
-CONSTEXPR uint8_t kExtraSpace = 0x40;
-CONSTEXPR uint8_t kCntrl      = 0x08;
-CONSTEXPR uint8_t kPunct      = 0x80;
+CONSTEXPR u8 kLower      = 0x01;
+CONSTEXPR u8 kDigit      = 0x10;
+CONSTEXPR u8 kUpper      = 0x02;
+CONSTEXPR u8 kSpace      = 0x20;
+CONSTEXPR u8 kXDigit     = 0x04;
+CONSTEXPR u8 kExtraSpace = 0x40;
+CONSTEXPR u8 kCntrl      = 0x08;
+CONSTEXPR u8 kPunct      = 0x80;
 
-CONSTEXPR uint8_t kAlpha = kLower | kUpper;
-CONSTEXPR uint8_t kAlnum = kAlpha | kDigit;
-CONSTEXPR uint8_t kGraph = kAlnum | kPunct;
-CONSTEXPR uint8_t kPrint = kGraph | kExtraSpace;
+CONSTEXPR u8 kAlpha = kLower | kUpper;
+CONSTEXPR u8 kAlnum = kAlpha | kDigit;
+CONSTEXPR u8 kGraph = kAlnum | kPunct;
+CONSTEXPR u8 kPrint = kGraph | kExtraSpace;
 
-CONSTEXPR uint8_t kLookup[256] = {
+CONSTEXPR u8 kLookup[256] = {
     kCntrl,               /* 0x00     0 NUL */
     kCntrl,               /* 0x01     1 SOH */
     kCntrl,               /* 0x02     2 STX */
@@ -150,183 +150,55 @@ CONSTEXPR uint8_t kLookup[256] = {
     kPunct,               /* 0x7D   125 '}' */
     kPunct,               /* 0x7E   126 '~' */
     kCntrl,               /* 0x7F   127 DEL */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0x80 to 0x8F    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0x90 to 0x9F    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xA0 to 0xAF    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xB0 to 0xBF    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xC0 to 0xCF    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xD0 to 0xDF    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xE0 to 0xEF    */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0, /* 0xF0 to 0xFF    */
 };
 
-}  // namespace __ctype
+}  // namespace internal
 
 BEGIN_DECL_C
 
 CONSTEXPR int isalnum(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kAlnum;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kAlnum;
 }
 CONSTEXPR int isalpha(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kAlpha;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kAlpha;
 }
 CONSTEXPR int iscntrl(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kCntrl;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kCntrl;
 }
 CONSTEXPR int isdigit(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kDigit;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kDigit;
 }
 CONSTEXPR int isgraph(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kGraph;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kGraph;
 }
 CONSTEXPR int islower(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kLower;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kLower;
 }
 CONSTEXPR int isprint(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kPrint;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kPrint;
 }
 CONSTEXPR int ispunct(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kPunct;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kPunct;
 }
 CONSTEXPR int isspace(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kSpace;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kSpace;
 }
 CONSTEXPR int isupper(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kUpper;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kUpper;
 }
 CONSTEXPR int isxdigit(int c)
 {
-    return __ctype::kLookup[static_cast<unsigned char>(c)] & __ctype::kXDigit;
+    return internal::kLookup[static_cast<unsigned char>(c)] & internal::kXDigit;
 }
 CONSTEXPR int tolower(int c) { return isupper(c) ? c + 0x20 : c; }
 CONSTEXPR int toupper(int c) { return islower(c) ? c - 0x20 : c; }
