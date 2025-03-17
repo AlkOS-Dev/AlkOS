@@ -116,3 +116,15 @@ FAIL_TEST(SimpleExceptionTest)
 extern "C" void PreserveCpuStateTest();
 
 TEST(PreserveCpuStateTest) { PreserveCpuStateTest(); }
+
+TEST(LoggingTest)
+{
+    TRACE_INFO("DUPA");
+    TRACE_INFO("DUPA");
+    TRACE_INFO("DUPA");
+    TRACE_INFO("DUPA");
+    TRACE_INFO("DUPA");
+    TRACE_INFO("DUPA");
+
+    ASSERT(false);
+}
