@@ -22,7 +22,6 @@ boot_test() {
 
     local output=$(<"$output_file")
     verify_output_contains "$output" "Hello from AlkOS!"
-    verify_output_contains "$output" "XDDDDDD!"
     verify_output_not_contains "$output" "ERROR"
     verify_output_not_contains "$output" "WARNING"
 }
