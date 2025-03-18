@@ -2,16 +2,19 @@
 #define ALKOS_ALKOS_KERNEL_ABI_MEMORY_MANAGER_HPP_
 
 #include <stddef.h>
+#include <extensions/template_lib.hpp>
 
-namespace memory_manager
+namespace memory
 {
 
-class MemoryManager
+class MemoryManager : TemplateLib::StaticSingletonHelper
 {
-    public:
-    void Initialize();
+    protected:
+    MemoryManager();
 };
 
-}  // namespace memory_manager
+}  // namespace memory
+
+using MemoryManager = TemplateLib::StaticSingleton<memory::MemoryManager>;
 
 #endif  // ALKOS_ALKOS_KERNEL_ABI_MEMORY_MANAGER_HPP_

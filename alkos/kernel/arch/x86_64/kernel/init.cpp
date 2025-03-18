@@ -15,6 +15,7 @@
 #include <interrupts/idt.hpp>
 #include <loader_memory_manager.hpp>
 #include <terminal.hpp>
+#include "memory_management/physical_memory_manager.hpp"
 
 /* external init procedures */
 extern "C" void EnableOSXSave();
@@ -22,10 +23,33 @@ extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-static void InitializePhysicalMemoryManager(loader64::LoaderData* loader_data)
+static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
+    loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
+)
 {
-    auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+    memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};
+    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
+        reinterpret_cast<void*>(loader_data->multiboot_info_addr)
+    );
+    u64 total_memory_bytes = 0;
+    multiboot::WalkMemoryMap(mmap_tag, [&total_memory_bytes](multiboot::memory_map_t* entry) {
+        if (entry->type == multiboot::mmap_entry_t::kMemoryAvailable) {
+            total_memory_bytes += entry->len;
+        }
+    });
+    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize;
+    buffer_info.start_addr =
+        AlignUp(loader_data->kernel_end_addr, memory::PhysicalMemoryManager::kPageSize);
+    buffer_info.size_bytes = pages_required * sizeof(u64);
+
+    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
+        buffer_info.start_addr, buffer_info.size_bytes
+    );
+    TRACE_INFO("Total memory bytes: %llu MB", total_memory_bytes >> 20);
+    TRACE_INFO("Pages required: %llu K", pages_required >> 10);
+
+    loader_data->multiboot_header_end_addr = buffer_info.start_addr + buffer_info.size_bytes;
+    return buffer_info;
 }
 
 extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
@@ -70,4 +94,14 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
+
+    auto* loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+    loader_memory_manager->MarkMemoryAreaNotFree(
+        loader_data->kernel_start_addr, loader_data->kernel_end_addr
+    );
+
+    memory::PhysicalMemoryManager::PageBufferInfo_t page_buffer_info =
+        CreatePageBuffer(loader_data, loader_memory_manager);
+    PhysicalMemoryManager::Init(page_buffer_info);
 }

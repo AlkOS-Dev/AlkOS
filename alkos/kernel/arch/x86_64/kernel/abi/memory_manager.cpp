@@ -1,8 +1,8 @@
 #include "memory_manager.hpp"
 
-namespace memory_manager
+namespace memory
 {
 
-void MemoryManager::Initialize() {}
+MemoryManager::MemoryManager() {}
 
-}  // namespace memory_manager
+}  // namespace memory

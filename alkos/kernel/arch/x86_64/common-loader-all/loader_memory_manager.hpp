@@ -325,7 +325,7 @@ class LoaderMemoryManager
      * @param bound Number of bytes to map.
      * @param flags Flags applied to the page table entries.
      */
-    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags = 0);
+    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 size_bytes, u64 flags = 0);
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
 

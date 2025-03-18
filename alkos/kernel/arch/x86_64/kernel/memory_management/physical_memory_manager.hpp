@@ -5,7 +5,10 @@
 #include <stddef.h>
 #include <multiboot2/extensions.hpp>
 
-class PhysicalMemoryManager
+namespace memory
+{
+
+class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
 {
     private:
     //------------------------------------------------------------------------------//
@@ -13,6 +16,8 @@ class PhysicalMemoryManager
     //------------------------------------------------------------------------------//
 
     public:
+    static constexpr u64 kPageSize = 1 << 12;
+
     struct PageBufferInfo_t {
         u64 size_bytes;
         u64 start_addr;
@@ -22,12 +27,21 @@ class PhysicalMemoryManager
     //------------------------------------------------------------------------------//
     // Class Creation and Destruction
     //------------------------------------------------------------------------------//
-    PhysicalMemoryManager(PageBufferInfo_t buffer_info);
 
+    protected:
+    explicit PhysicalMemoryManager() = default;
+    explicit PhysicalMemoryManager(PageBufferInfo_t page_buffer_info)
+        : page_buffer_info_{page_buffer_info}
+    {
+    }
+
+    public:
     //------------------------------------------------------------------------------//
     // Public Methods
     //------------------------------------------------------------------------------//
-    void Populate(multiboot::tag_mmap_t, u64 kernel_start, u64 kernel_end);
+
+    void SetPageBuffer(PageBufferInfo_t page_buffer_info) { page_buffer_info_ = page_buffer_info; }
+    void PopulatePageBuffer(multiboot::tag_mmap_t, u64 kernel_start, u64 kernel_end);
 
     //------------------------------------------------------------------------------//
     // Public Fields
@@ -42,9 +56,15 @@ class PhysicalMemoryManager
     // Private Fields
     //------------------------------------------------------------------------------//
 
+    PageBufferInfo_t page_buffer_info_;
+
     //------------------------------------------------------------------------------//
     // Helpers
     //------------------------------------------------------------------------------//
 };
+
+}  // namespace memory
+
+using PhysicalMemoryManager = TemplateLib::StaticSingleton<memory::PhysicalMemoryManager>;
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_MANAGEMENT_PHYSICAL_HPP_

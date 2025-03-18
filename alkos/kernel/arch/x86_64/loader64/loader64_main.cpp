@@ -121,5 +121,12 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
 
+    loader_data.kernel_start_addr           = elf_lower_bound;
+    loader_data.kernel_end_addr             = elf_upper_bound;
+    loader_data.loader_memory_manager_addr  = loader_data_32_64->loader_memory_manager_addr;
+    loader_data.multiboot_info_addr         = loader_data_32_64->multiboot_info_addr;
+    loader_data.multiboot_header_start_addr = loader_data_32_64->multiboot_header_start_addr;
+    loader_data.multiboot_header_end_addr   = loader_data_32_64->multiboot_header_end_addr;
+
     EnterKernel(kernel_entry_point, &loader_data);
 }
