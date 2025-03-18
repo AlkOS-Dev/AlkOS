@@ -11,12 +11,12 @@
 #include <arch_utils.hpp>
 #include <definitions/loader32_data.hpp>
 #include <definitions/loader64_data.hpp>
-#include <elf/elf64.hpp>
+#include <elf64.hpp>
 #include <extensions/debug.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include "loader64_kernel_constants.hpp"
-#include "loader_memory_manager/loader_memory_manager.hpp"
+#include "loader_memory_manager.hpp"
 
 using namespace loader64;
 

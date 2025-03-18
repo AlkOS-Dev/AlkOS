@@ -13,6 +13,7 @@
 #include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
 #include <interrupts/idt.hpp>
+#include <loader_memory_manager.hpp>
 #include <terminal.hpp>
 
 /* external init procedures */
@@ -21,13 +22,20 @@ extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
+static void InitializePhysicalMemoryManager(loader64::LoaderData* loader_data)
+{
+    auto* loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+}
+
 extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 {
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
     TRACE_INFO("Checking for LoaderData...");
-    TODO_WHEN_DEBUGGING_FRAMEWORK
     if (loader_data == nullptr) {
         TRACE_ERROR("LoaderData check failed!");
         OsHangNoInterrupts();

@@ -1,7 +1,6 @@
 #ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 
-#include "../../../../../cmake-build-debug/sysroot/usr/include/extensions/tuple.hpp"
 #include "defines.hpp"
 #include "extensions/types.hpp"
 #include "multiboot2/extensions.hpp"

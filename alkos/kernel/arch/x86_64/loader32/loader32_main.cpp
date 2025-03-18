@@ -3,9 +3,9 @@
 #include "arch_utils.hpp"
 #include "defines.hpp"
 #include "definitions/loader32_data.hpp"
-#include "elf/elf64.hpp"
+#include "elf64.hpp"
 #include "extensions/debug.hpp"
-#include "loader_memory_manager/loader_memory_manager.hpp"
+#include "loader_memory_manager.hpp"
 #include "terminal.hpp"
 
 // External functions defined in assembly
