@@ -3,6 +3,7 @@
 #include <constants.hpp>
 #include <extensions/debug.hpp>
 #include <io.hpp>
+#include <todo.hpp>
 
 template <typename T>
 uacpi_status uacpi_kernel_raw_io_write(uacpi_io_addr address, T in_value)
@@ -138,9 +139,9 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
     return uacpi_kernel_raw_io_write(addr + offset, in_value);
 }
 
-void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len) { return nullptr; }
+void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 
-void uacpi_kernel_unmap(void *addr, uacpi_size len) {}
+void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 
 void *uacpi_kernel_alloc(uacpi_size size)
 {

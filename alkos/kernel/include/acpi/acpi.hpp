@@ -15,6 +15,8 @@ uacpi_table GetMADT();
 uacpi_table GetDSDT();
 uacpi_table GetSSDT();
 uacpi_table GetSRAT();
+bool Shutdown();
+bool Reboot();
 
 }  // namespace ACPI
 
