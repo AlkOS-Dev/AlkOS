@@ -28,30 +28,12 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 
     TRACE_INFO("Checking for LoaderData...");
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    TRACE_INFO("LoaderData Address: 0x%X", loader_data);
-    TRACE_INFO("LoaderData buffer_addr: 0x%X", loader_data->page_buffer_params.buffer_addr);
-    TRACE_INFO(
-        "LoaderData total_size_num_pages: %llu",
-        loader_data->page_buffer_params.total_size_num_pages
-    );
-    // TODO: For now, loader_data is garbage, it's not passed from the 64-bit loader
-    //    if (loader_data == nullptr) {
-    //        TRACE_ERROR("LoaderData check failed!");
-    //        OsHangNoInterrupts();
-    //    }
+    if (loader_data == nullptr) {
+        TRACE_ERROR("LoaderData check failed!");
+        OsHangNoInterrupts();
+    }
     TRACE_SUCCESS("LoaderData found!");
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data->multiboot_info_addr);
-    //    TRACE_INFO(
-    //        "LoaderData multiboot_header_start_addr: 0x%X",
-    //        loader_data->multiboot_header_start_addr
-    //    );
-    //    TRACE_INFO(
-    //        "LoaderData multiboot_header_end_addr: 0x%X", loader_data->multiboot_header_end_addr
-    //    );
-    //    TRACE_INFO("LoaderData loader_start_addr: 0x%X", loader_data->loader_start_addr);
-    //    TRACE_INFO("LoaderData loader_end_addr: 0x%X", loader_data->loader_end_addr);
-    //
     TRACE_INFO("Starting pre-kernel initialization");
 
     TRACE_INFO("Starting to setup CPU features");

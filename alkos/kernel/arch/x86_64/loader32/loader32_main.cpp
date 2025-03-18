@@ -205,32 +205,18 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
     loader_data.multiboot_header_end_addr =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
-    loader_data.loader32_start_addr = static_cast<u64>(reinterpret_cast<u32>(loader32_start));
-    loader_data.loader32_end_addr   = static_cast<u64>(reinterpret_cast<u32>(loader32_end));
     loader_data.loader_memory_manager_addr = reinterpret_cast<u64>(loader_memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    // Convert addresses to hexadecimal strings
-    //    TRACE_INFO("LoaderData Address: 0x%X", reinterpret_cast<u32>(&loader_data));
-    //    TRACE_INFO("LoaderData multiboot_info_addr: 0x%X", loader_data.multiboot_info_addr);
-    //    TRACE_INFO(
-    //        "LoaderData multiboot_header_start_addr: 0x%X",
-    //        loader_data.multiboot_header_start_addr
-    //    );
-    //    TRACE_INFO("LoaderData multiboot_header_end_addr: 0x%X",
-    //    loader_data.multiboot_header_end_addr); TRACE_INFO("LoaderData loader_start_addr: 0x%X",
-    //    loader_data.loader_start_addr); TRACE_INFO("LoaderData loader_end_addr: 0x%X",
-    //    loader_data.loader_end_addr);
 
     //////////////////////////// Jumping to 64-bit /////////////////////////
     TRACE_INFO("Jumping to 64-bit loader...");
 
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO(
-    //        "Kernel entry point: 0x%X-%X", static_cast<u32>(kernel_entry_point >> 32),
-    //        static_cast<u32>(kernel_entry_point & k32BitMask)
-    //    );
+    loader_memory_manager->AddFreeMemoryRegion(
+        static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader32_end))
+    );
 
     EnterElf64(
         (void*)static_cast<u32>(kernel_entry_point >> 32),

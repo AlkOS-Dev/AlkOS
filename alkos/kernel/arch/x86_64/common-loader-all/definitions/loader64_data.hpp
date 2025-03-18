@@ -1,14 +1,14 @@
 #ifndef ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_DEFINITIONS_LOADER64_DATA_HPP_
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_DEFINITIONS_LOADER64_DATA_HPP_
 
-#include "definitions/page_buffer.hpp"
-
 /// This is the structure that is passed from the 64 bit loader to the kernel
-/// It is unused for now but will be used in physical memory management update
 namespace loader64
 {
 struct PACK LoaderData {
-    PageBufferParams_t page_buffer_params;
+    u64 multiboot_info_addr;          // The address of the multiboot info structure
+    u64 multiboot_header_start_addr;  // The start address of the multiboot header
+    u64 multiboot_header_end_addr;    // The end address of the multiboot header
+    u64 loader_memory_manager_addr;   // The address of the loader memory manager
 };
 }  // namespace loader64
 

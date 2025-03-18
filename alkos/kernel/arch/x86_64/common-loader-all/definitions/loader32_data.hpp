@@ -16,8 +16,6 @@ struct PACK LoaderData {
     u64 multiboot_info_addr;          // The address of the multiboot info structure
     u64 multiboot_header_start_addr;  // The start address of the multiboot header
     u64 multiboot_header_end_addr;    // The end address of the multiboot header
-    u64 loader32_start_addr;          // The start address of the 32 bit loader
-    u64 loader32_end_addr;            // The end address of the 32 bit loader
     u64 loader_memory_manager_addr;   // The address of the loader memory manager
 };
 
