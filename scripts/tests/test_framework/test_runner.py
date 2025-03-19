@@ -68,9 +68,11 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
 
                 if stdout:
                     log_file.write(stdout)
+                    log_file.flush()
 
                 if stderr:
                     log_file.write(stderr)
+                    log_file.flush()
 
                 raise Exception("Readable failed -> timed out or stream failed")
 
@@ -94,6 +96,7 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
                     alkos.stdin.flush()
 
                 log_file.write(line)
+                log_file.flush()
 
             if alkos.poll() is not None:
                 logging.info("AlkOS dead -> detected on poll -> stopping...")
@@ -112,9 +115,11 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
 
         if stdout:
             log_file.write(stdout)
+            log_file.flush()
 
         if stderr:
             log_file.write(stderr)
+            log_file.flush()
 
     except Exception as e:
         logging.error(f"Unexpected error occurred when waiting for AlkOS: {e}...")

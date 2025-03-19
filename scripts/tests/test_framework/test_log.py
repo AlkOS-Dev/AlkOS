@@ -14,10 +14,6 @@ class TestLog:
         self._dir = SCRIPT_DIRECTORY / ".." / "test_framework_logs" / current_time.strftime("%Y_%m_%d_%H_%M_%S")
         self._dir.mkdir(parents=True, exist_ok=True)
 
-    def save_init_log(self, output: str) -> None:
-        with open(self._dir / "init.log", 'w') as f:
-            f.write(output)
-
     def save_log(self, info: TestInfo, output: str) -> None:
         with open(self.get_log_file_path(info), 'w') as f:
             f.write(output)
@@ -41,6 +37,9 @@ class TestLog:
                     f.write(test_log.read())
                     f.write(f"{"="*80}\n")
                     f.write("\n\n")
+
+    def get_init_log_path(self) -> Path:
+        return Path(self._dir / "init.log")
 
     def get_log_file_path(self, info: TestInfo) -> Path:
         return Path(self._dir / f"{info.test_name}.log")
