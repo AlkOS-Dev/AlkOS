@@ -316,6 +316,11 @@ class LoaderMemoryManager
     void MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags);
 
     /**
+     * @brief Enum to specify the direction of the walk.
+     */
+    enum class WalkDirection { Ascending, Descending };
+
+    /**
      * @brief Maps a virtual memory range to physical memory.
      *
      * Maps the given virtual address range using free memory regions and updates
@@ -325,14 +330,10 @@ class LoaderMemoryManager
      * @param bound Number of bytes to map.
      * @param flags Flags applied to the page table entries.
      */
+    template <WalkDirection direction = WalkDirection::Descending>
     void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 size_bytes, u64 flags = 0);
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
-
-    /**
-     * @brief Enum to specify the direction of the walk.
-     */
-    enum class WalkDirection { Ascending, Descending };
 
     /**
      * @brief Iterates over each free memory region.
@@ -342,27 +343,8 @@ class LoaderMemoryManager
      * @tparam Callback Type of the callback satisfying FreeMemoryRegionCallback.
      * @param callback Function to invoke for each free memory region.
      */
-    template <
-        FreeMemoryRegionCallback Callback, WalkDirection direction = WalkDirection::Descending>
-    void WalkFreeMemoryRegions(Callback callback)
-    {
-        TRACE_INFO("Walking free memory regions...");
-        switch (direction) {
-            case WalkDirection::Ascending: {
-                for (u32 i = 0; i < num_free_memory_regions_; i++) {
-                    callback(descending_sorted_mmap_entries[i]);
-                }
-                break;
-            }
-            case WalkDirection::Descending: {
-                for (u32 i = num_free_memory_regions_; i > 0; i--) {
-                    callback(descending_sorted_mmap_entries[i - 1]);
-                }
-                break;
-            }
-        }
-        TRACE_INFO("Free memory regions walk complete!");
-    }
+    template <WalkDirection direction, FreeMemoryRegionCallback Callback>
+    void WalkFreeMemoryRegions(Callback callback);
 
     void AddFreeMemoryRegion(u64 start_addr, u64 end_addr);
     void MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr);
@@ -381,7 +363,8 @@ class LoaderMemoryManager
     // Private Methods
     //------------------------------------------------------------------------------//
 
-    void UseFrontOfFreeMemoryRegion(u64 region_index, u64 size_bytes);
+    template <WalkDirection direction = WalkDirection::Descending>
+    void UsePartOfFreeMemoryRegion(FreeMemoryRegion_t& region, u64 size_bytes);
 
     //------------------------------------------------------------------------------//
     // Private Fields

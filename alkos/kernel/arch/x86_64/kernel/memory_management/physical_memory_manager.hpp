@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <multiboot2/extensions.hpp>
 
+TODO_WHEN_DEBUGGING_FRAMEWORK
+
 namespace memory
 {
 
@@ -30,18 +32,18 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
 
     protected:
     explicit PhysicalMemoryManager() = default;
-    explicit PhysicalMemoryManager(PageBufferInfo_t page_buffer_info)
-        : page_buffer_info_{page_buffer_info}
-    {
-    }
+    explicit PhysicalMemoryManager(PageBufferInfo_t page_buffer_info);
 
     public:
     //------------------------------------------------------------------------------//
     // Public Methods
     //------------------------------------------------------------------------------//
 
-    void SetPageBuffer(PageBufferInfo_t page_buffer_info) { page_buffer_info_ = page_buffer_info; }
-    void PopulatePageBuffer(multiboot::tag_mmap_t, u64 kernel_start, u64 kernel_end);
+    void SetPageBuffer(PageBufferInfo_t page_buffer_info);
+    void PopulatePageBuffer(multiboot::tag_mmap_t* mmap);
+
+    uintptr_t Allocate();
+    void Free(uintptr_t page_address_physical);
 
     //------------------------------------------------------------------------------//
     // Public Fields
@@ -57,6 +59,8 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
     //------------------------------------------------------------------------------//
 
     PageBufferInfo_t page_buffer_info_;
+    u64* page_buffer_       = nullptr;
+    u64 num_pages_on_stack_ = 0;
 
     //------------------------------------------------------------------------------//
     // Helpers

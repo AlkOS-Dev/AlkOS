@@ -12,6 +12,8 @@ alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)];
 
 LoaderMemoryManager::LoaderMemoryManager()
 {
+    TRACE_INFO("LoaderMemoryManager::LoaderMemoryManager()");
+
     num_pml_tables_stored_ = 1;  ///< The first PML table is the PML4 table
     memset(descending_sorted_mmap_entries, 0, sizeof(descending_sorted_mmap_entries));
     memset(buffer_, 0, sizeof(u64) * kNumEntriesPerPml * kMaxPmlTablesToStore);
@@ -25,64 +27,6 @@ LoaderMemoryManager::LoaderMemoryManager()
     }
 }
 LoaderMemoryManager::PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
-void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
-    u64 virtual_address, u64 size_bytes, u64 flags
-)
-{
-    static constexpr u32 k4kPageSizeBytes = 1 << 12;
-
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("Starting to map virtual memory range using internal memory map...");
-
-    ASSERT(IsAligned(virtual_address, k4kPageSizeBytes));
-    ASSERT_GE(available_memory_bytes_, size_bytes);
-
-    u64 mapped_bytes = 0;
-    while (mapped_bytes < size_bytes) {
-        bool should_stop = true;
-        for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            // Skip exhausted memory regions
-            if (descending_sorted_mmap_entries[i].length < k4kPageSizeBytes) {
-                continue;
-            }
-
-            u64 current_physical_address = descending_sorted_mmap_entries[i].addr;
-            u64 aligned_physical_address = AlignUp(current_physical_address, k4kPageSizeBytes);
-            u32 offset_from_alignment    = aligned_physical_address - current_physical_address;
-
-            if (offset_from_alignment > 0) {
-                if (descending_sorted_mmap_entries[i].length < offset_from_alignment) {
-                    continue;
-                }
-                UseFrontOfFreeMemoryRegion(i, offset_from_alignment);
-            }
-
-            // Try to map as many pages as possible from the current memory region
-            while (descending_sorted_mmap_entries[i].length >= k4kPageSizeBytes &&
-                   mapped_bytes < size_bytes) {
-                const u64 current_virtual_address = virtual_address + mapped_bytes;
-                MapVirtualMemoryToPhysical<PageSize::Page4k>(
-                    current_virtual_address, descending_sorted_mmap_entries[i].addr, flags
-                );
-                should_stop = false;
-
-                UseFrontOfFreeMemoryRegion(i, k4kPageSizeBytes);
-                mapped_bytes += k4kPageSizeBytes;
-            }
-        }
-        if (mapped_bytes >= size_bytes) {
-            break;
-        }
-        // If no memory region was mapped in this iteration, we are out of memory
-        if (should_stop) {
-            break;
-        }
-    }
-    if (mapped_bytes < size_bytes) {
-        KernelPanic("Failed to map virtual memory range using internal memory map - out of memory!"
-        );
-    }
-}
 void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
@@ -104,15 +48,6 @@ void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
         memcpy(&descending_sorted_mmap_entries[i - 1], &temp, sizeof(FreeMemoryRegion_t));
         i--;
     }
-}
-void LoaderMemoryManager::UseFrontOfFreeMemoryRegion(u64 region_index, u64 size_bytes)
-{
-    ASSERT_LT(region_index, num_free_memory_regions_);
-    ASSERT_GE(descending_sorted_mmap_entries[region_index].length, size_bytes);
-
-    descending_sorted_mmap_entries[region_index].addr += size_bytes;
-    descending_sorted_mmap_entries[region_index].length -= size_bytes;
-    available_memory_bytes_ -= size_bytes;
 }
 void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
 {

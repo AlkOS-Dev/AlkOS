@@ -6,6 +6,7 @@
 namespace internal
 {
 
+// TODO : Template
 // TODO : Make Tests
 inline bool DoIntervalsOverlap(i64 start1, i64 end1, i64 start2, i64 end2)
 {

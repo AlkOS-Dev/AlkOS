@@ -37,7 +37,7 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
             total_memory_bytes += entry->len;
         }
     });
-    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize;
+    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
     buffer_info.start_addr =
         AlignUp(loader_data->kernel_end_addr, memory::PhysicalMemoryManager::kPageSize);
     buffer_info.size_bytes = pages_required * sizeof(u64);
@@ -104,4 +104,8 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     memory::PhysicalMemoryManager::PageBufferInfo_t page_buffer_info =
         CreatePageBuffer(loader_data, loader_memory_manager);
     PhysicalMemoryManager::Init(page_buffer_info);
+
+    auto* multiboot_info = reinterpret_cast<multiboot::header_t*>(loader_data->multiboot_info_addr);
+    auto* mmap_tag       = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
+    PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
 }

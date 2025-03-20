@@ -5,6 +5,62 @@
 #include <memory.h>
 #include "extensions/debug.hpp"
 
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
+    u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    constexpr bool is_descending          = direction == WalkDirection::Descending;
+    static constexpr u32 k4kPageSizeBytes = 1 << 12;
+
+    ASSERT(IsAligned(virtual_address, k4kPageSizeBytes));
+    ASSERT_GE(available_memory_bytes_, size_bytes);
+
+    u64 mapped_bytes = 0;
+
+    WalkFreeMemoryRegions<direction>([&](FreeMemoryRegion_t &region) {
+        if (mapped_bytes >= size_bytes) {
+            return;
+        }
+
+        // Skip exhausted memory regions
+        if (region.length < k4kPageSizeBytes) {
+            return;
+        }
+
+        const u64 current_physical_address =
+            is_descending ? region.addr + region.length - k4kPageSizeBytes : region.addr;
+        const u64 offset_from_alignment =
+            is_descending
+                ? current_physical_address - AlignDown(current_physical_address, k4kPageSizeBytes)
+                : AlignUp(current_physical_address, k4kPageSizeBytes) - current_physical_address;
+
+        if (offset_from_alignment > 0) {
+            if (region.length < offset_from_alignment + k4kPageSizeBytes) {
+                return;
+            }
+            UsePartOfFreeMemoryRegion<direction>(region, offset_from_alignment);
+        }
+
+        // Try to map as many pages as possible from the current memory region
+        while (region.length >= k4kPageSizeBytes && mapped_bytes < size_bytes) {
+            const u64 current_virtual_address = virtual_address + mapped_bytes;
+            const u64 physical_address_to_map =
+                is_descending ? (region.addr + region.length - k4kPageSizeBytes) : region.addr;
+            MapVirtualMemoryToPhysical<PageSize::Page4k>(
+                current_virtual_address, physical_address_to_map, flags
+            );
+            UsePartOfFreeMemoryRegion<direction>(region, k4kPageSizeBytes);
+            mapped_bytes += k4kPageSizeBytes;
+        }
+    });
+
+    if (mapped_bytes < size_bytes) {
+        KernelPanic("Failed to map virtual memory range using internal memory map - out of memory!"
+        );
+    }
+}
+
 template <LoaderMemoryManager::PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u64 virtual_address, u64 physical_address, u64 flags
@@ -95,6 +151,45 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     p1_entry[pml1_index].frame    = physical_address >> kPageShift;
     u64 *entry                    = reinterpret_cast<u64 *>(&p1_entry[pml1_index]);
     *entry |= flags;
+}
+template <LoaderMemoryManager::WalkDirection direction, FreeMemoryRegionCallback Callback>
+void LoaderMemoryManager::WalkFreeMemoryRegions(Callback callback)
+{
+    TRACE_INFO("Walking free memory regions...");
+    switch (direction) {
+        case WalkDirection::Ascending: {
+            for (u32 i = num_free_memory_regions_; i > 0; i--) {
+                callback(descending_sorted_mmap_entries[i]);
+            }
+            break;
+        }
+        case WalkDirection::Descending: {
+            for (u32 i = 0; i < num_free_memory_regions_; i++) {
+                callback(descending_sorted_mmap_entries[i - 1]);
+            }
+            break;
+        }
+    }
+    TRACE_INFO("Free memory regions walk complete!");
+}
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, u64 size_bytes)
+{
+    ASSERT_GE(region.length, size_bytes);
+
+    switch (direction) {
+        case WalkDirection::Descending: {
+            region.length -= size_bytes;
+            available_memory_bytes_ -= size_bytes;
+            break;
+        }
+        case WalkDirection::Ascending: {
+            region.addr += size_bytes;
+            region.length -= size_bytes;
+            available_memory_bytes_ -= size_bytes;
+            break;
+        }
+    }
 }
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
