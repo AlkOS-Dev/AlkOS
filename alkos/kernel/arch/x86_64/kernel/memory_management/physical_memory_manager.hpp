@@ -21,8 +21,8 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
     static constexpr u64 kPageSize = 1 << 12;
 
     struct PageBufferInfo_t {
-        u64 size_bytes;
         u64 start_addr;
+        u64 size_bytes;
     };
 
     public:

@@ -1,10 +1,11 @@
 #include <extensions/new.hpp>
 
+#include <extensions/debug.hpp>
+#include <extensions/internal/formats.hpp>
 #include "arch_utils.hpp"
 #include "defines.hpp"
 #include "definitions/loader32_data.hpp"
 #include "elf64.hpp"
-#include "extensions/debug.hpp"
 #include "loader_memory_manager.hpp"
 #include "terminal.hpp"
 
@@ -64,7 +65,7 @@ static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     static constexpr u32 k1GiB = 1 << 30;
-    for (u32 i = 0; i < 4; i++) {
+    for (u32 i = 0; i < 512; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
         loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
             addr_64bit, addr_64bit,
@@ -88,8 +89,9 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
                 mmap_entry->addr, mmap_entry->addr + mmap_entry->len
             );
             TRACE_INFO(
-                "Memory region: 0x%llX-0x%llX, length: %llu bytes - Added to memory manager",
-                mmap_entry->addr, mmap_entry->addr + mmap_entry->len, mmap_entry->len
+                "Memory region: 0x%llX-0x%llX, length: %sB - Added to memory manager",
+                mmap_entry->addr, mmap_entry->addr + mmap_entry->len,
+                FormatMetricUint(mmap_entry->len)
             );
         }
     });
@@ -97,7 +99,8 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
     //    loader_memory_manager->DumpMemoryMap();
 
     TRACE_INFO(
-        "Total available memory: %llu MB", loader_memory_manager->GetAvailableMemoryBytes() >> 20
+        "Total available memory: %s",
+        FormatMetricUint(loader_memory_manager->GetAvailableMemoryBytes())
     );
 }
 

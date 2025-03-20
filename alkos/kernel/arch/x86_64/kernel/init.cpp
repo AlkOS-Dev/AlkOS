@@ -12,6 +12,7 @@
 #include <definitions/loader64_data.hpp>
 #include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
+#include <extensions/internal/formats.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_memory_manager.hpp>
 #include <terminal.hpp>
@@ -27,6 +28,7 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
 )
 {
+    TRACE_INFO("Creating page buffer...");
     memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
         reinterpret_cast<void*>(loader_data->multiboot_info_addr)
@@ -48,10 +50,12 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
         ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
             mmap_tag, buffer_info.start_addr, buffer_info.size_bytes
         );
-    TRACE_INFO("Total memory bytes: %llu MB", total_memory_bytes >> 20);
-    TRACE_INFO("Pages required: %llu K", pages_required >> 10);
+    TRACE_INFO("Total memory bytes: %sB", FormatMetricUint(total_memory_bytes));
+    TRACE_INFO("Pages required: %sB", FormatMetricUint(pages_required));
 
     loader_data->multiboot_header_end_addr = buffer_info.start_addr + buffer_info.size_bytes;
+
+    TRACE_SUCCESS("Page buffer created!");
     return buffer_info;
 }
 

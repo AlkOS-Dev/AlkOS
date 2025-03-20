@@ -1,6 +1,7 @@
 #include <assert.h>
 extern "C" void AvxFloatingPointTest(double a, double b);
 
+// TODO - Use test_module/test.hpp
 void FloatExtensionTest()
 {
     /* simple float test */
