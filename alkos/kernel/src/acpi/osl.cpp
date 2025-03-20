@@ -5,6 +5,108 @@
 #include <io.hpp>
 #include <todo.hpp>
 
+uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
+{
+    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(kACPIRsdpAddr);
+    return UACPI_STATUS_OK;
+}
+
+template<typename T>
+uacpi_status uacpi_kernel_pci_read(uacpi_handle device, uacpi_size offset, T *value)
+{
+    const uacpi_pci_address addr = *static_cast<uacpi_pci_address *>(device);
+    ASSERT(addr.device < 32 && addr.function < 8);
+
+    const auto address = (addr.bus << 16) | (addr.device << 11) |
+        (addr.function << 8) | (offset & 0xFC) | 0x80000000;
+
+    outl(address, 0xCF8);
+
+    offset &= 3; // Address must be 32-bit aligned
+    switch (sizeof(T)) {
+        case 1:
+            *value = inb(0xCFC + offset);
+            break;
+        case 2:
+            *value = inw(0xCFC + offset);
+            break;
+        case 4:
+            *value = inl(0xCFC + offset);
+            break;
+        default:
+            return UACPI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return UACPI_STATUS_OK;
+}
+
+template<typename T>
+uacpi_status uacpi_kernel_pci_write(uacpi_handle device, uacpi_size offset, T value)
+{
+    const uacpi_pci_address addr = *static_cast<uacpi_pci_address *>(device);
+    ASSERT(addr.device < 32 && addr.function < 8);
+
+    const auto address = (addr.bus << 16) | (addr.device << 11) |
+        (addr.function << 8) | (offset & 0xFC) | 0x80000000;
+
+    outl(address, 0xCF8);
+
+    offset &= 3; // Address must be 32-bit aligned
+    switch (sizeof(T)) {
+        case 1:
+            outb(0xCFC + offset, value);
+        break;
+        case 2:
+            outw(0xCFC + offset, value);
+        break;
+        case 4:
+            outl(0xCFC + offset, value);
+        break;
+        default:
+            return UACPI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return UACPI_STATUS_OK;
+}
+
+uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address address, uacpi_handle *out_handle)
+{
+    memcpy(out_handle, &address, sizeof(uacpi_pci_address));
+    return UACPI_STATUS_OK;
+}
+
+void uacpi_kernel_pci_device_close(uacpi_handle handle) {}
+
+uacpi_status uacpi_kernel_pci_read8(uacpi_handle device, uacpi_size offset, uacpi_u8 *value)
+{
+    return uacpi_kernel_pci_read(device, offset, value);
+}
+
+uacpi_status uacpi_kernel_pci_read16(uacpi_handle device, uacpi_size offset, uacpi_u16 *value)
+{
+    return uacpi_kernel_pci_read(device, offset, value);
+}
+
+uacpi_status uacpi_kernel_pci_read32(uacpi_handle device, uacpi_size offset, uacpi_u32 *value)
+{
+    return uacpi_kernel_pci_read(device, offset, value);
+}
+
+uacpi_status uacpi_kernel_pci_write8(uacpi_handle device, uacpi_size offset, uacpi_u8 value)
+{
+    return uacpi_kernel_pci_write(device, offset, value);
+}
+
+uacpi_status uacpi_kernel_pci_write16(uacpi_handle device, uacpi_size offset, uacpi_u16 value)
+{
+    return uacpi_kernel_pci_write(device, offset, value);
+}
+
+uacpi_status uacpi_kernel_pci_write32(uacpi_handle device, uacpi_size offset, uacpi_u32 value)
+{
+    return uacpi_kernel_pci_write(device, offset, value);
+}
+
 template <typename T>
 uacpi_status uacpi_kernel_raw_io_write(uacpi_io_addr address, T in_value)
 {
@@ -49,50 +151,6 @@ uacpi_status uacpi_kernel_raw_io_read(uacpi_io_addr address, T *out_value)
     }
 
     return UACPI_STATUS_OK;
-}
-
-uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
-{
-    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(kACPIRsdpAddr);
-    return UACPI_STATUS_OK;
-}
-
-uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address address, uacpi_handle *out_handle)
-{
-    memcpy(out_handle, &address, sizeof(uacpi_pci_address));
-    return UACPI_STATUS_OK;
-}
-
-void uacpi_kernel_pci_device_close(uacpi_handle handle) {}
-
-uacpi_status uacpi_kernel_pci_read8(uacpi_handle device, uacpi_size offset, uacpi_u8 *value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
-
-uacpi_status uacpi_kernel_pci_read16(uacpi_handle device, uacpi_size offset, uacpi_u16 *value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
-
-uacpi_status uacpi_kernel_pci_read32(uacpi_handle device, uacpi_size offset, uacpi_u32 *value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
-
-uacpi_status uacpi_kernel_pci_write8(uacpi_handle device, uacpi_size offset, uacpi_u8 value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
-
-uacpi_status uacpi_kernel_pci_write16(uacpi_handle device, uacpi_size offset, uacpi_u16 value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
-
-uacpi_status uacpi_kernel_pci_write32(uacpi_handle device, uacpi_size offset, uacpi_u32 value)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
 }
 
 uacpi_status uacpi_kernel_io_map(uacpi_io_addr base, uacpi_size len, uacpi_handle *out_handle)
