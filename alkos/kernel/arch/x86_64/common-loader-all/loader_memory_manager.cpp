@@ -212,7 +212,8 @@ void LoaderMemoryManager::DumpPmlTables()
                     } else {
                         TRACE_INFO(
                             "PML2 entry %u: Present: %llu, Writable: %llu, Frame: 0x%llX", i,
-                            pml2_table[i].present, pml2_table[i].writable, pml2_table[i].frame
+                            pml2_table[i].present, pml2_table[i].writable,
+                            pml2_table[i].frame << kAddressOffset
                         );
                         pml2_addr_stack[pml2_stack_top_idx] =
                             reinterpret_cast<u64 *>(pml2_table[i].frame << kAddressOffset);

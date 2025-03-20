@@ -25,6 +25,14 @@ template <typename Callback>
 concept FreeMemoryRegionCallback =
     requires(Callback cb, FreeMemoryRegion_t& region) { cb(region); };
 
+template <typename Provider>
+concept FreeRegionProvider = requires(Provider provider) {
+    {
+        provider([](FreeMemoryRegion_t& region) {
+        })
+    } -> std::convertible_to<void>;
+};
+
 /**
  * @brief LoaderMemoryManager manages the mapping of virtual to physical memory.
  *
@@ -320,18 +328,13 @@ class LoaderMemoryManager
      */
     enum class WalkDirection { Ascending, Descending };
 
-    /**
-     * @brief Maps a virtual memory range to physical memory.
-     *
-     * Maps the given virtual address range using free memory regions and updates
-     * the paging structures.
-     *
-     * @param virtual_address Starting virtual address (must be page aligned).
-     * @param bound Number of bytes to map.
-     * @param flags Flags applied to the page table entries.
-     */
     template <WalkDirection direction = WalkDirection::Descending>
     void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 size_bytes, u64 flags = 0);
+
+    template <WalkDirection direction = WalkDirection::Descending>
+    void MapVirtualRangeUsingExternalMemoryMap(
+        multiboot::tag_mmap_t* mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags = 0
+    );
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
 
@@ -362,6 +365,11 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     // Private Methods
     //------------------------------------------------------------------------------//
+
+    template <FreeRegionProvider Provider, WalkDirection direction = WalkDirection::Descending>
+    void MapVirtualRangeUsingFreeRegionProvider(
+        Provider provider, u64 virtual_address, u64 size_bytes, u64 flags = 0
+    );
 
     template <WalkDirection direction = WalkDirection::Descending>
     void UsePartOfFreeMemoryRegion(FreeMemoryRegion_t& region, u64 size_bytes);

@@ -64,7 +64,7 @@ static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     static constexpr u32 k1GiB = 1 << 30;
-    for (u32 i = 0; i < 512; i++) {
+    for (u32 i = 0; i < 4; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
         loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
             addr_64bit, addr_64bit,

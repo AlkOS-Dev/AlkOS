@@ -101,9 +101,13 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_INFO(
         "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStartShared
     );
-    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        kKernelVirtualAddressStartShared, elf_effective_size, 0
-    );
+    auto* multiboot_info =
+        reinterpret_cast<multiboot::header_t*>(loader_data_32_64->multiboot_info_addr);
+    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
+    loader_memory_manager
+        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
+            mmap_tag, kKernelVirtualAddressStartShared, elf_effective_size, 0
+        );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);

@@ -37,14 +37,17 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
             total_memory_bytes += entry->len;
         }
     });
-    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
-    buffer_info.start_addr =
-        AlignUp(loader_data->kernel_end_addr, memory::PhysicalMemoryManager::kPageSize);
+    u64 pages_required     = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
+    buffer_info.start_addr = AlignUp(
+        loader_data->kernel_end_addr + memory::PhysicalMemoryManager::kPageSize,
+        memory::PhysicalMemoryManager::kPageSize
+    );
     buffer_info.size_bytes = pages_required * sizeof(u64);
 
-    loader_memory_manager->MapVirtualRangeUsingInternalMemoryMap(
-        buffer_info.start_addr, buffer_info.size_bytes
-    );
+    loader_memory_manager
+        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
+            mmap_tag, buffer_info.start_addr, buffer_info.size_bytes
+        );
     TRACE_INFO("Total memory bytes: %llu MB", total_memory_bytes >> 20);
     TRACE_INFO("Pages required: %llu K", pages_required >> 10);
 

@@ -5,9 +5,9 @@
 #include <memory.h>
 #include "extensions/debug.hpp"
 
-template <LoaderMemoryManager::WalkDirection direction>
-void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
-    u64 virtual_address, u64 size_bytes, u64 flags
+template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
+    Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
     constexpr bool is_descending          = direction == WalkDirection::Descending;
@@ -18,7 +18,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
 
     u64 mapped_bytes = 0;
 
-    WalkFreeMemoryRegions<direction>([&](FreeMemoryRegion_t &region) {
+    provider([&](FreeMemoryRegion_t &region) {
         if (mapped_bytes >= size_bytes) {
             return;
         }
@@ -59,6 +59,68 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
         KernelPanic("Failed to map virtual memory range using internal memory map - out of memory!"
         );
     }
+}
+
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
+    u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    const auto internal_provider = [this](auto callback) {
+        WalkFreeMemoryRegions<direction>(callback);
+    };
+    MapVirtualRangeUsingFreeRegionProvider<decltype(internal_provider), direction>(
+        internal_provider, virtual_address, size_bytes, flags
+    );
+}
+
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
+    multiboot::tag_mmap_t *mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    using namespace multiboot;
+    R_ASSERT_NOT_NULL(mmap_tag);
+
+    uintptr_t descending_sorted_address_buffer[kMaxMemoryMapEntries];
+    u64 address_count = 0;
+    WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t *entry) {
+        if (entry->type != multiboot::mmap_entry_t::kMemoryAvailable) {
+            return;
+        }
+        descending_sorted_address_buffer[address_count++] = reinterpret_cast<uintptr_t>(entry);
+        u64 i                                             = address_count - 1;
+        while (i > 0 &&
+               descending_sorted_address_buffer[i] > descending_sorted_address_buffer[i - 1]) {
+            uintptr_t tmp                           = descending_sorted_address_buffer[i - 1];
+            descending_sorted_address_buffer[i - 1] = descending_sorted_address_buffer[i];
+            descending_sorted_address_buffer[i]     = tmp;
+            i--;
+        }
+    });
+
+    const auto external_provider = [&](auto callback) {
+        if constexpr (direction == WalkDirection::Descending) {
+            for (u64 i = 0; i < address_count; i++) {
+                auto *entry = reinterpret_cast<mmap_entry_t *>(descending_sorted_address_buffer[i]);
+                FreeMemoryRegion_t region{entry->addr, entry->len};
+                callback(region);
+                entry->addr = region.addr;
+                entry->addr = region.length;
+            }
+        } else {
+            for (u64 i = address_count - 1; i > 0; i--) {
+                auto *entry = reinterpret_cast<mmap_entry_t *>(descending_sorted_address_buffer[i]);
+                FreeMemoryRegion_t region{entry->addr, entry->len};
+                callback(region);
+                entry->addr = region.addr;
+                entry->addr = region.length;
+            }
+        }
+    };
+    MapVirtualRangeUsingFreeRegionProvider<decltype(external_provider), direction>(
+        external_provider, virtual_address, size_bytes, flags
+    );
 }
 
 template <LoaderMemoryManager::PageSize page_size>
@@ -159,13 +221,13 @@ void LoaderMemoryManager::WalkFreeMemoryRegions(Callback callback)
     switch (direction) {
         case WalkDirection::Ascending: {
             for (u32 i = num_free_memory_regions_; i > 0; i--) {
-                callback(descending_sorted_mmap_entries[i]);
+                callback(descending_sorted_mmap_entries[i - 1]);
             }
             break;
         }
         case WalkDirection::Descending: {
             for (u32 i = 0; i < num_free_memory_regions_; i++) {
-                callback(descending_sorted_mmap_entries[i - 1]);
+                callback(descending_sorted_mmap_entries[i]);
             }
             break;
         }
