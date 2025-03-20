@@ -1,19 +1,24 @@
 #ifndef ALKOS_ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_INTERVALS_HPP_
 #define ALKOS_ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_INTERVALS_HPP_
 
-#include <extensions/types.hpp>
+#include "extensions/type_traits.hpp"
+#include "extensions/types.hpp"
 
 namespace internal
 {
 
-// TODO : Template
 // TODO : Make Tests
-inline bool DoIntervalsOverlap(i64 start1, i64 end1, i64 start2, i64 end2)
+
+template <typename NumT>
+    requires std::is_arithmetic_v<NumT>
+inline bool DoIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
 {
     return start1 <= end2 && end1 >= start2;
 }
 
-inline bool DoOpenIntervalsOverlap(i64 start1, i64 end1, i64 start2, i64 end2)
+template <typename NumT>
+    requires std::is_arithmetic_v<NumT>
+inline bool DoOpenIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
 {
     return start1 < end2 && end1 > start2;
 }
