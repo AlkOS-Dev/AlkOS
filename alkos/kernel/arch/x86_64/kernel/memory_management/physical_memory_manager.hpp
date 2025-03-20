@@ -45,6 +45,8 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
     uintptr_t Allocate();
     void Free(uintptr_t page_address_physical);
 
+    [[nodiscard]] u64 GetNumFreePages() const { return num_pages_on_stack_; }
+
     void DumpPagebuffer();
 
     //------------------------------------------------------------------------------//
@@ -61,7 +63,7 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
     //------------------------------------------------------------------------------//
 
     PageBufferInfo_t page_buffer_info_;
-    u64* page_buffer_       = nullptr;
+    uintptr_t* page_buffer_ = nullptr;
     u64 num_pages_on_stack_ = 0;
 
     //------------------------------------------------------------------------------//
