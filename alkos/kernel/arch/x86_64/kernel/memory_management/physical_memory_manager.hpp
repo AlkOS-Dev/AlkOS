@@ -45,6 +45,8 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
     uintptr_t Allocate();
     void Free(uintptr_t page_address_physical);
 
+    void DumpPagebuffer();
+
     //------------------------------------------------------------------------------//
     // Public Fields
     //------------------------------------------------------------------------------//

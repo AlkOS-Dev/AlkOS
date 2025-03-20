@@ -42,6 +42,16 @@ uintptr_t PhysicalMemoryManager::Allocate()
 }
 void PhysicalMemoryManager::Free(uintptr_t page_address_physical)
 {
+    ASSERT_LT(num_pages_on_stack_, ~0ULL);
     page_buffer_[num_pages_on_stack_++] = page_address_physical;
+}
+void PhysicalMemoryManager::DumpPagebuffer()
+{
+    TRACE_INFO("PhysicalMemoryManager::DumpPageBuffer()");
+    TRACE_INFO("STACK TOP");
+    for (u64 i = num_pages_on_stack_; i > 0; i--) {
+        TRACE_INFO("%lld: %llX", i, page_buffer_[i - 1]);
+    }
+    TRACE_INFO("STACK BOTTOM");
 }
 }  // namespace memory
