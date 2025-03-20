@@ -1,5 +1,5 @@
-#ifndef KERNEL_ARCH_X86_64_DRIVERS_ACPI_HPP_
-#define KERNEL_ARCH_X86_64_DRIVERS_ACPI_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_HPP_
 
 #include <uacpi/tables.h>
 
@@ -20,4 +20,4 @@ bool Reboot();
 
 }  // namespace ACPI
 
-#endif  // KERNEL_ARCH_X86_64_DRIVERS_ACPI_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_HPP_
