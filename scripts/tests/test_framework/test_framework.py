@@ -42,9 +42,15 @@ def test_framework_run(spec: TestRunSpec) -> None:
 
     logging.info("Finished running tests.")
     if failed_tests:
+
+        # Display test summary
         print_red(f"[FAILED] {len(failed_tests)} failed tests:")
         for test in failed_tests:
             print_red(f"  {test.test_name}")
+
+        # Create a concatenated log of failed tests
+        file_logger.save_concatenated_failed_tests_logs(failed_tests)
+
         exit(1)
     else:
         print_green(f"[PASSED] All tests ({len(tests_to_run)}) passed")
