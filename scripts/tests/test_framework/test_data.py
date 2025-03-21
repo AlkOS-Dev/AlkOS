@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 
+
 @dataclass
 class TestRunSpec:
     alkos_path: str
@@ -13,6 +14,7 @@ class TestRunSpec:
 class TestInfo:
     test_name: str
 
+
 class TestState(IntEnum):
     UNKNOWN = 0
     SUCCESS = 1
@@ -21,6 +23,7 @@ class TestState(IntEnum):
     ERROR_FAIL_AFTER_SUCCESS = 4
     ERROR_FAIL_AFTER_FAIL = 5
     ERROR_SUCCESS_AFTER_FAIL = 6
+
 
 MAX_ALKOS_BOOT_TIME = 10
 MAX_ALKOS_WAIT_SYNC_TIME = 10

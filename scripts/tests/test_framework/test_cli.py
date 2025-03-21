@@ -62,8 +62,8 @@ def process_args(args: list[str]) -> TestRunSpec:
 
     spec = TestRunSpec(
         alkos_path=raw_args.path,
-        filters= [item.strip() for item in raw_args.filter] if raw_args.filter else [],
-        blocks= [item.strip() for item in raw_args.block] if raw_args.block else [],
+        filters=[item.strip() for item in raw_args.filter] if raw_args.filter else [],
+        blocks=[item.strip() for item in raw_args.block] if raw_args.block else [],
         display_tests_only=raw_args.display,
         verbose=raw_args.verbose
     )

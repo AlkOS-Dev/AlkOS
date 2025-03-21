@@ -1,10 +1,10 @@
+import logging
 from contextlib import contextmanager
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import TextIO
 
 from .test_data import TestInfo
-import logging
 
 SCRIPT_DIRECTORY = Path(__file__).parent.resolve()
 
@@ -57,10 +57,10 @@ class TestLog:
         with open(self._dir / "failed_tests.log", 'w') as f:
             for test in failed_tests:
                 with open(self.get_log_file_path(test), 'r') as test_log:
-                    f.write(f"{"="*80}\n")
+                    f.write(f"{"=" * 80}\n")
                     f.write(f"Test: {test.test_name}\n\n\n")
                     f.write(test_log.read())
-                    f.write(f"{"="*80}\n")
+                    f.write(f"{"=" * 80}\n")
                     f.write("\n\n")
 
     def get_init_log_path(self) -> Path:

@@ -1,8 +1,7 @@
+import logging
 import select
 import subprocess
 import time
-from typing import TextIO
-import logging
 
 from .test_commands import TEST_COMMAND_SPECIFIER, TEST_SUCCESS_COMMAND, TEST_FAIL_COMMAND, TEST_DISPLAY_STOP_COMMAND_IN
 from .test_data import MAX_ALKOS_TEST_TIME, MAX_ALKOS_WAIT_SYNC_TIME, TestState

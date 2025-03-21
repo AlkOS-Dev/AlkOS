@@ -1,13 +1,13 @@
-from .test_data import TestRunSpec, TestInfo, MAX_ALKOS_BOOT_TIME, MAX_ALKOS_WAIT_SYNC_TIME
-from .test_log import TestLog
-from .test_commands import TEST_DISPLAY_STOP_COMMAND_IN, TEST_DISPLAY_STOP_COMMAND_OUT, TEST_COMMAND_SPECIFIER, \
-    TEST_NAME_SPECIFIER
-
-import subprocess
-import time
-import select
 import fnmatch
 import logging
+import select
+import subprocess
+import time
+
+from .test_commands import TEST_DISPLAY_STOP_COMMAND_IN, TEST_DISPLAY_STOP_COMMAND_OUT, TEST_COMMAND_SPECIFIER, \
+    TEST_NAME_SPECIFIER
+from .test_data import TestRunSpec, TestInfo, MAX_ALKOS_BOOT_TIME, MAX_ALKOS_WAIT_SYNC_TIME
+from .test_log import TestLog
 
 
 def _run_alkos_and_get_output(path: str, logger: TestLog) -> str:
@@ -107,6 +107,7 @@ def _run_alkos_and_get_output(path: str, logger: TestLog) -> str:
 
         logging.info("AlkOS test parsing finished successfully")
         return buf
+
 
 def _parse_test_relevant_messages(output: str) -> list[str]:
     lines = output.splitlines()
