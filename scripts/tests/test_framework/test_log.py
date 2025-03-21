@@ -1,18 +1,43 @@
 from contextlib import contextmanager
 from pathlib import Path
 from datetime import datetime
+from typing import TextIO
+
 from .test_data import TestInfo
 import logging
 
 SCRIPT_DIRECTORY = Path(__file__).parent.resolve()
 
 
+class TestFile:
+    _file: TextIO
+    _verbose: bool
+
+    def __init__(self, filename: str, verbose: bool) -> None:
+        self._file = open(filename, 'w')
+        self._verbose = verbose
+
+    def close(self) -> None:
+        self._file.flush()
+        self._file.close()
+
+    def write(self, text: str) -> None:
+        self._file.write(text)
+        self._file.flush()
+
+        if self._verbose:
+            print(text, end='')
+
+
 class TestLog:
+    _verbose: bool
+
     def __init__(self) -> None:
         current_time = datetime.now()
 
         self._dir = SCRIPT_DIRECTORY / ".." / "test_framework_logs" / current_time.strftime("%Y_%m_%d_%H_%M_%S")
         self._dir.mkdir(parents=True, exist_ok=True)
+        self._verbose = False
 
     def save_log(self, info: TestInfo, output: str) -> None:
         with open(self.get_log_file_path(info), 'w') as f:
@@ -22,7 +47,7 @@ class TestLog:
     def save_log_with_context(self, info: TestInfo):
         file_path = self.get_log_file_path(info)
 
-        file = open(file_path, 'w')
+        file = TestFile(str(file_path), self._verbose)
         try:
             yield file
         finally:
@@ -44,6 +69,7 @@ class TestLog:
     def get_log_file_path(self, info: TestInfo) -> Path:
         return Path(self._dir / f"{info.test_name}.log")
 
-    def setup_logging(self) -> None:
+    def setup_logging(self, verbose: bool) -> None:
         logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s",
                             filename=self._dir / 'exec_log.log', )
+        self._verbose = verbose

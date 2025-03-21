@@ -16,7 +16,7 @@ def _display_tests(tests: list[TestInfo]) -> None:
 
 def test_framework_run(spec: TestRunSpec) -> None:
     file_logger = TestLog()
-    file_logger.setup_logging()
+    file_logger.setup_logging(spec.verbose)
 
     logging.info("Test framework started...")
     logging.info("Parsing tests from alkos...")

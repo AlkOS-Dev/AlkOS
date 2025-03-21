@@ -7,7 +7,7 @@ import logging
 from .test_commands import TEST_COMMAND_SPECIFIER, TEST_SUCCESS_COMMAND, TEST_FAIL_COMMAND, TEST_DISPLAY_STOP_COMMAND_IN
 from .test_data import MAX_ALKOS_TEST_TIME, MAX_ALKOS_WAIT_SYNC_TIME, TestState
 from .test_data import TestInfo
-from .test_log import TestLog
+from .test_log import TestLog, TestFile
 from .test_utils import print_red, print_green
 
 
@@ -35,7 +35,7 @@ def _process_test_state(test_state: TestState, line: str) -> TestState:
     return test_state
 
 
-def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
+def _run_test(path: str, info: TestInfo, log_file: TestFile) -> bool:
     state = TestState.UNKNOWN
     should_process = True
 
@@ -68,11 +68,9 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
 
                 if stdout:
                     log_file.write(stdout)
-                    log_file.flush()
 
                 if stderr:
                     log_file.write(stderr)
-                    log_file.flush()
 
                 raise Exception("Readable failed -> timed out or stream failed")
 
@@ -96,7 +94,6 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
                     alkos.stdin.flush()
 
                 log_file.write(line)
-                log_file.flush()
 
             if alkos.poll() is not None:
                 logging.info("AlkOS dead -> detected on poll -> stopping...")
@@ -115,11 +112,9 @@ def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
 
         if stdout:
             log_file.write(stdout)
-            log_file.flush()
 
         if stderr:
             log_file.write(stderr)
-            log_file.flush()
 
     except Exception as e:
         logging.error(f"Unexpected error occurred when waiting for AlkOS: {e}...")
