@@ -39,6 +39,10 @@ class TestLog:
         self._dir.mkdir(parents=True, exist_ok=True)
         self._verbose = False
 
+    def save_init_log(self, output: str) -> None:
+        with open(self._dir / "init.log", 'w') as f:
+            f.write(output)
+
     def save_log(self, info: TestInfo, output: str) -> None:
         with open(self.get_log_file_path(info), 'w') as f:
             f.write(output)
