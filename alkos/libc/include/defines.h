@@ -23,6 +23,9 @@ static constexpr bool kIsKernel = false;
 // Attribute macros
 // ------------------------------
 
+/* Declare a structure */
+#define STRUCT typedef struct
+
 /* Prevent the compiler from adding padding to structures */
 #define PACK __attribute__((__packed__))
 
@@ -50,8 +53,10 @@ static constexpr bool kIsKernel = false;
 
 /* Convert a token into a string */
 #define STRINGIFY(x) #x
+
 /* Apply STRINGIFY to expand macros before conversion */
 #define TOSTRING(x) STRINGIFY(x)
+
 /* Creates a COMPILER LEVEL memory barrier forcing optimizer to not re-order memory accesses */
 #define BARRIER() __asm__ volatile("" : : : "memory")
 
