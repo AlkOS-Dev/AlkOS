@@ -31,7 +31,6 @@ add_library(arch.common.all.64 OBJECT
 add_library(arch.common.all.32 OBJECT
         ${COMMON_SOURCES}
         ${COMMON_ASM_32}
-        memory/page_tables_layout.hpp
 )
 
 ############################# Linking libraries ##############################
