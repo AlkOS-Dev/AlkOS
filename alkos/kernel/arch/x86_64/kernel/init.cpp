@@ -14,9 +14,9 @@
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
 #include <interrupts/idt.hpp>
-#include <loader_memory_manager.hpp>
+#include <memory/loader_memory_manager.hpp>
 #include <terminal.hpp>
-#include "memory_management/physical_memory_manager.hpp"
+#include "memory/physical_memory_manager.hpp"
 
 /* external init procedures */
 extern "C" void EnableOSXSave();
@@ -25,7 +25,7 @@ extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
-    loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
+    loader64::LoaderData* loader_data, memory::LoaderMemoryManager* loader_memory_manager
 )
 {
     TRACE_INFO("Creating page buffer...");
@@ -46,10 +46,10 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     );
     buffer_info.size_bytes = pages_required * sizeof(u64);
 
-    loader_memory_manager
-        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, buffer_info.start_addr, buffer_info.size_bytes
-        );
+    loader_memory_manager->MapVirtualRangeUsingExternalMemoryMap<
+        memory::LoaderMemoryManager::WalkDirection::Descending>(
+        mmap_tag, buffer_info.start_addr, buffer_info.size_bytes
+    );
     TRACE_INFO("Total memory bytes: %sB", FormatMetricUint(total_memory_bytes));
     TRACE_INFO("Pages required: %sB", FormatMetricUint(pages_required));
 
@@ -103,7 +103,7 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     TRACE_INFO("Finished cpu features setup.");
 
     auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
     loader_memory_manager->MarkMemoryAreaNotFree(
         loader_data->kernel_start_addr, loader_data->kernel_end_addr
     );

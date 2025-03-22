@@ -5,6 +5,9 @@
 #include <memory.h>
 #include "extensions/debug.hpp"
 
+namespace memory
+{
+
 template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
 void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
@@ -123,7 +126,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     );
 }
 
-template <LoaderMemoryManager::PageSize page_size>
+template <PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u64 virtual_address, u64 physical_address, u64 flags
 )
@@ -254,4 +257,5 @@ void LoaderMemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, 
     }
 }
 
+}  // namespace memory
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_

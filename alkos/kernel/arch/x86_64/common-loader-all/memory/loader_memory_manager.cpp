@@ -8,7 +8,10 @@
 
 // Note: The alignment here is a strict requirement for the PML tables and if the
 // initial object is not aligned, the PML tables will not be aligned either.
-alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)];
+alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(memory::LoaderMemoryManager)];
+
+namespace memory
+{
 
 LoaderMemoryManager::LoaderMemoryManager()
 {
@@ -26,7 +29,7 @@ LoaderMemoryManager::LoaderMemoryManager()
         }
     }
 }
-LoaderMemoryManager::PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
+PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
 void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
@@ -247,3 +250,5 @@ void LoaderMemoryManager::DumpPmlTables()
         }
     }
 }
+
+}  // namespace memory
