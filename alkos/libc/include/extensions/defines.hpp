@@ -12,6 +12,13 @@ static constexpr bool kIsDebugBuild = true;
 
 #define NODISCARD [[nodiscard]]
 
+/* 1 or nothing */
+#define VARIADIC_MACRO_HAS_ARGS(...) __VA_OPT__(1)
+
+/* 1 if has args, 0 if not */
+#define BOOL_VARIADIC_MACRO_HAS_ARGS(...) \
+    static_cast<bool>(VARIADIC_MACRO_HAS_ARGS(__VA_ARGS__) + 0)
+
 constexpr size_t operator""_size(const char* str, const size_t len)
 {
     size_t result = 0;
