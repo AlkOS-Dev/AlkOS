@@ -142,7 +142,6 @@ static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
 
 extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
 {
-    //    OsHang();
     TerminalInit();
     TRACE_INFO("In 32 bit mode");
 

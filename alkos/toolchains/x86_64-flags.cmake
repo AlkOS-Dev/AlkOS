@@ -11,24 +11,27 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fno-inline -fstack-protector-all")
     set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -g -F dwarf")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEASE")
-    set(SPEED_FLAGS "-O2")
+    set(RELEASE_FLAGS "-O2")
+
+    # ERROR = should not be used in kernel code at all due to low level issues
+    # UNSAFE = may work but it would need adaption in code and possibly will introduce strange behavior if not adapted.
 
     # Remove unwanted optimisations
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-strict-aliasing") # ERROR
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-omit-frame-pointer") # UNSAFE
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-loop-vectorize") # ERROR TODO
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-tree-slp-vectorize") # ERROR TODO
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fno-delete-null-pointer-checks") # UNSAFE
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-strict-aliasing") # ERROR
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-tree-loop-vectorize") # ERROR
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-tree-slp-vectorize") # ERROR
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-omit-frame-pointer") # UNSAFE
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fno-delete-null-pointer-checks") # UNSAFE
 
     # Add tempting ones
-    set(SPEED_FLAGS "${SPEED_FLAGS} -floop-unroll-and-jam")
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fgcse-after-reload")
-    set(SPEED_FLAGS "${SPEED_FLAGS} -ftree-partial-pre")
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fipa-cp-clone") # Allows function cloning - might be unhandy in debugging
-    set(SPEED_FLAGS "${SPEED_FLAGS} -fsplit-loops")
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -floop-unroll-and-jam")
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fgcse-after-reload")
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -ftree-partial-pre")
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fipa-cp-clone") # Allows function cloning - might be unhandy in debugging
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fsplit-loops")
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SPEED_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPEED_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${RELEASE_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${RELEASE_FLAGS}")
 else ()
     message(FATAL_ERROR "UNKNOWN BUILD TYPE: ${CMAKE_BUILD_TYPE}")
 endif ()
