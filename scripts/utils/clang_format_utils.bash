@@ -8,7 +8,7 @@ declare -a CLANG_FORMAT_UTILS_DIRS=(
 find_files() {
   local files=()
   for dir in "${CLANG_FORMAT_UTILS_DIRS[@]}"; do
-    files+=($(find "$dir" -type f \( -iname "*.cpp" -o -iname "*.c" -o -iname "*.h" -o -iname "*.hpp" \)))
+    files+=($(find "$dir" -type f \( -iname "*.cpp" -o -iname "*.c" -o -iname "*.h" -o -iname "*.hpp" -o -iname "*.tpp" \)))
   done
   echo "${files[@]}"
 }
