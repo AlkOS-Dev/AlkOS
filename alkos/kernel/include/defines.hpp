@@ -1,5 +1,5 @@
-#ifndef KERNEL_INCLUDE_DEFINES_HPP_
-#define KERNEL_INCLUDE_DEFINES_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_DEFINES_HPP_
+#define ALKOS_KERNEL_INCLUDE_DEFINES_HPP_
 
 /* defines from libc */
 #include <extensions/defines.hpp>
@@ -26,4 +26,4 @@ static constexpr bool kIsAlkosTestBuild = true;
 static constexpr bool kIsAlkosTestBuild = false;
 #endif  // __ALKOS_TESTS_BUILD__
 
-#endif  // KERNEL_INCLUDE_DEFINES_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_DEFINES_HPP_

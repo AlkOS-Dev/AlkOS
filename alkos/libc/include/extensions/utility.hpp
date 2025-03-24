@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/type_traits.hpp>
@@ -46,4 +46,4 @@ auto declval() noexcept -> decltype(internal::declval<T>(0))
     return internal::declval<T>();
 }
 }  // namespace std
-#endif  // LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
