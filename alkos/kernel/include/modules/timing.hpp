@@ -1,5 +1,5 @@
-#ifndef ALKOS_INCLUDE_MODULES_TIMING_HPP_
-#define ALKOS_INCLUDE_MODULES_TIMING_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
+#define ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
 
 #include <extensions/template_lib.hpp>
 
@@ -22,4 +22,4 @@ class TimingModule : TemplateLib::StaticSingletonHelper
 
 using TimingModule = TemplateLib::StaticSingleton<internal::TimingModule>;
 
-#endif  // ALKOS_INCLUDE_MODULES_TIMING_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_

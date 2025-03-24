@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_TYPES_H_
-#define LIBC_INCLUDE_TYPES_H_
+#ifndef ALKOS_LIBC_INCLUDE_TYPES_H_
+#define ALKOS_LIBC_INCLUDE_TYPES_H_
 
 #include <limits.h>
 #include <stdint.h>
@@ -38,4 +38,4 @@ typedef unsigned char uptrdiff_t;
 
 typedef size_t rsize_t;
 
-#endif  // LIBC_INCLUDE_TYPES_H_
+#endif  // ALKOS_LIBC_INCLUDE_TYPES_H_

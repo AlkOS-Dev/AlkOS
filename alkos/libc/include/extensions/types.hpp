@@ -1,5 +1,5 @@
-#ifndef KERNEL_INCLUDE_TYPES_HPP_
-#define KERNEL_INCLUDE_TYPES_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPES_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPES_HPP_
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -22,4 +22,4 @@ typedef int64_t i64;
 typedef float f32;
 typedef double f64;
 
-#endif  // KERNEL_INCLUDE_TYPES_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPES_HPP_

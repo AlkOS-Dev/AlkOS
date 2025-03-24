@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_ABI_TIMERS_HPP_
-#define ARCH_X86_64_ABI_TIMERS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_TIMERS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_TIMERS_HPP_
 
 #include <time.h>
 #include <drivers/cmos/rtc.hpp>
@@ -22,4 +22,4 @@ WRAP_CALL time_t QuerySystemTime()
     return ConvertDateTimeToSeconds(rtcTime, TimingModule::Get().GetDayTime().GetTimezone());
 }
 
-#endif  // ARCH_X86_64_ABI_TIMERS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_TIMERS_HPP_

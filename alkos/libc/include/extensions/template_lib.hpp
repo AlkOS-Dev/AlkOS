@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_TEMPLATE_LIB_HPP_
-#define LIBC_INCLUDE_TEMPLATE_LIB_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
 
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
@@ -273,4 +273,4 @@ template <typename T>
 unsigned char StaticSingleton<T>::instance_memory_[sizeof(T)]{};
 
 }  // namespace TemplateLib
-#endif  // LIBC_INCLUDE_TEMPLATE_LIB_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

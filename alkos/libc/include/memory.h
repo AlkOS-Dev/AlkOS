@@ -1,5 +1,5 @@
-#ifndef ALKOS_MALLOC_H_
-#define ALKOS_MALLOC_H_
+#ifndef ALKOS_LIBC_INCLUDE_MEMORY_H_
+#define ALKOS_LIBC_INCLUDE_MEMORY_H_
 
 #include <defines.h>
 #include <stddef.h>
@@ -56,4 +56,4 @@ int memcmp(const void *s1, const void *s2, size_t n);
 
 END_DECL_C
 
-#endif  // ALKOS_MALLOC_H_
+#endif  // ALKOS_LIBC_INCLUDE_MEMORY_H_

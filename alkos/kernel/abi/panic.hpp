@@ -1,5 +1,5 @@
-#ifndef ALKOS_INCLUDE_PANIC_HPP_
-#define ALKOS_INCLUDE_PANIC_HPP_
+#ifndef ALKOS_KERNEL_ABI_PANIC_HPP_
+#define ALKOS_KERNEL_ABI_PANIC_HPP_
 
 #include <stdio.h>
 
@@ -22,4 +22,4 @@ FAST_CALL void KernelPanicFormat(const char *fmt, Args... args)
     KernelPanic(buffer);
 }
 
-#endif  // ALKOS_INCLUDE_PANIC_HPP_
+#endif  // ALKOS_KERNEL_ABI_PANIC_HPP_
