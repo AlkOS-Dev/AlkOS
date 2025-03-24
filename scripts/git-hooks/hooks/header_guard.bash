@@ -61,7 +61,7 @@ process_file() {
 
     END {
       if (endif_line) {
-        lines[endif_line] = "#endif // " guard
+        lines[endif_line] = "#endif  // " guard
       }
 
       for (i = 1; i <= NR; i++) {
