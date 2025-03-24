@@ -133,10 +133,6 @@ static multiboot::tag_mmap_t* GetMemoryMapTag(void* multiboot_info_addr)
 static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
 {
     byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
-    byte* loader_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
-
-    auto [elf_lower_bound, elf_upper_bound] = elf::GetElf64ProgramBounds(loader_module_start_addr);
-    u64 elf_effective_size                  = elf_upper_bound - elf_lower_bound;
 
     TRACE_INFO("Loading module...");
     u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);

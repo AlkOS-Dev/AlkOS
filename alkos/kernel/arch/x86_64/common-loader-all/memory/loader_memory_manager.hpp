@@ -32,7 +32,7 @@ concept FreeMemoryRegionCallback =
 template <typename Provider>
 concept FreeRegionProvider = requires(Provider provider) {
     {
-        provider([](FreeMemoryRegion_t& region) {
+        provider([](FreeMemoryRegion_t&) {
         })
     } -> std::convertible_to<void>;
 };
