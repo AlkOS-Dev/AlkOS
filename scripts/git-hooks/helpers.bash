@@ -18,7 +18,18 @@ runner () {
 }
 
 find_text_files() {
-  find "$1" -type f -print0 | xargs -0 -n 1 file 2> /dev/null | grep "text" | cut -d ":" -f1
+  local target_path="$1"; shift
+  local exluded_paths=("$@")
+
+  # Construct the find command with excluded paths
+  find_command=(find "$target_path" -print0 \( )
+  for path in "${exluded_paths[@]}"; do
+      find_command+=(-path "$path" -o)
+  done
+  unset 'find_command[${#find_command[@]}-1]'
+  find_command+=(\) -prune -o -name '*.*')
+
+  "${find_command[@]}" | xargs -0 -n 1 file 2> /dev/null | grep "text" | cut -d ":" -f1
 }
 
 filter_text_files() {
