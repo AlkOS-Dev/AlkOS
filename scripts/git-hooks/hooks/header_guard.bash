@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 HEADER_GUARD_HOOK_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 HEADER_GUARD_HOOK_TARGET_DIR="$HEADER_GUARD_HOOK_DIR/../../.."
@@ -86,26 +87,30 @@ process_file() {
   mv "$temp_file" "$path"
 }
 
-# Use readarray to store null-delimited file names in an array
-readarray -d '' staged_files < <(printf "%s\0" "$@" | grep -z -i -E "$CPP_HEADER_PATTERN")
+main() {
+  # Use readarray to store null-delimited file names in an array
+  readarray -d '' staged_files < <(printf "%s\0" "$@" | grep -z -i -E "$CPP_HEADER_PATTERN")
 
-# Exit early if no C++ headers are staged
-if [ ${#staged_files[@]} -eq 0 ]; then
-  log "No staged C++ headers to process"
-  exit 0
-fi
+  # Exit early if no C++ headers are staged
+  if [ ${#staged_files[@]} -eq 0 ]; then
+    log "No staged C++ headers to process"
+    exit 0
+  fi
 
-# Display the files that will be processed
-log "Following files will be processed:"
-printf '%s\n' "${staged_files[@]}"
+  # Display the files that will be processed
+  log "Following files will be processed:"
+  printf '%s\n' "${staged_files[@]}"
 
-# Run function in parallel using null-delimited input
-export -f process_file
-export HEADER_GUARD_HOOK_TARGET_DIR
-printf '%s\0' "${staged_files[@]}" | xargs -0 -P "$NUM_CORES" -n 1 bash -c 'process_file "$1"' {} || exit 1
+  # Run function in parallel using null-delimited input
+  export -f process_file
+  export HEADER_GUARD_HOOK_TARGET_DIR
+  printf '%s\0' "${staged_files[@]}" | xargs -0 -P "$NUM_CORES" -n 1 bash -c 'process_file "$1"' {} || exit 1
 
-# Re-add the files to the staging area
-printf '%s\0' "${staged_files[@]}" | xargs -0 git add || {
-  log "Failed to re-add files to the staging area"
-  exit 1
+  # Re-add the files to the staging area
+  printf '%s\0' "${staged_files[@]}" | xargs -0 git add || {
+    log "Failed to re-add files to the staging area"
+    exit 1
+  }
 }
+
+main "$@"

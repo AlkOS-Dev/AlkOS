@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 END_OF_FILE_HOOK_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$END_OF_FILE_HOOK_DIR/../helpers.bash"
@@ -38,25 +39,29 @@ process_file() {
   fi
 }
 
-# Use readarray to store newline-delimited file names in an array
-readarray -t staged_files < <(filter_text_files "$@" || true)
+main() {
+  # Use readarray to store newline-delimited file names in an array
+  readarray -t staged_files < <(filter_text_files "$@" || true)
 
-# Exit early if no text files are staged
-if [ ${#staged_files[@]} -eq 0 ]; then
-  log "No staged text files to format"
-  exit 0
-fi
+  # Exit early if no text files are staged
+  if [ ${#staged_files[@]} -eq 0 ]; then
+    log "No staged text files to format"
+    exit 0
+  fi
 
-# Display the files that will be processed
-log "Following files will be processed:"
-printf '%s\n' "${staged_files[@]}"
+  # Display the files that will be processed
+  log "Following files will be processed:"
+  printf '%s\n' "${staged_files[@]}"
 
-# Run function in parallel using null-delimited input
-export -f process_file
-printf '%s\0' "${staged_files[@]}" | xargs -0 -P "$NUM_CORES" -n 1 bash -c 'process_file "$1"' {} || exit 1
+  # Run function in parallel using null-delimited input
+  export -f process_file
+  printf '%s\0' "${staged_files[@]}" | xargs -0 -P "$NUM_CORES" -n 1 bash -c 'process_file "$1"' {} || exit 1
 
-# Re-add the files to the staging area
-printf '%s\0' "${staged_files[@]}" | xargs -0 git add || {
-  log "Failed to re-add files to the staging area"
-  exit 1
+  # Re-add the files to the staging area
+  printf '%s\0' "${staged_files[@]}" | xargs -0 git add || {
+    log "Failed to re-add files to the staging area"
+    exit 1
+  }
 }
+
+main "$@"

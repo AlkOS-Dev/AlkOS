@@ -4,17 +4,21 @@ set -e
 PRE_COMMIT_HOOK_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$PRE_COMMIT_HOOK_DIR/helpers.bash"
 
-# Use readarray to store null-delimited file names in an array
-readarray -d '' staged_files < <(git diff --cached -z --name-only --diff-filter=ACM || true)
+main() {
+  # Use readarray to store null-delimited file names in an array
+  readarray -d '' staged_files < <(git diff --cached -z --name-only --diff-filter=ACM || true)
 
-# Exit early if no files are staged
-if [ ${#staged_files[@]} -eq 0 ]; then
-  log "No staged files to process"
-  exit 0
-fi
+  # Exit early if no files are staged
+  if [ ${#staged_files[@]} -eq 0 ]; then
+    log "No staged files to process"
+    exit 0
+  fi
 
-for file in "$PRE_COMMIT_HOOK_DIR"/hooks/*.bash; do
-  runner "$file" "${staged_files[@]}"
-done
+  for file in "$PRE_COMMIT_HOOK_DIR"/hooks/*.bash; do
+    runner "$file" "${staged_files[@]}"
+  done
 
-log "All hooks executed successfully"
+  log "All hooks executed successfully"
+}
+
+main "$@"
