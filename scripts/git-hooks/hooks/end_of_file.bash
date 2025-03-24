@@ -27,6 +27,7 @@ process_file() {
     echo "" >> "$filename"
   else
     temp_file=$(mktemp)
+    chmod --reference="$filename" "$temp_file"
 
     # Remove trailing empty lines
     sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' -e '/\n$/ba' "$filename" > "$temp_file"

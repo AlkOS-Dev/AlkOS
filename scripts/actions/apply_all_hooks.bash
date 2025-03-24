@@ -6,9 +6,7 @@ source "$APPLY_ALL_HOOKS_DIR/../git-hooks/helpers.bash"
 declare -a APPLY_ALL_HOOKS_EXCLUDE_PATHS=(
     "$APPLY_ALL_HOOKS_DIR/../../build"
     "$APPLY_ALL_HOOKS_DIR/../../tools"
-    "$APPLY_ALL_HOOKS_DIR/../../alkos/cmake-*"
     "$APPLY_ALL_HOOKS_DIR/../../.git"
-    "$APPLY_ALL_HOOKS_DIR/../../.idea"
 )
 
 # ===============================
@@ -29,11 +27,13 @@ echo "Applying all hooks"
 readarray -t files < <(find_text_files "$TARGET_FOLDER" "${APPLY_ALL_HOOKS_EXCLUDE_PATHS[@]}")
 
 # Remove files excluded from git
+tmp=()
 for file in "${files[@]}"; do
-    if git check-ignore -q "$file"; then
-        files=("${files[@]/$file}")
+    if ! git check-ignore -q "$file"; then
+        tmp+=("$file")
     fi
 done
+files=("${tmp[@]}")
 
 # Run all hooks
 for hook in "$HOOKS_DIR"/*; do

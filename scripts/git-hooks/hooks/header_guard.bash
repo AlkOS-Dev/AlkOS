@@ -31,6 +31,7 @@ process_file() {
   header_guard="${header_guard}_"
 
   temp_file=$(mktemp)
+  chmod --reference="$path" "$temp_file"
 
   # Replace existing header guards if they exist
   awk -v guard="$header_guard" '
