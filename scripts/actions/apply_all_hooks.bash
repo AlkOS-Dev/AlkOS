@@ -7,6 +7,8 @@ declare -a APPLY_ALL_HOOKS_EXCLUDE_PATHS=(
     "$APPLY_ALL_HOOKS_DIR/../../build"
     "$APPLY_ALL_HOOKS_DIR/../../tools"
     "$APPLY_ALL_HOOKS_DIR/../../alkos/cmake-*"
+    "$APPLY_ALL_HOOKS_DIR/../../.git"
+    "$APPLY_ALL_HOOKS_DIR/../../.idea"
 )
 
 # ===============================
@@ -23,12 +25,20 @@ NUM_CORES=$(nproc || echo 1)
 
 echo "Applying all hooks"
 
-FILES="$(find_text_files "$TARGET_FOLDER" "${APPLY_ALL_HOOKS_EXCLUDE_PATHS[@]}")"
+# Find all text files
+readarray -t files < <(find_text_files "$TARGET_FOLDER" "${APPLY_ALL_HOOKS_EXCLUDE_PATHS[@]}")
 
+# Remove files excluded from git
+for file in "${files[@]}"; do
+    if git check-ignore -q "$file"; then
+        files=("${files[@]/$file}")
+    fi
+done
+
+# Run all hooks
 for hook in "$HOOKS_DIR"/*; do
     if [ -f "$hook" ]; then
-        echo "Executing hook: $(basename "$hook")"
-        echo "$FILES" | xargs -d '\n' -P "$NUM_CORES" -I {} bash "$hook" "{}"
+      runner "$hook" "${files[@]}"
     fi
 done
 
