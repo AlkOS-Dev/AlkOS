@@ -21,6 +21,20 @@ verify_conf_var_exists() {
   fi
 }
 
+conf_file_read_var() {
+  local var_name="$1"
+  local default_value="$2"
+  local var_value
+
+  if verify_conf_var_exists "${var_name}"; then
+    var_value="${!var_name}"
+  else
+    var_value="${default_value}"
+  fi
+
+  echo "${var_value}"
+}
+
 source_conf_file() {
   verify_conf_file_exists
 

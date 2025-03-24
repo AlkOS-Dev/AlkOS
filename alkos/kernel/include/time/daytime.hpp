@@ -1,5 +1,5 @@
-#ifndef ALKOS_INCLUDE_TIME_DAYTIME_HPP_
-#define ALKOS_INCLUDE_TIME_DAYTIME_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
+#define ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
 
 #include <sys/time.h>
 #include <time.h>
@@ -54,4 +54,4 @@ class DayTime
     };
 };
 
-#endif  // ALKOS_INCLUDE_TIME_DAYTIME_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_

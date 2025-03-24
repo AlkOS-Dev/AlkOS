@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_COMMON_ABI_DEBUG_TERMINAL_HPP_
-#define ARCH_X86_64_COMMON_ABI_DEBUG_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_
 
 /* internal includes */
 #include <assert.h>
@@ -22,4 +22,4 @@ WRAP_CALL size_t DebugTerminalReadLineArch_(char *const buffer, const size_t buf
     return QemuTerminalReadLine(buffer, buffer_size);
 }
 
-#endif  // ARCH_X86_64_COMMON_ABI_DEBUG_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_

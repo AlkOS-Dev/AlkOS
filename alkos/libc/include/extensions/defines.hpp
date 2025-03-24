@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
 
 #include <defines.h>
 #include <stddef.h>
@@ -30,4 +30,4 @@ constexpr size_t operator""_size(const char* str, const size_t len)
 
 constexpr size_t operator""_size(const unsigned long long value) { return value; }
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_

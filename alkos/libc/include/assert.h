@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_ASSERT_H_
-#define LIBC_INCLUDE_ASSERT_H_
+#ifndef ALKOS_LIBC_INCLUDE_ASSERT_H_
+#define ALKOS_LIBC_INCLUDE_ASSERT_H_
 
 #include <todo.h>
 
@@ -124,4 +124,4 @@
 
 #endif  // __cplusplus
 
-#endif  // LIBC_INCLUDE_ASSERT_H_
+#endif  // ALKOS_LIBC_INCLUDE_ASSERT_H_

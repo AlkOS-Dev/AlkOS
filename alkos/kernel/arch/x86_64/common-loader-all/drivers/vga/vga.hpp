@@ -1,5 +1,5 @@
-#ifndef KERNEL_ARCH_X86_64_DRIVERS_VGA_VGA_HPP_
-#define KERNEL_ARCH_X86_64_DRIVERS_VGA_VGA_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_VGA_VGA_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_VGA_VGA_HPP_
 
 #include "extensions/types.hpp"
 
@@ -22,4 +22,4 @@ void VgaTerminalWriteString(const char *data);
 void VgaTerminalWriteError(const char *data);
 }
 
-#endif  // KERNEL_ARCH_X86_64_DRIVERS_VGA_VGA_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_VGA_VGA_HPP_

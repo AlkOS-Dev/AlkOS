@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_STRING_H_
-#define LIBC_INCLUDE_STRING_H_
+#ifndef ALKOS_LIBC_INCLUDE_STRING_H_
+#define ALKOS_LIBC_INCLUDE_STRING_H_
 
 #include <defines.h>
 #include <stddef.h>
@@ -56,4 +56,4 @@ char *strrchr(const char *str, int c);
 
 END_DECL_C
 
-#endif  // LIBC_INCLUDE_STRING_H_
+#endif  // ALKOS_LIBC_INCLUDE_STRING_H_
