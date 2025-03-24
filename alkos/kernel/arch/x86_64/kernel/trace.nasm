@@ -15,6 +15,3 @@ extern QemuTerminalWriteString
 %endmacro
 
 %endif
-
-
-

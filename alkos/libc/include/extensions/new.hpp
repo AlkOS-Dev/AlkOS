@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
 
 #include <assert.h>
 #include <stddef.h>
@@ -42,4 +42,4 @@ inline void *operator new[](size_t, std::align_val_t al, void *ptr)
     return ptr;
 }
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_NEW_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_NEW_HPP_

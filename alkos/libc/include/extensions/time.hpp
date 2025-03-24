@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
 
 #include <stdint.h>
 #include <sys/time.h>
@@ -144,4 +144,4 @@ NODISCARD i64 CalculateIsoBasedWeek(const tm &time);
 
 NODISCARD i64 CalculateIsoBasedYear(const tm &time);
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

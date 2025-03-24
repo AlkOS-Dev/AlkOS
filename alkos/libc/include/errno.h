@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_ERRNO_H_
-#define LIBC_INCLUDE_ERRNO_H_
+#ifndef ALKOS_LIBC_INCLUDE_ERRNO_H_
+#define ALKOS_LIBC_INCLUDE_ERRNO_H_
 
 #include <defines.h>
 #include <todo.h>
@@ -120,4 +120,4 @@ END_DECL_C
 #define EWOULDBLOCK     EAGAIN        /* Operation would block */
 #define EXDEV           __cast_er(79) /* Cross-device link */
 
-#endif  // LIBC_INCLUDE_ERRNO_H_
+#endif  // ALKOS_LIBC_INCLUDE_ERRNO_H_

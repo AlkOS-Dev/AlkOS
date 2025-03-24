@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_
 
 #include <stddef.h>
 
@@ -11,4 +11,4 @@ using ptrdiff_t   = ::ptrdiff_t;
 using max_align_t = ::max_align_t;
 }  // namespace std
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CSTDDEF_HPP_

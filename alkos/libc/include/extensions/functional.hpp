@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
 
 #include <extensions/internal/invoke.hpp>
 
@@ -22,4 +22,4 @@ namespace std
 // ------------------------------
 }  // namespace std
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
