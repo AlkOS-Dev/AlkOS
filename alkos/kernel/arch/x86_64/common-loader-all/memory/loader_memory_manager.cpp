@@ -151,7 +151,7 @@ void LoaderMemoryManager::DumpPmlTables()
 
     TRACE_INFO("PML4 table : 0x%X ---------------------------------", pml4_table);
     for (u32 i = 0; i < kNumEntriesPerPml; i++) {
-        auto *pml4_entry = reinterpret_cast<PML4Entry *>(&(*pml4_table)[i]);
+        auto *pml4_entry = reinterpret_cast<PML4Entry_t *>(&(*pml4_table)[i]);
         if (pml4_entry->present) {
             TRACE_INFO(
                 "PML4 entry %u: Present: %llu, Writable: %llu, Frame: 0x%llX", i,
@@ -167,7 +167,7 @@ void LoaderMemoryManager::DumpPmlTables()
 
     while (pml4_stack_top_idx > 0) {
         pml4_stack_top_idx--;
-        auto *pml3_table = reinterpret_cast<PML3Entry *>(pml4_addr_stack[pml4_stack_top_idx]);
+        auto *pml3_table = reinterpret_cast<PML3Entry_t *>(pml4_addr_stack[pml4_stack_top_idx]);
         u16 pml4_idx     = pml4_idx_stack[pml4_stack_top_idx];
 
         TRACE_INFO("PML3 table : 0x%X ---------------------------------", pml3_table);
@@ -198,7 +198,7 @@ void LoaderMemoryManager::DumpPmlTables()
 
         while (pml3_stack_top_idx > 0) {
             pml3_stack_top_idx--;
-            auto *pml2_table = reinterpret_cast<PML2Entry *>(pml3_addr_stack[pml3_stack_top_idx]);
+            auto *pml2_table = reinterpret_cast<PML2Entry_t *>(pml3_addr_stack[pml3_stack_top_idx]);
             u16 pml3_idx     = pml3_idx_stack[pml3_stack_top_idx];
 
             TRACE_INFO("PML2 table : 0x%X ---------------------------------", pml2_table);
@@ -230,7 +230,7 @@ void LoaderMemoryManager::DumpPmlTables()
             while (pml2_stack_top_idx > 0) {
                 pml2_stack_top_idx--;
                 auto *pml1_table =
-                    reinterpret_cast<PML1Entry *>(pml2_addr_stack[pml2_stack_top_idx]);
+                    reinterpret_cast<PML1Entry_t *>(pml2_addr_stack[pml2_stack_top_idx]);
                 u16 pml2_idx = pml2_idx_stack[pml2_stack_top_idx];
 
                 TRACE_INFO("PML1 table : 0x%X ---------------------------------", pml1_table);

@@ -37,7 +37,7 @@ static constexpr u32 kHlatRestartBit         = 1 << 13;  ///< HLAT restart bit
 static constexpr u32 kHugePageBit            = 1 << 7;   ///< Huge page bit
 
 // Table 5-15. Format of a PML4 Entry (PML4E) that References a Page-Directory-Pointer Table
-struct PML4Entry {
+struct PML4Entry_t {
     u64 present : 1;   ///< Must be 1 to reference a page-directory-pointer table
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 512-GByte region controlled
     ///< by this entry
@@ -64,7 +64,7 @@ struct PML4Entry {
 } PACK;
 
 // Table 5-16. Format of a Page-Directory-Pointer-Table Entry (PDPTE) that Maps a 1-GByte Page
-struct PML3Entry1GB {
+struct PML3Entry1GB_t {
     u64 present : 1;   ///< Must be 1 to map a 1-GByte page
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 1-GByte page controlled by
     ///< this entry
@@ -99,7 +99,7 @@ struct PML3Entry1GB {
 
 // Table 5-17. Format of a Page-Directory-Pointer-Table Entry (PDPTE) that References a Page
 // Directory
-struct PML3Entry {
+struct PML3Entry_t {
     u64 present : 1;   ///< Must be 1 to reference a page directory
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 1-GByte region controlled by
     ///< this entry
@@ -126,7 +126,7 @@ struct PML3Entry {
 } PACK;
 
 // Table 5-18. Format of a Page-Directory Entry (PDE) that Maps a 2-MByte Page
-struct PML2Entry2MB {
+struct PML2Entry2MB_t {
     u64 present : 1;   ///< Must be 1 to map a 2-MByte page
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 2-MByte page controlled by
     ///< this entry
@@ -160,7 +160,7 @@ struct PML2Entry2MB {
 } PACK;
 
 // Table 5-19. Format of a Page-Directory Entry (PDE) that References a Page Table
-struct PML2Entry {
+struct PML2Entry_t {
     u64 present : 1;   ///< Must be 1 to reference a page table
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 2-MByte region controlled by
     ///< this entry
@@ -187,7 +187,7 @@ struct PML2Entry {
 } PACK;
 
 // Table 5-20. Format of a Page-Table Entry (PTE) that Maps a 4-KByte Page
-struct PML1Entry {
+struct PML1Entry_t {
     u64 present : 1;   ///< Must be 1 to map a 4-KByte page
     u64 writable : 1;  ///< If 0, writes may not be allowed to the 4-KByte page controlled by
     ///< this entry

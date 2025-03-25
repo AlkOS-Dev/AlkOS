@@ -150,7 +150,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     PML4_t *pml4_table = GetPml4Table();
     ASSERT_NOT_NULL(pml4_table);
 
-    auto *pml4_entry = reinterpret_cast<PML4Entry *>(&(*pml4_table)[pml4_index]);
+    auto *pml4_entry = reinterpret_cast<PML4Entry_t *>(&(*pml4_table)[pml4_index]);
     if (!pml4_entry->present) {
         // Allocate a new PML3 table
         ASSERT(num_pml_tables_stored_ < kMaxPmlTablesToStore);
@@ -161,11 +161,11 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml4_entry->writable = 1;
     }
 
-    auto pml3_table = reinterpret_cast<PML3Entry *>(pml4_entry->frame << kAddressOffset);
+    auto pml3_table = reinterpret_cast<PML3Entry_t *>(pml4_entry->frame << kAddressOffset);
 
     if constexpr (page_size == PageSize::Page1G) {
         // PML3 Level
-        auto casted_pml3_table                  = reinterpret_cast<PML3Entry1GB *>(pml3_table);
+        auto casted_pml3_table                  = reinterpret_cast<PML3Entry1GB_t *>(pml3_table);
         casted_pml3_table[pml3_index].present   = 1;
         casted_pml3_table[pml3_index].writable  = 1;
         casted_pml3_table[pml3_index].page_size = 1;
@@ -185,11 +185,12 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml3_table[pml3_index].writable = 1;
     }
 
-    auto pml2_table = reinterpret_cast<PML2Entry *>(pml3_table[pml3_index].frame << kAddressOffset);
+    auto pml2_table =
+        reinterpret_cast<PML2Entry_t *>(pml3_table[pml3_index].frame << kAddressOffset);
 
     if constexpr (page_size == PageSize::Page2M) {
         // PML2 Level
-        auto casted_pml2_table                  = reinterpret_cast<PML2Entry2MB *>(pml2_table);
+        auto casted_pml2_table                  = reinterpret_cast<PML2Entry2MB_t *>(pml2_table);
         casted_pml2_table[pml2_index].present   = 1;
         casted_pml2_table[pml2_index].writable  = 1;
         casted_pml2_table[pml2_index].page_size = 1;
@@ -209,7 +210,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml2_table[pml2_index].writable = 1;
     }
 
-    auto p1_entry = reinterpret_cast<PML1Entry *>(pml2_table[pml2_index].frame << kAddressOffset);
+    auto p1_entry = reinterpret_cast<PML1Entry_t *>(pml2_table[pml2_index].frame << kAddressOffset);
     p1_entry[pml1_index].present  = 1;
     p1_entry[pml1_index].writable = 1;
     p1_entry[pml1_index].frame    = physical_address >> kPageShift;
