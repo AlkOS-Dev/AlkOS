@@ -15,7 +15,8 @@ enum class PageSize { Page4k, Page2M, Page1G };
 // physical address width supported by the processor. This is 52 for 4-level paging.
 
 static constexpr u32 kNumEntriesPerPml = 512;  ///< Number of entries in a PML table.
-static constexpr u32 kAddressOffset    = 12;  ///< The offset of the address in the page table entry
+static constexpr u8 kAddressOffset     = 12;  ///< The offset of the address in the page table entry
+static constexpr u8 kNumPmlLevels      = 4;   ///< Number of PML levels.
 
 // PML Flags
 // This is a list of flags that can be set in the page table entries.
@@ -220,10 +221,11 @@ struct PML1Entry_t {
 
 /// Type for a page table represented as an array of 512 entries, aligned to 4096 bytes.
 typedef u64 PMLTable_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
-typedef PMLTable_t PML4_t;
-typedef PMLTable_t PML3_t;
-typedef PMLTable_t PML2_t;
-typedef PMLTable_t PML1_t;
+typedef PML4Entry_t PML4_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
+typedef PML3Entry_t PML3_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
+typedef PML2Entry_t PML2_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
+typedef PML1Entry_t PML1_t[kNumEntriesPerPml] __attribute__((aligned(4096)));
+
 }  // namespace memory
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MEMORY_PAGE_TABLES_LAYOUT_HPP_

@@ -29,7 +29,10 @@ LoaderMemoryManager::LoaderMemoryManager()
         }
     }
 }
-PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
+PML4_t *LoaderMemoryManager::GetPml4Table()
+{
+    return reinterpret_cast<PML4_t *>(&buffer_[kPml4Index]);
+}
 void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
