@@ -6,20 +6,6 @@
 #endif
 
 // ------------------------------
-// C++ defines
-// ------------------------------
-
-#ifdef __cplusplus
-
-#ifdef __ALKOS_LIBK__
-static constexpr bool kIsKernel = true;
-#else
-static constexpr bool kIsKernel = false;
-#endif
-
-#endif  // __cplusplus
-
-// ------------------------------
 // Attribute macros
 // ------------------------------
 

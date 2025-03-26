@@ -10,6 +10,12 @@ static constexpr bool kIsDebugBuild = false;
 static constexpr bool kIsDebugBuild = true;
 #endif  // NDEBUG
 
+#ifdef __ALKOS_LIBK__
+static constexpr bool kIsKernelBuild = true;
+#else
+static constexpr bool kIsKernelBuild = false;
+#endif  // __ALKOS_LIBK__
+
 #define NODISCARD [[nodiscard]]
 
 constexpr size_t operator""_size(const char* str, const size_t len)

@@ -28,4 +28,6 @@
 
 #define TODO_LIBC_EXT1
 
+#define TODO_USERSPACE_EXCEPTIONS
+
 #endif  // LIBC_INCLUDE_TODO_H_
