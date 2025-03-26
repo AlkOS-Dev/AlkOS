@@ -17,6 +17,12 @@
 
 #define __ASSERT_FAIL_FUNC KernelPanic
 
+#define __STATIC_ASSERT_BASE(expr, msg)                                                            \
+    static_assert(                                                                                 \
+        expr,                                                                                      \
+        "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
+    );
+
 /* usual kernel assert macro */
 #ifdef NDEBUG
 #define ASSERT(expr)     ((void)0)
@@ -97,6 +103,33 @@
 #define R_ASSERT_GE(val1, val2)       BASE_ASSERT_GE(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STREQ(val1, val2)    BASE_ASSERT_STREQ(true, val1, val2, __ASSERT_FAIL_FUNC)
 #define R_ASSERT_STRNEQ(val1, val2)   BASE_ASSERT_STRNEQ(true, val1, val2, __ASSERT_FAIL_FUNC)
+
+/* static asserts */
+#define STATIC_ASSERT(expr, msg) __STATIC_ASSERT_BASE(expr, msg)
+#define STATIC_ASSERT_EQ(expected, value) \
+    STATIC_ASSERT((expected == value), "Expected: " TOSTRING(expected) " Got: " TOSTRING(value))
+#define STATIC_ASSERT_NEQ(expected, value) STATIC_ASSERT((expected != value), "Expected: " TOSTRING(expected) Got: " TOSTRING(value))
+#define STATIC_ASSERT_ZERO(value) STATIC_ASSERT((value == 0), "Expected: 0 Got: " TOSTRING(value))
+#define STATIC_ASSERT_TRUE(value) \
+    STATIC_ASSERT((value == true), "Expected: true Got: " TOSTRING(value))
+#define STATIC_ASSERT_FALSE(value) \
+    STATIC_ASSERT((value == false), "Expected: false Got: " TOSTRING(value))
+#define STATIC_ASSERT_NOT_NULL(value) \
+    STATIC_ASSERT((value != nullptr), "Expected: not null Got: " TOSTRING(value))
+#define STATIC_ASSERT_NULL(value) \
+    STATIC_ASSERT((value == nullptr), "Expected: null Got: " TOSTRING(value))
+#define STATIC_ASSERT_LT(val1, val2) \
+    STATIC_ASSERT((val1 < val2), "Expected: " TOSTRING(val1) " < " TOSTRING(val2))
+#define STATIC_ASSERT_LE(val1, val2) \
+    STATIC_ASSERT((val1 <= val2), "Expected: " TOSTRING(val1) " <= " TOSTRING(val2))
+#define STATIC_ASSERT_GT(val1, val2) \
+    STATIC_ASSERT((val1 > val2), "Expected: " TOSTRING(val1) " > " TOSTRING(val2))
+#define STATIC_ASSERT_GE(val1, val2) \
+    STATIC_ASSERT((val1 >= val2), "Expected: " TOSTRING(val1) " >= " TOSTRING(val2))
+#define STATIC_ASSERT_STREQ(val1, val2) \
+    STATIC_ASSERT((strcmp(val1, val2) == 0), "Expected: " TOSTRING(val1) " == " TOSTRING(val2))
+#define STATIC_ASSERT_STRNEQ(val1, val2) \
+    STATIC_ASSERT((strcmp(val1, val2) != 0), "Expected: " TOSTRING(val1) " != " TOSTRING(val2))
 
 #endif  // __cplusplus
 

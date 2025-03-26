@@ -57,7 +57,8 @@ PageTableTypeGetter<entry_level - 1>::Type& VirtualMemoryManager::GetChildPageDi
     PageEntryTypeGetter<entry_level>::Type& entry
 )
 {
-    AssertDescendable<entry_level>();
+    STATIC_ASSERT_LE(entry_level, 4);
+    STATIC_ASSERT_GE(entry_level, 2);
 
     return *reinterpret_cast<typename PageTableTypeGetter<entry_level - 1>::Type*>(
         entry.frame << kAddressOffset
@@ -69,7 +70,8 @@ void VirtualMemoryManager::EnsureEntryPresent(
     PageEntryTypeGetter<entry_level>::Type& entry, TableAllocatorConcept auto& allocator
 )
 {
-    AssertDescendable<entry_level>();
+    STATIC_ASSERT_LE(entry_level, 4);
+    STATIC_ASSERT_GE(entry_level, 2);
 
     if (!entry.present) {
         uintptr_t table = allocator.Allocate();
@@ -82,6 +84,10 @@ void VirtualMemoryManager::EnsureEntryPresent(
         entry.writable = 1;
     }
 }
+
+enum class PageWalkType { kLastValidEntry, kAllocateNewEntry };
+
+// template <u8 level_end, PageWalkType walk_type = PageWalkType::kLastValidEntry>
 
 // TODO : Think of a sane way to create a:
 // - a) Variant that returns the last valid entry (non-zero) in the page table and the level it was
@@ -115,13 +121,6 @@ void VirtualMemoryManager::EnsureEntryPresent(
 //    auto& pml1_entry = pml1_table[GetPmlIndex<1>(virtual_address)];
 //    return pml1_entry;
 //}
-
-template <u8 level>
-constexpr void VirtualMemoryManager::AssertDescendable()
-{
-    static_assert(level > 0, "Level must be greater than 0.");
-    static_assert(level <= 4, "Level must be less than or equal to 4.");
-}
 
 }  // namespace memory
 

@@ -80,6 +80,9 @@ class VirtualMemoryManager : TemplateLib::StaticSingletonHelper
     template <u8 level>
     constexpr void AssertDescendable();
 
+    template <u8 level>
+    constexpr void AssertValidLevel();
+
     //------------------------------------------------------------------------------//
     // Private Fields
     //------------------------------------------------------------------------------//
