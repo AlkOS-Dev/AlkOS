@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <extensions/cstddef.hpp>
+#include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
 
 namespace std
@@ -12,15 +13,17 @@ namespace std
 // https://github.com/gcc-mirror/gcc/tree/master/libstdc%2B%2B-v3
 // https://github.com/llvm/llvm-project/blob/main/libcxx/include/variant
 
-namespace detail
-{
-namespace variant
-{
-
 template <typename... Types>
 struct variant;
 template <typename... Types>
 struct tuple;
+
+namespace detail
+{
+namespace variant
+{
+}  // namespace variant
+}  // namespace detail
 
 NO_RET FAST_CALL void throw_bad_variant_access()
 {
@@ -100,6 +103,10 @@ struct variant_alternative<Index, const volatile Variant> {
 
 inline constexpr size_t variant_npos = -1;
 
+namespace detail
+{
+namespace variant
+{
 //------------------------------------------------------------------------------//
 // index_of
 // Returns the index of the first occurrence of Type in Types
@@ -115,6 +122,33 @@ inline constexpr size_t index_of_v = index_of<Type, Types...>::value;
 template <typename Type, typename First, typename... Rest>
 struct index_of<Type, First, Rest...>
     : std::integral_constant<size_t, is_same_v<Type, First> ? 0 : index_of_v<Type, Rest...> + 1> {
+};
+
+// TODO: Might change the "&&" to "||" depending on template parameter, and move this to TemplateLib
+template <typename... Types>
+struct Traits {
+    static constexpr bool has_default_constructor =
+        is_default_constructible_v<typename TemplateLib::nth_type_t<0, Types...>>;
+    static constexpr bool has_copy_constructor   = (is_copy_constructible_v<Types> && ...);
+    static constexpr bool has_move_constructor   = (is_move_constructible_v<Types> && ...);
+    static constexpr bool has_copy_assign        = (is_copy_assignable_v<Types> && ...);
+    static constexpr bool has_move_assign        = (is_move_assignable_v<Types> && ...);
+    static constexpr bool has_trivial_destructor = (is_trivially_constructible_v<Types> && ...);
+    static constexpr bool has_trivial_copy_constructor =
+        (is_trivially_copy_constructible_v<Types> && ...);
+    static constexpr bool has_trivial_move_constructor =
+        (is_trivially_move_constructible_v<Types> && ...);
+    static constexpr bool has_trivial_copy_assign = (is_trivially_copy_assignable_v<Types> && ...);
+    static constexpr bool has_trivial_move_assign = (is_trivially_move_assignable_v<Types> && ...);
+    static constexpr bool has_nothrow_default_constructor =
+        (is_nothrow_default_constructible_v<Types> && ...);
+    static constexpr bool has_nothrow_copy_constructor =
+        (is_nothrow_copy_constructible_v<Types> && ...);
+    static constexpr bool has_nothrow_move_constructor =
+        (is_nothrow_move_constructible_v<Types> && ...);
+    static constexpr bool has_nothrow_copy_assign = (is_nothrow_copy_assignable_v<Types> && ...);
+    static constexpr bool has_nothrow_move_assign = (is_nothrow_move_assignable_v<Types> && ...);
+};
 };
 }  // namespace variant
 }  // namespace detail
@@ -151,6 +185,8 @@ class variant
     //------------------------------------------------------------------------------//
     // Private Fields
     //------------------------------------------------------------------------------//
+    storage_t storage_;
+    std::size_t index_ = variant_npos;
 
     //------------------------------------------------------------------------------//
     // Helpers

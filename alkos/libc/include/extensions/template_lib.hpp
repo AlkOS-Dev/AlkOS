@@ -120,6 +120,26 @@ constexpr bool HasDuplicateTypes()
     return (HasDuplicateType<Args, Args...>() || ...);
 }
 
+//------------------------------------------------------------------------------//
+// Get N'th Type
+//------------------------------------------------------------------------------//
+
+template <size_t N, typename... Types>
+struct GetNthType {
+};
+
+template <size_t N, typename First, typename... Rest>
+struct GetNthType<N, First, Rest...> : GetNthType<N - 1, First, Rest...> {
+};
+
+template <typename First, typename... Rest>
+struct GetNthType<0, First, Rest...> {
+    using type = First;
+};
+
+template <size_t N, typename... Types>
+using nth_type_t = GetNthType<N, Types...>::type;
+
 // ------------------------------
 // Type List
 // ------------------------------

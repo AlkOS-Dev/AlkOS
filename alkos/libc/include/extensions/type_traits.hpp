@@ -30,9 +30,6 @@ TODO_LIBCPP_COMPLIANCE
  * - std::is_swappable_with
  * - std::is_nothrow_swappable
  * - std::is_nothrow_swappable_with
- * - std::is_destructible
- * - std::is_nothrow_destructible
- * - std::is_trivially_destructible
  */
 
 namespace std
@@ -1976,19 +1973,50 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 // std::is_destructible
 // ------------------------------
 
-// TODO
+template <class T>
+    struct is_destructible : std::integral_constant < bool,
+    requires(T object) {
+    object.~T();
+}>{};
+
+template <class T>
+constexpr bool is_destructible_v = is_destructible<T>::value;
 
 // ------------------------------------
 // std::is_trivially_destructible
 // ------------------------------------
 
-// TODO
+#if __has_builtin(__is_trivially_destructible)
+template <class T>
+struct is_trivially_destructible
+    : integral_constant<bool, is_destructible<T>::value &&__is_trivially_destructible(T)> {
+};
+#elif __has_builtin(__has_trivial_destructor)
+template <class T>
+struct is_trivially_destructible
+    : integral_constant<bool, is_destructible<T>::value &&__has_trivial_destructor(T)> {
+};
+#else
+#error is_trivially_deconstructible is not implemented
+#endif
+
+template <class T>
+constexpr bool is_trivially_destructible_v = is_trivially_destructible<T>::value;
 
 // ----------------------------------
 // std::is_nothrow_destructible
 // ----------------------------------
 
-// TODO
+template <class T>
+    struct is_nothrow_destructible : std::integral_constant < bool,
+    requires(T object) {
+    {
+        object.~T()
+    } noexcept;
+}>{};
+
+template <class T>
+constexpr bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
 
 }  // namespace std
 
