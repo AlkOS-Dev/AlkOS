@@ -120,6 +120,12 @@ constexpr bool HasDuplicateTypes()
     return (HasDuplicateType<Args, Args...>() || ...);
 }
 
+template <typename... Types>
+constexpr bool HasAtLeastOneType()
+{
+    return (sizeof...(Types) > 0);
+}
+
 //------------------------------------------------------------------------------//
 // Get N'th Type
 //------------------------------------------------------------------------------//
