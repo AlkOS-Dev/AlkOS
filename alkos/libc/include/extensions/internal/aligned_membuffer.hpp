@@ -24,13 +24,16 @@ class AlignedMemoryBuffer
     //------------------------------------------------------------------------------//
     // Public Methods
     //------------------------------------------------------------------------------//
-    constexpr void* GetAddress() noexcept { return static_cast<void*>(&storage); }
+    constexpr void* GetAddress() noexcept { return static_cast<void*>(&storage.data); }
 
-    constexpr const void* GetAddress() const noexcept { return static_cast<const void*>(&storage); }
+    constexpr const void* GetAddress() const noexcept
+    {
+        return static_cast<const void*>(&storage.data);
+    }
 
-    constexpr Type* GetPtr() noexcept { return static_cast<Type*>(&storage); }
+    constexpr Type* GetPtr() noexcept { return static_cast<Type*>(GetAddress()); }
 
-    constexpr const Type* GetPtr() const noexcept { return static_cast<const Type*>(&storage); }
+    constexpr const Type* GetPtr() const noexcept { return static_cast<const Type*>(GetAddress()); }
 
     private:
     //------------------------------------------------------------------------------//
