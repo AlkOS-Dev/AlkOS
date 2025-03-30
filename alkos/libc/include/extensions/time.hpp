@@ -7,6 +7,7 @@
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/time.hpp>
+#include <extensions/tuple.hpp>
 #include <extensions/types.hpp>
 
 // ------------------------------
@@ -38,11 +39,22 @@ static constexpr u64 kPosixYearsToFirstLeap400 = 30;
 static constexpr u64 kPosixEpochTmSecondDiff = (kPosixEpoch - kTmBaseYear) * kSecondsInUsualYear +
                                                ((kPosixEpoch - kTmBaseYear) / 4) * kSecondsInDay;
 
+static constexpr u64 kFirst30PosixYears = 30 * kSecondsInUsualYear + (28 / 4) * kSecondsInDay;
+
+static constexpr u64 kPosixToTmYearDiff = kPosixEpoch - kTmBaseYear;
+
 static constexpr u16 kDaysInMonth[2][13]{
     /* Normal Year */
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
     /* Leap Year */
     {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366},
+};
+
+static constexpr Timezone kUtcTimezone = {
+    .west_offset_minutes     = 0,
+    .dst_time_offset_minutes = 0,
+    .dst_time_start_seconds  = static_cast<u16>(-1),
+    .dst_time_end_seconds    = static_cast<u16>(-1),
 };
 
 // ------------------------------
@@ -56,35 +68,44 @@ static constexpr u64 kConversionFailed = static_cast<u64>(-1);
 // Functions
 // ------------------------------
 
-FAST_CALL bool IsLeapYear(const i64 year)
+FAST_CALL constexpr bool IsLeapYear(const i64 year)
 {
     return (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
 }
 
-WRAP_CALL bool IsTmYearLeap(const i64 year) { return IsLeapYear(year + kTmBaseYear); }
+WRAP_CALL constexpr bool IsTmYearLeap(const i64 year) { return IsLeapYear(year + kTmBaseYear); }
 
-WRAP_CALL bool IsTmYearLeap(const tm &time) { return IsLeapYear(time.tm_year + kTmBaseYear); }
+WRAP_CALL constexpr bool IsTmYearLeap(const tm &time)
+{
+    return IsLeapYear(time.tm_year + kTmBaseYear);
+}
 
-NODISCARD u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone);
+NODISCARD u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone);
 
-FAST_CALL i64 SumUpDays(const i64 year)
+FAST_CALL i64 constexpr SumUpDays(const i64 year)
 {
     const i64 years_adjusted = year - 1;
 
     return years_adjusted * 365 + years_adjusted / 4 - years_adjusted / 100 + years_adjusted / 400;
 }
 
-WRAP_CALL i64 SumUpDays(const tm &time_ptr) { return SumUpDays(time_ptr.tm_year + kTmBaseYear); }
+WRAP_CALL constexpr i64 SumUpDays(const tm &time_ptr)
+{
+    return SumUpDays(time_ptr.tm_year + kTmBaseYear);
+}
 
 /**
  * @note 0 = Sunday, 1 = Monday, ..., 6 = Saturday
  */
-FAST_CALL i64 GetWeekdayJan1(const i64 days_since_century) { return (days_since_century + 1) % 7; }
+FAST_CALL constexpr i64 GetWeekdayJan1(const i64 days_since_century)
+{
+    return (days_since_century + 1) % 7;
+}
 
 /**
  * @note: Includes the current day
  */
-FAST_CALL i64 SumYearDays(const tm &time_ptr)
+FAST_CALL constexpr i64 SumYearDays(const tm &time_ptr)
 {
     const bool is_leap = IsTmYearLeap(time_ptr.tm_year);
     return kDaysInMonth[is_leap][time_ptr.tm_mon] + time_ptr.tm_mday;
@@ -93,28 +114,24 @@ FAST_CALL i64 SumYearDays(const tm &time_ptr)
 /**
  * @note 0 = Sunday, 1 = Monday, ..., 6 = Saturday
  */
-FAST_CALL i64 CalculateDayOfWeek(const tm &time)
+FAST_CALL constexpr i64 CalculateDayOfWeek(const tm &time)
 {
-    const i64 total_days = GetWeekdayJan1(SumUpDays(time)) + SumYearDays(time);
+    const i64 total_days = GetWeekdayJan1(SumUpDays(time)) + SumYearDays(time) - 1;
     return total_days % 7;
 }
 
 NODISCARD bool ValidateTm(const tm &time_ptr);
 
-/* Posix time helpers */
-FAST_CALL u64 CalculateYears30LessWLeaps(const u64 time_left) { return {}; }
+/* [years, time] */
+NODISCARD std::tuple<u64, u64> CalculateYears30LessWLeaps(u64 time);
 
-FAST_CALL u64 CalculateYears30MoreWLeaps(const u64 time_left)
+/* [years, time] */
+NODISCARD std::tuple<u64, u64> CalculateYears30MoreWLeaps(u64 time);
+
+NODISCARD FAST_CALL std::tuple<u64, u64> CalculateYearsFromPosix(const u64 time)
 {
-    static constexpr u64 kDown = 400 * kSecondsInUsualYear + 97 * kSecondsInDay;
-
-    const u64 up       = time_left + 110 * kSecondsInDay;
-    const u64 estimate = 400 * (kSecondsInUsualYear + kSecondsInDay);
-
-    const u64 low  = (up - estimate) / kDown;
-    const u64 high = up / kDown;
-
-    return {};
+    return time >= kFirst30PosixYears ? CalculateYears30MoreWLeaps(time)
+                                      : CalculateYears30LessWLeaps(time);
 }
 
 NODISCARD FAST_CALL i64 CalculateMondayBasedWeek(const tm &time)
@@ -124,9 +141,6 @@ NODISCARD FAST_CALL i64 CalculateMondayBasedWeek(const tm &time)
     const i64 monday_based_jan1_weekday = jan1_weekday == 1   ? 7
                                           : jan1_weekday == 0 ? 6
                                                               : jan1_weekday - 1;
-
-    TRACE_INFO("jan1_weekday = %lu", jan1_weekday);
-    TRACE_INFO("Jan1_weekday_monday_based: %lu", monday_based_jan1_weekday);
 
     return (days + monday_based_jan1_weekday) / 7;
 }
@@ -143,5 +157,27 @@ NODISCARD FAST_CALL i64 CalculateSundayBasedWeek(const tm &time)
 NODISCARD i64 CalculateIsoBasedWeek(const tm &time);
 
 NODISCARD i64 CalculateIsoBasedYear(const tm &time);
+
+/* [month, day] */
+NODISCARD std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(u64 days, bool is_leap_year);
+
+NODISCARD u64 GetDSTOffset(u64 time, const timezone &tz);
+
+tm *ConvertFromPosixToTm(time_t timer, tm &result, const timezone &tz);
+
+NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const timezone &time_zone)
+{
+    const time_t t = ConvertDateTimeToPosix(time_ptr, time_zone);
+
+    if (t == kConversionFailed) {
+        errno = EOVERFLOW;
+        return kMktimeFailed;
+    }
+
+    ConvertFromPosixToTm(t, time_ptr, time_zone);
+    ASSERT_EQ(ConvertDateTimeToPosix(time_ptr, time_zone), t);
+
+    return t;
+}
 
 #endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

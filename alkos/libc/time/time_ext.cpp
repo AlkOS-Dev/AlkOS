@@ -6,7 +6,7 @@
 // Implementations
 // ------------------------------
 
-u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone)
+u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone)
 {
     const i64 is_month_negative = date_time.tm_mon < 0;
 
@@ -26,9 +26,9 @@ u64 ConvertDateTimeToSeconds(const tm &date_time, const timezone &time_zone)
     time += static_cast<i64>(years) * kSecondsInUsualYear;
 
     /* adjust by leap years */
-    time += years / 4 * kSecondsInDay;
-    time -= years / 100 * kSecondsInDay;
-    time += years / 400 * kSecondsInDay;
+    time += (years - 1) / 4 * kSecondsInDay;
+    time -= (years - 1) / 100 * kSecondsInDay;
+    time += (300 + years - 1) / 400 * kSecondsInDay;
 
     /* adjust to fit in posix */
     time -= kPosixEpochTmSecondDiff;
@@ -77,7 +77,7 @@ i64 CalculateIsoBasedWeek(const tm &time)
     /* Check for first days in year */
     const i64 days_sum = SumYearDays(time);
 
-    if (const bool is_in_first_days = days_sum <= days_in_first_week) {
+    if (days_sum <= days_in_first_week) {
         if (!is_first_week_in_this_year) {
             /* Extract week number from previous year if first week is not 4 days long */
             tm time_prev{};
@@ -146,4 +146,144 @@ i64 CalculateIsoBasedYear(const tm &time)
     }
 
     return kTmBaseYear + time.tm_year;
+}
+
+std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(const u64 days, const bool is_leap_year)
+{
+    ASSERT_LT(days, is_leap_year ? 366_u64 : 365_u64);
+
+    for (size_t idx = 1; idx < 12; ++idx) {
+        if (days < kDaysInMonth[is_leap_year][idx]) {
+            return {idx, days - kDaysInMonth[is_leap_year][idx - 1] + 1};
+        }
+    }
+
+    return {12, days - kDaysInMonth[is_leap_year][11] + 1};
+}
+
+std::tuple<u64, u64> CalculateYears30MoreWLeaps(const u64 time)
+{
+    i64 local_time_left;
+    i64 years = static_cast<i64>((time - kFirst30PosixYears) / kSecondsInUsualYear);
+    [[maybe_unused]] i64 iterations = 0;
+
+    do {
+        ASSERT_LT(iterations++, 5);
+
+        local_time_left = static_cast<i64>(time - kFirst30PosixYears);
+
+        local_time_left -= years * kSecondsInUsualYear;
+
+        /* Adjust by leap years div 4 */
+        local_time_left -= (years - 1) / 4 * kSecondsInDay;
+
+        /* Adjust by leap years div 100 */
+        local_time_left += (years - 1) / 100 * kSecondsInDay;
+
+        /* Adjust by leap years div 400 */
+        local_time_left -= (years - 1) / 400 * kSecondsInDay;
+
+        /* Adjust for year 2k */
+        local_time_left -= (years > 0) * kSecondsInDay;
+
+        /* prepare for next iteration */
+        years -= 1;
+    } while (local_time_left < 0);
+
+    ASSERT_GE(local_time_left, 0_i64);
+    return {years + 1 + 30, static_cast<u64>(local_time_left)};
+}
+
+std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time)
+{
+    i64 local_time_left;
+    i64 years                       = static_cast<i64>(time / kSecondsInUsualYear);
+    [[maybe_unused]] i64 iterations = 0;
+
+    do {
+        ASSERT_LT(iterations++, 2);
+
+        local_time_left = static_cast<i64>(time);
+
+        local_time_left -= years * kSecondsInUsualYear;
+
+        /* Adjust by leap years */
+        local_time_left -= years > 2 ? ((years + 1) / 4) * kSecondsInDay : 0;
+
+        /* prepare for next iteration */
+        years -= 1;
+    } while (local_time_left < 0);
+
+    return {years + 1, static_cast<u64>(local_time_left)};
+}
+
+u64 GetDSTOffset(u64 time, const timezone &time_zone)
+{
+    if (time_zone.dst_time_offset_minutes == 0) {
+        return 0;
+    }
+
+    if (time_zone.dst_time_start_seconds < time_zone.dst_time_end_seconds) {
+        /* Continuous DST */
+
+        if (time >= time_zone.dst_time_start_seconds && time < time_zone.dst_time_end_seconds) {
+            return time_zone.dst_time_offset_minutes * kSecondsInMinute;
+        } else {
+            return 0;
+        }
+    } else {
+        /* Spans over the year */
+
+        if (time >= time_zone.dst_time_start_seconds || time < time_zone.dst_time_end_seconds) {
+            return time_zone.dst_time_offset_minutes * kSecondsInMinute;
+        } else {
+            return 0;
+        }
+    }
+}
+
+tm *ConvertFromPosixToTm(const time_t timer, tm &result, const timezone &tz)
+{
+    u64 time_left = timer;
+
+    /* add local time offset */
+    time_left += tz.west_offset_minutes * kSecondsInMinute;
+
+    const auto [years, time_left_after_years] = CalculateYearsFromPosix(time_left);
+
+    /* Apply years */
+    time_left      = time_left_after_years;
+    result.tm_year = static_cast<int>(kPosixToTmYearDiff + years);
+
+    /* Check if DST is in effect */
+    const u64 dst_offset = GetDSTOffset(time_left, tz);
+
+    time_left += dst_offset;
+    result.tm_isdst = static_cast<int>(dst_offset != 0_u64 ? 1_u64 : dst_offset);
+
+    /* Apply days */
+    const u64 days = time_left / kSecondsInDay;
+    time_left -= days * kSecondsInDay;
+    result.tm_yday = static_cast<int>(days);
+
+    /* Apply hours */
+    const u64 hours = time_left / kSecondsInHour;
+    time_left -= hours * kSecondsInHour;
+    result.tm_hour = static_cast<int>(hours);
+
+    /* Apply minutes */
+    const u64 minutes = time_left / kSecondsInMinute;
+    time_left -= minutes * kSecondsInMinute;
+    result.tm_min = static_cast<int>(minutes);
+
+    /* Apply seconds */
+    result.tm_sec = static_cast<int>(time_left);
+
+    /* Apply month and days */
+    const auto [month, day] = CalculateMonthAndDaysFromPosix(days, IsTmYearLeap(result));
+    result.tm_mon           = static_cast<int>(month - 1);
+    result.tm_mday          = static_cast<int>(day);
+    result.tm_wday          = static_cast<int>(CalculateDayOfWeek(result));
+
+    return &result;
 }

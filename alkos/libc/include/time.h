@@ -4,6 +4,7 @@
 /* external includes */
 #include <errno.h>
 #include <stddef.h>
+#include <sys/time.h>
 #include <types.h>
 
 // ------------------------------
@@ -13,8 +14,7 @@
 /* POSIX defines CLOCKS_PER_SEC as one million, regardless of the actual precision of clock. */
 #define CLOCKS_PER_SEC ((__clock_t)1000000)
 
-/* Time base values for timespec_get.  */
-#define TIME_UTC 1
+#define TIME_UTC ((int)kTimeUtc)
 
 // ------------------------------
 // Types
@@ -34,12 +34,12 @@ typedef struct tm {
      * negative if no information is available*/
 } tm;
 
-typedef unsigned long long time_t;
-typedef unsigned long long clock_t;
+typedef u64 time_t;
+typedef u64 clock_t;
 
 typedef struct timespec {
     time_t tv_sec; /* seconds */
-    long tv_nsec;  /* nanoseconds */
+    long tv_nsec;  /* remainder */
 } timespec;
 
 BEGIN_DECL_C
@@ -84,9 +84,6 @@ struct tm *gmtime(const time_t *timer);
 
 /* C23 */
 struct tm *gmtime_r(const time_t *timer, struct tm *result);
-
-/* C11 */
-struct tm *gmtime_s(const time_t *__restrict__ timer, struct tm *__restrict__ result);
 
 struct tm *localtime(const time_t *timer);
 

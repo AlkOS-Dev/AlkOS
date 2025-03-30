@@ -20,9 +20,9 @@ class StrfTimeWriter final
             return false;
         }
 
-        /* we will copy null terminator inside the loop */
+        char c;
         do {
-            const char c = *(format_++);
+            c = *(format_++);
 
             if (c == '%') {
                 ProcessFormat_();
@@ -30,10 +30,10 @@ class StrfTimeWriter final
                 buf_[written_++] = c;
             }
 
-        } while (written_ < size_ && *format_ != '\0');
+        } while (written_ < size_ && c != '\0');
 
         /* If we have written all the characters, return true */
-        return *format_ == '\0';
+        return c == '\0';
     }
 
     NODISCARD FORCE_INLINE_F size_t Written() const { return written_; }
@@ -399,7 +399,7 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void WriteUint_(const uintmax_t num)
     {
-        written_ += FormatUIntWithoutNullTerminator(num, buf_ + written_, size_ - written_);
+        written_ += FormatUIntWoutNullTerm(num, buf_ + written_, size_ - written_);
     }
 
     FORCE_INLINE_F void WriteChar_(const char c)
@@ -438,5 +438,7 @@ size_t strftime(char* s, const size_t max_size, const char* format, const tm* ti
 {
     StrfTimeWriter writer(s, max_size, format, time_ptr);
     const bool is_success = writer.Write();
-    return is_success ? writer.Written() : 0;
+
+    /* Except null terminator */
+    return is_success ? writer.Written() - 1 : 0;
 }

@@ -30,4 +30,6 @@
 
 #define TODO_USERSPACE_EXCEPTIONS
 
+#define TODO_OPTIMISE
+
 #endif  // LIBC_INCLUDE_TODO_H_

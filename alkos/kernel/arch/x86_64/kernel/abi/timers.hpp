@@ -6,20 +6,20 @@
 #include <extensions/time.hpp>
 #include <modules/timing.hpp>
 #include <timers.hpp>
-#include <todo.hpp>
 
-WRAP_CALL time_t QuerySystemTime()
+WRAP_CALL time_t QuerySystemTime(const timezone& tz)
 {
-    TODO_SETTINGS_MANAGEMENT
-    static constexpr bool kSystemClockInUtc = true;
+    static constexpr size_t kBuffSize = 64;
+    [[maybe_unused]] char buffer[kBuffSize];
 
     const tm rtcTime = ReadRtcTime();
 
-    if (kSystemClockInUtc) {
-        return ConvertDateTimeToSeconds(rtcTime, DayTime::kUtcTimezone);
-    }
+    TRACE_INFO("Time loaded from CMOS: %s", [&] {
+        strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n", &rtcTime);
+        return buffer;
+    }());
 
-    return ConvertDateTimeToSeconds(rtcTime, TimingModule::Get().GetDayTime().GetTimezone());
+    return ConvertDateTimeToPosix(rtcTime, tz);
 }
 
 #endif  // ARCH_X86_64_ABI_TIMERS_HPP_

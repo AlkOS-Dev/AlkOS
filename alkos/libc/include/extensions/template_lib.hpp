@@ -1,17 +1,50 @@
 #ifndef LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 #define LIBC_INCLUDE_TEMPLATE_LIB_HPP_
 
+#include <assert.h>
+#include <extensions/array.hpp>
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/internal/tuple_base.hpp>
 #include <extensions/new.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
 
-#include <assert.h>
-
 namespace TemplateLib
 {
+// ------------------------------
+// NoCopy
+// ------------------------------
+
+struct NoCopy {
+    NoCopy()  = default;
+    ~NoCopy() = default;
+
+    NoCopy(const NoCopy &) = delete;
+    NoCopy(NoCopy &&)      = delete;
+
+    NoCopy &operator=(const NoCopy &) = delete;
+    NoCopy &operator=(NoCopy &&)      = delete;
+};
+
+// ------------------------------
+// MoveOnly
+// ------------------------------
+
+struct MoveOnly {
+    MoveOnly()  = default;
+    ~MoveOnly() = default;
+
+    /* remove copying */
+    MoveOnly(const MoveOnly &)            = delete;
+    MoveOnly &operator=(const MoveOnly &) = delete;
+
+    /* allow moving */
+    MoveOnly(MoveOnly &&)            = default;
+    MoveOnly &operator=(MoveOnly &&) = default;
+};
+
 // ------------------------------
 // Rolled Switch
 // ------------------------------
@@ -150,56 +183,65 @@ using nth_type_t = GetNthType<N, Types...>::type;
 // Type List
 // ------------------------------
 
-template <size_t N, class T, class... Ts>
-struct TypeList {
-    static constexpr size_t size = sizeof...(Ts) + 1;
-
-    static_assert(N < size, "Index out of range");
-    using type = typename TypeList<N - 1, Ts...>::type;
-};
-
-template <class T, class... Ts>
-struct TypeList<0, T, Ts...> {
-    static constexpr size_t size = sizeof...(Ts) + 1;
-
-    using type = T;
-};
-
-template <size_t N, template <size_t> class TypeList>
-struct IterateTypeList {
-    template <class Callable, class... Args>
-    FORCE_INLINE_F static constexpr void Apply(Callable &&func, Args &&...args)
-    {
-        func.template operator()<N, typename TypeList<N>::type>(args...);
-        IterateTypeList<N - 1, TypeList>::Apply(
-            std::forward<Callable>(func), std::forward<Args>(args)...
-        );
-    }
-};
-
-template <template <size_t> class TypeList>
-struct IterateTypeList<0, TypeList> {
-    template <class Callable>
-    FAST_CALL constexpr void Apply(Callable &&func)
-    {
-        func.template operator()<0, typename TypeList<0>::type>();
-    }
-};
-
 template <class... Args>
-struct IterateTypes {
-    static_assert(sizeof...(Args) > 0, "Type list must not be empty");
+struct TypeList {
+    // ------------------------------
+    // iterators
+    // ------------------------------
+
+    template <size_t N, class... Ts>
+    struct TypeListIter;
+
+    template <size_t N, class T, class... Ts>
+    struct TypeListIter<N, T, Ts...> {
+        static constexpr size_t kSize = sizeof...(Ts) + 1;
+
+        static_assert(N < kSize, "Index out of range");
+        using type = typename TypeListIter<N - 1, Ts...>::type;
+    };
+
+    template <class T, class... Ts>
+    struct TypeListIter<0, T, Ts...> {
+        static constexpr size_t kSize = sizeof...(Ts) + 1;
+
+        using type = T;
+    };
 
     template <size_t N>
-    using TypeList = TypeList<N, Args...>;
+    struct TypeListIter<N> {
+        static constexpr size_t kSize = 0;
+        using type                    = void;
+    };
 
-    template <class Callable, class... CallArgs>
-    FAST_CALL constexpr void Apply(Callable &&func, CallArgs &&...args)
+    // ------------------------------
+    // Invokers
+    // ------------------------------
+
+    template <size_t N, class Callable, class... ApplyArgs>
+    FORCE_INLINE_F static constexpr void Apply(Callable &&func, ApplyArgs &&...args)
     {
-        IterateTypeList<sizeof...(Args) - 1, TypeList>::Apply(
-            std::forward<Callable>(func), std::forward<CallArgs>(args)...
-        );
+        func.template operator()<N, typename Iterator<N>::type>(args...);
+
+        if constexpr (N > 0) {
+            Apply<N - 1>(std::forward<Callable>(func), std::forward<ApplyArgs>(args)...);
+        }
     }
+
+    template <class Callable, class... ApplyArgs>
+    FORCE_INLINE_F static constexpr void Apply(Callable &&func, ApplyArgs &&...args)
+    {
+        Apply<kSize - 1>(std::forward<Callable>(func), std::forward<ApplyArgs>(args)...);
+    }
+
+    // ------------------------------
+    // Fields
+    // ------------------------------
+
+    static constexpr size_t kSize = sizeof...(Args);
+
+    template <size_t N>
+    using Iterator = TypeListIter<N, Args...>;
+    using Tuple    = std::tuple<Args...>;
 };
 
 template <class T, class... Args>
@@ -208,7 +250,7 @@ NODISCARD FAST_CALL constexpr size_t GetTypeIndexInTypes()
     static_assert(HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple");
     size_t idx{};
 
-    IterateTypes<Args...>::Apply([&]<size_t Index, class U>() {
+    TypeList<Args...>::Apply([&]<size_t Index, class U>() {
         if constexpr (std::is_same_v<T, U>) {
             idx = Index;
         }
@@ -217,22 +259,27 @@ NODISCARD FAST_CALL constexpr size_t GetTypeIndexInTypes()
     return idx;
 }
 
+template <class T>
+struct IsTypeList : std::false_type {
+};
+
+template <class... Args>
+struct IsTypeList<TypeList<Args...>> : std::true_type {
+};
+
+template <class T>
+constexpr bool IsTypeList_v = IsTypeList<T>::value;
+
 // ------------------------------
 // Static singleton
 // ------------------------------
 
-class StaticSingletonHelper
+class StaticSingletonHelper : public NoCopy
 {
-    public:
-    StaticSingletonHelper(StaticSingletonHelper const &)            = delete;
-    StaticSingletonHelper &operator=(StaticSingletonHelper const &) = delete;
-
-    StaticSingletonHelper(StaticSingletonHelper &&)            = delete;
-    StaticSingletonHelper &operator=(StaticSingletonHelper &&) = delete;
-
     protected:
     /* Non instantiable */
-    StaticSingletonHelper() = default;
+    StaticSingletonHelper()  = default;
+    ~StaticSingletonHelper() = default;
 };
 
 template <class T>
@@ -322,6 +369,162 @@ class StaticSingleton
 template <class T>
     requires DerivedFromHelper<T>
 SingletonInstanceCreator<T> StaticSingleton<T>::instance_creator_;
+
+// ------------------------------
+// EventTable
+// ------------------------------
+
+template <size_t kSize, class EvenT>
+class StaticEventTable : MoveOnly
+{
+    // ------------------------------
+    // internals
+    // ------------------------------
+
+    struct NodeT {
+        EvenT event;
+        NodeT *next;
+    };
+
+    static constexpr size_t kMaxEvents = 256;
+
+    // ------------------------------
+    // Class construction
+    // ------------------------------
+
+    public:
+    StaticEventTable() noexcept  = default;
+    ~StaticEventTable() noexcept = default;
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    template <size_t idx>
+    void RegisterEvent(EvenT &&event)
+    {
+        static_assert(idx < kSize, "Index out of range");
+
+        NodeT *const node = &events_mem_[events_mem_top_++];
+        node->event       = std::move(event);
+        node->next        = nullptr;
+
+        NodeT **cur_node = &events_[idx];
+        while (*cur_node) {
+            cur_node = &(*cur_node)->next;
+        }
+        *cur_node = node;
+    }
+
+    template <size_t idx, class... Args>
+        requires std::is_invocable_v<EvenT, Args...>
+    void Notify(Args &&...args)
+    {
+        static_assert(idx < kSize, "Index out of range");
+
+        NodeT *cur_node = events_[idx];
+        while (cur_node) {
+            cur_node->event(args...);
+            cur_node = cur_node->next;
+        }
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    NodeT *events_[kSize]{};
+    NodeT events_mem_[kMaxEvents];
+    size_t events_mem_top_{};
+};
+
+// ------------------------------
+// Settings
+// ------------------------------
+
+template <class TypeListT>
+    requires IsTypeList_v<TypeListT>
+class Settings : public NoCopy
+{
+    public:
+    using TupleT = typename TypeListT::Tuple;
+    using EventT = void (*)();
+
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    explicit constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
+    explicit constexpr Settings(const TupleT &settings) : settings_(settings) {}
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    template <size_t idx>
+    FORCE_INLINE_F constexpr auto Get()
+    {
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        return settings_.template get<idx>();
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void Set(U &&value)
+    {
+        using OptType = typename TypeListT::template Iterator<idx>::type;
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        static_assert(std::is_same_v<U, OptType>, "Invalid option type");
+
+        settings_.template get<idx>() = std::forward<U>(value);
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void Set(const U &value)
+    {
+        using OptType = typename TypeListT::template Iterator<idx>::type;
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        static_assert(std::is_same_v<U, OptType>, "Invalid option type");
+
+        settings_.template get<idx>() = std::forward<U>(value);
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void SetAndNotify(U &&value)
+    {
+        using OptType = typename TypeListT::template Iterator<idx>::type;
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        static_assert(std::is_same_v<U, OptType>, "Invalid option type");
+
+        settings_.template get<idx>() = std::forward<U>(value);
+        event_table_.template Notify<idx>();
+    }
+
+    template <size_t idx, class U>
+    FORCE_INLINE_F constexpr void SetAndNotify(const U &value)
+    {
+        using OptType = typename TypeListT::template Iterator<idx>::type;
+        static_assert(idx < TypeListT::kSize, "Index out of range");
+        static_assert(std::is_same_v<U, OptType>, "Invalid option type");
+
+        settings_.template get<idx>() = std::forward<U>(value);
+        event_table_.template Notify<idx>();
+    }
+
+    template <size_t idx>
+    FORCE_INLINE_F void RegisterEvent(EventT &&event)
+    {
+        event_table_.template RegisterEvent<idx>(std::move(event));
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    TupleT settings_;
+    StaticEventTable<TypeListT::kSize, EventT> event_table_{};
+};
 
 }  // namespace TemplateLib
 #endif  // LIBC_INCLUDE_TEMPLATE_LIB_HPP_
