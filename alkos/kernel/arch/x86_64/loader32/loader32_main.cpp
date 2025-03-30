@@ -6,7 +6,7 @@
 #include "defines.hpp"
 #include "definitions/loader32_data.hpp"
 #include "elf64.hpp"
-#include "loader_memory_manager.hpp"
+#include "memory/loader_memory_manager.hpp"
 #include "terminal.hpp"
 
 // External functions defined in assembly
@@ -60,16 +60,15 @@ static void HardwareChecks()
     TRACE_SUCCESS("Long mode check passed!");
 }
 
-static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
+static void IdentityMap(memory::LoaderMemoryManager* loader_memory_manager)
 {
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     static constexpr u32 k1GiB = 1 << 30;
     for (u32 i = 0; i < 512; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
-        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
-            addr_64bit, addr_64bit,
-            LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
+        loader_memory_manager->MapVirtualMemoryToPhysical<memory::PageSize::Page1G>(
+            addr_64bit, addr_64bit, memory::kPresentBit | memory::kWriteBit
         );
     }
     TODO_WHEN_DEBUGGING_FRAMEWORK
@@ -79,7 +78,7 @@ static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
 }
 
 static void InitializeMemoryManagerWithFreeMemoryRegions(
-    LoaderMemoryManager* loader_memory_manager, multiboot::tag_mmap_t* mmap_tag
+    memory::LoaderMemoryManager* loader_memory_manager, multiboot::tag_mmap_t* mmap_tag
 )
 {
     TRACE_INFO("Adding available memory regions to memory manager...");
@@ -134,10 +133,6 @@ static multiboot::tag_mmap_t* GetMemoryMapTag(void* multiboot_info_addr)
 static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
 {
     byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
-    byte* loader_module_end_addr   = reinterpret_cast<byte*>(loader64_module->mod_end);
-
-    auto [elf_lower_bound, elf_upper_bound] = elf::GetElf64ProgramBounds(loader_module_start_addr);
-    u64 elf_effective_size                  = elf_upper_bound - elf_lower_bound;
 
     TRACE_INFO("Loading module...");
     u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);
@@ -163,7 +158,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     ///////////////////////////// Enabling Hardware //////////////////////////////
     TRACE_INFO("Enabling hardware features...");
     BlockHardwareInterrupts();
-    auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
+    auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) memory::LoaderMemoryManager();
     TRACE_SUCCESS("Loader memory manager created!");
     IdentityMap(loader_memory_manager);
 
@@ -193,7 +188,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory)),
         static_cast<u64>(
-            reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(LoaderMemoryManager)
+            reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(memory::LoaderMemoryManager)
         )
     );
 

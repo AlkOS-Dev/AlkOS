@@ -5,6 +5,9 @@
 #include <memory.h>
 #include "extensions/debug.hpp"
 
+namespace memory
+{
+
 template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
 void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
@@ -123,16 +126,15 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     );
 }
 
-template <LoaderMemoryManager::PageSize page_size>
+template <PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u64 virtual_address, u64 physical_address, u64 flags
 )
 {
-    static constexpr u32 kIndexMask     = 0x1FF;
-    static constexpr i32 kPageShift     = (page_size == PageSize::Page4k)   ? 12
-                                          : (page_size == PageSize::Page2M) ? 21
-                                                                            : 30;
-    static constexpr u64 kAlignmentMask = (1ULL << kPageShift) - 1;
+    static constexpr u32 kIndexMask = 0x1FF;
+    static constexpr i32 kPageShift = (page_size == PageSize::Page4k)   ? 12
+                                      : (page_size == PageSize::Page2M) ? 21
+                                                                        : 30;
 
     // Both addresses must be aligned to the page size
     R_ASSERT(IsAligned(physical_address, 1 << kPageShift));
@@ -148,7 +150,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     PML4_t *pml4_table = GetPml4Table();
     ASSERT_NOT_NULL(pml4_table);
 
-    auto *pml4_entry = reinterpret_cast<PML4Entry *>(&(*pml4_table)[pml4_index]);
+    auto *pml4_entry = reinterpret_cast<PML4Entry_t *>(&(*pml4_table)[pml4_index]);
     if (!pml4_entry->present) {
         // Allocate a new PML3 table
         ASSERT(num_pml_tables_stored_ < kMaxPmlTablesToStore);
@@ -159,11 +161,11 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml4_entry->writable = 1;
     }
 
-    auto pml3_table = reinterpret_cast<PML3Entry *>(pml4_entry->frame << kAddressOffset);
+    auto pml3_table = reinterpret_cast<PML3Entry_t *>(pml4_entry->frame << kAddressOffset);
 
     if constexpr (page_size == PageSize::Page1G) {
         // PML3 Level
-        auto casted_pml3_table                  = reinterpret_cast<PML3Entry1GB *>(pml3_table);
+        auto casted_pml3_table                  = reinterpret_cast<PML3Entry1GB_t *>(pml3_table);
         casted_pml3_table[pml3_index].present   = 1;
         casted_pml3_table[pml3_index].writable  = 1;
         casted_pml3_table[pml3_index].page_size = 1;
@@ -183,11 +185,12 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml3_table[pml3_index].writable = 1;
     }
 
-    auto pml2_table = reinterpret_cast<PML2Entry *>(pml3_table[pml3_index].frame << kAddressOffset);
+    auto pml2_table =
+        reinterpret_cast<PML2Entry_t *>(pml3_table[pml3_index].frame << kAddressOffset);
 
     if constexpr (page_size == PageSize::Page2M) {
         // PML2 Level
-        auto casted_pml2_table                  = reinterpret_cast<PML2Entry2MB *>(pml2_table);
+        auto casted_pml2_table                  = reinterpret_cast<PML2Entry2MB_t *>(pml2_table);
         casted_pml2_table[pml2_index].present   = 1;
         casted_pml2_table[pml2_index].writable  = 1;
         casted_pml2_table[pml2_index].page_size = 1;
@@ -207,7 +210,7 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
         pml2_table[pml2_index].writable = 1;
     }
 
-    auto p1_entry = reinterpret_cast<PML1Entry *>(pml2_table[pml2_index].frame << kAddressOffset);
+    auto p1_entry = reinterpret_cast<PML1Entry_t *>(pml2_table[pml2_index].frame << kAddressOffset);
     p1_entry[pml1_index].present  = 1;
     p1_entry[pml1_index].writable = 1;
     p1_entry[pml1_index].frame    = physical_address >> kPageShift;
@@ -254,4 +257,5 @@ void LoaderMemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, 
     }
 }
 
+}  // namespace memory
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_

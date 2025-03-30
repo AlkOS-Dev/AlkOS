@@ -1,6 +1,6 @@
 #include <extensions/template_lib.hpp>
 #include <test_module/test.hpp>
-#include "memory_management/physical_memory_manager.hpp"
+#include "memory/physical_memory_manager.hpp"
 class PhysicalMemoryManagerTest : public TestGroupBase
 {
     protected:

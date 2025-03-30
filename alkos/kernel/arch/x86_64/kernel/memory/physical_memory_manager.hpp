@@ -73,6 +73,8 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
 
 }  // namespace memory
 
+#include "virtual_memory_manager.tpp"
+
 using PhysicalMemoryManager = TemplateLib::StaticSingleton<memory::PhysicalMemoryManager>;
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_MANAGEMENT_PHYSICAL_HPP_

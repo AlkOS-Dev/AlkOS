@@ -16,7 +16,7 @@
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include "loader64_kernel_constants.hpp"
-#include "loader_memory_manager.hpp"
+#include "memory/loader_memory_manager.hpp"
 
 using namespace loader64;
 
@@ -40,18 +40,6 @@ static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
     return true;
-}
-
-static u64 GetTotalMemoryBytes(multiboot::tag_mmap_t* mmap_tag)
-{
-    u64 total_memory_bytes = 0;
-    multiboot::WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
-        if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
-            total_memory_bytes += mmap_entry->len;
-        }
-    });
-
-    return total_memory_bytes;
 }
 
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
@@ -85,7 +73,8 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_INFO("Jumping to 64-bit kernel...");
 
     auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr);
+        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr
+        );
     loader_memory_manager->MarkMemoryAreaNotFree(
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
@@ -104,10 +93,10 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     auto* multiboot_info =
         reinterpret_cast<multiboot::header_t*>(loader_data_32_64->multiboot_info_addr);
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
-    loader_memory_manager
-        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, kKernelVirtualAddressStartShared, elf_effective_size, 0
-        );
+    loader_memory_manager->MapVirtualRangeUsingExternalMemoryMap<
+        memory::LoaderMemoryManager::WalkDirection::Descending>(
+        mmap_tag, kKernelVirtualAddressStartShared, elf_effective_size, 0
+    );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
