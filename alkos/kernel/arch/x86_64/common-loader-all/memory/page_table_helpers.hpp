@@ -7,100 +7,106 @@
 
 namespace memory
 {
+
+namespace detail
+{
+namespace page_table_helpers
+{
+// --- Central Traits Struct ---
 template <u8 level>
-struct PageTableTypeGetter {
-    using Type = void;
+struct PageLevelTraits {
+    using TableType               = void;
+    using EntryType               = void;
+    static constexpr bool isValid = false;
 };
 
 template <>
-struct PageTableTypeGetter<1> {
-    using Type = PML1_t;
+struct PageLevelTraits<1> {
+    using TableType               = PML1_t;
+    using EntryType               = PML1Entry_t;
+    static constexpr u8 level     = 1;
+    static constexpr bool isValid = true;
 };
 
 template <>
-struct PageTableTypeGetter<2> {
-    using Type = PML2_t;
+struct PageLevelTraits<2> {
+    using TableType               = PML2_t;
+    using EntryType               = PML2Entry_t;
+    static constexpr u8 level     = 2;
+    static constexpr bool isValid = true;
 };
 
 template <>
-struct PageTableTypeGetter<3> {
-    using Type = PML3_t;
+struct PageLevelTraits<3> {
+    using TableType               = PML3_t;
+    using EntryType               = PML3Entry_t;
+    static constexpr u8 level     = 3;
+    static constexpr bool isValid = true;
 };
 
 template <>
-struct PageTableTypeGetter<4> {
-    using Type = PML4_t;
+struct PageLevelTraits<4> {
+    using TableType               = PML4_t;
+    using EntryType               = PML4Entry_t;
+    static constexpr u8 level     = 4;
+    static constexpr bool isValid = true;
 };
+}  // namespace page_table_helpers
+}  // namespace detail
 
+// Get Table type from level
 template <u8 level>
-struct PageEntryTypeGetter {
-    using Type = void;
-};
+using PageTableT = typename detail::page_table_helpers::PageLevelTraits<level>::TableType;
 
-template <>
-struct PageEntryTypeGetter<1> {
-    using Type = PML1Entry_t;
-};
+// Get Entry type from level
+template <u8 level>
+using PageEntryT = typename detail::page_table_helpers::PageLevelTraits<level>::EntryType;
 
-template <>
-struct PageEntryTypeGetter<2> {
-    using Type = PML2Entry_t;
-};
-
-template <>
-struct PageEntryTypeGetter<3> {
-    using Type = PML3Entry_t;
-};
-
-template <>
-struct PageEntryTypeGetter<4> {
-    using Type = PML4Entry_t;
-};
-
-template <class PageTableOrEntry>
+// Get Level from Table or Entry type
+template <typename PageTableOrEntry>
 struct PageLevelGetter {
-    static constexpr u8 value = 0;
+    private:
+    // Helper lambda to calculate the value using C++17 if constexpr
+    static constexpr u8 get_level()
+    {
+        if constexpr (std::is_same_v<
+                          PageTableOrEntry,
+                          typename detail::page_table_helpers::PageLevelTraits<1>::TableType> ||
+                      std::is_same_v<
+                          PageTableOrEntry,
+                          typename detail::page_table_helpers::PageLevelTraits<1>::EntryType>) {
+            return 1;
+        } else if constexpr (std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<2>::TableType> ||
+                             std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<2>::EntryType>) {
+            return 2;
+        } else if constexpr (std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<3>::TableType> ||
+                             std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<3>::EntryType>) {
+            return 3;
+        } else if constexpr (std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<4>::TableType> ||
+                             std::is_same_v<
+                                 PageTableOrEntry, typename detail::page_table_helpers::
+                                                       PageLevelTraits<4>::EntryType>) {
+            return 4;
+        } else {
+            return 0;
+        }
+    }
+
+    public:
+    static constexpr u8 value = get_level();
 };
 
-template <>
-struct PageLevelGetter<PML1_t> {
-    static constexpr u8 value = 1;
-};
-
-template <>
-struct PageLevelGetter<PML2_t> {
-    static constexpr u8 value = 2;
-};
-
-template <>
-struct PageLevelGetter<PML3_t> {
-    static constexpr u8 value = 3;
-};
-
-template <>
-struct PageLevelGetter<PML4_t> {
-    static constexpr u8 value = 4;
-};
-
-template <>
-struct PageLevelGetter<PML1Entry_t> {
-    static constexpr u8 value = 1;
-};
-
-template <>
-struct PageLevelGetter<PML2Entry_t> {
-    static constexpr u8 value = 2;
-};
-
-template <>
-struct PageLevelGetter<PML3Entry_t> {
-    static constexpr u8 value = 3;
-};
-
-template <>
-struct PageLevelGetter<PML4Entry_t> {
-    static constexpr u8 value = 4;
-};
+inline static constexpr u8 PageLevelV = PageLevelGetter<PageTableT<1>>::value;
 
 }  // namespace memory
 

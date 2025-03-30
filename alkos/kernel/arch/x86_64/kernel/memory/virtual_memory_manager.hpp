@@ -45,7 +45,7 @@ class VirtualMemoryManager : TemplateLib::StaticSingletonHelper
     void Free(u64 virtual_address);
 
     template <u8 level_end>
-    PageEntryTypeGetter<level_end>::Type& WalkPageTables(u64 virtual_address);
+    PageEntryT<level_end>& WalkPageTables(u64 virtual_address);
 
     PML4_t& GetPml4Table();
 
@@ -59,14 +59,10 @@ class VirtualMemoryManager : TemplateLib::StaticSingletonHelper
     //------------------------------------------------------------------------------//
 
     template <u8 level>
-    void EnsureEntryPresent(
-        PageEntryTypeGetter<level>::Type& entry, TableAllocatorConcept auto& allocator
-    );
+    void EnsureEntryPresent(PageEntryT<level>& entry, TableAllocatorConcept auto& allocator);
 
     template <u8 level>
-    PageTableTypeGetter<level - 1>::Type& GetChildPageDirectory(
-        PageEntryTypeGetter<level>::Type& entry
-    );
+    PageTableT<level - 1>& GetChildPageDirectory(PageEntryT<level>& entry);
 
     template <u8 level>
     [[nodiscard]] u16 GetPmlIndex(u64 virtual_address) const;

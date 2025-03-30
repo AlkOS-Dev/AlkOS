@@ -108,7 +108,8 @@
 #define STATIC_ASSERT(expr, msg) __STATIC_ASSERT_BASE(expr, msg)
 #define STATIC_ASSERT_EQ(expected, value) \
     STATIC_ASSERT((expected == value), "Expected: " TOSTRING(expected) " Got: " TOSTRING(value))
-#define STATIC_ASSERT_NEQ(expected, value) STATIC_ASSERT((expected != value), "Expected: " TOSTRING(expected) Got: " TOSTRING(value))
+#define STATIC_ASSERT_NEQ(expected, value) \
+    STATIC_ASSERT((expected != value), "Expected: " TOSTRING(expected) Got : TOSTRING(value))
 #define STATIC_ASSERT_ZERO(value) STATIC_ASSERT((value == 0), "Expected: 0 Got: " TOSTRING(value))
 #define STATIC_ASSERT_TRUE(value) \
     STATIC_ASSERT((value == true), "Expected: true Got: " TOSTRING(value))

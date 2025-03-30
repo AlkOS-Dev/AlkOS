@@ -51,7 +51,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr reference operator[](const size_type n) noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(n < size());
         }
 
@@ -60,7 +60,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr const_reference operator[](const size_type n) const noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(n < size());
         }
 
@@ -69,7 +69,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr reference at(const size_type n)
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             R_ASSERT(n < size());
         } else {
             TODO_USERSPACE
@@ -80,7 +80,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr const_reference at(const size_type n) const
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             R_ASSERT(n < size());
         } else {
             TODO_USERSPACE
@@ -91,7 +91,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr reference front() noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(!empty());
         }
 
@@ -100,7 +100,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr const_reference front() const noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(!empty());
         }
 
@@ -109,7 +109,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr reference back() noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(!empty());
         }
 
@@ -118,7 +118,7 @@ struct array {
 
     NODISCARD FORCE_INLINE_F constexpr const_reference back() const noexcept
     {
-        if constexpr (kIsKernel) {
+        if constexpr (kIsKernelBuild) {
             assert(!empty());
         }
 
@@ -156,31 +156,46 @@ struct array {
     // Iterators
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F iterator begin() noexcept { return mem_; }
+    NODISCARD FORCE_INLINE_F constexpr iterator begin() noexcept { return mem_; }
 
-    NODISCARD FORCE_INLINE_F const_iterator begin() const noexcept { return mem_; }
+    NODISCARD FORCE_INLINE_F constexpr const_iterator begin() const noexcept { return mem_; }
 
-    NODISCARD FORCE_INLINE_F const_iterator cbegin() const noexcept { return mem_; }
+    NODISCARD FORCE_INLINE_F constexpr const_iterator cbegin() const noexcept { return mem_; }
 
-    NODISCARD FORCE_INLINE_F iterator end() noexcept { return mem_ + size(); }
+    NODISCARD FORCE_INLINE_F constexpr iterator end() noexcept { return mem_ + size(); }
 
-    NODISCARD FORCE_INLINE_F const_iterator end() const noexcept { return mem_ + size(); }
+    NODISCARD FORCE_INLINE_F constexpr const_iterator end() const noexcept { return mem_ + size(); }
 
-    NODISCARD FORCE_INLINE_F const_iterator cend() const noexcept { return mem_ + size(); }
+    NODISCARD FORCE_INLINE_F constexpr const_iterator cend() const noexcept
+    {
+        return mem_ + size();
+    }
 
     /* Reverse iterators */
 
-    NODISCARD FORCE_INLINE_F reverse_iterator rbegin() noexcept { return end(); }
+    NODISCARD FORCE_INLINE_F constexpr reverse_iterator rbegin() noexcept { return end(); }
 
-    NODISCARD FORCE_INLINE_F const_reverse_iterator rbegin() const noexcept { return end(); }
+    NODISCARD FORCE_INLINE_F constexpr const_reverse_iterator rbegin() const noexcept
+    {
+        return end();
+    }
 
-    NODISCARD FORCE_INLINE_F const_reverse_iterator crbegin() const noexcept { return end(); }
+    NODISCARD FORCE_INLINE_F constexpr const_reverse_iterator crbegin() const noexcept
+    {
+        return end();
+    }
 
-    NODISCARD FORCE_INLINE_F reverse_iterator rend() noexcept { return begin(); }
+    NODISCARD FORCE_INLINE_F constexpr reverse_iterator rend() noexcept { return begin(); }
 
-    NODISCARD FORCE_INLINE_F const_reverse_iterator rend() const noexcept { return begin(); }
+    NODISCARD FORCE_INLINE_F constexpr const_reverse_iterator rend() const noexcept
+    {
+        return begin();
+    }
 
-    NODISCARD FORCE_INLINE_F const_reverse_iterator crend() const noexcept { return begin(); }
+    NODISCARD FORCE_INLINE_F constexpr const_reverse_iterator crend() const noexcept
+    {
+        return begin();
+    }
 
     // ------------------------------
     // Class fields

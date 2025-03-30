@@ -53,21 +53,19 @@ constexpr u8 VirtualMemoryManager::GetPageAddressShift() const
 }
 
 template <u8 entry_level>
-PageTableTypeGetter<entry_level - 1>::Type& VirtualMemoryManager::GetChildPageDirectory(
-    PageEntryTypeGetter<entry_level>::Type& entry
+PageTableT<entry_level - 1>& VirtualMemoryManager::GetChildPageDirectory(
+    PageEntryT<entry_level>& entry
 )
 {
     STATIC_ASSERT_LE(entry_level, 4);
     STATIC_ASSERT_GE(entry_level, 2);
 
-    return *reinterpret_cast<typename PageTableTypeGetter<entry_level - 1>::Type*>(
-        entry.frame << kAddressOffset
-    );
+    return *reinterpret_cast<PageTableT<entry_level - 1>*>(entry.frame << kAddressOffset);
 }
 
 template <u8 entry_level>
 void VirtualMemoryManager::EnsureEntryPresent(
-    PageEntryTypeGetter<entry_level>::Type& entry, TableAllocatorConcept auto& allocator
+    PageEntryT<entry_level>& entry, TableAllocatorConcept auto& allocator
 )
 {
     STATIC_ASSERT_LE(entry_level, 4);
@@ -75,10 +73,7 @@ void VirtualMemoryManager::EnsureEntryPresent(
 
     if (!entry.present) {
         uintptr_t table = allocator.Allocate();
-        memset(
-            reinterpret_cast<void*>(table), 0,
-            sizeof(typename PageTableTypeGetter<entry_level - 1>::Type)
-        );
+        memset(reinterpret_cast<void*>(table), 0, sizeof(PageTableT<entry_level - 1>));
         entry.frame    = reinterpret_cast<u64>(table) >> kAddressOffset;
         entry.present  = 1;
         entry.writable = 1;
@@ -124,4 +119,4 @@ enum class PageWalkType { kLastValidEntry, kAllocateNewEntry };
 
 }  // namespace memory
 
-#endif ALKOS_ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_MANAGEMENT_VIRTUAL_MEMORY_MANAGER_TPP_
+#endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_MANAGEMENT_VIRTUAL_MEMORY_MANAGER_TPP_
