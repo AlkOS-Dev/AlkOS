@@ -2,6 +2,7 @@
 #define ALKOS_ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_ALIGNED_MEMBUFFER_HPP_
 
 #include <extensions/type_traits.hpp>
+#include "extensions/utility.hpp"
 
 namespace internal
 {
@@ -32,8 +33,13 @@ class AlignedMemoryBuffer
     }
 
     constexpr Type* GetPtr() noexcept { return static_cast<Type*>(GetAddress()); }
-
     constexpr const Type* GetPtr() const noexcept { return static_cast<const Type*>(GetAddress()); }
+
+    constexpr Type& Get() & noexcept { return *GetPtr(); }
+    constexpr const Type& Get() const& noexcept { return *GetPtr(); }
+
+    constexpr Type&& Get() && noexcept { return std::move(*GetPtr()); }
+    constexpr const Type&& Get() const&& noexcept { return std::move(*GetPtr()); }
 
     private:
     //------------------------------------------------------------------------------//

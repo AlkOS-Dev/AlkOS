@@ -109,3 +109,39 @@ TEST_F(AlignedMemoryBufferTest, GetPtr_GivenBuffer_ModificationReflectsInConstVi
     // Then
     EXPECT_EQ(*const_buffer.GetPtr(), 3.1415);
 }
+
+// Test: Get_LValue_NonConst_ReturnsModifiableReference
+// Given: A default constructed AlignedMemoryBuffer for type int.
+// When: Accessing the value using the non-const lvalue Get().
+// Then: The reference returned allows modifying the stored value.
+TEST_F(AlignedMemoryBufferTest, Get_LValue_NonConst_ReturnsModifiableReference)
+{
+    AlignedMemoryBuffer<int> buffer;
+    buffer.Get() = 123;
+    EXPECT_EQ(*buffer.GetPtr(), 123);
+}
+
+// Test: Get_LValue_Const_ReturnsConstReference
+// Given: A default constructed AlignedMemoryBuffer for type double.
+// When: Accessing the value using the const lvalue Get().
+// Then: The reference returned reflects the stored value correctly.
+TEST_F(AlignedMemoryBufferTest, Get_LValue_Const_ReturnsConstReference)
+{
+    AlignedMemoryBuffer<double> buffer;
+    *buffer.GetPtr()                                = 6.28;
+    const AlignedMemoryBuffer<double>& const_buffer = buffer;
+    EXPECT_EQ(const_buffer.Get(), 6.28);
+}
+
+// Test: Get_RValue_Const_ReturnsConstRValueReference
+// Given: A default constructed AlignedMemoryBuffer for type char.
+// When: Accessing the value using the const rvalue Get().
+// Then: The rvalue reference to const returns the correct stored value.
+TEST_F(AlignedMemoryBufferTest, Get_RValue_Const_ReturnsConstRValueReference)
+{
+    AlignedMemoryBuffer<char> buffer;
+    *buffer.GetPtr()                              = 'A';
+    const AlignedMemoryBuffer<char>& const_buffer = buffer;
+    char moved_value                              = std::move(const_buffer).Get();
+    EXPECT_EQ(moved_value, 'A');
+}

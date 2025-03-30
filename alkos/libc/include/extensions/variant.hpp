@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <extensions/cstddef.hpp>
 #include <extensions/internal/aligned_membuffer.hpp>
+#include <extensions/memory.hpp>
 #include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/utility.hpp>
@@ -101,6 +102,50 @@ struct variant_alternative<Index, const volatile Variant> {
 };
 
 //------------------------------------------------------------------------------//
+// Forward declarations of get / get_if
+//------------------------------------------------------------------------------//
+
+// Forward declarations for get<kIndex>
+template <size_t kIndex, typename... Types>
+constexpr variant_alternative_t<kIndex, variant<Types...>>& get(variant<Types...>& variant_v);
+template <size_t kIndex, typename... Types>
+constexpr variant_alternative_t<kIndex, variant<Types...>>&& get(variant<Types...>&& variant_v);
+template <size_t kIndex, typename... Types>
+constexpr const variant_alternative_t<kIndex, variant<Types...>>& get(
+    const variant<Types...>& variant_v
+);
+template <size_t kIndex, typename... Types>
+constexpr const variant_alternative_t<kIndex, variant<Types...>>&& get(
+    const variant<Types...>&& variant_v
+);
+
+// Forward declarations for get<T>
+template <typename T, typename... Types>
+constexpr T& get(variant<Types...>& variant_v);
+template <typename T, typename... Types>
+constexpr T&& get(variant<Types...>&& variant_v);
+template <typename T, typename... Types>
+constexpr const T& get(const variant<Types...>& variant_v);
+template <typename T, typename... Types>
+constexpr const T&& get(const variant<Types...>&& variant_v);
+
+// Forward declarations for get_if<kIndex>
+template <size_t kIndex, typename... Types>
+constexpr add_pointer_t<variant_alternative_t<kIndex, variant<Types...>>> get_if(
+    variant<Types...>* variant_v
+) noexcept;
+template <size_t kIndex, typename... Types>
+constexpr add_pointer_t<const variant_alternative_t<kIndex, variant<Types...>>> get_if(
+    const variant<Types...>* variant_v
+) noexcept;
+
+// Forward declarations for get_if<T>
+template <typename T, typename... Types>
+constexpr add_pointer_t<T> get_if(variant<Types...>* variant_v) noexcept;
+template <typename T, typename... Types>
+constexpr add_pointer_t<const T> get_if(const variant<Types...>* variant_v) noexcept;
+
+//------------------------------------------------------------------------------//
 // variant_npos
 //------------------------------------------------------------------------------//
 // Special value to indicate that an index is not in the variant
@@ -179,7 +224,7 @@ union VariadicUnion<First, Rest...> {
     {
         STATIC_ASSERT((kIndex < 1 + sizeof...(Rest)), "Index out of range");
         if constexpr (kIndex == 0) {
-            return *mem_buffer_first.GetPtr();
+            return *mem_buffer_first.Get();
         } else {
             return rest.get(in_place_index_t<kIndex - 1>{});
         }
@@ -236,17 +281,67 @@ struct Traits {
     static constexpr bool has_nothrow_move_assign = (is_nothrow_move_assignable_v<Types> && ...);
 };
 
-//------------------------------------------------------------------------------//
-// get
-//------------------------------------------------------------------------------//
-// An internal helper function
-//------------------------------------------------------------------------------//
+template <bool IsTrivialyDestructible, typename... Types>
+struct VariantStorage;
+
+template <typename... Types>
+struct VariantStorage<false, Types...> {
+    protected:
+    //------------------------------------------------------------------------------//
+    // Internal Types
+    //------------------------------------------------------------------------------//
+
+    public:
+    using index_t = std::size_t;  // TODO: Could implement a getter for the smallest viable type
+
+    //------------------------------------------------------------------------------//
+    // Class Creation and Destruction
+    //------------------------------------------------------------------------------//
+    constexpr VariantStorage() noexcept : index_(variant_npos) {}
+
+    constexpr void Reset() noexcept
+    {
+        // TODO
+        index_ = index_t(variant_npos);
+    }
+
+    ~VariantStorage() { Reset(); }
+
+    //------------------------------------------------------------------------------//
+    // Public Methods
+    //------------------------------------------------------------------------------//
+
+    void* GetPtr() const noexcept
+    {
+        return const_cast<void*>(static_cast<const void*>(std::addressof(storage_)));
+    }
+
+    constexpr index_t GetIndex() const noexcept { return index_; }
+
+    constexpr bool IsIndexNpos() const noexcept { return index_ == index_t(variant_npos); }
+
+    constexpr bool IsValid() const noexcept
+    {
+        // TODO
+        return !IsIndexNpos();
+    }
+
+    protected:
+    //------------------------------------------------------------------------------//
+    // Private Fields
+    //------------------------------------------------------------------------------//
+    VariadicUnion<Types...> storage_;
+    index_t index_;
+};
+
+// TODO: VariantStorage<true, Types...>
 
 }  // namespace variant
 }  // namespace detail
 
 template <typename... Types>
-class variant
+class variant : protected detail::variant::VariantStorage<
+                    detail::variant::Traits<Types...>::has_trivial_destructor, Types...>
 {
     STATIC_ASSERT(sizeof...(Types) > 0, "Variant must have at least one type");
     STATIC_ASSERT((!is_array_v<Types> && ...), "Arrays are not allowed");
@@ -257,9 +352,10 @@ class variant
     //------------------------------------------------------------------------------//
     // Internal Types
     //------------------------------------------------------------------------------//
-    using storage_t = std::aligned_union<0, Types...>;
-    using Traits    = detail::variant::Traits<Types...>;
-    using index_t   = std::size_t;  // TODO: Could implement a getter for the smallest viable type
+    using Traits = detail::variant::Traits<Types...>;
+    using VariantStorage =
+        detail::variant::VariantStorage<Traits::has_trivial_destructor, Types...>;
+    using index_t = std::size_t;
 
     public:
     //------------------------------------------------------------------------------//
@@ -269,7 +365,6 @@ class variant
     /* 1. Default constructor */
     constexpr variant() noexcept(Traits::has_nothrow_default_constructor)
         requires(Traits::has_default_constructor)
-        : index_(variant_npos)
     {
         // TODO
     }
@@ -302,63 +397,274 @@ class variant
     //------------------------------------------------------------------------------//
     FORCE_INLINE_F constexpr bool valueless_by_exception() const noexcept
     {
-        return index_ == variant_npos;
+        return !VariantStorage::IsValid();
     }
 
     //------------------------------------------------------------------------------//
     // Public Fields
     //------------------------------------------------------------------------------//
-    constexpr index_t index() { return index_; }
+    constexpr size_t index()
+    {
+        if (VariantStorage::IsIndexNpos()) {
+            return variant_npos;
+        }
+        return VariantStorage::GetIndex();
+    }
 
     private:
     //------------------------------------------------------------------------------//
     // Private Methods
     //------------------------------------------------------------------------------//
 
-    template <size_t I>
-    constexpr TemplateLib::nth_type_t<I, Types...> get_ptr() noexcept
-    {
-        return &storage_;
-    }
-
-    constexpr void initialize_valueless() noexcept { index_ = variant_npos; }
+    constexpr void initialize_valueless() noexcept { VariantStorage::Reset(); }
 
     //------------------------------------------------------------------------------//
     // Private Fields
     //------------------------------------------------------------------------------//
-    storage_t storage_;
-    index_t index_ = variant_npos;
 
     //------------------------------------------------------------------------------//
     // Helpers
     //------------------------------------------------------------------------------//
+
+    template <size_t kIndex>
+    constexpr auto& _get_internal() & noexcept
+    {
+        // Access the storage_ union directly
+        return this->storage_.template get<kIndex>();
+    }
+
+    template <size_t kIndex>
+    constexpr const auto& _get_internal() const& noexcept
+    {
+        return this->storage_.template get<kIndex>();
+    }
+
+    template <size_t kIndex>
+    constexpr auto&& _get_internal() && noexcept
+    {
+        return std::move(this->storage_.template get<kIndex>());
+    }
+
+    template <size_t kIndex>
+    constexpr const auto&& _get_internal() const&& noexcept
+    {
+        return std::move(this->storage_.template get<kIndex>());
+    }
+
+    //------------------------------------------------------------------------------//
+    // Friends
+    //------------------------------------------------------------------------------//
+
+    // Friends for get<kIndex>
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr variant_alternative_t<kOtherIndex, variant<OtherTypes...>>& get(
+        variant<OtherTypes...>& variant_v
+    );
+
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr variant_alternative_t<kOtherIndex, variant<OtherTypes...>>&& get(
+        variant<OtherTypes...>&& variant_v
+    );
+
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr const variant_alternative_t<kOtherIndex, variant<OtherTypes...>>& get(
+        const variant<OtherTypes...>& variant_v
+    );
+
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr const variant_alternative_t<kOtherIndex, variant<OtherTypes...>>&& get(
+        const variant<OtherTypes...>&& variant_v
+    );
+
+    // Friends for get<T>
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr TOther& get(variant<OtherTypes...>& variant_v);
+
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr TOther&& get(variant<OtherTypes...>&& variant_v);
+
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr const TOther& get(const variant<OtherTypes...>& variant_v);
+
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr const TOther&& get(const variant<OtherTypes...>&& variant_v);
+
+    // Friends for get_if<kIndex>
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr add_pointer_t<variant_alternative_t<kOtherIndex, variant<OtherTypes...>>>
+    get_if(variant<OtherTypes...>* variant_v) noexcept;
+
+    template <size_t kOtherIndex, typename... OtherTypes>
+    friend constexpr add_pointer_t<const variant_alternative_t<kOtherIndex, variant<OtherTypes...>>>
+    get_if(const variant<OtherTypes...>* variant_v) noexcept;
+
+    // Friends for get_if<T>
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr add_pointer_t<TOther> get_if(variant<OtherTypes...>* variant_v) noexcept;
+
+    template <typename TOther, typename... OtherTypes>
+    friend constexpr add_pointer_t<const TOther> get_if(const variant<OtherTypes...>* variant_v
+    ) noexcept;
 };
 
 //------------------------------------------------------------------------------//
 // get
 //------------------------------------------------------------------------------//
 
-// Specialization where we use the index to get the value
-template <size_t I, typename... Types>
-constexpr variant_alternative<I, Types...>& get(variant<Types...>& variant_v)
+// By index
+
+template <size_t kIndex, typename... Types>
+constexpr variant_alternative<kIndex, variant<Types...>>& get(variant<Types...>& variant_v)
 {
     STATIC_ASSERT(
-        I < sizeof...(Types), "Index should be less than the number of types in the variant"
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
     );
-    if (variant_v.index() != I) {
+    if (variant_v.index() != kIndex) {
         throw_bad_variant_access();
     }
+    return variant_v.template _get_internal<kIndex>();
 }
+
+template <size_t kIndex, typename... Types>
+constexpr variant_alternative_t<kIndex, variant<Types...>>&& get(variant<Types...>&& variant_v)
+{
+    STATIC_ASSERT(
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
+    );
+    if (variant_v.index() != kIndex) {
+        throw_bad_variant_access();
+    }
+    return variant_v.template _get_internal<kIndex>();
+}
+
+template <size_t kIndex, typename... Types>
+constexpr const variant_alternative_t<kIndex, variant<Types...>>& get(
+    const variant<Types...>& variant_v
+)
+{
+    STATIC_ASSERT(
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
+    );
+    if (variant_v.index() != kIndex) {
+        throw_bad_variant_access();
+    }
+    return variant_v.template _get_internal<kIndex>();
+}
+
+template <size_t kIndex, typename... Types>
+constexpr const variant_alternative_t<kIndex, variant<Types...>>&& get(
+    const variant<Types...>&& variant_v
+)
+{
+    STATIC_ASSERT(
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
+    );
+    if (variant_v.index() != kIndex) {
+        throw_bad_variant_access();
+    }
+    return variant_v.template _get_internal<kIndex>();
+}
+
+// By type
 
 template <typename T, typename... Types>
 constexpr T& get(variant<Types...>& variant_v)
 {
     STATIC_ASSERT(
-        (TemplateLib::HasTypeOnce<T, Types...>()), "Type must occur exactly once in the variant"
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
     );
-    STATIC_ASSERT((!std::is_void_v<T>), "Void is not allowed");
+    return get<detail::variant::index_of_v<T, Types...>>(variant_v);
+}
 
-    return std::get<detail::variant::index_of_v<T, Types...>>(variant_v);
+template <typename T, typename... Types>
+constexpr T&& get(variant<Types...>&& variant_v)
+{
+    STATIC_ASSERT(
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
+    );
+    return get<detail::variant::index_of_v<T, Types...>>(std::move(variant_v));
+}
+
+template <typename T, typename... Types>
+constexpr const T& get(const variant<Types...>& variant_v)
+{
+    STATIC_ASSERT(
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
+    );
+    return get<detail::variant::index_of_v<T, Types...>>(variant_v);
+}
+
+template <typename T, typename... Types>
+constexpr const T&& get(const variant<Types...>&& variant_v)
+{
+    STATIC_ASSERT(
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
+    );
+    return get<detail::variant::index_of_v<T, Types...>>(std::move(variant_v));
+}
+
+// get_if
+
+// by index
+
+template <size_t kIndex, typename... Types>
+constexpr add_pointer_t<variant_alternative_t<kIndex, variant<Types...>>> get_if(
+    variant<Types...>* variant_v
+) noexcept
+{
+    STATIC_ASSERT(
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
+    );
+
+    if (variant_v == nullptr || variant_v->index() != kIndex) {
+        return nullptr;
+    }
+    return std::addressof(variant_v->template _get_internal<kIndex>());
+}
+
+template <size_t kIndex, typename... Types>
+constexpr add_pointer_t<const variant_alternative_t<kIndex, variant<Types...>>> get_if(
+    const variant<Types...>* variant_v
+) noexcept
+{
+    STATIC_ASSERT(
+        (kIndex < sizeof...(Types)), "Index should be less than the number of types in the variant"
+    );
+
+    if (variant_v == nullptr || variant_v->index() != kIndex) {
+        return nullptr;
+    }
+    return std::addressof(variant_v->template _get_internal<kIndex>());
+}
+
+// by type
+
+template <typename T, typename... Types>
+constexpr add_pointer_t<T> get_if(variant<Types...>* variant_v) noexcept
+{
+    STATIC_ASSERT(
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
+    );
+
+    constexpr size_t kIndex = detail::variant::index_of_v<T, Types...>;
+    return get_if<kIndex>(variant_v);
+}
+
+template <typename T, typename... Types>
+constexpr add_pointer_t<const T> get_if(const variant<Types...>* variant_v) noexcept
+{
+    STATIC_ASSERT(
+        (detail::variant::index_of_v<T, Types...> != sizeof...(Types)),
+        "Type should be in the variant"
+    );
+
+    constexpr size_t kIndex = detail::variant::index_of_v<T, Types...>;
+    return get_if<kIndex>(variant_v);
 }
 
 }  // namespace std
