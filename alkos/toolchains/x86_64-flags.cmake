@@ -27,7 +27,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEAS
     set(RELEASE_FLAGS "${RELEASE_FLAGS} -floop-unroll-and-jam")
     set(RELEASE_FLAGS "${RELEASE_FLAGS} -fgcse-after-reload")
     set(RELEASE_FLAGS "${RELEASE_FLAGS} -ftree-partial-pre")
-    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fipa-cp-clone") # Allows function cloning - might be unhandy in debugging
+    set(RELEASE_FLAGS "${RELEASE_FLAGS} -fipa-cp-clone")
     set(RELEASE_FLAGS "${RELEASE_FLAGS} -fsplit-loops")
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${RELEASE_FLAGS}")
