@@ -1,5 +1,5 @@
-#ifndef KERNEL_ABI_TERMINA_HPP_
-#define KERNEL_ABI_TERMINA_HPP_
+#ifndef ALKOS_KERNEL_ABI_TERMINAL_HPP_
+#define ALKOS_KERNEL_ABI_TERMINAL_HPP_
 
 #include <defines.h>
 #include <todo.hpp>
@@ -55,4 +55,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, size_t size);
 
 #include <abi/terminal.hpp>
 
-#endif  // KERNEL_ABI_TERMINA_HPP_
+#endif  // ALKOS_KERNEL_ABI_TERMINAL_HPP_

@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
 
 #include <extensions/concepts.hpp>
 
@@ -21,4 +21,4 @@ concept RolledSwitchFunctor = requires(FuncT f, Args... args) {
 };
 }  // namespace concepts_ext
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
