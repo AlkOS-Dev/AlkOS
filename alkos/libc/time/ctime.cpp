@@ -13,8 +13,6 @@ char *ctime(const time_t *timer)
 
 errno_t ctime_s(char *buf, const rsize_t bufsz, const time_t *timer)
 {
-    static constexpr size_t kMinialBufSize = 26;
-
     /* error checking */
     TODO_LIBC_EXT1
 
