@@ -142,7 +142,7 @@ void TestModule::RunTest_(const TestSpec *test)
         return;
     }
 
-    TerminalWriteString("[TEST] [SUCCESS] Test correctly passed...\n");
+    TerminalWriteString("[TEST] [SUCCESS] Test passed...\n");
 }
 
 void AddTest(const char *name, const test_factory_t factory)

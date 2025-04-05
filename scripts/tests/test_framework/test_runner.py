@@ -133,7 +133,7 @@ def run_test(path: str, info: TestInfo, logger: TestLog) -> bool:
         result = _run_test(path, info, log_file)
 
         if result:
-            print_green(f"[PASS] Test: {info.test_name} correctly passed...")
+            print_green(f"[PASS] Test: {info.test_name} passed...")
         else:
             print_red(f"[FAIL] Test: {info.test_name} failed...")
 
