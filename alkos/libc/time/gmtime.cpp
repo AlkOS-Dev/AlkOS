@@ -1,20 +1,14 @@
 #include <assert.h>
 #include <time.h>
-
-struct tm *gmtime_s(const time_t *timer, struct tm *result)
-{
-    assert(false && "Not implemented!");
-    return nullptr;
-}
+#include <extensions/time.hpp>
 
 struct tm *gmtime_r(const time_t *timer, struct tm *result)
 {
-    assert(false && "Not implemented!");
-    return nullptr;
+    return ConvertFromPosixToTm(*timer, *result, kUtcTimezone);
 }
 
 struct tm *gmtime(const time_t *timer)
 {
-    assert(false && "Not implemented!");
-    return nullptr;
+    static tm buffer;
+    return gmtime_r(timer, &buffer);
 }

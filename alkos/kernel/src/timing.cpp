@@ -1,5 +1,20 @@
+#include <extensions/debug.hpp>
+#include <modules/global_state.hpp>
 #include <modules/timing.hpp>
 
-#include <extensions/debug.hpp>
+internal::TimingModule::TimingModule() noexcept
+{
+    ::GlobalStateModule::Get()
+        .GetSettings()
+        .RegisterEvent<
+            static_cast<size_t>(global_state_constants::SettingsType::kIsDayTimeClockInUTC)>(
+            &OnIsUtcChanged
+        );
 
-internal::TimingModule::TimingModule() noexcept { TRACE_INFO("TimingModule::TimingModule()"); }
+    TRACE_INFO("TimingModule::TimingModule()");
+}
+
+void internal::TimingModule::OnIsUtcChanged() noexcept
+{
+    ::TimingModule::Get().day_time_.SyncWithHardware();
+}

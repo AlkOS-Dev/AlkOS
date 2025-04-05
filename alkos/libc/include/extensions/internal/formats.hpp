@@ -40,7 +40,7 @@ inline char *FormatUInt(uintmax_t num, char *str)
     return str;
 }
 
-inline size_t FormatUIntWithoutNullTerminator(uintmax_t num, char *str, const size_t len)
+inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
 {
     if (len == 0) {
         return 0;

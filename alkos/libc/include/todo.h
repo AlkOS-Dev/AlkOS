@@ -28,4 +28,6 @@
 
 #define TODO_LIBC_EXT1
 
+#define TODO_OPTIMISE
+
 #endif  // ALKOS_LIBC_INCLUDE_TODO_H_

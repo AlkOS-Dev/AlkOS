@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <memory.h>
 #include <time.h>
+#include <extensions/array.hpp>
 #include <extensions/time.hpp>
 #include <test_module/test.hpp>
 
@@ -35,7 +36,7 @@ class StrftimeTest : public TestGroupBase
         const auto local_time = time;                                              \
         memset(buffer_, 0, kBufferSize);                                           \
         const size_t result = strftime(buffer_, kBufferSize, format, &local_time); \
-        EXPECT_GT(result, 0);                                                      \
+        EXPECT_GT(result, 0_size);                                                 \
         EXPECT_STREQ(expected, buffer_);                                           \
     }
 };
@@ -43,6 +44,30 @@ class StrftimeTest : public TestGroupBase
 // ------------------------------
 // Basic Format Tests
 // ------------------------------
+
+TEST_F(StrftimeTest, BuggedRange)
+{
+    static constexpr size_t kBuffSize = 64;
+    std::array<char, kBuffSize> arr{};
+    arr.fill('x');
+
+    tm time{
+        .tm_sec   = 13,
+        .tm_min   = 39,
+        .tm_hour  = 11,
+        .tm_mday  = 14,
+        .tm_mon   = 2,
+        .tm_year  = 125,
+        .tm_wday  = 0,
+        .tm_yday  = 0,
+        .tm_isdst = 0,
+    };
+
+    const size_t out = strftime(arr.data(), kBuffSize, "%Y-%m-%d %H:%M:%S\n", &time);
+
+    EXPECT_EQ(20_size, out);
+    EXPECT_NEQ('x', arr[20]);
+}
 
 TEST_F(StrftimeTest, BasicDateFormats)
 {
