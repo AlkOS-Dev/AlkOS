@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_TEMPLATE_LIB_HPP_
-#define LIBC_INCLUDE_TEMPLATE_LIB_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
 
 #include <assert.h>
 #include <extensions/array.hpp>
@@ -476,4 +476,4 @@ class Settings : public NoCopy
 };
 
 }  // namespace TemplateLib
-#endif  // LIBC_INCLUDE_TEMPLATE_LIB_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

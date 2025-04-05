@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
 
 #include <assert.h>
 #include <defines.h>
@@ -9,6 +9,7 @@
 #include <todo.h>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
+#include <extensions/utility.hpp>
 
 // -------------------------------------
 // TODO: temporary print mechanism
@@ -91,6 +92,7 @@ DEF_VERB_DUMP(long double, "%Lg")
 
 static constexpr size_t kFailMsgBuffSize       = 2048;
 static constexpr size_t kFullAssertMsgBuffSize = 512 + kFailMsgBuffSize;
+static constexpr size_t kUserMessageBuffSize   = 1024;
 
 using ErrorHandlerFn = void (*)(const char *);
 
@@ -110,38 +112,63 @@ FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *
     Handler(full_msg);
 }
 
-template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT>
+template <
+    ErrorHandlerFn Handler, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT,
+    class... Args>
 FAST_CALL void VerboseAssertTwoArgBase(
     const ExpectedT &expected, const ValueT &value, CheckerT checker, MsgGetterT msg_getter,
-    const char *expected_str, const char *value_str, const char *file, const char *line
+    const char *expected_str, const char *value_str, const char *file, const char *line,
+    Args... args
 )
 {
     if (!checker(expected, value)) {
         char fail_msg[kFailMsgBuffSize];
         char e_obj[kObjToHexBuffSize];
         char v_obj[kObjToHexBuffSize];
+        char *msg_buff  = fail_msg;
+        size_t msg_size = kFailMsgBuffSize;
+
+        if constexpr (sizeof...(args) > 0) {
+            const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
+            fail_msg[offset]    = '\n';
+            msg_buff            = fail_msg + offset + 1;
+            msg_size            = kFailMsgBuffSize - offset;
+
+            assert(offset < kFailMsgBuffSize && "VerboseAssertTwoArgBase buffer fully used!");
+        }
 
         VerboseAssertDumpObjToHex(expected, e_obj, kObjToHexBuffSize);
         VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
 
-        msg_getter(fail_msg, kFailMsgBuffSize, expected_str, value_str, e_obj, v_obj);
+        msg_getter(msg_buff, msg_size, expected_str, value_str, e_obj, v_obj);
         VerboseAssertDump<Handler>(fail_msg, file, line);
     }
 }
 
-template <ErrorHandlerFn Handler, class ValueT, class CheckerT, class MsgGetterT>
+template <ErrorHandlerFn Handler, class ValueT, class CheckerT, class MsgGetterT, class... Args>
 FAST_CALL void VerboseAssertOneArgBase(
     const ValueT &value, CheckerT checker, MsgGetterT msg_getter, const char *value_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     if (!checker(value)) {
         char fail_msg[kFailMsgBuffSize];
         char v_obj[kObjToHexBuffSize];
+        char *msg_buff  = fail_msg;
+        size_t msg_size = kFailMsgBuffSize;
+
+        if constexpr (sizeof...(args) > 0) {
+            const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
+            fail_msg[offset]    = '\n';
+            msg_buff            = fail_msg + offset + 1;
+            msg_size            = kFailMsgBuffSize - offset;
+
+            assert(offset < kFailMsgBuffSize && "VerboseAssertOneArgBase buffer fully used!");
+        }
 
         VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
 
-        msg_getter(fail_msg, kFailMsgBuffSize, value_str, v_obj);
+        msg_getter(msg_buff, msg_size, value_str, v_obj);
         VerboseAssertDump<Handler>(fail_msg, file, line);
     }
 }
@@ -150,10 +177,10 @@ FAST_CALL void VerboseAssertOneArgBase(
 // EQ Assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ExpectedT, class ValueT>
+template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class... Args>
 FAST_CALL void VerboseAssertEq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -175,7 +202,7 @@ FAST_CALL void VerboseAssertEq(
             );
             assert(bytes_written < size && "VerboseAssertEq buffer fully used!");
         },
-        expected_str, value_str, file, line
+        expected_str, value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -183,10 +210,10 @@ FAST_CALL void VerboseAssertEq(
 // NEQ Assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ExpectedT, class ValueT>
+template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class... Args>
 FAST_CALL void VerboseAssertNeq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -208,7 +235,7 @@ FAST_CALL void VerboseAssertNeq(
             );
             assert(bytes_written < size && "VerboseAssertNeq buffer fully used!");
         },
-        expected_str, value_str, file, line
+        expected_str, value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -216,9 +243,9 @@ FAST_CALL void VerboseAssertNeq(
 // Zero Assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
 void VerboseAssertZero(
-    const ValueT &value, const char *value_str, const char *file, const char *line
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
@@ -238,7 +265,7 @@ void VerboseAssertZero(
             );
             assert(bytes_written < size && "VerboseAssertTrue buffer fully used!");
         },
-        value_str, file, line
+        value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -246,9 +273,9 @@ void VerboseAssertZero(
 // TRUE assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
 void VerboseAssertTrue(
-    const ValueT &value, const char *value_str, const char *file, const char *line
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
@@ -268,7 +295,7 @@ void VerboseAssertTrue(
             );
             assert(bytes_written < size && "VerboseAssertTrue buffer fully used!");
         },
-        value_str, file, line
+        value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -276,9 +303,9 @@ void VerboseAssertTrue(
 // FALSE assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
 void VerboseAssertFalse(
-    const ValueT &value, const char *value_str, const char *file, const char *line
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
@@ -298,7 +325,7 @@ void VerboseAssertFalse(
             );
             assert(bytes_written < size && "VerboseAssertFalse buffer fully used!");
         },
-        value_str, file, line
+        value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -306,9 +333,9 @@ void VerboseAssertFalse(
 // NOT_NULL assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
 void VerboseAssertNotNull(
-    const ValueT &value, const char *value_str, const char *file, const char *line
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
@@ -327,7 +354,7 @@ void VerboseAssertNotNull(
             );
             assert(bytes_written < size && "VerboseAssertNotNull buffer fully used!");
         },
-        value_str, file, line
+        value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -335,9 +362,9 @@ void VerboseAssertNotNull(
 // NULL assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class ValueT>
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
 void VerboseAssertNull(
-    const ValueT &value, const char *value_str, const char *file, const char *line
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
@@ -356,7 +383,7 @@ void VerboseAssertNull(
             );
             assert(bytes_written < size && "VerboseAssertNull buffer fully used!");
         },
-        value_str, file, line
+        value_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -364,10 +391,10 @@ void VerboseAssertNull(
 // LT (Less Than) assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
 void VerboseAssertLt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -389,7 +416,7 @@ void VerboseAssertLt(
             );
             assert(bytes_written < size && "VerboseAssertLt buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -397,10 +424,10 @@ void VerboseAssertLt(
 // LE (Less Than or Equal) assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
 void VerboseAssertLe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -422,7 +449,7 @@ void VerboseAssertLe(
             );
             assert(bytes_written < size && "VerboseAssertLe buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -430,10 +457,10 @@ void VerboseAssertLe(
 // GT (Greater Than) assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
 void VerboseAssertGt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -455,7 +482,7 @@ void VerboseAssertGt(
             );
             assert(bytes_written < size && "VerboseAssertGt buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -463,10 +490,10 @@ void VerboseAssertGt(
 // GE (Greater Than or Equal) assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler, class Val1T, class Val2T>
+template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
 void VerboseAssertGe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -488,7 +515,7 @@ void VerboseAssertGe(
             );
             assert(bytes_written < size && "VerboseAssertGe buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -496,10 +523,10 @@ void VerboseAssertGe(
 // String Equal assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler>
+template <ErrorHandlerFn Handler, class... Args>
 void VerboseAssertStrEq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -521,7 +548,7 @@ void VerboseAssertStrEq(
             );
             assert(bytes_written < size && "VerboseAssertStrEq buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -529,10 +556,10 @@ void VerboseAssertStrEq(
 // String Not Equal assert base
 // ------------------------------
 
-template <ErrorHandlerFn Handler>
+template <ErrorHandlerFn Handler, class... Args>
 void VerboseAssertStrNeq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
-    const char *file, const char *line
+    const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
@@ -554,7 +581,7 @@ void VerboseAssertStrNeq(
             );
             assert(bytes_written < size && "VerboseAssertStrNeq buffer fully used!");
         },
-        val1_str, val2_str, file, line
+        val1_str, val2_str, file, line, std::forward<Args>(args)...
     );
 }
 
@@ -562,60 +589,78 @@ void VerboseAssertStrNeq(
 // Macro wrappers
 // ------------------------------
 
-#define BASE_ASSERT_EQ(is_active, expected, value, handler)                                \
-    if constexpr (is_active)                                                               \
-    VerboseAssertEq<handler>(                                                              \
-        expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_EQ(is_active, expected, value, handler, ...)        \
+    if constexpr (is_active)                                            \
+    VerboseAssertEq<handler>(                                           \
+        expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__                   \
     )
-#define BASE_ASSERT_NEQ(is_active, expected, value, handler)                               \
-    if constexpr (is_active)                                                               \
-    VerboseAssertNeq<handler>(                                                             \
-        expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_NEQ(is_active, expected, value, handler, ...)       \
+    if constexpr (is_active)                                            \
+    VerboseAssertNeq<handler>(                                          \
+        expected, value, TOSTRING(expected), TOSTRING(value), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__                   \
     )
-#define BASE_ASSERT_TRUE(is_active, value, handler) \
-    if constexpr (is_active)                        \
-    VerboseAssertTrue<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_ZERO(is_active, value, handler) \
-    if constexpr (is_active)                        \
-    VerboseAssertZero<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_FALSE(is_active, value, handler) \
-    if constexpr (is_active)                         \
-    VerboseAssertFalse<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_NOT_NULL(is_active, value, handler) \
-    if constexpr (is_active)                            \
-    VerboseAssertNotNull<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_NULL(is_active, value, handler) \
-    if constexpr (is_active)                        \
-    VerboseAssertNull<handler>(value, TOSTRING(value), __FILE__, TOSTRING(__LINE__))
-#define BASE_ASSERT_LT(is_active, val1, val2, handler)                           \
-    if constexpr (is_active)                                                     \
-    VerboseAssertLt<handler>(                                                    \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_TRUE(is_active, value, handler, ...)                                \
+    if constexpr (is_active)                                                            \
+    VerboseAssertTrue<handler>(                                                         \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
-#define BASE_ASSERT_LE(is_active, val1, val2, handler)                           \
-    if constexpr (is_active)                                                     \
-    VerboseAssertLe<handler>(                                                    \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_ZERO(is_active, value, handler, ...)                                \
+    if constexpr (is_active)                                                            \
+    VerboseAssertZero<handler>(                                                         \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
-#define BASE_ASSERT_GT(is_active, val1, val2, handler)                           \
-    if constexpr (is_active)                                                     \
-    VerboseAssertGt<handler>(                                                    \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_FALSE(is_active, value, handler, ...)                               \
+    if constexpr (is_active)                                                            \
+    VerboseAssertFalse<handler>(                                                        \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
-#define BASE_ASSERT_GE(is_active, val1, val2, handler)                           \
-    if constexpr (is_active)                                                     \
-    VerboseAssertGe<handler>(                                                    \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_NOT_NULL(is_active, value, handler, ...)                            \
+    if constexpr (is_active)                                                            \
+    VerboseAssertNotNull<handler>(                                                      \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
-#define BASE_ASSERT_STREQ(is_active, val1, val2, handler)                        \
-    if constexpr (is_active)                                                     \
-    VerboseAssertStrEq<handler>(                                                 \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_NULL(is_active, value, handler, ...)                                \
+    if constexpr (is_active)                                                            \
+    VerboseAssertNull<handler>(                                                         \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
-#define BASE_ASSERT_STRNEQ(is_active, val1, val2, handler)                       \
-    if constexpr (is_active)                                                     \
-    VerboseAssertStrNeq<handler>(                                                \
-        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, TOSTRING(__LINE__) \
+#define BASE_ASSERT_LT(is_active, val1, val2, handler, ...)   \
+    if constexpr (is_active)                                  \
+    VerboseAssertLt<handler>(                                 \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__         \
+    )
+#define BASE_ASSERT_LE(is_active, val1, val2, handler, ...)   \
+    if constexpr (is_active)                                  \
+    VerboseAssertLe<handler>(                                 \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__         \
+    )
+#define BASE_ASSERT_GT(is_active, val1, val2, handler, ...)   \
+    if constexpr (is_active)                                  \
+    VerboseAssertGt<handler>(                                 \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__         \
+    )
+#define BASE_ASSERT_GE(is_active, val1, val2, handler, ...)   \
+    if constexpr (is_active)                                  \
+    VerboseAssertGe<handler>(                                 \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__, \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__         \
+    )
+#define BASE_ASSERT_STREQ(is_active, val1, val2, handler, ...) \
+    if constexpr (is_active)                                   \
+    VerboseAssertStrEq<handler>(                               \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__,  \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__          \
+    )
+#define BASE_ASSERT_STRNEQ(is_active, val1, val2, handler, ...) \
+    if constexpr (is_active)                                    \
+    VerboseAssertStrNeq<handler>(                               \
+        val1, val2, TOSTRING(val1), TOSTRING(val2), __FILE__,   \
+        TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__           \
     )
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_ASSERT_BASE_HPP_

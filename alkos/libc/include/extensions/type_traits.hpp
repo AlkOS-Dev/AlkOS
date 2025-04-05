@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
 
 #include <todo.h>
 #include <extensions/cstddef.hpp>
@@ -1992,4 +1992,4 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 
 }  // namespace std
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_

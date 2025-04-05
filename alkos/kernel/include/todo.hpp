@@ -1,5 +1,5 @@
-#ifndef KERNEL_INCLUDE_TODO_HPP_
-#define KERNEL_INCLUDE_TODO_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_TODO_HPP_
+#define ALKOS_KERNEL_INCLUDE_TODO_HPP_
 
 /**
  * @brief This file's purpose is to define a set of macros used as placeholders
@@ -23,4 +23,4 @@
 #define TODO_WHEN_TYPETRAITS_MERGED
 #define TODO_WHEN_DEBUGGING_FRAMEWORK
 
-#endif  // KERNEL_INCLUDE_TODO_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_TODO_HPP_

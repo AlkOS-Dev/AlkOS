@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_STDIO_H_
-#define LIBC_INCLUDE_STDIO_H_
+#ifndef ALKOS_LIBC_INCLUDE_STDIO_H_
+#define ALKOS_LIBC_INCLUDE_STDIO_H_
 
 #include <defines.h>
 #include <stdarg.h>
@@ -18,4 +18,4 @@ int vsnprintf(char *str, size_t size, const char *format, va_list va);
 
 END_DECL_C
 
-#endif  // LIBC_INCLUDE_STDIO_H_
+#endif  // ALKOS_LIBC_INCLUDE_STDIO_H_

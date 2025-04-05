@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
 
 #include <stdint.h>
 #include <sys/time.h>
@@ -180,4 +180,4 @@ NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const timezone &time
     return t;
 }
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_

@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
 #include <todo.h>
 
@@ -51,4 +51,4 @@ void FormatTrace(const char* format, Args... args)
 #define TRACE_INFO(message, ...)    TRACE(TRACE_FORMAT_INFO(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_SUCCESS(message, ...) TRACE(TRACE_FORMAT_SUCCESS(message) __VA_OPT__(, ) __VA_ARGS__)
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_

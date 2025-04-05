@@ -1,5 +1,5 @@
-#ifndef KERNEL_ABI_TIMERS_HPP_
-#define KERNEL_ABI_TIMERS_HPP_
+#ifndef ALKOS_KERNEL_ABI_TIMERS_HPP_
+#define ALKOS_KERNEL_ABI_TIMERS_HPP_
 
 #include <sys/time.h>
 #include <time.h>
@@ -15,4 +15,4 @@ WRAP_CALL time_t QuerySystemTime(const timezone& tz);
 
 #include <abi/timers.hpp>
 
-#endif  // KERNEL_ABI_TIMERS_HPP_
+#endif  // ALKOS_KERNEL_ABI_TIMERS_HPP_
