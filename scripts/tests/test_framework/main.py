@@ -6,6 +6,7 @@ import traceback
 from .test_cli import process_args
 from .test_framework import test_framework_run
 
+
 def main(args: list[str]) -> None:
     try:
         test_spec = process_args(args)

@@ -1,10 +1,10 @@
+import logging
+
 from .test_data import TestRunSpec, TestInfo
+from .test_log import TestLog
 from .test_parser import parse_tests
 from .test_runner import run_test
-from .test_log import TestLog
 from .test_utils import print_red, print_green
-
-import logging
 
 
 def _display_tests(tests: list[TestInfo]) -> None:
@@ -16,7 +16,7 @@ def _display_tests(tests: list[TestInfo]) -> None:
 
 def test_framework_run(spec: TestRunSpec) -> None:
     file_logger = TestLog()
-    file_logger.setup_logging()
+    file_logger.setup_logging(spec.verbose)
 
     logging.info("Test framework started...")
     logging.info("Parsing tests from alkos...")
