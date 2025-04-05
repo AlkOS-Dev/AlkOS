@@ -20,7 +20,7 @@ Options:
     -h, --help                  Display this help message
 
 Examples:
-    ${script_name} x86_64 --verbose
+    ${script_name} x86_64 --run --verbose
 
 EOF
 }
