@@ -21,7 +21,7 @@ extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-extern "C" void PreKernelInit(LoaderDataKernelPass* loader_data)
+extern "C" void PreKernelInit([[maybe_unused]] LoaderDataKernelPass* loader_data)
 {
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
