@@ -1,13 +1,12 @@
+import logging
 import select
 import subprocess
 import time
-from typing import TextIO
-import logging
 
 from .test_commands import TEST_COMMAND_SPECIFIER, TEST_SUCCESS_COMMAND, TEST_FAIL_COMMAND, TEST_DISPLAY_STOP_COMMAND_IN
 from .test_data import MAX_ALKOS_TEST_TIME, MAX_ALKOS_WAIT_SYNC_TIME, TestState
 from .test_data import TestInfo
-from .test_log import TestLog
+from .test_log import TestLog, TestFile
 from .test_utils import print_red, print_green
 
 
@@ -35,7 +34,7 @@ def _process_test_state(test_state: TestState, line: str) -> TestState:
     return test_state
 
 
-def _run_test(path: str, info: TestInfo, log_file: TextIO) -> bool:
+def _run_test(path: str, info: TestInfo, log_file: TestFile) -> bool:
     state = TestState.UNKNOWN
     should_process = True
 
