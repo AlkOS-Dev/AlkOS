@@ -29,4 +29,3 @@ echo "Searching in '$TARGET_FOLDER' for files with extensions: ${FILE_EXTENSIONS
 "${find_command[@]}" | xargs -d '\n' -P "$num_cores" -I {} clang-format -i -style="$CLANG_FORMAT_STYLE" "{}"
 
 echo "Formatting completed."
-

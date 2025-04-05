@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
 
 #include <extensions/type_traits.hpp>
 #include "utility.hpp"
@@ -13,4 +13,4 @@ concept convertible_to =
 
 }  // namespace std
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_

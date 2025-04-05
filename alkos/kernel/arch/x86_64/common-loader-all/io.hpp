@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_IO_HPP_
-#define ARCH_X86_64_IO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
 
 #include <defines.hpp>
 #include "extensions/types.hpp"
@@ -49,4 +49,4 @@ FAST_CALL void outl(const u16 port, const u32 v)
  */
 FAST_CALL void IoWait() { outb(0x80, 0); }
 
-#endif  // ARCH_X86_64_IO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_

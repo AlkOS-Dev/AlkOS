@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_TODO_H_
-#define LIBC_INCLUDE_TODO_H_
+#ifndef ALKOS_LIBC_INCLUDE_TODO_H_
+#define ALKOS_LIBC_INCLUDE_TODO_H_
 
 /* Should be adjusted when userspace version of libc is implemented */
 #define TODO_USERSPACE
@@ -30,4 +30,4 @@
 
 #define TODO_OPTIMISE
 
-#endif  // LIBC_INCLUDE_TODO_H_
+#endif  // ALKOS_LIBC_INCLUDE_TODO_H_

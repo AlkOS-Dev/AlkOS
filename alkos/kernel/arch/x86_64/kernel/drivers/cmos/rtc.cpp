@@ -143,7 +143,7 @@ tm ReadRtcTime()
     time.time.tm_year -= kTmBaseYear;
     /* Adjust month to match tm struct */
     time.time.tm_mon -= 1;
-    /* Disable dst guess */
+    /* Disable dst */
     time.time.tm_isdst = 0;
 
     return time.time;

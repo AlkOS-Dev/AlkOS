@@ -1,5 +1,5 @@
-#ifndef ALKOS_ALKOS_KERNEL_INCLUDE_INIT_HPP_
-#define ALKOS_ALKOS_KERNEL_INCLUDE_INIT_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_INIT_HPP_
+#define ALKOS_KERNEL_INCLUDE_INIT_HPP_
 
 /**
  * @brief Performs all high-level initialization not related to architecture
@@ -7,4 +7,4 @@
  */
 void KernelInit();
 
-#endif  // ALKOS_ALKOS_KERNEL_INCLUDE_INIT_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_INIT_HPP_

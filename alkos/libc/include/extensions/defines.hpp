@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
 
 #include <defines.h>
 #include <stddef.h>
@@ -12,6 +12,13 @@ static constexpr bool kIsDebugBuild = true;
 #endif  // NDEBUG
 
 #define NODISCARD [[nodiscard]]
+
+/* 1 or nothing */
+#define VARIADIC_MACRO_HAS_ARGS(...) __VA_OPT__(1)
+
+/* 1 if has args, 0 if not */
+#define BOOL_VARIADIC_MACRO_HAS_ARGS(...) \
+    static_cast<bool>(VARIADIC_MACRO_HAS_ARGS(__VA_ARGS__) + 0)
 
 constexpr u64 Parse(const char* str, const size_t len)
 {
@@ -116,4 +123,4 @@ constexpr byte operator""_byte(const unsigned long long value) { return static_c
 constexpr f32 operator""_f32(const long double value) { return static_cast<f32>(value); }
 constexpr f64 operator""_f64(const long double value) { return static_cast<f64>(value); }
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_

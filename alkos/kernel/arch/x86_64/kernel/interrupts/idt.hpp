@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_INTERRUPTS_IDT_HPP_
-#define ARCH_X86_64_INTERRUPTS_IDT_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
 
 #include <defines.hpp>
 #include "extensions/types.hpp"
@@ -59,4 +59,4 @@ void LogIrqReceived(void *stack_frame, u8 idt_idx);
 
 const char *GetExceptionMsg(u8 idx);
 
-#endif  // ARCH_X86_64_INTERRUPTS_IDT_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_

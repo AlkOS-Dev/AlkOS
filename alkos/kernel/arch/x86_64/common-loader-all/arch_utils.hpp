@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_ARCH_UTILS_HPP_
-#define ARCH_X86_64_ARCH_UTILS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
 
 #include <defines.hpp>
 #include <io.hpp>
@@ -118,4 +118,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ARCH_X86_64_ARCH_UTILS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
