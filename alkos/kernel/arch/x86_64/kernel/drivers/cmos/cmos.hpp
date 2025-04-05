@@ -1,5 +1,5 @@
-#ifndef KERNEL_ARCH_X86_64_DRIVERS_CMOS_CMOS_HPP_
-#define KERNEL_ARCH_X86_64_DRIVERS_CMOS_CMOS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_CMOS_CMOS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_CMOS_CMOS_HPP_
 
 #include <defines.hpp>
 #include <io.hpp>
@@ -16,4 +16,4 @@ FAST_CALL byte ReadCmosRegister(const byte reg)
     return inb(kCmosDataPort);
 }
 
-#endif  // KERNEL_ARCH_X86_64_DRIVERS_CMOS_CMOS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_CMOS_CMOS_HPP_

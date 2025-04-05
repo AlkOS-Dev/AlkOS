@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -59,4 +59,4 @@ inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
     return i;
 }
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_

@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_MATH_OPERATIONS_H_
-#define LIBC_INCLUDE_MATH_OPERATIONS_H_
+#ifndef ALKOS_LIBC_INCLUDE_MATH_OPERATIONS_HPP_
+#define ALKOS_LIBC_INCLUDE_MATH_OPERATIONS_HPP_
 
 #include <defines.h>
 #include <stdint.h>
@@ -16,4 +16,4 @@ CONSTEXPR double fabs(const double num)
 
 END_DECL_C
 
-#endif  // LIBC_INCLUDE_MATH_OPERATIONS_H_
+#endif  // ALKOS_LIBC_INCLUDE_MATH_OPERATIONS_HPP_

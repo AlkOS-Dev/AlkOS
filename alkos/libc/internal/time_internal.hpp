@@ -1,5 +1,5 @@
-#ifndef TIME_INTERNAL_HPP
-#define TIME_INTERNAL_HPP
+#ifndef ALKOS_LIBC_INTERNAL_TIME_INTERNAL_HPP_
+#define ALKOS_LIBC_INTERNAL_TIME_INTERNAL_HPP_
 
 #include <stdint.h>
 
@@ -7,4 +7,4 @@
 
 [[nodiscard]] uint64_t __GetDstTimezoneOffsetNs();
 
-#endif  // TIME_INTERNAL_HPP
+#endif  // ALKOS_LIBC_INTERNAL_TIME_INTERNAL_HPP_

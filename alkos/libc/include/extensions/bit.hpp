@@ -1,5 +1,5 @@
-#ifndef KERNEL_INCLUDE_BIT_HPP_
-#define KERNEL_INCLUDE_BIT_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
 
 #include <stdint.h>
 #include <extensions/defines.hpp>
@@ -103,4 +103,4 @@ FAST_CALL constexpr PtrT AlignDown(const PtrT ptr, const size_t alignment)
     return reinterpret_cast<PtrT>(AlignDown(reinterpret_cast<uintptr_t>(ptr), alignment));
 }
 
-#endif  // KERNEL_INCLUDE_BIT_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_

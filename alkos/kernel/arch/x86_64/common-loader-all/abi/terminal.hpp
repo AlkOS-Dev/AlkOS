@@ -1,5 +1,5 @@
-#ifndef ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_
-#define ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_TERMINAL_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_TERMINAL_HPP_
 
 /* internal includes */
 #include <defines.hpp>
@@ -61,4 +61,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
 }
 }
 
-#endif  // ARCH_X86_64_COMMON_ABI_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_TERMINAL_HPP_

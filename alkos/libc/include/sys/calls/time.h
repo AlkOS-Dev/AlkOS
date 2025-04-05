@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_SYS_CALLS_TIME_H_
-#define LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#ifndef ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#define ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
 
 #include <defines.h>
 #include <sys/time.h>
@@ -51,4 +51,4 @@ WRAP_CALL std::tuple<TimeVal, Timezone> GetClockValueTimezoneSysCall(const Clock
 
 #endif  // __cplusplus
 
-#endif  // LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#endif  // ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_

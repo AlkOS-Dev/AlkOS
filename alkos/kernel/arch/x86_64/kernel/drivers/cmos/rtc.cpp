@@ -85,7 +85,8 @@ FAST_CALL RtcTime FillRtcStruct()
 FAST_CALL int ConvertBcdToBinary(const int in)
 {
     return ((in & 0xF0) >> 1) + ((in & 0xF0) >> 3) + (in & 0xf);
-}
+}#define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
+
 
 FAST_CALL void ConvertBcdToBinary(RtcTime &time)
 {
@@ -143,7 +144,7 @@ tm ReadRtcTime()
     time.time.tm_year -= kTmBaseYear;
     /* Adjust month to match tm struct */
     time.time.tm_mon -= 1;
-    /* Disable dst guess */
+    /* Disable dst */
     time.time.tm_isdst = 0;
 
     return time.time;
