@@ -6,7 +6,8 @@
 #include <extensions/time.hpp>
 #include <modules/timing_constants.hpp>
 
-TIMING_DECL_START
+namespace timing
+{
 class DayTime
 {
     public:
@@ -44,6 +45,6 @@ class DayTime
         .dst_time_end_seconds    = static_cast<u16>(-1),
     };
 };
-TIMING_DECL_END
+}  // namespace timing
 
 #endif  // ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_

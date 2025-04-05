@@ -6,10 +6,7 @@ internal::TimingModule::TimingModule() noexcept
 {
     ::GlobalStateModule::Get()
         .GetSettings()
-        .RegisterEvent<
-            static_cast<size_t>(global_state_constants::SettingsType::kIsDayTimeClockInUTC)>(
-            &OnIsUtcChanged
-        );
+        .RegisterEvent<global_state_constants::SettingsType::kIsDayTimeClockInUTC>(&OnIsUtcChanged);
 
     TRACE_INFO("TimingModule::TimingModule()");
 }

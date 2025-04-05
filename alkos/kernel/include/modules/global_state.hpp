@@ -1,5 +1,5 @@
-#ifndef ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
-#define ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 
 #include <extensions/template_lib.hpp>
 #include <modules/global_state_constants.hpp>
@@ -24,7 +24,8 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    using SettingsT = TemplateLib::Settings<global_state_constants::GlobalSettingsTypes>;
+    using SettingsT = TemplateLib::Settings<
+        global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
 
     NODISCARD FORCE_INLINE_F SettingsT& GetSettings() noexcept { return settings_; }
 
@@ -39,14 +40,4 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
 
 using GlobalStateModule = TemplateLib::StaticSingleton<internal::GlobalStateModule>;
 
-// ------------------------------
-// Helpers
-// ------------------------------
-
-template <global_state_constants::SettingsType kType>
-WRAP_CALL constexpr auto GetSetting()
-{
-    return GlobalStateModule::Get().GetSettings().Get<static_cast<size_t>(kType)>();
-}
-
-#endif  // ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
