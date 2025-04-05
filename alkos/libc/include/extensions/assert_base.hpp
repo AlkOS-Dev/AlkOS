@@ -100,7 +100,7 @@ template <ErrorHandlerFn Handler>
 FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *line)
 {
     char full_msg[kFullAssertMsgBuffSize];
-    const int bytes_written = snprintf(
+    [[maybe_unused]] const int bytes_written = snprintf(
         full_msg, kFullAssertMsgBuffSize, "Check failed at file: %s and line: %s\n%s\n", file, line,
         msg
     );
@@ -190,7 +190,7 @@ FAST_CALL void VerboseAssertEq(
         },
         [](char *msg, const int size, const char *e_str, const char *v_str, const char *e_dump,
            const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (EQ)!\n"
                 "Actual value does not match the expected value.\n"
@@ -223,7 +223,7 @@ FAST_CALL void VerboseAssertNeq(
         },
         [](char *msg, const int size, const char *e_str, const char *v_str, const char *e_dump,
            const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NEQ)!\n"
                 "Actual value does matches the expected value, when it shouldn't.\n"
@@ -254,7 +254,7 @@ void VerboseAssertZero(
             return v == static_cast<ValueT>(0);
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (ZERO)!\n"
                 "Given value was supposed to be equal to 0!\n"
@@ -284,7 +284,7 @@ void VerboseAssertTrue(
             return v == true;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (TRUE)!\n"
                 "Given value was supposed to be equal to true!\n"
@@ -314,7 +314,7 @@ void VerboseAssertFalse(
             return v == false;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (FALSE)!\n"
                 "Given value was supposed to be equal to false!\n"
@@ -344,7 +344,7 @@ void VerboseAssertNotNull(
             return v != nullptr;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NOT_NULL)!\n"
                 "Given value was supposed to be not null!\n"
@@ -373,7 +373,7 @@ void VerboseAssertNull(
             return v == nullptr;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NULL)!\n"
                 "Given value was supposed to be null!\n"
@@ -404,7 +404,7 @@ void VerboseAssertLt(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (LT)!\n"
                 "First value should be less than second value!\n"
@@ -437,7 +437,7 @@ void VerboseAssertLe(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (LE)!\n"
                 "First value should be less than or equal to second value!\n"
@@ -470,7 +470,7 @@ void VerboseAssertGt(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (GT)!\n"
                 "First value should be greater than second value!\n"
@@ -503,7 +503,7 @@ void VerboseAssertGe(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (GE)!\n"
                 "First value should be greater than or equal to second value!\n"
@@ -536,7 +536,7 @@ void VerboseAssertStrEq(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (STREQ)!\n"
                 "Strings should be equal!\n"
@@ -569,7 +569,7 @@ void VerboseAssertStrNeq(
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
            const char *v2_dump) {
-            const int bytes_written = snprintf(
+            [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Assertion failed (STRNEQ)!\n"
                 "Strings should not be equal!\n"
