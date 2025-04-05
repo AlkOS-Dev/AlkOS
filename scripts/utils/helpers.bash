@@ -33,15 +33,17 @@ base_runner() {
     pretty_info "Running: $@" >&2
 
     if [ "$verbose" = true ]; then
-        if ! "$@" 2>&1 | tee "$HELPERS_LOG_FILE"; then
-            dump_error "${dump_info}"
-        fi
+        { "$@" 2>&1 | tee "$HELPERS_LOG_FILE"; } && exit_code=${PIPESTATUS[0]} || exit_code=${PIPESTATUS[0]}
     else
-        if ! "$@" > "$HELPERS_LOG_FILE" 2>&1; then
-            dump_error "${dump_info}"
-        fi
+        { "$@" > "$HELPERS_LOG_FILE" 2>&1; } && exit_code=$? || exit_code=$?
+    fi
+
+    if [ $exit_code -ne 0 ]; then
+        dump_error "${dump_info}"
+        return $exit_code
     fi
 }
+
 
 attempt_runner() {
     assert_argument_provided "$1"
