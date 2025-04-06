@@ -3,4 +3,6 @@
 
 static constexpr u64 kKernelVirtualAddressStartShared = 0xFFFFFFFF80000000;
 
+static constexpr u64 kACPIRsdpAddrShared = kKernelVirtualAddressStartShared << 1;
+
 #endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_LOADER64_KERNEL_CONSTANTS_HPP_
