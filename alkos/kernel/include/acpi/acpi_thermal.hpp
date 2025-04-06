@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_THERMAL_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_THERMAL_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_THERMAL_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_THERMAL_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
@@ -47,4 +47,4 @@ ThermalZone;
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_THERMAL_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_THERMAL_HPP_

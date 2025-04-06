@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
 
 #include <uacpi/uacpi.h>
 #include <extensions/defines.hpp>
@@ -40,4 +40,4 @@ WRAP_CALL void Deinit() { uacpi_state_reset(); }
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_

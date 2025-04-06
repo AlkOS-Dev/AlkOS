@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_POWER_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_POWER_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_POWER_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_POWER_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
@@ -58,4 +58,4 @@ bool SystemReboot();
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_POWER_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_POWER_HPP_

@@ -1,5 +1,5 @@
-#ifndef KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_
-#define KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_
+#ifndef ALKOS_KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_
+#define ALKOS_KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_
 
 #include <stdio.h>
 #include <string.h>
@@ -14,4 +14,4 @@
 #define uacpi_snprintf  snprintf
 #define uacpi_vsnprintf vsnprintf
 
-#endif  // KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_
+#endif  // ALKOS_KERNEL_THIRDPARTY_UACPI_UACPI_LIBC_H_

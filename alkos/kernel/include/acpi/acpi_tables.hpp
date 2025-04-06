@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_TABLES_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_TABLES_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_
 
 #include <uacpi/acpi.h>
 #include <uacpi/internal/tables.h>
@@ -116,4 +116,4 @@ static Table<T> GetTable()
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_TABLES_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_

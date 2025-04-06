@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_BATTERY_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_BATTERY_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_
+#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_
 
 #include <uacpi/tables.h>
 #include <extensions/defines.hpp>
@@ -66,4 +66,4 @@ Battery;
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_BATTERY_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
-#define ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 
 #include <extensions/template_lib.hpp>
 #include <modules/global_state_constants.hpp>
@@ -49,4 +49,4 @@ WRAP_CALL constexpr auto GetSetting()
     return GlobalStateModule::Get().GetSettings().Get<static_cast<size_t>(kType)>();
 }
 
-#endif  // ALKOS_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_

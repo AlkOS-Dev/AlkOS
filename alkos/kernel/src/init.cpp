@@ -2,9 +2,9 @@
 #include "init.hpp"
 #include <libssp.h>
 
+#include <acpi/acpi.hpp>
 #include <modules/global_state.hpp>
 #include <modules/timing.hpp>
-#include <acpi/acpi.hpp>
 
 void KernelInit()
 {

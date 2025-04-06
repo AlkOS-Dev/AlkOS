@@ -1,5 +1,5 @@
-#ifndef LIBC_INCLUDE_CTYPE_H_
-#define LIBC_INCLUDE_CTYPE_H_
+#ifndef ALKOS_LIBC_INCLUDE_CTYPE_H_
+#define ALKOS_LIBC_INCLUDE_CTYPE_H_
 
 #include <defines.h>
 #include <extensions/types.hpp>
@@ -205,4 +205,4 @@ CONSTEXPR int toupper(int c) { return islower(c) ? c - 0x20 : c; }
 
 END_DECL_C
 
-#endif  // LIBC_INCLUDE_CTYPE_H_
+#endif  // ALKOS_LIBC_INCLUDE_CTYPE_H_
