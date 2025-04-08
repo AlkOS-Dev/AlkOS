@@ -3,17 +3,17 @@
 
 #include <assert.h>
 #include <memory.h>
-#include "extensions/debug.hpp"
+#include <extensions/debug.hpp>
 
 template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
 void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
-    constexpr bool is_descending          = direction == WalkDirection::Descending;
+    static constexpr bool is_descending   = direction == WalkDirection::Descending;
     static constexpr u32 k4kPageSizeBytes = 1 << 12;
 
-    ASSERT(IsAligned(virtual_address, k4kPageSizeBytes));
+    ASSERT_TRUE(IsAligned(virtual_address, k4kPageSizeBytes));
     ASSERT_GE(available_memory_bytes_, size_bytes);
 
     u64 mapped_bytes = 0;

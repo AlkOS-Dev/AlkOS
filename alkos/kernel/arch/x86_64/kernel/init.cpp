@@ -33,13 +33,16 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
         reinterpret_cast<void*>(loader_data->multiboot_info_addr)
     );
+
     u64 total_memory_bytes = 0;
     multiboot::WalkMemoryMap(mmap_tag, [&total_memory_bytes](multiboot::memory_map_t* entry) {
         if (entry->type == multiboot::mmap_entry_t::kMemoryAvailable) {
             total_memory_bytes += entry->len;
         }
     });
-    u64 pages_required     = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
+
+    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
+
     buffer_info.start_addr = AlignUp(
         loader_data->kernel_end_addr + memory::PhysicalMemoryManager::kPageSize,
         memory::PhysicalMemoryManager::kPageSize

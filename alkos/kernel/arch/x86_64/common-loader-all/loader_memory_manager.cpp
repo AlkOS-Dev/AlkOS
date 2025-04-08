@@ -55,46 +55,46 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
     while (found_intersection) {
         found_intersection = false;
         for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            if (internal::DoOpenIntervalsOverlap(
-                    static_cast<i64>(descending_sorted_mmap_entries[i].addr),
-                    static_cast<i64>(
-                        descending_sorted_mmap_entries[i].addr +
-                        descending_sorted_mmap_entries[i].length
-                    ),
-                    static_cast<i64>(start_addr), static_cast<i64>(end_addr)
-                )) {
+            constexpr i64 kNoOffset          = 0;
+            constexpr u64 kEmptyRegionLength = 0;
+
+            const i64 free_start = static_cast<i64>(descending_sorted_mmap_entries[i].addr);
+            const i64 free_end   = static_cast<i64>(
+                descending_sorted_mmap_entries[i].addr + descending_sorted_mmap_entries[i].length
+            );
+            const i64 region_start = static_cast<i64>(start_addr);
+            const i64 region_end   = static_cast<i64>(end_addr);
+
+            if (internal::DoOpenIntervalsOverlap(free_start, free_end, region_start, region_end)) {
                 TRACE_INFO(
-                    "Found intersection of 0x%llX-0x%llX with 0x%llX-0x%llX", start_addr, end_addr,
-                    descending_sorted_mmap_entries[i].addr,
-                    descending_sorted_mmap_entries[i].addr +
-                        descending_sorted_mmap_entries[i].length
+                    "Found intersection of 0x%llX-0x%llX with 0x%llX-0x%llX", region_start,
+                    region_end, free_start, free_end
                 );
                 found_intersection = true;
                 // Delete the not free part of the memory region
 
                 // Case 0: The memory region completely encompasses the free memory region
-                if (start_addr <= descending_sorted_mmap_entries[i].addr &&
-                    end_addr >= descending_sorted_mmap_entries[i].addr +
-                                    descending_sorted_mmap_entries[i].length) {
+                if (region_start <= free_start && region_end >= free_end) {
                     available_memory_bytes_ -= descending_sorted_mmap_entries[i].length;
-                    descending_sorted_mmap_entries[i].length = 0;
+                    descending_sorted_mmap_entries[i].length = kEmptyRegionLength;
                 }
 
                 // Case 1: The left part of the memory region is not free
                 if (start_addr < descending_sorted_mmap_entries[i].addr) {
+                    const u64 original_addr                = descending_sorted_mmap_entries[i].addr;
                     descending_sorted_mmap_entries[i].addr = end_addr;
-                    u64 lost_memory = end_addr - descending_sorted_mmap_entries[i].addr;
+                    const u64 lost_memory                  = end_addr - original_addr;
                     R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
                     descending_sorted_mmap_entries[i].length -= lost_memory;
                     available_memory_bytes_ -= lost_memory;
                 }
                 // Case 2: The right part of the memory region is not free
                 else if (end_addr > descending_sorted_mmap_entries[i].addr) {
-                    u64 lost_memory = descending_sorted_mmap_entries[i].addr +
-                                      descending_sorted_mmap_entries[i].length - start_addr;
+                    const u64 original_addr = descending_sorted_mmap_entries[i].addr;
+                    const u64 lost_memory =
+                        (original_addr + descending_sorted_mmap_entries[i].length) - start_addr;
                     R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
-                    descending_sorted_mmap_entries[i].length =
-                        start_addr - descending_sorted_mmap_entries[i].addr;
+                    descending_sorted_mmap_entries[i].length = start_addr - original_addr;
                     available_memory_bytes_ -= lost_memory;
                 }
 

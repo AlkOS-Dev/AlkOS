@@ -222,7 +222,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     );
 
     EnterElf64(
-        (void*)static_cast<u32>(kernel_entry_point >> 32),
-        (void*)static_cast<u32>(kernel_entry_point & kBitMask32), &loader_data
+        reinterpret_cast<void*>(static_cast<u32>(kernel_entry_point >> 32)),
+        reinterpret_cast<void*>(static_cast<u32>(kernel_entry_point & kBitMask32)), &loader_data
     );
 }
