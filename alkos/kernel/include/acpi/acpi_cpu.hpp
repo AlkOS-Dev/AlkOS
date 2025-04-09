@@ -19,8 +19,7 @@ namespace ACPI
  * @struct Processor
  * @brief Represents a processor in the ACPI namespace.
  */
-STRUCT PACK Processor
-{
+struct PACK Processor {
     u32 id;        // ACPI processor ID
     bool present;  // Is this processor present?
 
@@ -28,8 +27,7 @@ STRUCT PACK Processor
     u8 maxCState;              // Maximum supported C-state
     u8 maxPState;              // Maximum supported P-state
     bool throttlingSupported;  // Is throttling supported?
-}
-Processor;
+};
 
 //////////////////////////////
 //        Functions         //

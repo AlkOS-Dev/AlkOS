@@ -19,20 +19,17 @@ namespace ACPI
  * @struct PCIDevice
  * @brief Represents a PCI device.
  */
-STRUCT PACK PCIDevice
-{
+struct PACK PCIDevice {
     u8 bus;
     u8 device;
     u8 function;
-}
-PCIDevice;
+};
 
 /**
  * @struct Device
  * @brief Represents a device in the ACPI namespace.
  */
-STRUCT PACK Device
-{
+struct PACK Device {
     const char* name;        // Device name
     const char* hid;         // Hardware ID
     u32 address;             // Device address
@@ -40,8 +37,7 @@ STRUCT PACK Device
     Device* parent;          // Parent device
     Device* child;           // First child device
     Device* next;            // Next sibling device
-}
-Device;
+};
 
 //////////////////////////////
 //        Functions         //

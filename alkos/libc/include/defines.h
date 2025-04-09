@@ -23,9 +23,6 @@ static constexpr bool kIsKernel = false;
 // Attribute macros
 // ------------------------------
 
-/* Declare a structure */
-#define STRUCT typedef struct
-
 /* Prevent the compiler from adding padding to structures */
 #define PACK __attribute__((__packed__))
 

@@ -19,7 +19,7 @@ set(BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
 
 add_subdirectory(loader64)
 set(KERNEL_MODULES ${KERNEL_MODULES} alkos.loader64)
-seT(KERNEL_COMMANDS ${KERNEL_COMMANDS} "loader64")
+set(KERNEL_COMMANDS ${KERNEL_COMMANDS} "loader64")
 
 ################################### Kernel ###################################
 

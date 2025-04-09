@@ -28,8 +28,7 @@ enum class ChargeState {
  * @struct Battery
  * @brief Represents a battery in the ACPI namespace.
  */
-STRUCT PACK Battery
-{
+struct PACK Battery {
     u32 id;            // Battery ID
     const char* name;  // Battery name
     bool present;      // Is battery present?
@@ -57,8 +56,7 @@ STRUCT PACK Battery
     // Battery capacity warning levels
     u32 warningCapacity;  // Warning level in mWh
     u32 lowCapacity;      // Low level in mWh
-}
-Battery;
+};
 
 //////////////////////////////
 //        Functions         //

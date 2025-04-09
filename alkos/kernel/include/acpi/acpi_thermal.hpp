@@ -25,8 +25,7 @@ enum class CoolingPolicy {
  * @struct ThermalZone
  * @brief Represents a thermal zone in the ACPI namespace.
  */
-STRUCT PACK ThermalZone
-{
+struct PACK ThermalZone {
     u32 id;
     const char* name;
 
@@ -38,8 +37,7 @@ STRUCT PACK ThermalZone
     // Cooling information
     bool hasActiveControl;   // Does this zone support active cooling?
     bool hasPassiveControl;  // Does this zone support passive cooling?
-}
-ThermalZone;
+};
 
 //////////////////////////////
 //        Functions         //
