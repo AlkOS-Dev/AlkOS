@@ -1,9 +1,22 @@
 #include "osl.tpp"
-#include <uacpi/kernel_api.h>
+
+#include "sync/mutex.hpp"
+#include "sync/spinlock.hpp"
 
 #include <string.h>
+#include <uacpi/kernel_api.h>
 #include <constants.hpp>
+#include <definitions/loader64_data.hpp>
+#include <loader_memory_manager.hpp>
+#include <memory_management/physical_memory_manager.hpp>
 #include <todo.hpp>
+
+extern void *kACPIRsdpAddr;
+extern loader64::LoaderData *kLoaderData;
+
+TODO_WHEN_VMEM_WORKS
+Mutex mutex_mock;
+Spinlock spinlock_mock;
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
@@ -95,16 +108,50 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
 
 void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len)
 {
+    using pmm   = memory::PhysicalMemoryManager;
+    auto paddr  = AlignDown(addr, pmm::kPageSize);
+    auto offset = addr & (pmm::kPageSize - 1);
+    auto vsize  = AlignUp(len + offset, pmm::kPageSize);
     TODO_WHEN_VMEM_WORKS
-    return nullptr;
+    auto vaddr = AlignDown(kKernelDirectMapAddressStart + addr, pmm::kPageSize);
+    auto loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
+
+    for (size_t pg = 0; pg < vsize; pg += pmm::kPageSize) {
+        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+            vaddr + pg, paddr + pg, LoaderMemoryManager::kWriteBit
+        );
+    }
+
+    return reinterpret_cast<byte *>(vaddr) + offset;
 }
 
 void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 
 void *uacpi_kernel_alloc(uacpi_size size)
 {
-    // return kmalloc(size);
-    return nullptr;
+    TODO_WHEN_VMEM_WORKS
+    auto loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
+    // TODO(F1r3d3v): Memory layout need to be established
+    const u64 kVMemAllocStart = kKernelDirectMapAddressStart + BitMask<u64, 46>;
+    using pmm                 = memory::PhysicalMemoryManager;
+
+    auto vsize = AlignUp(size, pmm::kPageSize);
+    auto paddr = PhysicalMemoryManager::Get().Allocate();
+    auto vaddr = AlignDown(kVMemAllocStart + paddr, pmm::kPageSize);
+    loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+        vaddr, paddr, LoaderMemoryManager::kWriteBit
+    );
+
+    for (size_t pg = pmm::kPageSize; pg < vsize; pg += pmm::kPageSize) {
+        auto phys_addr = PhysicalMemoryManager::Get().Allocate();
+        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+            vaddr + pg, phys_addr, LoaderMemoryManager::kWriteBit
+        );
+    }
+
+    return reinterpret_cast<void *>(vaddr);
 }
 
 void uacpi_kernel_free(void *mem)
@@ -118,19 +165,19 @@ void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
 {
     switch (level) {
         case UACPI_LOG_ERROR:
-            FormatTrace("[ERROR]     %s", log);
+            FormatTrace(ERROR_TAG "%s", log);
             break;
         case UACPI_LOG_WARN:
-            FormatTrace("[WARNING]   %s", log);
+            FormatTrace(WARNING_TAG "%s", log);
             break;
         case UACPI_LOG_INFO:
-            FormatTrace("[INFO]      %s", log);
+            FormatTrace(INFO_TAG "%s", log);
             break;
         case UACPI_LOG_DEBUG:
-            FormatTrace("[DEBUG]     %s", log);
+            FormatTrace(DEBUG_TAG "%s", log);
             break;
         case UACPI_LOG_TRACE:
-            FormatTrace("[TRACE]     %s", log);
+            FormatTrace(TRACE_TAG "%s", log);
             break;
     }
 }
@@ -141,7 +188,7 @@ void uacpi_kernel_stall(uacpi_u8 usec) {}
 
 void uacpi_kernel_sleep(uacpi_u64 msec) {}
 
-uacpi_handle uacpi_kernel_create_mutex() { return nullptr; }
+uacpi_handle uacpi_kernel_create_mutex() { return &mutex_mock; }
 
 void uacpi_kernel_free_mutex(uacpi_handle) {}
 
@@ -151,10 +198,7 @@ void uacpi_kernel_free_event(uacpi_handle) {}
 
 uacpi_thread_id uacpi_kernel_get_thread_id() { return nullptr; }
 
-uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16)
-{
-    return UACPI_STATUS_UNIMPLEMENTED;
-}
+uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16) { return UACPI_STATUS_OK; }
 
 void uacpi_kernel_release_mutex(uacpi_handle) {}
 
@@ -183,7 +227,7 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
-uacpi_handle uacpi_kernel_create_spinlock() { return nullptr; }
+uacpi_handle uacpi_kernel_create_spinlock() { return &spinlock_mock; }
 
 void uacpi_kernel_free_spinlock(uacpi_handle) {}
 

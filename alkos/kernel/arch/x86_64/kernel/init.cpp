@@ -15,6 +15,7 @@
 #include <extensions/internal/formats.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_memory_manager.hpp>
+#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include "memory_management/physical_memory_manager.hpp"
 
@@ -23,6 +24,29 @@ extern "C" void EnableOSXSave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
+
+void* kACPIRsdpAddr;
+loader64::LoaderData* kLoaderData;
+
+static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
+{
+    TRACE_INFO("Finding ACPI tag in multiboot tags...");
+    auto* new_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_new_acpi_t>(
+        reinterpret_cast<void*>(multiboot_info_addr)
+    );
+    if (new_acpi_tag == nullptr) {
+        TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
+        auto* old_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_old_acpi_t>(
+            reinterpret_cast<void*>(multiboot_info_addr)
+        );
+        if (old_acpi_tag == nullptr) {
+            KernelPanic("ACPI1.0 tag not found in multiboot tags!");
+        }
+        new_acpi_tag = reinterpret_cast<multiboot::tag_new_acpi_t*>(old_acpi_tag);
+    }
+
+    return new_acpi_tag;
+}
 
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
@@ -118,4 +142,16 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     auto* multiboot_info = reinterpret_cast<multiboot::header_t*>(loader_data->multiboot_info_addr);
     auto* mmap_tag       = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
     PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
+
+    TRACE_INFO("Finding RSDP...");
+    auto* acpi_tag = FindAcpiTag(loader_data->multiboot_info_addr);
+    TRACE_INFO(
+        "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
+        FormatMetricUint(acpi_tag->size)
+    );
+
+    kACPIRsdpAddr = reinterpret_cast<void*>(acpi_tag->rsdp);
+    TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), kACPIRsdpAddr);
+
+    kLoaderData = loader_data;
 }

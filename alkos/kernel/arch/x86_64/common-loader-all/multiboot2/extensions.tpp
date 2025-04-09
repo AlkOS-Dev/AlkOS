@@ -26,7 +26,7 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
             return reinterpret_cast<Tag *>(tag);
         }
     }
-    TRACE_ERROR("Tag type: %s not found!", kTagName);
+    TRACE_WARNING("Tag type: %s not found!", kTagName);
     return nullptr;
 }
 
