@@ -35,7 +35,7 @@ static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
         reinterpret_cast<void*>(multiboot_info_addr)
     );
     if (new_acpi_tag == nullptr) {
-        TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
+        TRACE_INFO("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
         auto* old_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_old_acpi_t>(
             reinterpret_cast<void*>(multiboot_info_addr)
         );
