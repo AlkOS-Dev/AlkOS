@@ -4,13 +4,13 @@
 #include <uacpi/uacpi.h>
 #include <extensions/defines.hpp>
 
-#include <acpi/acpi_battery.hpp>
-#include <acpi/acpi_cpu.hpp>
-#include <acpi/acpi_device.hpp>
-#include <acpi/acpi_interrupt.hpp>
-#include <acpi/acpi_power.hpp>
-#include <acpi/acpi_tables.hpp>
-#include <acpi/acpi_thermal.hpp>
+#include "acpi_battery.hpp"
+#include "acpi_cpu.hpp"
+#include "acpi_device.hpp"
+#include "acpi_interrupt.hpp"
+#include "acpi_power.hpp"
+#include "acpi_tables.hpp"
+#include "acpi_thermal.hpp"
 
 namespace ACPI
 {
@@ -39,5 +39,7 @@ int Init();
 WRAP_CALL void Deinit() { uacpi_state_reset(); }
 
 }  // namespace ACPI
+
+#include "acpi.tpp"
 
 #endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_

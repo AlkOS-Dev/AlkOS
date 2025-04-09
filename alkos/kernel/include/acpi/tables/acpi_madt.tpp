@@ -1,8 +1,13 @@
 #ifndef ALKOS_KERNEL_INCLUDE_ACPI_TABLES_ACPI_MADT_TPP_
 #define ALKOS_KERNEL_INCLUDE_ACPI_TABLES_ACPI_MADT_TPP_
 
+#include "acpi_utils.tpp"
+
+namespace ACPI
+{
+
 template <typename T>
-concept MATDEntry = OneOf<
+concept MATDEntry = concepts_ext::OneOf<
     T, acpi_madt_lapic, acpi_madt_ioapic, acpi_madt_interrupt_source_override, acpi_madt_nmi_source,
     acpi_madt_lapic_nmi, acpi_madt_lapic_address_override, acpi_madt_iosapic, acpi_madt_lsapic,
     acpi_madt_platform_interrupt_source, acpi_madt_x2apic, acpi_madt_x2apic_nmi, acpi_madt_gicc,
@@ -128,32 +133,12 @@ struct MADTEntryTypeID<acpi_madt_plic> {
 };
 
 template <>
-template <typename T>
-T* Table<acpi_madt>::GetTableEntry()
+template <TableEntryCallback Callback>
+void Table<acpi_madt>::ForEachTableEntry(Callback callback)
 {
-    static_assert(MATDEntry<T>, "Invalid MADT entry type");
-
-    acpi_madt* madt = GetNative();
-    if (!madt) {
-        return nullptr;
-    }
-
-    constexpr u8 target_type = MADTEntryTypeID<T>::value;
-
-    u8* entry_ptr = reinterpret_cast<u8*>(madt) + sizeof(acpi_madt);
-    u8* end_ptr   = reinterpret_cast<u8*>(madt) + madt->hdr.length;
-
-    while (entry_ptr < end_ptr) {
-        auto* entry = reinterpret_cast<acpi_entry_hdr*>(entry_ptr);
-        if (entry->type == target_type) {
-            return reinterpret_cast<T*>(entry);
-        }
-
-        // Move to next entry
-        entry_ptr += entry->length;
-    }
-
-    return nullptr;
+    internal::ForEachTableEntry<acpi_madt>(GetNative(), callback);
 }
+
+}  // namespace ACPI
 
 #endif  //  ALKOS_KERNEL_INCLUDE_ACPI_TABLES_ACPI_MADT_TPP_
