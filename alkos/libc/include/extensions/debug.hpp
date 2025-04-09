@@ -44,7 +44,7 @@ void FormatTrace(const char* format, Args... args)
 #define WARNING_TAG "[WARNING]   "
 #define INFO_TAG    "[INFO]      "
 #define SUCCESS_TAG "[SUCCESS]   "
-#define DEBUG_TAG   "[DEBUG]    "
+#define DEBUG_TAG   "[DEBUG]     "
 #define TRACE_TAG   "[TRACE]     "
 
 #define TRACE_FORMAT_LOCATION(message) __FILE__ " " TOSTRING(__LINE__) " " message "\n"
