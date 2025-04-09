@@ -68,15 +68,15 @@ inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
     TODO_THREADING
     static char buffer[128];
 
-    static const char *prefixes[]    = {"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
-    static const size_t num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
+    static const char *kPrefixes[]       = {"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
+    static constexpr size_t kNumPrefixes = sizeof(kPrefixes) / sizeof(kPrefixes[0]);
 
     size_t i = 0;
-    for (; i < num_prefixes && num >= static_cast<uintmax_t>(1e6); i++) {
+    for (; i < kNumPrefixes && num >= static_cast<uintmax_t>(1e6); i++) {
         num /= 1000;
     }
 
-    snprintf(buffer, sizeof(buffer), "%lld %s", num, prefixes[i]);
+    snprintf(buffer, sizeof(buffer), "%lld %s", num, kPrefixes[i]);
     return buffer;
 }
 

@@ -42,18 +42,6 @@ static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
     return true;
 }
 
-static u64 GetTotalMemoryBytes(multiboot::tag_mmap_t* mmap_tag)
-{
-    u64 total_memory_bytes = 0;
-    multiboot::WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
-        if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
-            total_memory_bytes += mmap_entry->len;
-        }
-    });
-
-    return total_memory_bytes;
-}
-
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK

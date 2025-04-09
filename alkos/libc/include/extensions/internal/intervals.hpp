@@ -7,18 +7,16 @@
 namespace internal
 {
 
-// TODO : Make Tests
-
 template <typename NumT>
     requires std::is_arithmetic_v<NumT>
-inline bool DoIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
+bool DoIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
 {
     return start1 <= end2 && end1 >= start2;
 }
 
 template <typename NumT>
     requires std::is_arithmetic_v<NumT>
-inline bool DoOpenIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
+bool DoOpenIntervalsOverlap(NumT start1, NumT end1, NumT start2, NumT end2)
 {
     return start1 < end2 && end1 > start2;
 }

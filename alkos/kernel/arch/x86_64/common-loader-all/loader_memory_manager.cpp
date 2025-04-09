@@ -1,10 +1,9 @@
 #include "loader_memory_manager.hpp"
 #include <assert.h>
 #include <memory.h>
+#include <extensions/algorithm.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/intervals.hpp>
-#include <extensions/new.hpp>
-#include "extensions/algorithm.hpp"
 
 // Note: The alignment here is a strict requirement for the PML tables and if the
 // initial object is not aligned, the PML tables will not be aligned either.
