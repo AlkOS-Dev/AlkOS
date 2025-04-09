@@ -3,6 +3,8 @@
 
 #include <extensions/defines.hpp>
 
-struct PACK Mutex{};
+struct PACK Mutex{
+    // Empty stub
+};
 
 #endif  // ALKOS_KERNEL_INCLUDE_SYNC_MUTEX_HPP_
