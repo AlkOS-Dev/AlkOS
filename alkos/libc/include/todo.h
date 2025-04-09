@@ -30,4 +30,6 @@
 
 #define TODO_OPTIMISE
 
+#define TODO_LIBK_TRACE
+
 #endif  // ALKOS_LIBC_INCLUDE_TODO_H_

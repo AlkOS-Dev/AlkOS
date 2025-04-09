@@ -2,6 +2,8 @@
 
 #include <stdarg.h>
 #include <stdint.h>
+
+#include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/types.hpp>
 

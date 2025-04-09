@@ -59,9 +59,11 @@ static constexpr bool kIsKernel = false;
 
 /* C decl */
 #ifdef __cplusplus
+#define DECL_C       extern "C"
 #define BEGIN_DECL_C extern "C" {
 #define END_DECL_C   }  // extern "C"
 #else                   // __cplusplus
+#define DECL_C
 #define BEGIN_DECL_C
 #define END_DECL_C
 #endif  // __cplusplus
