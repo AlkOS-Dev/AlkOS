@@ -20,7 +20,10 @@ static constexpr bool kIsDebugBuild = true;
 #define BOOL_VARIADIC_MACRO_HAS_ARGS(...) \
     static_cast<bool>(VARIADIC_MACRO_HAS_ARGS(__VA_ARGS__) + 0)
 
-constexpr u64 Parse(const char* str, const size_t len)
+<<<<<<< Updated upstream constexpr u64 Parse(const char* str, const size_t len)
+=======
+constexpr size_t operator""_size(const char* str, const size_t len)
+>>>>>>> Stashed changes
 {
     u64 result = 0;
     for (size_t i = 0; i < len; ++i) {

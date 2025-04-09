@@ -3,7 +3,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <extensions/defines.hpp>
+#include "extensions/defines.hpp"
+#include "extensions/tuple.hpp"
+#include "extensions/type_traits.hpp"
 
 inline void ReverseString(char *str, const size_t len)
 {
@@ -59,4 +61,24 @@ inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
     return i;
 }
 
+<<<<<<< Updated upstream
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
+======= inline const char *FormatMetricUint(uintmax_t num)
+{
+    TODO_THREADING
+    static char buffer[128];
+
+    static const char *prefixes[]    = {"", "K", "M", "G", "T", "P", "E", "Z", "Y"};
+    static const size_t num_prefixes = sizeof(prefixes) / sizeof(prefixes[0]);
+
+    size_t i = 0;
+    for (; i < num_prefixes && num >= static_cast<uintmax_t>(1e6); i++) {
+        num /= 1000;
+    }
+
+    snprintf(buffer, sizeof(buffer), "%lld %s", num, prefixes[i]);
+    return buffer;
+}
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
+>>>>>>> Stashed changes
