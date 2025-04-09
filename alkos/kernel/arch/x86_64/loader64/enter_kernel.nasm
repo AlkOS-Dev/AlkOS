@@ -2,7 +2,9 @@
 
           section .text
           global EnterKernel
-          ; void EnterKernel(u64 kernel_entry)
-          ;                  [rdi]
+          ; void EnterKernel(u64 kernel_entry, LoaderData *loader_data)
+          ;                  [rdi]            [rsi]
 EnterKernel:
-          jmp rdi
+          xchg rdi, rsi ; Swap rdi and rsi
+          ; rdi = loader_data, rsi = kernel_entry
+          jmp rsi
