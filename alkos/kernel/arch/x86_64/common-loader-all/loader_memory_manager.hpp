@@ -25,6 +25,14 @@ template <typename Callback>
 concept FreeMemoryRegionCallback =
     requires(Callback cb, FreeMemoryRegion_t& region) { cb(region); };
 
+template <typename Provider>
+concept FreeRegionProvider = requires(Provider provider) {
+    {
+        provider([](FreeMemoryRegion_t& region) {
+        })
+    } -> std::convertible_to<void>;
+};
+
 /**
  * @brief LoaderMemoryManager manages the mapping of virtual to physical memory.
  *
@@ -40,6 +48,8 @@ class LoaderMemoryManager
 
     static constexpr u32 kMaxPmlTablesToStore = 100;  ///< Maximum number of PML tables to store.
     static constexpr u32 kNumEntriesPerPml    = 512;  ///< Number of entries in a PML table.
+    static constexpr u32 kMaxProtectedMemoryRegions =
+        1e2;  ///< Maximum number of protected memory regions.
 
     /**
      * @brief Maximum number of memory map entries the loader can handle.
@@ -51,6 +61,8 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     // Internal Types
     //------------------------------------------------------------------------------//
+
+    private:
     static constexpr u32 kPml4Index = 0;  ///< Must be 0
 
     public:
@@ -312,16 +324,17 @@ class LoaderMemoryManager
     void MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags);
 
     /**
-     * @brief Maps a virtual memory range to physical memory.
-     *
-     * Maps the given virtual address range using free memory regions and updates
-     * the paging structures.
-     *
-     * @param virtual_address Starting virtual address (must be page aligned).
-     * @param bound Number of bytes to map.
-     * @param flags Flags applied to the page table entries.
+     * @brief Enum to specify the direction of the walk.
      */
-    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 bound, u64 flags);
+    enum class WalkDirection { Ascending, Descending };
+
+    template <WalkDirection direction = WalkDirection::Descending>
+    void MapVirtualRangeUsingInternalMemoryMap(u64 virtual_address, u64 size_bytes, u64 flags = 0);
+
+    template <WalkDirection direction = WalkDirection::Descending>
+    void MapVirtualRangeUsingExternalMemoryMap(
+        multiboot::tag_mmap_t* mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags = 0
+    );
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
 
@@ -333,24 +346,11 @@ class LoaderMemoryManager
      * @tparam Callback Type of the callback satisfying FreeMemoryRegionCallback.
      * @param callback Function to invoke for each free memory region.
      */
-    template <FreeMemoryRegionCallback Callback>
-    void WalkFreeMemoryRegions(Callback callback)
-    {
-        TRACE_INFO("Walking free memory regions...");
-        for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            callback(descending_sorted_mmap_entries[i]);
-        }
-        TRACE_INFO("Free memory regions walk complete!");
-    }
+    template <WalkDirection direction, FreeMemoryRegionCallback Callback>
+    void WalkFreeMemoryRegions(Callback callback);
 
-    /**
-     * @brief Adds a memory map entry provided by the bootloader.
-     *
-     * Updates the internal free memory regions sorted in descending order.
-     *
-     * @param mmap_entry Pointer to the memory map entry.
-     */
-    void AddMemoryMapEntry(multiboot::memory_map_t* mmap_entry);
+    void AddFreeMemoryRegion(u64 start_addr, u64 end_addr);
+    void MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr);
 
     [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
 
@@ -365,6 +365,14 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
     // Private Methods
     //------------------------------------------------------------------------------//
+
+    template <FreeRegionProvider Provider, WalkDirection direction = WalkDirection::Descending>
+    void MapVirtualRangeUsingFreeRegionProvider(
+        Provider provider, u64 virtual_address, u64 size_bytes, u64 flags = 0
+    );
+
+    template <WalkDirection direction = WalkDirection::Descending>
+    void UsePartOfFreeMemoryRegion(FreeMemoryRegion_t& region, u64 size_bytes);
 
     //------------------------------------------------------------------------------//
     // Private Fields

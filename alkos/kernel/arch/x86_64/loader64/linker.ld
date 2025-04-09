@@ -4,6 +4,9 @@ ENTRY(loader64)
 SECTIONS
 {
           . = 100m;
+
+	PROVIDE(loader64_start = .);
+
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text)
@@ -27,4 +30,6 @@ SECTIONS
 		*(COMMON)
 		*(.bss)
 	}
+
+	PROVIDE(loader64_end = .);
 }
