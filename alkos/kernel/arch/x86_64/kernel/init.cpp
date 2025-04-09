@@ -24,13 +24,9 @@ extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-<<<<<<< Updated upstream
-extern "C" void PreKernelInit([[maybe_unused]] LoaderDataKernelPass* loader_data)
-=======
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
 )
->>>>>>> Stashed changes
 {
     TRACE_INFO("Creating page buffer...");
     memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};

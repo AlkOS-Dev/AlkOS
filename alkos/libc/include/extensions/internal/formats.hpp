@@ -61,9 +61,7 @@ inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
     return i;
 }
 
-<<<<<<< Updated upstream
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
-======= inline const char *FormatMetricUint(uintmax_t num)
+inline const char *FormatMetricUint(uintmax_t num)
 {
     TODO_THREADING
     static char buffer[128];
@@ -81,4 +79,3 @@ inline size_t FormatUIntWoutNullTerm(uintmax_t num, char *str, const size_t len)
 }
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_FORMATS_HPP_
->>>>>>> Stashed changes
