@@ -118,6 +118,7 @@ endif ()
 
 ################################# ThirdParty #################################
 
+message(STATUS "Adding third-party libraries...")
 add_subdirectory(thirdparty)
 
 ################################## Linking ###################################
