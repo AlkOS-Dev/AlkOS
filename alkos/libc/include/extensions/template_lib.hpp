@@ -418,8 +418,8 @@ class StaticEventTable : MoveOnly
 // Settings
 // ------------------------------
 
-template <class TypeListT>
-    requires IsTypeList_v<TypeListT>
+template <class TypeListT, class AccessT = size_t>
+    requires IsTypeList_v<TypeListT> && requires { static_cast<size_t>(std::declval<AccessT>()); }
 class Settings : public NoCopy
 {
     public:
@@ -437,59 +437,59 @@ class Settings : public NoCopy
     // Class methods
     // ------------------------------
 
-    template <size_t idx>
+    template <AccessT idx>
     FORCE_INLINE_F constexpr auto Get()
     {
-        static_assert(idx < TypeListT::kSize, "Index out of range");
-        return settings_.template get<idx>();
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
+        return settings_.template get<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void Set(U &&value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void Set(const U &value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(U &&value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
-        event_table_.template Notify<idx>();
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
+        event_table_.template Notify<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(const U &value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
-        event_table_.template Notify<idx>();
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
+        event_table_.template Notify<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx>
+    template <AccessT idx>
     FORCE_INLINE_F void RegisterEvent(EventT &&event)
     {
-        event_table_.template RegisterEvent<idx>(std::move(event));
+        event_table_.template RegisterEvent<static_cast<size_t>(idx)>(std::move(event));
     }
 
     // ------------------------------

@@ -3,7 +3,7 @@
 #include <time/daytime.hpp>
 #include <timers.hpp>
 
-USE_TIMING
+using namespace timing;
 
 // ------------------------------
 // Implementations
@@ -20,7 +20,9 @@ void DayTime::SyncWithHardware()
     static constexpr size_t kBuffSize = 64;
     [[maybe_unused]] char buffer[kBuffSize];
 
-    const timezone& tz = GetSetting<global_state_constants::SettingsType::kIsDayTimeClockInUTC>()
+    const timezone &tz = GlobalStateModule::Get()
+                                 .GetSettings()
+                                 .Get<global_state_constants::SettingsType::kIsDayTimeClockInUTC>()
                              ? kUtcTimezone
                              : GetTimezone();
 
