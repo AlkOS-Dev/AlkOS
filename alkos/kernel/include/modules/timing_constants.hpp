@@ -3,12 +3,6 @@
 
 #include <sys/time.h>
 
-#define TIMING_DECL_START \
-    namespace timing      \
-    {
-#define TIMING_DECL_END }
-#define USE_TIMING      using namespace timing;
-
 namespace timing_constants
 {
 static constexpr u64 kClockTicksInSecond[]{
