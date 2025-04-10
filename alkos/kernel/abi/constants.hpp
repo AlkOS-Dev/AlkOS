@@ -4,5 +4,6 @@
 #include <extensions/types.hpp>
 
 extern const u64 kKernelVirtualAddressStart;
+extern const u64 kKernelDirectMapAddressStart;
 
 #endif  // ALKOS_KERNEL_ABI_CONSTANTS_HPP_

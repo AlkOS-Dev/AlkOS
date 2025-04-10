@@ -2,7 +2,7 @@
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
 
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include "extensions/debug.hpp"
 
 template <LoaderMemoryManager::PageSize page_size>

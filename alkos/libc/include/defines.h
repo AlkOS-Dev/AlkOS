@@ -50,8 +50,12 @@ static constexpr bool kIsKernel = false;
 
 /* Convert a token into a string */
 #define STRINGIFY(x) #x
+
 /* Apply STRINGIFY to expand macros before conversion */
 #define TOSTRING(x) STRINGIFY(x)
+
+/* Creates a COMPILER LEVEL memory barrier forcing optimizer to not re-order memory accesses */
+#define BARRIER() __asm__ volatile("" : : : "memory")
 
 // ------------------------------
 // Lang specific defines

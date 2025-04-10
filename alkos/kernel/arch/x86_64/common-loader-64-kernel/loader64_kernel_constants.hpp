@@ -1,7 +1,10 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_LOADER64_KERNEL_CONSTANTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_LOADER64_KERNEL_CONSTANTS_HPP_
 
+#include <extensions/bit.hpp>
+
 // TODO THINK OF A SANE SOLUTION FOR THIS
-static constexpr u64 kKernelVirtualAddressStartShared = 0xFFFFFFFF80000000;
+static constexpr u64 kKernelVirtualAddressStartShared = BitMaskLeft<u64, 33>;
+static constexpr u64 kKernelDirectMapAddressShared    = BitMaskLeft<u64, 17>;
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_64_KERNEL_LOADER64_KERNEL_CONSTANTS_HPP_

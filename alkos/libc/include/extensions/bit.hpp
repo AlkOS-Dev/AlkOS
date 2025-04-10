@@ -20,13 +20,25 @@ template <typename NumT>
     requires std::is_unsigned_v<NumT>
 static constexpr NumT kLsb = 1;
 
+template <typename NumT, u16 Bit>
+    requires std::is_unsigned_v<NumT>
+static constexpr NumT BitMask = kLsb<NumT> << Bit;
+
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
-static constexpr NumT kMsb = kLsb<NumT> << sizeof(NumT) * 8 - 1;
+static constexpr NumT kMsb = BitMask<NumT, sizeof(NumT) * 8 - 1>;
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
 static constexpr NumT kFullMask = ~static_cast<NumT>(0);
+
+template <typename NumT, u16 Range>
+    requires std::is_unsigned_v<NumT>
+static constexpr NumT BitMaskLeft = kFullMask<NumT> << (sizeof(NumT) * 8 - Range);
+
+template <typename NumT, u16 Range>
+    requires std::is_unsigned_v<NumT>
+static constexpr NumT BitMaskRight = kFullMask<NumT> >> (sizeof(NumT) * 8 - Range);
 
 // ------------------------------
 // Functions

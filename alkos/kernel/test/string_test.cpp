@@ -1,4 +1,3 @@
-#include <memory.h>
 #include <string.h>
 #include <test_module/test.hpp>
 

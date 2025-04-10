@@ -132,7 +132,7 @@ constexpr size_t CountType()
 template <typename T, typename... Args>
 constexpr bool HasType()
 {
-    return (std::is_same_v<T, Args> || ...);
+    return concepts_ext::OneOf<T, Args...>;
 }
 
 template <typename T, typename... Args>
