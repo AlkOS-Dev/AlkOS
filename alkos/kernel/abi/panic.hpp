@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ABI_PANIC_HPP_
 
 #include <stdio.h>
+#include <extensions/utility.hpp>
 
 /**
  * @brief Stops the kernel from functioning and disables all necessary devices and processes.
@@ -9,7 +10,7 @@
  *       to help diagnose the issue.
  * @param msg A message providing additional information about the panic.
  */
-extern "C" void KernelPanic(const char *msg);
+extern "C" NO_RET void KernelPanic(const char *msg);
 
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)

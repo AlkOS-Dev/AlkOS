@@ -1,40 +1,10 @@
+#include "assert.h"
 #include "extensions/bit.hpp"
 #include "extensions/debug.hpp"
 #include "extensions/defines.hpp"
 #include "extensions/internal/macro.hpp"
 #include "extensions/utility.hpp"
-
-#include <panic.hpp>
-
-/////////////////////////////
-//       Constants         //
-/////////////////////////////
-
-static constexpr const char* kTypeCheckKinds[] = {
-    "Load operation on",     "Store operation to",      "Reference binding to",
-    "Member access within",  "Member function call on", "Constructor invocation on",
-    "Downcast operation on", "Secondary downcast on",   "Upcast operation on",
-    "Virtual base cast on",  "Non-null binding to",     "Dynamic operation on"
-};
-
-static constexpr const char* kOutOfBoundsKinds[] = {
-    "Array index out of bounds", "Pointer subtraction out of bounds",
-    "Pointer addition out of bounds", "Pointer offset out of bounds"
-};
-
-static constexpr const char* kBuiltinCheckKinds[] = {
-    "Count trailing zeros of zero", "Count leading zeros of zero", "Assume condition false"
-};
-
-static constexpr const char* kCFITypeCheckKinds[] = {
-    "Virtual call",
-    "Non-virtual call",
-    "Derived cast",
-    "Unrelated cast",
-    "Indirect call",
-    "Non-virtual member function call",
-    "Virtual member function call"
-};
+#include "stdarg.h"
 
 ////////////////////////////
 //        Structs         //
@@ -92,7 +62,9 @@ struct UbsanVLABoundData {
 };
 
 struct UbsanFloatCastOverflowData {
+#if !(defined(__GNUC__) && __GNUC__ < 6)
     UbsanSourceLocation location;
+#endif
     const UbsanTypeDescriptor* from_type;
     const UbsanTypeDescriptor* to_type;
 };
@@ -161,10 +133,9 @@ struct UbsanFunctionTypeMismatchData {
 
 constexpr UbsanSourceLocation kUnknownLocation = {"<Unknown File>", 0, 0};
 
-template <typename... Args>
-static int FormatUbsanMessage(
-    char* buffer, size_t buffer_size, const char* violation_type,
-    const UbsanSourceLocation* location, const char* format = nullptr, Args... args
+static int vFormatUbsanMessage(
+    char* buffer, const size_t buffer_size, const char* violation_type,
+    const UbsanSourceLocation* location, const char* format, va_list args
 )
 {
     if (buffer == nullptr || buffer_size == 0) {
@@ -175,403 +146,532 @@ static int FormatUbsanMessage(
         location = &kUnknownLocation;
     }
 
-    int written = snprintf(
-        buffer, buffer_size,
-        "UBSAN: %s\n"
-        "File: %s\n"
-        "Line: %u\n"
-        "Column: %u\n",
-        violation_type, location->file, location->line, location->column
+    int offset = 0;
+
+    // Format violation type and location information
+    offset += snprintf(
+        buffer + offset, buffer_size - offset, "UBSAN: %s at %s:%u:%u", violation_type,
+        location->file, location->line, location->column
     );
 
-    if (format != nullptr && written > 0 && static_cast<size_t>(written) < buffer_size - 1) {
-        written += snprintf(buffer + written, buffer_size - written, "Details:\n");
-        written += snprintf(buffer + written, buffer_size - written, format, args...);
+    // If we have additional format and arguments, add them to the message
+    if (format && static_cast<size_t>(offset) < buffer_size) {
+        offset += snprintf(buffer + offset, buffer_size - offset, ":\n");
+        offset += vsnprintf(buffer + offset, buffer_size - offset, format, args);
     }
 
-    // Add final newline if space permits
-    if (static_cast<size_t>(written) < buffer_size - 1) {
-        buffer[written++] = '\n';
-        buffer[written]   = '\0';
-    } else {
-        buffer[buffer_size - 1] = '\0';
-        written                 = buffer_size - 1;
-    }
-
-    return written;
+    return offset;
 }
 
-template <bool fatal, typename... Args>
+template <bool fatal>
 static void UbsanReport(
     const char* violation_type, const UbsanSourceLocation* location, const char* format = nullptr,
-    Args... args
+    ...
 )
 {
-    char message_buffer[1024];
-    FormatUbsanMessage(
-        message_buffer, sizeof(message_buffer), violation_type, location, format, args...
-    );
+    constexpr u64 kBufferSize = 512;
+    char buffer[kBufferSize];
+
+    va_list args;
+    va_start(args, format);
+    vFormatUbsanMessage(buffer, sizeof(buffer), violation_type, location, format, args);
+    va_end(args);
 
     if constexpr (fatal) {
         if constexpr (kIsKernel) {
-            KernelPanicFormat(message_buffer);
+            KernelPanic(buffer);
         } else {
             TODO_USERSPACE
             // TODO(F1r3d3v): Implement user space panic/process termination
         }
-    }
 
-    TODO_LIBK_TRACE
-    // TODO(F1r3d3v): Enable tracing when using libk
-    TRACE_WARNING(message_buffer);
+        std::unreachable();
+    } else {
+        TODO_LIBK_TRACE
+        // TODO(F1r3d3v): Enable tracing when using libk
+        TRACE_WARNING(buffer);
+    }
 }
 
 ////////////////////////////
 //     Implementation     //
 ////////////////////////////
 
-#define MERGE(x, y)              x y
-#define GET_SECOND(x, y)         y
-#define FOR_EACH_MERGE(...)      FOR_EACH_PAIR(MERGE, __VA_ARGS__)
-#define FOR_EACH_GET_SECOND(...) FOR_EACH_PAIR(GET_SECOND, __VA_ARGS__)
-#define GET_FIRST(x, ...)        x
+#define GET_FIRST_PARAM_NAME(x, y, ...) y
+#define GET_SECOND(x, y)                y
+#define MERGE(x, y)                     x y
+#define FOR_EACH_MERGE(...)             FOR_EACH_PAIR(MERGE, __VA_ARGS__)
+#define FOR_EACH_GET_SECOND(...)        FOR_EACH_PAIR(GET_SECOND, __VA_ARGS__)
 
-#define UBSAN_ABORT_VARIANT(checkname, ...)                                            \
-    DECL_C NO_RET void __ubsan_handle_##checkname##_abort(FOR_EACH_MERGE(__VA_ARGS__)) \
-    {                                                                                  \
-        /* Call the base handler to report the violation */                            \
-        __ubsan_handle_##checkname(FOR_EACH_GET_SECOND(__VA_ARGS__));                  \
-                                                                                       \
-        /* Now trigger the panic/abort sequence */                                     \
-        if constexpr (kIsKernel) {                                                     \
-            KernelPanic("UBSAN: Unrecoverable error");                                 \
-        } else {                                                                       \
-            TODO_USERSPACE                                                             \
-            /* TODO(F1r3d3v): Implement user space panic/process termination */        \
-        }                                                                              \
-                                                                                       \
-        /* Should not be reached */                                                    \
-        std::unreachable();                                                            \
+#define UBSAN_RECOVERABLE(handler_name, check_name, ...)                                \
+    DECL_C void __ubsan_handle_##check_name(FOR_EACH_MERGE(__VA_ARGS__))                \
+    {                                                                                   \
+        ASSERT_NOT_NULL(GET_FIRST_PARAM_NAME(__VA_ARGS__));                             \
+        handler_name<false>(FOR_EACH_GET_SECOND(__VA_ARGS__));                          \
+    }                                                                                   \
+                                                                                        \
+    DECL_C NO_RET void __ubsan_handle_##check_name##_abort(FOR_EACH_MERGE(__VA_ARGS__)) \
+    {                                                                                   \
+        ASSERT_NOT_NULL(GET_FIRST_PARAM_NAME(__VA_ARGS__));                             \
+        handler_name<true>(FOR_EACH_GET_SECOND(__VA_ARGS__));                           \
+        std::unreachable();                                                             \
+    }
+
+#define UBSAN_UNRECOVERABLE(handler_name, check_name, ...)                      \
+    DECL_C NO_RET void __ubsan_handle_##check_name(FOR_EACH_MERGE(__VA_ARGS__)) \
+    {                                                                           \
+        ASSERT_NOT_NULL(GET_FIRST_PARAM_NAME(__VA_ARGS__));                     \
+        handler_name<true>(FOR_EACH_GET_SECOND(__VA_ARGS__));                   \
+        std::unreachable();                                                     \
     }
 
 // --- Type Mismatch ---
-DECL_C void __ubsan_handle_type_mismatch_v1(UbsanTypeMismatchData* data, uintptr_t ptr)
+template <bool fatal>
+void HandleTypeMismatch(UbsanTypeMismatchData* data, uintptr_t ptr)
 {
-    const char* violation_base;
+    constexpr const char* kTypeCheckKinds[] = {
+        "Load operation on",     "Store operation to",      "Reference binding to",
+        "Member access within",  "Member function call on", "Constructor invocation on",
+        "Downcast operation on", "Secondary downcast on",   "Upcast operation on",
+        "Virtual base cast on",  "Non-null binding to",     "Dynamic operation on"
+    };
+
     const char* type_check_kind_str = data->type_check_kind < ARRAY_SIZE(kTypeCheckKinds)
                                           ? kTypeCheckKinds[data->type_check_kind]
                                           : "Unknown";
 
     if (ptr == 0) {
-        violation_base = "Null pointer access";
-        UbsanReport<false>(violation_base, &data->location);
+        UbsanReport<fatal>(
+            "Null pointer access", &data->location, "%s null pointer of type %s",
+            type_check_kind_str, data->type->name
+        );
     } else if (data->alignment != 0 && !IsAligned(ptr, data->alignment)) {
-        violation_base = "Unaligned memory access";
-        UbsanReport<false>(
-            violation_base, &data->location, "%s address %p, Required Alignment: %lu",
-            type_check_kind_str, reinterpret_cast<void*>(ptr), data->alignment
+        UbsanReport<fatal>(
+            "Misaligned memory access", &data->location,
+            "%s misaligned address %p for type %s\n"
+            "which requires %u byte alignment",
+            type_check_kind_str, reinterpret_cast<void*>(ptr), data->type->name, data->alignment
         );
     } else {
-        violation_base = "Insufficient size";
-        UbsanReport<false>(
-            violation_base, &data->location, "%s address %p, Type: %s", type_check_kind_str,
+        UbsanReport<fatal>(
+            "Object size mismatch", &data->location,
+            "%s address %p with insufficient space for an object of type %s", type_check_kind_str,
             reinterpret_cast<void*>(ptr), data->type->name
         );
     }
 }
-UBSAN_ABORT_VARIANT(type_mismatch_v1, UbsanTypeMismatchData*, data, uintptr_t, ptr)
+UBSAN_RECOVERABLE(
+    HandleTypeMismatch, type_mismatch_v1, UbsanTypeMismatchData*, data, uintptr_t, ptr
+)
 
 // --- Alignment Assumption ---
-DECL_C void __ubsan_handle_alignment_assumption(
+template <bool fatal>
+void HandleAlignmentAssumption(
     UbsanAlignmentAssumptionData* data, uintptr_t ptr, uintptr_t alignment, uintptr_t offset
 )
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Alignment assumption failed", &data->location,
-        "Pointer: %p, Alignment: %lu, Offset: %lu, Type: '%s'", reinterpret_cast<void*>(ptr),
-        alignment, offset, data->type->name
+        "Assumption of %lu byte alignment for pointer %p with offset %lu failed\n"
+        "Type: '%s'",
+        alignment, reinterpret_cast<void*>(ptr), offset, data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(
-    alignment_assumption, UbsanAlignmentAssumptionData*, data, uintptr_t, ptr, uintptr_t, alignment,
-    uintptr_t, offset
+UBSAN_RECOVERABLE(
+    HandleAlignmentAssumption, alignment_assumption, UbsanAlignmentAssumptionData*, data, uintptr_t,
+    ptr, uintptr_t, alignment, uintptr_t, offset
 )
 
 // --- Add Overflow ---
-DECL_C void __ubsan_handle_add_overflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
+template <bool fatal>
+void HandleArithmeticOverflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs, char op)
 {
-    UbsanReport<false>(
-        "Addition overflow", &data->location, "Type: '%s', LHS: %#lx, RHS: %#lx", data->type->name,
-        lhs, rhs
-    );
-}
-UBSAN_ABORT_VARIANT(add_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs)
+    const char* violation_type;
 
-// --- Sub Overflow ---R
-DECL_C void __ubsan_handle_sub_overflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
-{
-    UbsanReport<false>(
-        "Subtraction overflow", &data->location, "Type: '%s', LHS: %#lx, RHS: %#lx",
-        data->type->name, lhs, rhs
+    switch (op) {
+        case '+':
+            violation_type = "Addition overflow";
+            break;
+        case '-':
+            violation_type = "Subtraction overflow";
+            break;
+        case '*':
+            violation_type = "Multiplication overflow";
+            break;
+        default:
+            violation_type = "Unknown arithmetic operation";
+    }
+
+    UbsanReport<fatal>(
+        violation_type, &data->location,
+        "%s integer overflow:\n"
+        "%#lx %c %#lx cannot be represented in type %s",
+        data->type->info & 1 ? "Signed" : "Unsigned", lhs, op, rhs, data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(sub_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs)
+
+// --- Add Overflow ---
+template <bool fatal>
+WRAP_CALL void HandleAddOverflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
+{
+    HandleArithmeticOverflow<fatal>(data, lhs, rhs, '+');
+}
+UBSAN_RECOVERABLE(
+    HandleAddOverflow, add_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs
+)
+
+// --- Sub Overflow ---
+template <bool fatal>
+WRAP_CALL void HandleSubOverflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
+{
+    HandleArithmeticOverflow<fatal>(data, lhs, rhs, '-');
+}
+UBSAN_RECOVERABLE(
+    HandleSubOverflow, sub_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs
+)
 
 // --- Mul Overflow ---
-DECL_C void __ubsan_handle_mul_overflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
+template <bool fatal>
+WRAP_CALL void HandleMulOverflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
 {
-    UbsanReport<false>(
-        "Multiplication overflow", &data->location, "Type: '%s', LHS: %#lx, RHS: %#lx",
-        data->type->name, lhs, rhs
-    );
+    HandleArithmeticOverflow<fatal>(data, lhs, rhs, '*');
 }
-UBSAN_ABORT_VARIANT(mul_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs)
+UBSAN_RECOVERABLE(
+    HandleMulOverflow, mul_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs
+)
 
 // --- Negate Overflow ---
-DECL_C void __ubsan_handle_negate_overflow(UbsanOverflowData* data, uintptr_t old_val)
+template <bool fatal>
+void HandleNegateOverflow(UbsanOverflowData* data, uintptr_t old_val)
 {
-    UbsanReport<false>(
-        "Negation overflow", &data->location, "Type: '%s', Value: %#lx", data->type->name, old_val
+    UbsanReport<fatal>(
+        "Negation overflow", &data->location, "negation of %#lx cannot be represented in type %s",
+        old_val, data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(negate_overflow, UbsanOverflowData*, data, uintptr_t, old_val)
+UBSAN_RECOVERABLE(
+    HandleNegateOverflow, negate_overflow, UbsanOverflowData*, data, uintptr_t, old_val
+)
 
 // --- Divrem Overflow ---
-DECL_C void __ubsan_handle_divrem_overflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
+template <bool fatal>
+void HandleDivremOverflow(UbsanOverflowData* data, uintptr_t lhs, uintptr_t rhs)
 {
-    const char* violation = (rhs == 0) ? "Division by zero" : "Division overflow";
-    UbsanReport<false>(
-        violation, &data->location, "Type: '%s', LHS: %#lx, RHS: %#lx", data->type->name, lhs, rhs
-    );
+    if (rhs == 0) {
+        UbsanReport<fatal>("Division by zero", &data->location, "Type: '%s'", data->type->name);
+    } else if (data->type->info & 1 && rhs == static_cast<uintptr_t>(-1) &&
+               lhs == static_cast<uintptr_t>(-1ull >> 1) + 1) {
+        UbsanReport<fatal>(
+            "Division overflow", &data->location,
+            "division of %#lx by -1 cannot be represented in type %s", lhs, data->type->name
+        );
+    } else {
+        UbsanReport<fatal>("Division error", &data->location, "Type: '%s'", data->type->name);
+    }
 }
-UBSAN_ABORT_VARIANT(divrem_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs)
+UBSAN_RECOVERABLE(
+    HandleDivremOverflow, divrem_overflow, UbsanOverflowData*, data, uintptr_t, lhs, uintptr_t, rhs
+)
 
 // --- Shift Out Of Bounds ---
-DECL_C void __ubsan_handle_shift_out_of_bounds(
-    UbsanShiftOutOfBoundsData* data, uintptr_t lhs, uintptr_t rhs
-)
+template <bool fatal>
+void HandleShiftOutOfBounds(UbsanShiftOutOfBoundsData* data, uintptr_t lhs, uintptr_t rhs)
 {
-    UbsanReport<false>(
-        "Shift out of bounds", &data->location,
-        "LHS Type: '%s', RHS Type: '%s', LHS: %#lx, RHS: %#lx", data->lhs_type->name,
-        data->rhs_type->name, lhs, rhs
-    );
+    bool is_lhs_signed = data->lhs_type->info & 1;
+    bool is_rhs_signed = data->rhs_type->info & 1;
+    u64 lhs_bit_width  = 1 << (data->lhs_type->info >> 1);
+
+    if (is_rhs_signed && static_cast<intptr_t>(rhs) < 0) {
+        UbsanReport<fatal>(
+            "Shift out of bounds", &data->location, "shift exponent %#lx is negative", rhs
+        );
+    } else if (rhs >= lhs_bit_width) {
+        UbsanReport<fatal>(
+            "Shift out of bounds", &data->location,
+            "shift exponent %#lx is too large for %u-bit type %s", rhs, lhs_bit_width,
+            data->lhs_type->name
+        );
+    } else if (is_lhs_signed && static_cast<intptr_t>(lhs) < 0) {
+        UbsanReport<fatal>(
+            "Shift out of bounds", &data->location, "left shift of negative value %#lx", lhs
+        );
+    } else {
+        UbsanReport<fatal>(
+            "Shift out of bounds", &data->location,
+            "left shift of %#lx by %#lx places cannot be represented in type %s", lhs, rhs,
+            data->lhs_type->name
+        );
+    }
 }
-UBSAN_ABORT_VARIANT(
-    shift_out_of_bounds, UbsanShiftOutOfBoundsData*, data, uintptr_t, lhs, uintptr_t, rhs
+UBSAN_RECOVERABLE(
+    HandleShiftOutOfBounds, shift_out_of_bounds, UbsanShiftOutOfBoundsData*, data, uintptr_t, lhs,
+    uintptr_t, rhs
 )
 
 // --- Out Of Bounds ---
-DECL_C void __ubsan_handle_out_of_bounds(UbsanOutOfBoundsData* data, uintptr_t index)
+template <bool fatal>
+void HandleOutOfBounds(UbsanOutOfBoundsData* data, uintptr_t index)
 {
-    UbsanReport<false>(
-        "Out of bounds access", &data->location, "Index: %#lx, Left Type: '%s', Right Type: '%s'",
-        index, data->left_type->name, data->right_type->name
+    UbsanReport<fatal>(
+        "Index out of bounds", &data->location, "index %#lx is out of range for type %s", index,
+        data->right_type->name
     );
 }
-UBSAN_ABORT_VARIANT(out_of_bounds, UbsanOutOfBoundsData*, data, uintptr_t, index)
+UBSAN_RECOVERABLE(HandleOutOfBounds, out_of_bounds, UbsanOutOfBoundsData*, data, uintptr_t, index)
 
 // --- Builtin Unreachable ---
-DECL_C NO_RET void __ubsan_handle_builtin_unreachable(UbsanUnreachableData* data)
+template <bool fatal>
+void BuiltinUnreachable(UbsanUnreachableData* data)
 {
-    UbsanReport<true>("Execution reached an unreachable program point", &data->location);
+    UbsanReport<fatal>("Execution reached an unreachable program point", &data->location);
 }
+UBSAN_UNRECOVERABLE(BuiltinUnreachable, builtin_unreachable, UbsanUnreachableData*, data)
 
 // --- Missing Return ---
-DECL_C NO_RET void __ubsan_handle_missing_return(UbsanUnreachableData* data)
+template <bool fatal>
+void MissingReturn(UbsanUnreachableData* data)
 {
-    UbsanReport<true>(
+    UbsanReport<fatal>(
         "Execution reached the end of a value-returning function without returning a value",
         &data->location
     );
 }
+UBSAN_UNRECOVERABLE(MissingReturn, missing_return, UbsanUnreachableData*, data)
 
 // --- VLA Bound Not Positive ---
-DECL_C void __ubsan_handle_vla_bound_not_positive(UbsanVLABoundData* data, uintptr_t bound)
+template <bool fatal>
+void HandleVLABoundNotPositive(UbsanVLABoundData* data, uintptr_t bound)
 {
-    UbsanReport<false>(
-        "Variable-length array bound not positive", &data->location, "Bound: %lu, Type: '%s'",
-        bound, data->type->name
+    UbsanReport<fatal>(
+        "Variable-length array bound not positive", &data->location,
+        "variable length array bound value %lu <= 0", bound
     );
 }
-UBSAN_ABORT_VARIANT(vla_bound_not_positive, UbsanVLABoundData*, data, uintptr_t, bound)
+UBSAN_RECOVERABLE(
+    HandleVLABoundNotPositive, vla_bound_not_positive, UbsanVLABoundData*, data, uintptr_t, bound
+)
 
 // --- Float Cast Overflow ---
-DECL_C void __ubsan_handle_float_cast_overflow(UbsanFloatCastOverflowData* data, uintptr_t from)
+template <bool fatal>
+void HandleFloatCastOverflow(UbsanFloatCastOverflowData* data, uintptr_t from)
 {
-    UbsanReport<false>(
+#if !(defined(__GNUC__) && __GNUC__ < 6)
+    UbsanReport<fatal>(
         "Floating-point cast overflow", &data->location,
-        "From Type: '%s', To Type: '%s', Value Bits: %#lx", data->from_type->name,
-        data->to_type->name, from
+        "value %#lx from type '%s' cannot be represented in type '%s'", from, data->from_type->name,
+        data->to_type->name
     );
+#else
+    UbsanReport<fatal>(
+        "Floating-point cast overflow", nullptr_t,
+        "value %#lx from type '%s' cannot be represented in type '%s'", from, data->from_type->name,
+        data->to_type->name
+    );
+#endif
 }
-UBSAN_ABORT_VARIANT(float_cast_overflow, UbsanFloatCastOverflowData*, data, uintptr_t, from)
+UBSAN_RECOVERABLE(
+    HandleFloatCastOverflow, float_cast_overflow, UbsanFloatCastOverflowData*, data, uintptr_t, from
+)
 
 // --- Load Invalid Value ---
-DECL_C void __ubsan_handle_load_invalid_value(UbsanInvalidValueData* data, uintptr_t val)
+template <bool fatal>
+void HandleLoadInvalidValue(UbsanInvalidValueData* data, uintptr_t val)
 {
-    UbsanReport<false>(
-        "Load of invalid value", &data->location, "Type: '%s', Value: %#lx", data->type->name, val
+    UbsanReport<fatal>(
+        "Load of invalid value", &data->location,
+        "load of value %#lx is not a valid value for type '%s'", val, data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(load_invalid_value, UbsanInvalidValueData*, data, uintptr_t, val)
+UBSAN_RECOVERABLE(
+    HandleLoadInvalidValue, load_invalid_value, UbsanInvalidValueData*, data, uintptr_t, val
+)
 
 // --- Implicit Conversion ---
-DECL_C void __ubsan_handle_implicit_conversion(
-    UbsanImplicitConversionData* data, uintptr_t src, uintptr_t dst
-)
+template <bool fatal>
+void HandleImplicitConversion(UbsanImplicitConversionData* data, uintptr_t src, uintptr_t dst)
 {
-    const char* kKinds[] = {
-        "integer truncation", "unsigned integer truncation", "signed integer truncation",
-        "integer sign change", "signed integer truncation or sign change"
+    constexpr const char* kKinds[] = {
+        "Integer truncation", "Unsigned integer truncation", "Signed integer truncation",
+        "Integer sign change", "Signed integer truncation or sign change"
     };
-    const char* kind_str = data->kind < ARRAY_SIZE(kKinds) ? kKinds[data->kind] : "unknown kind";
-    UbsanReport<false>(
+
+    const char* kind_str = data->kind < ARRAY_SIZE(kKinds) ? kKinds[data->kind] : "Unknown";
+
+    UbsanReport<fatal>(
         "Implicit conversion issue", &data->location,
         "Kind: '%s', From Type: '%s', To Type: '%s', Src Value: %#lx, Dst Value: %#lx", kind_str,
         data->from_type->name, data->to_type->name, src, dst
     );
 }
-UBSAN_ABORT_VARIANT(
-    implicit_conversion, UbsanImplicitConversionData*, data, uintptr_t, src, uintptr_t, dst
+UBSAN_RECOVERABLE(
+    HandleImplicitConversion, implicit_conversion, UbsanImplicitConversionData*, data, uintptr_t,
+    src, uintptr_t, dst
 )
 
 // --- Invalid Builtin ---
-DECL_C void __ubsan_handle_invalid_builtin(UbsanInvalidBuiltinData* data)
+template <bool fatal>
+void HandleInvalidBuiltin(UbsanInvalidBuiltinData* data)
 {
-    const char* kind_str = data->kind < ARRAY_SIZE(kBuiltinCheckKinds)
-                               ? kBuiltinCheckKinds[data->kind]
-                               : "unknown kind";
-    UbsanReport<false>(
+    constexpr const char* kBuiltinCheckKinds[] = {
+        "Count trailing zeros of zero", "Count leading zeros of zero", "Assume condition false"
+    };
+
+    const char* kind_str =
+        data->kind < ARRAY_SIZE(kBuiltinCheckKinds) ? kBuiltinCheckKinds[data->kind] : "Unknown";
+
+    UbsanReport<fatal>(
         "Invalid builtin function usage", &data->location, "Kind: '%s' (%hhu)", kind_str, data->kind
     );
 }
-UBSAN_ABORT_VARIANT(invalid_builtin, UbsanInvalidBuiltinData*, data)
+UBSAN_RECOVERABLE(HandleInvalidBuiltin, invalid_builtin, UbsanInvalidBuiltinData*, data)
 
 // --- Invalid ObjC Cast ---
-DECL_C void __ubsan_handle_invalid_objc_cast(UbsanInvalidObjCCastData* data, uintptr_t ptr)
+template <bool fatal>
+void HandleInvalidObjCCast(UbsanInvalidObjCCastData* data, uintptr_t ptr)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Invalid Objective-C cast", &data->location, "Pointer: %p, Expected Type: '%s'",
         reinterpret_cast<void*>(ptr), data->expected_type->name
     );
 }
-UBSAN_ABORT_VARIANT(invalid_objc_cast, UbsanInvalidObjCCastData*, data, uintptr_t, ptr)
+UBSAN_RECOVERABLE(
+    HandleInvalidObjCCast, invalid_objc_cast, UbsanInvalidObjCCastData*, data, uintptr_t, ptr
+)
 
 // --- Nonnull Return v1 ---
-DECL_C void __ubsan_handle_nonnull_return_v1(
-    UbsanNonNullReturnData* data, UbsanSourceLocation* loc_ptr
-)
+template <bool fatal>
+void HandleNonnullReturnV1(UbsanNonNullReturnData* data, UbsanSourceLocation* loc_ptr)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Null return from function declared to never return null",
         loc_ptr ? loc_ptr : &data->attr_location
     );
 }
-UBSAN_ABORT_VARIANT(nonnull_return_v1, UbsanNonNullReturnData*, data, UbsanSourceLocation*, loc_ptr)
+UBSAN_RECOVERABLE(
+    HandleNonnullReturnV1, nonnull_return_v1, UbsanNonNullReturnData*, data, UbsanSourceLocation*,
+    loc_ptr
+)
 
 // --- Nullability Return v1 ---
-DECL_C void __ubsan_handle_nullability_return_v1(
-    UbsanNonNullReturnData* data, UbsanSourceLocation* loc_ptr
-)
+template <bool fatal>
+void HandleNullabilityReturnV1(UbsanNonNullReturnData* data, UbsanSourceLocation* loc_ptr)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Null return from function with non-null return annotation",
         loc_ptr ? loc_ptr : &data->attr_location
     );
 }
-UBSAN_ABORT_VARIANT(
-    nullability_return_v1, UbsanNonNullReturnData*, data, UbsanSourceLocation*, loc_ptr
+UBSAN_RECOVERABLE(
+    HandleNullabilityReturnV1, nullability_return_v1, UbsanNonNullReturnData*, data,
+    UbsanSourceLocation*, loc_ptr
 )
 
 // --- Nonnull Arg ---
-DECL_C void __ubsan_handle_nonnull_arg(UbsanNonNullArgData* data)
+template <bool fatal>
+void HandleNonnullArg(UbsanNonNullArgData* data)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Null pointer passed as argument", &data->location,
         "Argument Index: %d, Declared non-null at %s:%u:%u", data->arg_index,
         data->attr_location.file, data->attr_location.line, data->attr_location.column
     );
 }
-UBSAN_ABORT_VARIANT(nonnull_arg, UbsanNonNullArgData*, data)
+UBSAN_RECOVERABLE(HandleNonnullArg, nonnull_arg, UbsanNonNullArgData*, data)
 
 // --- Nullability Arg ---
-DECL_C void __ubsan_handle_nullability_arg(UbsanNonNullArgData* data)
+template <bool fatal>
+void HandleNullabilityArg(UbsanNonNullArgData* data)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Null pointer passed as argument", &data->location,
         "Argument Index: %d, Annotated non-null at %s:%u:%u", data->arg_index,
         data->attr_location.file, data->attr_location.line, data->attr_location.column
     );
 }
-UBSAN_ABORT_VARIANT(nullability_arg, UbsanNonNullArgData*, data)
+UBSAN_RECOVERABLE(HandleNullabilityArg, nullability_arg, UbsanNonNullArgData*, data)
 
 // --- Pointer Overflow ---
-DECL_C void __ubsan_handle_pointer_overflow(
-    UbsanPointerOverflowData* data, uintptr_t base, uintptr_t result
-)
+template <bool fatal>
+void HandlePointerOverflow(UbsanPointerOverflowData* data, uintptr_t base, uintptr_t result)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Pointer arithmetic overflow", &data->location, "Base: %p, Result: %p",
         reinterpret_cast<void*>(base), reinterpret_cast<void*>(result)
     );
 }
-UBSAN_ABORT_VARIANT(
-    pointer_overflow, UbsanPointerOverflowData*, data, uintptr_t, base, uintptr_t, result
+UBSAN_RECOVERABLE(
+    HandlePointerOverflow, pointer_overflow, UbsanPointerOverflowData*, data, uintptr_t, base,
+    uintptr_t, result
 )
 
 // --- CFI Bad ICall ---
-DECL_C void __ubsan_handle_cfi_bad_icall(UbsanCFIBadIcallData* data, uintptr_t function)
+template <bool fatal>
+void HandleCFIBadICall(UbsanCFIBadIcallData* data, uintptr_t function)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Control Flow Integrity: bad indirect function call", &data->location,
         "Target: %p, Expected Type: '%s'", reinterpret_cast<void*>(function), data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(cfi_bad_icall, UbsanCFIBadIcallData*, data, uintptr_t, function)
+UBSAN_RECOVERABLE(
+    HandleCFIBadICall, cfi_bad_icall, UbsanCFIBadIcallData*, data, uintptr_t, function
+)
 
 // --- CFI Check Fail ---
-DECL_C void __ubsan_handle_cfi_check_fail(
-    UbsanCFICheckFailData* data, uintptr_t function, uintptr_t vtable_is_valid
-)
+template <bool fatal>
+void HandleCFICheckFail(UbsanCFICheckFailData* data, uintptr_t function, uintptr_t vtable_is_valid)
 {
+    constexpr const char* kCFITypeCheckKinds[] = {
+        "Virtual call",
+        "Non-virtual call",
+        "Derived cast",
+        "Unrelated cast",
+        "Indirect call",
+        "Non-virtual member function call",
+        "Virtual member function call"
+    };
+
     const char* kind_str = data->check_kind < ARRAY_SIZE(kCFITypeCheckKinds)
                                ? kCFITypeCheckKinds[data->check_kind]
-                               : "unknown kind";
-    UbsanReport<false>(
+                               : "Unknown";
+    UbsanReport<fatal>(
         "Control Flow Integrity check failure", &data->location,
         "Check Kind: '%s' (%hhu), Target: %p, VTable Valid: %lu", kind_str, data->check_kind,
         reinterpret_cast<void*>(function), vtable_is_valid
     );
 }
-UBSAN_ABORT_VARIANT(
-    cfi_check_fail, UbsanCFICheckFailData*, data, uintptr_t, function, uintptr_t, vtable_is_valid
+UBSAN_RECOVERABLE(
+    HandleCFICheckFail, cfi_check_fail, UbsanCFICheckFailData*, data, uintptr_t, function,
+    uintptr_t, vtable_is_valid
 )
 
 // --- CFI Bad Type ---
-DECL_C void __ubsan_handle_cfi_bad_type(
+template <bool fatal>
+void HandleCFIBadType(
     UbsanCFICheckFailData* data, uintptr_t vtable, bool valid_vtable, UbsanReportOptions opts
 )
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Control Flow Integrity: bad type", &data->location,
         "VTable Ptr: %p, Valid VTable: %s, PC: %#lx, BP: %#lx", reinterpret_cast<void*>(vtable),
         valid_vtable ? "true" : "false", opts.pc, opts.bp
     );
 }
-UBSAN_ABORT_VARIANT(
-    cfi_bad_type, UbsanCFICheckFailData*, data, uintptr_t, vtable, bool, valid_vtable,
-    UbsanReportOptions, opts
+UBSAN_RECOVERABLE(
+    HandleCFIBadType, cfi_bad_type, UbsanCFICheckFailData*, data, uintptr_t, vtable, bool,
+    valid_vtable, UbsanReportOptions, opts
 )
 
 // --- Function Type Mismatch ---
-DECL_C void __ubsan_handle_function_type_mismatch(
-    UbsanFunctionTypeMismatchData* data, uintptr_t val
-)
+template <bool fatal>
+void HandleFunctionTypeMismatch(UbsanFunctionTypeMismatchData* data, uintptr_t val)
 {
-    UbsanReport<false>(
+    UbsanReport<fatal>(
         "Function called through pointer with incompatible type", &data->location,
         "Function Pointer: %p, Required Type: '%s'", reinterpret_cast<void*>(val), data->type->name
     );
 }
-UBSAN_ABORT_VARIANT(function_type_mismatch, UbsanFunctionTypeMismatchData*, data, uintptr_t, val)
+UBSAN_RECOVERABLE(
+    HandleFunctionTypeMismatch, function_type_mismatch, UbsanFunctionTypeMismatchData*, data,
+    uintptr_t, val
+)
