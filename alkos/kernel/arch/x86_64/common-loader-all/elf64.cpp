@@ -1,8 +1,9 @@
 #include <memory.h>
-#include <elf/elf64.hpp>
+#include <elf64.hpp>
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <extensions/internal/formats.hpp>
 #include "todo.hpp"
 
 namespace elf
@@ -55,10 +56,9 @@ u64 LoadElf64(const byte* elf_start, u64 destination_begin_virtual_address)
 
             TODO_WHEN_DEBUGGING_FRAMEWORK
             TRACE_INFO(
-                "Segment %d: dest=0x%llX, dest_size=0x%llu KB, source=0x%llX, source_size=0x%llu "
-                "KB",
-                i + 1, segment_dest, segment_dest_size << 10, segment_source,
-                segment_source_size << 10
+                "Segment %d: dest=0x%llX, dest_size=0x%sB, source=0x%llX, source_size=0x%sB", i + 1,
+                segment_dest, FormatMetricUint(segment_dest_size), segment_source,
+                FormatMetricUint(segment_source_size)
             );
 
             memcpy(

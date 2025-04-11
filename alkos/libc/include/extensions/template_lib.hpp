@@ -261,7 +261,7 @@ concept DerivedFromHelper = std::is_base_of_v<StaticSingletonHelper, T>;
 
 template <class T>
     requires DerivedFromHelper<T>
-class StaticSingleton
+class SingletonInstanceCreator
 {
     struct InstanceHelper final : T {
         /* Makes protected constructor accessible */
@@ -277,22 +277,22 @@ class StaticSingleton
     // Static Accessors and Utilities
     // ------------------------------------
 
-    FORCE_INLINE_F static T &Get() noexcept
+    FORCE_INLINE_F T &Get() noexcept
     {
         assert(is_instance_inited_ && "Not inited Singleton instance!");
         return *reinterpret_cast<T *>(instance_memory_);
     }
 
-    FORCE_INLINE_F static void Destroy() noexcept
+    FORCE_INLINE_F void Destroy() noexcept
     {
         Get().~T();
         is_instance_inited_ = false;
     }
 
-    FORCE_INLINE_F static bool IsInited() noexcept { return is_instance_inited_; }
+    FORCE_INLINE_F bool IsInited() noexcept { return is_instance_inited_; }
 
     template <class... Args>
-    FORCE_INLINE_F static T &Init(Args &&...args) noexcept
+    FORCE_INLINE_F T &Init(Args &&...args) noexcept
     {
         assert(!IsInited() && "Singleton instance already inited!");
         [[maybe_unused]] auto ptr =
@@ -308,17 +308,42 @@ class StaticSingleton
     // Static memory
     // ------------------------------
 
-    static bool is_instance_inited_;
-    alignas(alignof(T)) static unsigned char instance_memory_[sizeof(T)];
+    bool is_instance_inited_ = false;
+    alignas(alignof(T)) unsigned char instance_memory_[sizeof(T)]{};
 };
 
-template <typename T>
+template <class T>
     requires DerivedFromHelper<T>
-bool StaticSingleton<T>::is_instance_inited_ = false;
+class StaticSingleton
+{
+    public:
+    // ------------------------------------
+    // Static Accessors and Utilities
+    // ------------------------------------
 
-template <typename T>
+    FORCE_INLINE_F static T &Get() noexcept { return instance_creator_.Get(); }
+
+    FORCE_INLINE_F static void Destroy() noexcept { instance_creator_.Destroy(); }
+
+    FORCE_INLINE_F static bool IsInited() noexcept { return instance_creator_.IsInited(); }
+
+    template <class... Args>
+    FORCE_INLINE_F static T &Init(Args &&...args) noexcept
+    {
+        return instance_creator_.Init(std::forward<Args>(args)...);
+    }
+
+    protected:
+    // ------------------------------
+    // Static memory
+    // ------------------------------
+
+    static SingletonInstanceCreator<T> instance_creator_;
+};
+
+template <class T>
     requires DerivedFromHelper<T>
-unsigned char StaticSingleton<T>::instance_memory_[sizeof(T)]{};
+SingletonInstanceCreator<T> StaticSingleton<T>::instance_creator_;
 
 // ------------------------------
 // EventTable
@@ -393,8 +418,8 @@ class StaticEventTable : MoveOnly
 // Settings
 // ------------------------------
 
-template <class TypeListT>
-    requires IsTypeList_v<TypeListT>
+template <class TypeListT, class AccessT = size_t>
+    requires IsTypeList_v<TypeListT> && requires { static_cast<size_t>(std::declval<AccessT>()); }
 class Settings : public NoCopy
 {
     public:
@@ -412,59 +437,59 @@ class Settings : public NoCopy
     // Class methods
     // ------------------------------
 
-    template <size_t idx>
+    template <AccessT idx>
     FORCE_INLINE_F constexpr auto Get()
     {
-        static_assert(idx < TypeListT::kSize, "Index out of range");
-        return settings_.template get<idx>();
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
+        return settings_.template get<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void Set(U &&value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void Set(const U &value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(U &&value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
-        event_table_.template Notify<idx>();
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
+        event_table_.template Notify<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx, class U>
+    template <AccessT idx, class U>
     FORCE_INLINE_F constexpr void SetAndNotify(const U &value)
     {
-        using OptType = typename TypeListT::template Iterator<idx>::type;
-        static_assert(idx < TypeListT::kSize, "Index out of range");
+        using OptType = typename TypeListT::template Iterator<static_cast<size_t>(idx)>::type;
+        static_assert(static_cast<size_t>(idx) < TypeListT::kSize, "Index out of range");
         static_assert(std::is_same_v<U, OptType>, "Invalid option type");
 
-        settings_.template get<idx>() = std::forward<U>(value);
-        event_table_.template Notify<idx>();
+        settings_.template get<static_cast<size_t>(idx)>() = std::forward<U>(value);
+        event_table_.template Notify<static_cast<size_t>(idx)>();
     }
 
-    template <size_t idx>
+    template <AccessT idx>
     FORCE_INLINE_F void RegisterEvent(EventT &&event)
     {
-        event_table_.template RegisterEvent<idx>(std::move(event));
+        event_table_.template RegisterEvent<static_cast<size_t>(idx)>(std::move(event));
     }
 
     // ------------------------------

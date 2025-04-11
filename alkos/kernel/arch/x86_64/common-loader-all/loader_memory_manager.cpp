@@ -1,8 +1,9 @@
 #include "loader_memory_manager.hpp"
 #include <assert.h>
 #include <memory.h>
+#include <extensions/algorithm.hpp>
 #include <extensions/debug.hpp>
-#include <extensions/new.hpp>
+#include <extensions/internal/intervals.hpp>
 
 // Note: The alignment here is a strict requirement for the PML tables and if the
 // initial object is not aligned, the PML tables will not be aligned either.
@@ -10,9 +11,10 @@ alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)];
 
 LoaderMemoryManager::LoaderMemoryManager()
 {
+    TRACE_INFO("LoaderMemoryManager::LoaderMemoryManager()");
+
     num_pml_tables_stored_ = 1;  ///< The first PML table is the PML4 table
     memset(descending_sorted_mmap_entries, 0, sizeof(descending_sorted_mmap_entries));
-
     memset(buffer_, 0, sizeof(u64) * kNumEntriesPerPml * kMaxPmlTablesToStore);
 
     // Should get compiled away in release mode
@@ -24,78 +26,13 @@ LoaderMemoryManager::LoaderMemoryManager()
     }
 }
 LoaderMemoryManager::PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
-void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
-    u64 virtual_address, u64 size_bytes, u64 flags
-)
-{
-    static constexpr u32 k4kPageSizeBytes = 1 << 12;
-
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("Starting to map virtual memory range using internal memory map...");
-
-    ASSERT(IsAligned(virtual_address, k4kPageSizeBytes));
-    ASSERT_GE(available_memory_bytes_, size_bytes);
-
-    u64 mapped_bytes = 0;
-    while (mapped_bytes < size_bytes) {
-        bool mapped_this_iteration = false;
-        for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            // Skip exhausted memory regions
-            if (descending_sorted_mmap_entries[i].length < k4kPageSizeBytes) {
-                continue;
-            }
-
-            const u64 current_physical_address = descending_sorted_mmap_entries[i].addr;
-            const u64 aligned_physical_address =
-                AlignUp(current_physical_address, k4kPageSizeBytes);
-            const u32 offset_from_alignment = aligned_physical_address - current_physical_address;
-
-            if (offset_from_alignment > 0) {
-                if (descending_sorted_mmap_entries[i].length < offset_from_alignment) {
-                    continue;
-                }
-                descending_sorted_mmap_entries[i].addr += offset_from_alignment;
-                descending_sorted_mmap_entries[i].length -= offset_from_alignment;
-                available_memory_bytes_ -= offset_from_alignment;
-            }
-
-            // Try to map as many pages as possible from the current memory region
-            while (descending_sorted_mmap_entries[i].length >= k4kPageSizeBytes &&
-                   mapped_bytes < size_bytes) {
-                const u64 current_virtual_address = virtual_address + mapped_bytes;
-                MapVirtualMemoryToPhysical<PageSize::Page4k>(
-                    current_virtual_address, descending_sorted_mmap_entries[i].addr, flags
-                );
-                mapped_this_iteration = true;
-
-                // Update the region: move the start address forward by one page and reduce its
-                // length.
-                descending_sorted_mmap_entries[i].addr += k4kPageSizeBytes;
-                descending_sorted_mmap_entries[i].length -= k4kPageSizeBytes;
-                mapped_bytes += k4kPageSizeBytes;
-                available_memory_bytes_ -= k4kPageSizeBytes;
-            }
-        }
-        if (mapped_bytes >= size_bytes) {
-            break;
-        }
-        // If no memory region was mapped in this iteration, we are out of memory
-        if (!mapped_this_iteration) {
-            break;
-        }
-    }
-    if (mapped_bytes < size_bytes) {
-        KernelPanic("Failed to map virtual memory range using internal memory map - out of memory!"
-        );
-    }
-}
-void LoaderMemoryManager::AddMemoryMapEntry(multiboot::memory_map_t *mmap_entry)
+void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
     FreeMemoryRegion_t &mmap_entry_ref = descending_sorted_mmap_entries[num_free_memory_regions_++];
-    mmap_entry_ref.addr                = mmap_entry->addr;
-    mmap_entry_ref.length              = mmap_entry->len;
-    available_memory_bytes_ += mmap_entry->len;
+    mmap_entry_ref.addr                = start_addr;
+    mmap_entry_ref.length              = end_addr - start_addr;
+    available_memory_bytes_ += mmap_entry_ref.length;
 
     // Sort the memory map entries in descending order
     u32 i = num_free_memory_regions_ - 1;
@@ -109,6 +46,71 @@ void LoaderMemoryManager::AddMemoryMapEntry(multiboot::memory_map_t *mmap_entry)
         );
         memcpy(&descending_sorted_mmap_entries[i - 1], &temp, sizeof(FreeMemoryRegion_t));
         i--;
+    }
+}
+void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
+{
+    bool found_intersection = true;
+    while (found_intersection) {
+        found_intersection = false;
+        for (u32 i = 0; i < num_free_memory_regions_; i++) {
+            constexpr i64 kNoOffset          = 0;
+            constexpr u64 kEmptyRegionLength = 0;
+
+            const i64 free_start = static_cast<i64>(descending_sorted_mmap_entries[i].addr);
+            const i64 free_end   = static_cast<i64>(
+                descending_sorted_mmap_entries[i].addr + descending_sorted_mmap_entries[i].length
+            );
+            const i64 region_start = static_cast<i64>(start_addr);
+            const i64 region_end   = static_cast<i64>(end_addr);
+
+            if (internal::DoOpenIntervalsOverlap(free_start, free_end, region_start, region_end)) {
+                TRACE_INFO(
+                    "Found intersection of 0x%llX-0x%llX with 0x%llX-0x%llX", region_start,
+                    region_end, free_start, free_end
+                );
+                found_intersection = true;
+                // Delete the not free part of the memory region
+
+                // Case 0: The memory region completely encompasses the free memory region
+                if (region_start <= free_start && region_end >= free_end) {
+                    available_memory_bytes_ -= descending_sorted_mmap_entries[i].length;
+                    descending_sorted_mmap_entries[i].length = kEmptyRegionLength;
+                }
+
+                // Case 1: The left part of the memory region is not free
+                if (start_addr < descending_sorted_mmap_entries[i].addr) {
+                    const u64 original_addr                = descending_sorted_mmap_entries[i].addr;
+                    descending_sorted_mmap_entries[i].addr = end_addr;
+                    const u64 lost_memory                  = end_addr - original_addr;
+                    R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
+                    descending_sorted_mmap_entries[i].length -= lost_memory;
+                    available_memory_bytes_ -= lost_memory;
+                }
+                // Case 2: The right part of the memory region is not free
+                else if (end_addr > descending_sorted_mmap_entries[i].addr) {
+                    const u64 original_addr = descending_sorted_mmap_entries[i].addr;
+                    const u64 lost_memory =
+                        (original_addr + descending_sorted_mmap_entries[i].length) - start_addr;
+                    R_ASSERT_GE(descending_sorted_mmap_entries[i].length, lost_memory);
+                    descending_sorted_mmap_entries[i].length = start_addr - original_addr;
+                    available_memory_bytes_ -= lost_memory;
+                }
+
+                // Case 3: The memory region is completely inside the free memory region
+                if (start_addr > descending_sorted_mmap_entries[i].addr &&
+                    end_addr < descending_sorted_mmap_entries[i].addr +
+                                   descending_sorted_mmap_entries[i].length) {
+                    // Split the free memory region into two
+                    AddFreeMemoryRegion(
+                        end_addr, descending_sorted_mmap_entries[i].addr +
+                                      descending_sorted_mmap_entries[i].length
+                    );
+                    descending_sorted_mmap_entries[i].length =
+                        start_addr - descending_sorted_mmap_entries[i].addr;
+                }
+            }
+        }
     }
 }
 void LoaderMemoryManager::DumpMemoryMap()
@@ -209,7 +211,8 @@ void LoaderMemoryManager::DumpPmlTables()
                     } else {
                         TRACE_INFO(
                             "PML2 entry %u: Present: %llu, Writable: %llu, Frame: 0x%llX", i,
-                            pml2_table[i].present, pml2_table[i].writable, pml2_table[i].frame
+                            pml2_table[i].present, pml2_table[i].writable,
+                            pml2_table[i].frame << kAddressOffset
                         );
                         pml2_addr_stack[pml2_stack_top_idx] =
                             reinterpret_cast<u64 *>(pml2_table[i].frame << kAddressOffset);
