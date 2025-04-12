@@ -1,8 +1,8 @@
-#ifndef LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_
-#define LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_
 
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include <extensions/cstddef.hpp>
 #include <extensions/initializer_list.hpp>
 #include <extensions/type_traits.hpp>
@@ -252,4 +252,4 @@ NODISCARD FORCE_INLINE_F constexpr const T&& get(const array<T, N>&& arr) noexce
 
 TODO_LIBCPP_COMPLIANCE
 
-#endif  // LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_ARRAY_HPP_

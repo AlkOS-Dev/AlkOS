@@ -1,6 +1,6 @@
 /* internal includes */
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include <time.h>
 #include <extensions/time.hpp>
 #include <test_module/test.hpp>

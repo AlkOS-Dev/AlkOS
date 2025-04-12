@@ -15,18 +15,18 @@ Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
     static_assert(kType != TagNumber<Tag>::kInvalidTagNumber, "Invalid tag type!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
+    // TRACE_INFO("Searching for tag type: %s", GetTagName(kType));
     for (auto *tag = reinterpret_cast<tag_t *>(static_cast<byte *>(multiboot_info_addr) + 8);
          tag->type != kMultibootTagTypeEnd;
          tag =
              reinterpret_cast<tag_t *>(reinterpret_cast<uintptr_t>(tag) + AlignUp(tag->size, 8))) {
         if (tag->type == kType && Filter(reinterpret_cast<Tag *>(tag))) {
             TODO_WHEN_DEBUGGING_FRAMEWORK
-            //            TRACE_SUCCESS("Found tag type: %s", kTagName);
+            // TRACE_SUCCESS("Found tag type: %s", kTagName);
             return reinterpret_cast<Tag *>(tag);
         }
     }
-    TRACE_ERROR("Tag type: %s not found!", kTagName);
+    // TRACE_ERROR("Tag type: %s not found!", kTagName);
     return nullptr;
 }
 

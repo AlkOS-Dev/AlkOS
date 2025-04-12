@@ -15,7 +15,7 @@ WRAP_CALL time_t QuerySystemTime(const timezone& tz)
     const tm rtcTime = ReadRtcTime();
 
     TRACE_INFO("Time loaded from CMOS: %s", [&] {
-        strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n", &rtcTime);
+        strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S", &rtcTime);
         return buffer;
     }());
 

@@ -98,6 +98,9 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
         );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
+    TODO_WHEN_DEBUGGING_FRAMEWORK
+    //    loader_memory_manager->DumpPmlTables();
+
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
 
     TRACE_INFO("Loading module...");

@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <string.h>
 #include <elf64.hpp>
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>

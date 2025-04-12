@@ -15,6 +15,7 @@
 #include <extensions/internal/formats.hpp>
 #include <interrupts/idt.hpp>
 #include <loader_memory_manager.hpp>
+#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include "memory_management/physical_memory_manager.hpp"
 
@@ -23,6 +24,8 @@ extern "C" void EnableOSXSave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
+
+loader64::LoaderData* kLoaderData;
 
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
@@ -118,4 +121,6 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     auto* multiboot_info = reinterpret_cast<multiboot::header_t*>(loader_data->multiboot_info_addr);
     auto* mmap_tag       = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
     PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
+
+    kLoaderData = loader_data;
 }

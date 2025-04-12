@@ -1,6 +1,6 @@
 #include "loader_memory_manager.hpp"
 #include <assert.h>
-#include <memory.h>
+#include <string.h>
 #include <extensions/algorithm.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/intervals.hpp>
