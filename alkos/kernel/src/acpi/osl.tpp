@@ -9,7 +9,7 @@
 
 template <typename T>
 concept ValidUnsigned =
-    std::is_unsigned_v<T> && (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4);
+    std::is_unsigned_v<T> && sizeof(T) <= 4;
 
 template <ValidUnsigned T>
 uacpi_status uacpi_kernel_pci_read(uacpi_handle device, uacpi_size offset, T *value)
