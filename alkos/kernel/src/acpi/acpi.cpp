@@ -44,7 +44,7 @@ int ACPI::Init()
     if (acpi_tag == nullptr) {
         KernelPanic("ACPI tag not found in multiboot tags!");
     }
-    TRACE_INFO(
+    TRACE_SUCCESS(
         "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
         FormatMetricUint(acpi_tag->size)
     );
