@@ -51,10 +51,10 @@ class Table
         return *this;
     }
 
-    T* GetNative() const { return static_cast<T*>(table_.ptr); }
-    size_t GetSize() const { return table_.hdr->length; }
-    bool IsValid() const;
-    bool IsNull() const { return table_.ptr == nullptr; }
+    [[nodiscard]] T* GetNative() const { return static_cast<T*>(table_.ptr); }
+    [[nodiscard]] size_t GetSize() const { return table_.hdr->length; }
+    [[nodiscard]] bool IsValid() const;
+    [[nodiscard]] bool IsNull() const { return table_.ptr == nullptr; }
     void GetNext() { uacpi_table_find_next_with_same_signature(&table_); }
 
     template <TableEntryCallback Callback>
