@@ -13,7 +13,7 @@ static constexpr u64 kPCIConfigAddressPort = 0xCF8;
 static constexpr u64 kPCIConfigDataPort    = 0xCFC;
 
 template <typename T>
-    requires std::is_unsigned_v<T> && (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4)
+    requires std::is_unsigned_v<T> && sizeof(T) <= 4
 T read(u32 bus, u32 device, u32 function, u32 offset)
 {
     R_ASSERT(bus < 256 && device < 32 && function < 8);
