@@ -7,7 +7,7 @@ namespace ACPI
 {
 
 template <typename T>
-concept MATDEntry = concepts_ext::OneOf<
+concept MADTEntry = concepts_ext::OneOf<
     T, acpi_madt_lapic, acpi_madt_ioapic, acpi_madt_interrupt_source_override, acpi_madt_nmi_source,
     acpi_madt_lapic_nmi, acpi_madt_lapic_address_override, acpi_madt_iosapic, acpi_madt_lsapic,
     acpi_madt_platform_interrupt_source, acpi_madt_x2apic, acpi_madt_x2apic_nmi, acpi_madt_gicc,
