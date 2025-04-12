@@ -13,8 +13,8 @@ static constexpr u64 kPCIConfigAddressPort = 0xCF8;
 static constexpr u64 kPCIConfigDataPort    = 0xCFC;
 
 template <typename T>
-    requires std::is_unsigned_v<T> && sizeof(T) <= 4
-                                  T read(u32 bus, u32 device, u32 function, u32 offset)
+    requires(std::is_unsigned_v<T> && sizeof(T) <= 4)
+T read(u32 bus, u32 device, u32 function, u32 offset)
 {
     ASSERT_LT(bus, 256, "Bus number out of range");
     ASSERT_LT(device, 32, "Device number out of range");
@@ -37,8 +37,8 @@ template <typename T>
 }
 
 template <typename T>
-    requires std::is_unsigned_v<T> && sizeof(T) <= 4
-                                  void write(u32 bus, u32 device, u32 function, u32 offset, T value)
+    requires(std::is_unsigned_v<T> && sizeof(T) <= 4)
+void write(u32 bus, u32 device, u32 function, u32 offset, T value)
 {
     ASSERT_LT(bus, 256, "Bus number out of range");
     ASSERT_LT(device, 32, "Device number out of range");
