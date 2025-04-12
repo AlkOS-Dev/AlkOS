@@ -66,9 +66,9 @@ class Table
     private:
     uacpi_table table_;
 
-    bool ValidChecksum() const;
+    bool ValidChecksum_() const;
 
-    void Unref();
+    void Unref_();
 };
 
 //////////////////////////////
