@@ -36,7 +36,7 @@ class Table
 {
     public:
     explicit Table(const uacpi_table t) : table_(t) {}
-    ~Table() { Unref(); }
+    ~Table() { Unref_(); }
 
     Table(const Table&)            = delete;
     Table& operator=(const Table&) = delete;
@@ -44,7 +44,7 @@ class Table
     Table& operator=(Table&& other) noexcept
     {
         if (this != &other) {
-            Unref();
+            Unref_();
             table_           = other.table_;
             other.table_.ptr = nullptr;
         }

@@ -51,11 +51,13 @@ void FormatTrace(const char* format, Args... args)
 #define TRACE_FORMAT_ERROR(message)    ERROR_TAG TRACE_FORMAT_LOCATION(message)
 #define TRACE_FORMAT_WARNING(message)  WARNING_TAG TRACE_FORMAT_LOCATION(message)
 #define TRACE_FORMAT_INFO(message)     INFO_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_DEBUG(message)    DEBUG_TAG TRACE_FORMAT_LOCATION(message)
 #define TRACE_FORMAT_SUCCESS(message)  SUCCESS_TAG TRACE_FORMAT_LOCATION(message)
 
 #define TRACE_ERROR(message, ...)   TRACE(TRACE_FORMAT_ERROR(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_WARNING(message, ...) TRACE(TRACE_FORMAT_WARNING(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_INFO(message, ...)    TRACE(TRACE_FORMAT_INFO(message) __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_DEBUG(message, ...)   TRACE(TRACE_FORMAT_DEBUG(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_SUCCESS(message, ...) TRACE(TRACE_FORMAT_SUCCESS(message) __VA_OPT__(, ) __VA_ARGS__)
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_

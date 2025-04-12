@@ -30,8 +30,7 @@ void DayTime::SyncWithHardware()
     TRACE_INFO("Synced system time with hardware: %lu, %s", time_, [&] {
         tm time;
         strftime(
-            buffer, kBuffSize, "%Y-%m-%d %H:%M:%S\n",
-            ConvertFromPosixToTm(time_, time, GetTimezone())
+            buffer, kBuffSize, "%Y-%m-%d %H:%M:%S", ConvertFromPosixToTm(time_, time, GetTimezone())
         );
         return buffer;
     }());

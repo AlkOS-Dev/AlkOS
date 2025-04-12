@@ -165,19 +165,19 @@ void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
 {
     switch (level) {
         case UACPI_LOG_ERROR:
-            FormatTrace(ERROR_TAG "%s", log);
+            TRACE(ERROR_TAG "%s", log);
             break;
         case UACPI_LOG_WARN:
-            FormatTrace(WARNING_TAG "%s", log);
+            TRACE(WARNING_TAG "%s", log);
             break;
         case UACPI_LOG_INFO:
-            FormatTrace(INFO_TAG "%s", log);
+            TRACE(INFO_TAG "%s", log);
             break;
         case UACPI_LOG_DEBUG:
-            FormatTrace(DEBUG_TAG "%s", log);
+            TRACE(DEBUG_TAG "%s", log);
             break;
         case UACPI_LOG_TRACE:
-            FormatTrace(TRACE_TAG "%s", log);
+            TRACE(TRACE_TAG "%s", log);
             break;
     }
 }

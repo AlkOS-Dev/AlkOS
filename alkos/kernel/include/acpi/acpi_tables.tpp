@@ -11,14 +11,14 @@ bool ACPI::Table<T>::IsValid() const
     if (TableSignature<T>::value == "FACS")
         return true;
 
-    if (!ValidChecksum())
+    if (!ValidChecksum_())
         return false;
 
     return true;
 }
 
 template <ACPI::IsTable T>
-bool ACPI::Table<T>::ValidChecksum() const
+bool ACPI::Table<T>::ValidChecksum_() const
 {
     const u8* bytes = static_cast<u8*>(table_.ptr);
     u8 checksum     = 0;
@@ -27,7 +27,7 @@ bool ACPI::Table<T>::ValidChecksum() const
 }
 
 template <ACPI::IsTable T>
-void ACPI::Table<T>::Unref()
+void ACPI::Table<T>::Unref_()
 {
     if (table_.ptr) {
         uacpi_table_unref(&table_);
