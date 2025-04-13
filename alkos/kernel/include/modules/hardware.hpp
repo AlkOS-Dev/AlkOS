@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_MODULES_HARDWARE_HPP_
 
 #include <extensions/template_lib.hpp>
+#include <hardware/interupts.hpp>
 
 namespace internal
 {
