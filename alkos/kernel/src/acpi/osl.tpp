@@ -3,14 +3,11 @@
 
 #include <uacpi/status.h>
 #include <uacpi/types.h>
-#include <extensions/type_traits.hpp>
+#include <extensions/concepts_ext.hpp>
 #include <io.hpp>
 #include <pci.hpp>
 
-template <typename T>
-concept ValidUnsigned = std::is_unsigned_v<T> && sizeof(T) <= 4;
-
-template <ValidUnsigned T>
+template <concepts_ext::IoT T>
 uacpi_status uacpi_kernel_pci_read(uacpi_handle device, uacpi_size offset, T *value)
 {
     const uacpi_pci_address addr = *static_cast<uacpi_pci_address *>(device);
@@ -18,7 +15,7 @@ uacpi_status uacpi_kernel_pci_read(uacpi_handle device, uacpi_size offset, T *va
     return UACPI_STATUS_OK;
 }
 
-template <ValidUnsigned T>
+template <concepts_ext::IoT T>
 uacpi_status uacpi_kernel_pci_write(uacpi_handle device, uacpi_size offset, T value)
 {
     const uacpi_pci_address addr = *static_cast<uacpi_pci_address *>(device);
@@ -26,49 +23,17 @@ uacpi_status uacpi_kernel_pci_write(uacpi_handle device, uacpi_size offset, T va
     return UACPI_STATUS_OK;
 }
 
-template <ValidUnsigned T>
+template <concepts_ext::IoT T>
 uacpi_status uacpi_kernel_raw_io_write(uacpi_io_addr address, T in_value)
 {
-    switch (sizeof(T)) {
-        case 1: {
-            outb(address, in_value);
-            break;
-        }
-        case 2: {
-            outw(address, in_value);
-            break;
-        }
-        case 4: {
-            outl(address, in_value);
-            break;
-        }
-        default:
-            return UACPI_STATUS_INVALID_ARGUMENT;
-    }
-
+    io::out(address, in_value);
     return UACPI_STATUS_OK;
 }
 
-template <ValidUnsigned T>
+template <concepts_ext::IoT T>
 uacpi_status uacpi_kernel_raw_io_read(uacpi_io_addr address, T *out_value)
 {
-    switch (sizeof(T)) {
-        case 1: {
-            *out_value = inb(address);
-            break;
-        }
-        case 2: {
-            *out_value = inw(address);
-            break;
-        }
-        case 4: {
-            *out_value = inl(address);
-            break;
-        }
-        default:
-            return UACPI_STATUS_INVALID_ARGUMENT;
-    }
-
+    *out_value = io::in<T>(address);
     return UACPI_STATUS_OK;
 }
 

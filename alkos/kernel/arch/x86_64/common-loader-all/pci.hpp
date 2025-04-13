@@ -12,8 +12,7 @@ namespace pci
 static constexpr u64 kPCIConfigAddressPort = 0xCF8;
 static constexpr u64 kPCIConfigDataPort    = 0xCFC;
 
-template <typename T>
-    requires(std::is_unsigned_v<T> && sizeof(T) <= 4)
+template <concepts_ext::IoT T>
 T read(u32 bus, u32 device, u32 function, u32 offset)
 {
     ASSERT_LT(bus, 256, "Bus number out of range");
@@ -24,20 +23,12 @@ T read(u32 bus, u32 device, u32 function, u32 offset)
     const u32 address =
         AlignDown((bus << 16) | (device << 11) | (function << 8) | offset | kMsb<u32>, 4);
     outl(address, kPCIConfigAddressPort);
-    switch (sizeof(T)) {
-        case 1:
-            return inb(kPCIConfigDataPort + (offset & 3));
-        case 2:
-            return inw(kPCIConfigDataPort + (offset & 2));
-        case 4:
-            return inl(kPCIConfigDataPort);
-        default:
-            return 0;
-    }
+
+    static constexpr u16 kOffsetMask = 4 - sizeof(T);
+    return io::in<T>(kPCIConfigDataPort + (offset & kOffsetMask));
 }
 
-template <typename T>
-    requires(std::is_unsigned_v<T> && sizeof(T) <= 4)
+template <concepts_ext::IoT T>
 void write(u32 bus, u32 device, u32 function, u32 offset, T value)
 {
     ASSERT_LT(bus, 256, "Bus number out of range");
@@ -48,17 +39,9 @@ void write(u32 bus, u32 device, u32 function, u32 offset, T value)
     const u32 address =
         AlignDown((bus << 16) | (device << 11) | (function << 8) | offset | kMsb<u32>, 4);
     outl(address, kPCIConfigAddressPort);
-    switch (sizeof(T)) {
-        case 1:
-            outb(kPCIConfigDataPort + (offset & 3), value);
-            break;
-        case 2:
-            outw(kPCIConfigDataPort + (offset & 2), value);
-            break;
-        case 4:
-            outl(kPCIConfigDataPort, value);
-            break;
-    }
+
+    static constexpr u16 kOffsetMask = 4 - sizeof(T);
+    io::out(kPCIConfigDataPort + (offset & kOffsetMask), value);
 }
 
 }  // namespace pci
