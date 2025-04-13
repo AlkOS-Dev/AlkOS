@@ -20,11 +20,14 @@ class HardwareModule : TemplateLib::StaticSingletonHelper
     // ------------------------------
 
     public:
+    FORCE_INLINE_F hardware::Interrupts& GetInterrupts() noexcept { return interrupts_; }
+
     // ------------------------------
     // Module fields
     // ------------------------------
 
     private:
+    hardware::Interrupts interrupts_;
 };
 }  // namespace internal
 
