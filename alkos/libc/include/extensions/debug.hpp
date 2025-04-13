@@ -3,9 +3,7 @@
 
 #include <todo.h>
 
-TODO_STREAMS
-/* Note: Currently works only in kernel code due to lack of libc terminal abstractions */
-#if defined(__USE_DEBUG_TRACES__) && defined(__ALKOS_KERNEL__)
+#if defined(__USE_DEBUG_TRACES__)
 
 #include <assert.h>
 #include <stdio.h>
