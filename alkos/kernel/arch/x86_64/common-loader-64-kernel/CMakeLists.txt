@@ -44,6 +44,10 @@ set_source_files_properties(${COMMON_ASM} PROPERTIES COMPILE_FLAGS "-f elf64")
 
 ############################### Adding Headers ###############################
 
-target_include_directories(arch.common.kernel-loader.64 PUBLIC
+target_include_directories(alkos.kernel.headers INTERFACE
     .
+)
+
+target_link_libraries(arch.common.kernel-loader.64 PRIVATE
+        alkos.kernel.headers
 )
