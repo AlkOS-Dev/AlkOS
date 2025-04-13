@@ -1,10 +1,33 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 
+#include <interrupts/idt.hpp>
+
 namespace arch
 {
 class Interrupts : public InterruptsABI
 {
+    public:
+    Interrupts()  = default;
+    ~Interrupts() = default;
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    void FirstStageInit();
+
+    // ------------------------------
+    // Protected methods
+    // ------------------------------
+
+    protected:
+    void InitializeDefaultIdt_();
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+    Idt idt_{};
 };
 }  // namespace arch
 

@@ -9,6 +9,7 @@ class Interrupts;
 /* Abi which Interrupts class should follow */
 struct InterruptsABI {
 };
+
 }  // namespace arch
 
 /* Load architecture definition of component */

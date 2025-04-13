@@ -8,6 +8,8 @@
 // Crucial defines
 // ------------------------------
 
+static constexpr u32 kIdtEntries = 256;
+
 static constexpr u16 kIrq1Offset = 0x20;
 static constexpr u16 kIrq2Offset = 0x28;
 
@@ -37,6 +39,28 @@ static_assert(
 // Data layout
 // ------------------------------
 
+/**
+ * @brief Data layout of x86_64 interrupt service routines, refer to intel manual for details
+ */
+struct PACK IdtEntry {
+    u16 isr_low;    // The lower 16 bits of the ISR's address
+    u16 kernel_cs;  // The GDT segment selector that the CPU will load into CS before calling the
+    // ISR
+    u8 ist;         // The IST in the TSS that the CPU will load into RSP; set to zero for now
+    u8 attributes;  // Type and attributes; see the IDT page
+    u16 isr_mid;    // The higher 16 bits of the lower 32 bits of the ISR's address
+    u32 isr_high;   // The higher 32 bits of the ISR's address
+    u32 reserved;   // Set to zero
+};
+
+/**
+ * @brief Structure describing Idt position in memory
+ */
+struct PACK Idtr {
+    u16 limit;
+    u64 base;
+};
+
 struct PACK IsrStackFrame {
     u64 rip;
     u64 cs;
@@ -49,13 +73,17 @@ struct PACK IsrErrorStackFrame {
     IsrStackFrame isr_stack_frame;
 };
 
+struct Idt {
+    /* global structure defining isr specifics for each interrupt signal */
+    alignas(32) IdtEntry idt[kIdtEntries]{};
+
+    /* holds information about the idt position in memory */
+    Idtr idtr{};
+};
+
 // ------------------------------
 // Functions
 // ------------------------------
-
-void IdtInit();
-
-void LogIrqReceived(void *stack_frame, u8 idt_idx);
 
 const char *GetExceptionMsg(u8 idx);
 
