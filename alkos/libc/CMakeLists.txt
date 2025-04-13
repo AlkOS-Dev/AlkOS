@@ -76,6 +76,10 @@ target_include_directories(lib${LIB_NAME} PRIVATE
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)
 
+if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
+    target_link_libraries(lib${LIB_NAME} PRIVATE alkos.kernel.headers)
+endif ()
+
 ############################### Processing output ###############################
 
 file(MAKE_DIRECTORY ${SYSROOT}/usr/include)
