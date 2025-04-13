@@ -5,7 +5,8 @@
 #include "extensions/types.hpp"
 
 /* Should be implemented inside architecture-specific code */
-extern "C" {
+namespace arch
+{
 /**
  * @brief Reads a line from the architecture-specific debug terminal.
  * @param buffer The buffer to store the read data.
@@ -14,27 +15,27 @@ extern "C" {
  *
  * @note This function should block until something is read from the terminal.
  */
-WRAP_CALL size_t DebugTerminalReadLineArch_(char *buffer, size_t buffer_size);
+WRAP_CALL size_t DebugTerminalReadLine(char *buffer, size_t buffer_size);
 
 /**
  * @brief Writes a string to the architecture-specific debug terminal.
  * @param buffer The string to be written.
  * @note This function should block until something is written to the terminal.
  */
-WRAP_CALL void DebugTerminalWriteArch_(const char *buffer);
-}
+WRAP_CALL void DebugTerminalWrite(const char *buffer);
+}  // namespace arch
 
 WRAP_CALL void DebugTerminalWrite(const char *str)
 {
     if constexpr (kUseDebugOutput) {
-        DebugTerminalWriteArch_(str);
+        arch::DebugTerminalWrite(str);
     }
 }
 
 WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_size)
 {
     if constexpr (kUseDebugOutput) {
-        return DebugTerminalReadLineArch_(buffer, buffer_size);
+        return arch::DebugTerminalReadLine(buffer, buffer_size);
     }
 
     return 0;

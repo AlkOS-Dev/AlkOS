@@ -11,11 +11,11 @@
 
 #include <panic.hpp>
 
-#define __FAIL_KERNEL(expr)                                               \
-    KernelPanic("Assertion failed: " TOSTRING(expr) " at file: " __FILE__ \
-                                                    " and line: " TOSTRING(__LINE__));
+#define __FAIL_KERNEL(expr)                                                     \
+    arch::KernelPanic("Assertion failed: " TOSTRING(expr) " at file: " __FILE__ \
+                                                          " and line: " TOSTRING(__LINE__));
 
-#define __ASSERT_FAIL_FUNC KernelPanic
+#define __ASSERT_FAIL_FUNC arch::KernelPanic
 
 /* usual kernel assert macro */
 #ifdef NDEBUG

@@ -15,8 +15,8 @@ static void KernelRun()
     const auto t = time(nullptr);
     strftime(buff, kBuffSize, "Today we have: %Y-%m-%d %H:%M:%S\n", localtime(&t));
 
-    TerminalWriteString("Hello from AlkOS!\n");
-    TerminalWriteString(buff);
+    arch::TerminalWriteString("Hello from AlkOS!\n");
+    arch::TerminalWriteString(buff);
 }
 
 extern "C" void KernelMain()

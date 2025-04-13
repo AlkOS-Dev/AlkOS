@@ -53,6 +53,19 @@ WRAP_CALL char TerminalGetChar();
 WRAP_CALL size_t TerminalReadLine(char *buffer, size_t size);
 }
 
+namespace arch
+{
+WRAP_CALL void TerminalInit() { ::TerminalInit(); }
+WRAP_CALL void TerminalPutChar(const char c) { ::TerminalPutChar(c); }
+WRAP_CALL void TerminalWriteString(const char *data) { ::TerminalWriteString(data); }
+WRAP_CALL void TerminalWriteError(const char *data) { ::TerminalWriteError(data); }
+WRAP_CALL char TerminalGetChar() { return ::TerminalGetChar(); }
+WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
+{
+    return ::TerminalReadLine(buffer, size);
+}
+}  // namespace arch
+
 #include <abi/terminal.hpp>
 
 #endif  // ALKOS_KERNEL_ABI_TERMINAL_HPP_

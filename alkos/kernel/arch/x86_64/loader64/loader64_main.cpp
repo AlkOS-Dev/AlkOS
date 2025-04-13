@@ -53,7 +53,7 @@ static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
             return strcmp(tag->cmdline, "kernel") == 0;
         }>(reinterpret_cast<void*>(multiboot_info_addr));
     if (kernel_module == nullptr) {
-        KernelPanic("Kernel module not found in multiboot tags!");
+        arch::KernelPanic("Kernel module not found in multiboot tags!");
     }
     TRACE_SUCCESS("Found kernel module in multiboot tags!");
 
@@ -64,11 +64,11 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
-    TerminalInit();
+    arch::TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
     if (!ValidateLoaderData(loader_data_32_64)) {
-        KernelPanic("LoaderData check failed!");
+        arch::KernelPanic("LoaderData check failed!");
     }
 
     TRACE_INFO("Jumping to 64-bit kernel...");
@@ -107,7 +107,7 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_INFO("Loading module...");
     u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, 0);
     if (kernel_entry_point == 0) {
-        KernelPanic("Failed to load kernel module!");
+        arch::KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Module loaded!");
 

@@ -70,5 +70,5 @@ void CpuState::DumpStateDesc() const
     char buff[kSizeBuff];
 
     GetStateDesc(buff, kSizeBuff);
-    TerminalWriteString(buff);
+    arch::TerminalWriteString(buff);
 }

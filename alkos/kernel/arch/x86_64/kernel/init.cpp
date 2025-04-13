@@ -69,7 +69,7 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
-    TerminalInit();
+    arch::TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
     TRACE_INFO("Checking for LoaderData...");
