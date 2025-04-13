@@ -7,16 +7,17 @@
 #endif
 
 /* internal includes */
-#include <multiboot2/multiboot2.h>
-#include <arch_utils.hpp>
-#include <definitions/loader32_data.hpp>
-#include <definitions/loader64_data.hpp>
-#include <elf64.hpp>
-#include <extensions/debug.hpp>
-#include <multiboot2/extensions.hpp>
-#include <terminal.hpp>
-#include "loader64_kernel_constants.hpp"
+#include "arch_utils.hpp"
+#include "constants.hpp"
+#include "definitions/loader32_data.hpp"
+#include "definitions/loader64_data.hpp"
+#include "elf64.hpp"
 #include "loader_memory_manager.hpp"
+#include "multiboot2/extensions.hpp"
+#include "multiboot2/multiboot2.h"
+#include "terminal.hpp"
+
+#include <extensions/debug.hpp>
 
 using namespace loader64;
 
@@ -87,14 +88,14 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_SUCCESS("ELF bounds obtained!");
 
     TRACE_INFO(
-        "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStartShared
+        "Mapping kernel module to upper memory starting at 0x%llX", arch::kKernelVirtualAddressStart
     );
     auto* multiboot_info =
         reinterpret_cast<multiboot::header_t*>(loader_data_32_64->multiboot_info_addr);
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
     loader_memory_manager
         ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, kKernelVirtualAddressStartShared, elf_effective_size, 0
+            mmap_tag, arch::kKernelVirtualAddressStart, elf_effective_size, 0
         );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
