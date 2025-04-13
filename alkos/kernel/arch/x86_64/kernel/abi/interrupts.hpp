@@ -12,9 +12,17 @@ class Interrupts : public InterruptsABI
     ~Interrupts() = default;
 
     // ------------------------------
+    // ABI
+    // ------------------------------
+
+    void Initialise();
+
+    // ------------------------------
     // Class methods
     // ------------------------------
 
+    /* First stage init is used to allow correct exception handling in whole memory initialization
+     * code */
     void FirstStageInit();
 
     // ------------------------------

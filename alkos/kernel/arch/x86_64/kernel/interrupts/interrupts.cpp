@@ -6,13 +6,12 @@
 
 using namespace arch;
 
+void Interrupts::Initialise() { TRACE_INFO("Initialising interrupts system..."); }
+
 void Interrupts::FirstStageInit()
 {
-    TRACE_INFO("Setting up PIC units...");
-    InitPic8259(kIrq1Offset, kIrq2Offset);
-    TRACE_SUCCESS("PIC units setup complete!");
+    TRACE_INFO("Interrupts first stage init...");
 
-    TRACE_INFO("Setting up IDT...");
+    InitPic8259(kIrq1Offset, kIrq2Offset);
     InitializeDefaultIdt_();
-    TRACE_SUCCESS("IDT setup complete!");
 }

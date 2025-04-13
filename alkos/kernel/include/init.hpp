@@ -2,7 +2,8 @@
 #define ALKOS_KERNEL_INCLUDE_INIT_HPP_
 
 /**
- * @brief Performs all high-level initialization not related to architecture
+ * @brief Performs all complex initialization, most of the code should be here,
+ *        memory and kmalloc should be available to use at this stage.
  * @note  MUST ALWAYS be invoked after the PreKernelInit function
  */
 void KernelInit();

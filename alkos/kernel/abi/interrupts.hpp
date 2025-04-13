@@ -8,6 +8,8 @@ class Interrupts;
 
 /* Abi which Interrupts class should follow */
 struct InterruptsABI {
+    /* Should perform full initialisation of interrupt system */
+    void Initialise();
 };
 
 }  // namespace arch
