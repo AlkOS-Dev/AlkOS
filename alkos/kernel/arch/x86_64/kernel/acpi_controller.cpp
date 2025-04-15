@@ -27,9 +27,6 @@ void AcpiController::ParseMadt_()
     auto table = ACPI::GetTable<acpi_madt>();
     R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
 
-    // auto lapic_address =
-    //         reinterpret_cast<void *>(table.GetNative()->local_interrupt_controller_address);
-
     /* Count cores */
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
@@ -145,7 +142,7 @@ void AcpiController::ParseMadt_()
                 TRACE_INFO("x2apic not supported yet...");
                 break;
             default:
-                // TODO:
+                R_FAIL_ALWAYS("Found unsupported MADT table...");
                 break;
         }
     });
