@@ -1,5 +1,7 @@
-#ifndef ALKOS_KERNEL_ABI_ACPI_HPP_
-#define ALKOS_KERNEL_ABI_ACPI_HPP_
+#ifndef ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_
+#define ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_
+
+#include <extensions/type_traits.hpp>
 
 namespace arch
 {
@@ -15,6 +17,10 @@ struct AcpiABI {
 }  // namespace arch
 
 /* Load architecture definition of component */
-#include <abi/acpi.hpp>
+#include <abi/acpi_controller.hpp>
+static_assert(
+    std::is_base_of_v<arch::AcpiABI, arch::AcpiController>,
+    "AcpiController must derive from AcpiABI..."
+);
 
-#endif  // ALKOS_KERNEL_ABI_ACPI_HPP_
+#endif  // ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_

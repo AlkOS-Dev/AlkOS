@@ -6,6 +6,7 @@
 #include <todo.hpp>
 
 #include "acpi_battery.hpp"
+#include "acpi_controller.hpp"
 #include "acpi_cpu.hpp"
 #include "acpi_device.hpp"
 #include "acpi_interrupt.hpp"
