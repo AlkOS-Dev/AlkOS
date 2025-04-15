@@ -40,9 +40,8 @@ int ACPI::ACPIController::Init()
 
     TRACE_INFO("Finding RSDP...");
     auto* acpi_tag = FindAcpiTag(kLoaderData->multiboot_info_addr);
-    if (acpi_tag == nullptr) {
-        arch::KernelPanic("ACPI tag not found in multiboot tags!");
-    }
+    R_ASSERT_NOT_NULL(acpi_tag, "ACPI tag not found in multiboot tags!");
+
     TRACE_SUCCESS(
         "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
         FormatMetricUint(acpi_tag->size)
