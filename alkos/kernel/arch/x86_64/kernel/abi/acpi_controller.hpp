@@ -22,11 +22,12 @@ class AcpiController : public AcpiABI
     // Class methods
     // ------------------------------
 
+    private:
+    void ParseMadt_();
+
     // ------------------------------
     // Class fields
     // ------------------------------
-
-    protected:
 };
 }  // namespace arch
 

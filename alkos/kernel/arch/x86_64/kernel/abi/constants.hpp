@@ -5,8 +5,8 @@
 
 namespace arch
 {
-static constexpr u64 kKernelVirtualAddressStart   = BitMaskLeft<u64, 33>;
-static constexpr u64 kKernelDirectMapAddressStart = BitMaskLeft<u64, 17>;
+static constexpr u64 kKernelVirtualAddressStart   = kBitMaskLeft<u64, 33>;
+static constexpr u64 kKernelDirectMapAddressStart = kBitMaskLeft<u64, 17>;
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CONSTANTS_HPP_

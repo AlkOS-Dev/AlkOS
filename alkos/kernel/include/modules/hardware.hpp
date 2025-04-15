@@ -23,17 +23,23 @@ class HardwareModule : TemplateLib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    FORCE_INLINE_F hardware::Interrupts &GetInterrupts() noexcept { return interrupts_; }
-    FORCE_INLINE_F ACPI::ACPIController &GetAcpiController() noexcept { return acpi_controller_; }
-    FORCE_INLINE_F hardware::CoresController GetCoresController() noexcept { return cores_; }
+    NODISCARD FORCE_INLINE_F hardware::Interrupts &GetInterrupts() noexcept { return interrupts_; }
+    NODISCARD FORCE_INLINE_F ACPI::ACPIController &GetAcpiController() noexcept
+    {
+        return acpi_controller_;
+    }
+    NODISCARD FORCE_INLINE_F hardware::CoresController &GetCoresController() noexcept
+    {
+        return cores_;
+    }
 
     // ------------------------------
     // Module fields
     // ------------------------------
 
     private:
-    ACPI::ACPIController acpi_controller_;
-    hardware::Interrupts interrupts_;
+    ACPI::ACPIController acpi_controller_{};
+    hardware::Interrupts interrupts_{};
     hardware::CoresController cores_{};
 };
 }  // namespace internal

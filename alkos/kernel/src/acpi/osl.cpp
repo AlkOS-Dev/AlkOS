@@ -129,7 +129,7 @@ void *uacpi_kernel_alloc(uacpi_size size)
     auto loader_memory_manager =
         reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
     // TODO(F1r3d3v): Memory layout need to be established
-    const u64 kVMemAllocStart = arch::kKernelDirectMapAddressStart + BitMask<u64, 46>;
+    const u64 kVMemAllocStart = arch::kKernelDirectMapAddressStart + kSingleBit<u64, 46>;
     using pmm                 = memory::PhysicalMemoryManager;
 
     auto vsize = AlignUp(size, pmm::kPageSize);

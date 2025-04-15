@@ -12,22 +12,28 @@ class Core : public CoreABI
     // Class creation
     // ------------------------------
 
-    Core() = default;
+    Core() = delete;
 
+    explicit Core(u64 acpi_id, u64 apic_id);
     ~Core() = default;
 
     // ------------------------------
     // ABI implementation
     // ------------------------------
 
-    void EnableCore()
-    {
-        // TODO:
-    }
+    void EnableCore();
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
 
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    protected:
+    u64 acpi_id_;
+    u64 apic_id_;
 };
 }  // namespace arch
 
