@@ -68,7 +68,7 @@ class ACPIController final
     // Class fields
     // ------------------------------
 
-    protected:
+    private:
     TODO_WHEN_VMEM_WORKS
     Mutex AcpiMutex_{};
     Spinlock AcpiSpinLock_{};
