@@ -96,29 +96,16 @@ static void PrepareApicRules_(MadtTable &table)
             case ACPI::MADTEntryTypeID<acpi_madt_lapic>::value:
             case ACPI::MADTEntryTypeID<acpi_madt_ioapic>::value:
                 break;
-            case ACPI::MADTEntryTypeID<acpi_madt_interrupt_source_override>::value: {
-                const auto table_ptr =
-                    reinterpret_cast<const acpi_madt_interrupt_source_override *>(entry);
-
-                TRACE_INFO(
-                    "Got I/O APIC Interrupt Source Override: "
-                    "bus: %hhu, "
-                    "source: %hhu, "
-                    "gsi: %u, "
-                    "flags: %04X",
-                    table_ptr->bus, table_ptr->source, table_ptr->gsi, table_ptr->flags
+            case ACPI::MADTEntryTypeID<acpi_madt_interrupt_source_override>::value:
+                HardwareModule::Get().GetInterrupts().ApplyIoApicOverride(
+                    reinterpret_cast<const acpi_madt_interrupt_source_override *>(entry)
                 );
-            } break;
-            case ACPI::MADTEntryTypeID<acpi_madt_nmi_source>::value: {
-                const auto table_ptr = reinterpret_cast<const acpi_madt_nmi_source *>(entry);
-
-                TRACE_INFO(
-                    "Got I/O APIC Non-maskable interrupt source: "
-                    "gsi: %u, "
-                    "flags: %04X",
-                    table_ptr->gsi, table_ptr->flags
+                break;
+            case ACPI::MADTEntryTypeID<acpi_madt_nmi_source>::value:
+                HardwareModule::Get().GetInterrupts().ApplyIoApicNmi(
+                    reinterpret_cast<const acpi_madt_nmi_source *>(entry)
                 );
-            } break;
+                break;
             case ACPI::MADTEntryTypeID<acpi_madt_lapic_nmi>::value: {
                 const auto table_ptr = reinterpret_cast<const acpi_madt_lapic_nmi *>(entry);
 
@@ -129,6 +116,8 @@ static void PrepareApicRules_(MadtTable &table)
                     "lint: %02X",
                     table_ptr->uid, table_ptr->flags, table_ptr->lint
                 );
+
+                // TODO
             } break;
             case ACPI::MADTEntryTypeID<acpi_madt_lapic_address_override>::value: {
                 const auto table_ptr =
@@ -139,6 +128,8 @@ static void PrepareApicRules_(MadtTable &table)
                     "address: %16X",
                     table_ptr->address
                 );
+
+                // TODO:
             } break;
             case ACPI::MADTEntryTypeID<acpi_madt_x2apic>::value:
                 TRACE_INFO("x2apic not supported yet...");

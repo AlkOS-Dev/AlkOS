@@ -1,9 +1,10 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 
-#include <drivers/apic/io_apic.hpp>
-#include <interrupts/idt.hpp>
-#include <todo.hpp>
+#include "acpi/acpi.hpp"
+#include "drivers/apic/io_apic.hpp"
+#include "interrupts/idt.hpp"
+#include "todo.hpp"
 
 namespace arch
 {
@@ -30,6 +31,10 @@ class Interrupts : public InterruptsABI
     void AllocateIoApic(size_t num_apic);
 
     void InitializeIoApic(size_t idx, u8 id, u32 address, u32 gsi_base);
+
+    void ApplyIoApicOverride(const acpi_madt_interrupt_source_override* override);
+
+    void ApplyIoApicNmi(const acpi_madt_nmi_source* nmi_source);
 
     // ------------------------------
     // Protected methods

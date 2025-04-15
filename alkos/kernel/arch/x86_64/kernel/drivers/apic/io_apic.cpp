@@ -10,8 +10,9 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
     /* TODO: Map the address first, currently identity */
     virtual_address_ = physical_address_;
 
-    version_     = static_cast<u8>(ReadRegister(kIoApicVerReg));   /* Removes upper bits */
-    num_entries_ = static_cast<u8>(ReadRegister(kIoRegWin) >> 16); /* Access bits [16, 24] */
+    version_ = static_cast<u8>(ReadRegister(kIoApicVerReg)); /* Removes upper bits */
+    num_entries_ =
+        static_cast<u8>(ReadRegister(kIoApicVerReg) >> 16) + 1; /* Access bits [16, 23] */
 
     TRACE_INFO(
         "Got IO APIC (%lu) "
