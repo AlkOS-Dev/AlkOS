@@ -52,7 +52,13 @@ class Table
     }
 
     [[nodiscard]] T* GetNative() const { return static_cast<T*>(table_.ptr); }
-    [[nodiscard]] size_t GetSize() const { return table_.hdr->length; }
+
+    [[nodiscard]] size_t GetSize() const
+    {
+        ASSERT_NOT_NULL(table_.ptr);
+        return table_.hdr->length;
+    }
+
     [[nodiscard]] bool IsValid() const;
     [[nodiscard]] bool IsNull() const { return table_.ptr == nullptr; }
     void GetNext() { uacpi_table_find_next_with_same_signature(&table_); }
