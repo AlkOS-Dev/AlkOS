@@ -5,7 +5,7 @@
 
 namespace arch
 {
-/* Should be defined by architecture, all Acpi logic correlated to arhcitecture and state should be
+/* Should be defined by architecture, all Acpi logic correlated to architecture and state should be
  * stored here */
 class AcpiController;
 
