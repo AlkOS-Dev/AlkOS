@@ -10,24 +10,23 @@ using namespace arch;
 // Static functions
 // ------------------------------
 
-// ------------------------------
-// Implementations
-// ------------------------------
-
-void AcpiController::ParseTables()
+using MadtTable = ACPI::Table<acpi_madt>;
+NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t core_idx)
 {
-    TRACE_INFO("Parsing ACPI Tables...");
-    ParseMadt_();
+    if (!IsBitEnabled<0>(table->flags)) {
+        TRACE_INFO("Core with idx: %lu is not enabled...", core_idx);
+
+        if (!IsBitEnabled<1>(table->flags)) {
+            TRACE_WARNING("Core with idx: %lu is not online capable...", core_idx);
+            return false;
+        }
+    }
+
+    return true;
 }
 
-void AcpiController::ParseMadt_()
+NODISCARD size_t CountCores_(MadtTable &table)
 {
-    TRACE_INFO("Parsing MADT table...");
-
-    auto table = ACPI::GetTable<acpi_madt>();
-    R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
-
-    /* Count cores */
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         if (entry->type != ACPI::MADTEntryTypeID<acpi_madt_lapic>::value) {
@@ -36,23 +35,19 @@ void AcpiController::ParseMadt_()
 
         const auto table_ptr = reinterpret_cast<const acpi_madt_lapic *>(entry);
 
-        if (!IsBitEnabled<0>(table_ptr->flags)) {
-            TRACE_INFO("Core with idx: %lu is not enabled...", cores);
-
-            if (!IsBitEnabled<1>(table_ptr->flags)) {
-                TRACE_WARNING("Core with idx: %lu is not online capable...", cores);
-                return;
-            }
+        if (!IsCoreUsable(table_ptr, cores)) {
+            return;
         }
 
         ++cores;
     });
 
-    TRACE_INFO("Found %d cores", cores);
-    HardwareModule::Get().GetCoresController().AllocateCores(cores);
+    return cores;
+}
 
-    /* Initialize core structures */
-    cores = 0;
+static void InitializeCores_(MadtTable &table)
+{
+    size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
 
@@ -73,8 +68,10 @@ void AcpiController::ParseMadt_()
             cores++, static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
         );
     });
+}
 
-    // Parse IO-APIC info
+static void PrepareIoApic_(MadtTable &table)
+{
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
@@ -87,8 +84,10 @@ void AcpiController::ParseMadt_()
             table_ptr->address, table_ptr->gsi_base
         );
     });
+}
 
-    // Parse redirection rules
+static void PrepareApicRules_(MadtTable &table)
+{
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         switch (entry->type) {
             case ACPI::MADTEntryTypeID<acpi_madt_lapic>::value:
@@ -146,4 +145,36 @@ void AcpiController::ParseMadt_()
                 break;
         }
     });
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
+
+void AcpiController::ParseTables()
+{
+    TRACE_INFO("Parsing ACPI Tables...");
+    ParseMadt_();
+}
+
+void AcpiController::ParseMadt_()
+{
+    TRACE_INFO("Parsing MADT table...");
+
+    auto table = ACPI::GetTable<acpi_madt>();
+    R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
+
+    /* Prepare cores */
+    const size_t cores = CountCores_(table);
+    TRACE_INFO("Found %d cores", cores);
+    HardwareModule::Get().GetCoresController().AllocateCores(cores);
+
+    /* Initialize core structures */
+    InitializeCores_(table);
+
+    /* Prepare interrupt data */
+    PrepareIoApic_(table);
+
+    /* Finally, process apic rules */
+    PrepareApicRules_(table);
 }
