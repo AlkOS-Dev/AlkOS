@@ -18,6 +18,9 @@ void KernelInit()
     /* Initialize ACPI */
     HardwareModule::Get().GetAcpiController().Init();
 
+    /* Extract all necessary data from ACPI tables */
+    HardwareModule::Get().GetAcpiController().ParseTables();
+
     /* Allow hardware to fully initialise interrupt system */
     HardwareModule::Get().GetInterrupts().Initialise();
 
