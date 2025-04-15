@@ -83,14 +83,6 @@ static void PrepareIoApic_(MadtTable &table)
             return;
         }
 
-        TRACE_INFO(
-            "Got IO APIC "
-            "with id: %lu, "
-            "at address: 0x%llX "
-            "and base: 0x%llX",
-            table_ptr->id, table_ptr->address, table_ptr->gsi_base
-        );
-
         HardwareModule::Get().GetInterrupts().InitializeIoApic(
             num_apic++, table_ptr->id, table_ptr->address, table_ptr->gsi_base
         );
