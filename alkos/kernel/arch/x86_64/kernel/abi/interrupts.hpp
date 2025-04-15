@@ -25,6 +25,10 @@ class Interrupts : public InterruptsABI
      * code */
     void FirstStageInit();
 
+    void AllocateIoApic(size_t num_apic);
+
+    void InitializeIoApic(u8 id, u32 address, u32 gsi_base);
+
     // ------------------------------
     // Protected methods
     // ------------------------------
@@ -35,7 +39,11 @@ class Interrupts : public InterruptsABI
     // ------------------------------
     // Class fields
     // ------------------------------
+
     Idt idt_{};
+    //
+    // alignas(Core) byte mem_[sizeof(Core) * 128]{};
+    // size_t num_cores_{};
 };
 }  // namespace arch
 

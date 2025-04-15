@@ -16,3 +16,7 @@ void Interrupts::FirstStageInit()
     InitPic8259(kIrq1Offset, kIrq2Offset);
     InitializeDefaultIdt_();
 }
+
+void Interrupts::AllocateIoApic(size_t num_apic) {}
+
+void Interrupts::InitializeIoApic(u8 id, u32 address, u32 gsi_base) {}

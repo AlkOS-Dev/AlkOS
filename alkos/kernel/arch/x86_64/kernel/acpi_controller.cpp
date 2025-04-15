@@ -29,11 +29,11 @@ NODISCARD size_t CountCores_(MadtTable &table)
 {
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
-        if (entry->type != ACPI::MADTEntryTypeID<acpi_madt_lapic>::value) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
+
+        if (!table_ptr) {
             return;
         }
-
-        const auto table_ptr = reinterpret_cast<const acpi_madt_lapic *>(entry);
 
         if (!IsCoreUsable(table_ptr, cores)) {
             return;
@@ -55,13 +55,8 @@ static void InitializeCores_(MadtTable &table)
             return;
         }
 
-        if (!IsBitEnabled<0>(table_ptr->flags)) {
-            TRACE_INFO("Core with idx: %lu is not enabled...", cores);
-
-            if (!IsBitEnabled<1>(table_ptr->flags)) {
-                TRACE_WARNING("Core with idx: %lu is not online capable...", cores);
-                return;
-            }
+        if (!IsCoreUsable(table_ptr, cores)) {
+            return;
         }
 
         HardwareModule::Get().GetCoresController().AllocateCore(
@@ -72,7 +67,15 @@ static void InitializeCores_(MadtTable &table)
 
 static void PrepareIoApic_(MadtTable &table)
 {
+    size_t num_apic{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+        num_apic += (ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry) != nullptr);
+    });
+    TRACE_INFO("Detected %lu I/O APIC devices...");
+
+    HardwareModule::Get().GetInterrupts().AllocateIoApic(num_apic);
+
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
         if (!table_ptr) {
@@ -80,15 +83,18 @@ static void PrepareIoApic_(MadtTable &table)
         }
 
         TRACE_INFO(
-            "Got IO APIC with id: %lu, at address: 0x%llX and base: 0x%llX", table_ptr->id,
-            table_ptr->address, table_ptr->gsi_base
+            "Got IO APIC "
+            "with id: %lu, "
+            "at address: 0x%llX "
+            "and base: 0x%llX",
+            table_ptr->id, table_ptr->address, table_ptr->gsi_base
         );
     });
 }
 
 static void PrepareApicRules_(MadtTable &table)
 {
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         switch (entry->type) {
             case ACPI::MADTEntryTypeID<acpi_madt_lapic>::value:
             case ACPI::MADTEntryTypeID<acpi_madt_ioapic>::value:
