@@ -15,7 +15,6 @@ void Interrupts::Initialise()
 
     auto table = ACPI::GetTable<acpi_madt>();
     R_ASSERT_TRUE(table.IsValid(), "MADT table is not found");
-    ` qqqqqqqqqqqqqqqq1111111111111111
 }
 
 void Interrupts::FirstStageInit()
