@@ -1,7 +1,9 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
 
+#include <drivers/apic/io_apic.hpp>
 #include <interrupts/idt.hpp>
+#include <todo.hpp>
 
 namespace arch
 {
@@ -41,9 +43,10 @@ class Interrupts : public InterruptsABI
     // ------------------------------
 
     Idt idt_{};
-    //
-    // alignas(Core) byte mem_[sizeof(Core) * 128]{};
-    // size_t num_cores_{};
+
+    TODO_WHEN_VMEM_WORKS
+    alignas(IoApic) byte mem_[sizeof(IoApic) * 8]{};
+    size_t num_apic_{};
 };
 }  // namespace arch
 

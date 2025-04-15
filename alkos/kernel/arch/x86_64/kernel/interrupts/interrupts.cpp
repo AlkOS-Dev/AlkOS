@@ -17,6 +17,10 @@ void Interrupts::FirstStageInit()
     InitializeDefaultIdt_();
 }
 
-void Interrupts::AllocateIoApic(size_t num_apic) {}
+void Interrupts::AllocateIoApic(const size_t num_apic)
+{
+    TODO_WHEN_VMEM_WORKS
+    num_apic_ = num_apic;
+}
 
 void Interrupts::InitializeIoApic(u8 id, u32 address, u32 gsi_base) {}

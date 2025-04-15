@@ -21,6 +21,8 @@ inline void ExpectHandler(const char* msg)
     BASE_ASSERT_NEQ(true, expected, value, ExpectHandler __VA_OPT__(, ) __VA_ARGS__)
 #define EXPECT_ZERO(value, ...) \
     BASE_ASSERT_ZERO(true, value, ExpectHandler __VA_OPT__(, ) __VA_ARGS__)
+#define EXPECT_NOT_ZERO(value, ...) \
+    BASE_ASSERT_NOT_ZERO(true, value, ExpectHandler __VA_OPT__(, ) __VA_ARGS__)
 #define EXPECT_TRUE(value, ...) \
     BASE_ASSERT_TRUE(true, value, ExpectHandler __VA_OPT__(, ) __VA_ARGS__)
 #define EXPECT_FALSE(value, ...) \
