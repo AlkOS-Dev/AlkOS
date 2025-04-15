@@ -15,12 +15,12 @@ void KernelInit()
     /* Initialize the global state module */
     GlobalStateModule::Init();
 
+    /* Initialize ACPI */
+    HardwareModule::Get().GetAcpiController().Init();
+
     /* Allow hardware to fully initialise interrupt system */
     HardwareModule::Get().GetInterrupts().Initialise();
 
     /* Initialize the timing system */
     TimingModule::Init();
-
-    /* Initialize ACPI */
-    ACPI::Init();
 }

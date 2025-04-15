@@ -12,7 +12,6 @@
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
 
-void* kACPIRsdpAddr;
 extern loader64::LoaderData* kLoaderData;
 
 static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
@@ -35,7 +34,7 @@ static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
     return new_acpi_tag;
 }
 
-int ACPI::Init()
+int ACPI::ACPIController::Init()
 {
     TRACE_INFO("ACPI initialization...");
 
@@ -49,8 +48,8 @@ int ACPI::Init()
         FormatMetricUint(acpi_tag->size)
     );
 
-    kACPIRsdpAddr = reinterpret_cast<void*>(acpi_tag->rsdp);
-    TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), kACPIRsdpAddr);
+    RsdpAddress_ = reinterpret_cast<void*>(acpi_tag->rsdp);
+    TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), RsdpAddress_);
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);

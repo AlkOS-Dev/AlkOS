@@ -1,26 +1,21 @@
 #include "osl.tpp"
 
-#include "sync/mutex.hpp"
-#include "sync/spinlock.hpp"
-
 #include <string.h>
 #include <uacpi/kernel_api.h>
 #include <constants.hpp>
 #include <definitions/loader64_data.hpp>
 #include <loader_memory_manager.hpp>
 #include <memory_management/physical_memory_manager.hpp>
+#include <modules/hardware.hpp>
 #include <todo.hpp>
 
-extern void *kACPIRsdpAddr;
 extern loader64::LoaderData *kLoaderData;
-
-TODO_WHEN_VMEM_WORKS
-Mutex mutex_mock;
-Spinlock spinlock_mock;
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
-    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(kACPIRsdpAddr);
+    *out_rsdp_address =
+        reinterpret_cast<uacpi_phys_addr>(HardwareModule::Get().GetAcpiController().GetRsdpAddress()
+        );
     return UACPI_STATUS_OK;
 }
 
@@ -188,7 +183,10 @@ void uacpi_kernel_stall(uacpi_u8 usec) {}
 
 void uacpi_kernel_sleep(uacpi_u64 msec) {}
 
-uacpi_handle uacpi_kernel_create_mutex() { return &mutex_mock; }
+uacpi_handle uacpi_kernel_create_mutex()
+{
+    return &HardwareModule::Get().GetAcpiController().GetAcpiMutex();
+}
 
 void uacpi_kernel_free_mutex(uacpi_handle) {}
 
@@ -227,7 +225,10 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
-uacpi_handle uacpi_kernel_create_spinlock() { return &spinlock_mock; }
+uacpi_handle uacpi_kernel_create_spinlock()
+{
+    return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
+}
 
 void uacpi_kernel_free_spinlock(uacpi_handle) {}
 
