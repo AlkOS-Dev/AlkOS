@@ -29,7 +29,7 @@ class Interrupts : public InterruptsABI
 
     void AllocateIoApic(size_t num_apic);
 
-    void InitializeIoApic(u8 id, u32 address, u32 gsi_base);
+    void InitializeIoApic(size_t idx, u8 id, u32 address, u32 gsi_base);
 
     // ------------------------------
     // Protected methods

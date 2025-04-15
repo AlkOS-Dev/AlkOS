@@ -75,7 +75,8 @@ static void PrepareIoApic_(MadtTable &table)
 
     HardwareModule::Get().GetInterrupts().AllocateIoApic(num_apic);
 
-    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
+    num_apic = 0;
+    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
         if (!table_ptr) {
@@ -88,6 +89,10 @@ static void PrepareIoApic_(MadtTable &table)
             "at address: 0x%llX "
             "and base: 0x%llX",
             table_ptr->id, table_ptr->address, table_ptr->gsi_base
+        );
+
+        HardwareModule::Get().GetInterrupts().InitializeIoApic(
+            num_apic++, table_ptr->id, table_ptr->address, table_ptr->gsi_base
         );
     });
 }

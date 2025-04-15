@@ -3,12 +3,13 @@
 #include <assert.h>
 #include <extensions/debug.hpp>
 
-void hardware::CoresController::AllocateCores(const size_t num)
+void hardware::CoresController::AllocateCores(const size_t num_cores)
 {
-    ASSERT_EQ(0, num_cores_, "Cores should be allocated only once at startup...");
+    R_ASSERT_NOT_ZERO(num_cores, "No cores where found!");
+    ASSERT_ZERO(num_cores_, "Cores should be allocated only once at startup...");
 
     TODO_WHEN_VMEM_WORKS
-    num_cores_ = num;
+    num_cores_ = num_cores;
 }
 
 void hardware::CoresController::BootUpAllCores()

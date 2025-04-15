@@ -30,7 +30,7 @@ class CoresController final
     // Class interaction
     // ------------------------------
 
-    void AllocateCores(size_t num);
+    void AllocateCores(size_t num_cores);
 
     template <class... Args>
     FORCE_INLINE_F void AllocateCore(const size_t idx, Args&&... args)
