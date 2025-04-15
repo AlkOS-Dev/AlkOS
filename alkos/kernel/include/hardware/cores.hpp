@@ -1,13 +1,19 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 
-#include <core.hpp>
+#include <extensions/types.hpp>
 #include <todo.hpp>
+
+#include "core.hpp"
 
 namespace hardware
 {
 class CoresController final
 {
+    class Core final : public arch::Core
+    {
+    };
+
     public:
     // ------------------------------
     // Class creation
@@ -29,7 +35,8 @@ class CoresController final
 
     private:
     TODO_WHEN_VMEM_WORKS
-    arch::Core
+    alignas(Core) byte mem_[sizeof(Core) * 128]{};
+    size_t num_cores_{};
 };
 }  // namespace hardware
 
