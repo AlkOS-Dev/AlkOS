@@ -1,4 +1,5 @@
 #include "drivers/apic/local_apic.hpp"
+#include "msrs.hpp"
 
 #include <assert.h>
 
