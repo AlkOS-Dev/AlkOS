@@ -30,11 +30,10 @@ void AcpiController::ParseMadt_()
     /* Count cores */
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
-        if (entry->type != ACPI::MADTEntryTypeID<acpi_madt_lapic>::value) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
+        if (table_ptr == nullptr) {
             return;
         }
-
-        const auto table_ptr = reinterpret_cast<const acpi_madt_lapic *>(entry);
 
         if (!IsBitEnabled<0>(table_ptr->flags)) {
             TRACE_INFO("Core with idx: %lu is not enabled...", cores);
