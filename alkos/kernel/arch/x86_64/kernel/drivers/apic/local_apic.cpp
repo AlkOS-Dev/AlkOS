@@ -24,5 +24,9 @@ void LocalApic::Enable()
     SetPhysicalAddress(GetPhysicalAddress());
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
-    WriteRegister(kSpuriousInterruptRegRW, ReadRegister(kSpuriousInterruptRegRW) | 0x100);
+
+    auto reg    = CastRegister<SpuriousInterruptRegister>(ReadRegister(kSpuriousInterruptRegRW));
+    reg.enabled = 1;
+
+    WriteRegister(kSpuriousInterruptRegRW, ToRawRegister(reg));
 }

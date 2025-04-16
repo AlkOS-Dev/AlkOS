@@ -193,7 +193,7 @@ FAST_CALL void WriteRegister(const u32 offset, const u32 value)
 {
     TODO_WHEN_VMEM_WORKS
     WriteMemoryIo<u32>(
-        reinterpret_cast<void *>(GetPhysicalAddress()),  // TODO : REPLACE WITH V ADDERSS
+        reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH V ADDERSS
         offset, value
     );
 }
@@ -202,7 +202,7 @@ FAST_CALL u32 ReadRegister(const u32 offset)
 {
     TODO_WHEN_VMEM_WORKS
     return ReadMemoryIo<u32>(
-        reinterpret_cast<void *>(GetPhysicalAddress()),  // TODO : REPLACE WITH V ADDERSS
+        reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH V ADDERSS
         offset
     );
 }
