@@ -44,6 +44,9 @@ class Interrupts : public InterruptsABI
 
     NODISCARD IoApic& GetIoApicHandler(u32 gsi);
 
+    /* Note: If APIC is initialized all cores will use apic functionality instead of PIC */
+    NODISCARD bool IsApicInitialized() const { return is_apic_initialized_; }
+
     // ------------------------------
     // Protected methods
     // ------------------------------
@@ -60,6 +63,7 @@ class Interrupts : public InterruptsABI
     TODO_WHEN_VMEM_WORKS
     alignas(IoApic) byte mem_[sizeof(IoApic) * 8]{};
     size_t num_apic_{};
+    bool is_apic_initialized_{};
 };
 }  // namespace arch
 

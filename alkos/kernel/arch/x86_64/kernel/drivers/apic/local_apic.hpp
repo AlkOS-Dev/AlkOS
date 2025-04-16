@@ -84,6 +84,12 @@ FAST_CALL void SetPhysicalAddress(const u64 new_address)
     CpuSetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
 }
 
+// --------------------------------
+// Main controlling functions
+// --------------------------------
+
+void Enable();
+
 FAST_CALL void WriteRegister(const u32 offset, const u32 value)
 {
     TODO_WHEN_VMEM_WORKS
@@ -101,11 +107,5 @@ FAST_CALL u32 ReadRegister(const u32 offset)
         offset
     );
 }
-
-// --------------------------------
-// Main controlling functions
-// --------------------------------
-
-void Enable();
 }  // namespace LocalApic
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_LOCAL_APIC_HPP_
