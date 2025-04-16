@@ -6,6 +6,7 @@
 #include <extensions/types.hpp>
 
 #include "acpi/acpi.hpp"
+#include "memory_io.hpp"
 
 /**
  * IO APIC Driver
@@ -116,19 +117,19 @@ class IoApic final
     FORCE_INLINE_F void WriteRegister(const u8 offset, const u32 value) const
     {
         /* Select register we want to operate on by writing to SELECT register */
-        *reinterpret_cast<volatile u32 *>(virtual_address_ + kIoRegSelOffset) = offset;
+        WriteMemoryIo<u32>(reinterpret_cast<void *>(virtual_address_), kIoRegSelOffset, offset);
 
         /* Write actual value to IO register */
-        *reinterpret_cast<volatile u32 *>(physical_address_ + kIoRegWin) = value;
+        WriteMemoryIo<u32>(reinterpret_cast<void *>(virtual_address_), kIoRegWin, value);
     }
 
     NODISCARD FORCE_INLINE_F u32 ReadRegister(const u8 offset) const
     {
         /* Select register we want to operate on by writing to SELECT register */
-        *reinterpret_cast<volatile u32 *>(virtual_address_ + kIoRegSelOffset) = offset;
+        WriteMemoryIo<u32>(reinterpret_cast<void *>(virtual_address_), kIoRegSelOffset, offset);
 
         /* Read actual value from IO register */
-        return *reinterpret_cast<volatile u32 *>(physical_address_ + kIoRegWin);
+        return ReadMemoryIo<u32>(reinterpret_cast<void *>(virtual_address_), kIoRegWin);
     }
 
     NODISCARD FORCE_INLINE_F LowerTableRegister ReadLowerTableRegister(const u32 reg_idx) const

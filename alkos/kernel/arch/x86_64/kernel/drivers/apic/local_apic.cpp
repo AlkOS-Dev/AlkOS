@@ -1,5 +1,5 @@
 #include "drivers/apic/local_apic.hpp"
-#include "msrs.hpp"
+#include "memory_io.hpp"
 
 #include <assert.h>
 #include <drivers/pic8259/pic8259.hpp>
@@ -18,4 +18,6 @@ void EnableLocalAPIC()
     // TODO: currently: identity
 
     TRACE_INFO("Local APIC found at address: %016X", GetLocalApicPhysicalAddress());
+
+    /* Enable apics */
 }
