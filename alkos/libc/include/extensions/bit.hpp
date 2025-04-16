@@ -156,4 +156,11 @@ FAST_CALL constexpr bool IsBitEnabled(const NumT num)
     return (num & kSingleBit<NumT, kBit>) == kSingleBit<NumT, kBit>;
 }
 
+template <typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool AreBitsEnabled(const NumT num, const NumT mask)
+{
+    return (num & mask) == mask;
+}
+
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_

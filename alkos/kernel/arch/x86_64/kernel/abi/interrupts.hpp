@@ -36,6 +36,14 @@ class Interrupts : public InterruptsABI
 
     void ApplyIoApicNmi(const acpi_madt_nmi_source* nmi_source);
 
+    NODISCARD FORCE_INLINE_F IoApic& GetIoApic(const size_t idx)
+    {
+        byte* ptr = mem_ + idx * sizeof(IoApic);
+        return *reinterpret_cast<IoApic*>(ptr);
+    }
+
+    NODISCARD IoApic& GetIoApicHandler(u32 gsi);
+
     // ------------------------------
     // Protected methods
     // ------------------------------

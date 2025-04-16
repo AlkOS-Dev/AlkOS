@@ -5,6 +5,8 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
+#include "acpi/acpi.hpp"
+
 /**
  * IO APIC Driver
  *
@@ -44,7 +46,7 @@ static constexpr u32 IoApicTableReg(const u32 reg_idx) { return 0x10 + 2 * reg_i
 class IoApic final
 {
     public:
-    enum class DeliveryMode : u8 {
+    enum class TriggerMode : u8 {
         kEdge  = 0,
         kLevel = 1,
     };
@@ -52,6 +54,30 @@ class IoApic final
     enum class DestinationMode : u8 {
         kPhysical = 0,
         kLogical  = 1,
+    };
+
+    enum class Mask : u8 {
+        kEnabled = 0,
+        kMasked  = 1,
+    };
+
+    enum class PinPolarity : u8 {
+        kActiveHigh = 0,
+        kActiveLow  = 1,
+    };
+
+    enum class DeliveryStatus : u8 {
+        kReadyToSend      = 0,
+        kSendNotProcessed = 1,
+    };
+
+    enum class DeliveryMode : u8 {
+        kFixed         = 0b000,
+        kLowerPriority = 0b001,
+        kSMI           = 0b010,
+        kNMI           = 0b100,
+        kINIT          = 0b101,
+        kExtINT        = 0b111,
     };
 
     struct LowerTableRegister {
@@ -112,6 +138,15 @@ class IoApic final
     NODISCARD u32 GetGsiBase() const { return gsi_base_; }
 
     NODISCARD u8 GetNumEntries() const { return num_entries_; }
+
+    void PrepareDefaultConfig() const;
+
+    NODISCARD bool IsInChargeOfGsi(const u32 gsi) const
+    {
+        return gsi >= gsi_base_ && gsi < gsi_base_ + num_entries_;
+    }
+
+    void ApplyOverrideRule(const acpi_madt_interrupt_source_override *override);
 
     // ------------------------------
     // Class fields

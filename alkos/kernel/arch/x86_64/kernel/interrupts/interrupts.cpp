@@ -47,6 +47,9 @@ void Interrupts::ApplyIoApicOverride(const acpi_madt_interrupt_source_override *
         "flags: %04X",
         override->bus, override->source, override->gsi, override->flags
     );
+
+    IoApic &io_apic = GetIoApicHandler(override->gsi);
+    io_apic.ApplyOverrideRule(override);
 }
 
 void Interrupts::ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source)
@@ -59,4 +62,15 @@ void Interrupts::ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source)
         "flags: %04X",
         nmi_source->gsi, nmi_source->flags
     );
+}
+
+IoApic &Interrupts::GetIoApicHandler(const u32 gsi)
+{
+    for (size_t idx = 0; idx < num_apic_; ++idx) {
+        if (IoApic &io_apic = GetIoApic(idx); io_apic.IsInChargeOfGsi(gsi)) {
+            return io_apic;
+        }
+    }
+
+    R_FAIL_ALWAYS("No I/O APIC devices found handling given gsi...");
 }
