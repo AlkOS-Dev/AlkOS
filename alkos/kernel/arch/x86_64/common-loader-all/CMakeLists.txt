@@ -76,10 +76,6 @@ target_link_libraries(arch.common.all.64 PRIVATE
         alkos.kernel.headers
 )
 
-target_include_directories(arch.common.all.32 PUBLIC
-    .
-)
-
 target_link_libraries(arch.common.all.32 PRIVATE
         alkos.kernel.headers
 )
