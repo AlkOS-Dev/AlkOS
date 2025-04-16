@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
 
+#include <assert.h>
 #include <defines.hpp>
 #include "extensions/types.hpp"
 
@@ -48,5 +49,50 @@ FAST_CALL void outl(const u16 port, const u32 v)
  * is not required.
  */
 FAST_CALL void IoWait() { outb(0x80, 0); }
+
+// ------------------------------
+// Cxx bindings
+// ------------------------------
+
+#ifdef __cplusplus
+
+#include <extensions/concepts_ext.hpp>
+
+namespace io
+{
+template <concepts_ext::IoT T>
+WRAP_CALL T in(const u16 port)
+{
+    if constexpr (std::is_same_v<T, u8>) {
+        return inb(port);
+    }
+
+    if constexpr (std::is_same_v<T, u16>) {
+        return inw(port);
+    }
+
+    if constexpr (std::is_same_v<T, u32>) {
+        return inl(port);
+    }
+
+    R_FAIL_ALWAYS("Unexpected execution path");
+}
+
+template <concepts_ext::IoT T>
+WRAP_CALL void out(const u16 port, const T v)
+{
+    if constexpr (std::is_same_v<T, u8>) {
+        outb(port, v);
+    } else if constexpr (std::is_same_v<T, u16>) {
+        outw(port, v);
+    } else if constexpr (std::is_same_v<T, u32>) {
+        outl(port, v);
+    } else {
+        R_FAIL_ALWAYS("Unexpected execution path");
+    }
+}
+}  // namespace io
+
+#endif  // __cplusplus
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
