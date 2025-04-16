@@ -75,18 +75,8 @@ set(SYSTEM_LIB_TYPE k)
 
 # Add the subdirectories
 add_subdirectory(libc)
-
-target_include_directories(libk PRIVATE
-        kernel/include
-        kernel/abi
-)
-
-target_include_directories(libk.32 PRIVATE
-        kernel/include
-        kernel/abi
-)
-
 add_subdirectory(kernel)
+
 if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
     message(FATAL_ERROR "No primary kernel executable defined")
 endif()
