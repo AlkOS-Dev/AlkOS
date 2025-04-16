@@ -6,9 +6,11 @@
 #include <extensions/debug.hpp>
 #include <todo.hpp>
 
-void EnableLocalAPIC()
+using namespace LocalApic;
+
+void LocalApic::Enable()
 {
-    R_ASSERT_TRUE(IsApicSupported(), "APIC is not supported on this platform...");
+    R_ASSERT_TRUE(IsSupported(), "APIC is not supported on this platform...");
 
     /* Disable PIC unit */
     Pic8259Disable();
@@ -17,7 +19,11 @@ void EnableLocalAPIC()
     /* Map local apic address to vmem */
     // TODO: currently: identity
 
-    TRACE_INFO("Local APIC found at address: %016X", GetLocalApicPhysicalAddress());
+    TRACE_INFO("Local APIC found at address: %016X", GetPhysicalAddress());
 
-    /* Enable apics */
+    /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
+    SetPhysicalAddress(GetPhysicalAddress());
+
+    /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
+    WriteRegister(kSpuriousInterruptRegRW, ReadRegister(kSpuriousInterruptRegRW) | 0x100);
 }
