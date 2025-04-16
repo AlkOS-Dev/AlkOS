@@ -55,21 +55,22 @@ void TestModule::RunTestModule()
 
     /* read single line of input */
     char buff[kInputBufferSize];
-    TerminalWriteString("Provide test name for framework or simply type \"exit\" to quit...\n");
-    if (TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
-        TerminalWriteError("[TEST] [FAIL] Too long input message...\n");
+    arch::TerminalWriteString("Provide test name for framework or simply type \"exit\" to quit...\n"
+    );
+    if (arch::TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
+        arch::TerminalWriteError("[TEST] [FAIL] Too long input message...\n");
         QemuShutdown();
     }
 
     if (strcmp(buff, "exit") == 0) {
-        TerminalWriteString("Kernel shutdown on test...\n");
+        arch::TerminalWriteString("Kernel shutdown on test...\n");
         QemuShutdown();
     }
 
     const TestSpec *test = FindTestFunction(buff);
 
     if (test == nullptr) {
-        TerminalWriteError("[TEST] [FAIL] Test not found...\n");
+        arch::TerminalWriteError("[TEST] [FAIL] Test not found...\n");
         QemuShutdown();
     }
 
@@ -79,21 +80,21 @@ void TestModule::RunTestModule()
 
 void TestModule::DisplayTests_()
 {
-    TerminalWriteString("Displaying list of all tests:\n");
+    arch::TerminalWriteString("Displaying list of all tests:\n");
     for (size_t idx = 0; idx < g_numTests; ++idx) {
-        TerminalWriteString("[TEST] [TESTNAME] ");
-        TerminalWriteString(g_tests[idx].name);
-        TerminalWriteString("\n");
+        arch::TerminalWriteString("[TEST] [TESTNAME] ");
+        arch::TerminalWriteString(g_tests[idx].name);
+        arch::TerminalWriteString("\n");
     }
 
-    TerminalWriteString("Displaying list of all manual tests:\n");
+    arch::TerminalWriteString("Displaying list of all manual tests:\n");
     for (size_t idx = 0; idx < g_numManualTests; ++idx) {
-        TerminalWriteString("[TEST] [MANUAL] [TESTNAME] ");
-        TerminalWriteString(g_manualTests[idx].name);
-        TerminalWriteString("\n");
+        arch::TerminalWriteString("[TEST] [MANUAL] [TESTNAME] ");
+        arch::TerminalWriteString(g_manualTests[idx].name);
+        arch::TerminalWriteString("\n");
     }
 
-    TerminalWriteString("[TEST] [LISTEND]\n");
+    arch::TerminalWriteString("[TEST] [LISTEND]\n");
 }
 
 TestSpec *TestModule::FindTestFunction(const char *name)
@@ -117,9 +118,9 @@ TestSpec *TestModule::FindTestFunction(const char *name)
 
 void TestModule::RunTest_(const TestSpec *test)
 {
-    TerminalWriteString("Running test:\n");
-    TerminalWriteString(test->name);
-    TerminalWriteString("\n");
+    arch::TerminalWriteString("Running test:\n");
+    arch::TerminalWriteString(test->name);
+    arch::TerminalWriteString("\n");
 
     TestGroupBase *test_obj = test->factory(g_testMem);
     R_ASSERT_NOT_NULL(test_obj);
@@ -131,18 +132,18 @@ void TestModule::RunTest_(const TestSpec *test)
 
     if (g_expectFail && !g_testCheckFailed) {
         /* test was expected to fail */
-        TerminalWriteError(
+        arch::TerminalWriteError(
             "[TEST] [FAIL] Test was supposed to fail but all checks passed correctly...\n"
         );
         return;
     }
 
     if (g_testCheckFailed) {
-        TerminalWriteError("[TEST] [FAIL] Test failed on some EXPECT_* checks...\n");
+        arch::TerminalWriteError("[TEST] [FAIL] Test failed on some EXPECT_* checks...\n");
         return;
     }
 
-    TerminalWriteString("[TEST] [SUCCESS] Test passed...\n");
+    arch::TerminalWriteString("[TEST] [SUCCESS] Test passed...\n");
 }
 
 void AddTest(const char *name, const test_factory_t factory)
@@ -167,18 +168,18 @@ NO_RET void OnKernelPanic()
 {
     if (!g_testStarted) {
         /* test not started yet, but we received failure -> some critical bug -> abort execution */
-        TerminalWriteError("[TEST] [FAIL] Kernel panic received before test started...\n");
+        arch::TerminalWriteError("[TEST] [FAIL] Kernel panic received before test started...\n");
         QemuShutdown();
     }
 
     if (g_expectFail) {
         /* fail was expected we are good */
-        TerminalWriteString("[TEST] [SUCCESS] Test failed successfully...\n");
+        arch::TerminalWriteString("[TEST] [SUCCESS] Test failed successfully...\n");
         QemuShutdown();
     }
 
     /* ups... */
-    TerminalWriteError("[TEST] [FAIL] Test failed on kernel panic...\n");
+    arch::TerminalWriteError("[TEST] [FAIL] Test failed on kernel panic...\n");
     QemuShutdown();
 }
 }  // namespace test

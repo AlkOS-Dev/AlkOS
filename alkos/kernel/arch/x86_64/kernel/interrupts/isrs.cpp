@@ -1,5 +1,18 @@
-#include <drivers/pic8259/pic8259.hpp>
-#include <interrupts/idt.hpp>
+#include "drivers/pic8259/pic8259.hpp"
+#include "interrupts/idt.hpp"
+
+#include <extensions/debug.hpp>
+
+/**
+ * @brief Logs the received interrupt.
+ *
+ * @param stack_frame Pointer to the ISR stack frame.
+ * @param idt_idx index of interrupt triggered.
+ */
+void LogIrqReceived([[maybe_unused]] void *stack_frame, const u8 idt_idx)
+{
+    TRACE_INFO("Received interrupt with idx: %hhu\n", idt_idx);
+}
 
 extern "C" {
 

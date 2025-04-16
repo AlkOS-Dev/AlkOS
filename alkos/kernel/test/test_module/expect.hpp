@@ -8,7 +8,7 @@
 inline void ExpectHandler(const char* msg)
 {
     test::g_testCheckFailed = true;
-    TerminalWriteString(msg);
+    arch::TerminalWriteString(msg);
 }
 
 // ------------------------------

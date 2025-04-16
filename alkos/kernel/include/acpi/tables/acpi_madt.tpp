@@ -16,7 +16,7 @@ concept MADTEntry = concepts_ext::OneOf<
     acpi_madt_eio_pic, acpi_madt_msi_pic, acpi_madt_bio_pic, acpi_madt_lpc_pic, acpi_madt_rintc,
     acpi_madt_imsic, acpi_madt_aplic, acpi_madt_plic>;
 
-template <typename T>
+template <MADTEntry T>
 struct MADTEntryTypeID;
 
 template <>
@@ -137,6 +137,18 @@ template <TableEntryCallback Callback>
 void Table<acpi_madt>::ForEachTableEntry(Callback callback)
 {
     internal::ForEachTableEntry<acpi_madt>(GetNative(), callback);
+}
+
+template <MADTEntry T>
+FAST_CALL const T *TryToAccessTheTable(const acpi_entry_hdr *entry)
+{
+    ASSERT_NOT_NULL(entry);
+
+    if (entry->type == MADTEntryTypeID<T>::value) {
+        return reinterpret_cast<const T *>(entry);
+    }
+
+    return nullptr;
 }
 
 }  // namespace ACPI

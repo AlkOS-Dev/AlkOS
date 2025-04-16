@@ -36,7 +36,7 @@ static void MultibootCheck(u32 boot_loader_magic)
 {
     TRACE_INFO("Checking for Multiboot2...");
     if (boot_loader_magic != multiboot::kMultiboot2BootloaderMagic) {
-        KernelPanic("Multiboot2 check failed!");
+        arch::KernelPanic("Multiboot2 check failed!");
     }
     TRACE_SUCCESS("Multiboot2 check passed!");
 }
@@ -49,13 +49,13 @@ static void HardwareChecks()
 
     TRACE_INFO("Checking for CPUID...");
     if (CheckCpuId()) {
-        KernelPanic("CPUID check failed!");
+        arch::KernelPanic("CPUID check failed!");
     }
     TRACE_SUCCESS("CPUID check passed!");
 
     TRACE_INFO("Checking for long mode...");
     if (CheckLongMode()) {
-        KernelPanic("Long mode check failed!");
+        arch::KernelPanic("Long mode check failed!");
     }
     TRACE_SUCCESS("Long mode check passed!");
 }
@@ -112,7 +112,7 @@ static multiboot::tag_module_t* GetLoader64Module(void* multiboot_info_addr)
             return strcmp(tag->cmdline, "loader64") == 0;
         }>(multiboot_info_addr);
     if (loader64_module == nullptr) {
-        KernelPanic("loader64 module not found in multiboot tags!");
+        arch::KernelPanic("loader64 module not found in multiboot tags!");
     }
     TRACE_SUCCESS("Found loader64 module in multiboot tags!");
 
@@ -124,7 +124,7 @@ static multiboot::tag_mmap_t* GetMemoryMapTag(void* multiboot_info_addr)
     TRACE_INFO("Searching for memory map tag...");
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info_addr);
     if (mmap_tag == nullptr) {
-        KernelPanic("Memory map tag not found in multiboot tags!");
+        arch::KernelPanic("Memory map tag not found in multiboot tags!");
     }
     TRACE_SUCCESS("Memory map tag found!");
 
@@ -138,7 +138,7 @@ static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
     TRACE_INFO("Loading module...");
     u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);
     if (kernel_entry_point == 0) {
-        KernelPanic("Failed to load kernel module!");
+        arch::KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Module loaded!");
 
@@ -148,7 +148,7 @@ static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
 extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
 {
     //    OsHang();
-    TerminalInit();
+    arch::TerminalInit();
     TRACE_INFO("In 32 bit mode");
 
     MultibootCheck(boot_loader_magic);

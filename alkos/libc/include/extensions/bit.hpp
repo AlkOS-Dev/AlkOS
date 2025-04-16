@@ -22,11 +22,11 @@ static constexpr NumT kLsb = 1;
 
 template <typename NumT, u16 Bit>
     requires std::is_unsigned_v<NumT>
-static constexpr NumT BitMask = kLsb<NumT> << Bit;
+static constexpr NumT kSingleBit = kLsb<NumT> << Bit;
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
-static constexpr NumT kMsb = BitMask<NumT, sizeof(NumT) * 8 - 1>;
+static constexpr NumT kMsb = kSingleBit<NumT, sizeof(NumT) * 8 - 1>;
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
@@ -34,11 +34,30 @@ static constexpr NumT kFullMask = ~static_cast<NumT>(0);
 
 template <typename NumT, u16 Range>
     requires std::is_unsigned_v<NumT>
-static constexpr NumT BitMaskLeft = kFullMask<NumT> << (sizeof(NumT) * 8 - Range);
+static constexpr NumT kBitMaskLeft = kFullMask<NumT> << (sizeof(NumT) * 8 - Range);
 
 template <typename NumT, u16 Range>
     requires std::is_unsigned_v<NumT>
-static constexpr NumT BitMaskRight = kFullMask<NumT> >> (sizeof(NumT) * 8 - Range);
+static constexpr NumT kBitMaskRight = kFullMask<NumT> >> (sizeof(NumT) * 8 - Range);
+
+template <typename NumT, const u16 kBitStart, const u16 kBitLength>
+    requires std::is_unsigned_v<NumT>
+static constexpr NumT kBitMask = []() constexpr {
+    static_assert(kBitStart < sizeof(NumT) * 8, "bit start overflows given integer type...");
+    static_assert(
+        kBitStart + kBitLength <= sizeof(NumT) * 8, "bit length overflows given integer type..."
+    );
+
+    NumT mask{};
+    for (u16 bit = kBitStart; bit < kBitLength; ++bit) {
+        mask |= kLsb<NumT> << bit;
+    }
+    return mask;
+}();
+
+template <typename NumT, const u16 kBitStart, const u16 kBitEnd>
+    requires(std::is_unsigned_v<NumT> && kBitStart < kBitEnd)
+static constexpr NumT kBitMaskRange = kBitMask<NumT, kBitStart, kBitEnd - kBitStart>;
 
 // ------------------------------
 // Functions
@@ -113,6 +132,28 @@ template <typename PtrT>
 FAST_CALL constexpr PtrT AlignDown(const PtrT ptr, const size_t alignment)
 {
     return reinterpret_cast<PtrT>(AlignDown(reinterpret_cast<uintptr_t>(ptr), alignment));
+}
+
+template <const u16 kBitStart, const u16 kBitLength, typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool AreBitsEnabled(const NumT num)
+{
+    return (num & kBitMask<NumT, kBitStart, kBitLength>) == kBitMask<NumT, kBitStart, kBitLength>;
+}
+
+template <const u16 kBitStart, const u16 kBitEnd, typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool AreBitsEnabledRanged(const NumT num)
+{
+    return (num & kBitMaskRange<NumT, kBitStart, kBitEnd>) ==
+           kBitMaskRange<NumT, kBitStart, kBitEnd>;
+}
+
+template <const u16 kBit, typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool IsBitEnabled(const NumT num)
+{
+    return (num & kSingleBit<NumT, kBit>) == kSingleBit<NumT, kBit>;
 }
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_

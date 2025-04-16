@@ -35,7 +35,7 @@ extern "C" void __cxa_guard_abort(__guard *)
 
 #else
 
-    KernelPanic("Failed to initialize static object");
+    arch::KernelPanic("Failed to initialize static object");
 
 #endif
 }
