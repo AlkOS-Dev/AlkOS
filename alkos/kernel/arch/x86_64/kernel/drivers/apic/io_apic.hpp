@@ -16,7 +16,7 @@
  *
  * Access pattern: write index to IOREGSEL (0x00), then read/write IOWIN (0x10). Both 32bits based.
  *
- * Ref: Intel 82093AA I/O APIC Datasheet, Section 3.2
+ * Reference: Intel System Programming Guide, Vol 3A Part 1, Chapter 10
  */
 
 // ------------------------------
@@ -92,11 +92,13 @@ class IoApic final
         u32 mask : 1;
         u32 reserved : 15;
     };
+    static_assert(sizeof(LowerTableRegister) == 4);
 
     struct HigherTableRegister {
         u32 reserved : 24;
         u32 destination : 8;
     };
+    static_assert(sizeof(HigherTableRegister) == 4);
 
     // ------------------------------
     // Class defines

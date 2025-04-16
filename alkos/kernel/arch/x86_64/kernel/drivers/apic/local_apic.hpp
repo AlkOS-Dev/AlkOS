@@ -10,20 +10,29 @@
 #include "memory_io.hpp"
 #include "msrs.hpp"
 
+/**
+ *  Local IO APIC driver
+ *
+ *  Reference: Intel System Programming Guide, Vol 3A Part 1, Chapter 10
+ */
 namespace LocalApic
 {
 // ------------------------------
 // defines
 // ------------------------------
 
-/* Architecture flags */
-static constexpr u32 kEdxAcpiFlag = 1 << 9;
+/**
+ * Architecture flags
+ */
 
-static constexpr u32 kIA32ApicBaseMsr = 0x1B;
-
+static constexpr u32 kEdxAcpiFlag           = 1 << 9;
+static constexpr u32 kIA32ApicBaseMsr       = 0x1B;
 static constexpr u64 kIA32ApicBaseMsrEnable = 0x800;
 
-/* Local APIC details: */
+/**
+ * Local APIC register details:
+ */
+
 /* RW - Read Write, RO - Read Only, WO - Write Only */
 /* All registers are 32 bit wide, but aligned to 16 byte boundary */
 
@@ -58,6 +67,96 @@ static constexpr u32 kCurrentCountRegRO          = 0x390; /* Timer */
 /* 0x3A0 - 0x3D0 - RESERVED */
 static constexpr u32 kDivideConfigRegRW = 0x3E0; /* Timer */
 /* 0x3F0 - RESERVED */
+
+/**
+ * EOI
+ */
+
+static constexpr u32 kEOISignal = 0;
+
+/**
+ * Local Vector Table Registers
+ */
+
+struct LocalVectorTableRegister {
+    u32 vector : 8;
+    u32 reserved1 : 4;
+    u32 pending : 1; /* set if pending */
+    u32 reserved2 : 3;
+    u32 mask : 1; /* Set to disable */
+    u32 reserved3 : 15;
+};
+static_assert(sizeof(LocalVectorTableRegister) == 4);
+
+struct LocalVectorTableTimerRegister {
+    u32 vector : 8;
+    u32 type : 3;
+    u32 reserved1 : 1;
+    u32 pending : 1;  /* set if pending */
+    u32 polarity : 1; /* set to low triggered */
+    u32 remote_irr : 1;
+    u32 trigger_mode : 1; /* set for level triggered */
+    u32 mask : 1;         /* Set to disable */
+    u32 reserved2 : 15;
+
+    static constexpr u32 kTypeNMI = 0x100b;
+};
+static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
+
+/**
+ * Spurious Interrupt Vector Register
+ */
+
+struct SpuriousInterruptRegister {
+    u32 vector : 8;
+    u32 enabled : 1;
+    u32 reserved1 : 3;
+    u32 no_eoi_broadcast : 1;
+    u32 reserved2 : 19;
+};
+static_assert(sizeof(SpuriousInterruptRegister) == 4);
+
+/**
+ * Interrupt Command Register
+ */
+
+struct InterruptCommandRegister {
+    u32 vector : 8;
+    u32 delivery_mode : 3;
+    u32 destination_mode : 1;
+    u32 delivery_status : 1;
+    u32 reserved1 : 1;
+    u32 init_type : 2;
+    u32 destination_type : 2;
+    u32 reserved2 : 12;
+
+    enum class DeliveryMode : u8 {
+        kFixed         = 0b000,
+        kLowerPriority = 0b001,
+        kSMI           = 0b010,
+        kNMI           = 0b100,
+        kINIT          = 0b101,
+        kSIPI          = 0b110,
+    };
+
+    enum class DestinationMode : u8 {
+        kPhysical = 0,
+        kLogical  = 1,
+    };
+
+    enum class InitType : u8 {
+        kNormal   = 0b01,
+        kDeAssert = 0b10,
+    };
+
+    enum class DestinationType : u8 {
+        kNormal                  = 0,
+        kNotifyYourself          = 1,
+        kBroadcast               = 2,
+        kBroadcastExceptYourself = 3
+    };
+};
+static_assert(sizeof(InterruptCommandRegister) == 4);
 
 // ------------------------------
 // Utility functions
