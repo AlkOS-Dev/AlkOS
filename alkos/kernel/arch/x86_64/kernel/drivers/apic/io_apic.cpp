@@ -4,9 +4,34 @@
 #include <extensions/debug.hpp>
 #include <todo.hpp>
 
+// ------------------------------
+// static functions
+// ------------------------------
+
+FAST_CALL void ApplyAcpiFlags(const u16 flags, IoApic::LowerTableRegister &reg)
+{
+    if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_HIGH))) {
+        reg.pin_polarity = static_cast<u32>(IoApic::PinPolarity::kActiveHigh);
+    } else if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_LOW))) {
+        reg.pin_polarity = static_cast<u32>(IoApic::PinPolarity::kActiveLow);
+    }
+
+    if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_TRIGGERING_EDGE))) {
+        reg.trigger_mode = static_cast<u32>(IoApic::TriggerMode::kEdge);
+    } else if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_TRIGGERING_LEVEL))) {
+        reg.trigger_mode = static_cast<u32>(IoApic::TriggerMode::kLevel);
+    }
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
+
 IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
     : physical_address_(address), gsi_base_(gsi_base), id_(id)
 {
+    ASSERT_NOT_ZERO(address);
+
     TODO_WHEN_VMEM_WORKS
     /* TODO: Map the address first, currently identity */
     virtual_address_ = physical_address_;
@@ -29,9 +54,8 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
 
 void IoApic::PrepareDefaultConfig() const
 {
-    for (u32 idx = gsi_base_; idx < gsi_base_ + num_entries_; ++idx) {
-        const u32 reg_raw          = ReadRegister(IoApicTableReg(idx));
-        LowerTableRegister reg_low = *reinterpret_cast<const LowerTableRegister *>(&reg_raw);
+    for (u32 idx = 0; idx < num_entries_; ++idx) {
+        auto reg_low = ReadLowerTableRegister(idx);
 
         reg_low.delivery_mode    = static_cast<u32>(DeliveryMode::kFixed);
         reg_low.destination_mode = static_cast<u32>(DestinationMode::kPhysical);
@@ -39,35 +63,37 @@ void IoApic::PrepareDefaultConfig() const
         reg_low.trigger_mode     = static_cast<u32>(TriggerMode::kEdge);
         reg_low.mask             = static_cast<u32>(Mask::kEnabled);
 
-        WriteRegister(IoApicTableReg(idx), *reinterpret_cast<u32 *>(&reg_low));
+        WriteLowerTableRegister(idx, reg_low);
     }
 }
 
-void IoApic::ApplyOverrideRule(const acpi_madt_interrupt_source_override *override)
+void IoApic::ApplyOverrideRule(const acpi_madt_interrupt_source_override *override) const
 {
     ASSERT_NOT_NULL(override);
 
-    const u32 reg_idx          = IoApicTableReg(override->gsi - GetGsiBase());
-    const u32 reg_raw          = ReadRegister(reg_idx);
-    LowerTableRegister reg_low = *reinterpret_cast<const LowerTableRegister *>(&reg_raw);
+    auto reg_low = ReadLowerTableRegister(override->gsi - GetGsiBase());
 
     /* Apply flags */
-    if (AreBitsEnabled(override->flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_HIGH))) {
-        reg_low.pin_polarity = static_cast<u32>(PinPolarity::kActiveHigh);
-    } else if (AreBitsEnabled(override->flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_LOW))) {
-        reg_low.pin_polarity = static_cast<u32>(PinPolarity::kActiveLow);
-    }
-
-    if (AreBitsEnabled(override->flags, static_cast<u16>(ACPI_MADT_TRIGGERING_EDGE))) {
-        reg_low.trigger_mode = static_cast<u32>(TriggerMode::kEdge);
-    } else if (AreBitsEnabled(override->flags, static_cast<u16>(ACPI_MADT_TRIGGERING_LEVEL))) {
-        reg_low.trigger_mode = static_cast<u32>(TriggerMode::kLevel);
-    }
+    ApplyAcpiFlags(override->flags, reg_low);
 
     /* Apply redirection */
     // TODO:
     reg_low.vector = override->source;
 
     /* Write back */
-    WriteRegister(reg_idx, *reinterpret_cast<u32 *>(&reg_low));
+    WriteLowerTableRegister(override->gsi - GetGsiBase(), reg_low);
+}
+
+void IoApic::ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const
+{
+    ASSERT_NOT_NULL(nmi_source);
+
+    auto reg_low = ReadLowerTableRegister(nmi_source->gsi - GetGsiBase());
+
+    /* Apply flags */
+    ApplyAcpiFlags(nmi_source->flags, reg_low);
+    reg_low.delivery_mode = static_cast<u32>(DeliveryMode::kNMI);
+
+    /* Write back */
+    WriteLowerTableRegister(nmi_source->gsi - GetGsiBase(), reg_low);
 }

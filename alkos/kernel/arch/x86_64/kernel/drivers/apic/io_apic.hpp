@@ -131,6 +131,19 @@ class IoApic final
         return *reinterpret_cast<volatile u32 *>(physical_address_ + kIoRegWin);
     }
 
+    NODISCARD FORCE_INLINE_F LowerTableRegister ReadLowerTableRegister(const u32 reg_idx) const
+    {
+        const u32 reg_raw = ReadRegister(IoApicTableReg(reg_idx));
+        return *reinterpret_cast<const LowerTableRegister *>(&reg_raw);
+    }
+
+    FORCE_INLINE_F void WriteLowerTableRegister(
+        const u32 reg_idx, const LowerTableRegister &reg_low
+    ) const
+    {
+        WriteRegister(IoApicTableReg(reg_idx), *reinterpret_cast<const u32 *>(&reg_low));
+    }
+
     NODISCARD u8 GetId() const { return id_; }
 
     NODISCARD u32 GetAddress() const { return virtual_address_; }
@@ -146,7 +159,9 @@ class IoApic final
         return gsi >= gsi_base_ && gsi < gsi_base_ + num_entries_;
     }
 
-    void ApplyOverrideRule(const acpi_madt_interrupt_source_override *override);
+    void ApplyOverrideRule(const acpi_madt_interrupt_source_override *override) const;
+
+    void ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const;
 
     // ------------------------------
     // Class fields

@@ -48,7 +48,7 @@ void Interrupts::ApplyIoApicOverride(const acpi_madt_interrupt_source_override *
         override->bus, override->source, override->gsi, override->flags
     );
 
-    IoApic &io_apic = GetIoApicHandler(override->gsi);
+    const IoApic &io_apic = GetIoApicHandler(override->gsi);
     io_apic.ApplyOverrideRule(override);
 }
 
@@ -62,6 +62,9 @@ void Interrupts::ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source)
         "flags: %04X",
         nmi_source->gsi, nmi_source->flags
     );
+
+    const IoApic &io_apic = GetIoApicHandler(nmi_source->gsi);
+    io_apic.ApplyNmiRule(nmi_source);
 }
 
 IoApic &Interrupts::GetIoApicHandler(const u32 gsi)
