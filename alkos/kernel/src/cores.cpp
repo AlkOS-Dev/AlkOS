@@ -5,7 +5,7 @@
 
 void hardware::CoresController::AllocateCores(const size_t num_cores)
 {
-    R_ASSERT_NOT_ZERO(num_cores, "No cores where found!");
+    R_ASSERT_NOT_ZERO(num_cores, "No cores were found!");
     ASSERT_ZERO(num_cores_, "Cores should be allocated only once at startup...");
 
     TODO_WHEN_VMEM_WORKS

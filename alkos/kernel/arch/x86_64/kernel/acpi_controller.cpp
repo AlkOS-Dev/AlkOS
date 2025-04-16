@@ -71,7 +71,7 @@ static void PrepareIoApic_(MadtTable &table)
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         num_apic += (ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry) != nullptr);
     });
-    TRACE_INFO("Detected %lu I/O APIC devices...");
+    TRACE_INFO("Detected %lu I/O APIC devices...", num_apic);
 
     HardwareModule::Get().GetInterrupts().AllocateIoApic(num_apic);
 
