@@ -1,5 +1,4 @@
 #include "drivers/apic/local_apic.hpp"
-#include "memory_io.hpp"
 
 #include <assert.h>
 #include <drivers/pic8259/pic8259.hpp>

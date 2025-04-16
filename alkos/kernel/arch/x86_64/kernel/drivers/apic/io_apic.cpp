@@ -1,7 +1,9 @@
 #include "drivers/apic/io_apic.hpp"
+#include "drivers/apic/local_apic.hpp"
 
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <interrupts/idt.hpp>
 #include <todo.hpp>
 
 // ------------------------------
@@ -57,6 +59,7 @@ void IoApic::PrepareDefaultConfig() const
     for (u32 idx = 0; idx < num_entries_; ++idx) {
         auto reg_low = ReadLowerTableRegister(idx);
 
+        /* Note: vector not initialized */
         reg_low.delivery_mode    = static_cast<u32>(DeliveryMode::kFixed);
         reg_low.destination_mode = static_cast<u32>(DestinationMode::kPhysical);
         reg_low.pin_polarity     = static_cast<u32>(PinPolarity::kActiveHigh);
@@ -77,8 +80,7 @@ void IoApic::ApplyOverrideRule(const acpi_madt_interrupt_source_override *overri
     ApplyAcpiFlags(override->flags, reg_low);
 
     /* Apply redirection */
-    // TODO:
-    reg_low.vector = override->source;
+    reg_low.vector = kIrq1Offset + override->source;
 
     /* Write back */
     WriteLowerTableRegister(override->gsi - GetGsiBase(), reg_low);
