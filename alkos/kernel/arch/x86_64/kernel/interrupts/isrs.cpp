@@ -1,5 +1,7 @@
+#include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
+#include "modules/hardware.hpp"
 
 #include <extensions/debug.hpp>
 
@@ -15,7 +17,6 @@ void LogIrqReceived([[maybe_unused]] void *stack_frame, const u8 idt_idx)
 }
 
 extern "C" {
-
 // ------------------------------
 // IRQ0: System timer
 // ------------------------------
@@ -23,7 +24,8 @@ extern "C" {
 void isr_32([[maybe_unused]] void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 32);
-    Pic8259SendEOI(0);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(0);
 }
 
 // ------------------------------
@@ -33,7 +35,8 @@ void isr_32([[maybe_unused]] void *const stack_frame)
 void isr_33(void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 33);
-    Pic8259SendEOI(1);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(1);
 }
 
 // ------------------------------
@@ -43,7 +46,8 @@ void isr_33(void *const stack_frame)
 void isr_35(void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 35);
-    Pic8259SendEOI(3);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(3);
 }
 
 // ------------------------------
@@ -53,7 +57,8 @@ void isr_35(void *const stack_frame)
 void isr_36(void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 36);
-    Pic8259SendEOI(4);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(4);
 }
 
 // ------------------------------
@@ -63,7 +68,8 @@ void isr_36(void *const stack_frame)
 void isr_40(void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 40);
-    Pic8259SendEOI(8);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(8);
 }
 
 // ------------------------------
@@ -73,7 +79,8 @@ void isr_40(void *const stack_frame)
 void isr_44(void *const stack_frame)
 {
     LogIrqReceived(stack_frame, 44);
-    Pic8259SendEOI(12);
+    HardwareModule::Get().GetInterrupts().IsApicInitialized() ? LocalApic::SendEOI()
+                                                              : Pic8259SendEOI(12);
 }
 
 // ------------------------------

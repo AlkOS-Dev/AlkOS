@@ -206,5 +206,8 @@ FAST_CALL u32 ReadRegister(const u32 offset)
         offset
     );
 }
+
+FAST_CALL void SendEOI() { WriteRegister(kEndOfInterruptRegWO, kEOISignal); }
+
 }  // namespace LocalApic
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_LOCAL_APIC_HPP_

@@ -29,4 +29,6 @@ void LocalApic::Enable()
     reg.enabled = 1;
 
     WriteRegister(kSpuriousInterruptRegRW, ToRawRegister(reg));
+
+    /* TODO: verify LAPIC works ... */
 }

@@ -15,6 +15,7 @@ void Interrupts::Initialise()
 
     /* Replace first stage PIC with new APIC chip on startup Core */
     LocalApic::Enable();
+    is_apic_initialized_ = true;
 }
 
 void Interrupts::FirstStageInit()
