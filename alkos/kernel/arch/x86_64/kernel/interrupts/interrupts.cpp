@@ -1,5 +1,6 @@
 #include "interrupts.hpp"
 
+#include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
 
@@ -12,7 +13,8 @@ void Interrupts::Initialise()
 {
     TRACE_INFO("Initialising interrupts system...");
 
-    /* Replace first stage PIC with new APIC chip */
+    /* Replace first stage PIC with new APIC chip on startup Core */
+    EnableLocalAPIC();
 }
 
 void Interrupts::FirstStageInit()
