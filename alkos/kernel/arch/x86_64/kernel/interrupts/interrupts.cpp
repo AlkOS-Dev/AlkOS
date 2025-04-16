@@ -8,7 +8,12 @@
 
 using namespace arch;
 
-void Interrupts::Initialise() { TRACE_INFO("Initialising interrupts system..."); }
+void Interrupts::Initialise()
+{
+    TRACE_INFO("Initialising interrupts system...");
+
+    /* Replace first stage PIC with new APIC chip */
+}
 
 void Interrupts::FirstStageInit()
 {
