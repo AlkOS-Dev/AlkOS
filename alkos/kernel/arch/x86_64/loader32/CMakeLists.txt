@@ -61,4 +61,5 @@ target_link_libraries(alkos.loader32 PRIVATE
         gcc
         arch.common.all.32
         libk.32
+        alkos.kernel.headers
 )

@@ -81,9 +81,16 @@ add_executable(alkos.kernel
 
 ############################### Adding Headers ###############################
 
-include_directories(include)
-include_directories(test)
-include_directories(abi)
+add_library(alkos.kernel.headers INTERFACE)
+target_include_directories(alkos.kernel.headers INTERFACE
+    include
+    test
+    abi
+)
+
+target_link_libraries(alkos.kernel PRIVATE
+    alkos.kernel.headers
+)
 
 ########################## Configure for given Arch ##########################
 
