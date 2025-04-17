@@ -3,7 +3,6 @@
 
 /* internal includes */
 #include <assert.h>
-#include <arch_utils.hpp>
 #include <extensions/debug.hpp>
 #include "init.hpp"
 #include "terminal.hpp"
@@ -18,8 +17,6 @@ static void KernelRun()
 
     arch::TerminalWriteString("Hello from AlkOS!\n");
     arch::TerminalWriteString(buff);
-
-    OsHang();
 }
 
 extern "C" void KernelMain()

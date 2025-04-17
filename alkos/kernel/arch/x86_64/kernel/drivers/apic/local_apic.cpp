@@ -13,7 +13,7 @@ using namespace LocalApic;
 // Static functions
 // ------------------------------
 
-static void ApplyNmiSource(const acpi_madt_lapic_nmi *nmi_source)
+static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
 {
     ASSERT_NOT_NULL(nmi_source);
 
@@ -26,7 +26,7 @@ static void ApplyNmiSource(const acpi_madt_lapic_nmi *nmi_source)
     );
 }
 
-static void ParseMadtRules()
+static void ParseMadtRules_()
 {
     auto table = ACPI::GetTable<acpi_madt>();
     R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
@@ -38,7 +38,7 @@ static void ParseMadtRules()
             return;
         }
 
-        ApplyNmiSource(table_ptr);
+        ApplyNmiSource_(table_ptr);
     });
 }
 
@@ -66,7 +66,7 @@ void LocalApic::Enable()
     TRACE_INFO("Configuring LAPIC for core with id: %u", GetCoreId());
 
     /* Configure apic based on MADT entries */
-    ParseMadtRules();
+    ParseMadtRules_();
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     auto reg    = CastRegister<SpuriousInterruptRegister>(ReadRegister(kSpuriousInterruptRegRW));
