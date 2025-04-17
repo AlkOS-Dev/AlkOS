@@ -9,111 +9,143 @@
 #include "memory_io.hpp"
 
 /**
- * IO APIC Driver
+ * @file io_apic.hpp
+ * @brief IO APIC (I/O Advanced Programmable Interrupt Controller) driver
  *
- * Memory-mapped controller that distributes external interrupts to local APICs.
- * Each I/O APIC manages a range of Global System Interrupts (GSIs).
+ * The IO APIC is a memory-mapped controller that manages external hardware interrupts
+ * and routes them to appropriate Local APICs. Each IO APIC controls a range of
+ * Global System Interrupts (GSIs) and can redirect them to any CPU in the system.
  *
- * Access pattern: write index to IOREGSEL (0x00), then read/write IOWIN (0x10). Both 32bits based.
+ * Access pattern: Write register index to IOREGSEL (offset 0x00), then read/write
+ * data at IOWIN (offset 0x10). Both registers are 32-bit.
  *
- * Reference: Intel System Programming Guide, Vol 3A Part 1, Chapter 10
+ * Reference: Intel 64 and IA-32 Architectures Software Developer's Manual
+ * - Volume 3A: System Programming Guide, Part 1
+ * - Chapter 10, Section 10.11: I/O APIC
  */
 
 // ------------------------------
-// Defines
+// Register Definitions
 // ------------------------------
 
-// Offset of select register, should be applied to IO APIC address
+/// Register selector offset (write register index here)
 static constexpr u64 kIoRegSelOffset = 0x0;
 
-// Offset of write/read register, should be applied to IO APIC address
+/// Data window offset (read/write register data here)
 static constexpr u64 kIoRegWin = 0x10;
 
-// ID Register (0x00): [24:27] APIC ID, others reserved
+/// ID Register (0x00): [24:27] APIC ID, others reserved
 static constexpr u32 kIoApicIdReg = 0x00;
 
-// Version Register (0x01): [0:7] Version, [16:23] Max Redirection Entry (count-1), others reserved
+/// Version Register (0x01): [0:7] Version, [16:23] Max Redirection Entry (count-1)
 static constexpr u32 kIoApicVerReg = 0x01;
 
-// Arbitration ID Register (0x02): [24:27] Arbitration ID, others reserved
+/// Arbitration ID Register (0x02): [24:27] Arbitration ID, others reserved
 static constexpr u32 kIoApicArbReg = 0x02;
 
+/**
+ * @brief Calculates redirection table register index
+ *
+ * Each entry in the redirection table occupies two 32-bit registers (low and high)
+ *
+ * @param reg_idx Zero-based index of the redirection table entry
+ * @return Register offset for the lower 32 bits of the entry
+ */
 static constexpr u32 IoApicTableReg(const u32 reg_idx) { return 0x10 + 2 * reg_idx; }
 
 // ------------------------------
-// Driver class
+// Driver Class
 // ------------------------------
 
+/**
+ * @brief IO APIC controller class
+ *
+ * Manages access to a single IO APIC device in the system,
+ * handling interrupt routing configuration and GSI management.
+ */
 class IoApic final
 {
     public:
     enum class TriggerMode : u8 {
-        kEdge  = 0,
-        kLevel = 1,
+        kEdge  = 0,  ///< Edge-triggered interrupt
+        kLevel = 1,  ///< Level-triggered interrupt
     };
 
     enum class DestinationMode : u8 {
-        kPhysical = 0,
-        kLogical  = 1,
+        kPhysical = 0,  ///< Physical APIC ID targeting
+        kLogical  = 1,  ///< Logical APIC ID targeting
     };
 
     enum class Mask : u8 {
-        kEnabled = 0,
-        kMasked  = 1,
+        kEnabled = 0,  ///< Interrupt enabled
+        kMasked  = 1,  ///< Interrupt masked (disabled)
     };
 
     enum class PinPolarity : u8 {
-        kActiveHigh = 0,
-        kActiveLow  = 1,
+        kActiveHigh = 0,  ///< Interrupt triggered on high signal
+        kActiveLow  = 1,  ///< Interrupt triggered on low signal
     };
 
     enum class DeliveryStatus : u8 {
-        kReadyToSend      = 0,
-        kSendNotProcessed = 1,
+        kReadyToSend      = 0,  ///< Ready to accept new interrupt
+        kSendNotProcessed = 1,  ///< Delivery in progress
     };
 
     enum class DeliveryMode : u8 {
-        kFixed         = 0b000,
-        kLowerPriority = 0b001,
-        kSMI           = 0b010,
-        kNMI           = 0b100,
-        kINIT          = 0b101,
-        kExtINT        = 0b111,
+        kFixed         = 0b000,  ///< Deliver to specified vector
+        kLowerPriority = 0b001,  ///< Deliver to lowest priority processor
+        kSMI           = 0b010,  ///< System Management Interrupt
+        kNMI           = 0b100,  ///< Non-Maskable Interrupt
+        kINIT          = 0b101,  ///< INIT signal
+        kExtINT        = 0b111,  ///< External interrupt (like 8259 PIC)
     };
 
+    /**
+     * @brief IO APIC redirection table entry (lower 32 bits)
+     *
+     * Controls how an interrupt is routed to processor(s)
+     */
     struct LowerTableRegister {
-        u32 vector : 8;
-        u32 delivery_mode : 3;
-        u32 destination_mode : 1;
-        u32 delivery_status : 1;
-        u32 pin_polarity : 1;
-        u32 remote_IRR : 1;
-        u32 trigger_mode : 1;
-        u32 mask : 1;
-        u32 reserved : 15;
+        u32 vector : 8;            ///< Interrupt vector (0-255)
+        u32 delivery_mode : 3;     ///< How the interrupt should be delivered
+        u32 destination_mode : 1;  ///< Physical or logical destination
+        u32 delivery_status : 1;   ///< 1 if delivery in progress
+        u32 pin_polarity : 1;      ///< Signal polarity
+        u32 remote_IRR : 1;        ///< Remote IRR (for level-triggered)
+        u32 trigger_mode : 1;      ///< Edge or level triggered
+        u32 mask : 1;              ///< Enable/disable interrupt
+        u32 reserved : 15;         ///< Reserved bits
     };
     static_assert(sizeof(LowerTableRegister) == 4);
 
+    /**
+     * @brief IO APIC redirection table entry (upper 32 bits)
+     *
+     * Contains destination processor information
+     */
     struct HigherTableRegister {
-        u32 reserved : 24;
-        u32 destination : 8;
+        u32 reserved : 24;    ///< Reserved bits
+        u32 destination : 8;  ///< Destination APIC ID
     };
     static_assert(sizeof(HigherTableRegister) == 4);
 
     // ------------------------------
-    // Class defines
+    // Class Creation
     // ------------------------------
 
-    // ------------------------------
-    // Class creation
-    // ------------------------------
-
+    /**
+     * @brief Constructor for IO APIC driver
+     *
+     * @param id IO APIC identifier
+     * @param address Physical address of the IO APIC registers
+     * @param gsi_base First GSI number managed by this IO APIC
+     */
     IoApic(u8 id, u32 address, u32 gsi_base);
 
     ~IoApic() = default;
 
     // ------------------------------
-    // Class interaction
+    // Register Access Methods
     // ------------------------------
 
     FORCE_INLINE_F void WriteRegister(const u8 offset, const u32 value) const
@@ -146,6 +178,10 @@ class IoApic final
         WriteRegister(IoApicTableReg(reg_idx), ToRawRegister(reg_low));
     }
 
+    // ------------------------------
+    // Status and Configuration Methods
+    // ------------------------------
+
     NODISCARD u8 GetId() const { return id_; }
 
     NODISCARD u32 GetAddress() const { return virtual_address_; }
@@ -166,16 +202,16 @@ class IoApic final
     void ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const;
 
     // ------------------------------
-    // Class fields
+    // Class Fields
     // ------------------------------
 
     private:
-    u64 virtual_address_{};
-    u32 physical_address_{};
-    u32 gsi_base_{};
-    u8 id_{};
-    u8 version_{};
-    u8 num_entries_{};
+    u64 virtual_address_{};   ///< Virtual memory address for MMIO access
+    u32 physical_address_{};  ///< Physical memory address of the IO APIC
+    u32 gsi_base_{};          ///< First GSI number managed by this IO APIC
+    u8 id_{};                 ///< IO APIC ID
+    u8 version_{};            ///< IO APIC hardware version
+    u8 num_entries_{};        ///< Number of redirection table entries
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_IO_APIC_HPP_
