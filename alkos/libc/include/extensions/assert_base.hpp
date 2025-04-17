@@ -38,7 +38,7 @@ void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size
     }
 }
 
-FAST_CALL void VerboseAssertDumpObjToHex(const bool &obj, char *buffer, const size_t buffer_size)
+FAST_CALL void VerboseAssertDumpObjToHex(const bool &obj, char *buffer, const size_t)
 {
     strcpy(buffer, obj ? "true" : "false");
 }

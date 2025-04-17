@@ -1,11 +1,50 @@
 #include "drivers/apic/local_apic.hpp"
+#include "acpi/acpi.hpp"
+#include "drivers/pic8259/pic8259.hpp"
+#include "modules/hardware.hpp"
 
 #include <assert.h>
-#include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
 #include <todo.hpp>
 
 using namespace LocalApic;
+
+// ------------------------------
+// Static functions
+// ------------------------------
+
+static void ApplyNmiSource(const acpi_madt_lapic_nmi *nmi_source)
+{
+    ASSERT_NOT_NULL(nmi_source);
+
+    TRACE_INFO(
+        "Got LAPIC NMI source: "
+        "flags: %hhu, "
+        "lapic_id: %hhu, "
+        "lint: %hhu",
+        nmi_source->flags, nmi_source->uid, nmi_source->lint
+    );
+}
+
+static void ParseMadtRules()
+{
+    auto table = ACPI::GetTable<acpi_madt>();
+    R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
+
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic_nmi>(entry);
+
+        if (table_ptr == nullptr) {
+            return;
+        }
+
+        ApplyNmiSource(table_ptr);
+    });
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
 
 void LocalApic::Enable()
 {
@@ -18,19 +57,20 @@ void LocalApic::Enable()
     /* Map local apic address to vmem */
     // TODO: currently: identity
 
-    TRACE_INFO("Local APIC found at address: %016X", GetPhysicalAddress());
+    const u64 lapic_address = HardwareModule::Get().GetInterrupts().GetLocalApicPhysicalAddress();
+    TRACE_INFO("Assuming APIC address as: %016X", lapic_address);
 
     /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
-    SetPhysicalAddress(GetPhysicalAddress());
+    SetPhysicalAddress(lapic_address);
+
+    /* Configure apic based on MADT entries */
+    ParseMadtRules();
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
-
     auto reg    = CastRegister<SpuriousInterruptRegister>(ReadRegister(kSpuriousInterruptRegRW));
     reg.enabled = 1;
 
     WriteRegister(kSpuriousInterruptRegRW, ToRawRegister(reg));
-
-    /* TODO: verify LAPIC works ... */
 
     TRACE_INFO("Local APIC enabled...");
 }

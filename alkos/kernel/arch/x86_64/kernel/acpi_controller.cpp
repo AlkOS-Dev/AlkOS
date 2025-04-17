@@ -25,7 +25,7 @@ NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t co
     return true;
 }
 
-NODISCARD size_t CountCores_(MadtTable &table)
+NODISCARD static size_t CountCores_(MadtTable &table)
 {
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
@@ -113,8 +113,35 @@ static void PrepareApicRules_(MadtTable &table)
                 break;
             default:
                 R_FAIL_ALWAYS("Found unsupported MADT table...");
-                break;
         }
+    });
+}
+
+static void ParseLApicAddress_(MadtTable &table)
+{
+    TRACE_INFO(
+        "Local APIC physical address: %08X", table.GetNative()->local_interrupt_controller_address
+    );
+
+    HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(
+        table.GetNative()->local_interrupt_controller_address
+    );
+
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic_address_override>(entry);
+
+        if (table_ptr == nullptr) {
+            return;
+        }
+
+        TRACE_INFO(
+            "Found LAPIC Address Override: "
+            "address: %016X, "
+            "rsvd: %hhu",
+            table_ptr->address, table_ptr->rsvd
+        );
+
+        HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(table_ptr->address);
     });
 }
 
@@ -134,6 +161,9 @@ void AcpiController::ParseMadt_()
 
     auto table = ACPI::GetTable<acpi_madt>();
     R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
+
+    /* Prepare LAPIC */
+    ParseLApicAddress_(table);
 
     /* Prepare cores */
     const size_t cores = CountCores_(table);
