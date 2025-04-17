@@ -11,6 +11,10 @@
 #include "msrs.hpp"
 
 /**
+ * TODO: SUPPORT 2x APIC
+ */
+
+/**
  * @file local_apic.hpp
  * @brief Local APIC (Advanced Programmable Interrupt Controller) driver for x86_64 architecture
  *
@@ -361,6 +365,8 @@ FAST_CALL u32 ReadRegister(const u32 offset)
  * new interrupts of the same or lower priority.
  */
 FAST_CALL void SendEOI() { WriteRegister(kEndOfInterruptRegWO, kEOISignal); }
+
+FAST_CALL u8 GetCoreId() { return ReadRegister(kIdRegRW) >> 24; }
 
 }  // namespace LocalApic
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_LOCAL_APIC_HPP_

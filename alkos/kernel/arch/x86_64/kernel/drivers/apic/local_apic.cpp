@@ -63,6 +63,8 @@ void LocalApic::Enable()
     /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
     SetPhysicalAddress(lapic_address);
 
+    TRACE_INFO("Configuring LAPIC for core with id: %u", GetCoreId());
+
     /* Configure apic based on MADT entries */
     ParseMadtRules();
 
