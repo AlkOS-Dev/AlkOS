@@ -56,7 +56,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     });
 
     if (mapped_bytes < size_bytes) {
-        KernelPanic("Failed to map virtual memory range using internal memory map - out of memory!"
+        arch::KernelPanic(
+            "Failed to map virtual memory range using internal memory map - out of memory!"
         );
     }
 }

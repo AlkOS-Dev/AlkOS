@@ -39,7 +39,7 @@ bool ACPI::SystemShutdown()
         return false;
     }
 
-    KernelPanic("Shutdown failed");
+    arch::KernelPanic("Shutdown failed");
 }
 
 bool ACPI::SystemReboot()
@@ -71,5 +71,5 @@ bool ACPI::SystemReboot()
         return false;
     }
 
-    KernelPanic("Reboot failed");
+    arch::KernelPanic("Reboot failed");
 }

@@ -8,9 +8,9 @@
 
 extern "C" void NO_RET KernelPanic(const char *msg)
 {
-    TerminalWriteError("[ KERNEL PANIC ]\n");
-    TerminalWriteError(msg);
-    TerminalWriteError("\n");
+    arch::TerminalWriteError("[ KERNEL PANIC ]\n");
+    arch::TerminalWriteError(msg);
+    arch::TerminalWriteError("\n");
 
 #ifndef __i386__
     /* Tests are supposed to run only in x86_64 target */

@@ -5,8 +5,8 @@
 
 extern "C" void NO_RET KernelPanic(const char *msg)
 {
-    TerminalWriteError("[ KERNEL PANIC ]\n");
-    TerminalWriteError(msg);
-    TerminalWriteError("\n");
+    arch::TerminalWriteError("[ KERNEL PANIC ]\n");
+    arch::TerminalWriteError(msg);
+    arch::TerminalWriteError("\n");
     OsHang();
 }

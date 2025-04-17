@@ -10,35 +10,38 @@
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
 #include <definitions/loader64_data.hpp>
-#include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <interrupts/idt.hpp>
 #include <loader_memory_manager.hpp>
+#include <modules/hardware.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
+
 #include "memory_management/physical_memory_manager.hpp"
 
 /* external init procedures */
 extern "C" void EnableOSXSave();
+
 extern "C" void EnableSSE();
+
 extern "C" void EnableAVX();
+
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
-loader64::LoaderData* kLoaderData;
+loader64::LoaderData *kLoaderData;
 
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
-    loader64::LoaderData* loader_data, LoaderMemoryManager* loader_memory_manager
+    loader64::LoaderData *loader_data, LoaderMemoryManager *loader_memory_manager
 )
 {
     TRACE_INFO("Creating page buffer...");
     memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};
-    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
-        reinterpret_cast<void*>(loader_data->multiboot_info_addr)
+    auto *mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
+        reinterpret_cast<void *>(loader_data->multiboot_info_addr)
     );
 
     u64 total_memory_bytes = 0;
-    multiboot::WalkMemoryMap(mmap_tag, [&total_memory_bytes](multiboot::memory_map_t* entry) {
+    multiboot::WalkMemoryMap(mmap_tag, [&total_memory_bytes](multiboot::memory_map_t *entry) {
         if (entry->type == multiboot::mmap_entry_t::kMemoryAvailable) {
             total_memory_bytes += entry->len;
         }
@@ -65,11 +68,11 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     return buffer_info;
 }
 
-extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
+extern "C" void PreKernelInit(loader64::LoaderData *loader_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
-    TerminalInit();
+    arch::TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
     TRACE_INFO("Checking for LoaderData...");
@@ -97,19 +100,14 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     EnableAVX();
     TRACE_SUCCESS("AVX setup complete!");
 
-    TRACE_INFO("Setting up PIC units...");
-    InitPic8259(kIrq1Offset, kIrq2Offset);
-    TRACE_SUCCESS("PIC units setup complete!");
-
-    TRACE_INFO("Setting up IDT...");
-    IdtInit();
-    TRACE_SUCCESS("IDT setup complete!");
+    HardwareModule::Init();
+    HardwareModule::Get().GetInterrupts().FirstStageInit();
 
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
 
-    auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+    auto *loader_memory_manager =
+        reinterpret_cast<LoaderMemoryManager *>(loader_data->loader_memory_manager_addr);
     loader_memory_manager->MarkMemoryAreaNotFree(
         loader_data->kernel_start_addr, loader_data->kernel_end_addr
     );
@@ -118,8 +116,9 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
         CreatePageBuffer(loader_data, loader_memory_manager);
     PhysicalMemoryManager::Init(page_buffer_info);
 
-    auto* multiboot_info = reinterpret_cast<multiboot::header_t*>(loader_data->multiboot_info_addr);
-    auto* mmap_tag       = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
+    auto *multiboot_info =
+        reinterpret_cast<multiboot::header_t *>(loader_data->multiboot_info_addr);
+    auto *mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
     PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
 
     kLoaderData = loader_data;

@@ -7,7 +7,9 @@
 #include <modules/timing.hpp>
 #include <timers.hpp>
 
-WRAP_CALL time_t QuerySystemTime(const timezone& tz)
+namespace arch
+{
+WRAP_CALL time_t QuerySystemTime(const timezone &tz)
 {
     static constexpr size_t kBuffSize = 64;
     [[maybe_unused]] char buffer[kBuffSize];
@@ -21,5 +23,6 @@ WRAP_CALL time_t QuerySystemTime(const timezone& tz)
 
     return ConvertDateTimeToPosix(rtcTime, tz);
 }
+}  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_TIMERS_HPP_

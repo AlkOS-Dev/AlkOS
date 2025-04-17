@@ -5,7 +5,7 @@ namespace internal
 {
 
 template <typename Table, typename Callback>
-void ForEachTableEntry(Table* table, Callback callback)
+FAST_CALL void ForEachTableEntry(Table* table, Callback callback)
 {
     if (!table) {
         return;

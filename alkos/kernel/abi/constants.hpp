@@ -1,9 +1,12 @@
 #ifndef ALKOS_KERNEL_ABI_CONSTANTS_HPP_
 #define ALKOS_KERNEL_ABI_CONSTANTS_HPP_
 
-#include <extensions/types.hpp>
+/**
+ * Expected fields in arch namespace:
+ * - u64 kKernelVirtualAddressStart;
+ * - u64 kKernelDirectMapAddressStart;
+ */
 
-extern const u64 kKernelVirtualAddressStart;
-extern const u64 kKernelDirectMapAddressStart;
+#include <abi/constants.hpp>
 
 #endif  // ALKOS_KERNEL_ABI_CONSTANTS_HPP_

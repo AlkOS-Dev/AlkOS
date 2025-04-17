@@ -5,6 +5,8 @@
 #include <time.h>
 #include <defines.hpp>
 
+namespace arch
+{
 /**
  * @brief This function should use some hardware timer to get the current system time.
  *
@@ -12,6 +14,7 @@
  *       get rid of any time drift created possibly by inaccurate timers. Returns POSIX time value.
  */
 WRAP_CALL time_t QuerySystemTime(const timezone& tz);
+}  // namespace arch
 
 #include <abi/timers.hpp>
 

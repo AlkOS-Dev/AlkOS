@@ -26,7 +26,7 @@ void DayTime::SyncWithHardware()
                              ? kUtcTimezone
                              : GetTimezone();
 
-    time_ = QuerySystemTime(tz);
+    time_ = arch::QuerySystemTime(tz);
     TRACE_INFO("Synced system time with hardware: %lu, %s", time_, [&] {
         tm time;
         strftime(
