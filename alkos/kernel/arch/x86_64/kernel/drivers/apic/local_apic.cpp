@@ -27,9 +27,10 @@ static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
 
     ASSERT_LT(nmi_source->lint, 2, "LINT number is out of range (0-1)");
     const u32 reg_offset = nmi_source->lint == 0 ? kLvtLint0RegRW : kLvtLint1RegRW;
-    auto reg             = ReadRegister<LocalVectorTableRegister>(reg_offset);
 
-    reg.delivery_mode = 1;
+    auto reg          = ReadRegister<LocalVectorTableRegister>(reg_offset);
+    reg.delivery_mode = LocalVectorTableRegister::DeliveryMode::kNMI;
+    WriteRegister(reg_offset, reg);
 }
 
 static void ParseMadtRules_()
@@ -76,7 +77,7 @@ void LocalApic::Enable()
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     auto reg    = ReadRegister<SpuriousInterruptRegister>(kSpuriousInterruptRegRW);
-    reg.enabled = 1;
+    reg.enabled = SpuriousInterruptRegister::State::kEnabled;
 
     WriteRegister(kSpuriousInterruptRegRW, reg);
 

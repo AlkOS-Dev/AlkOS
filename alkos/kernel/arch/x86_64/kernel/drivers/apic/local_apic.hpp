@@ -145,16 +145,6 @@ static constexpr u32 kDivideConfigRegRW =
 static constexpr u32 kEOISignal = 0;
 
 struct LocalVectorTableRegister {
-    u32 vector : 8;
-    u32 delivery_mode : 3;
-    u32 reserved1 : 1;
-    u32 delivery_status : 1;
-    u32 polarity : 1;
-    u32 remote_irr : 1;
-    u32 trigger_mode : 1;
-    u32 mask : 1;
-    u32 reserved2 : 15;
-
     enum class DeliveryMode : u8 {
         kFixed   = 0b000,  ///< Normal interrupt delivery to vector specified
         kSMI     = 0b010,  ///< System Management Interrupt (enters SMM)
@@ -182,6 +172,16 @@ struct LocalVectorTableRegister {
         kEdgeTriggered  = 0,
         kLevelTriggered = 1,
     };
+
+    u32 vector : 8;
+    DeliveryMode delivery_mode : 3;
+    u32 reserved1 : 1;
+    DeliveryStatus delivery_status : 1;
+    Polarity polarity : 1;
+    u32 remote_irr : 1;
+    TriggerMode trigger_mode : 1;
+    Mask mask : 1;
+    u32 reserved2 : 15;
 };
 static_assert(sizeof(LocalVectorTableRegister) == 4);
 
@@ -190,13 +190,6 @@ struct LocalVectorTableTimerRegister {
         kIdle    = 0,
         kPending = 1,
     };
-
-    u32 vector : 8;
-    u32 reserved1 : 4;
-    DeliveryStatus delivery_status : 1;
-    u32 reserved2 : 3;
-    u32 mask : 1;
-    u32 timer_mode : 2;
 
     enum class Mask {
         kEnabled  = 0,
@@ -208,6 +201,13 @@ struct LocalVectorTableTimerRegister {
         kPeriodic    = 0b01,
         kTSCDeadline = 0b10,
     };
+
+    u32 vector : 8;
+    u32 reserved1 : 4;
+    DeliveryStatus delivery_status : 1;
+    u32 reserved2 : 3;
+    Mask mask : 1;
+    TimerMode timer_mode : 2;
 };
 static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
 
@@ -218,8 +218,13 @@ static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
  * for spurious interrupts (false or unwanted interrupts).
  */
 struct SpuriousInterruptRegister {
+    enum class State {
+        kDisabled = 0,
+        kEnabled  = 1,
+    };
+
     u32 vector : 8;  ///< Vector to deliver for spurious interrupts
-    u32 enabled : 1;
+    State enabled : 1;
     u32 reserved1 : 3;
     u32 no_eoi_broadcast : 1;  ///< 1 = Suppress EOI broadcasts in x2APIC mode
     u32 reserved2 : 19;
@@ -234,15 +239,6 @@ static_assert(sizeof(SpuriousInterruptRegister) == 4);
  * The upper 32 bits contain the destination processor ID.
  */
 struct InterruptCommandRegister {
-    u32 vector : 8;            ///< Interrupt vector (0-255) to deliver to destination
-    u32 delivery_mode : 3;     ///< How the interrupt should be handled by destination
-    u32 destination_mode : 1;  ///< 0 = Physical ID, 1 = Logical ID
-    u32 delivery_status : 1;   ///< Set by hardware when IPI is pending (read-only)
-    u32 reserved1 : 1;         ///< Reserved bit
-    u32 init_type : 2;         ///< Additional flags for INIT IPIs
-    u32 destination_type : 2;  ///< Destination shorthand for common IPI targets
-    u32 reserved2 : 12;        ///< Reserved bits
-
     enum class DeliveryMode : u8 {
         kFixed         = 0b000,  ///< Normal interrupt delivery to vector specified
         kLowerPriority = 0b001,  ///< Lowest-priority delivery (for load balancing)
@@ -262,12 +258,26 @@ struct InterruptCommandRegister {
         kDeAssert = 0b10,  ///< INIT De-Assert (used to complete INIT sequence)
     };
 
+    enum class DeliveryStatus : u8 {
+        kIdle    = 0,
+        kPending = 1,
+    };
+
     enum class DestinationType : u8 {
         kNormal                  = 0,  ///< Use destination ID in ICR high register
         kNotifyYourself          = 1,  ///< Send IPI to self only
         kBroadcast               = 2,  ///< Send IPI to all processors including self
         kBroadcastExceptYourself = 3   ///< Send IPI to all processors except self
     };
+
+    u32 vector : 8;                        ///< Interrupt vector (0-255) to deliver to destination
+    DeliveryMode delivery_mode : 3;        ///< How the interrupt should be handled by destination
+    DestinationMode destination_mode : 1;  ///< 0 = Physical ID, 1 = Logical ID
+    DeliveryStatus delivery_status : 1;    ///< Set by hardware when IPI is pending (read-only)
+    u32 reserved1 : 1;                     ///< Reserved bit
+    InitType init_type : 2;                ///< Additional flags for INIT IPIs
+    DestinationType destination_type : 2;  ///< Destination shorthand for common IPI targets
+    u32 reserved2 : 12;                    ///< Reserved bits
 };
 static_assert(sizeof(InterruptCommandRegister) == 4);
 
