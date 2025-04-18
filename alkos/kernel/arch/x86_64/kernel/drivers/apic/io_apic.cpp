@@ -13,15 +13,15 @@
 FAST_CALL void ApplyAcpiFlags(const u16 flags, IoApic::LowerTableRegister &reg)
 {
     if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_HIGH))) {
-        reg.pin_polarity = static_cast<u32>(IoApic::PinPolarity::kActiveHigh);
+        reg.pin_polarity = IoApic::LowerTableRegister::PinPolarity::kActiveHigh;
     } else if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_POLARITY_ACTIVE_LOW))) {
-        reg.pin_polarity = static_cast<u32>(IoApic::PinPolarity::kActiveLow);
+        reg.pin_polarity = IoApic::LowerTableRegister::PinPolarity::kActiveLow;
     }
 
     if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_TRIGGERING_EDGE))) {
-        reg.trigger_mode = static_cast<u32>(IoApic::TriggerMode::kEdge);
+        reg.trigger_mode = IoApic::LowerTableRegister::TriggerMode::kEdge;
     } else if (AreBitsEnabled(flags, static_cast<u16>(ACPI_MADT_TRIGGERING_LEVEL))) {
-        reg.trigger_mode = static_cast<u32>(IoApic::TriggerMode::kLevel);
+        reg.trigger_mode = IoApic::LowerTableRegister::TriggerMode::kLevel;
     }
 }
 
@@ -60,11 +60,11 @@ void IoApic::PrepareDefaultConfig() const
         auto reg_low = ReadLowerTableRegister(idx);
 
         /* Note: vector not initialized */
-        reg_low.delivery_mode    = static_cast<u32>(DeliveryMode::kFixed);
-        reg_low.destination_mode = static_cast<u32>(DestinationMode::kPhysical);
-        reg_low.pin_polarity     = static_cast<u32>(PinPolarity::kActiveHigh);
-        reg_low.trigger_mode     = static_cast<u32>(TriggerMode::kEdge);
-        reg_low.mask             = static_cast<u32>(Mask::kEnabled);
+        reg_low.delivery_mode    = LowerTableRegister::DeliveryMode::kFixed;
+        reg_low.destination_mode = LowerTableRegister::DestinationMode::kPhysical;
+        reg_low.pin_polarity     = LowerTableRegister::PinPolarity::kActiveHigh;
+        reg_low.trigger_mode     = LowerTableRegister::TriggerMode::kEdge;
+        reg_low.mask             = LowerTableRegister::Mask::kEnabled;
 
         WriteLowerTableRegister(idx, reg_low);
     }
@@ -94,7 +94,7 @@ void IoApic::ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const
 
     /* Apply flags */
     ApplyAcpiFlags(nmi_source->flags, reg_low);
-    reg_low.delivery_mode = static_cast<u32>(DeliveryMode::kNMI);
+    reg_low.delivery_mode = LowerTableRegister::DeliveryMode::kNMI;
 
     /* Write back */
     WriteLowerTableRegister(nmi_source->gsi - GetGsiBase(), reg_low);

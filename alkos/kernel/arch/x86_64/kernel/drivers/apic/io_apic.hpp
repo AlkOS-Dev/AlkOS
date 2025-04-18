@@ -66,55 +66,55 @@ static constexpr u32 IoApicTableReg(const u32 reg_idx) { return 0x10 + 2 * reg_i
 class IoApic final
 {
     public:
-    enum class TriggerMode : u8 {
-        kEdge  = 0,  ///< Edge-triggered interrupt
-        kLevel = 1,  ///< Level-triggered interrupt
-    };
-
-    enum class DestinationMode : u8 {
-        kPhysical = 0,  ///< Physical APIC ID targeting
-        kLogical  = 1,  ///< Logical APIC ID targeting
-    };
-
-    enum class Mask : u8 {
-        kEnabled = 0,  ///< Interrupt enabled
-        kMasked  = 1,  ///< Interrupt masked (disabled)
-    };
-
-    enum class PinPolarity : u8 {
-        kActiveHigh = 0,  ///< Interrupt triggered on high signal
-        kActiveLow  = 1,  ///< Interrupt triggered on low signal
-    };
-
-    enum class DeliveryStatus : u8 {
-        kReadyToSend      = 0,  ///< Ready to accept new interrupt
-        kSendNotProcessed = 1,  ///< Delivery in progress
-    };
-
-    enum class DeliveryMode : u8 {
-        kFixed         = 0b000,  ///< Deliver to specified vector
-        kLowerPriority = 0b001,  ///< Deliver to lowest priority processor
-        kSMI           = 0b010,  ///< System Management Interrupt
-        kNMI           = 0b100,  ///< Non-Maskable Interrupt
-        kINIT          = 0b101,  ///< INIT signal
-        kExtINT        = 0b111,  ///< External interrupt (like 8259 PIC)
-    };
-
     /**
      * @brief IO APIC redirection table entry (lower 32 bits)
      *
      * Controls how an interrupt is routed to processor(s)
      */
     struct LowerTableRegister {
-        u32 vector : 8;            ///< Interrupt vector (0-255)
-        u32 delivery_mode : 3;     ///< How the interrupt should be delivered
-        u32 destination_mode : 1;  ///< Physical or logical destination
-        u32 delivery_status : 1;   ///< 1 if delivery in progress
-        u32 pin_polarity : 1;      ///< Signal polarity
-        u32 remote_IRR : 1;        ///< Remote IRR (for level-triggered)
-        u32 trigger_mode : 1;      ///< Edge or level triggered
-        u32 mask : 1;              ///< Enable/disable interrupt
-        u32 reserved : 15;         ///< Reserved bits
+        enum class TriggerMode : u8 {
+            kEdge  = 0,  ///< Edge-triggered interrupt
+            kLevel = 1,  ///< Level-triggered interrupt
+        };
+
+        enum class DestinationMode : u8 {
+            kPhysical = 0,  ///< Physical APIC ID targeting
+            kLogical  = 1,  ///< Logical APIC ID targeting
+        };
+
+        enum class Mask : u8 {
+            kEnabled = 0,  ///< Interrupt enabled
+            kMasked  = 1,  ///< Interrupt masked (disabled)
+        };
+
+        enum class PinPolarity : u8 {
+            kActiveHigh = 0,  ///< Interrupt triggered on high signal
+            kActiveLow  = 1,  ///< Interrupt triggered on low signal
+        };
+
+        enum class DeliveryStatus : u8 {
+            kReadyToSend      = 0,  ///< Ready to accept new interrupt
+            kSendNotProcessed = 1,  ///< Delivery in progress
+        };
+
+        enum class DeliveryMode : u8 {
+            kFixed         = 0b000,  ///< Deliver to specified vector
+            kLowerPriority = 0b001,  ///< Deliver to lowest priority processor
+            kSMI           = 0b010,  ///< System Management Interrupt
+            kNMI           = 0b100,  ///< Non-Maskable Interrupt
+            kINIT          = 0b101,  ///< INIT signal
+            kExtINT        = 0b111,  ///< External interrupt (like 8259 PIC)
+        };
+
+        u32 vector : 8;                        ///< Interrupt vector (0-255)
+        DeliveryMode delivery_mode : 3;        ///< How the interrupt should be delivered
+        DestinationMode destination_mode : 1;  ///< Physical or logical destination
+        DeliveryStatus delivery_status : 1;    ///< 1 if delivery in progress
+        PinPolarity pin_polarity : 1;          ///< Signal polarity
+        u32 remote_IRR : 1;                    ///< Remote IRR (for level-triggered)
+        TriggerMode trigger_mode : 1;          ///< Edge or level triggered
+        Mask mask : 1;                         ///< Enable/disable interrupt
+        u32 reserved : 15;                     ///< Reserved bits
     };
     static_assert(sizeof(LowerTableRegister) == 4);
 
