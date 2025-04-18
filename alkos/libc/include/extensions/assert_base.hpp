@@ -38,6 +38,11 @@ void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size
     }
 }
 
+FAST_CALL void VerboseAssertDumpObjToHex(const bool &obj, char *buffer, const size_t)
+{
+    strcpy(buffer, obj ? "true" : "false");
+}
+
 FAST_CALL void VerboseAssertDumpObjToHex(const char *&obj, char *buffer, const size_t buffer_size)
 {
     strncpy(buffer, obj, buffer_size);
@@ -263,7 +268,36 @@ void VerboseAssertZero(
                 "Which is: %s\n",
                 v_str, v_dump
             );
-            assert(bytes_written < size && "VerboseAssertTrue buffer fully used!");
+            assert(bytes_written < size && "VerboseAssertZero buffer fully used!");
+        },
+        value_str, file, line, std::forward<Args>(args)...
+    );
+}
+
+// ------------------------------
+// Not Zero Assert base
+// ------------------------------
+
+template <ErrorHandlerFn Handler, class ValueT, class... Args>
+void VerboseAssertNotZero(
+    const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
+)
+{
+    VerboseAssertOneArgBase<Handler>(
+        value,
+        [](const ValueT &v) {
+            return v != static_cast<ValueT>(0);
+        },
+        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+            [[maybe_unused]] const int bytes_written = snprintf(
+                msg, size,
+                "Check failed (NOT ZERO)!\n"
+                "Given value was not supposed to be equal to 0!\n"
+                "Actual value: %s\n"
+                "Which is: %s\n",
+                v_str, v_dump
+            );
+            assert(bytes_written < size && "VerboseAssertNotZero buffer fully used!");
         },
         value_str, file, line, std::forward<Args>(args)...
     );
@@ -609,6 +643,11 @@ void VerboseAssertStrNeq(
 #define BASE_ASSERT_ZERO(is_active, value, handler, ...)                                \
     if constexpr (is_active)                                                            \
     VerboseAssertZero<handler>(                                                         \
+        value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
+    )
+#define BASE_ASSERT_NOT_ZERO(is_active, value, handler, ...)                            \
+    if constexpr (is_active)                                                            \
+    VerboseAssertNotZero<handler>(                                                      \
         value, TOSTRING(value), __FILE__, TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__ \
     )
 #define BASE_ASSERT_FALSE(is_active, value, handler, ...)                               \

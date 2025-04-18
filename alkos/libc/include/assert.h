@@ -73,6 +73,8 @@
     BASE_ASSERT_NEQ(kIsDebugBuild, expected, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define ASSERT_ZERO(value, ...) \
     BASE_ASSERT_ZERO(kIsDebugBuild, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
+#define ASSERT_NOT_ZERO(value, ...) \
+    BASE_ASSERT_NOT_ZERO(kIsDebugBuild, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define ASSERT_TRUE(value, ...) \
     BASE_ASSERT_TRUE(kIsDebugBuild, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define ASSERT_FALSE(value, ...) \
@@ -101,6 +103,8 @@
     BASE_ASSERT_NEQ(true, expected, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define R_ASSERT_ZERO(value, ...) \
     BASE_ASSERT_ZERO(true, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
+#define R_ASSERT_NOT_ZERO(value, ...) \
+    BASE_ASSERT_NOT_ZERO(true, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define R_ASSERT_TRUE(value, ...) \
     BASE_ASSERT_TRUE(true, value, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 #define R_ASSERT_FALSE(value, ...) \

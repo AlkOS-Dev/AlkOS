@@ -59,6 +59,28 @@ template <typename NumT, const u16 kBitStart, const u16 kBitEnd>
     requires(std::is_unsigned_v<NumT> && kBitStart < kBitEnd)
 static constexpr NumT kBitMaskRange = kBitMask<NumT, kBitStart, kBitEnd - kBitStart>;
 
+template <size_t kSize = 0>
+struct UnsignedIntegral {
+    static_assert(false, "Provided wrong integral size");
+};
+
+template <>
+struct UnsignedIntegral<1> {
+    using type = u8;
+};
+template <>
+struct UnsignedIntegral<2> {
+    using type = u16;
+};
+template <>
+struct UnsignedIntegral<4> {
+    using type = u32;
+};
+template <>
+struct UnsignedIntegral<8> {
+    using type = u64;
+};
+
 // ------------------------------
 // Functions
 // ------------------------------
@@ -154,6 +176,13 @@ template <const u16 kBit, typename NumT>
 FAST_CALL constexpr bool IsBitEnabled(const NumT num)
 {
     return (num & kSingleBit<NumT, kBit>) == kSingleBit<NumT, kBit>;
+}
+
+template <typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool AreBitsEnabled(const NumT num, const NumT mask)
+{
+    return (num & mask) == mask;
 }
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
