@@ -142,44 +142,72 @@ static constexpr u32 kDivideConfigRegRW =
  * Writing this value to the EOI register acknowledges completion
  * of the current interrupt service routine.
  */
-static constexpr u32 kEOISignal =
-    0;  ///< Value to write to EOI register to signal interrupt completion
+static constexpr u32 kEOISignal = 0;
 
-/**
- * @brief Local Vector Table Register Structure
- *
- * Common bit layout for most LVT registers. These registers control
- * how specific interrupt sources are handled by the Local APIC.
- */
 struct LocalVectorTableRegister {
-    u32 vector : 8;      ///< Interrupt vector (0-255) to deliver when triggered
-    u32 reserved1 : 4;   ///< Reserved bits
-    u32 pending : 1;     ///< Set by hardware if interrupt is pending (read-only)
-    u32 reserved2 : 3;   ///< Reserved bits
-    u32 mask : 1;        ///< 1 = Masked (disabled), 0 = Enabled
-    u32 reserved3 : 15;  ///< Reserved bits
+    u32 vector : 8;
+    u32 delivery_mode : 3;
+    u32 reserved1 : 1;
+    u32 delivery_status : 1;
+    u32 polarity : 1;
+    u32 remote_irr : 1;
+    u32 trigger_mode : 1;
+    u32 mask : 1;
+    u32 reserved2 : 15;
+
+    enum class DeliveryMode : u8 {
+        kFixed   = 0b000,  ///< Normal interrupt delivery to vector specified
+        kSMI     = 0b010,  ///< System Management Interrupt (enters SMM)
+        kNMI     = 0b100,  ///< Non-Maskable Interrupt (cannot be masked)
+        kINIT    = 0b101,  ///< INIT signal (processor reset without memory reset)
+        kExtINIT = 0b110,  ///< External INIT
+    };
+
+    enum class DeliveryStatus : u8 {
+        kIdle    = 0,
+        kPending = 1,
+    };
+
+    enum class Mask {
+        kEnabled  = 0,
+        kDisabled = 1,
+    };
+
+    enum class Polarity : u8 {
+        kActiveHigh = 0,
+        kActiveLow  = 1,
+    };
+
+    enum class TriggerMode : u8 {
+        kEdgeTriggered  = 0,
+        kLevelTriggered = 1,
+    };
 };
 static_assert(sizeof(LocalVectorTableRegister) == 4);
 
-/**
- * @brief Local Vector Table Timer Register Structure
- *
- * Controls the behavior of the Local APIC timer, including
- * its triggering mode and interrupt vector.
- */
 struct LocalVectorTableTimerRegister {
-    u32 vector : 8;        ///< Interrupt vector (0-255) to deliver when timer expires
-    u32 type : 3;          ///< Delivery mode (000=Fixed, 010=SMI, 100=NMI, etc.)
-    u32 reserved1 : 1;     ///< Reserved bit
-    u32 pending : 1;       ///< Set by hardware if timer interrupt is pending (read-only)
-    u32 polarity : 1;      ///< Signal polarity (usually ignored for timer)
-    u32 remote_irr : 1;    ///< Remote IRR flag (usually ignored for timer)
-    u32 trigger_mode : 1;  ///< 0 = Edge triggered, 1 = Level triggered
-    u32 mask : 1;          ///< 1 = Masked (disabled), 0 = Enabled
-    u32 reserved2 : 15;    ///< Reserved bits
+    enum class DeliveryStatus : u8 {
+        kIdle    = 0,
+        kPending = 1,
+    };
 
-    // Common type configurations
-    static constexpr u32 kTypeNMI = 0x100b;  ///< Configuration for NMI delivery mode
+    u32 vector : 8;
+    u32 reserved1 : 4;
+    DeliveryStatus delivery_status : 1;
+    u32 reserved2 : 3;
+    u32 mask : 1;
+    u32 timer_mode : 2;
+
+    enum class Mask {
+        kEnabled  = 0,
+        kDisabled = 1,
+    };
+
+    enum class TimerMode : u8 {
+        kOneShot     = 0b00,
+        kPeriodic    = 0b01,
+        kTSCDeadline = 0b10,
+    };
 };
 static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
 
@@ -190,11 +218,11 @@ static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
  * for spurious interrupts (false or unwanted interrupts).
  */
 struct SpuriousInterruptRegister {
-    u32 vector : 8;            ///< Vector to deliver for spurious interrupts (typically 0xFF)
-    u32 enabled : 1;           ///< 1 = Local APIC enabled, 0 = APIC disabled
-    u32 reserved1 : 3;         ///< Reserved bits
+    u32 vector : 8;  ///< Vector to deliver for spurious interrupts
+    u32 enabled : 1;
+    u32 reserved1 : 3;
     u32 no_eoi_broadcast : 1;  ///< 1 = Suppress EOI broadcasts in x2APIC mode
-    u32 reserved2 : 19;        ///< Reserved bits
+    u32 reserved2 : 19;
 };
 static_assert(sizeof(SpuriousInterruptRegister) == 4);
 
@@ -215,11 +243,6 @@ struct InterruptCommandRegister {
     u32 destination_type : 2;  ///< Destination shorthand for common IPI targets
     u32 reserved2 : 12;        ///< Reserved bits
 
-    /**
-     * @brief Delivery mode options for inter-processor interrupts
-     *
-     * Determines how the destination processor(s) will handle the interrupt
-     */
     enum class DeliveryMode : u8 {
         kFixed         = 0b000,  ///< Normal interrupt delivery to vector specified
         kLowerPriority = 0b001,  ///< Lowest-priority delivery (for load balancing)
@@ -229,28 +252,16 @@ struct InterruptCommandRegister {
         kSIPI          = 0b110,  ///< Startup IPI (used during AP initialization)
     };
 
-    /**
-     * @brief Destination addressing mode
-     */
     enum class DestinationMode : u8 {
-        kPhysical = 0,  ///< Use physical APIC ID for targeting
-        kLogical  = 1,  ///< Use logical APIC ID for targeting
+        kPhysical = 0,
+        kLogical  = 1,
     };
 
-    /**
-     * @brief INIT IPI type options
-     */
     enum class InitType : u8 {
-        kNormal   = 0b01,  ///< Normal INIT delivery
+        kNormal   = 0b01,
         kDeAssert = 0b10,  ///< INIT De-Assert (used to complete INIT sequence)
     };
 
-    /**
-     * @brief Destination shorthand values
-     *
-     * Provides shortcuts for common IPI targeting scenarios without
-     * needing to specify destination IDs in the high register
-     */
     enum class DestinationType : u8 {
         kNormal                  = 0,  ///< Use destination ID in ICR high register
         kNotifyYourself          = 1,  ///< Send IPI to self only
@@ -330,12 +341,17 @@ void Enable();
  * @param offset Register offset from the Local APIC base address
  * @param value 32-bit value to write to the register
  */
-FAST_CALL void WriteRegister(const u32 offset, const u32 value)
+
+template <class InputT = u32>
+    requires(sizeof(InputT) <= sizeof(u32))
+FAST_CALL void WriteRegister(const u32 offset, const InputT value)
 {
     TODO_WHEN_VMEM_WORKS
+    const u32 casted_value = ToRawRegister(value);
+
     WriteMemoryIo<u32>(
         reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-        offset, value
+        offset, casted_value
     );
 }
 
@@ -347,13 +363,17 @@ FAST_CALL void WriteRegister(const u32 offset, const u32 value)
  * @param offset Register offset from the Local APIC base address
  * @return 32-bit value read from the register
  */
-FAST_CALL u32 ReadRegister(const u32 offset)
+template <class RetT = u32>
+    requires(sizeof(RetT) <= sizeof(u32))
+FAST_CALL RetT ReadRegister(const u32 offset)
 {
     TODO_WHEN_VMEM_WORKS
-    return ReadMemoryIo<u32>(
+    const u32 reg = ReadMemoryIo<u32>(
         reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
         offset
     );
+
+    return CastRegister<RetT>(reg);
 }
 
 /**

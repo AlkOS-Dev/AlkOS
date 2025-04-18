@@ -24,6 +24,12 @@ static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
         "lint: %hhu",
         nmi_source->flags, nmi_source->uid, nmi_source->lint
     );
+
+    ASSERT_LT(nmi_source->lint, 2, "LINT number is out of range (0-1)");
+    const u32 reg_offset = nmi_source->lint == 0 ? kLvtLint0RegRW : kLvtLint1RegRW;
+    auto reg             = ReadRegister<LocalVectorTableRegister>(reg_offset);
+
+    reg.delivery_mode = 1;
 }
 
 static void ParseMadtRules_()
@@ -69,10 +75,10 @@ void LocalApic::Enable()
     ParseMadtRules_();
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
-    auto reg    = CastRegister<SpuriousInterruptRegister>(ReadRegister(kSpuriousInterruptRegRW));
+    auto reg    = ReadRegister<SpuriousInterruptRegister>(kSpuriousInterruptRegRW);
     reg.enabled = 1;
 
-    WriteRegister(kSpuriousInterruptRegRW, ToRawRegister(reg));
+    WriteRegister(kSpuriousInterruptRegRW, reg);
 
     TRACE_INFO("Local APIC enabled...");
 }
