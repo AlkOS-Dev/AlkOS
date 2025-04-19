@@ -14,13 +14,6 @@ struct SpinlockAbi {
     void lock();
     void unlock();
     bool try_lock();
-
-    /* debug capabilities - optionally defined */
-    bool is_locked() const;
-    void set_locked(bool locked);
-
-    u32 get_locker_id() const;
-    void set_locker_id(u32 id);
 };
 
 }  // namespace arch

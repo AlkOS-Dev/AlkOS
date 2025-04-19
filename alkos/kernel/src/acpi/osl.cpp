@@ -246,7 +246,7 @@ void uacpi_kernel_release_mutex(uacpi_handle) {}
 uacpi_handle uacpi_kernel_create_mutex()
 {
     TODO_WHEN_VMEM_WORKS
-    return &HardwareModule::Get().GetAcpiController().GetAcpiMutex();
+    return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
 }
 
 void uacpi_kernel_free_mutex(uacpi_handle) {}

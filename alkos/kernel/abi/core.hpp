@@ -14,7 +14,7 @@ struct CoreABI {
     void EnableCore();
 
     /* Should return unique core ID */
-    u32 GetCoreId() const;
+    NODISCARD u32 GetCoreId() const;
 };
 
 NODISCARD WRAP_CALL u32 GetCurrentCoreId();
