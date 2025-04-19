@@ -93,7 +93,6 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         const u32 value = ToRawRegister(DebugLock{
             .locked = 1,
             .owner  = GetCurrentCoreId() + 1,
-            .empty  = 0,
         });
 
         u64 failed_lock_tries{};
@@ -134,7 +133,6 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         const u32 value = ToRawRegister(DebugLock{
             .locked = 1,
             .owner  = GetCurrentCoreId() + 1,
-            .empty  = 0,
         });
 
         return __sync_bool_compare_and_swap(&lock_, 0, value);
