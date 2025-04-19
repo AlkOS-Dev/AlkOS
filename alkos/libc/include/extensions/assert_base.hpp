@@ -249,7 +249,7 @@ FAST_CALL void VerboseAssertNeq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertZero(
+FAST_CALL void VerboseAssertZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -279,7 +279,7 @@ void VerboseAssertZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNotZero(
+FAST_CALL void VerboseAssertNotZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -308,7 +308,7 @@ void VerboseAssertNotZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertTrue(
+FAST_CALL void VerboseAssertTrue(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -338,7 +338,7 @@ void VerboseAssertTrue(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertFalse(
+FAST_CALL void VerboseAssertFalse(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -368,7 +368,7 @@ void VerboseAssertFalse(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNotNull(
+FAST_CALL void VerboseAssertNotNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -397,7 +397,7 @@ void VerboseAssertNotNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNull(
+FAST_CALL void VerboseAssertNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -426,7 +426,7 @@ void VerboseAssertNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertLt(
+FAST_CALL void VerboseAssertLt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -459,7 +459,7 @@ void VerboseAssertLt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertLe(
+FAST_CALL void VerboseAssertLe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -492,7 +492,7 @@ void VerboseAssertLe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertGt(
+FAST_CALL void VerboseAssertGt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -525,7 +525,7 @@ void VerboseAssertGt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertGe(
+FAST_CALL void VerboseAssertGe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -558,7 +558,7 @@ void VerboseAssertGe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-void VerboseAssertStrEq(
+FAST_CALL void VerboseAssertStrEq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -591,7 +591,7 @@ void VerboseAssertStrEq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-void VerboseAssertStrNeq(
+FAST_CALL void VerboseAssertStrNeq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
