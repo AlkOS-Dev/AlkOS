@@ -19,7 +19,15 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     // Class creation
     // ------------------------------
 
-    ~Spinlock() { ASSERT_FALSE(IsLocked()); }
+    ~Spinlock()
+    {
+        if constexpr (kIsDebugBuild) {
+            R_ASSERT_FALSE(
+                IsLocked(), "Spinlock is locked, but destructor is called (%p, core: %hu)", this,
+                CastRegister<DebugLock>(lock_).owner - 1
+            );
+        }
+    }
 
     // ------------------------------
     // ABI implementations

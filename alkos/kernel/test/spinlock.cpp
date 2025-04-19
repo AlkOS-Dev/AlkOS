@@ -51,8 +51,4 @@ FAIL_TEST_F(SpinlockTest, DoubleLockWithTryLock)
 
 FAIL_TEST_F(SpinlockTest, UnlockWithoutLock) { lock_.Unlock(); }
 
-FAIL_TEST_F(SpinlockTest, LockedLeftoverLock)
-{
-    Spinlock lock{};
-    lock_.Lock();
-}
+FAIL_TEST_F(SpinlockTest, LockedLeftoverLock) { lock_.Lock(); }
