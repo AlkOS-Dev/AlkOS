@@ -10,8 +10,17 @@ class Spinlock;
 
 /* Defined by architecture to allow various optimizations */
 struct SpinlockAbi {
+    /* basic operations */
     void lock();
     void unlock();
+    bool try_lock();
+
+    /* debug capabilities */
+    bool is_locked();
+    void set_locked(bool locked);
+
+    u16 get_locker_id();
+    void set_locker_id(u16 id);
 };
 
 }  // namespace arch
@@ -19,7 +28,8 @@ struct SpinlockAbi {
 /* Load architecture definition of component */
 #include <abi/spinlock.hpp>
 static_assert(
-    std::is_base_of_v<arch::CoreABI, arch::Core>, "Core implementation must derive from the ABI"
+    std::is_base_of_v<arch::SpinlockAbi, arch::Spinlock>,
+    "Spinlock implementation must derive from the ABI"
 );
 
 #endif  // ALKOS_KERNEL_ABI_SPINLOCK_HPP_

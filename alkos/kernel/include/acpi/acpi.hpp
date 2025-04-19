@@ -60,8 +60,6 @@ class ACPIController final : public arch::AcpiController
 
     FORCE_INLINE_F void *GetRsdpAddress() const { return RsdpAddress_; }
 
-    FORCE_INLINE_F Mutex &GetAcpiMutex() { return AcpiMutex_; }
-
     FORCE_INLINE_F Spinlock &GetAcpiSpinlock() { return AcpiSpinLock_; }
 
     // ------------------------------
@@ -70,7 +68,6 @@ class ACPIController final : public arch::AcpiController
 
     private:
     TODO_WHEN_VMEM_WORKS
-    Mutex AcpiMutex_{};
     Spinlock AcpiSpinLock_{};
 
     void *RsdpAddress_{};
