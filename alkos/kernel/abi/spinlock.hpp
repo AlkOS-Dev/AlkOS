@@ -11,10 +11,10 @@ class Spinlock;
 /* Defined by architecture to allow various optimizations */
 struct SpinlockAbi {
     /* basic operations */
-    void lock();
-    void unlock();
-    bool try_lock();
-    NODISCARD bool is_locked() const;
+    void Lock();
+    void Unlock();
+    bool Try_lock();
+    NODISCARD bool IsLocked() const;
 };
 
 }  // namespace arch

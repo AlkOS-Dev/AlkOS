@@ -1,9 +1,8 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CORE_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CORE_HPP_
 
+#include <core.hpp>
 #include <drivers/apic/local_apic.hpp>
-
-#include "core.hpp"
 
 namespace arch
 {

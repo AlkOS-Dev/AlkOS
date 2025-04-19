@@ -19,6 +19,8 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     // Class creation
     // ------------------------------
 
+    ~Spinlock() { ASSERT_FALSE(IsLocked()); }
+
     // ------------------------------
     // ABI implementations
     // ------------------------------
@@ -77,7 +79,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     FORCE_INLINE_F void LockDebug_()
     {
         R_ASSERT_NEQ(
-            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_),
+            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
@@ -104,9 +106,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FORCE_INLINE_F void UnlockDebug_()
     {
-        R_ASSERT_TRUE(
-            IsLocked(), "Unlocking spinlock that is not locked!
-        );
+        R_ASSERT_TRUE(IsLocked(), "Unlocking spinlock that is not locked!");
 
         R_ASSERT_EQ(
             GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
@@ -120,7 +120,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     NODISCARD FORCE_INLINE_F bool TryLockDebug_()
     {
         R_ASSERT_NEQ(
-            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_),
+            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 

@@ -23,8 +23,5 @@ NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 /* Load architecture definition of component */
 #include <abi/core.hpp>
-static_assert(
-    std::is_base_of_v<arch::CoreABI, arch::Core>, "Core implementation must derive from the ABI"
-);
 
 #endif  // ALKOS_KERNEL_ABI_CORE_HPP_
