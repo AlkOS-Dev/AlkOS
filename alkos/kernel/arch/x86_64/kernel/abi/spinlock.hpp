@@ -124,7 +124,13 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        return !__sync_lock_test_and_set(&lock_, 1);
+        const u32 value = ToRawRegister(DebugLock{
+            .locked = 1,
+            .owner  = GetCurrentCoreId() + 1,
+            .empty  = 0,
+        });
+
+        return !__sync_lock_test_and_set(&lock_, value);
     }
 
     // ------------------------------
