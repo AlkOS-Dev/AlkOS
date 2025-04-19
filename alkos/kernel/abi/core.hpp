@@ -12,14 +12,16 @@ class Core;
 struct CoreABI {
     /* Should perform full initialisation of single core */
     void EnableCore();
+
+    /* Should return unique core ID */
+    NODISCARD u32 GetCoreId() const;
 };
+
+NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 }  // namespace arch
 
 /* Load architecture definition of component */
 #include <abi/core.hpp>
-static_assert(
-    std::is_base_of_v<arch::CoreABI, arch::Core>, "Core implementation must derive from the ABI"
-);
 
 #endif  // ALKOS_KERNEL_ABI_CORE_HPP_

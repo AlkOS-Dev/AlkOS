@@ -22,17 +22,17 @@
 #define ASSERT(expr)     ((void)0)
 #define FAIL_ALWAYS(msg) ((void)0)
 #else
-#define ASSERT(expr)         \
-    if (!(expr)) {           \
-        __FAIL_KERNEL(expr); \
+#define ASSERT(expr)            \
+    if (!(expr)) [[unlikely]] { \
+        __FAIL_KERNEL(expr);    \
     }
 #define FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 #endif  // NDEBUG
 
 /* usual kernel working in release assert macro */
-#define R_ASSERT(expr)       \
-    if (!(expr)) {           \
-        __FAIL_KERNEL(expr); \
+#define R_ASSERT(expr)          \
+    if (!(expr)) [[unlikely]] { \
+        __FAIL_KERNEL(expr);    \
     }
 #define R_FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 
