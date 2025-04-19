@@ -98,7 +98,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         });
 
         u64 failed_lock_tries{};
-        while (__builtin_expect(__sync_lock_test_and_set(&lock_, value), 0)) {
+        while (__builtin_expect(__sync_val_compare_and_swap(&lock_, 0, value) != 0, 0)) {
             Pause_();
             ++failed_lock_tries;
         }
@@ -138,7 +138,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
             .empty  = 0,
         });
 
-        return !__sync_lock_test_and_set(&lock_, value);
+        return __sync_bool_compare_and_swap(&lock_, 0, value);
     }
 
     // ------------------------------
@@ -146,7 +146,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     // ------------------------------
 
     protected:
-    u32 lock_                                = 0;
+    volatile u32 lock_                       = 0;
     [[maybe_unused]] u64 failed_lock_tries_  = 0;
     [[maybe_unused]] u64 success_lock_tries_ = 0;
 };
