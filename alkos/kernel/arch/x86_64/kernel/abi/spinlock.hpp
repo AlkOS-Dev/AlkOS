@@ -72,8 +72,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     struct DebugLock {
         u32 locked : 1;
-        u32 owner : 16;
-        u32 empty : 15;
+        u32 owner : 31;
     };
 
     static_assert(sizeof(DebugLock) == sizeof(u32));

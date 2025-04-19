@@ -232,16 +232,42 @@ uacpi_handle uacpi_kernel_create_spinlock()
     return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
 }
 
-void uacpi_kernel_free_spinlock(uacpi_handle) {}
+void uacpi_kernel_free_spinlock(uacpi_handle) { TRACE_DEBUG("uacpi_kernel_free_spinlock"); }
 
-uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle) { return 0; }
+uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
 
-void uacpi_kernel_unlock_spinlock(uacpi_handle, uacpi_cpu_flags) {}
+    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    spinlock->Lock();
+
+    return 0;
+}
+
+void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
+{
+    ASSERT_NOT_NULL(handle);
+
+    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    spinlock->Unlock();
+}
 
 /* mutex */
-uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16) { return UACPI_STATUS_OK; }
+uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
+{
+    ASSERT_NOT_NULL(handle);
+    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    spinlock->Lock();
 
-void uacpi_kernel_release_mutex(uacpi_handle) {}
+    return UACPI_STATUS_OK;
+}
+
+void uacpi_kernel_release_mutex(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    spinlock->Unlock();
+}
 
 uacpi_handle uacpi_kernel_create_mutex()
 {
@@ -249,4 +275,4 @@ uacpi_handle uacpi_kernel_create_mutex()
     return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
 }
 
-void uacpi_kernel_free_mutex(uacpi_handle) {}
+void uacpi_kernel_free_mutex(uacpi_handle) { TRACE_DEBUG("uacpi_kernel_free_mutex"); }

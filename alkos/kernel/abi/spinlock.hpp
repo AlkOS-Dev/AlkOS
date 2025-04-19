@@ -13,7 +13,7 @@ struct SpinlockAbi {
     /* basic operations */
     void Lock();
     void Unlock();
-    bool Try_lock();
+    bool TryLock();
     NODISCARD bool IsLocked() const;
 };
 
