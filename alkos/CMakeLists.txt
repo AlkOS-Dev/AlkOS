@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.30)
 project(AlkOS LANGUAGES C CXX ASM_NASM)
 enable_language(ASM_NASM)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_C_STANDARD 17)

@@ -14,6 +14,14 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     FAST_CALL void Pause() { asm volatile("pause"); }
 
     public:
+    Spinlock()
+    {
+        if constexpr (kIsDebugBuild) {
+            lock_.f = ATOMIC_FLAG_INIT;
+        } else {
+        }
+    }
+
     /* basic operations */
     FORCE_INLINE_F void lock()
     {
@@ -30,6 +38,8 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     }
 
     /* debug capabilities */
+
+    protected:
     NODISCARD FORCE_INLINE_F bool is_locked() const { return locked_; }
 
     FORCE_INLINE_F void set_locked(const bool locked) { locked_ = locked; }
@@ -39,7 +49,10 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     FORCE_INLINE_F void set_owner_id(const u32 id) { owner_id_ = id; }
 
     protected:
-    alignas(u32) atomic_flag lock_ = ATOMIC_FLAG_INIT;
+    alignas(u32) union {
+        atomic_flag f;
+        atomic_uint_fast64_t t;
+    } lock_;
     bool locked_ : 1;
     u32 owner_id_;
 };

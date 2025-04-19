@@ -17,7 +17,7 @@ struct CoreABI {
     u32 GetCoreId() const;
 };
 
-NODISCARD u32 GetCurrentCoreId();
+NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 }  // namespace arch
 
