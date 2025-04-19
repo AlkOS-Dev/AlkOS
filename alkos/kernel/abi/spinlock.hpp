@@ -19,8 +19,8 @@ struct SpinlockAbi {
     bool is_locked() const;
     void set_locked(bool locked);
 
-    u16 get_locker_id() const;
-    void set_locker_id(u16 id);
+    u32 get_locker_id() const;
+    void set_locker_id(u32 id);
 };
 
 }  // namespace arch

@@ -34,14 +34,14 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FORCE_INLINE_F void set_locked(const bool locked) { locked_ = locked; }
 
-    NODISCARD FORCE_INLINE_F u16 get_owner_id() const { return owner_id_; }
+    NODISCARD FORCE_INLINE_F u32 get_owner_id() const { return owner_id_; }
 
-    FORCE_INLINE_F void set_owner_id(const u16 id) { owner_id_ = id; }
+    FORCE_INLINE_F void set_owner_id(const u32 id) { owner_id_ = id; }
 
     protected:
     alignas(u32) atomic_flag lock_ = ATOMIC_FLAG_INIT;
     bool locked_ : 1;
-    u16 owner_id_;
+    u32 owner_id_;
 };
 }  // namespace arch
 

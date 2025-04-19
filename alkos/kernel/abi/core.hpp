@@ -12,7 +12,12 @@ class Core;
 struct CoreABI {
     /* Should perform full initialisation of single core */
     void EnableCore();
+
+    /* Should return unique core ID */
+    u32 GetCoreId() const;
 };
+
+NODISCARD u32 GetCurrentCoreId();
 
 }  // namespace arch
 
