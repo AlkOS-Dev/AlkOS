@@ -183,22 +183,11 @@ void uacpi_kernel_stall(uacpi_u8 usec) {}
 
 void uacpi_kernel_sleep(uacpi_u64 msec) {}
 
-uacpi_handle uacpi_kernel_create_mutex()
-{
-    return &HardwareModule::Get().GetAcpiController().GetAcpiMutex();
-}
-
-void uacpi_kernel_free_mutex(uacpi_handle) {}
-
 uacpi_handle uacpi_kernel_create_event() { return nullptr; }
 
 void uacpi_kernel_free_event(uacpi_handle) {}
 
 uacpi_thread_id uacpi_kernel_get_thread_id() { return nullptr; }
-
-uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16) { return UACPI_STATUS_OK; }
-
-void uacpi_kernel_release_mutex(uacpi_handle) {}
 
 uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16) { return UACPI_FALSE; }
 
@@ -225,8 +214,21 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
+uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)
+{
+    return UACPI_STATUS_UNIMPLEMENTED;
+}
+
+uacpi_status uacpi_kernel_wait_for_work_completion() { return UACPI_STATUS_UNIMPLEMENTED; }
+
+// ------------------------------
+// Synchro
+// ------------------------------
+
+/* spinlock */
 uacpi_handle uacpi_kernel_create_spinlock()
 {
+    TODO_WHEN_VMEM_WORKS
     return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
 }
 
@@ -236,9 +238,15 @@ uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle) { return 0; }
 
 void uacpi_kernel_unlock_spinlock(uacpi_handle, uacpi_cpu_flags) {}
 
-uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)
+/* mutex */
+uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16) { return UACPI_STATUS_OK; }
+
+void uacpi_kernel_release_mutex(uacpi_handle) {}
+
+uacpi_handle uacpi_kernel_create_mutex()
 {
-    return UACPI_STATUS_UNIMPLEMENTED;
+    TODO_WHEN_VMEM_WORKS
+    return &HardwareModule::Get().GetAcpiController().GetAcpiMutex();
 }
 
-uacpi_status uacpi_kernel_wait_for_work_completion() { return UACPI_STATUS_UNIMPLEMENTED; }
+void uacpi_kernel_free_mutex(uacpi_handle) {}

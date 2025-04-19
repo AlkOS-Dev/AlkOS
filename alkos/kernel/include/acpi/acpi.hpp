@@ -13,8 +13,7 @@
 #include "acpi_power.hpp"
 #include "acpi_tables.hpp"
 #include "acpi_thermal.hpp"
-#include "sync/mutex.hpp"
-#include "sync/spinlock.hpp"
+#include "sync/kernel/spinlock.hpp"
 
 #define R_ASSERT_ACPI_SUCCESS(status, ...) \
     R_ASSERT_EQ(UACPI_STATUS_OK, status __VA_OPT__(, ) __VA_ARGS__)
