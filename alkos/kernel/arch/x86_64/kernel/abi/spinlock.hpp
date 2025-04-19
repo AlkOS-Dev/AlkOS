@@ -14,7 +14,51 @@ namespace arch
 {
 class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 {
-    FAST_CALL void Pause() { asm volatile("pause"); }
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    // ------------------------------
+    // ABI implementations
+    // ------------------------------
+
+    FORCE_INLINE_F void Lock()
+    {
+        if constexpr (kIsDebugBuild) {
+            LockDebug_();
+            return;
+        }
+
+        while (__builtin_expect(__sync_lock_test_and_set(&lock_, 1), 0)) {
+            Pause_();
+        }
+    }
+
+    FORCE_INLINE_F void Unlock()
+    {
+        if constexpr (kIsDebugBuild) {
+            UnlockDebug_();
+            return;
+        }
+
+        __sync_lock_release(&lock_);
+    }
+
+    FORCE_INLINE_F NODISCARD bool TryLock()
+    {
+        if constexpr (kIsDebugBuild) {
+            return TryLockDebug_();
+        }
+
+        return !__sync_lock_test_and_set(&lock_, 1);
+    }
+
+    FORCE_INLINE_F NODISCARD bool IsLocked() const { return lock_ != 0; }
+
+    // ------------------------------
+    // Class defines
+    // ------------------------------
 
     struct DebugLock {
         u32 locked : 1;
@@ -24,7 +68,13 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     static_assert(sizeof(DebugLock) == sizeof(u32));
 
-    FORCE_INLINE_F void lock_debug_()
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    FAST_CALL void Pause_() { asm volatile("pause"); }
+
+    FORCE_INLINE_F void LockDebug_()
     {
         R_ASSERT_NEQ(
             GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_),
@@ -39,7 +89,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
         u64 failed_lock_tries{};
         while (__builtin_expect(__sync_lock_test_and_set(&lock_, value), 0)) {
-            Pause();
+            Pause_();
             ++failed_lock_tries;
         }
 
@@ -52,10 +102,10 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         failed_lock_tries_ += failed_lock_tries;
     }
 
-    FORCE_INLINE_F void unlock_debug_()
+    FORCE_INLINE_F void UnlockDebug_()
     {
         R_ASSERT_TRUE(
-            is_locked(), "Unlocking spinlock that is not locked!
+            IsLocked(), "Unlocking spinlock that is not locked!
         );
 
         R_ASSERT_EQ(
@@ -67,7 +117,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         __sync_lock_release(&lock_);
     }
 
-    NODISCARD FORCE_INLINE_F bool try_lock_debug_()
+    NODISCARD FORCE_INLINE_F bool TryLockDebug_()
     {
         R_ASSERT_NEQ(
             GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_),
@@ -77,45 +127,14 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         return !__sync_lock_test_and_set(&lock_, 1);
     }
 
-    public:
-    /* basic operations */
-    FORCE_INLINE_F void lock()
-    {
-        if constexpr (kIsDebugBuild) {
-            lock_debug_();
-            return;
-        }
-
-        while (__builtin_expect(__sync_lock_test_and_set(&lock_, 1), 0)) {
-            Pause();
-        }
-    }
-
-    FORCE_INLINE_F void unlock()
-    {
-        if constexpr (kIsDebugBuild) {
-            unlock_debug_();
-            return;
-        }
-
-        __sync_lock_release(&lock_);
-    }
-
-    FORCE_INLINE_F NODISCARD bool try_lock()
-    {
-        if constexpr (kIsDebugBuild) {
-            return try_lock_debug_();
-        }
-
-        return !__sync_lock_test_and_set(&lock_, 1);
-    }
-
-    FORCE_INLINE_F NODISCARD bool is_locked() const { return lock_ != 0; }
+    // ------------------------------
+    // Class fields
+    // ------------------------------
 
     protected:
-    u32 lock_               = 0;
-    u64 failed_lock_tries_  = 0;
-    u64 success_lock_tries_ = 0;
+    u32 lock_                                = 0;
+    [[maybe_unused]] u64 failed_lock_tries_  = 0;
+    [[maybe_unused]] u64 success_lock_tries_ = 0;
 };
 }  // namespace arch
 
