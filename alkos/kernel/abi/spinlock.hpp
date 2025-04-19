@@ -14,6 +14,7 @@ struct SpinlockAbi {
     void lock();
     void unlock();
     bool try_lock();
+    bool is_locked() const;
 };
 
 }  // namespace arch
