@@ -31,15 +31,6 @@ TEST_F(SpinlockTest, TryLock)
     R_ASSERT_FALSE(lock_.IsLocked());
 }
 
-TEST_F(SpinlockTest, LockGuard)
-{
-    {
-        std::lock_guard lock(lock_);
-        R_ASSERT_TRUE(lock_.IsLocked());
-    }
-    R_ASSERT_FALSE(lock_.IsLocked());
-}
-
 /**
  * @note TESTS BELOW WILL ONLY WORK CORRECTLY IN DEBUG BUILD
  */

@@ -8,6 +8,7 @@ class CyclicAllocatorTest : public TestGroupBase
 class TestObject
 {
     public:
+    TestObject() noexcept = default;
     explicit TestObject(int value) : value_(value) {}
     ~TestObject() = default;
 

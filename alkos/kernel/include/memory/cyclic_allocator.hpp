@@ -50,7 +50,7 @@ class CyclicAllocator final
 
     void Free(T *ptr)
     {
-        const size_t idx = static_cast<u64>(static_cast<byte *>(ptr) - mem_) / sizeof(T);
+        const size_t idx = static_cast<u64>(reinterpret_cast<byte *>(ptr) - mem_) / sizeof(T);
         ASSERT_LT(idx, kNumObjects, "Invalid pointer in CyclicAllocator.Free()");
         ASSERT_TRUE(used_map_.Get(idx));
 
