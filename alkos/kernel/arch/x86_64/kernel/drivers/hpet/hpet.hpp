@@ -5,6 +5,8 @@
 #include <extensions/bit_array.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/types.hpp>
+#include "memory_io.hpp"
+#include "todo.hpp"
 
 // ------------------------------
 // Driver class
@@ -67,13 +69,23 @@ class Hpet final
      * General capabilities register - Provides hardware information about this HPET
      */
     struct PACK GeneralCapabilitiesAndIdReg {
-        u8 revision_id;               // Hardware revision number
-        u8 num_comparators : 5;       // Number of timers available (0-31)
-        u8 is_64_bit_comparator : 1;  // Whether counters are 64-bit (1) or 32-bit (0)
+        enum class TimerType : u8 {
+            kLegacyReplacement = 0,  // HPET can replace legacy 8254 PIT
+            kGeneralPurpose    = 1,  // General purpose timer
+        };
+
+        enum class TimerSize : u8 {
+            k32Bit = 0,  // 32-bit timer
+            k64Bit = 1,  // 64-bit timer
+        };
+
+        u8 revision_id;            // Hardware revision number
+        u8 num_comparators : 5;    // Number of timers available (0-31)
+        TimerSize timer_size : 1;  // Whether counters are 64-bit (1) or 32-bit (0)
         u8 reserved : 1;
-        u8 is_legacy_replacement : 1;  // Can replace legacy 8254 PIT
-        u16 vendor_id;                 // Hardware vendor identifier
-        u32 clock_period;              // Timer period in femtoseconds
+        TimerType timer_type : 1;  // Can replace legacy 8254 PIT
+        u16 vendor_id;             // Hardware vendor identifier
+        u32 clock_period;          // Timer period in femtoseconds
     };
     static_assert(sizeof(GeneralCapabilitiesAndIdReg) == 8);
 
@@ -177,21 +189,39 @@ class Hpet final
      * Initialize HPET driver from ACPI table
      * @param table Pointer to the ACPI HPET description table
      */
-    explicit Hpet(acpi_hpet* table);
+    explicit Hpet(acpi_hpet *table);
 
     // ------------------------------
     // Class methods
     // ------------------------------
+
+    NODISCARD FORCE_INLINE_F u64 GetPhysicalAddress() const { return address_.address; }
+
+    template <class InputT>
+    FORCE_INLINE_F void WriteRegister(const u32 offset, const InputT value)
+    {
+        TODO_WHEN_VMEM_WORKS
+        // TODO : REPLACE WITH VIRTUAL ADDRESS
+        WriteMemoryIo<u64>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset, value);
+    }
+
+    template <class RetT>
+    FORCE_INLINE_F RetT ReadRegister(const u32 offset)
+    {
+        TODO_WHEN_VMEM_WORKS
+        // TODO : REPLACE WITH VIRTUAL ADDRESS
+        return ReadMemoryIo<u64, RetT>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset);
+    }
 
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    acpi_gas address_;           // Memory-mapped register address information
-    u8 num_comparators_;         // Number of timer comparators available
-    bool is_comparator_64_bit_;  // Whether comparators are 64-bit capable
-    u16 ticks_;                  // Timer frequency information
+    acpi_gas address_;        // Memory-mapped register address information
+    u8 num_comparators_;      // Number of timer comparators available
+    bool is_counter_32_bit_;  // Whether comparators are 64-bit capable
+    u16 ticks_;               // Timer frequency information
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_

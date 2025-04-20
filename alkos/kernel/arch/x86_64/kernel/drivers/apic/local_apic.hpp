@@ -352,16 +352,13 @@ void Enable();
  * @param value 32-bit value to write to the register
  */
 
-template <class InputT = u32>
-    requires(sizeof(InputT) <= sizeof(u32))
+template <class InputT>
 FAST_CALL void WriteRegister(const u32 offset, const InputT value)
 {
     TODO_WHEN_VMEM_WORKS
-    const u32 casted_value = ToRawRegister(value);
-
     WriteMemoryIo<u32>(
         reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-        offset, casted_value
+        offset, value
     );
 }
 
@@ -374,16 +371,13 @@ FAST_CALL void WriteRegister(const u32 offset, const InputT value)
  * @return 32-bit value read from the register
  */
 template <class RetT = u32>
-    requires(sizeof(RetT) <= sizeof(u32))
 FAST_CALL RetT ReadRegister(const u32 offset)
 {
     TODO_WHEN_VMEM_WORKS
-    const u32 reg = ReadMemoryIo<u32>(
+    return ReadMemoryIo<u32, RetT>(
         reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
         offset
     );
-
-    return CastRegister<RetT>(reg);
 }
 
 /**
