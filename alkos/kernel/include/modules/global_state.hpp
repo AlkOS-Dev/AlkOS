@@ -10,7 +10,7 @@
 
 namespace internal
 {
-class GlobalStateModule : TemplateLib::StaticSingletonHelper
+class GlobalStateModule : template_lib::StaticSingletonHelper
 {
     // -------------------------------------
     // Protected singleton constructor
@@ -24,7 +24,7 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    using SettingsT = TemplateLib::Settings<
+    using SettingsT = template_lib::Settings<
         global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
 
     NODISCARD FORCE_INLINE_F SettingsT& GetSettings() noexcept { return settings_; }
@@ -38,6 +38,6 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
 };
 }  // namespace internal
 
-using GlobalStateModule = TemplateLib::StaticSingleton<internal::GlobalStateModule>;
+using GlobalStateModule = template_lib::StaticSingleton<internal::GlobalStateModule>;
 
 #endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_

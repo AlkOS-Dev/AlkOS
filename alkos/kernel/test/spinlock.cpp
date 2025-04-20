@@ -1,6 +1,7 @@
 /* internal includes */
 
 #include <assert.h>
+#include <extensions/mutex.hpp>
 #include <sync/kernel/spinlock.hpp>
 #include <test_module/test.hpp>
 
@@ -27,6 +28,15 @@ TEST_F(SpinlockTest, TryLock)
     R_ASSERT_TRUE(lock_.TryLock());
     R_ASSERT_TRUE(lock_.IsLocked());
     lock_.Unlock();
+    R_ASSERT_FALSE(lock_.IsLocked());
+}
+
+TEST_F(SpinlockTest, LockGuard)
+{
+    {
+        std::lock_guard lock(lock_);
+        R_ASSERT_TRUE(lock_.IsLocked());
+    }
     R_ASSERT_FALSE(lock_.IsLocked());
 }
 

@@ -1,7 +1,7 @@
 #include <extensions/template_lib.hpp>
 #include <test_module/test.hpp>
 
-using namespace TemplateLib;
+using namespace template_lib;
 
 class TemplateLibTest : public TestGroupBase
 {

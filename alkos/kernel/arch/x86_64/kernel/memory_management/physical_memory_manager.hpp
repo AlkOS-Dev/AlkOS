@@ -10,7 +10,7 @@ TODO_WHEN_DEBUGGING_FRAMEWORK
 namespace memory
 {
 
-class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
+class PhysicalMemoryManager : template_lib::StaticSingletonHelper
 {
     private:
     //------------------------------------------------------------------------------//
@@ -73,6 +73,6 @@ class PhysicalMemoryManager : TemplateLib::StaticSingletonHelper
 
 }  // namespace memory
 
-using PhysicalMemoryManager = TemplateLib::StaticSingleton<memory::PhysicalMemoryManager>;
+using PhysicalMemoryManager = template_lib::StaticSingleton<memory::PhysicalMemoryManager>;
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_MANAGEMENT_PHYSICAL_MEMORY_MANAGER_HPP_

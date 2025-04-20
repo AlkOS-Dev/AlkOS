@@ -7,7 +7,7 @@
 namespace memory
 {
 
-class MemoryManager : TemplateLib::StaticSingletonHelper
+class MemoryManager : template_lib::StaticSingletonHelper
 {
     protected:
     MemoryManager();
@@ -15,6 +15,6 @@ class MemoryManager : TemplateLib::StaticSingletonHelper
 
 }  // namespace memory
 
-using MemoryManager = TemplateLib::StaticSingleton<memory::MemoryManager>;
+using MemoryManager = template_lib::StaticSingleton<memory::MemoryManager>;
 
 #endif  // ALKOS_KERNEL_ABI_MEMORY_MANAGER_HPP_

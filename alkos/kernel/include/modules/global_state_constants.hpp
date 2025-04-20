@@ -11,8 +11,8 @@ enum class SettingsType : size_t {
     kLastSettingsType,
 };
 
-using GlobalSettingsTypes = TemplateLib::TypeList<bool /* kIsDayTimeClockInUTC */
-                                                  >;
+using GlobalSettingsTypes = template_lib::TypeList<bool /* kIsDayTimeClockInUTC */
+                                                   >;
 
 using GlobalSettingsTuple = GlobalSettingsTypes::Tuple;
 

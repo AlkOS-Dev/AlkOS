@@ -4,7 +4,7 @@
 class PhysicalMemoryManagerTest : public TestGroupBase
 {
     protected:
-    static TemplateLib::SingletonInstanceCreator<memory::PhysicalMemoryManager>
+    static template_lib::SingletonInstanceCreator<memory::PhysicalMemoryManager>
         memory_manager_singleton;
 
     void Setup_() override
@@ -25,9 +25,9 @@ memory::PhysicalMemoryManager::PageBufferInfo_t PhysicalMemoryManagerTest::buffe
     .start_addr = reinterpret_cast<u64>(buffer_),
     .size_bytes = sizeof(buffer_),
 };
-TemplateLib::SingletonInstanceCreator<memory::PhysicalMemoryManager>
+template_lib::SingletonInstanceCreator<memory::PhysicalMemoryManager>
     PhysicalMemoryManagerTest::memory_manager_singleton =
-        TemplateLib::SingletonInstanceCreator<memory::PhysicalMemoryManager>();
+        template_lib::SingletonInstanceCreator<memory::PhysicalMemoryManager>();
 
 TEST_F(PhysicalMemoryManagerTest, Free_WhenCalled_ShouldIncreaseNumFreePages)
 {

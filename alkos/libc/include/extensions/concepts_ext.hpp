@@ -25,6 +25,12 @@ concept OneOf = (std::is_same_v<T, Args> || ...);
 
 template <class T>
 concept IoT = (std::is_unsigned_v<T> && sizeof(T) <= 4);
+
+template <class T>
+concept LibCxxCompatibleMutex = requires(T m) {
+    { m.lock() } -> std::same_as<void>;
+    { m.unlock() } -> std::same_as<void>;
+};
 }  // namespace concepts_ext
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_

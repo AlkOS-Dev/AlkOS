@@ -9,7 +9,7 @@
 
 namespace internal
 {
-class HardwareModule : TemplateLib::StaticSingletonHelper
+class HardwareModule : template_lib::StaticSingletonHelper
 {
     // -------------------------------------
     // Protected singleton constructor
@@ -44,6 +44,6 @@ class HardwareModule : TemplateLib::StaticSingletonHelper
 };
 }  // namespace internal
 
-using HardwareModule = TemplateLib::StaticSingleton<internal::HardwareModule>;
+using HardwareModule = template_lib::StaticSingleton<internal::HardwareModule>;
 
 #endif  // ALKOS_KERNEL_INCLUDE_MODULES_HARDWARE_HPP_
