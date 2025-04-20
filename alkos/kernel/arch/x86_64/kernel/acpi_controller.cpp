@@ -1,5 +1,6 @@
 #include "acpi_controller.hpp"
 #include "acpi/acpi_tables.hpp"
+#include "drivers/hpet/hpet.hpp"
 #include "modules/hardware.hpp"
 
 #include <extensions/bit.hpp>
@@ -184,10 +185,15 @@ void AcpiController::ParseMadt_()
 void AcpiController::ParseHpet_()
 {
     TRACE_INFO("Parsing HPET table...");
-    auto table = ACPI::GetTable<acpi_hpet>();
+    const auto table = ACPI::GetTable<acpi_hpet>();
 
     if (!table.IsValid()) {
         TRACE_INFO("HPET table not found...");
         return;
     }
+
+    TOOD_WHEN_TIMER_INFRA_DONE
+    /* TODO: Use the driver */
+
+    Hpet hpet(table.GetNative());
 }
