@@ -153,6 +153,7 @@ void AcpiController::ParseTables()
 {
     TRACE_INFO("Parsing ACPI Tables...");
     ParseMadt_();
+    ParseHpet_();
 }
 
 void AcpiController::ParseMadt_()
@@ -178,4 +179,15 @@ void AcpiController::ParseMadt_()
 
     /* Finally, process apic rules */
     PrepareApicRules_(table);
+}
+
+void AcpiController::ParseHpet_()
+{
+    TRACE_INFO("Parsing HPET table...");
+    auto table = ACPI::GetTable<acpi_hpet>();
+
+    if (!table.IsValid()) {
+        TRACE_INFO("HPET table not found...");
+        return;
+    }
 }
