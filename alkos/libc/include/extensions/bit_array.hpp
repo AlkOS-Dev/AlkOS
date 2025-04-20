@@ -57,7 +57,7 @@ class BitArray final
 
     FORCE_INLINE_F void SetAll(const bool value)
     {
-        memset(storage_, value ? UINT8_MAX : 0, kNumStorageT);
+        memset(storage_, value ? UINT8_MAX : 0, kNumStorageT * sizeof(StorageT));
     }
 
     // ------------------------------
