@@ -13,6 +13,8 @@ TODO_WHEN_VMEM_WORKS
 template <class T, size_t kNumObjects>
 class CyclicAllocator final
 {
+    using StorageT = std::aligned_storage_t<sizeof(T), alignof(T)>;
+
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -45,14 +47,16 @@ class CyclicAllocator final
 
         lock_.Unlock();
 
-        byte *mem = mem_ + (cursor * sizeof(T));
+        void *mem = &mem_[cursor];
         new (mem) T(std::forward<Args>(args)...);
-        return reinterpret_cast<T *>(mem);
+        return static_cast<T *>(mem);
     }
 
     void Free(T *ptr)
     {
-        const size_t idx = static_cast<u64>(reinterpret_cast<byte *>(ptr) - mem_) / sizeof(T);
+        const size_t idx =
+            static_cast<size_t>(reinterpret_cast<byte *>(ptr) - reinterpret_cast<byte *>(mem_)) /
+            sizeof(StorageT);
         ASSERT_LT(idx, kNumObjects, "Invalid pointer in CyclicAllocator.Free()");
         ASSERT_TRUE(used_map_.Get(idx));
 
@@ -72,7 +76,7 @@ class CyclicAllocator final
 
     private:
     BitArray<kNumObjects> used_map_{};
-    alignas(T) byte mem_[kNumObjects * sizeof(T)]{};
+    StorageT mem_[kNumObjects]{};
     Spinlock lock_{};
     size_t free_slots_ = kNumObjects;
     size_t cursor_{};

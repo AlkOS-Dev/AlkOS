@@ -1065,7 +1065,7 @@ using decay_t = typename decay<T>::type;
 template <std::size_t kLen, std::size_t kAlign = alignof(std::size_t)>
 struct aligned_storage {
     struct type {
-        alignas(kAlign) unsigned char data[kLen];
+        alignas(kAlign) byte data[kLen];
     };
 };
 
