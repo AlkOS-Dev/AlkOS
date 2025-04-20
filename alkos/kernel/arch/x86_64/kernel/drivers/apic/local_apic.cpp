@@ -78,6 +78,7 @@ void LocalApic::Enable()
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     auto reg    = ReadRegister<SpuriousInterruptRegister>(kSpuriousInterruptRegRW);
     reg.enabled = SpuriousInterruptRegister::State::kEnabled;
+    reg.vector  = kSpuriousVector;
 
     WriteRegister(kSpuriousInterruptRegRW, reg);
 
