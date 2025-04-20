@@ -6,6 +6,7 @@
 #include <definitions/loader64_data.hpp>
 #include <loader_memory_manager.hpp>
 #include <memory_management/physical_memory_manager.hpp>
+#include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
 #include <todo.hpp>
 
@@ -228,17 +229,21 @@ uacpi_status uacpi_kernel_wait_for_work_completion() { return UACPI_STATUS_UNIMP
 /* spinlock */
 uacpi_handle uacpi_kernel_create_spinlock()
 {
-    TODO_WHEN_VMEM_WORKS
-    return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
+    return GlobalStateModule::Get().GetSpinlockAllocator().Allocate();
 }
 
-void uacpi_kernel_free_spinlock(uacpi_handle) { TRACE_DEBUG("uacpi_kernel_free_spinlock"); }
+void uacpi_kernel_free_spinlock(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+
+    GlobalStateModule::Get().GetSpinlockAllocator().Free(static_cast<Spinlock *>(handle));
+}
 
 uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
 {
     ASSERT_NOT_NULL(handle);
 
-    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
     spinlock->Lock();
 
     return 0;
@@ -248,7 +253,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 {
     ASSERT_NOT_NULL(handle);
 
-    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
     spinlock->Unlock();
 }
 
@@ -256,7 +261,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 {
     ASSERT_NOT_NULL(handle);
-    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
     spinlock->Lock();
 
     return UACPI_STATUS_OK;
@@ -265,14 +270,18 @@ uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 void uacpi_kernel_release_mutex(uacpi_handle handle)
 {
     ASSERT_NOT_NULL(handle);
-    const auto spinlock = reinterpret_cast<Spinlock *>(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
     spinlock->Unlock();
 }
 
 uacpi_handle uacpi_kernel_create_mutex()
 {
-    TODO_WHEN_VMEM_WORKS
-    return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
+    return GlobalStateModule::Get().GetSpinlockAllocator().Allocate();
 }
 
-void uacpi_kernel_free_mutex(uacpi_handle) { TRACE_DEBUG("uacpi_kernel_free_mutex"); }
+void uacpi_kernel_free_mutex(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+
+    GlobalStateModule::Get().GetSpinlockAllocator().Free(static_cast<Spinlock *>(handle));
+}
