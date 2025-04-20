@@ -167,7 +167,7 @@ void AcpiController::ParseMadt_()
 
     /* Prepare cores */
     const size_t cores = CountCores_(table);
-    TRACE_INFO("Found %d cores", cores);
+    TRACE_INFO("Found %zu cores", cores);
     HardwareModule::Get().GetCoresController().AllocateCores(cores);
 
     /* Initialize core structures */
