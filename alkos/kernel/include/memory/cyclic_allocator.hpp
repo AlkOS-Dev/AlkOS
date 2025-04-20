@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <extensions/bit_array.hpp>
+#include <extensions/new.hpp>
 #include <todo.hpp>
 #include "sync/kernel/spinlock.hpp"
 
@@ -38,14 +39,15 @@ class CyclicAllocator final
         }
 
         used_map_.Set(cursor, true);
-        cursor_ = cursor;
+        cursor_ = (cursor + 1) % kNumObjects;
         ASSERT_NOT_ZERO(free_slots_, "Out of memory in CyclicAllocator");
         --free_slots_;
 
         lock_.Unlock();
 
         byte *mem = mem_ + (cursor * sizeof(T));
-        return new (mem) T(std::forward<Args>(args)...);
+        new (mem) T(std::forward<Args>(args)...);
+        return reinterpret_cast<T *>(mem);
     }
 
     void Free(T *ptr)
