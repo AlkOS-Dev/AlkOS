@@ -4,6 +4,7 @@
 #include <extensions/template_lib.hpp>
 
 #include "acpi/acpi.hpp"
+#include "hardware/clock_infra.hpp"
 #include "hardware/cores.hpp"
 #include "hardware/interupts.hpp"
 
@@ -41,6 +42,7 @@ class HardwareModule : template_lib::StaticSingletonHelper
     ACPI::ACPIController acpi_controller_{};
     hardware::Interrupts interrupts_{};
     hardware::CoresController cores_{};
+    hardware::ClockRegistry clock_registry_{};
 };
 }  // namespace internal
 
