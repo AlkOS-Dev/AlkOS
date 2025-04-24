@@ -213,15 +213,19 @@ class Hpet final
         return ReadMemoryIo<u64, RetT>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset);
     }
 
+    void Enable();
+
+    void Disable();
+
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    acpi_gas address_;        // Memory-mapped register address information
-    u8 num_comparators_;      // Number of timer comparators available
-    bool is_counter_32_bit_;  // Whether comparators are 64-bit capable
-    u16 ticks_;               // Timer frequency information
+    acpi_gas address_{};        // Memory-mapped register address information
+    u8 num_comparators_{};      // Number of timer comparators available
+    bool is_counter_32_bit_{};  // Whether comparators are 64-bit capable
+    u16 ticks_{};               // Timer frequency information
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
