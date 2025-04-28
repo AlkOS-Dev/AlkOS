@@ -1,12 +1,24 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TIME_CLOCK_INFRA_HPP_
-#define ALKOS_KERNEL_INCLUDE_TIME_CLOCK_INFRA_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
+#define ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
 
-namespace hardware{
+#include <extensions/template_lib.hpp>
 
-struct ClockCallbacks {};
+namespace hardware
+{
 
-class ClockRegistry{};
+struct ClockCallbacks {
+};
 
-}
+class ClockRegistry : public template_lib::NoCopy
+{
+    // ------------------------------
+    // Class creation
+    // ------------------------------
 
-#endif  // ALKOS_KERNEL_INCLUDE_TIME_CLOCK_INFRA_HPP_
+    ClockRegistry()  = default;
+    ~ClockRegistry() = default;
+};
+
+}  // namespace hardware
+
+#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_

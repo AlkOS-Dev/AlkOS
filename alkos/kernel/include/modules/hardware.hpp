@@ -7,6 +7,7 @@
 #include "hardware/clock_infra.hpp"
 #include "hardware/cores.hpp"
 #include "hardware/interupts.hpp"
+#include "modules/helpers.hpp"
 
 namespace internal
 {
@@ -20,29 +21,13 @@ class HardwareModule : template_lib::StaticSingletonHelper
     HardwareModule() noexcept;
 
     // ------------------------------
-    // Getters
-    // ------------------------------
-
-    public:
-    NODISCARD FORCE_INLINE_F hardware::Interrupts &GetInterrupts() noexcept { return interrupts_; }
-    NODISCARD FORCE_INLINE_F ACPI::ACPIController &GetAcpiController() noexcept
-    {
-        return acpi_controller_;
-    }
-    NODISCARD FORCE_INLINE_F hardware::CoresController &GetCoresController() noexcept
-    {
-        return cores_;
-    }
-
-    // ------------------------------
     // Module fields
     // ------------------------------
 
-    private:
-    ACPI::ACPIController acpi_controller_{};
-    hardware::Interrupts interrupts_{};
-    hardware::CoresController cores_{};
-    hardware::ClockRegistry clock_registry_{};
+    DEFINE_MODULE_FIELD(ACPI, ACPIController)
+    DEFINE_MODULE_FIELD(hardware, Interrupts)
+    DEFINE_MODULE_FIELD(hardware, CoresController)
+    DEFINE_MODULE_FIELD(hardware, ClockRegistry)
 };
 }  // namespace internal
 

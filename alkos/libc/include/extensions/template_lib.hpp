@@ -501,5 +501,21 @@ class Settings : public NoCopy
     StaticEventTable<TypeListT::kSize, EventT> event_table_{};
 };
 
+// ------------------------------
+// Static stack
+// ------------------------------
+
+class StaticStack
+{
+};
+
+// ------------------------------
+// Static Registry
+// ------------------------------
+
+class StaticRegisgtery
+{
+};
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

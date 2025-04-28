@@ -15,7 +15,7 @@ extern loader64::LoaderData *kLoaderData;
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
     *out_rsdp_address =
-        reinterpret_cast<uacpi_phys_addr>(HardwareModule::Get().GetAcpiController().GetRsdpAddress()
+        reinterpret_cast<uacpi_phys_addr>(HardwareModule::Get().GetACPIController().GetRsdpAddress()
         );
     return UACPI_STATUS_OK;
 }
