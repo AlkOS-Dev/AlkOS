@@ -6,19 +6,15 @@
 namespace hardware
 {
 
-struct ClockCallbacks {
+struct ClockRegistryEntry {
+    struct ClockCallbacks {
+        int (*enable)(ClockRegistryEntry* clock_entry);
+        int (*disable)(ClockRegistryEntry* clock_entry);
+    };
 };
 
-class ClockRegistry : public template_lib::NoCopy
-{
-    // ------------------------------
-    // Class creation
-    // ------------------------------
-
-    public:
-    ClockRegistry()  = default;
-    ~ClockRegistry() = default;
-};
+static constexpr size_t kMaxClocks = 8;
+using ClockRegistry                = template_lib::StaticRegistry<ClockRegistryEntry, kMaxClocks>;
 
 }  // namespace hardware
 
