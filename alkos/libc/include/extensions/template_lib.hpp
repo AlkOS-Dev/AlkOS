@@ -18,14 +18,17 @@ namespace template_lib
 // ------------------------------
 
 struct NoCopy {
-    NoCopy()  = default;
+    NoCopy() = default;
+
     ~NoCopy() = default;
 
     NoCopy(const NoCopy &) = delete;
-    NoCopy(NoCopy &&)      = delete;
+
+    NoCopy(NoCopy &&) = delete;
 
     NoCopy &operator=(const NoCopy &) = delete;
-    NoCopy &operator=(NoCopy &&)      = delete;
+
+    NoCopy &operator=(NoCopy &&) = delete;
 };
 
 // ------------------------------
@@ -33,15 +36,18 @@ struct NoCopy {
 // ------------------------------
 
 struct MoveOnly {
-    MoveOnly()  = default;
+    MoveOnly() = default;
+
     ~MoveOnly() = default;
 
     /* remove copying */
-    MoveOnly(const MoveOnly &)            = delete;
+    MoveOnly(const MoveOnly &) = delete;
+
     MoveOnly &operator=(const MoveOnly &) = delete;
 
     /* allow moving */
-    MoveOnly(MoveOnly &&)            = default;
+    MoveOnly(MoveOnly &&) = default;
+
     MoveOnly &operator=(MoveOnly &&) = default;
 };
 
@@ -252,7 +258,8 @@ class StaticSingletonHelper : public NoCopy
 {
     protected:
     /* Non instantiable */
-    StaticSingletonHelper()  = default;
+    StaticSingletonHelper() = default;
+
     ~StaticSingletonHelper() = default;
 };
 
@@ -368,7 +375,8 @@ class StaticEventTable : MoveOnly
     // ------------------------------
 
     public:
-    StaticEventTable() noexcept  = default;
+    StaticEventTable() noexcept = default;
+
     ~StaticEventTable() noexcept = default;
 
     // ------------------------------
@@ -431,6 +439,7 @@ class Settings : public NoCopy
     // ------------------------------
 
     explicit constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
+
     explicit constexpr Settings(const TupleT &settings) : settings_(settings) {}
 
     // ------------------------------
@@ -505,8 +514,114 @@ class Settings : public NoCopy
 // Static stack
 // ------------------------------
 
+template <size_t kSizeBytes, size_t kAlignment = 8>
 class StaticStack
 {
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    StaticStack() = default;
+
+    ~StaticStack() = default;
+
+    StaticStack(const StaticStack &) = default;
+
+    StaticStack(StaticStack &&) = default;
+
+    StaticStack &operator=(const StaticStack &) = default;
+
+    StaticStack &operator=(StaticStack &&) = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    template <class T>
+    FORCE_INLINE_F void Push(const T &item)
+    {
+        const size_t start = top_;
+        top_ += sizeof(T);
+
+        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
+
+        auto ptr = reinterpret_cast<void *>(stack_.data + start);
+        new (ptr)
+            std::remove_reference_t<std::remove_const_t<T>>(item); /* Checks alignment on debug */
+    }
+
+    template <class T>
+    FORCE_INLINE_F void Push(T &&item)
+    {
+        const size_t start = top_;
+        top_ += sizeof(T);
+
+        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
+
+        auto ptr = reinterpret_cast<void *>(stack_.data + start);
+        new (ptr) std::remove_reference_t<std::remove_const_t<T>>(std::move(item)
+        ); /* Checks alignment on debug */
+    }
+
+    template <class T>
+    FORCE_INLINE_F std::remove_reference_t<std::remove_const_t<T>> &&Pop()
+    {
+        ASSERT_LE(sizeof(T), top_, "Stack overflow!!");
+        top_ -= sizeof(T);
+
+        auto ptr =
+            reinterpret_cast<std::remove_reference_t<std::remove_const_t<T>> *>(stack_.data + top_);
+        return std::move(*ptr);
+    }
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return top_; }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    size_t top_{};
+    std::aligned_storage_t<kSizeBytes, kAlignment> stack_{};
+};
+
+// ------------------------------
+// SingleTypeStaticStack
+// ------------------------------
+
+template <class T, size_t kNumObjects>
+class SingleTypeStaticStack : protected StaticStack<sizeof(T) * kNumObjects, alignof(T)>
+{
+    using base_t = StaticStack<sizeof(T) * kNumObjects, alignof(T)>;
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    SingleTypeStaticStack() = default;
+
+    ~SingleTypeStaticStack() = default;
+
+    SingleTypeStaticStack(const SingleTypeStaticStack &) = default;
+
+    SingleTypeStaticStack(SingleTypeStaticStack &&) = default;
+
+    SingleTypeStaticStack &operator=(const SingleTypeStaticStack &) = default;
+
+    SingleTypeStaticStack &operator=(SingleTypeStaticStack &&) = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    FORCE_INLINE_F void Push(const T &item) { base_t::Push(item); }
+
+    FORCE_INLINE_F void Push(T &&item) { base_t::Push(std::move(item)); }
+
+    FORCE_INLINE_F T &&Pop() { return std::move(base_t::template Pop<T>()); }
+
+    using base_t::Size;
 };
 
 // ------------------------------
@@ -516,6 +631,5 @@ class StaticStack
 class StaticRegisgtery
 {
 };
-
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

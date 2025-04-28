@@ -15,6 +15,7 @@ class ClockRegistry : public template_lib::NoCopy
     // Class creation
     // ------------------------------
 
+    public:
     ClockRegistry()  = default;
     ~ClockRegistry() = default;
 };
