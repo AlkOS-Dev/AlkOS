@@ -646,21 +646,21 @@ class ArraySingleTypeStaticStack : protected ArrayStaticStack<sizeof(T) * kNumOb
 // ------------------------------
 
 template <class T, size_t kMaxObjects>
-class StaticRegistery
+class StaticRegistry
 {
     // ------------------------------
     // Class creation
     // ------------------------------
 
     public:
-    StaticRegistery()  = default;
-    ~StaticRegistery() = default;
+    StaticRegistry()  = default;
+    ~StaticRegistry() = default;
 
-    StaticRegistery(const StaticRegistery &) = default;
-    StaticRegistery(StaticRegistery &&)      = default;
+    StaticRegistry(const StaticRegistry &) = default;
+    StaticRegistry(StaticRegistry &&)      = default;
 
-    StaticRegistery &operator=(const StaticRegistery &) = default;
-    StaticRegistery &operator=(StaticRegistery &&)      = default;
+    StaticRegistry &operator=(const StaticRegistry &) = default;
+    StaticRegistry &operator=(StaticRegistry &&)      = default;
 
     // ------------------------------
     // Class interaction
