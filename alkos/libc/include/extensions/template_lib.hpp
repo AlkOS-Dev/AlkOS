@@ -511,28 +511,28 @@ class Settings : public NoCopy
 };
 
 // ------------------------------
-// Static stack
+// ArrayStaticStack
 // ------------------------------
 
 template <size_t kSizeBytes, size_t kAlignment = 8>
-class StaticStack
+class ArrayStaticStack
 {
     // ------------------------------
     // Class creation
     // ------------------------------
 
     public:
-    StaticStack() = default;
+    ArrayStaticStack() = default;
 
-    ~StaticStack() = default;
+    ~ArrayStaticStack() = default;
 
-    StaticStack(const StaticStack &) = default;
+    ArrayStaticStack(const ArrayStaticStack &) = default;
 
-    StaticStack(StaticStack &&) = default;
+    ArrayStaticStack(ArrayStaticStack &&) = default;
 
-    StaticStack &operator=(const StaticStack &) = default;
+    ArrayStaticStack &operator=(const ArrayStaticStack &) = default;
 
-    StaticStack &operator=(StaticStack &&) = default;
+    ArrayStaticStack &operator=(ArrayStaticStack &&) = default;
 
     // ------------------------------
     // Class interaction
@@ -577,6 +577,8 @@ class StaticStack
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return top_; }
 
+    NODISCARD FORCE_INLINE_F const void *Data() const { return stack_.data; }
+
     // ------------------------------
     // Class fields
     // ------------------------------
@@ -587,29 +589,29 @@ class StaticStack
 };
 
 // ------------------------------
-// SingleTypeStaticStack
+// ArraySingleTypeStaticStack
 // ------------------------------
 
 template <class T, size_t kNumObjects>
-class SingleTypeStaticStack : protected StaticStack<sizeof(T) * kNumObjects, alignof(T)>
+class ArraySingleTypeStaticStack : protected ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>
 {
-    using base_t = StaticStack<sizeof(T) * kNumObjects, alignof(T)>;
+    using base_t = ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>;
     // ------------------------------
     // Class creation
     // ------------------------------
 
     public:
-    SingleTypeStaticStack() = default;
+    ArraySingleTypeStaticStack() = default;
 
-    ~SingleTypeStaticStack() = default;
+    ~ArraySingleTypeStaticStack() = default;
 
-    SingleTypeStaticStack(const SingleTypeStaticStack &) = default;
+    ArraySingleTypeStaticStack(const ArraySingleTypeStaticStack &) = default;
 
-    SingleTypeStaticStack(SingleTypeStaticStack &&) = default;
+    ArraySingleTypeStaticStack(ArraySingleTypeStaticStack &&) = default;
 
-    SingleTypeStaticStack &operator=(const SingleTypeStaticStack &) = default;
+    ArraySingleTypeStaticStack &operator=(const ArraySingleTypeStaticStack &) = default;
 
-    SingleTypeStaticStack &operator=(SingleTypeStaticStack &&) = default;
+    ArraySingleTypeStaticStack &operator=(ArraySingleTypeStaticStack &&) = default;
 
     // ------------------------------
     // Class interaction
@@ -622,14 +624,63 @@ class SingleTypeStaticStack : protected StaticStack<sizeof(T) * kNumObjects, ali
     FORCE_INLINE_F T &&Pop() { return std::move(base_t::template Pop<T>()); }
 
     using base_t::Size;
+
+    using base_t::Data;
+
+    // Iterator support
+    FORCE_INLINE_F const T *begin() const { return static_cast<const T *>(Data()); }
+    FORCE_INLINE_F const T *end() const
+    {
+        return static_cast<const T *>(Data()) + (Size() / sizeof(T));
+    }
+
+    FORCE_INLINE_F const T *cbegin() const { return static_cast<const T *>(Data()); }
+    FORCE_INLINE_F const T *cend() const
+    {
+        return static_cast<const T *>(Data()) + (Size() / sizeof(T));
+    }
 };
 
 // ------------------------------
 // Static Registry
 // ------------------------------
 
-class StaticRegisgtery
+template <class T, size_t kMaxObjects>
+class StaticRegistery
 {
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    StaticRegistery()  = default;
+    ~StaticRegistery() = default;
+
+    StaticRegistery(const StaticRegistery &) = default;
+    StaticRegistery(StaticRegistery &&)      = default;
+
+    StaticRegistery &operator=(const StaticRegistery &) = default;
+    StaticRegistery &operator=(StaticRegistery &&)      = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    void RegisterObject(T &&item) { stack_.Push(std::forward<T>(item)); }
+
+    auto begin() const { return stack_.begin(); }
+    auto end() const { return stack_.end(); }
+
+    auto cbegin() const { return stack_.cbegin(); }
+    auto cend() const { return stack_.cend(); }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    ArraySingleTypeStaticStack<T, kMaxObjects> stack_{};
 };
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

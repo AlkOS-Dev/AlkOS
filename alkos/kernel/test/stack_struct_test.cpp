@@ -16,6 +16,10 @@ class SingleTypeStaticStackTest : public TestGroupBase
 {
 };
 
+class StaticRegisteryTest : public TestGroupBase
+{
+};
+
 // ------------------------------
 // StaticStack Tests
 // ------------------------------
@@ -23,13 +27,13 @@ class SingleTypeStaticStackTest : public TestGroupBase
 // Basic functionality tests
 TEST_F(StaticStackTest, EmptyStackSize)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
     EXPECT_EQ(0_size, stack.Size());
 }
 
 TEST_F(StaticStackTest, PushPopInt)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
 
     stack.Push(42);
     EXPECT_EQ(sizeof(int), stack.Size());
@@ -41,7 +45,7 @@ TEST_F(StaticStackTest, PushPopInt)
 
 TEST_F(StaticStackTest, PushPopMultipleInts)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
 
     stack.Push(1);
     stack.Push(2);
@@ -58,7 +62,7 @@ TEST_F(StaticStackTest, PushPopMultipleInts)
 
 TEST_F(StaticStackTest, MoveOnlyType)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
 
     MoveOnlyInt original(42);
     stack.Push(std::move(original));
@@ -73,7 +77,7 @@ TEST_F(StaticStackTest, MoveOnlyType)
 
 TEST_F(StaticStackTest, MixedTypes)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
 
     stack.Push(42);
     stack.Push(3.14159);
@@ -92,7 +96,7 @@ TEST_F(StaticStackTest, MixedTypes)
 
 FAIL_TEST_F(StaticStackTest, StackOverflow)
 {
-    StaticStack<16> small_stack;
+    ArrayStaticStack<16> small_stack;
 
     small_stack.Push(42);
     small_stack.Push(CustomString("Too large"));
@@ -100,7 +104,7 @@ FAIL_TEST_F(StaticStackTest, StackOverflow)
 
 FAIL_TEST_F(StaticStackTest, StackUnderflow)
 {
-    StaticStack<1024> stack;
+    ArrayStaticStack<1024> stack;
     stack.Pop<int>();
 }
 
@@ -110,13 +114,13 @@ FAIL_TEST_F(StaticStackTest, StackUnderflow)
 
 TEST_F(SingleTypeStaticStackTest, EmptyStackSize)
 {
-    SingleTypeStaticStack<int, 10> stack;
+    ArraySingleTypeStaticStack<int, 10> stack;
     EXPECT_EQ(0u, stack.Size());
 }
 
 TEST_F(SingleTypeStaticStackTest, PushPopInt)
 {
-    SingleTypeStaticStack<int, 10> stack;
+    ArraySingleTypeStaticStack<int, 10> stack;
 
     stack.Push(42);
     EXPECT_EQ(sizeof(int), stack.Size());
@@ -128,7 +132,7 @@ TEST_F(SingleTypeStaticStackTest, PushPopInt)
 
 TEST_F(SingleTypeStaticStackTest, PushPopMultipleInts)
 {
-    SingleTypeStaticStack<int, 10> stack;
+    ArraySingleTypeStaticStack<int, 10> stack;
 
     for (int i = 0; i < 10; ++i) {
         stack.Push(i);
@@ -145,7 +149,7 @@ TEST_F(SingleTypeStaticStackTest, PushPopMultipleInts)
 
 TEST_F(SingleTypeStaticStackTest, CustomAlignment)
 {
-    SingleTypeStaticStack<AlignedStruct, 8> stack;
+    ArraySingleTypeStaticStack<AlignedStruct, 8> stack;
 
     AlignedStruct as{1.0, 2.0};
     stack.Push(as);
@@ -172,7 +176,7 @@ TEST_F(SingleTypeStaticStackTest, CustomAlignment)
 
 FAIL_TEST_F(SingleTypeStaticStackTest, CapacityLimit)
 {
-    SingleTypeStaticStack<int, 3> stack;
+    ArraySingleTypeStaticStack<int, 3> stack;
 
     stack.Push(1);
     stack.Push(2);
@@ -183,7 +187,7 @@ FAIL_TEST_F(SingleTypeStaticStackTest, CapacityLimit)
 
 TEST_F(SingleTypeStaticStackTest, MoveSemantics)
 {
-    SingleTypeStaticStack<MoveOnlyInt, 5> stack;
+    ArraySingleTypeStaticStack<MoveOnlyInt, 5> stack;
 
     stack.Push(MoveOnlyInt(42));
     stack.Push(MoveOnlyInt(43));
@@ -199,7 +203,7 @@ TEST_F(SingleTypeStaticStackTest, MoveSemantics)
 
 TEST_F(StaticStackTest, VariedAlignmentTypes)
 {
-    StaticStack<1024, 32> stack;
+    ArrayStaticStack<1024, 32> stack;
 
     char c = 'A';
     stack.Push(c);
@@ -241,12 +245,12 @@ TEST_F(StaticStackTest, VariedAlignmentTypes)
 
 TEST_F(StaticStackTest, CopyConstructor)
 {
-    StaticStack<1024> stack1;
+    ArrayStaticStack<1024> stack1;
     stack1.Push(1);
     stack1.Push(2);
     stack1.Push(3);
 
-    StaticStack<1024> stack2 = stack1;
+    ArrayStaticStack<1024> stack2 = stack1;
 
     EXPECT_EQ(stack1.Size(), stack2.Size());
     EXPECT_EQ(3 * sizeof(int), stack2.Size());
@@ -256,4 +260,22 @@ TEST_F(StaticStackTest, CopyConstructor)
     EXPECT_EQ(1, stack2.Pop<int>());
 
     EXPECT_EQ(3 * sizeof(int), stack1.Size());
+}
+
+// ------------------------------
+// StackRegisterTest
+// ------------------------------
+
+TEST_F(StaticRegisteryTest, FunctionalityTest)
+{
+    StaticRegistery<int, 3> reg{};
+
+    reg.RegisterObject(1);
+    reg.RegisterObject(2);
+    reg.RegisterObject(3);
+
+    int idx{};
+    for (const auto& obj : reg) {
+        EXPECT_EQ(obj, ++idx);
+    }
 }
