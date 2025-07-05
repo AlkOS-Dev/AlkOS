@@ -64,7 +64,7 @@ void IoApic::PrepareDefaultConfig() const
         reg_low.destination_mode = LowerTableRegister::DestinationMode::kPhysical;
         reg_low.pin_polarity     = LowerTableRegister::PinPolarity::kActiveHigh;
         reg_low.trigger_mode     = LowerTableRegister::TriggerMode::kEdge;
-        reg_low.mask             = LowerTableRegister::Mask::kEnabled;
+        reg_low.mask             = LowerTableRegister::EnabledFlag::kEnabled;
 
         WriteLowerTableRegister(idx, reg_low);
     }

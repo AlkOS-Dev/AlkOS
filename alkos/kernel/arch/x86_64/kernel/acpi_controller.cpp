@@ -4,6 +4,8 @@
 
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <trace.hpp>
+
 using namespace arch;
 
 // ------------------------------
@@ -112,7 +114,7 @@ static void PrepareApicRules_(MadtTable &table)
                 TRACE_INFO("x2apic not supported yet...");
                 break;
             default:
-                R_FAIL_ALWAYS("Found unsupported MADT table...");
+                KernelTraceWarning("Found unsupported MADT table. Skipping...");
         }
     });
 }

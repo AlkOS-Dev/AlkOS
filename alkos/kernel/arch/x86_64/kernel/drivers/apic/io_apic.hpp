@@ -82,9 +82,9 @@ class IoApic final
             kLogical  = 1,  ///< Logical APIC ID targeting
         };
 
-        enum class Mask : u8 {
-            kEnabled = 0,  ///< Interrupt enabled
-            kMasked  = 1,  ///< Interrupt masked (disabled)
+        enum class EnabledFlag : u8 {
+            kEnabled  = 0,  ///< Interrupt enabled
+            kDisabled = 1,  ///< Interrupt masked (disabled)
         };
 
         enum class PinPolarity : u8 {
@@ -113,7 +113,7 @@ class IoApic final
         PinPolarity pin_polarity : 1;          ///< Signal polarity
         u32 remote_IRR : 1;                    ///< Remote IRR (for level-triggered)
         TriggerMode trigger_mode : 1;          ///< Edge or level triggered
-        Mask mask : 1;                         ///< Enable/disable interrupt
+        EnabledFlag mask : 1;                  ///< Enable/disable interrupt
         u32 reserved : 15;                     ///< Reserved bits
     };
     static_assert(sizeof(LowerTableRegister) == 4);
