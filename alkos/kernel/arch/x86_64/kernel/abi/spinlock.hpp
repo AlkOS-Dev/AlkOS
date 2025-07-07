@@ -19,6 +19,8 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     // Class creation
     // ------------------------------
 
+    Spinlock() = default;
+
     ~Spinlock()
     {
         if constexpr (kIsDebugBuild) {
