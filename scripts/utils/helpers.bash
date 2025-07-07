@@ -5,10 +5,28 @@ HELPERS_LOG_FILE="/tmp/alkOS_build.log"
 
 source "${HELPERS_SCRIPT_DIR}/pretty_print.bash"
 
+trap 'display_state' ERR EXIT
+
+display_state() {
+      if [ $exit_code -eq 0 ]; then
+          return
+      fi
+
+      echo "Current state: "
+      echo "--------------------------------------------------------------------"
+      for var in $(compgen -v); do
+          # Check if it's NOT a function
+          if ! declare -f "$var" > /dev/null; then
+              printf "%s=%q\n" "$var" "${!var}"
+          fi
+      done
+      echo "--------------------------------------------------------------------"
+}
+
 dump_error() {
     help
-
     pretty_error "$1"
+
     exit 1
 }
 
