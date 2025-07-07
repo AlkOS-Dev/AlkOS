@@ -24,7 +24,7 @@ INSTALL_TOOLCHAIN_BUILD_DIR=""
 INSTALL_TOOLCHAIN_VERBOSE=false
 
 help() {
-  echo "${INSTALL_TOOLCHAIN_PATH<} <install_dir> <build_dir> <arch> [--verbose | -v]"
+  echo "${INSTALL_TOOLCHAIN_PATH} <install_dir> <build_dir> <arch> [--verbose | -v]"
   echo "Where:"
   echo "install_dir - path to the directory where the toolchain will be installed"
   echo "build_dir   - path to the directory where the build files will be located"
@@ -38,6 +38,8 @@ help() {
 }
 
 parse_args() {
+  echo $@
+
   if [ $# -lt 3 ]; then
     echo "Error: Missing required arguments."
     help
