@@ -1364,7 +1364,8 @@ auto is_returnable(...) -> std::false_type
 }
 
 template <class From, class To>
-auto is_implicitly_convertible(int
+auto is_implicitly_convertible(
+    int
 ) -> decltype(void(internal::declval<void (&)(To)>()(internal::declval<From>())), std::true_type{})
 {
     return {};

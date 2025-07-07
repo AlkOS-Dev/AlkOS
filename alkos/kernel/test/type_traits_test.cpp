@@ -87,8 +87,9 @@ TEST_F(TypeTraitsTest, RemoveExtent)
     };
 
     EXPECT_TRUE((std::is_same_v<std::remove_extent_t<decltype(dim2arr)>, int[2]>));
-    EXPECT_TRUE((std::is_same_v<std::remove_extent_t<std::remove_extent_t<decltype(dim2arr)>>, int>)
-    );
+    EXPECT_TRUE((
+        std::is_same_v<std::remove_extent_t<std::remove_extent_t<decltype(dim2arr)>>, int>
+    ));
 }
 
 TEST_F(TypeTraitsTest, IsConst)
@@ -168,7 +169,7 @@ TEST_F(TypeTraitsTest, Decay)
     EXPECT_TRUE((std::is_same_v<std::decay_t<int[2]>, int *>));
     EXPECT_FALSE((std::is_same_v<std::decay_t<int[4][2]>, int *>));
     EXPECT_FALSE((std::is_same_v<std::decay_t<int[4][2]>, int **>));
-    EXPECT_TRUE((std::is_same_v<std::decay_t<int[4][2]>, int(*)[2]>));
+    EXPECT_TRUE((std::is_same_v<std::decay_t<int[4][2]>, int (*)[2]>));
     EXPECT_TRUE((std::is_same_v<std::decay_t<int(int)>, int (*)(int)>));
     EXPECT_TRUE((std::is_same_v<std::decay_t<const char *const &>, const char *>));
 }
@@ -851,8 +852,9 @@ TEST_F(TypeTraitsTest, IsMemberFunctionPointer)
     EXPECT_TRUE((std::is_member_function_pointer_v<void (TestClass::*)() const>));
 
     EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunction)>));
-    EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunctionWithReturn)>)
-    );
+    EXPECT_TRUE((
+        std::is_member_function_pointer_v<decltype(&TestClass::memberFunctionWithReturn)>
+    ));
     EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::memberFunctionWithArgs)>));
     EXPECT_TRUE((std::is_member_function_pointer_v<decltype(&TestClass::constMemberFunction)>));
 
@@ -1229,9 +1231,9 @@ TEST_F(TypeTraitsTest, UnwrapReference)
     EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<int &>, int &>));
 
     EXPECT_TRUE((std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<int>>, int &>));
-    EXPECT_TRUE(
-        (std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<const int>>, const int &>)
-    );
+    EXPECT_TRUE((
+        std::is_same_v<std::unwrap_reference_t<std::reference_wrapper<const int>>, const int &>
+    ));
 
     struct Test {
     };
@@ -1246,12 +1248,12 @@ TEST_F(TypeTraitsTest, UnwrapRefDecay)
     EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<const int &>, int>));
 
     EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int[3]>, int *>));
-    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int[][3]>, int(*)[3]>));
+    EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<int[][3]>, int (*)[3]>));
 
     EXPECT_TRUE((std::is_same_v<std::unwrap_ref_decay_t<std::reference_wrapper<int>>, int &>));
-    EXPECT_TRUE(
-        (std::is_same_v<std::unwrap_ref_decay_t<std::reference_wrapper<const int>>, const int &>)
-    );
+    EXPECT_TRUE((
+        std::is_same_v<std::unwrap_ref_decay_t<std::reference_wrapper<const int>>, const int &>
+    ));
 }
 
 TEST_F(TypeTraitsTest, Conjunction)

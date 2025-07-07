@@ -560,7 +560,8 @@ class ArrayStaticStack
         ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
 
         auto ptr = reinterpret_cast<void *>(stack_.data + start);
-        new (ptr) std::remove_reference_t<std::remove_const_t<T>>(std::move(item)
+        new (ptr) std::remove_reference_t<std::remove_const_t<T>>(
+            std::move(item)
         ); /* Checks alignment on debug */
     }
 

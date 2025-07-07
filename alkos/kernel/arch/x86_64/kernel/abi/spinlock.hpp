@@ -90,10 +90,12 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        const u32 value = ToRawRegister(DebugLock{
-            .locked = 1,
-            .owner  = GetCurrentCoreId() + 1,
-        });
+        const u32 value = ToRawRegister(
+            DebugLock{
+                .locked = 1,
+                .owner  = GetCurrentCoreId() + 1,
+            }
+        );
 
         u64 failed_lock_tries{};
         while (__builtin_expect(__sync_val_compare_and_swap(&lock_, 0, value) != 0, 0)) {
@@ -130,10 +132,12 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        const u32 value = ToRawRegister(DebugLock{
-            .locked = 1,
-            .owner  = GetCurrentCoreId() + 1,
-        });
+        const u32 value = ToRawRegister(
+            DebugLock{
+                .locked = 1,
+                .owner  = GetCurrentCoreId() + 1,
+            }
+        );
 
         return __sync_bool_compare_and_swap(&lock_, 0, value);
     }
