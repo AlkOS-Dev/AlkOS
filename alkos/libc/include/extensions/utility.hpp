@@ -88,5 +88,15 @@ TODO_LIBCPP_COMPLIANCE
     }
 }
 
+// ------------------------------
+// std::addressof
+// ------------------------------
+
+template <typename T>
+NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
+{
+    return __builtin_addressof(arg);
+}
+
 }  // namespace std
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
