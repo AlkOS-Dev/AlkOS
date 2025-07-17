@@ -8,7 +8,7 @@ class StringViewTest : public TestGroupBase
 {
 };
 
-TEST_F(StringViewTest, BasicStringViewConstructors)
+TEST_F(StringViewTest, Constructors)
 {
     constexpr basic_string_view<char> sv1;
     R_ASSERT_EQ(0, sv1.size());
@@ -24,7 +24,7 @@ TEST_F(StringViewTest, BasicStringViewConstructors)
     R_ASSERT_EQ(str, sv3.data());
 }
 
-TEST_F(StringViewTest, BasicStringViewSubstr)
+TEST_F(StringViewTest, Substr)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -39,7 +39,7 @@ TEST_F(StringViewTest, BasicStringViewSubstr)
     R_ASSERT_EQ(str, empty_sv.data());
 }
 
-TEST_F(StringViewTest, BasicStringViewFind)
+TEST_F(StringViewTest, Find)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -50,7 +50,7 @@ TEST_F(StringViewTest, BasicStringViewFind)
     R_ASSERT_EQ(basic_string_view<char>::npos, sv.find("xyz"));
 }
 
-TEST_F(StringViewTest, BasicStringViewCompare)
+TEST_F(StringViewTest, Compare)
 {
     const auto str1 = "Hello, World!";
     const auto str2 = "Hello, World!";
@@ -64,7 +64,7 @@ TEST_F(StringViewTest, BasicStringViewCompare)
     R_ASSERT_EQ(-1, sv3.compare(sv1));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindFirstOf)
+TEST_F(StringViewTest, FindFirstOf)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -75,7 +75,7 @@ TEST_F(StringViewTest, BasicStringViewFindFirstOf)
     R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of("xyz"));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindLastOf)
+TEST_F(StringViewTest, FindLastOf)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -86,7 +86,7 @@ TEST_F(StringViewTest, BasicStringViewFindLastOf)
     R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of("xyz"));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindFirstNotOf)
+TEST_F(StringViewTest, FindFirstNotOf)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -96,7 +96,7 @@ TEST_F(StringViewTest, BasicStringViewFindFirstNotOf)
     R_ASSERT_EQ(0, sv.find_first_not_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindLastNotOf)
+TEST_F(StringViewTest, FindLastNotOf)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -106,7 +106,7 @@ TEST_F(StringViewTest, BasicStringViewFindLastNotOf)
     R_ASSERT_EQ(12, sv.find_last_not_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewEmpty)
+TEST_F(StringViewTest, Empty)
 {
     constexpr basic_string_view<char> sv1;
     R_ASSERT_TRUE(sv1.empty());
@@ -116,7 +116,7 @@ TEST_F(StringViewTest, BasicStringViewEmpty)
     R_ASSERT_FALSE(sv2.empty());
 }
 
-TEST_F(StringViewTest, BasicStringViewSize)
+TEST_F(StringViewTest, Size)
 {
     constexpr basic_string_view<char> sv1;
     R_ASSERT_EQ(0, sv1.size());
@@ -129,7 +129,7 @@ TEST_F(StringViewTest, BasicStringViewSize)
     R_ASSERT_EQ(5, sv3.size());
 }
 
-TEST_F(StringViewTest, BasicStringViewFrontAndBack)
+TEST_F(StringViewTest, FrontAndBack)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -138,7 +138,7 @@ TEST_F(StringViewTest, BasicStringViewFrontAndBack)
     R_ASSERT_EQ('!', sv.back());
 }
 
-TEST_F(StringViewTest, BasicStringViewStartsWithAndEndsWith)
+TEST_F(StringViewTest, StartsAndEnds)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -154,7 +154,7 @@ TEST_F(StringViewTest, BasicStringViewStartsWithAndEndsWith)
     R_ASSERT_FALSE(sv.ends_with('d'));
 }
 
-TEST_F(StringViewTest, BasicStringViewSwap)
+TEST_F(StringViewTest, Swap)
 {
     const auto str1 = "Hello";
     const auto str2 = "World!";
@@ -169,7 +169,7 @@ TEST_F(StringViewTest, BasicStringViewSwap)
     R_ASSERT_EQ(5, sv2.size());
 }
 
-TEST_F(StringViewTest, BasicStringViewRemovePrefixAndSuffix)
+TEST_F(StringViewTest, RemovePrefixSuffix)
 {
     const auto str = "Hello, World!";
     basic_string_view<char> sv(str);
@@ -184,7 +184,7 @@ TEST_F(StringViewTest, BasicStringViewRemovePrefixAndSuffix)
     R_ASSERT_EQ(0, sv.compare("World"));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindFirstOfWithEmptyString)
+TEST_F(StringViewTest, FindFirstOfEmpty)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -194,7 +194,7 @@ TEST_F(StringViewTest, BasicStringViewFindFirstOfWithEmptyString)
     R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindLastOfWithEmptyString)
+TEST_F(StringViewTest, FindLastOfEmpty)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -204,7 +204,7 @@ TEST_F(StringViewTest, BasicStringViewFindLastOfWithEmptyString)
     R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindFirstNotOfWithEmptyString)
+TEST_F(StringViewTest, FindFirstNotOfEmpty)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -214,7 +214,7 @@ TEST_F(StringViewTest, BasicStringViewFindFirstNotOfWithEmptyString)
     R_ASSERT_EQ(0, sv.find_first_not_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewFindLastNotOfWithEmptyString)
+TEST_F(StringViewTest, FindLastNotOfEmpty)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -224,7 +224,7 @@ TEST_F(StringViewTest, BasicStringViewFindLastNotOfWithEmptyString)
     R_ASSERT_EQ(12, sv.find_last_not_of('x'));
 }
 
-TEST_F(StringViewTest, BasicStringViewCopy)
+TEST_F(StringViewTest, Copy)
 {
     const auto str = "Hello, World!";
     const basic_string_view<char> sv(str);
@@ -237,7 +237,7 @@ TEST_F(StringViewTest, BasicStringViewCopy)
     R_ASSERT_EQ(0, strcmp(buffer, "Hello"));
 }
 
-TEST_F(StringViewTest, BasicStringViewAssignment)
+TEST_F(StringViewTest, Assignment)
 {
     const auto str1 = "Hello, World!";
     const auto str2 = "Goodbye, World!";
@@ -253,7 +253,7 @@ TEST_F(StringViewTest, BasicStringViewAssignment)
     R_ASSERT_EQ(15, sv2.size());
 }
 
-TEST_F(StringViewTest, BasicStringViewComparisonOperators)
+TEST_F(StringViewTest, Operators)
 {
     const auto str1 = "Hello, World!";
     const auto str2 = "Hello, World!";
@@ -287,7 +287,7 @@ TEST_F(StringViewTest, BasicStringViewComparisonOperators)
     R_ASSERT_TRUE(sv2 >= sv3);
 }
 
-TEST_F(StringViewTest, BasicStringViewSwapFunction)
+TEST_F(StringViewTest, SwapFunction)
 {
     const auto str1 = "Hello";
     const auto str2 = "World";
@@ -301,7 +301,7 @@ TEST_F(StringViewTest, BasicStringViewSwapFunction)
     R_ASSERT_EQ(5, sv2.size());
 }
 
-TEST_F(StringViewTest, BasicStringViewLiterals)
+TEST_F(StringViewTest, Literals)
 {
     using namespace std::literals::string_view_literals;
 
