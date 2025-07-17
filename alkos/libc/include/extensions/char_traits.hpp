@@ -88,7 +88,7 @@ class char_traits
     // ------------------------------
     // Class creation
     // ------------------------------
-    NODISCARD FAST_CALL constexpr char_type *assign(char_type *p, size_t n, char_type c) noexcept
+    FAST_CALL constexpr char_type *assign(char_type *p, size_t n, char_type c) noexcept
     {
         for (size_t i = 0; i < n; ++i) {
             p[i] = c;
@@ -97,9 +97,7 @@ class char_traits
     }
     NODISCARD FAST_CALL constexpr bool eq(char_type c, char_type d) noexcept { return c == d; }
     NODISCARD FAST_CALL constexpr bool lt(char_type c, char_type d) noexcept { return c < d; }
-    NODISCARD FAST_CALL constexpr char_type *move(
-        char_type *dest, const char_type *src, size_t n
-    ) noexcept
+    FAST_CALL constexpr char_type *move(char_type *dest, const char_type *src, size_t n) noexcept
     {
         if (dest < src || dest >= src + n) {
             for (size_t i = 0; i < n; ++i) {
@@ -112,7 +110,7 @@ class char_traits
         }
         return dest;
     }
-    NODISCARD FAST_CALL constexpr const char_type *copy(
+    FAST_CALL constexpr const char_type *copy(
         char_type *dest, const char_type *src, size_t n
     ) noexcept
     {
