@@ -21,12 +21,12 @@ class TestObject
 
 TEST_F(CyclicAllocatorTest, BasicAllocFree)
 {
-    CyclicAllocator<TestObject, 8> allocator;
+    CyclicAllocator<TestObject, 8_size> allocator;
 
-    EXPECT_EQ(allocator.GetFreeSlots(), 8);
+    EXPECT_EQ(allocator.GetFreeSlots(), 8_size);
 
     TestObject* obj = allocator.Allocate();
-    EXPECT_EQ(allocator.GetFreeSlots(), 7);
+    EXPECT_EQ(allocator.GetFreeSlots(), 7_size);
 
     obj->SetValue(42);
     EXPECT_EQ(obj->GetValue(), 42);

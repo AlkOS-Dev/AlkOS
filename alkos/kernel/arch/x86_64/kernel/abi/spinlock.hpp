@@ -26,7 +26,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         if constexpr (kIsDebugBuild) {
             R_ASSERT_FALSE(
                 IsLocked(), "Spinlock is locked, but destructor is called (%p, core: %hu)", this,
-                CastRegister<DebugLock>(lock_).owner - 1
+                CastRegister<DebugLock>(lock_).owner
             );
         }
     }
@@ -85,21 +85,26 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FAST_CALL void Pause_() { asm volatile("pause"); }
 
-    FORCE_INLINE_F void LockDebug_()
+    FAST_CALL u32 GetLockedValueWithDebugInfo_()
     {
-        R_ASSERT_NEQ(
-            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
-            "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
-        );
-
-        const u32 value = ToRawRegister(
+        return ToRawRegister(
             DebugLock{
                 .locked = 1,
                 .owner  = GetCurrentCoreId(),
             }
         );
+    }
 
+    FORCE_INLINE_F void LockDebug_()
+    {
+        R_ASSERT_NEQ(
+            GetLockedValueWithDebugInfo_(), static_cast<u32>(lock_),
+            "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
+        );
+
+        const u32 value = GetLockedValueWithDebugInfo_();
         u64 failed_lock_tries{};
+
         while (__builtin_expect(__sync_val_compare_and_swap(&lock_, 0, value), 0)) {
             Pause_();
             ++failed_lock_tries;
@@ -119,7 +124,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         R_ASSERT_TRUE(IsLocked(), "Unlocking spinlock that is not locked!");
 
         R_ASSERT_EQ(
-            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
+            GetLockedValueWithDebugInfo_(), static_cast<u32>(lock_),
             "Spinlock is locked by core %d, but unlocking by core %d",
             CastRegister<DebugLock>(lock_).owner, GetCurrentCoreId()
         );
@@ -130,17 +135,11 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     NODISCARD FORCE_INLINE_F bool TryLockDebug_()
     {
         R_ASSERT_NEQ(
-            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
+            GetLockedValueWithDebugInfo_(), static_cast<u32>(lock_),
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        const u32 value = ToRawRegister(
-            DebugLock{
-                .locked = 1,
-                .owner  = GetCurrentCoreId(),
-            }
-        );
-
+        const u32 value = GetLockedValueWithDebugInfo_();
         return __sync_bool_compare_and_swap(&lock_, 0, value);
     }
 
