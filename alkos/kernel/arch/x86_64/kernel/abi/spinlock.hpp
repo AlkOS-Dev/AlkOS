@@ -88,17 +88,19 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     FORCE_INLINE_F void LockDebug_()
     {
         R_ASSERT_NEQ(
-            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
+            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        const u32 value = ToRawRegister(DebugLock{
-            .locked = 1,
-            .owner  = GetCurrentCoreId() + 1,
-        });
+        const u32 value = ToRawRegister(
+            DebugLock{
+                .locked = 1,
+                .owner  = GetCurrentCoreId(),
+            }
+        );
 
         u64 failed_lock_tries{};
-        while (__builtin_expect(__sync_val_compare_and_swap(&lock_, 0, value) != 0, 0)) {
+        while (__builtin_expect(__sync_val_compare_and_swap(&lock_, 0, value), 0)) {
             Pause_();
             ++failed_lock_tries;
         }
@@ -117,9 +119,9 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
         R_ASSERT_TRUE(IsLocked(), "Unlocking spinlock that is not locked!");
 
         R_ASSERT_EQ(
-            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
+            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
             "Spinlock is locked by core %d, but unlocking by core %d",
-            CastRegister<DebugLock>(lock_).owner - 1, GetCurrentCoreId()
+            CastRegister<DebugLock>(lock_).owner, GetCurrentCoreId()
         );
 
         __sync_lock_release(&lock_);
@@ -128,14 +130,16 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
     NODISCARD FORCE_INLINE_F bool TryLockDebug_()
     {
         R_ASSERT_NEQ(
-            GetCurrentCoreId() + 1, CastRegister<DebugLock>(lock_).owner,
+            GetCurrentCoreId(), CastRegister<DebugLock>(lock_).owner,
             "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
         );
 
-        const u32 value = ToRawRegister(DebugLock{
-            .locked = 1,
-            .owner  = GetCurrentCoreId() + 1,
-        });
+        const u32 value = ToRawRegister(
+            DebugLock{
+                .locked = 1,
+                .owner  = GetCurrentCoreId(),
+            }
+        );
 
         return __sync_bool_compare_and_swap(&lock_, 0, value);
     }

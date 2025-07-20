@@ -14,9 +14,9 @@ extern loader64::LoaderData *kLoaderData;
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
-    *out_rsdp_address =
-        reinterpret_cast<uacpi_phys_addr>(HardwareModule::Get().GetAcpiController().GetRsdpAddress()
-        );
+    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(
+        HardwareModule::Get().GetAcpiController().GetRsdpAddress()
+    );
     return UACPI_STATUS_OK;
 }
 
@@ -258,6 +258,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 }
 
 /* mutex */
+TODO_WHEN_MUTEX_IMPLEMENTED
 uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 {
     ASSERT_NOT_NULL(handle);
