@@ -10,7 +10,7 @@ if [ -n "${1-}" ]; then
 fi
 
 # Step 1: Configure the environment for tests
-"${BUILD_AND_RUN_TESTS_DIR}/../configure.bash" "${BUILD_AND_RUN_TESTS_ARCH}" debug_qemu_tests -v
+"${BUILD_AND_RUN_TESTS_DIR}/../config/configure.bash" "${BUILD_AND_RUN_TESTS_ARCH}" debug_qemu_tests -v
 
 # Step 2: Build the project
 "${BUILD_AND_RUN_TESTS_DIR}/../actions/build_alkos.bash" -v

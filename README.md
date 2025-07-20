@@ -78,13 +78,13 @@ The primary goals of AlkOS are:
     *   **utils/** - Utility scripts to be sourced and used by other scripts.
     *   **git-hooks/** - Git hooks for the project.
     *   `alkos_cli.bash` - Main CLI script for managing the project.
-    *   `conf.bash` - Configuration file.
+    *   `config/conf.generated.bash` - Configuration file.
     *   `configure.bash` - Configuration script.
 
 ## 🛠️ Key Scripts
 
 *   `scripts/alkos_cli.bash` - Main CLI script that orchestrates the project. It can install dependencies, build the project, run it in QEMU, and more.
-*   `scripts/configure.bash` - Used to configure the project for a specific architecture and build type.
+*   `scripts/config/configure.bash` - Used to configure the project for a specific architecture and build type.
 *   `scripts/actions/build_alkos.bash` - Builds the AlkOS kernel and creates an ISO image.
 *   `scripts/actions/make_iso.bash` - Creates an ISO image from the built kernel and modules.
 *   `scripts/actions/run_alkos.bash` - Runs AlkOS in QEMU.
@@ -133,7 +133,7 @@ The primary goals of AlkOS are:
     ./configure.bash x86_64 debug_qemu_tests -v
     ```
 
-    This will create a `conf.bash` file in the `scripts` directory. This file is sourced by other scripts to get configuration information. The configuration script will 
+    This will create a `conf.generated.bash` file in the `scripts/config` directory. This file is sourced by other scripts to get configuration information. The configuration script will 
     also create a build directory at `../build`.
 
     To see all available configuration options, run:

@@ -49,5 +49,5 @@ logs
 test_framework_logs
 
 # build configuration
-conf.bash
-conf.cmake
+conf.generated.bash
+conf.generated.cmake

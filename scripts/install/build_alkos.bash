@@ -5,7 +5,7 @@ BUILD_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null &&
 BUILD_SCRIPT_PATH="${BUILD_SCRIPT_DIR}/$(basename "$0")"
 BUILD_SCRIPT_SOURCE_DIR="${BUILD_SCRIPT_DIR}/../.."
 
-BUILD_SCRIPT_CONF_PATH="${BUILD_SCRIPT_SOURCE_DIR}/scripts/conf.bash"
+BUILD_SCRIPT_CONF_PATH="${BUILD_SCRIPT_SOURCE_DIR}/scripts/config/conf.generated.bash"
 
 # Source helper scripts
 source "${BUILD_SCRIPT_SOURCE_DIR}/scripts/utils/helpers.bash"
