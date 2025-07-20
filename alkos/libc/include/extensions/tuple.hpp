@@ -73,9 +73,9 @@ template <class T, class... Args>
 NODISCARD FORCE_INLINE_F constexpr T &get(tuple<Args...> &tuple) noexcept
 {
     static_assert(
-        TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
+        template_lib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
     );
-    constexpr size_t index = TemplateLib::GetTypeIndexInTypes<T, Args...>();
+    constexpr size_t index = template_lib::GetTypeIndexInTypes<T, Args...>();
     return get<index>(tuple);
 }
 
@@ -83,9 +83,9 @@ template <class T, class... Args>
 NODISCARD FORCE_INLINE_F constexpr const T &get(const tuple<Args...> &tuple) noexcept
 {
     static_assert(
-        TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
+        template_lib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
     );
-    constexpr size_t index = TemplateLib::GetTypeIndexInTypes<T, Args...>();
+    constexpr size_t index = template_lib::GetTypeIndexInTypes<T, Args...>();
     return get<index>(tuple);
 }
 
@@ -93,9 +93,9 @@ template <class T, class... Args>
 NODISCARD FORCE_INLINE_F constexpr T &&get(tuple<Args...> &&tuple) noexcept
 {
     static_assert(
-        TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
+        template_lib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
     );
-    constexpr size_t index = TemplateLib::GetTypeIndexInTypes<T, Args...>();
+    constexpr size_t index = template_lib::GetTypeIndexInTypes<T, Args...>();
     return get<index>(tuple);
 }
 
@@ -103,9 +103,9 @@ template <class T, class... Args>
 NODISCARD FORCE_INLINE_F constexpr const T &&get(const tuple<Args...> &&tuple) noexcept
 {
     static_assert(
-        TemplateLib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
+        template_lib::HasTypeOnce<T, Args...>(), "Type must occur exactly once in the tuple"
     );
-    constexpr size_t index = TemplateLib::GetTypeIndexInTypes<T, Args...>();
+    constexpr size_t index = template_lib::GetTypeIndexInTypes<T, Args...>();
     return get<index>(tuple);
 }
 }  // namespace std

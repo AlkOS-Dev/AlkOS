@@ -3,7 +3,6 @@
 
 #include <uacpi/uacpi.h>
 #include <extensions/defines.hpp>
-#include <todo.hpp>
 
 #include "acpi_battery.hpp"
 #include "acpi_controller.hpp"
@@ -13,8 +12,6 @@
 #include "acpi_power.hpp"
 #include "acpi_tables.hpp"
 #include "acpi_thermal.hpp"
-#include "sync/mutex.hpp"
-#include "sync/spinlock.hpp"
 
 #define R_ASSERT_ACPI_SUCCESS(status, ...) \
     R_ASSERT_EQ(UACPI_STATUS_OK, status __VA_OPT__(, ) __VA_ARGS__)
@@ -61,19 +58,11 @@ class ACPIController final : public arch::AcpiController
 
     FORCE_INLINE_F void *GetRsdpAddress() const { return RsdpAddress_; }
 
-    FORCE_INLINE_F Mutex &GetAcpiMutex() { return AcpiMutex_; }
-
-    FORCE_INLINE_F Spinlock &GetAcpiSpinlock() { return AcpiSpinLock_; }
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    TODO_WHEN_VMEM_WORKS
-    Mutex AcpiMutex_{};
-    Spinlock AcpiSpinLock_{};
-
     void *RsdpAddress_{};
 };
 

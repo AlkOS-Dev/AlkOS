@@ -126,7 +126,7 @@ FAST_CALL void VerboseAssertTwoArgBase(
     Args... args
 )
 {
-    if (!checker(expected, value)) {
+    if (!checker(expected, value)) [[unlikely]] {
         char fail_msg[kFailMsgBuffSize];
         char e_obj[kObjToHexBuffSize];
         char v_obj[kObjToHexBuffSize];
@@ -156,7 +156,7 @@ FAST_CALL void VerboseAssertOneArgBase(
     const char *file, const char *line, Args... args
 )
 {
-    if (!checker(value)) {
+    if (!checker(value)) [[unlikely]] {
         char fail_msg[kFailMsgBuffSize];
         char v_obj[kObjToHexBuffSize];
         char *msg_buff  = fail_msg;
@@ -190,11 +190,11 @@ FAST_CALL void VerboseAssertEq(
 {
     VerboseAssertTwoArgBase<Handler>(
         expected, value,
-        [](const ExpectedT &e, const ValueT &v) {
+        [](const ExpectedT &e, const ValueT &v) FORCE_INLINE_L {
             return e == v;
         },
         [](char *msg, const int size, const char *e_str, const char *v_str, const char *e_dump,
-           const char *v_dump) {
+           const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (EQ)!\n"
@@ -223,11 +223,11 @@ FAST_CALL void VerboseAssertNeq(
 {
     VerboseAssertTwoArgBase<Handler>(
         expected, value,
-        [](const ExpectedT &e, const ValueT &v) {
+        [](const ExpectedT &e, const ValueT &v) FORCE_INLINE_L {
             return e != v;
         },
         [](char *msg, const int size, const char *e_str, const char *v_str, const char *e_dump,
-           const char *v_dump) {
+           const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NEQ)!\n"
@@ -249,16 +249,16 @@ FAST_CALL void VerboseAssertNeq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertZero(
+FAST_CALL void VerboseAssertZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v == static_cast<ValueT>(0);
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (ZERO)!\n"
@@ -279,16 +279,16 @@ void VerboseAssertZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNotZero(
+FAST_CALL void VerboseAssertNotZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v != static_cast<ValueT>(0);
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NOT ZERO)!\n"
@@ -308,16 +308,16 @@ void VerboseAssertNotZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertTrue(
+FAST_CALL void VerboseAssertTrue(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v == true;
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (TRUE)!\n"
@@ -338,16 +338,16 @@ void VerboseAssertTrue(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertFalse(
+FAST_CALL void VerboseAssertFalse(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v == false;
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (FALSE)!\n"
@@ -368,16 +368,16 @@ void VerboseAssertFalse(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNotNull(
+FAST_CALL void VerboseAssertNotNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v != nullptr;
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NOT_NULL)!\n"
@@ -397,16 +397,16 @@ void VerboseAssertNotNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-void VerboseAssertNull(
+FAST_CALL void VerboseAssertNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
     VerboseAssertOneArgBase<Handler>(
         value,
-        [](const ValueT &v) {
+        [](const ValueT &v) FORCE_INLINE_L {
             return v == nullptr;
         },
-        [](char *msg, const int size, const char *v_str, const char *v_dump) {
+        [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (NULL)!\n"
@@ -426,18 +426,18 @@ void VerboseAssertNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertLt(
+FAST_CALL void VerboseAssertLt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const Val1T &v1, const Val2T &v2) {
+        [](const Val1T &v1, const Val2T &v2) FORCE_INLINE_L {
             return v1 < v2;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (LT)!\n"
@@ -459,18 +459,18 @@ void VerboseAssertLt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertLe(
+FAST_CALL void VerboseAssertLe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const Val1T &v1, const Val2T &v2) {
+        [](const Val1T &v1, const Val2T &v2) FORCE_INLINE_L {
             return v1 <= v2;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (LE)!\n"
@@ -492,18 +492,18 @@ void VerboseAssertLe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertGt(
+FAST_CALL void VerboseAssertGt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const Val1T &v1, const Val2T &v2) {
+        [](const Val1T &v1, const Val2T &v2) FORCE_INLINE_L {
             return v1 > v2;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (GT)!\n"
@@ -525,18 +525,18 @@ void VerboseAssertGt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-void VerboseAssertGe(
+FAST_CALL void VerboseAssertGe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const Val1T &v1, const Val2T &v2) {
+        [](const Val1T &v1, const Val2T &v2) FORCE_INLINE_L {
             return v1 >= v2;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (GE)!\n"
@@ -558,18 +558,18 @@ void VerboseAssertGe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-void VerboseAssertStrEq(
+FAST_CALL void VerboseAssertStrEq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const char *v1, const char *v2) {
+        [](const char *v1, const char *v2) FORCE_INLINE_L {
             return strcmp(v1, v2) == 0;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Check failed (STREQ)!\n"
@@ -591,18 +591,18 @@ void VerboseAssertStrEq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-void VerboseAssertStrNeq(
+FAST_CALL void VerboseAssertStrNeq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
 {
     VerboseAssertTwoArgBase<Handler>(
         val1, val2,
-        [](const char *v1, const char *v2) {
+        [](const char *v1, const char *v2) FORCE_INLINE_L {
             return strcmp(v1, v2) != 0;
         },
         [](char *msg, const int size, const char *v1_str, const char *v2_str, const char *v1_dump,
-           const char *v2_dump) {
+           const char *v2_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
                 msg, size,
                 "Assertion failed (STRNEQ)!\n"

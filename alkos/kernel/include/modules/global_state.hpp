@@ -2,7 +2,9 @@
 #define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 
 #include <extensions/template_lib.hpp>
+#include <memory/cyclic_allocator.hpp>
 #include <modules/global_state_constants.hpp>
+#include <sync/kernel/spinlock.hpp>
 
 // ------------------------------
 // Module
@@ -10,7 +12,7 @@
 
 namespace internal
 {
-class GlobalStateModule : TemplateLib::StaticSingletonHelper
+class GlobalStateModule : template_lib::StaticSingletonHelper
 {
     // -------------------------------------
     // Protected singleton constructor
@@ -24,10 +26,18 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    using SettingsT = TemplateLib::Settings<
+    using SettingsT = template_lib::Settings<
         global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
 
     NODISCARD FORCE_INLINE_F SettingsT& GetSettings() noexcept { return settings_; }
+
+    using LockAllocatorT =
+        CyclicAllocator<Spinlock, global_state_constants::kStaticSpinlockAllocCount>;
+
+    NODISCARD FORCE_INLINE_F LockAllocatorT& GetSpinlockAllocator() noexcept
+    {
+        return spinlock_alloc_;
+    }
 
     // ------------------------------
     // Module fields
@@ -35,9 +45,10 @@ class GlobalStateModule : TemplateLib::StaticSingletonHelper
 
     private:
     SettingsT settings_;
+    LockAllocatorT spinlock_alloc_;
 };
 }  // namespace internal
 
-using GlobalStateModule = TemplateLib::StaticSingleton<internal::GlobalStateModule>;
+using GlobalStateModule = template_lib::StaticSingleton<internal::GlobalStateModule>;
 
 #endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_

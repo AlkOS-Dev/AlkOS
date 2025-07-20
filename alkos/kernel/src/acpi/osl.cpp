@@ -6,6 +6,7 @@
 #include <definitions/loader64_data.hpp>
 #include <loader_memory_manager.hpp>
 #include <memory_management/physical_memory_manager.hpp>
+#include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
 #include <todo.hpp>
 
@@ -13,9 +14,9 @@ extern loader64::LoaderData *kLoaderData;
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
-    *out_rsdp_address =
-        reinterpret_cast<uacpi_phys_addr>(HardwareModule::Get().GetAcpiController().GetRsdpAddress()
-        );
+    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(
+        HardwareModule::Get().GetAcpiController().GetRsdpAddress()
+    );
     return UACPI_STATUS_OK;
 }
 
@@ -183,22 +184,11 @@ void uacpi_kernel_stall(uacpi_u8 usec) {}
 
 void uacpi_kernel_sleep(uacpi_u64 msec) {}
 
-uacpi_handle uacpi_kernel_create_mutex()
-{
-    return &HardwareModule::Get().GetAcpiController().GetAcpiMutex();
-}
-
-void uacpi_kernel_free_mutex(uacpi_handle) {}
-
 uacpi_handle uacpi_kernel_create_event() { return nullptr; }
 
 void uacpi_kernel_free_event(uacpi_handle) {}
 
 uacpi_thread_id uacpi_kernel_get_thread_id() { return nullptr; }
-
-uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle, uacpi_u16) { return UACPI_STATUS_OK; }
-
-void uacpi_kernel_release_mutex(uacpi_handle) {}
 
 uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16) { return UACPI_FALSE; }
 
@@ -225,20 +215,74 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
-uacpi_handle uacpi_kernel_create_spinlock()
-{
-    return &HardwareModule::Get().GetAcpiController().GetAcpiSpinlock();
-}
-
-void uacpi_kernel_free_spinlock(uacpi_handle) {}
-
-uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle) { return 0; }
-
-void uacpi_kernel_unlock_spinlock(uacpi_handle, uacpi_cpu_flags) {}
-
 uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)
 {
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
 uacpi_status uacpi_kernel_wait_for_work_completion() { return UACPI_STATUS_UNIMPLEMENTED; }
+
+// ------------------------------
+// Synchro
+// ------------------------------
+
+/* spinlock */
+uacpi_handle uacpi_kernel_create_spinlock()
+{
+    return GlobalStateModule::Get().GetSpinlockAllocator().Allocate();
+}
+
+void uacpi_kernel_free_spinlock(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+
+    GlobalStateModule::Get().GetSpinlockAllocator().Free(static_cast<Spinlock *>(handle));
+}
+
+uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+
+    const auto spinlock = static_cast<Spinlock *>(handle);
+    spinlock->Lock();
+
+    return 0;
+}
+
+void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
+{
+    ASSERT_NOT_NULL(handle);
+
+    const auto spinlock = static_cast<Spinlock *>(handle);
+    spinlock->Unlock();
+}
+
+/* mutex */
+TODO_WHEN_MUTEX_IMPLEMENTED
+uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
+{
+    ASSERT_NOT_NULL(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
+    spinlock->Lock();
+
+    return UACPI_STATUS_OK;
+}
+
+void uacpi_kernel_release_mutex(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+    const auto spinlock = static_cast<Spinlock *>(handle);
+    spinlock->Unlock();
+}
+
+uacpi_handle uacpi_kernel_create_mutex()
+{
+    return GlobalStateModule::Get().GetSpinlockAllocator().Allocate();
+}
+
+void uacpi_kernel_free_mutex(uacpi_handle handle)
+{
+    ASSERT_NOT_NULL(handle);
+
+    GlobalStateModule::Get().GetSpinlockAllocator().Free(static_cast<Spinlock *>(handle));
+}

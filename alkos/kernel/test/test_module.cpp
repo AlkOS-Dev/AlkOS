@@ -55,7 +55,8 @@ void TestModule::RunTestModule()
 
     /* read single line of input */
     char buff[kInputBufferSize];
-    arch::TerminalWriteString("Provide test name for framework or simply type \"exit\" to quit...\n"
+    arch::TerminalWriteString(
+        "Provide test name for framework or simply type \"exit\" to quit...\n"
     );
     if (arch::TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
         arch::TerminalWriteError("[TEST] [FAIL] Too long input message...\n");

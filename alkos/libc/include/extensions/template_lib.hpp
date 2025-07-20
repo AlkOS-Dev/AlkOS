@@ -11,7 +11,7 @@
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
 
-namespace TemplateLib
+namespace template_lib
 {
 // ------------------------------
 // NoCopy
@@ -501,5 +501,5 @@ class Settings : public NoCopy
     StaticEventTable<TypeListT::kSize, EventT> event_table_{};
 };
 
-}  // namespace TemplateLib
+}  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

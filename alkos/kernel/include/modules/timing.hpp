@@ -7,7 +7,7 @@
 
 namespace internal
 {
-class TimingModule : TemplateLib::StaticSingletonHelper
+class TimingModule : template_lib::StaticSingletonHelper
 {
     // -------------------------------------
     // Protected singleton constructor
@@ -38,6 +38,6 @@ class TimingModule : TemplateLib::StaticSingletonHelper
 };
 }  // namespace internal
 
-using TimingModule = TemplateLib::StaticSingleton<internal::TimingModule>;
+using TimingModule = template_lib::StaticSingleton<internal::TimingModule>;
 
 #endif  // ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_

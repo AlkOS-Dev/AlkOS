@@ -293,17 +293,18 @@ class tuple : public __BaseTuple<Args...>
      */
 
     /* 1. Default constructor */
-    FORCE_INLINE_F constexpr explicit(!(is_constructible_from_empty_init<Args> && ...))
-        tuple() noexcept((std::is_nothrow_default_constructible_v<Args> && ...))
+    FORCE_INLINE_F constexpr explicit(
+        !(is_constructible_from_empty_init<Args> && ...)
+    ) tuple() noexcept((std::is_nothrow_default_constructible_v<Args> && ...))
         requires(std::is_default_constructible_v<Args> && ...)
         : __BaseTuple<Args...>()
     {
     }
 
     /* 2. Usual types */
-    FORCE_INLINE_F constexpr explicit(!(std::is_convertible_v<const Args &, Args> && ...))
-        tuple(const Args &...args
-        ) noexcept((std::is_nothrow_constructible_v<Args, const Args &> && ...))
+    FORCE_INLINE_F constexpr explicit(!(std::is_convertible_v<const Args &, Args> && ...)) tuple(
+        const Args &...args
+    ) noexcept((std::is_nothrow_constructible_v<Args, const Args &> && ...))
         requires(sizeof...(Args) != 0 && (std::is_constructible_v<Args, const Args &> && ...))
         : __BaseTuple<Args...>(args...)
     {
@@ -316,8 +317,9 @@ class tuple : public __BaseTuple<Args...>
 
     /* 4. R-Value UArgs construction */
     template <typename... UArgs>
-    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<UArgs...>())
-        tuple(UArgs &&...args) noexcept(AreUargsNothrowConstructible<UArgs...>())
+    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<UArgs...>()) tuple(
+        UArgs &&...args
+    ) noexcept(AreUargsNothrowConstructible<UArgs...>())
         requires(UargsTupleRequirement<UArgs...>() && AreUargsConstructible<UArgs...>())
         : __BaseTuple<Args...>(std::forward<UArgs>(args)...)
     {
@@ -325,16 +327,18 @@ class tuple : public __BaseTuple<Args...>
 
     /* 5. Other tuple construction */
     template <typename... UArgs>
-    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<UArgs...>())
-        tuple(tuple<UArgs...> &&other) noexcept(AreUargsNothrowConstructible<UArgs...>())
+    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<UArgs...>()) tuple(
+        tuple<UArgs...> &&other
+    ) noexcept(AreUargsNothrowConstructible<UArgs...>())
         requires(AreUargsConstructible<UArgs...>() && IsOtherTupleUsable<tuple<UArgs...>>())
         : __BaseTuple<Args...>(std::forward<tuple<UArgs...>>(other))
     {
     }
 
     template <typename... UArgs>
-    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<const UArgs &...>()
-    ) tuple(const tuple<UArgs...> &other) noexcept(AreUargsNothrowConstructible<const UArgs &...>())
+    FORCE_INLINE_F constexpr explicit(!AreUargsConvertible<const UArgs &...>()) tuple(
+        const tuple<UArgs...> &other
+    ) noexcept(AreUargsNothrowConstructible<const UArgs &...>())
         requires(
             AreUargsConstructible<const UArgs &...>() &&
             IsOtherTupleUsable<const tuple<UArgs...> &>()
