@@ -10,7 +10,7 @@
 
 static constexpr u32 kIdtEntries = 256;
 
-static constexpr u16 kIrq1Offset = 0x20;
+static constexpr u16 kIrq1Offset = 0x20; /* Start for hardware interrupts */
 static constexpr u16 kIrq2Offset = 0x28;
 
 static constexpr u8 kExceptionIdx[]{8, 10, 11, 12, 13, 14, 17, 21, 29, 30};

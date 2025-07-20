@@ -7,6 +7,7 @@
 #endif
 
 /* internal includes */
+#include <cpuid.h>
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
 #include <definitions/loader64_data.hpp>
@@ -68,12 +69,21 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     return buffer_info;
 }
 
+static int GetCpuModel()
+{
+    int ebx, unused;
+    __cpuid(0, unused, ebx, unused, unused);
+    return ebx;
+}
+
 extern "C" void PreKernelInit(loader64::LoaderData *loader_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
     arch::TerminalInit();
     TRACE_INFO("In 64 bit mode");
+
+    TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
     TRACE_INFO("Checking for LoaderData...");
     if (loader_data == nullptr) {
