@@ -1314,3 +1314,160 @@ TEST_F(TypeTraitsTest, IsConstantEvaluated)
     };
     EXPECT_FALSE(test_runtime());
 }
+
+TEST_F(TypeTraitsTest, IsDestructible)
+{
+    struct PublicDestructor {
+        ~PublicDestructor() = default;
+    };
+
+    struct ProtectedDestructor {
+        protected:
+        ~ProtectedDestructor() = default;
+    };
+
+    struct PrivateDestructor {
+        private:
+        ~PrivateDestructor() = default;
+    };
+
+    struct DeletedDestructor {
+        ~DeletedDestructor() = delete;
+    };
+
+    // Fundamental types are always destructible
+    EXPECT_TRUE(std::is_destructible_v<int>);
+    EXPECT_TRUE(std::is_destructible_v<double>);
+    EXPECT_TRUE(std::is_destructible_v<void *>);
+
+    // Classes with accessible destructors are destructible
+    EXPECT_TRUE(std::is_destructible_v<PublicDestructor>);
+
+    // Classes with inaccessible destructors are not destructible from outside
+    EXPECT_FALSE(std::is_destructible_v<ProtectedDestructor>);
+    EXPECT_FALSE(std::is_destructible_v<PrivateDestructor>);
+
+    // Classes with deleted destructors are not destructible
+    EXPECT_FALSE(std::is_destructible_v<DeletedDestructor>);
+
+    // Reference types are destructible
+    EXPECT_TRUE(std::is_destructible_v<int &>);
+    EXPECT_TRUE(std::is_destructible_v<int &&>);
+
+    // Arrays with known bound are destructible if their elements are
+    EXPECT_TRUE(std::is_destructible_v<int[10]>);
+    EXPECT_TRUE(std::is_destructible_v<PublicDestructor[5]>);
+    EXPECT_FALSE(std::is_destructible_v<DeletedDestructor[5]>);
+
+    // void is not destructible
+    EXPECT_FALSE(std::is_destructible_v<void>);
+    EXPECT_FALSE(std::is_destructible_v<const volatile void>);
+
+    // Function types are not destructible
+    EXPECT_FALSE(std::is_destructible_v<void()>);
+    EXPECT_FALSE(std::is_destructible_v<int(int)>);
+    EXPECT_FALSE(std::is_destructible_v<void(...)>);
+
+    // Arrays of unknown bound are not destructible
+    EXPECT_FALSE(std::is_destructible_v<int[]>);
+}
+
+TEST_F(TypeTraitsTest, IsTriviallyDestructible)
+{
+    struct TrivialDestructor {
+        // Implicitly defined destructor is trivial
+    };
+
+    struct DefaultedTrivialDestructor {
+        ~DefaultedTrivialDestructor() = default;
+    };
+
+    struct NonTrivialDestructor {
+        ~NonTrivialDestructor() {}  // User-defined, so not trivial
+    };
+
+    struct VirtualDestructor {
+        virtual ~VirtualDestructor() = default;  // Virtual, so not trivial
+    };
+
+    // Fundamental types are trivially destructible
+    EXPECT_TRUE(std::is_trivially_destructible_v<int>);
+    EXPECT_TRUE(std::is_trivially_destructible_v<double>);
+    EXPECT_TRUE(std::is_trivially_destructible_v<void *>);
+
+    // Classes with trivial destructors
+    EXPECT_TRUE(std::is_trivially_destructible_v<TrivialDestructor>);
+    EXPECT_TRUE(std::is_trivially_destructible_v<DefaultedTrivialDestructor>);
+
+    // Classes with non-trivial destructors
+    EXPECT_FALSE(std::is_trivially_destructible_v<NonTrivialDestructor>);
+    EXPECT_FALSE(std::is_trivially_destructible_v<VirtualDestructor>);
+
+    // Reference types are trivially destructible
+    EXPECT_TRUE(std::is_trivially_destructible_v<int &>);
+    EXPECT_TRUE(std::is_trivially_destructible_v<int &&>);
+
+    // Arrays with known bound are trivially destructible if their elements are
+    EXPECT_TRUE(std::is_trivially_destructible_v<int[10]>);
+    EXPECT_TRUE(std::is_trivially_destructible_v<TrivialDestructor[5]>);
+    EXPECT_FALSE(std::is_trivially_destructible_v<NonTrivialDestructor[5]>);
+
+    // void is not destructible so not trivially destructible
+    EXPECT_FALSE(std::is_trivially_destructible_v<void>);
+
+    // Function types are not destructible, so not trivially destructible
+    EXPECT_FALSE(std::is_trivially_destructible_v<void()>);
+    EXPECT_FALSE(std::is_trivially_destructible_v<int(int)>);
+    EXPECT_FALSE(std::is_trivially_destructible_v<void(...)>);
+
+    // Arrays of unknown bound are not destructible so not trivially destructible
+    EXPECT_FALSE(std::is_trivially_destructible_v<int[]>);
+}
+
+TEST_F(TypeTraitsTest, IsNothrowDestructible)
+{
+    // Classes with different destructors
+    struct NothrowDestructor {
+        ~NothrowDestructor() noexcept {}
+    };
+
+    struct ImplicitNothrowDestructor {
+        // Implicitly defined destructor is noexcept
+    };
+
+    struct PotentiallyThrowingDestructor {
+        ~PotentiallyThrowingDestructor() noexcept(false) {}
+    };
+
+    // Fundamental types have nothrow destructors
+    EXPECT_TRUE(std::is_nothrow_destructible_v<int>);
+    EXPECT_TRUE(std::is_nothrow_destructible_v<double>);
+    EXPECT_TRUE(std::is_nothrow_destructible_v<void *>);
+
+    // Classes with noexcept destructors
+    EXPECT_TRUE(std::is_nothrow_destructible_v<NothrowDestructor>);
+    EXPECT_TRUE(std::is_nothrow_destructible_v<ImplicitNothrowDestructor>);
+
+    // Classes with potentially throwing destructors
+    EXPECT_FALSE(std::is_nothrow_destructible_v<PotentiallyThrowingDestructor>);
+
+    // Reference types have nothrow destructors
+    EXPECT_TRUE(std::is_nothrow_destructible_v<int &>);
+    EXPECT_TRUE(std::is_nothrow_destructible_v<int &&>);
+
+    // Arrays with known bound have nothrow destructors if their elements do
+    EXPECT_TRUE(std::is_nothrow_destructible_v<int[10]>);
+    EXPECT_TRUE(std::is_nothrow_destructible_v<NothrowDestructor[5]>);
+    EXPECT_FALSE(std::is_nothrow_destructible_v<PotentiallyThrowingDestructor[5]>);
+
+    // void is not destructible so not nothrow destructible
+    EXPECT_FALSE(std::is_nothrow_destructible_v<void>);
+
+    // Function types are not destructible, so not nothrow destructible
+    EXPECT_FALSE(std::is_nothrow_destructible_v<void()>);
+    EXPECT_FALSE(std::is_nothrow_destructible_v<int(int)>);
+    EXPECT_FALSE(std::is_nothrow_destructible_v<void(...)>);
+
+    // Arrays of unknown bound are not destructible, so not nothrow destructible
+    EXPECT_FALSE(std::is_nothrow_destructible_v<int[]>);
+}

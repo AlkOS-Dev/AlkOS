@@ -11,7 +11,8 @@ static constexpr bool kIsDebugBuild = false;
 static constexpr bool kIsDebugBuild = true;
 #endif  // NDEBUG
 
-#define NODISCARD [[nodiscard]]
+#define NODISCARD         [[nodiscard]]
+#define NO_UNIQUE_ADDRESS [[no_unique_address]]
 
 /* 1 or nothing */
 #define VARIADIC_MACRO_HAS_ARGS(...) __VA_OPT__(1)
@@ -122,5 +123,14 @@ constexpr byte operator""_byte(const unsigned long long value) { return static_c
 
 constexpr f32 operator""_f32(const long double value) { return static_cast<f32>(value); }
 constexpr f64 operator""_f64(const long double value) { return static_cast<f64>(value); }
+
+// ------------------------------
+// Unique empty struct
+// ------------------------------
+template <size_t ID>
+struct empty_t {
+};
+
+#define UNIQUE_EMPTY empty_t<__COUNTER__>
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEFINES_HPP_

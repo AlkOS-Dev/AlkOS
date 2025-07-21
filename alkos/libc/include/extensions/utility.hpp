@@ -1,6 +1,7 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 
+#include <extensions/compare.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/type_traits.hpp>
 
@@ -86,6 +87,60 @@ TODO_LIBCPP_COMPLIANCE
     for (size_t idx = 0; idx < N; ++idx) {
         std::swap(a[idx], b[idx]);
     }
+}
+
+// ------------------------------
+// std::addressof
+// ------------------------------
+
+template <typename T>
+NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
+{
+    return __builtin_addressof(arg);
+}
+
+// ------------------------------
+// std::integer_sequence
+// ------------------------------
+
+template <class T, T... Ints>
+class integer_sequence
+{
+    public:
+    using value_type = T;
+
+    NODISCARD static constexpr size_t size() noexcept { return sizeof...(Ints); }
+};
+
+namespace internal
+{
+template <class T, T I, T N, T... integers>
+struct make_integer_sequence_helper {
+    using type = typename make_integer_sequence_helper<T, I + 1, N, integers..., I>::type;
+};
+
+template <class T, T N, T... integers>
+struct make_integer_sequence_helper<T, N, N, integers...> {
+    using type = std::integer_sequence<T, integers...>;
+};
+}  // namespace internal
+
+template <class T, T N>
+using make_integer_sequence = typename internal::make_integer_sequence_helper<T, 0, N>::type;
+
+template <std::size_t N>
+using make_index_sequence = std::make_integer_sequence<std::size_t, N>;
+
+// ------------------------------
+// std::monostate
+// ------------------------------
+
+struct monostate {
+};
+constexpr bool operator==(monostate, monostate) noexcept { return true; }
+constexpr strong_ordering operator<=>(monostate, monostate) noexcept
+{
+    return strong_ordering::equal;
 }
 
 }  // namespace std

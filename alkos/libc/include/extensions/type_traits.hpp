@@ -30,9 +30,6 @@ TODO_LIBCPP_COMPLIANCE
  * - std::is_swappable_with
  * - std::is_nothrow_swappable
  * - std::is_nothrow_swappable_with
- * - std::is_destructible
- * - std::is_nothrow_destructible
- * - std::is_trivially_destructible
  */
 
 namespace std
@@ -1977,19 +1974,53 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 // std::is_destructible
 // ------------------------------
 
-// TODO
+namespace internal
+{
+template <typename T>
+concept has_destructor = requires(T &t) { t.~T(); };
+
+template <typename T>
+concept has_nothrow_destructor = requires(T &t) {
+    { t.~T() } noexcept;
+};
+
+template <typename T, bool kNoThrow = false>
+concept destructible =
+    // Case 1: void, unknown bound arrays, or functions are not destructible
+    !(is_void_v<T> || (is_array_v<T> && !is_bounded_array_v<T>) || is_function_v<T>) &&
+    // Case 2: references and scalars are always destructible
+    ((is_reference_v<T> || is_scalar_v<T>) ||
+     // Case 3: for other types, check if destructor can be called
+     (kNoThrow ? has_nothrow_destructor<std::remove_all_extents_t<T>>
+               : has_destructor<std::remove_all_extents_t<T>>));
+}  // namespace internal
+
+template <typename T>
+struct is_destructible : bool_constant<internal::destructible<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_destructible)
 
 // ------------------------------------
 // std::is_trivially_destructible
 // ------------------------------------
 
-// TODO
+template <typename T>
+struct is_trivially_destructible
+    : bool_constant<internal::destructible<T> &&__has_trivial_destructor(T)> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_trivially_destructible)
 
 // ----------------------------------
 // std::is_nothrow_destructible
 // ----------------------------------
 
-// TODO
+template <typename T>
+struct is_nothrow_destructible : bool_constant<internal::destructible<T, true>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_destructible)
 
 }  // namespace std
 

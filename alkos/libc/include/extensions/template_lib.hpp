@@ -46,6 +46,52 @@ struct MoveOnly {
 };
 
 // ------------------------------
+// Enum values count
+// ------------------------------
+
+namespace internal
+{
+template <typename E, E V>
+consteval bool IsValidEnum()
+{
+    // "bool IsValidEnum() [E = Enum, V = Enum::Value]" for valid enum values
+    // "bool IsValidEnum() [E = Enum, V = (Enum)42]" for invalid enum values
+    auto name = __PRETTY_FUNCTION__;
+    const char *s;
+    for (s = name; *s; ++s) continue;
+    int i = s - name;
+    // Find the final space character in the pretty name.
+    for (; i >= 0; --i) {
+        if (name[i] == ' ') {
+            break;
+        }
+    }
+    // The character after the final space will indicate if
+    // it's a valid value or not.
+    char c = name[i + 1];
+    if (c == '(' || (c >= '0' && c <= '9')) {
+        return false;
+    }
+    return true;
+}
+
+template <typename E, size_t... I>
+constexpr size_t EnumCount(std::integer_sequence<size_t, I...>)
+{
+    return (static_cast<size_t>(IsValidEnum<E, static_cast<E>(I)>()) + ...);
+}
+}  // namespace internal
+
+template <typename E>
+struct EnumCount {
+    static constexpr size_t kMaxEnum = 256;
+    static constexpr size_t value    = internal::EnumCount<E>(std::make_index_sequence<kMaxEnum>());
+};
+
+template <typename T>
+constexpr size_t EnumCount_v = EnumCount<T>::value;
+
+// ------------------------------
 // Rolled Switch
 // ------------------------------
 
