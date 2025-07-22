@@ -5,6 +5,7 @@
 #include <extensions/algorithm.hpp>
 #include <extensions/array.hpp>
 #include <extensions/char_traits.hpp>
+#include <extensions/concepts.hpp>
 #include <extensions/utility.hpp>
 
 namespace std
@@ -37,23 +38,24 @@ class basic_string_view
     // ------------------------------
     // Constructors and assignment
     // ------------------------------
-    constexpr basic_string_view() noexcept : data_(nullptr), size_(0) {}
+    constexpr basic_string_view() noexcept                               = default;
+    constexpr basic_string_view(const basic_string_view &other) noexcept = default;
     constexpr basic_string_view(const CharT *str, size_t len) noexcept : data_(str), size_(len) {}
     constexpr basic_string_view(const CharT *str) noexcept : data_(str), size_(Traits::length(str))
     {
     }
-    constexpr basic_string_view(const basic_string_view &other) noexcept
-        : data_(other.data_), size_(other.size_)
+    template <class R>
+        requires requires(R &&r) {
+            { r.data() } -> std::convertible_to<const CharT *>;
+            { r.size() } -> std::convertible_to<size_type>;
+        }
+    constexpr explicit basic_string_view(R &&r) : data_(r.data()), size_(r.size())
     {
     }
+
     basic_string_view(nullptr_t) = delete;
 
-    constexpr basic_string_view &operator=(const basic_string_view &other) noexcept
-    {
-        data_ = other.data_;
-        size_ = other.size_;
-        return *this;
-    }
+    constexpr basic_string_view &operator=(const basic_string_view &other) noexcept = default;
 
     // ------------------------------
     // Iterators
@@ -619,8 +621,8 @@ class basic_string_view
     // ------------------------------
 
     private:
-    const_pointer data_;
-    size_type size_;
+    const_pointer data_{};
+    size_type size_{};
 };
 
 template <class CharT, class Traits>
