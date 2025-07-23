@@ -266,6 +266,10 @@ TEST_F(StringViewTest, Operators)
     R_ASSERT_FALSE(sv1 == sv3);
     R_ASSERT_FALSE(sv2 == sv3);
 
+    R_ASSERT_TRUE(str1 == sv1);
+    R_ASSERT_TRUE(str2 == sv2);
+    R_ASSERT_TRUE(str3 == sv3);
+
     R_ASSERT_FALSE(sv1 != sv2);
     R_ASSERT_TRUE(sv1 != sv3);
     R_ASSERT_TRUE(sv2 != sv3);

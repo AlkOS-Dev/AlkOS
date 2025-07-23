@@ -123,7 +123,7 @@ class char_traits
         const char_type *p, const char_type *q, size_t n
     ) noexcept
     {
-        for (int i = 0; i < n; ++i) {
+        for (size_t i = 0; i < n; ++i) {
             if (lt(p[i], q[i])) {
                 return -1;
             } else if (!eq(p[i], q[i])) {

@@ -633,6 +633,14 @@ constexpr bool operator==(
     return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
 }
 
+template <class CharT, class Traits>
+constexpr bool operator==(
+    basic_string_view<CharT, Traits> lhs, type_identity_t<basic_string_view<CharT, Traits>> rhs
+) noexcept
+{
+    return lhs.size() == rhs.size() && lhs.compare(rhs) == 0;
+}
+
 template <typename CharT, typename Traits>
 NODISCARD constexpr Traits::comparison_category operator<=>(
     basic_string_view<CharT, Traits> lhs, type_identity_t<basic_string_view<CharT, Traits>> rhs
