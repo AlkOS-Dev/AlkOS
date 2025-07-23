@@ -19,6 +19,7 @@
  * Works only when __USE_DEBUG_OUTPUT__ and __USE_DEBUG_TRACES__ are defined.
  */
 
+#error XDXD
 static constexpr size_t kTraceBufferSize = 4096;
 template <typename... Args>
 void FormatTrace(const char* format, Args... args)

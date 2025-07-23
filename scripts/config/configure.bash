@@ -20,36 +20,13 @@ declare -A CONFIGURE_FLAGS=(
 )
 
 declare -A CONFIGURE_BUILD_TYPES_DESC=(
-  ["debug_qemu_tests"]="Build with full QEMU debugging capabilities running test framework, built in debug."
-  ["release_qemu_tests"]="Build with full QEMU debugging capabilities running test framework, built in release."
-  ["debug_qemu"]="Build with full QEMU debugging capabilities, built in debug."
-  ["release_qemu"]="Build with full QEMU debugging capabilities, built in release."
-  ["debug_qemu_no_traces"]="Build with full QEMU debugging capabilities, built in debug, without traces."
-  ["release_qemu_no_traces"]="Build with full QEMU debugging capabilities, built in release, without traces."
   ["debug"]="Build in debug. Capable of running on real hardware."
   ["release"]="Build in release. Capable of running on real hardware."
 )
 
 declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
-  ["debug_qemu_tests"]="Debug"
-  ["release_qemu_tests"]="Release"
-  ["debug_qemu"]="Debug"
-  ["release_qemu"]="Release"
-  ["debug_qemu_no_traces"]="Debug"
-  ["release_qemu_no_traces"]="Release"
   ["debug"]="Debug"
   ["release"]="Release"
-)
-
-declare -A CONFIGURE_BUILD_TYPES_DEFINES=(
-    [debug_qemu_tests]="ENABLE_TESTS USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [release_qemu_tests]="ENABLE_TESTS USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [debug_qemu]="USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [release_qemu]="USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [debug_qemu_no_traces]="USE_DEBUG_OUTPUT"
-    [release_qemu_no_traces]="USE_DEBUG_OUTPUT"
-    [debug]=""
-    [release]=""
 )
 
 CONFIGURE_BUILD_DIR=""
@@ -293,6 +270,17 @@ process_feature_flags() {
   generate_cxx_feature_flag_files
 }
 
+get_feature_flag() {
+  source "${CONFIGURE_FEATURE_FLAGS_PATH}"
+
+  local flag_name="$1"
+  if [[ -z "${CONFIGURE_FEATURE_FLAGS[$flag_name]}" ]]; then
+    dump_error "Feature flag '${flag_name}' is not defined."
+    exit 1
+  fi
+  echo "${CONFIGURE_FEATURE_FLAGS[$flag_name]}"
+}
+
 run() {
   pretty_info "Configuring AlkOS build..."
   pretty_info "Architecture: $CONFIGURE_ARCH"
@@ -300,6 +288,9 @@ run() {
   pretty_info "Build directory: $CONFIGURE_BUILD_DIR"
   pretty_info "Tool binaries directory: $CONFIGURE_TOOL_BINARIES_DIR"
   pretty_info "Verbose mode: $CONFIGURE_VERBOSE"
+
+  pretty_info "Preparing feature flags..."
+  process_feature_flags
 
   pretty_info "Creating cmake configuration files..."
   # prepare conf.generated.cmake
@@ -314,16 +305,14 @@ run() {
   echo "set(TOOL_BINARIES_DIR \"${CONFIGURE_TOOL_BINARIES_DIR}\")" >> "$conf_cmake"
   echo "set(CMAKE_BUILD_DIR \"${CONFIGURE_BUILD_DIR}\")" >> "$conf_cmake"
 
-  local cmake_arg
-  for cmake_arg in ${CONFIGURE_BUILD_TYPES_DEFINES[$CONFIGURE_BUILD_TYPE]}; do
-      echo "set(${cmake_arg} ON)" >> "$conf_cmake"
-  done
+  if [[ "$(get_feature_flag run_test_mode)" == true ]]; then
+    echo "set(ENABLE_TESTS ON)" >> "$conf_cmake"
+  else
+    echo "set(ENABLE_TESTS OFF)" >> "$conf_cmake"
+  fi
 
   pretty_info "Preparing build directory..."
   base_runner "Failed to create build directory" "${CONFIGURE_VERBOSE}" mkdir -p "${CONFIGURE_BUILD_DIR}"
-
-  pretty_info "Preparing feature flags..."
-  process_feature_flags
 
   # let the cmake generate bash.conf and build files
   pretty_info "Running cmake..."

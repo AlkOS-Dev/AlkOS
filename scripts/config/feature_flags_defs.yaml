@@ -6,3 +6,11 @@ feature_flags:
   - name: debug_spinlock
     description: Enables additional debug information for spinlocks, which can help to identify deadlocks and other synchronization issues.
     default: false
+
+  - name: debug_output
+    description: Enables additional terminal output directed to serial port, mostly used for qemu builds and debugging.
+    default: false
+
+  - name: debug_traces
+    description: Enables additional debug traces in the kernel, which can help to identify issues during execution.
+    default: false

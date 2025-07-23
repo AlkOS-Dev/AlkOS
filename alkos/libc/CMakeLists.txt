@@ -13,21 +13,6 @@ endif ()
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     set(LIB_NAME "k")
     add_compile_definitions(__ALKOS_LIBK__=1)
-
-    if (USE_DEBUG_OUTPUT)
-        message(STATUS "Enabled debug output for libc...")
-
-        # Defining this macro enables debug output
-        add_compile_definitions(__USE_DEBUG_OUTPUT__=1)
-    endif ()
-
-    if (USE_DEBUG_TRACES)
-        message(STATUS "Enabled debug traces for libc...")
-
-        # Controls whether various traces should be printed to debug output
-        add_compile_definitions(__USE_DEBUG_TRACES__=1)
-    endif ()
-
 elseif (SYSTEM_LIB_TYPE STREQUAL "c" OR SYSTEM_LIB_TYPE STREQUAL "C")
     set(LIB_NAME "c")
 else ()
@@ -75,6 +60,8 @@ target_include_directories(lib${LIB_NAME} PRIVATE
 )
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)
+
+target_link_libraries(lib${LIB_NAME} PRIVATE AutoGenLib)
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     target_link_libraries(lib${LIB_NAME} PRIVATE alkos.kernel.headers)
