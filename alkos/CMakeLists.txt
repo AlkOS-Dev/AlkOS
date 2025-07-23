@@ -75,6 +75,7 @@ set(SYSTEM_LIB_TYPE k)
 
 # Add the subdirectories
 add_subdirectory(libc)
+add_subdirectory(generated)
 add_subdirectory(kernel)
 
 if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
