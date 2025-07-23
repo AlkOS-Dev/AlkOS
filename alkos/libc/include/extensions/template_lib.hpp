@@ -501,5 +501,80 @@ class Settings : public NoCopy
     StaticEventTable<TypeListT::kSize, EventT> event_table_{};
 };
 
+// ------------------------------
+// StaticPlainMap
+// ------------------------------
+
+template <class ItemT, size_t kSize, class KeyT = size_t>
+    requires(
+        std::convertible_to<KeyT, size_t> && std::is_trivially_copyable_v<ItemT> &&
+        std::is_default_constructible_v<ItemT> && kSize > 0 &&
+        kSize < 256  // Static maps should not be too large to avoid excessive memory usage
+    )
+class StaticPlainMapDefaultConstructible
+{
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    constexpr StaticPlainMapDefaultConstructible()  = default;
+    constexpr ~StaticPlainMapDefaultConstructible() = default;
+
+    constexpr StaticPlainMapDefaultConstructible(const StaticPlainMapDefaultConstructible &) =
+        default;
+    constexpr StaticPlainMapDefaultConstructible(StaticPlainMapDefaultConstructible &&) = default;
+
+    constexpr StaticPlainMapDefaultConstructible &operator=(
+        const StaticPlainMapDefaultConstructible &
+    ) = default;
+    constexpr StaticPlainMapDefaultConstructible &operator=(StaticPlainMapDefaultConstructible &&) =
+        default;
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    FORCE_INLINE_F constexpr ItemT &operator[](const KeyT &key) noexcept
+    {
+        const size_t idx = static_cast<size_t>(key);
+
+        ASSERT_LT(idx, kSize, "Index out of range");
+        return map_[idx];
+    }
+
+    FORCE_INLINE_F constexpr const ItemT &operator[](const KeyT &key) const noexcept
+    {
+        const size_t idx = static_cast<size_t>(key);
+
+        ASSERT_LT(idx, kSize, "Index out of range");
+        return map_[idx];
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    ItemT map_[kSize]{};
+};
+
+// ------------------------------
+// EnumMap
+// ------------------------------
+
+template <class ItemT, class EnumT>
+    requires std::is_enum_v<EnumT>
+using EnumMap = StaticPlainMapDefaultConstructible<ItemT, static_cast<size_t>(EnumT::kLast), EnumT>;
+
+// ------------------------------
+// EnumFlagMap
+// ------------------------------
+
+template <class EnumT>
+    requires std::is_enum_v<EnumT>
+using EnumFlagMap =
+    StaticPlainMapDefaultConstructible<bool, static_cast<size_t>(EnumT::kLast), EnumT>;
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
