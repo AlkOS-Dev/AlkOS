@@ -1,0 +1,8 @@
+feature_flags:
+  - name: run_test_mode
+    description: Instead of proceeding to usual kernel boot enter the test mode, which allows to run single test on the kernel.
+    default: false
+
+  - name: debug_spinlock
+    description: Enables additional debug information for spinlocks, which can help to identify deadlocks and other synchronization issues.
+    default: false

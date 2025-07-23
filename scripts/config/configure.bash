@@ -4,6 +4,8 @@ CONFIGURE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CONFIGURE_SCRIPT_PATH="${CONFIGURE_DIR}/$(basename "$0")"
 CONFIGURE_CMAKE_PATH="${CONFIGURE_DIR}/../../alkos/CMakeLists.txt"
 CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../alkos/toolchains"
+CONFIGURE_FEATURE_FLAGS_PATH="${CONFIGURE_DIR}/feature_flags.conf"
+CONFIGURE_FEATURE_FLAGS_DEFS_PATH="${CONFIGURE_DIR}/feature_flags_defs.yaml"
 
 source "${CONFIGURE_DIR}/../utils/pretty_print.bash"
 source "${CONFIGURE_DIR}/../utils/helpers.bash"
@@ -141,6 +143,60 @@ process_args() {
   [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../../tools"
 }
 
+generate_feature_flags_file() {
+  echo "#!/bin/bash" > "${CONFIGURE_FEATURE_FLAGS_PATH}"
+  echo "" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+  echo "declare -A CONFIGURE_FEATURE_FLAGS" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+  echo "" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+}
+
+generate_cxx_feature_flag_files() {
+
+}
+
+process_feature_flags() {
+  if [[ ! -f "${CONFIGURE_FEATURE_FLAGS_PATH}" ]]; then
+    generate_feature_flags_file
+  fi
+
+  # Source the feature flags to load existing flags
+  source "${CONFIGURE_FEATURE_FLAGS_PATH}"
+
+  if ! grep -q "declare -A CONFIGURE_FEATURE_FLAGS" "${CONFIGURE_FEATURE_FLAGS_PATH}"; then
+    dump_error "Feature flags file is not correctly formatted. Delete existing file and re-run the script."
+    exit 1
+  fi
+
+  local flag_names
+  mapfile -t flag_names < <(yq '.feature_flags[].name' "${CONFIGURE_FEATURE_FLAGS_DEFS_PATH}")
+
+  # Add each missing flag to the feature flags file
+  for flag in "${flag_names[@]}"; do
+      if ! grep -q "CONFIGURE_FEATURE_FLAGS\[${flag}\]=" "${CONFIGURE_FEATURE_FLAGS_PATH}"; then
+          default=$(yq ".feature_flags[] | select(.name == $flag) | .default" "${CONFIGURE_FEATURE_FLAGS_DEFS_PATH}")
+          description=$(yq ".feature_flags[] | select(.name == $flag) | .description" "${CONFIGURE_FEATURE_FLAGS_DEFS_PATH}")
+
+          echo "# ${flag} - ${description}" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+          echo "CONFIGURE_FEATURE_FLAGS[${flag}]=${default}" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+          echo "" >> "${CONFIGURE_FEATURE_FLAGS_PATH}"
+      fi
+  done
+
+  # Source the updated feature flags file
+  source "${CONFIGURE_FEATURE_FLAGS_PATH}"
+
+  # Verify structure of config file
+  for flag in "${!CONFIGURE_FEATURE_FLAGS[@]}"; do
+      # Check if flag from file is in definitions
+      if ! printf '%s\n' "${flag_names[@]}" | grep -q ${flag}; then
+          pretty_warn "Feature flag ${flag} is unrecognized. Please check your feature flags definitions."
+      fi
+  done
+
+  # Generate CXX feature flag files
+  generate_cxx_feature_flag_files
+}
+
 run() {
   pretty_info "Configuring AlkOS build..."
   pretty_info "Architecture: $CONFIGURE_ARCH"
@@ -169,6 +225,9 @@ run() {
 
   pretty_info "Preparing build directory..."
   base_runner "Failed to create build directory" "${CONFIGURE_VERBOSE}" mkdir -p "${CONFIGURE_BUILD_DIR}"
+
+  pretty_info "Preparing feature flags..."
+  process_feature_flags
 
   # let the cmake generate bash.conf and build files
   pretty_info "Running cmake..."
