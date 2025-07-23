@@ -19,6 +19,14 @@
 TODO_BY_THE_END_OF_MILESTONE1
 static constexpr size_t kObjToHexBuffSize = 512;
 
+consteval void ConstevalAssert(bool expression)
+{
+    if (!expression) {
+        size_t tmp = 42;
+        tmp /= (tmp == 0);
+    }
+}
+
 template <typename ObjT>
 void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size)
 {
@@ -120,61 +128,69 @@ FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *
 template <
     ErrorHandlerFn Handler, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT,
     class... Args>
-FAST_CALL void VerboseAssertTwoArgBase(
+FAST_CALL constexpr void VerboseAssertTwoArgBase(
     const ExpectedT &expected, const ValueT &value, CheckerT checker, MsgGetterT msg_getter,
     const char *expected_str, const char *value_str, const char *file, const char *line,
     Args... args
 )
 {
-    if (!checker(expected, value)) [[unlikely]] {
-        char fail_msg[kFailMsgBuffSize];
-        char e_obj[kObjToHexBuffSize];
-        char v_obj[kObjToHexBuffSize];
-        char *msg_buff  = fail_msg;
-        size_t msg_size = kFailMsgBuffSize;
+    if not consteval {
+        if (!checker(expected, value)) [[unlikely]] {
+            char fail_msg[kFailMsgBuffSize];
+            char e_obj[kObjToHexBuffSize];
+            char v_obj[kObjToHexBuffSize];
+            char *msg_buff  = fail_msg;
+            size_t msg_size = kFailMsgBuffSize;
 
-        if constexpr (sizeof...(args) > 0) {
-            const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
-            fail_msg[offset]    = '\n';
-            msg_buff            = fail_msg + offset + 1;
-            msg_size            = kFailMsgBuffSize - offset;
+            if constexpr (sizeof...(args) > 0) {
+                const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
+                fail_msg[offset]    = '\n';
+                msg_buff            = fail_msg + offset + 1;
+                msg_size            = kFailMsgBuffSize - offset;
 
-            assert(offset < kFailMsgBuffSize && "VerboseAssertTwoArgBase buffer fully used!");
+                assert(offset < kFailMsgBuffSize && "VerboseAssertTwoArgBase buffer fully used!");
+            }
+
+            VerboseAssertDumpObjToHex(expected, e_obj, kObjToHexBuffSize);
+            VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
+
+            msg_getter(msg_buff, msg_size, expected_str, value_str, e_obj, v_obj);
+            VerboseAssertDump<Handler>(fail_msg, file, line);
         }
-
-        VerboseAssertDumpObjToHex(expected, e_obj, kObjToHexBuffSize);
-        VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
-
-        msg_getter(msg_buff, msg_size, expected_str, value_str, e_obj, v_obj);
-        VerboseAssertDump<Handler>(fail_msg, file, line);
+    } else {
+        ConstevalAssert(checker(expected, value));
     }
 }
 
 template <ErrorHandlerFn Handler, class ValueT, class CheckerT, class MsgGetterT, class... Args>
-FAST_CALL void VerboseAssertOneArgBase(
+FAST_CALL constexpr void VerboseAssertOneArgBase(
     const ValueT &value, CheckerT checker, MsgGetterT msg_getter, const char *value_str,
     const char *file, const char *line, Args... args
 )
 {
-    if (!checker(value)) [[unlikely]] {
-        char fail_msg[kFailMsgBuffSize];
-        char v_obj[kObjToHexBuffSize];
-        char *msg_buff  = fail_msg;
-        size_t msg_size = kFailMsgBuffSize;
+    if not consteval {
+        if (!checker(value)) [[unlikely]] {
+            char fail_msg[kFailMsgBuffSize];
+            char v_obj[kObjToHexBuffSize];
+            char *msg_buff  = fail_msg;
+            size_t msg_size = kFailMsgBuffSize;
 
-        if constexpr (sizeof...(args) > 0) {
-            const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
-            fail_msg[offset]    = '\n';
-            msg_buff            = fail_msg + offset + 1;
-            msg_size            = kFailMsgBuffSize - offset;
+            if constexpr (sizeof...(args) > 0) {
+                const size_t offset = snprintf(fail_msg, kFailMsgBuffSize, args...);
+                fail_msg[offset]    = '\n';
+                msg_buff            = fail_msg + offset + 1;
+                msg_size            = kFailMsgBuffSize - offset;
 
-            assert(offset < kFailMsgBuffSize && "VerboseAssertOneArgBase buffer fully used!");
+                assert(offset < kFailMsgBuffSize && "VerboseAssertOneArgBase buffer fully used!");
+            }
+
+            VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
+
+            msg_getter(msg_buff, msg_size, value_str, v_obj);
+            VerboseAssertDump<Handler>(fail_msg, file, line);
         }
-
-        VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
-
-        msg_getter(msg_buff, msg_size, value_str, v_obj);
-        VerboseAssertDump<Handler>(fail_msg, file, line);
+    } else {
+        ConstevalAssert(checker(value));
     }
 }
 
@@ -183,7 +199,7 @@ FAST_CALL void VerboseAssertOneArgBase(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class... Args>
-FAST_CALL void VerboseAssertEq(
+FAST_CALL constexpr void VerboseAssertEq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
     const char *file, const char *line, Args... args
 )
@@ -216,7 +232,7 @@ FAST_CALL void VerboseAssertEq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ExpectedT, class ValueT, class... Args>
-FAST_CALL void VerboseAssertNeq(
+FAST_CALL constexpr void VerboseAssertNeq(
     const ExpectedT &expected, const ValueT &value, const char *expected_str, const char *value_str,
     const char *file, const char *line, Args... args
 )
@@ -249,7 +265,7 @@ FAST_CALL void VerboseAssertNeq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertZero(
+FAST_CALL constexpr void VerboseAssertZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -279,7 +295,7 @@ FAST_CALL void VerboseAssertZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertNotZero(
+FAST_CALL constexpr void VerboseAssertNotZero(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -308,7 +324,7 @@ FAST_CALL void VerboseAssertNotZero(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertTrue(
+FAST_CALL constexpr void VerboseAssertTrue(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -338,7 +354,7 @@ FAST_CALL void VerboseAssertTrue(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertFalse(
+FAST_CALL constexpr void VerboseAssertFalse(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -368,7 +384,7 @@ FAST_CALL void VerboseAssertFalse(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertNotNull(
+FAST_CALL constexpr void VerboseAssertNotNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -397,7 +413,7 @@ FAST_CALL void VerboseAssertNotNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class ValueT, class... Args>
-FAST_CALL void VerboseAssertNull(
+FAST_CALL constexpr void VerboseAssertNull(
     const ValueT &value, const char *value_str, const char *file, const char *line, Args... args
 )
 {
@@ -426,7 +442,7 @@ FAST_CALL void VerboseAssertNull(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-FAST_CALL void VerboseAssertLt(
+FAST_CALL constexpr void VerboseAssertLt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -459,7 +475,7 @@ FAST_CALL void VerboseAssertLt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-FAST_CALL void VerboseAssertLe(
+FAST_CALL constexpr void VerboseAssertLe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -492,7 +508,7 @@ FAST_CALL void VerboseAssertLe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-FAST_CALL void VerboseAssertGt(
+FAST_CALL constexpr void VerboseAssertGt(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -525,7 +541,7 @@ FAST_CALL void VerboseAssertGt(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class Val1T, class Val2T, class... Args>
-FAST_CALL void VerboseAssertGe(
+FAST_CALL constexpr void VerboseAssertGe(
     const Val1T &val1, const Val2T &val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -558,7 +574,7 @@ FAST_CALL void VerboseAssertGe(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-FAST_CALL void VerboseAssertStrEq(
+FAST_CALL constexpr void VerboseAssertStrEq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
@@ -591,7 +607,7 @@ FAST_CALL void VerboseAssertStrEq(
 // ------------------------------
 
 template <ErrorHandlerFn Handler, class... Args>
-FAST_CALL void VerboseAssertStrNeq(
+FAST_CALL constexpr void VerboseAssertStrNeq(
     const char *val1, const char *val2, const char *val1_str, const char *val2_str,
     const char *file, const char *line, Args... args
 )
