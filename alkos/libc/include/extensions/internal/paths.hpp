@@ -132,7 +132,7 @@ consteval auto weakly_canonical(const std::string_view path)
         out_pos   = 1;
     }
 
-    // Remove trailing separator if ends with ".."
+    // Remove trailing separator if result ends with ".."
     if (!kIsAbsolute && out_pos == base_pos && buffer[out_pos - 1] == kSeparator) {
         out_pos--;
     }

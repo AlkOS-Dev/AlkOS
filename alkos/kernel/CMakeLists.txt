@@ -30,6 +30,7 @@ alkos_ensure_defined(
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
 add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
+add_compile_definitions(__ROOT__="${CMAKE_SOURCE_DIR}")
 
 ########################### Setting Sysroot Boot #############################
 
@@ -141,4 +142,3 @@ message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 set(CMAKE_CXX_LINK_EXECUTABLE
   "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
 )
-

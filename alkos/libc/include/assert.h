@@ -11,13 +11,7 @@
 
 #include <panic.hpp>
 
-#define __FAIL_KERNEL(expr)                                                                        \
-    arch::KernelPanic(                                                                             \
-        "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
-    );
-
-#define __ASSERT_FAIL_FUNC arch::KernelPanic
-
+#ifdef __cplusplus
 consteval void ConstevalAssert(bool expression)
 {
     if (!expression) {
@@ -25,12 +19,21 @@ consteval void ConstevalAssert(bool expression)
         tmp /= (tmp == 0);
     }
 }
+#endif
+
+#define __FAIL_KERNEL(expr)                                                                        \
+    arch::KernelPanic(                                                                             \
+        "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
+    );
+
+#define __ASSERT_FAIL_FUNC arch::KernelPanic
 
 /* usual kernel assert macro */
 #ifdef NDEBUG
 #define ASSERT(expr)     ((void)0)
 #define FAIL_ALWAYS(msg) ((void)0)
 #else
+#ifdef __cplusplus
 #define ASSERT(expr)                \
     if not consteval {              \
         if (!(expr)) [[unlikely]] { \
@@ -39,10 +42,17 @@ consteval void ConstevalAssert(bool expression)
     } else {                        \
         ConstevalAssert(expr);      \
     }
+#else
+#define ASSERT(expr)            \
+    if (!(expr)) [[unlikely]] { \
+        __FAIL_KERNEL(expr);    \
+    }
+#endif
 #define FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 #endif  // NDEBUG
 
 /* usual kernel working in release assert macro */
+#ifdef __cplusplus
 #define R_ASSERT(expr)              \
     if not consteval {              \
         if (!(expr)) [[unlikely]] { \
@@ -51,6 +61,12 @@ consteval void ConstevalAssert(bool expression)
     } else {                        \
         ConstevalAssert(expr);      \
     }
+#else
+#define R_ASSERT(expr)          \
+    if (!(expr)) [[unlikely]] { \
+        __FAIL_KERNEL(expr);    \
+    }
+#endif
 #define R_FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
 
 /* libc default assert macro */

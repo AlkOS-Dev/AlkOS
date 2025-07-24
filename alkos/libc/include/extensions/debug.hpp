@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <debug_terminal.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/internal/paths.hpp>
 
 // ------------------------------
 // Traces
@@ -46,12 +47,14 @@ void FormatTrace(const char* format, Args... args)
 #define DEBUG_TAG   "[DEBUG]     "
 #define TRACE_TAG   "[TRACE]     "
 
-#define TRACE_FORMAT_LOCATION(message) __FILE__ " " TOSTRING(__LINE__) " " message "\n"
-#define TRACE_FORMAT_ERROR(message)    ERROR_TAG TRACE_FORMAT_LOCATION(message)
-#define TRACE_FORMAT_WARNING(message)  WARNING_TAG TRACE_FORMAT_LOCATION(message)
-#define TRACE_FORMAT_INFO(message)     INFO_TAG TRACE_FORMAT_LOCATION(message)
-#define TRACE_FORMAT_DEBUG(message)    DEBUG_TAG TRACE_FORMAT_LOCATION(message)
-#define TRACE_FORMAT_SUCCESS(message)  SUCCESS_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_LOCATION(message) \
+    "%s " TOSTRING(__LINE__) " " message "\n", RELATIVE(__ROOT__, __FILE__).data()
+
+#define TRACE_FORMAT_ERROR(message)   ERROR_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_WARNING(message) WARNING_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_INFO(message)    INFO_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_DEBUG(message)   DEBUG_TAG TRACE_FORMAT_LOCATION(message)
+#define TRACE_FORMAT_SUCCESS(message) SUCCESS_TAG TRACE_FORMAT_LOCATION(message)
 
 #define TRACE_ERROR(message, ...)   TRACE(TRACE_FORMAT_ERROR(message) __VA_OPT__(, ) __VA_ARGS__)
 #define TRACE_WARNING(message, ...) TRACE(TRACE_FORMAT_WARNING(message) __VA_OPT__(, ) __VA_ARGS__)

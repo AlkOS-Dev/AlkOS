@@ -9,6 +9,7 @@ alkos_ensure_defined(
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     set(LIB_NAME "k")
     add_compile_definitions(__ALKOS_LIBK__=1)
+    add_compile_definitions(__ROOT__="${CMAKE_SOURCE_DIR}")
 elseif (SYSTEM_LIB_TYPE STREQUAL "c" OR SYSTEM_LIB_TYPE STREQUAL "C")
     set(LIB_NAME "c")
 else ()
