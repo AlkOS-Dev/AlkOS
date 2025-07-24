@@ -19,14 +19,6 @@
 TODO_BY_THE_END_OF_MILESTONE1
 static constexpr size_t kObjToHexBuffSize = 512;
 
-consteval void ConstevalAssert(bool expression)
-{
-    if (!expression) {
-        size_t tmp = 42;
-        tmp /= (tmp == 0);
-    }
-}
-
 template <typename ObjT>
 void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size)
 {

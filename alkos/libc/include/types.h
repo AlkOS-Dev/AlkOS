@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_TYPES_H_
 
 #include <limits.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #if SIZE_MAX == UINTMAX_MAX
