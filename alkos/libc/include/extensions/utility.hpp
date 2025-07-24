@@ -1,7 +1,6 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 
-#include <extensions/compare.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/type_traits.hpp>
 
@@ -130,18 +129,6 @@ using make_integer_sequence = typename internal::make_integer_sequence_helper<T,
 
 template <std::size_t N>
 using make_index_sequence = std::make_integer_sequence<std::size_t, N>;
-
-// ------------------------------
-// std::monostate
-// ------------------------------
-
-struct monostate {
-};
-constexpr bool operator==(monostate, monostate) noexcept { return true; }
-constexpr strong_ordering operator<=>(monostate, monostate) noexcept
-{
-    return strong_ordering::equal;
-}
 
 }  // namespace std
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
