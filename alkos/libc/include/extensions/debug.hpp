@@ -4,7 +4,7 @@
 #include <autogen/feature_flags.h>
 #include <todo.h>
 
-#if defined(__USE_DEBUG_TRACES__)
+#if FEATURE_FLAG_DEBUG_TRACES
 
 #include <assert.h>
 #include <stdio.h>

@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
 
 #include <assert.h>
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 
 FAST_CALL byte inb(const u16 port)

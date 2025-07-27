@@ -54,7 +54,6 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
     while (found_intersection) {
         found_intersection = false;
         for (u32 i = 0; i < num_free_memory_regions_; i++) {
-            constexpr i64 kNoOffset          = 0;
             constexpr u64 kEmptyRegionLength = 0;
 
             const i64 free_start = static_cast<i64>(descending_sorted_mmap_entries[i].addr);
@@ -164,7 +163,6 @@ void LoaderMemoryManager::DumpPmlTables()
     while (pml4_stack_top_idx > 0) {
         pml4_stack_top_idx--;
         auto *pml3_table = reinterpret_cast<PML3Entry *>(pml4_addr_stack[pml4_stack_top_idx]);
-        u16 pml4_idx     = pml4_idx_stack[pml4_stack_top_idx];
 
         TRACE_INFO("PML3 table : 0x%X ---------------------------------", pml3_table);
         for (u32 i = 0; i < kNumEntriesPerPml; i++) {
@@ -195,7 +193,6 @@ void LoaderMemoryManager::DumpPmlTables()
         while (pml3_stack_top_idx > 0) {
             pml3_stack_top_idx--;
             auto *pml2_table = reinterpret_cast<PML2Entry *>(pml3_addr_stack[pml3_stack_top_idx]);
-            u16 pml3_idx     = pml3_idx_stack[pml3_stack_top_idx];
 
             TRACE_INFO("PML2 table : 0x%X ---------------------------------", pml2_table);
             for (u32 i = 0; i < kNumEntriesPerPml; i++) {
@@ -227,7 +224,6 @@ void LoaderMemoryManager::DumpPmlTables()
                 pml2_stack_top_idx--;
                 auto *pml1_table =
                     reinterpret_cast<PML1Entry *>(pml2_addr_stack[pml2_stack_top_idx]);
-                u16 pml2_idx = pml2_idx_stack[pml2_stack_top_idx];
 
                 TRACE_INFO("PML1 table : 0x%X ---------------------------------", pml1_table);
                 for (u32 i = 0; i < kNumEntriesPerPml; i++) {

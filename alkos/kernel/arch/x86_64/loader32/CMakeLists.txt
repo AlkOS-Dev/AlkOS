@@ -58,4 +58,5 @@ target_link_libraries(alkos.loader32 PRIVATE
         arch.common.all.32
         libk.32
         alkos.kernel.headers
+        AutoGenLib
 )

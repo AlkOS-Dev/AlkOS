@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
 
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 
 // ------------------------------
