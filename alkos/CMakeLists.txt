@@ -163,7 +163,7 @@ add_custom_target(mount
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-if (ENABLE_TESTS)
+if (CMAKE_FEATURE_FLAG_RunTestMode)
     separate_arguments(SPLIT_TEST_ARGS UNIX_COMMAND "${CMAKE_TEST_ARGS}")
     add_custom_target(tests
             COMMAND ${RUN_ALKOS_TESTS_SCRIPT_PATH} ${SPLIT_TEST_ARGS}

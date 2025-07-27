@@ -1,10 +1,5 @@
-############################### Configuring files ###############################
-
-file(GLOB_RECURSE LIB_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-)
-
 ############################### Preparing target ###############################
 
-add_library(AutoGenLib INTERFACE include)
+add_library(AutoGenLib INTERFACE)
+
+target_include_directories(AutoGenLib PRIVATE INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include/")

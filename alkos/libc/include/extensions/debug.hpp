@@ -1,6 +1,7 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
+#include <autogen/feature_flags.h>
 #include <todo.h>
 
 #if defined(__USE_DEBUG_TRACES__)

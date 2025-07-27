@@ -42,7 +42,7 @@ file(GLOB_RECURSE KERNEL_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-if (ENABLE_TESTS)
+if (CMAKE_FEATURE_FLAG_RunTestMode)
     file(GLOB_RECURSE KERNEL_TEST_SOURCES
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"

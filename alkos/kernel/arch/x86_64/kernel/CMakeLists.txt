@@ -14,8 +14,7 @@ file(GLOB_RECURSE ARCH_SOURCES
 # Exclude specific files like crti.nasm and crtn.nasm
 list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/(crti\\.nasm|crtn\\.nasm)$")
 
-# If ENABLE_TESTS is NOT defined, exclude files from the 'tests/' directory
-if (NOT DEFINED ENABLE_TESTS)
+if (NOT CMAKE_FEATURE_FLAG_RunTestMode)
     list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/tests/.*")
 endif ()
 
