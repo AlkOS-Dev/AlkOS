@@ -10,8 +10,8 @@ namespace multiboot
 template <class Tag, TagFilter<Tag> auto Filter>
 Tag *FindTagInMultibootInfo(void *multiboot_info_addr)
 {
-    const u32 kType      = TagNumber<Tag>::value;
-    const char *kTagName = TagNumber<Tag>::kTagName;
+    const u32 kType = TagNumber<Tag>::value;
+    // const char *kTagName = TagNumber<Tag>::kTagName;
     static_assert(kType != TagNumber<Tag>::kInvalidTagNumber, "Invalid tag type!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK

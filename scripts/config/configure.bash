@@ -144,7 +144,6 @@ generate_cxx_feature_flag_files() {
 
 
   # C code macros
-  echo "#ifndef __cplusplus" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
   echo "// Macros for feature flags in C code" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
   echo "" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
 
@@ -170,7 +169,6 @@ generate_cxx_feature_flag_files() {
     echo "" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
   done
 
-  echo "#endif // __cplusplus" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
   echo "" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
 
   echo "// =========================================================================================" >> "${CONFIGURE_FEATURE_FLAGS_CXX_PATH}"
@@ -291,9 +289,9 @@ generate_cmake_feature_flags() {
     flag_upper=$(echo "${flag_upper}" | sed 's/_\([a-z]\)/\U\1/g')
 
     if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
-      echo "set(CMAKE_FEATURE_FLAG_${flag_upper}, ON)" >> "${conf_cmake}"
+      echo "set(CMAKE_FEATURE_FLAG_${flag_upper} ON)" >> "${conf_cmake}"
     else
-      echo "set(CMAKE_FEATURE_FLAG_${flag_upper}, OFF)" >> "${conf_cmake}"
+      echo "set(CMAKE_FEATURE_FLAG_${flag_upper} OFF)" >> "${conf_cmake}"
     fi
   done
 }

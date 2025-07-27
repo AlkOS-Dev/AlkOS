@@ -13,7 +13,7 @@ extern "C" void KernelPanic(const char *msg);
 
 namespace arch
 {
-WRAP_CALL void KernelPanic(const char *msg) { ::KernelPanic(msg); }
+WRAP_CALL NO_RET void KernelPanic(const char *msg) { ::KernelPanic(msg); }
 }  // namespace arch
 
 template <typename... Args>
