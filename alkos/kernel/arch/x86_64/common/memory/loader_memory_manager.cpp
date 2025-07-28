@@ -33,7 +33,7 @@ PML4_t *LoaderMemoryManager::GetPml4Table()
 {
     return reinterpret_cast<PML4_t *>(&buffer_[kPml4Index]);
 }
-void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
+void LoaderMemoryManager::AddFreeRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
     FreeMemoryRegion_t &mmap_entry_ref = descending_sorted_mmap_entries[num_free_memory_regions_++];
@@ -55,7 +55,7 @@ void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
         i--;
     }
 }
-void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
+void LoaderMemoryManager::ReserveArea(u64 start_addr, u64 end_addr)
 {
     bool found_intersection = true;
     while (found_intersection) {
@@ -109,7 +109,7 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
                     end_addr < descending_sorted_mmap_entries[i].addr +
                                    descending_sorted_mmap_entries[i].length) {
                     // Split the free memory region into two
-                    AddFreeMemoryRegion(
+                    AddFreeRegion(
                         end_addr, descending_sorted_mmap_entries[i].addr +
                                       descending_sorted_mmap_entries[i].length
                     );

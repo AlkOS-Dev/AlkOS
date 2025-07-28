@@ -2,6 +2,7 @@
 #define ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_EXTENSIONS_TPP_
 
 #include <extensions/debug.hpp>
+#include "extensions.hpp"
 #include "todo.hpp"
 
 namespace multiboot

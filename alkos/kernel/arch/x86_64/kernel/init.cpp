@@ -104,7 +104,7 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
 
     auto* loader_memory_manager =
         reinterpret_cast<memory::LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
-    loader_memory_manager->MarkMemoryAreaNotFree(
+    loader_memory_manager->ReserveArea(
         loader_data->kernel_start_addr, loader_data->kernel_end_addr
     );
 
