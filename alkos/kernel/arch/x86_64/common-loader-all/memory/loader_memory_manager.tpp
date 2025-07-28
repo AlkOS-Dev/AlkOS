@@ -3,7 +3,6 @@
 
 #include <assert.h>
 #include <memory.h>
-#include "loader_memory_manager.hpp"
 #include "extensions/debug.hpp"
 
 namespace memory

@@ -84,7 +84,7 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
     TRACE_INFO("Adding available memory regions to memory manager...");
     WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
         if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
-            loader_memory_manager->AddFreeRegion(
+            loader_memory_manager->AddFreeMemoryRegion(
                 mmap_entry->addr, mmap_entry->addr + mmap_entry->len
             );
             TRACE_INFO(
@@ -177,15 +177,15 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
 
     auto* mmap_tag = GetMemoryMapTag(multiboot_info_addr);
     InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
-    loader_memory_manager->ReserveArea(
+    loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
         static_cast<u64>(reinterpret_cast<u32>(loader32_end))
     );
-    loader_memory_manager->ReserveArea(
+    loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end))
     );
-    loader_memory_manager->ReserveArea(
+    loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory)),
         static_cast<u64>(
             reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(memory::LoaderMemoryManager)
@@ -211,7 +211,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     //////////////////////////// Jumping to 64-bit /////////////////////////
     TRACE_INFO("Jumping to 64-bit loader...");
 
-    loader_memory_manager->AddFreeRegion(
+    loader_memory_manager->AddFreeMemoryRegion(
         static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
         static_cast<u64>(reinterpret_cast<u32>(loader32_end))
     );

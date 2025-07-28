@@ -7,9 +7,9 @@ u64 __GetLocalTimezoneOffsetNs()
 {
     TODO_TIMEZONES
     /* Hard coded UTC */
-    static constexpr u64 kUctOffset2 = 1;
+    static constexpr u64 kUctOffset = 1;
 
-    return kNanosInSecond * kSecondsInHour * kUctOffset2;
+    return kNanosInSecond * kSecondsInHour * kUctOffset;
 }
 
 u64 __GetDstTimezoneOffsetNs()

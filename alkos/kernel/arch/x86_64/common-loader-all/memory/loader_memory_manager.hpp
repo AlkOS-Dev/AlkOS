@@ -29,14 +29,6 @@ template <typename Callback>
 concept FreeMemoryRegionCallback =
     requires(Callback cb, FreeMemoryRegion_t& region) { cb(region); };
 
-/**
- * @brief Concept for a provider that can provide free memory regions.
- *
- * The provider must be callable with a callback that accepts a FreeMemoryRegion_t reference.
- * The callback should not return any value.
- *
- * The provider is expected to iterate over free memory regions and invoke the callback
- */
 template <typename Provider>
 concept FreeRegionProvider = requires(Provider provider) {
     {
@@ -140,8 +132,8 @@ class LoaderMemoryManager
     template <WalkDirection direction, FreeMemoryRegionCallback Callback>
     void WalkFreeMemoryRegions(Callback callback);
 
-    void AddFreeRegion(u64 start_addr, u64 end_addr);
-    void ReserveArea(u64 start_addr, u64 end_addr);
+    void AddFreeMemoryRegion(u64 start_addr, u64 end_addr);
+    void MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr);
 
     [[nodiscard]] u64 GetAvailableMemoryBytes() const { return available_memory_bytes_; }
 

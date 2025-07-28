@@ -72,10 +72,10 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    auto* loader_memory_manager = reinterpret_cast<memory::LoaderMemoryManager*>(
-        loader_data_32_64->loader_memory_manager_addr
-    );
-    loader_memory_manager->ReserveArea(
+    auto* loader_memory_manager =
+        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr
+        );
+    loader_memory_manager->MarkMemoryAreaNotFree(
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
 
@@ -110,7 +110,7 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
 
     TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", kernel_entry_point);
 
-    loader_memory_manager->AddFreeRegion(
+    loader_memory_manager->AddFreeMemoryRegion(
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
 

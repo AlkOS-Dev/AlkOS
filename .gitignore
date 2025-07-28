@@ -38,8 +38,6 @@ cmake-build-*
 
 # build files
 build
-.cache
-out
 
 # tools
 tools
@@ -53,6 +51,3 @@ test_framework_logs
 # build configuration
 conf.bash
 conf.cmake
-
-# IDE configuration
-compile_commands.json
