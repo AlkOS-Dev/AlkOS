@@ -13,10 +13,13 @@
 #include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <loader_memory_manager.hpp>
+#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <modules/hardware.hpp>
-#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
+
+#include "multiboot2/memory_map.hpp"
+#include "multiboot2/multiboot2.h"
+#include "multiboot2/multiboot_info.hpp"
 
 #include "memory_management/physical_memory_manager.hpp"
 

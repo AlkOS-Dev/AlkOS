@@ -1,3 +1,4 @@
+#include "multiboot2/multiboot_info.hpp"
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
@@ -12,14 +13,14 @@
 #include "definitions/loader32_data.hpp"
 #include "definitions/loader64_data.hpp"
 #include "elf64.hpp"
-#include "loader_memory_manager.hpp"
-#include "multiboot2/extensions.hpp"
+#include "loader_memory_manager/loader_memory_manager.hpp"
 #include "multiboot2/multiboot2.h"
 #include "terminal.hpp"
 
 #include <extensions/debug.hpp>
 
 using namespace loader64;
+using namespace Multiboot;
 
 /* external init procedures */
 extern "C" void EnterKernel(u64 kernel_entry_addr, LoaderData* loader_data_kernel);
@@ -43,15 +44,15 @@ static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
     return true;
 }
 
-static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
+static Multiboot::TagModule* FindKernelModule(MultibootInfo multiboot_info)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
     TRACE_INFO("Finding kernel module in multiboot tags...");
-    auto* kernel_module = multiboot::FindTagInMultibootInfo<
-        multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
+    auto* kernel_module =
+        multiboot_info.FindTag<Multiboot::TagModule, [](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "kernel") == 0;
-        }>(reinterpret_cast<void*>(multiboot_info_addr));
+        }>();
     if (kernel_module == nullptr) {
         arch::KernelPanic("Kernel module not found in multiboot tags!");
     }
@@ -90,9 +91,8 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_INFO(
         "Mapping kernel module to upper memory starting at 0x%llX", arch::kKernelVirtualAddressStart
     );
-    auto* multiboot_info =
-        reinterpret_cast<multiboot::header_t*>(loader_data_32_64->multiboot_info_addr);
-    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
+    MultibootInfo multiboot_info{loader_data_32_64->multiboot_info_addr};
+    auto* mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
     loader_memory_manager
         ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
             mmap_tag, arch::kKernelVirtualAddressStart, elf_effective_size, 0

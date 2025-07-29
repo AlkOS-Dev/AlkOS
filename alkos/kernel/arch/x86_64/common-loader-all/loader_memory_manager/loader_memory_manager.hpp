@@ -1,9 +1,8 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
 
-#include "defines.hpp"
+#include "extensions/concepts.hpp"
 #include "extensions/types.hpp"
-#include "multiboot2/extensions.hpp"
 #include "multiboot2/multiboot2.h"
 
 /**
@@ -333,7 +332,7 @@ class LoaderMemoryManager
 
     template <WalkDirection direction = WalkDirection::Descending>
     void MapVirtualRangeUsingExternalMemoryMap(
-        multiboot::tag_mmap_t* mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags = 0
+        Multiboot::TagMmap* mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags = 0
     );
 
     [[nodiscard]] u32 GetNumPmlTablesStored() const { return num_pml_tables_stored_; }
