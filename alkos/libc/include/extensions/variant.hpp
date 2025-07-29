@@ -503,7 +503,8 @@ class variant : protected detail::variant::VariantStorage<
     friend constexpr add_pointer_t<TOther> get_if(variant<OtherTypes...>* variant_v) noexcept;
 
     template <typename TOther, typename... OtherTypes>
-    friend constexpr add_pointer_t<const TOther> get_if(const variant<OtherTypes...>* variant_v
+    friend constexpr add_pointer_t<const TOther> get_if(
+        const variant<OtherTypes...>* variant_v
     ) noexcept;
 };
 

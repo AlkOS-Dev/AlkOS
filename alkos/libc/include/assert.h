@@ -11,9 +11,10 @@
 
 #include <panic.hpp>
 
-#define __FAIL_KERNEL(expr)                                               \
-    KernelPanic("Assertion failed: " TOSTRING(expr) " at file: " __FILE__ \
-                                                    " and line: " TOSTRING(__LINE__));
+#define __FAIL_KERNEL(expr)                                                                        \
+    KernelPanic(                                                                                   \
+        "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
+    );
 
 #define __ASSERT_FAIL_FUNC KernelPanic
 

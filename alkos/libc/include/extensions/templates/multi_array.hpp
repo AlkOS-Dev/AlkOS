@@ -154,7 +154,8 @@ class MultiArray
      *
      * @param fill_value Value to initialize all elements of the MultiArray.
      */
-    explicit constexpr MultiArray(const T& fill_value
+    explicit constexpr MultiArray(
+        const T& fill_value
     ) noexcept(std::is_nothrow_copy_constructible_v<T>)
         : data_{}
     {
@@ -174,7 +175,11 @@ class MultiArray
      */
     template <typename Generator>
 
-        requires(std::is_invocable_v<Generator, const std::array<size_t, kRank>&> && std::convertible_to<std::invoke_result_t<Generator, const std::array<size_t, kRank>&>, T>)
+        requires(
+            std::is_invocable_v<Generator, const std::array<size_t, kRank>&> &&
+            std::convertible_to<
+                std::invoke_result_t<Generator, const std::array<size_t, kRank>&>, T>
+        )
 
     explicit constexpr MultiArray(Generator&& generator) noexcept(
 
@@ -231,7 +236,8 @@ class MultiArray
      *
      * @param other MultiArray to copy from.
      */
-    constexpr MultiArray& operator=(const MultiArray& other
+    constexpr MultiArray& operator=(
+        const MultiArray& other
     ) noexcept(std::is_nothrow_copy_assignable_v<T>)
         requires(std::is_copy_assignable_v<storage_t>)
     {
@@ -246,7 +252,8 @@ class MultiArray
      *
      * @param other MultiArray to move from.
      */
-    constexpr MultiArray& operator=(MultiArray&& other
+    constexpr MultiArray& operator=(
+        MultiArray&& other
     ) noexcept(std::is_nothrow_move_assignable_v<T>)
         requires(std::is_move_assignable_v<storage_t>)
     {
