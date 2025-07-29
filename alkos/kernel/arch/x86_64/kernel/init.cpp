@@ -9,7 +9,6 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <definitions/loader64_data.hpp>
 #include <drivers/pic8259/pic8259.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
@@ -17,6 +16,7 @@
 #include <memory/loader_memory_manager.hpp>
 #include <terminal.hpp>
 #include "memory/physical_memory_manager.hpp"
+#include "models/loader_data.hpp"
 
 /* external init procedures */
 extern "C" void EnableOSXSave();
@@ -25,7 +25,7 @@ extern "C" void EnableAVX();
 extern "C" void EnterKernel(u64 kernel_entry_addr);
 
 static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
-    loader64::LoaderData* loader_data, memory::LoaderMemoryManager* loader_memory_manager
+    Loader::Bit64::LoaderData* loader_data, memory::LoaderMemoryManager* loader_memory_manager
 )
 {
     TRACE_INFO("Creating page buffer...");
@@ -41,7 +41,7 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     });
     u64 pages_required     = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
     buffer_info.start_addr = AlignUp(
-        loader_data->kernel_end_addr + memory::PhysicalMemoryManager::kPageSize,
+        loader_data->kernel_span.end + memory::PhysicalMemoryManager::kPageSize,
         memory::PhysicalMemoryManager::kPageSize
     );
     buffer_info.size_bytes = pages_required * sizeof(u64);
@@ -53,13 +53,13 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
     TRACE_INFO("Total memory bytes: %sB", FormatMetricUint(total_memory_bytes));
     TRACE_INFO("Pages required: %sB", FormatMetricUint(pages_required));
 
-    loader_data->multiboot_header_end_addr = buffer_info.start_addr + buffer_info.size_bytes;
+    loader_data->multiboot_header_span.end = buffer_info.start_addr + buffer_info.size_bytes;
 
     TRACE_SUCCESS("Page buffer created!");
     return buffer_info;
 }
 
-extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
+extern "C" void PreKernelInit(Loader::Bit64::LoaderData* loader_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
@@ -72,7 +72,10 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
         OsHangNoInterrupts();
     }
     TRACE_SUCCESS("LoaderData found!");
-    TODO_WHEN_DEBUGGING_FRAMEWORK
+    if (!loader_data->magic.IsValid()) {
+        TRACE_ERROR("LoaderData magic check failed!");
+        OsHangNoInterrupts();
+    }
     TRACE_INFO("Starting pre-kernel initialization");
 
     TRACE_INFO("Starting to setup CPU features");
@@ -103,9 +106,9 @@ extern "C" void PreKernelInit(loader64::LoaderData* loader_data)
     TRACE_INFO("Finished cpu features setup.");
 
     auto* loader_memory_manager =
-        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data->loader_memory_manager_addr);
+        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data->memory_manager_span.start);
     loader_memory_manager->MarkMemoryAreaNotFree(
-        loader_data->kernel_start_addr, loader_data->kernel_end_addr
+        loader_data->kernel_span.start, loader_data->kernel_span.end
     );
 
     memory::PhysicalMemoryManager::PageBufferInfo_t page_buffer_info =

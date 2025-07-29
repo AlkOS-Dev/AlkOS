@@ -1,4 +1,7 @@
 cmake-build-*
+out
+compile_commands.json
+.cache
 
 # Prerequisites
 *.d

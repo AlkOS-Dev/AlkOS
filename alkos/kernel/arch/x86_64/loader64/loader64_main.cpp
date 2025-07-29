@@ -9,16 +9,15 @@
 /* internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <definitions/loader32_data.hpp>
-#include <definitions/loader64_data.hpp>
 #include <elf64.hpp>
 #include <extensions/debug.hpp>
 #include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
 #include "loader64_kernel_constants.hpp"
 #include "memory/loader_memory_manager.hpp"
+#include "models/loader_data.hpp"
 
-using namespace loader64;
+using namespace Loader::Bit64;
 
 /* external init procedures */
 extern "C" void EnterKernel(u64 kernel_entry_addr, LoaderData* loader_data_kernel);
@@ -26,21 +25,7 @@ extern const char loader64_start[];
 extern const char loader64_end[];
 extern byte kLoaderPreAllocatedMemory[];
 
-LoaderData loader_data;
-
-static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
-{
-    TRACE_INFO("Checking for LoaderData...");
-    if (loader_data_32_64 == nullptr) {
-        TRACE_ERROR("LoaderData check failed!");
-        return false;
-    }
-    TRACE_SUCCESS("LoaderData found passed!");
-
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-
-    return true;
-}
+alignas(4096) LoaderData loader_data;
 
 static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
 {
@@ -59,27 +44,27 @@ static multiboot::tag_module_t* FindKernelModule(u32 multiboot_info_addr)
     return kernel_module;
 }
 
-extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
+extern "C" void MainLoader64(Loader::Bit32::LoaderData* loader_data_bit32)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
-    if (!ValidateLoaderData(loader_data_32_64)) {
-        KernelPanic("LoaderData check failed!");
+    if (!loader_data_bit32->magic.IsValid()) {
+        KernelPanic("LoaderData magic check failed!");
     }
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    auto* loader_memory_manager =
-        reinterpret_cast<memory::LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr
-        );
+    auto* loader_memory_manager = reinterpret_cast<memory::LoaderMemoryManager*>(
+        loader_data_bit32->memory_manager_span.start
+    );
     loader_memory_manager->MarkMemoryAreaNotFree(
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
 
-    auto* kernel_module = FindKernelModule(loader_data_32_64->multiboot_info_addr);
+    auto* kernel_module = FindKernelModule(loader_data_bit32->multiboot_info_addr);
 
     TRACE_INFO("Getting ELF bounds...");
     auto [elf_lower_bound, elf_upper_bound] =
@@ -91,7 +76,7 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
         "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStartShared
     );
     auto* multiboot_info =
-        reinterpret_cast<multiboot::header_t*>(loader_data_32_64->multiboot_info_addr);
+        reinterpret_cast<multiboot::header_t*>(loader_data_bit32->multiboot_info_addr);
     auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
     loader_memory_manager->MapVirtualRangeUsingExternalMemoryMap<
         memory::LoaderMemoryManager::WalkDirection::Descending>(
@@ -114,12 +99,12 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
         reinterpret_cast<u64>(loader64_start), reinterpret_cast<u64>(loader64_end)
     );
 
-    loader_data.kernel_start_addr           = elf_lower_bound;
-    loader_data.kernel_end_addr             = elf_upper_bound;
-    loader_data.loader_memory_manager_addr  = loader_data_32_64->loader_memory_manager_addr;
-    loader_data.multiboot_info_addr         = loader_data_32_64->multiboot_info_addr;
-    loader_data.multiboot_header_start_addr = loader_data_32_64->multiboot_header_start_addr;
-    loader_data.multiboot_header_end_addr   = loader_data_32_64->multiboot_header_end_addr;
+    loader_data.multiboot_info_addr   = loader_data_bit32->multiboot_info_addr;
+    loader_data.multiboot_header_span = loader_data_bit32->multiboot_header_span;
+    loader_data.memory_manager_span   = loader_data_bit32->memory_manager_span;
+    loader_data.kernel_span           = MemorySpan{
+        kKernelVirtualAddressStartShared, kKernelVirtualAddressStartShared + elf_effective_size
+    };
 
     EnterKernel(kernel_entry_point, &loader_data);
 }

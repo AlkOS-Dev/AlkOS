@@ -4,9 +4,9 @@
 #include <extensions/internal/formats.hpp>
 #include "arch_utils.hpp"
 #include "defines.hpp"
-#include "definitions/loader32_data.hpp"
 #include "elf64.hpp"
 #include "memory/loader_memory_manager.hpp"
+#include "models/loader_data.hpp"
 #include "terminal.hpp"
 
 // External functions defined in assembly
@@ -30,7 +30,7 @@ extern const char loader32_end[];
 extern byte kLoaderPreAllocatedMemory[];
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
-loader32::LoaderData loader_data;
+Loader::Bit32::LoaderData loader_data;
 
 static void MultibootCheck(u32 boot_loader_magic)
 {
@@ -198,12 +198,17 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     u64 kernel_entry_point = LoadLoader64Module(loader64_module);
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
+    TRACE_INFO("Initializing LoaderData structure...");
     loader_data.multiboot_info_addr = static_cast<u64>(reinterpret_cast<u32>(multiboot_info_addr));
-    loader_data.multiboot_header_start_addr =
+    loader_data.multiboot_header_span.start =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
-    loader_data.multiboot_header_end_addr =
+    loader_data.multiboot_header_span.end =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
-    loader_data.loader_memory_manager_addr = reinterpret_cast<u64>(loader_memory_manager);
+    loader_data.memory_manager_span.start =
+        static_cast<u64>(reinterpret_cast<u32>(loader_memory_manager));
+    loader_data.memory_manager_span.end = static_cast<u64>(
+        reinterpret_cast<u32>(loader_memory_manager) + sizeof(memory::LoaderMemoryManager)
+    );
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     TODO_WHEN_DEBUGGING_FRAMEWORK
