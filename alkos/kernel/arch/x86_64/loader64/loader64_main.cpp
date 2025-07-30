@@ -50,9 +50,9 @@ static Multiboot::TagModule* FindKernelModule(MultibootInfo multiboot_info)
 
     TRACE_INFO("Finding kernel module in multiboot tags...");
     auto* kernel_module =
-        multiboot_info.FindTag<Multiboot::TagModule, [](Multiboot::TagModule* tag) -> bool {
+        multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "kernel") == 0;
-        }>();
+        });
     if (kernel_module == nullptr) {
         arch::KernelPanic("Kernel module not found in multiboot tags!");
     }

@@ -28,6 +28,9 @@ struct TagMetadata {
     }
 
 // Specializations for each tag type based on the kMultibootTagType constants.
+// NOTE: This is not ideal - the defines are not 1:1 (Eg. TagString is not the same as
+// kMultibootTagTypeCmdline) TagString can have kMultibootTagTypeCmdline or
+// kMultibootTagTypeBootLoaderName, But this is unimportant for the current use case.
 DEFINE_TAG_METADATA(TagString, kMultibootTagTypeCmdline);
 DEFINE_TAG_METADATA(TagModule, kMultibootTagTypeModule);
 DEFINE_TAG_METADATA(TagBasicMeminfo, kMultibootTagTypeBasicMeminfo);

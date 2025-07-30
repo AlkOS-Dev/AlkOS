@@ -24,11 +24,11 @@ concept TagCallback = requires(Callback cb, Tag tag) {
 
 template <typename Tag>
 concept TagT = requires(Tag tag) {
-    { tag->type };
+    { tag.type };
 };
 
 template <class FilterT, class TagT>
-concept TagFilter = requires(FilterT filter, TagT *tag) {
+concept TagFilter = requires(FilterT filter, TagT* tag) {
     { filter(tag) } -> std::convertible_to<bool>;
 };
 
@@ -49,37 +49,50 @@ class MultibootInfo
     {
         MemorySpan ms;
         ms.start = multiboot_info_addr_;
+        return ms;
     }
 
     template <TagCallback Callback>
     void WalkTags(Callback cb)
     {
-        for (Tag *tag_ptr = reinterpret_cast<Tag *>(multiboot_info_addr_ + 8);
-             tag_ptr->type != kMultibootTagTypeEnd; tag_ptr = tag_ptr + AlignUp(tag_ptr->size, 8)) {
-            Tag &tag = *tag_ptr;
+        for (Tag* tag_ptr = reinterpret_cast<Tag*>(multiboot_info_addr_ + 8);
+             tag_ptr->type != kMultibootTagTypeEnd;
+             tag_ptr = reinterpret_cast<Tag*>(
+                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             )) {
+            Tag& tag = *tag_ptr;
             cb(tag);
         }
     }
 
-    template <
-        TagT Tag,
-        TagFilter<Tag> auto Filter = [](Tag *) constexpr -> bool {
-            return true;
-        }>
-    Tag *FindTag()
+    template <TagT Tag, typename Filter>
+    Tag* FindTag(Filter filter)
     {
-        const u32 kType = TagMetadata<Tag>::kValue;
-        TODO_WHEN_DEBUGGING_FRAMEWORK
-        [[maybe_unused]] const char *kName = TagMetadata<Tag>::kTagName;
+        const u32 kType                    = TagMetadata<Tag>::kValue;
+        [[maybe_unused]] const char* kName = TagMetadata<Tag>::kTagName;
         static_assert(kType != kInvalidTagNumber);
 
-        for (Tag *tag_ptr = reinterpret_cast<Tag *>(multiboot_info_addr_ + 8);
-             tag_ptr->type != kMultibootTagTypeEnd; tag_ptr = tag_ptr + AlignUp(tag_ptr->size, 8)) {
-            if (tag_ptr->type == kType && Filter(tag_ptr)) {
-                return tag_ptr;
+        for (auto* tag_ptr = reinterpret_cast<Multiboot::Tag*>(multiboot_info_addr_ + 8);
+             tag_ptr->type != kMultibootTagTypeEnd;
+             tag_ptr = reinterpret_cast<Multiboot::Tag*>(
+                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             )) {
+            if (tag_ptr->type == kType) {
+                auto* specific_tag = reinterpret_cast<Tag*>(tag_ptr);
+                if (filter(specific_tag)) {
+                    return specific_tag;
+                }
             }
         }
         return nullptr;
+    }
+
+    template <TagT Tag>
+    Tag* FindTag()
+    {
+        return FindTag<Tag>([](const Tag*) {
+            return true;
+        });
     }
 
     private:

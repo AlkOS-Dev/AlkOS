@@ -113,6 +113,7 @@ static Multiboot::TagModule* GetLoader64Module(const MultibootInfo& multiboot_in
         multiboot_info.FindTag<Multiboot::TagModule, [](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "loader64") == 0;
         }>();
+
     if (loader64_module == nullptr) {
         arch::KernelPanic("loader64 module not found in multiboot tags!");
     }
