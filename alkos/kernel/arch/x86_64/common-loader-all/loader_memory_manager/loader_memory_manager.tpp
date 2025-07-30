@@ -123,7 +123,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
                 FreeMemoryRegion_t region{entry->addr, entry->len};
                 callback(region);
                 entry->addr = region.addr;
-                entry->addr = region.length;
+                entry->len  = region.length;
             }
         }
     };
