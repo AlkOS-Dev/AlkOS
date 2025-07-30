@@ -6,7 +6,8 @@
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 
-#include "loader_memory_manager.hpp"
+#include "loader_memory_manager/loader_memory_manager.hpp"
+#include "multiboot2/memory_map.hpp"
 
 template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
 void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
@@ -88,7 +89,10 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
 
     uintptr_t descending_sorted_address_buffer[kMaxMemoryMapEntries];
     u64 address_count = 0;
-    WalkMemoryMap(mmap_tag, [&](MmapEntry *entry) {
+    // TODO: This looks wacky since we pass the Tag and construct the MemoryMap from it, not just
+    // passing the MemoryMap directly. This should be changed when the loader_memory_manager is
+    // updated to be more sensible.
+    MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry *entry) {
         if (entry->type != MmapEntry::kMemoryAvailable) {
             return;
         }
@@ -102,7 +106,6 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
             i--;
         }
     });
-
     const auto external_provider = [&](auto callback) {
         if constexpr (direction == WalkDirection::Descending) {
             for (u64 i = 0; i < address_count; i++) {
