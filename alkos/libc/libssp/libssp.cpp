@@ -54,8 +54,11 @@ static void __stack_chk_init_kernel() {}
 /**
  * @todo Add some debug message about stack in future
  */
-WRAP_CALL NO_RET void __stack_chk_fail_kernel() { arch::KernelPanic("Stack smashing detected"); }
-
+WRAP_CALL NO_RET void __stack_chk_fail_kernel()
+{
+    arch::KernelPanic("Stack smashing detected");
+    while (true);  // This makes it explicit to the compiler that this function does not return.
+}
 #endif  // __ALKOS_LIBK__
 
 // ------------------------------

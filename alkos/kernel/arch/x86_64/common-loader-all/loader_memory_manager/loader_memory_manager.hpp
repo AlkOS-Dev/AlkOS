@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 
 #include "extensions/concepts.hpp"
 #include "extensions/types.hpp"
@@ -27,7 +27,7 @@ concept FreeMemoryRegionCallback =
 template <typename Provider>
 concept FreeRegionProvider = requires(Provider provider) {
     {
-        provider([](FreeMemoryRegion_t & region) {
+        provider([](FreeMemoryRegion_t&) {
         })
     } -> std::convertible_to<void>;
 };
@@ -398,4 +398,4 @@ class LoaderMemoryManager
 
 #include "loader_memory_manager.tpp"
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_

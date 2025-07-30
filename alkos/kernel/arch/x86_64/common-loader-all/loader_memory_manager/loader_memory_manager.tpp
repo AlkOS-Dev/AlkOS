@@ -92,11 +92,11 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     // TODO: This looks wacky since we pass the Tag and construct the MemoryMap from it, not just
     // passing the MemoryMap directly. This should be changed when the loader_memory_manager is
     // updated to be more sensible.
-    MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry *entry) {
-        if (entry->type != MmapEntry::kMemoryAvailable) {
+    MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry &entry) {
+        if (entry.type != MmapEntry::kMemoryAvailable) {
             return;
         }
-        descending_sorted_address_buffer[address_count++] = reinterpret_cast<uintptr_t>(entry);
+        descending_sorted_address_buffer[address_count++] = reinterpret_cast<uintptr_t>(&entry);
         u64 i                                             = address_count - 1;
         while (i > 0 &&
                descending_sorted_address_buffer[i] > descending_sorted_address_buffer[i - 1]) {
@@ -114,7 +114,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
                 FreeMemoryRegion_t region{entry->addr, entry->len};
                 callback(region);
                 entry->addr = region.addr;
-                entry->addr = region.length;
+                entry->len  = region.length;
             }
         } else {
             for (u64 i = address_count - 1; i > 0; i--) {
@@ -137,12 +137,10 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u64 virtual_address, u64 physical_address, u64 flags
 )
 {
-    static constexpr u32 kIndexMask     = 0x1FF;
-    static constexpr i32 kPageShift     = (page_size == PageSize::Page4k)   ? 12
-                                          : (page_size == PageSize::Page2M) ? 21
-                                                                            : 30;
-    static constexpr u64 kAlignmentMask = (1ULL << kPageShift) - 1;
-
+    static constexpr u32 kIndexMask = 0x1FF;
+    static constexpr i32 kPageShift = (page_size == PageSize::Page4k)   ? 12
+                                      : (page_size == PageSize::Page2M) ? 21
+                                                                        : 30;
     // Both addresses must be aligned to the page size
     R_ASSERT(IsAligned(physical_address, 1 << kPageShift));
     R_ASSERT(IsAligned(virtual_address, 1 << kPageShift));

@@ -88,15 +88,14 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
 )
 {
     TRACE_INFO("Adding available memory regions to memory manager...");
-    memory_map.WalkEntries([&](Multiboot::MmapEntry* mmap_entry) FORCE_INLINE_L {
-        if (mmap_entry->type == Multiboot::MmapEntry::kMemoryAvailable) {
+    memory_map.WalkEntries([&](Multiboot::MmapEntry& mmap_entry) FORCE_INLINE_L {
+        if (mmap_entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
             loader_memory_manager->AddFreeMemoryRegion(
-                mmap_entry->addr, mmap_entry->addr + mmap_entry->len
+                mmap_entry.addr, mmap_entry.addr + mmap_entry.len
             );
             TRACE_INFO(
                 "Memory region: 0x%llX-0x%llX, length: %sB - Added to memory manager",
-                mmap_entry->addr, mmap_entry->addr + mmap_entry->len,
-                FormatMetricUint(mmap_entry->len)
+                mmap_entry.addr, mmap_entry.addr + mmap_entry.len, FormatMetricUint(mmap_entry.len)
             );
         }
     });
@@ -106,14 +105,13 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
     );
 }
 
-static Multiboot::TagModule* GetLoader64Module(const MultibootInfo& multiboot_info)
+static Multiboot::TagModule* GetLoader64Module(MultibootInfo& multiboot_info)
 {
     TRACE_INFO("Searching for loader64 module...");
     auto* loader64_module =
-        multiboot_info.FindTag<Multiboot::TagModule, [](Multiboot::TagModule* tag) -> bool {
+        multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "loader64") == 0;
-        }>();
-
+        });
     if (loader64_module == nullptr) {
         arch::KernelPanic("loader64 module not found in multiboot tags!");
     }
@@ -192,7 +190,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
 
     //////////////////////////// Loading Loader64 Module //////////////////////////
 
-    auto* loader64_module  = GetLoader64Module(multiboot_info_addr);
+    auto* loader64_module  = GetLoader64Module(multiboot_info);
     u64 kernel_entry_point = LoadLoader64Module(loader64_module);
 
     ///////////////////// Initializing LoaderData Structure //////////////////////
