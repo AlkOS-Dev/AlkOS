@@ -168,7 +168,7 @@ feature_flags_process() {
   # Verify structure of config file
   for flag in "${!CONFIGURE_FEATURE_FLAGS[@]}"; do
     # Check if flag from file is in definitions
-    if ! printf '%s\n' "${flag_names[@]}" | grep -q ${flag}; then
+    if ! printf '%s\n' "${flag_names[@]}" | grep -q "${flag}"; then
         pretty_warn "Feature flag ${flag} is unrecognized. Please check your feature flags definitions."
     fi
   done
