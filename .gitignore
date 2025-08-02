@@ -47,8 +47,3 @@ tools
 __pycache__
 logs
 test_framework_logs
-
-# build configuration
-conf.generated.bash
-conf.generated.cmake
-feature_flags.conf
