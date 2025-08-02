@@ -142,14 +142,16 @@ process_args() {
   [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../../tools"
 }
 
-run() {
+configure_script_welcome() {
   pretty_info "Configuring AlkOS build..."
   pretty_info "Architecture: $CONFIGURE_ARCH"
   pretty_info "Build type: $CONFIGURE_BUILD_TYPE"
   pretty_info "Build directory: $CONFIGURE_BUILD_DIR"
   pretty_info "Tool binaries directory: $CONFIGURE_TOOL_BINARIES_DIR"
   pretty_info "Verbose mode: $CONFIGURE_VERBOSE"
+}
 
+configure_script_feature_flags() {
   pretty_info "Preparing feature flags..."
 
   if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
@@ -165,7 +167,9 @@ run() {
   fi
 
   feature_flags_generate_cxx_files
+}
 
+configure_script_cmake_config() {
   pretty_info "Creating cmake configuration files..."
   # prepare conf.generated.cmake
   local conf_cmake="${CONFIGURE_DIR}/../../config/conf.generated.cmake"
@@ -180,6 +184,12 @@ run() {
   echo "set(CMAKE_BUILD_DIR \"${CONFIGURE_BUILD_DIR}\")" >> "$conf_cmake"
 
   feature_flags_generate_cmake
+}
+
+run() {
+  configure_script_welcome
+  configure_script_feature_flags
+  configure_script_cmake_config
 
   pretty_info "Preparing build directory..."
   base_runner "Failed to create build directory" "${CONFIGURE_VERBOSE}" mkdir -p "${CONFIGURE_BUILD_DIR}"
