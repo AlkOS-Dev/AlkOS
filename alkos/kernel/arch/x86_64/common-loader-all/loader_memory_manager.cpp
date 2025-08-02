@@ -54,6 +54,7 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
     while (found_intersection) {
         found_intersection = false;
         for (u32 i = 0; i < num_free_memory_regions_; i++) {
+            constexpr i64 kNoOffset          = 0;
             constexpr u64 kEmptyRegionLength = 0;
 
             const i64 free_start = static_cast<i64>(descending_sorted_mmap_entries[i].addr);
