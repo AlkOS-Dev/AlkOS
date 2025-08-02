@@ -222,8 +222,6 @@ feature_flags_set() {
 
   CONFIGURE_FEATURE_FLAGS[$flag_name]="$flag_value"
 
-  echo "Setting feature flag '${flag_name}' to '${flag_value}'"
-
   # Escape for sed and replace line with quoted key
   escaped_flag_name=$(printf '%s' "$flag_name" | sed 's/[][\\.^$*]/\\&/g')
   sed -i.bak "s/^CONFIGURE_FEATURE_FLAGS\[\"$escaped_flag_name\"\]=.*/CONFIGURE_FEATURE_FLAGS[\"$flag_name\"]=$flag_value/" "${FEATURE_FLAGS_PATH}"

@@ -13,7 +13,7 @@ main() {
 
   pretty_info "Running debug regression test"
 
-  init "debug_qemu" "${ARCH}"
+  init "debug -p regression_mode" "${ARCH}"
 
   # Tests
   boot_test
