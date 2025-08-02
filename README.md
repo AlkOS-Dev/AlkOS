@@ -30,6 +30,7 @@ AlkOS is an open-source operating system project targeting the x86_64 architectu
     *   [Getting Started](#getting-started)
         *   [Prerequisites](#-prerequisites)
         *   [Installation](#️-installation-dependencies-and-toolchain)
+        *   [Feature flags](#feature-flags)
     *   [Development Workflow](#-development-workflow)
         *   [Building AlkOS](#️-building-alkos)
         *   [Running AlkOS in QEMU](#️-running-alkos-in-qemu)
@@ -141,7 +142,9 @@ The primary goals of AlkOS are:
     ```
     ./configure.bash -h
     ```
-
+    
+    Modify feature flags in `scripts/config/feature_flags.conf` to enable or disable specific features. The configuration script will automatically update the generated files based on these flags.
+    For more information refer to feature flags section below [Feature flags](#feature-flags).
 4.  **Install dependencies and the cross-compilation toolchain:**
 
     ```bash
@@ -158,6 +161,72 @@ The primary goals of AlkOS are:
     Note: Installing the dependencies assumes you are running on Arch Linux. If not, you will need to manually install the packages listed in `scripts/env/arch_packages.txt`.
 
     Note 2: There exists a dependencies installer for Ubuntu: `./scripts/env/install_deps_ubuntu.bash`
+
+### Feature flags
+
+#### Initial Setup
+
+When you first run the configure script, it will generate a feature flags configuration file at `config/feature_flags.conf`. This file contains all available feature flags with their default values:
+
+```bash
+./scripts/configure/configure.bash x86_64 debug
+```
+
+This creates `config/feature_flags.conf` with entries like:
+```bash
+# run_test_mode - Instead of proceeding to usual kernel boot enter the test mode
+CONFIGURE_FEATURE_FLAGS["run_test_mode"]=false
+
+# debug_spinlock - Enables additional debug information for spinlocks
+CONFIGURE_FEATURE_FLAGS["debug_spinlock"]=false
+```
+
+#### Manual Configuration
+
+You can edit `config/feature_flags.conf` directly to enable or disable features:
+
+```bash
+# Enable test mode
+CONFIGURE_FEATURE_FLAGS["run_test_mode"]=true
+
+# Enable debug output for troubleshooting
+CONFIGURE_FEATURE_FLAGS["debug_output"]=true
+```
+
+**Important**: Only use `true` or `false` values. The system will validate your configuration.
+
+#### Using Presets
+
+For common configurations, you can use presets instead of manually editing flags:
+
+```bash
+# Configure for testing
+./scripts/configure/configure.bash x86_64 debug -p test_mode
+
+# Configure for regression testing  
+./scripts/configure/configure.bash x86_64 debug -p regression_mode
+
+# Reset to defaults
+./scripts/configure/configure.bash x86_64 debug -p default
+```
+
+**Available Presets:**
+- `test_mode`: Enables test mode with full debugging (`run_test_mode=true debug_spinlock=true debug_output=true debug_traces=true`)
+- `regression_mode`: Enables debugging without test mode (`debug_spinlock=true debug_output=true debug_traces=true`)
+- `default`: Resets all flags to their default values
+
+#### Verifying Configuration
+
+After configuration, the system will warn you about any unrecognized flags in your configuration file. This helps catch typos or outdated flag names.
+
+The generated header file at `alkos/generated/include/autogen/feature_flags.h` shows the final configuration that will be used in your build.
+
+#### Best Practices
+
+1. **Keep a backup**: Before making extensive changes, copy your working `feature_flags.conf`
+2. **Use presets when possible**: They ensure consistent, tested configurations
+3. **Check generated files**: Review the generated header to confirm your settings
+4. **Clean builds**: After changing feature flags, consider doing a clean build to ensure all code is recompiled with new settings
 
 ## 💻 Development Workflow
 
