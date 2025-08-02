@@ -130,7 +130,7 @@ The primary goals of AlkOS are:
     For example, to configure a debug build for QEMU with tests enabled, run:
 
     ```
-    ./configure.bash x86_64 debug_qemu_tests -v
+    ./configure.bash x86_64 debug -v
     ```
 
     This will create a `conf.generated.bash` file in the `scripts/config` directory. This file is sourced by other scripts to get configuration information. The configuration script will 
