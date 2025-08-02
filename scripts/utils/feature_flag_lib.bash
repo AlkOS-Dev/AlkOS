@@ -162,7 +162,7 @@ feature_flags_process() {
     fi
   done
 
-  # Source the updated feature flags file
+  # Source the feature flags file
   source "${FEATURE_FLAGS_PATH}"
 
   # Verify structure of config file
@@ -172,9 +172,6 @@ feature_flags_process() {
         pretty_warn "Feature flag ${flag} is unrecognized. Please check your feature flags definitions."
     fi
   done
-
-  # Generate CXX feature flag files
-  feature_flags_generate_cxx_files
 }
 
 feature_flags_generate_cmake() {
@@ -208,8 +205,10 @@ feature_flags_generate_cmake() {
 feature_flags_set() {
   assert_argument_provided "$1"
   assert_argument_provided "$2"
-  local flag_name="$1"
-  local flag_value="$2"
+  local flag_name=$1
+  local flag_value=$2
+
+  source "${FEATURE_FLAGS_PATH}"
 
   if [[ -z "${CONFIGURE_FEATURE_FLAGS[$flag_name]}" ]]; then
     dump_error "Feature flag '${flag_name}' is not defined."
@@ -223,13 +222,20 @@ feature_flags_set() {
 
   CONFIGURE_FEATURE_FLAGS[$flag_name]="$flag_value"
 
-  # Inline replace the file with the new value
-  sed -i.bak "s/^CONFIGURE_FEATURE_FLAGS\[$flag_name\]=.*/CONFIGURE_FEATURE_FLAGS[$flag_name]=$flag_value/" "${FEATURE_FLAGS_PATH}"
+  echo "Setting feature flag '${flag_name}' to '${flag_value}'"
+
+  # Escape for sed and replace line with quoted key
+  escaped_flag_name=$(printf '%s' "$flag_name" | sed 's/[][\\.^$*]/\\&/g')
+  sed -i.bak "s/^CONFIGURE_FEATURE_FLAGS\[\"$escaped_flag_name\"\]=.*/CONFIGURE_FEATURE_FLAGS[\"$flag_name\"]=$flag_value/" "${FEATURE_FLAGS_PATH}"
+
+  rm -f "${FEATURE_FLAGS_PATH}.bak"
 }
 
 feature_flags_get() {
   assert_argument_provided "$1"
-  local flag_name="$1"
+  local flag_name=$1
+
+  source "${FEATURE_FLAGS_PATH}"
 
   if [[ -z "${CONFIGURE_FEATURE_FLAGS[$flag_name]}" ]]; then
     dump_error "Feature flag '${flag_name}' is not defined."
@@ -237,4 +243,18 @@ feature_flags_get() {
   fi
 
   echo "${CONFIGURE_FEATURE_FLAGS[$flag_name]}"
+}
+
+feature_flags_apply_preset() {
+  assert_argument_provided "$1"
+  local preset="$1"
+
+  # parse the preset string
+  IFS=' ' read -ra flags <<< "$preset"
+  for flag in "${flags[@]}"; do
+    # Split flag into name and value
+    IFS='=' read -r flag_name flag_value <<< "$flag"
+
+    feature_flags_set $flag_name $flag_value
+  done
 }

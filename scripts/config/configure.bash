@@ -27,19 +27,27 @@ declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
   ["release"]="Release"
 )
 
+declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
+  ["test_mode"]="run_test_mode=true debug_spinlock=true debug_output=true debug_traces=true"
+  ["regression_mode"]="debug_spinlock=true debug_output=true debug_traces=true"
+  ["default"]="Refer to feature_flags_defs.yaml..."
+)
+
 CONFIGURE_BUILD_DIR=""
 CONFIGURE_TOOL_BINARIES_DIR=""
 CONFIGURE_ARCH=""
 CONFIGURE_BUILD_TYPE=""
 CONFIGURE_VERBOSE=false
+CONFIGURE_PRESET=""
 
 help() {
-  echo "${CONFIGURE_SCRIPT_PATH} <arch> <build> [-b <BUILD_DIR>] [-t <TOOL_DIR>] [--verbose | -v]"
+  echo "${CONFIGURE_SCRIPT_PATH} <arch> <build> [-b <BUILD_DIR>] [-t <TOOL_DIR>] [--verbose | -v] [ -p <PRESET>]"
   echo "Where:"
   echo "<arch> - MANDATORY - architecture to build for. Supported are listed below."
   echo "<build> - MANDATORY - build type to configure. Supported are listed below."
   echo "-b <BUILD_DIR> - directory to store build files. Default is 'build' in repo parent dir."
   echo "-t <TOOL_DIR> - directory to store tool binaries. Default is 'tools' in repo parent dir."
+  echo "-p <PRESET> - optionally use preset for feature flags. "
   echo "--verbose | -v - flag to enable verbose output"
 
   echo ""
@@ -52,6 +60,12 @@ help() {
   echo "Supported build types:"
   for build in "${!CONFIGURE_BUILD_TYPES_DESC[@]}"; do
     echo "  ${build} - ${CONFIGURE_BUILD_TYPES_DESC[${build}]}"
+  done
+
+  echo ""
+  echo "Supported feature flag presets:"
+  for preset in "${!CONFIGURE_FEATURE_FLAGS_PRESETS[@]}"; do
+    echo "  ${preset} - ${CONFIGURE_FEATURE_FLAGS_PRESETS[${preset}]}"
   done
 }
 
@@ -73,6 +87,10 @@ parse_args() {
       -v|--verbose)
         CONFIGURE_VERBOSE=true
         shift
+        ;;
+      -p)
+        CONFIGURE_PRESET="$2"
+        shift 2
         ;;
       -*)
         dump_error "Unknown argument: $1"
@@ -114,6 +132,11 @@ process_args() {
     exit 1
   fi
 
+  if [[ -n "$CONFIGURE_PRESET" && -z "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}" ]]; then
+    dump_error "Unsupported feature flag preset: $CONFIGURE_PRESET. Use -h for help."
+    exit 1
+  fi
+
   # Set default values if not provided
   [[ -z "$CONFIGURE_BUILD_DIR" ]] && CONFIGURE_BUILD_DIR="${CONFIGURE_DIR}/../../build"
   [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../../tools"
@@ -128,7 +151,20 @@ run() {
   pretty_info "Verbose mode: $CONFIGURE_VERBOSE"
 
   pretty_info "Preparing feature flags..."
+
+  if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
+    rm -f "${FEATURE_FLAGS_PATH}"
+    CONFIGURE_PRESET=""
+  fi
+
   feature_flags_process
+
+  if [[ -n "$CONFIGURE_PRESET" ]]; then
+    pretty_info "Applying feature flag preset: $CONFIGURE_PRESET"
+    feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}"
+  fi
+
+  feature_flags_generate_cxx_files
 
   pretty_info "Creating cmake configuration files..."
   # prepare conf.generated.cmake
