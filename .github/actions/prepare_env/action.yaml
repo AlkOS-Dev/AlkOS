@@ -17,7 +17,7 @@ runs:
       env:
         ARCH: ${{ inputs.arch }}
       shell: bash
-      run: sudo "$GITHUB_WORKSPACE/scripts/config/configure.bash" "$ARCH" debug -v
+      run: sudo "$GITHUB_WORKSPACE/scripts/config/configure.bash" "$ARCH" debug -v -p test_mode
 
     - name: Cache toolchain
       uses: actions/cache@v4

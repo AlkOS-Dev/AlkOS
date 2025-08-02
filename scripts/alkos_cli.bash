@@ -132,7 +132,7 @@ run_default_configuration() {
     if [[ ${ALK_OS_CLI_CONFIG[configure]} == true ]]; then
         pretty_info "Running default configuration"
         base_runner "Failed to run default configuration" true \
-            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug_qemu ${ALK_OS_CLI_CONFIG[verbose]}
+            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug ${ALK_OS_CLI_CONFIG[verbose]} -p regression_mode
     fi
 }
 
