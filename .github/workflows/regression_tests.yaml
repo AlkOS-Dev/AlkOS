@@ -17,7 +17,7 @@ jobs:
 
       - name: Run debug regression tests
         id: debug_tests
-        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash" x86_64 --run
+        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash" x86_64 --run --verbose
         continue-on-error: true
 
       - name: Display debug logs on failure
@@ -42,7 +42,7 @@ jobs:
 
       - name: Run release regression tests
         id: release_tests
-        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64 --run
+        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64 --run --verbose
         if: always()
         continue-on-error: true
 
