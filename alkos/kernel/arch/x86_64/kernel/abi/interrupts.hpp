@@ -72,6 +72,7 @@ class Interrupts : public InterruptsABI
     // ------------------------------
     // Class fields
     // ------------------------------
+
     Idt idt_{};
 
     TODO_WHEN_VMEM_WORKS
