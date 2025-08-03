@@ -6,7 +6,7 @@ The AlkOS feature flags system provides a flexible way to enable or disable kern
 
 ### Why YAML Configuration?
 
-The feature flags system uses YAML (`feature_flags_defs.yaml`) as the single source of truth for several key benefits:
+The feature flags system uses YAML (`feature_flags_schema.yaml`) as the single source of truth for several key benefits:
 
 - **Declarative Configuration**: All feature flags, their descriptions, and default values are defined in one readable location
 - **Type Safety**: YAML structure ensures consistent flag definitions with required fields (name, description, default)
@@ -75,7 +75,7 @@ CONFIGURE_FEATURE_FLAGS["debug_spinlock"]=false
 
 #### Step 1: Define the Flag in YAML
 
-Add your new flag to `config/feature_flags_defs.yaml`:
+Add your new flag to `config/feature_flags_schema.yaml`:
 
 ```yaml
 feature_flags:

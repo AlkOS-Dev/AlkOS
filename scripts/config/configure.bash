@@ -30,7 +30,7 @@ declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
 declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
   ["test_mode"]="run_test_mode=true debug_spinlock=true debug_output=true debug_traces=true"
   ["regression_mode"]="debug_spinlock=true debug_output=true debug_traces=true"
-  ["default"]="Refer to feature_flags_defs.yaml..."
+  ["default"]="Refer to feature_flags_schema.yaml..."
 )
 
 CONFIGURE_BUILD_DIR=""
@@ -154,16 +154,16 @@ configure_script_welcome() {
 configure_script_feature_flags() {
   pretty_info "Preparing feature flags..."
 
-  if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
-    rm -f "${FEATURE_FLAGS_PATH}"
-    CONFIGURE_PRESET=""
-  fi
-
   feature_flags_process
 
   if [[ -n "$CONFIGURE_PRESET" ]]; then
-    pretty_info "Applying feature flag preset: $CONFIGURE_PRESET"
-    feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}"
+    if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
+      pretty_info "Resetting all feature flags to defaults..."
+      feature_flags_reset_to_defaults
+    else
+      pretty_info "Applying feature flag preset: $CONFIGURE_PRESET"
+      feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}"
+    fi
   fi
 
   feature_flags_generate_cxx_files
