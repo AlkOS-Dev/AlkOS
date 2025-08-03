@@ -131,7 +131,7 @@ feature_flags_generate_cxx_files_cxx_vars() {
 
   # Prepare constexpr variable for C++ code
   echo "template <FeatureFlag Flag>" >> "${FEATURE_FLAGS_CXX_PATH}"
-  echo "constexpr bool FeatureEnabled = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
+  echo "inline constexpr bool FeatureEnabled = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
   echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
 
   for flag in "${flag_names[@]}"; do
@@ -145,9 +145,9 @@ feature_flags_generate_cxx_files_cxx_vars() {
     flag_pascal=$(snake_case_to_pascal_case "${flag}")
 
     if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
-      echo "template <> constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = true;" >> "${FEATURE_FLAGS_CXX_PATH}"
+      echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = true;" >> "${FEATURE_FLAGS_CXX_PATH}"
     else
-      echo "template <> constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
+      echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
     fi
 
     echo "" >> "${FEATURE_FLAGS_CXX_PATH}"

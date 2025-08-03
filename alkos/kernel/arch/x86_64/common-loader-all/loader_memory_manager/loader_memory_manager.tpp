@@ -3,7 +3,134 @@
 
 #include <assert.h>
 #include <string.h>
-#include "extensions/debug.hpp"
+#include <extensions/bit.hpp>
+#include <extensions/debug.hpp>
+
+#include "loader_memory_manager/loader_memory_manager.hpp"
+#include "multiboot2/memory_map.hpp"
+
+template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
+    Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    static constexpr bool is_descending   = direction == WalkDirection::Descending;
+    static constexpr u32 k4kPageSizeBytes = 1 << 12;
+
+    ASSERT_TRUE(IsAligned(virtual_address, k4kPageSizeBytes));
+    ASSERT_GE(available_memory_bytes_, size_bytes);
+
+    u64 mapped_bytes = 0;
+
+    provider([&](FreeMemoryRegion_t &region) {
+        if (mapped_bytes >= size_bytes) {
+            return;
+        }
+
+        // Skip exhausted memory regions
+        if (region.length < k4kPageSizeBytes) {
+            return;
+        }
+
+        const u64 current_physical_address =
+            is_descending ? region.addr + region.length - k4kPageSizeBytes : region.addr;
+        const u64 offset_from_alignment =
+            is_descending
+                ? current_physical_address - AlignDown(current_physical_address, k4kPageSizeBytes)
+                : AlignUp(current_physical_address, k4kPageSizeBytes) - current_physical_address;
+
+        if (offset_from_alignment > 0) {
+            if (region.length < offset_from_alignment + k4kPageSizeBytes) {
+                return;
+            }
+            UsePartOfFreeMemoryRegion<direction>(region, offset_from_alignment);
+        }
+
+        // Try to map as many pages as possible from the current memory region
+        while (region.length >= k4kPageSizeBytes && mapped_bytes < size_bytes) {
+            const u64 current_virtual_address = virtual_address + mapped_bytes;
+            const u64 physical_address_to_map =
+                is_descending ? (region.addr + region.length - k4kPageSizeBytes) : region.addr;
+            MapVirtualMemoryToPhysical<PageSize::Page4k>(
+                current_virtual_address, physical_address_to_map, flags
+            );
+            UsePartOfFreeMemoryRegion<direction>(region, k4kPageSizeBytes);
+            mapped_bytes += k4kPageSizeBytes;
+        }
+    });
+
+    if (mapped_bytes < size_bytes) {
+        arch::KernelPanic(
+            "Failed to map virtual memory range using internal memory map - out of memory!"
+        );
+    }
+}
+
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
+    u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    const auto internal_provider = [this](auto callback) {
+        WalkFreeMemoryRegions<direction>(callback);
+    };
+    MapVirtualRangeUsingFreeRegionProvider<decltype(internal_provider), direction>(
+        internal_provider, virtual_address, size_bytes, flags
+    );
+}
+
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
+    Multiboot::TagMmap *mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags
+)
+{
+    using namespace Multiboot;
+    R_ASSERT_NOT_NULL(mmap_tag);
+
+    uintptr_t descending_sorted_address_buffer[kMaxMemoryMapEntries];
+    u64 address_count = 0;
+    // TODO: This looks wacky since we pass the Tag and construct the MemoryMap from it, not just
+    // passing the MemoryMap directly. This should be changed when the loader_memory_manager is
+    // updated to be more sensible.
+    MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry &entry) {
+        if (entry.type != MmapEntry::kMemoryAvailable) {
+            return;
+        }
+        descending_sorted_address_buffer[address_count++] = reinterpret_cast<uintptr_t>(&entry);
+        u64 i                                             = address_count - 1;
+        while (i > 0 &&
+               descending_sorted_address_buffer[i] > descending_sorted_address_buffer[i - 1]) {
+            uintptr_t tmp                           = descending_sorted_address_buffer[i - 1];
+            descending_sorted_address_buffer[i - 1] = descending_sorted_address_buffer[i];
+            descending_sorted_address_buffer[i]     = tmp;
+            i--;
+        }
+    });
+    const auto external_provider = [&](auto callback) {
+        if constexpr (direction == WalkDirection::Descending) {
+            for (u64 i = 0; i < address_count; i++) {
+                auto *entry =
+                    reinterpret_cast<Multiboot::MmapEntry *>(descending_sorted_address_buffer[i]);
+                FreeMemoryRegion_t region{entry->addr, entry->len};
+                callback(region);
+                entry->addr = region.addr;
+                entry->len  = region.length;
+            }
+        } else {
+            for (u64 i = address_count - 1; i > 0; i--) {
+                auto *entry =
+                    reinterpret_cast<Multiboot::MmapEntry *>(descending_sorted_address_buffer[i]);
+                FreeMemoryRegion_t region{entry->addr, entry->len};
+                callback(region);
+                entry->addr = region.addr;
+                entry->len  = region.length;
+            }
+        }
+    };
+    MapVirtualRangeUsingFreeRegionProvider<decltype(external_provider), direction>(
+        external_provider, virtual_address, size_bytes, flags
+    );
+}
 
 template <LoaderMemoryManager::PageSize page_size>
 void LoaderMemoryManager::MapVirtualMemoryToPhysical(
@@ -14,7 +141,6 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     static constexpr i32 kPageShift = (page_size == PageSize::Page4k)   ? 12
                                       : (page_size == PageSize::Page2M) ? 21
                                                                         : 30;
-
     // Both addresses must be aligned to the page size
     R_ASSERT(IsAligned(physical_address, 1 << kPageShift));
     R_ASSERT(IsAligned(virtual_address, 1 << kPageShift));
@@ -94,6 +220,45 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     p1_entry[pml1_index].frame    = physical_address >> kPageShift;
     u64 *entry                    = reinterpret_cast<u64 *>(&p1_entry[pml1_index]);
     *entry |= flags;
+}
+template <LoaderMemoryManager::WalkDirection direction, FreeMemoryRegionCallback Callback>
+void LoaderMemoryManager::WalkFreeMemoryRegions(Callback callback)
+{
+    TRACE_INFO("Walking free memory regions...");
+    switch (direction) {
+        case WalkDirection::Ascending: {
+            for (u32 i = num_free_memory_regions_; i > 0; i--) {
+                callback(descending_sorted_mmap_entries[i - 1]);
+            }
+            break;
+        }
+        case WalkDirection::Descending: {
+            for (u32 i = 0; i < num_free_memory_regions_; i++) {
+                callback(descending_sorted_mmap_entries[i]);
+            }
+            break;
+        }
+    }
+    TRACE_INFO("Free memory regions walk complete!");
+}
+template <LoaderMemoryManager::WalkDirection direction>
+void LoaderMemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, u64 size_bytes)
+{
+    ASSERT_GE(region.length, size_bytes);
+
+    switch (direction) {
+        case WalkDirection::Descending: {
+            region.length -= size_bytes;
+            available_memory_bytes_ -= size_bytes;
+            break;
+        }
+        case WalkDirection::Ascending: {
+            region.addr += size_bytes;
+            region.length -= size_bytes;
+            available_memory_bytes_ -= size_bytes;
+            break;
+        }
+    }
 }
 
 #endif  // ALKOS_ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_TPP_
