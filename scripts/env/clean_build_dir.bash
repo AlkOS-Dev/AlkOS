@@ -22,7 +22,6 @@ parse_args() {
 
 main() {
   parse_args "$@"
-  process_args
 
   if [[ ! -d "${CONF_BUILD_DIR}" ]]; then
     pretty_info "Build directory does not exist"

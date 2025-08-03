@@ -12,6 +12,9 @@ ARGPARSE_SCRIPT_NAME=""
 ARGPARSE_SCRIPT_DESCRIPTION=""
 ARGPARSE_POSITIONAL_NAMES=()
 
+ARGPARSE_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source "${ARGPARSE_SCRIPT_DIR}/helpers.bash"
+
 # Initialize the argument parser
 # Usage: argparse_init "script_name" "description" [help_function]
 argparse_init() {

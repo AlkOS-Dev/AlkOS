@@ -18,7 +18,7 @@ parse_args() {
 }
 
 process_args() {
-  if [ ! -f $(argparse_get "kernel_source_path") ]; then
+  if [ ! -f "$(argparse_get "kernel_source_path")" ]; then
     dump_error "Provided kernel source path does not exist!"
     exit 1
   fi
