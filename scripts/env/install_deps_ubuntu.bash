@@ -6,6 +6,7 @@ INSTALL_DEPS_UBUNTU_SCRIPT_PACKAGES_TXT_FILE="${INSTALL_DEPS_UBUNTU_SCRIPT_DIR}/
 
 source "${INSTALL_DEPS_UBUNTU_SCRIPT_DIR}/../utils/pretty_print.bash"
 source "${INSTALL_DEPS_UBUNTU_SCRIPT_DIR}/../utils/helpers.bash"
+source "${INSTALL_DEPS_UBUNTU_SCRIPT_DIR}/../utils/argparse.bash"
 
 parse_args() {
   argparse_init "${INSTALL_DEPS_UBUNTU_SCRIPT_PATH}" "Install dependencies for AlkOS on Ubuntu-based systems"
