@@ -29,7 +29,7 @@ declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
 
 declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
   ["test_mode"]="run_test_mode=true debug_spinlock=true debug_output=true debug_traces=true"
-  ["regression_mode"]="debug_spinlock=true debug_output=true debug_traces=true"
+  ["regression_mode"]="run_test_mode=false debug_spinlock=true debug_output=true debug_traces=true"
   ["default"]="Refer to feature_flags_schema.yaml..."
 )
 
