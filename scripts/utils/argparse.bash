@@ -249,6 +249,12 @@ argparse_parse() {
                 fi
                 ;;
             *)
+                # skip empty arguments
+                if [[ -z "$1" ]]; then
+                    shift
+                    continue
+                fi
+
                 # Handle positional arguments
                 if [[ $positional_index -lt ${#ARGPARSE_POSITIONAL_NAMES[@]} ]]; then
                     local pos_name="${ARGPARSE_POSITIONAL_NAMES[$positional_index]}"

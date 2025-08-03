@@ -44,11 +44,10 @@ main() {
     base_runner "Failed to clean build directory" true "${INSTALL_TOOLCHAIN_CLEAN_BUILD_SCRIPT_PATH}" ${INSTALL_TOOLCHAIN_VERBOSE_FLAG}
     # Spawn a subshell to run the build script (to avoid polluting the current shell)
     (
-      base_runner "Failed to install cross-compile toolchain" true "${INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH}" --install \
-        "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"   \
+      base_runner "Failed to install cross-compile toolchain" true "${INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH}" -i \
           -t "$(argparse_get "install_dir")/${arch}" \
           -b "$(argparse_get "build_dir")/${arch}"   \
-          -c "${arch}"
+          -c "${arch}" "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"
 
       base_runner "Failed to remove build directory" true rm -rf "$(argparse_get "build_dir")/${arch}"
 
