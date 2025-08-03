@@ -279,6 +279,6 @@ argparse_parse() {
 # Usage: argparse_quick_setup "script_name" "description"
 argparse_quick_setup() {
     argparse_init "$1" "$2"
-    argparse_add_option "v|verbose" "Enable verbose output" false "" "" "flag"
+    argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
     argparse_add_option "r|run" "Expected to run the script" true "" "" "flag"
 }

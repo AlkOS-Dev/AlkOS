@@ -18,4 +18,8 @@ parse_args() {
     argparse_parse "$@"
 
     ARCH=$(argparse_get 'architecture')
+
+    if [[ $(argparse_get "v|verbose") == true ]]; then
+        VERBOSE_FLAG="--verbose"
+    fi
 }
