@@ -1,9 +1,4 @@
 #!/bin/bash
-
-ARGPARSE_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-
-source "${ARGPARSE_SCRIPT_DIR}/pretty_print.bash"
-
 declare -A ARGPARSE_OPTIONS=()
 declare -A ARGPARSE_POSITIONAL=()
 declare -A ARGPARSE_VALUES=()
@@ -87,57 +82,106 @@ argparse_is_set() {
 }
 
 argparse_show_help() {
-    echo "Usage: $ARGPARSE_SCRIPT_NAME [OPTIONS]"
+    # Build usage line: script positionals options
+    local usage_line="$ARGPARSE_SCRIPT_NAME"
 
-    # Add positional arguments to usage
+    # Add positional arguments first
     for pos_name in "${ARGPARSE_POSITIONAL_NAMES[@]}"; do
         if [[ "${ARGPARSE_REQUIRED[$pos_name]}" == "true" ]]; then
-            echo -n " $pos_name"
+            usage_line+=" <$pos_name>"
         else
-            echo -n " [$pos_name]"
+            usage_line+=" [$pos_name]"
         fi
     done
-    echo
 
-    [[ -n "$ARGPARSE_SCRIPT_DESCRIPTION" ]] && echo -e "\n$ARGPARSE_SCRIPT_DESCRIPTION"
+    # Add options to usage line
+    for option in "${!ARGPARSE_OPTIONS[@]}"; do
+        local option_display=""
+        local required="${ARGPARSE_REQUIRED[$option]}"
+        local type="${ARGPARSE_TYPES[$option]}"
 
-    # Show positional arguments
-    if [[ ${#ARGPARSE_POSITIONAL_NAMES[@]} -gt 0 ]]; then
-        echo -e "\nPositional arguments:"
-        for pos_name in "${ARGPARSE_POSITIONAL_NAMES[@]}"; do
-            local desc="${ARGPARSE_DESCRIPTIONS[$pos_name]}"
-            local choices="${ARGPARSE_CHOICES[$pos_name]}"
-            printf "  %-20s %s" "$pos_name" "$desc"
-            [[ -n "$choices" ]] && printf " (choices: %s)" "$choices"
-            echo
-        done
-    fi
-
-    # Show options
-    if [[ ${#ARGPARSE_OPTIONS[@]} -gt 0 ]]; then
-        echo -e "\nOptions:"
-        for option in "${!ARGPARSE_OPTIONS[@]}"; do
-            local desc="${ARGPARSE_DESCRIPTIONS[$option]}"
-            local default="${ARGPARSE_DEFAULTS[$option]}"
-            local choices="${ARGPARSE_CHOICES[$option]}"
-            local required="${ARGPARSE_REQUIRED[$option]}"
-
-            # Format option display
-            local opt_display="$option"
-            if [[ "$option" == *"|"* ]]; then
-                opt_display=$(echo "$option" | sed 's/|/, -/g' | sed 's/^/-/')
+        # Format option for usage line
+        if [[ "$option" == *"|"* ]]; then
+            # Handle short|long format
+            local short=$(echo "$option" | cut -d'|' -f1)
+            local long=$(echo "$option" | cut -d'|' -f2)
+            if [[ "$type" == "flag" ]]; then
+                option_display="[--$long | -$short]"
             else
-                opt_display="-$option"
+                option_display="[-$short <${short^^}>]"
             fi
+        else
+            # Single option
+            if [[ "$type" == "flag" ]]; then
+                option_display="[-$option]"
+            else
+                option_display="[-$option <${option^^}>]"
+            fi
+        fi
 
-            printf "  %-20s %s" "$opt_display" "$desc"
-            [[ "$required" == "true" ]] && printf " (required)"
-            [[ -n "$default" ]] && printf " (default: %s)" "$default"
-            [[ -n "$choices" ]] && printf " (choices: %s)" "$choices"
-            echo
-        done
-        echo "  -h, --help           Show this help message and exit"
-    fi
+        # Make required options not bracketed
+        if [[ "$required" == "true" ]]; then
+            option_display="${option_display//\[/}"
+            option_display="${option_display//\]/}"
+            option_display="<${option_display}>"
+        fi
+
+        usage_line+=" $option_display"
+    done
+
+    echo "$usage_line"
+    echo ""
+    echo "Description:"
+    echo -e "\t$ARGPARSE_SCRIPT_DESCRIPTION"
+    echo ""
+    echo "Positional arguments:"
+
+    # Show positional arguments descriptions
+    for pos_name in "${ARGPARSE_POSITIONAL_NAMES[@]}"; do
+        local desc="${ARGPARSE_DESCRIPTIONS[$pos_name]}"
+        local choices="${ARGPARSE_CHOICES[$pos_name]}"
+        local required="${ARGPARSE_REQUIRED[$pos_name]}"
+
+        local mandatory_text=""
+        [[ "$required" == "true" ]] && mandatory_text=" - MANDATORY"
+
+        echo -e "\t<$pos_name>$mandatory_text - $desc"
+        [[ -n "$choices" ]] && echo -e "\t\tSupported: $choices"
+    done
+
+    echo ""
+    echo "Options:"
+
+    # Show options descriptions
+    for option in "${!ARGPARSE_OPTIONS[@]}"; do
+        local desc="${ARGPARSE_DESCRIPTIONS[$option]}"
+        local default="${ARGPARSE_DEFAULTS[$option]}"
+        local choices="${ARGPARSE_CHOICES[$option]}"
+        local required="${ARGPARSE_REQUIRED[$option]}"
+        local type="${ARGPARSE_TYPES[$option]}"
+
+        # Format option display for description
+        local opt_display=""
+        if [[ "$option" == *"|"* ]]; then
+            local short=$(echo "$option" | cut -d'|' -f1)
+            local long=$(echo "$option" | cut -d'|' -f2)
+            if [[ "$type" == "flag" ]]; then
+                opt_display="--$long | -$short"
+            else
+                opt_display="-$short <${short^^}>"
+            fi
+        else
+            if [[ "$type" == "flag" ]]; then
+                opt_display="-$option"
+            else
+                opt_display="-$option <${option^^}>"
+            fi
+        fi
+
+        echo -e "\t\"$opt_display\" - $desc"
+        [[ -n "$default" ]] && echo "    Default: $default"
+        [[ -n "$choices" ]] && echo "    Supported: $choices"
+    done
 
     # Call custom help function if provided
     [[ -n "$ARGPARSE_HELP_FUNCTION" && $(type -t "$ARGPARSE_HELP_FUNCTION") == "function" ]] && "$ARGPARSE_HELP_FUNCTION"
@@ -160,8 +204,6 @@ argparse_validate_choice() {
     dump_error "Invalid value '$value' for $key. Valid choices: $choices"
 }
 
-# Main parsing function
-# Usage: argparse_parse "$@"
 argparse_parse() {
     local positional_index=0
 
