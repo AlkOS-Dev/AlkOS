@@ -2,10 +2,10 @@
 
 # script dirs
 INSTALL_TOOLCHAIN_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-INSTALL_TOOLCHAIN_PATH="${INSTALL_TOOLCHAIN_DIR}/$(basename "$0")"
 
 # script dirs
 INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH="${INSTALL_TOOLCHAIN_DIR}/build_cross_compile.bash"
+INSTALL_TOOLCHAIN_CLEAN_BUILD_SCRIPT_PATH="${INSTALL_TOOLCHAIN_DIR}/clean_build_dir.bash"
 
 # sources
 source "${INSTALL_TOOLCHAIN_DIR}/../utils/pretty_print.bash"
