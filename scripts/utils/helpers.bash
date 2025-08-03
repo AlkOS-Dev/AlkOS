@@ -6,9 +6,9 @@ HELPERS_LOG_FILE="/tmp/alkOS_build.log"
 source "${HELPERS_SCRIPT_DIR}/pretty_print.bash"
 
 dump_error() {
-    help
+    pretty_error "$1" >&2
+    pretty_error "Use -h or --help for usage information." >&2
 
-    pretty_error "$1"
     exit 1
 }
 
