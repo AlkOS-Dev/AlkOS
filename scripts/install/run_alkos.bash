@@ -23,7 +23,7 @@ source "${RUN_ALKOS_SCRIPT_DIR}/../utils/argparse.bash"
 
 parse_args() {
   argparse_init "${RUN_ALKOS_SCRIPT_PATH}" "Run AlkOS in QEMU with an ISO file"
-  argparse_add_positional "alkos_iso_path" "Path to the AlkOS ISO file"
+  argparse_add_positional "alkos_iso_path" "Path to the AlkOS ISO file" true
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "g|gdb" "Run AlkOS in QEMU with GDB" false false "" "flag"
 
