@@ -14,8 +14,7 @@ file(GLOB_RECURSE ARCH_SOURCES
 # Exclude specific files like crti.nasm and crtn.nasm
 list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/(crti\\.nasm|crtn\\.nasm)$")
 
-# If ENABLE_TESTS is NOT defined, exclude files from the 'tests/' directory
-if (NOT DEFINED ENABLE_TESTS)
+if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/tests/.*")
 endif ()
 
@@ -70,4 +69,5 @@ add_dependencies(alkos.kernel alkos.kernel.crts)
 target_link_libraries(alkos.kernel PRIVATE
         arch.common.all.64
         arch.common.kernel-loader.64
+        AutoGenLib
 )

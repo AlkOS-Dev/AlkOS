@@ -15,27 +15,6 @@ endif ()
 add_compile_definitions(__ALKOS_KERNEL__=1)
 add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
 
-if (ENABLE_TESTS)
-    message(STATUS "Tests enabled...")
-
-    # Defining this macro autostarts tests framework after kernel boot
-    add_compile_definitions(__ALKOS_TESTS_BUILD__=1)
-endif ()
-
-if (USE_DEBUG_OUTPUT)
-    message(STATUS "Debug output enabled...")
-
-    # Defining this macro enables debug output
-    add_compile_definitions(__USE_DEBUG_OUTPUT__=1)
-endif ()
-
-if (USE_DEBUG_TRACES)
-    message(STATUS "Debug traces enabled...")
-
-    # Controls whether TRACE macro strings should be printed to debug output
-    add_compile_definitions(__USE_DEBUG_TRACES__=1)
-endif ()
-
 ############################# Arch Dependent Vars ############################
 
 # ----------------------------------------------------------------------------
@@ -63,7 +42,7 @@ file(GLOB_RECURSE KERNEL_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
 
-if (ENABLE_TESTS)
+if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     file(GLOB_RECURSE KERNEL_TEST_SOURCES
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.cpp"
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"
@@ -130,7 +109,7 @@ add_subdirectory(thirdparty)
 
 ################################## Linking ###################################
 
-target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES})
+target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES} AutoGenLib)
 
 ############################## Post Arch Action ##############################
 

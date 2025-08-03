@@ -1,6 +1,6 @@
 #include "interrupts/idt.hpp"
 #include "arch_utils.hpp"
-#include "defines.hpp"
+#include "extensions/defines.hpp"
 #include "interrupts.hpp"
 #include "panic.hpp"
 

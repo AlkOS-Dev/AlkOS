@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 
 #include "extensions/concepts.hpp"
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 #include "multiboot2/multiboot2.h"
 

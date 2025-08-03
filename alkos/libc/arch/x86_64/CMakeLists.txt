@@ -23,6 +23,8 @@ if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     target_link_libraries(lib${LIB_NAME}.32 PRIVATE alkos.kernel.headers)
 endif ()
 
+target_link_libraries(lib${LIB_NAME}.32 PRIVATE AutoGenLib)
+
 ############################### Processing output ###############################
 
 set_target_properties(lib${LIB_NAME}.32 PROPERTIES

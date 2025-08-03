@@ -74,8 +74,10 @@ target_include_directories(alkos.kernel.headers INTERFACE
 
 target_link_libraries(arch.common.all.64 PRIVATE
         alkos.kernel.headers
+        AutoGenLib
 )
 
 target_link_libraries(arch.common.all.32 PRIVATE
         alkos.kernel.headers
+        AutoGenLib
 )

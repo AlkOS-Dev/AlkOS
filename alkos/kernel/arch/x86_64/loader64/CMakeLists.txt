@@ -17,10 +17,6 @@ add_executable(alkos.loader64
         ${ARCH_SOURCES}
 )
 
-############################### Applying Flags ###############################
-
-target_compile_definitions(alkos.loader64 PRIVATE __USE_DEBUG_OUTPUT__=1)
-
 ############################### Adding Headers ###############################
 
 target_include_directories(alkos.loader64 PRIVATE
@@ -46,4 +42,5 @@ target_link_libraries(alkos.loader64 PRIVATE
         arch.common.all.64
         arch.common.kernel-loader.64
         alkos.kernel.headers
+        AutoGenLib
 )

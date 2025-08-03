@@ -1,9 +1,9 @@
 #include <extensions/debug.hpp>
+#include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/new.hpp>
 
 #include "arch_utils.hpp"
-#include "defines.hpp"
 #include "definitions/loader32_data.hpp"
 #include "elf64.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"

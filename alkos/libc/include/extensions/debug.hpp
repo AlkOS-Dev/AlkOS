@@ -1,14 +1,15 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
+#include <autogen/feature_flags.h>
 #include <todo.h>
 
-#if defined(__USE_DEBUG_TRACES__)
+#if FEATURE_FLAG_DEBUG_TRACES
 
 #include <assert.h>
 #include <stdio.h>
 #include <debug_terminal.hpp>
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 
 // ------------------------------
 // Traces

@@ -2,11 +2,12 @@
 
 CONFIGURE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CONFIGURE_SCRIPT_PATH="${CONFIGURE_DIR}/$(basename "$0")"
-CONFIGURE_CMAKE_PATH="${CONFIGURE_DIR}/../alkos/CMakeLists.txt"
-CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../alkos/toolchains"
+CONFIGURE_CMAKE_PATH="${CONFIGURE_DIR}/../../alkos/CMakeLists.txt"
+CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../alkos/toolchains"
 
-source "${CONFIGURE_DIR}/utils/pretty_print.bash"
-source "${CONFIGURE_DIR}/utils/helpers.bash"
+source "${CONFIGURE_DIR}/../utils/pretty_print.bash"
+source "${CONFIGURE_DIR}/../utils/helpers.bash"
+source "${CONFIGURE_DIR}/../utils/feature_flag_lib.bash"
 
 declare -A CONFIGURE_TOOLCHAINS=(
   ["x86_64"]="${CONFIGURE_TOOLCHAIN_DIR}/x86_64-toolchain.cmake"
@@ -17,36 +18,19 @@ declare -A CONFIGURE_FLAGS=(
 )
 
 declare -A CONFIGURE_BUILD_TYPES_DESC=(
-  ["debug_qemu_tests"]="Build with full QEMU debugging capabilities running test framework, built in debug."
-  ["release_qemu_tests"]="Build with full QEMU debugging capabilities running test framework, built in release."
-  ["debug_qemu"]="Build with full QEMU debugging capabilities, built in debug."
-  ["release_qemu"]="Build with full QEMU debugging capabilities, built in release."
-  ["debug_qemu_no_traces"]="Build with full QEMU debugging capabilities, built in debug, without traces."
-  ["release_qemu_no_traces"]="Build with full QEMU debugging capabilities, built in release, without traces."
   ["debug"]="Build in debug. Capable of running on real hardware."
   ["release"]="Build in release. Capable of running on real hardware."
 )
 
 declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
-  ["debug_qemu_tests"]="Debug"
-  ["release_qemu_tests"]="Release"
-  ["debug_qemu"]="Debug"
-  ["release_qemu"]="Release"
-  ["debug_qemu_no_traces"]="Debug"
-  ["release_qemu_no_traces"]="Release"
   ["debug"]="Debug"
   ["release"]="Release"
 )
 
-declare -A CONFIGURE_BUILD_TYPES_DEFINES=(
-    [debug_qemu_tests]="ENABLE_TESTS USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [release_qemu_tests]="ENABLE_TESTS USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [debug_qemu]="USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [release_qemu]="USE_DEBUG_OUTPUT USE_DEBUG_TRACES"
-    [debug_qemu_no_traces]="USE_DEBUG_OUTPUT"
-    [release_qemu_no_traces]="USE_DEBUG_OUTPUT"
-    [debug]=""
-    [release]=""
+declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
+  ["test_mode"]="run_test_mode=true debug_spinlock=true debug_output=true debug_traces=true"
+  ["regression_mode"]="run_test_mode=false debug_spinlock=true debug_output=true debug_traces=true"
+  ["default"]="Refer to feature_flags_schema.yaml..."
 )
 
 CONFIGURE_BUILD_DIR=""
@@ -54,14 +38,16 @@ CONFIGURE_TOOL_BINARIES_DIR=""
 CONFIGURE_ARCH=""
 CONFIGURE_BUILD_TYPE=""
 CONFIGURE_VERBOSE=false
+CONFIGURE_PRESET=""
 
 help() {
-  echo "${CONFIGURE_SCRIPT_PATH} <arch> <build> [-b <BUILD_DIR>] [-t <TOOL_DIR>] [--verbose | -v]"
+  echo "${CONFIGURE_SCRIPT_PATH} <arch> <build> [-b <BUILD_DIR>] [-t <TOOL_DIR>] [--verbose | -v] [ -p <PRESET>]"
   echo "Where:"
   echo "<arch> - MANDATORY - architecture to build for. Supported are listed below."
   echo "<build> - MANDATORY - build type to configure. Supported are listed below."
   echo "-b <BUILD_DIR> - directory to store build files. Default is 'build' in repo parent dir."
   echo "-t <TOOL_DIR> - directory to store tool binaries. Default is 'tools' in repo parent dir."
+  echo "-p <PRESET> - optionally use preset for feature flags. "
   echo "--verbose | -v - flag to enable verbose output"
 
   echo ""
@@ -74,6 +60,12 @@ help() {
   echo "Supported build types:"
   for build in "${!CONFIGURE_BUILD_TYPES_DESC[@]}"; do
     echo "  ${build} - ${CONFIGURE_BUILD_TYPES_DESC[${build}]}"
+  done
+
+  echo ""
+  echo "Supported feature flag presets:"
+  for preset in "${!CONFIGURE_FEATURE_FLAGS_PRESETS[@]}"; do
+    echo "  ${preset} - ${CONFIGURE_FEATURE_FLAGS_PRESETS[${preset}]}"
   done
 }
 
@@ -95,6 +87,10 @@ parse_args() {
       -v|--verbose)
         CONFIGURE_VERBOSE=true
         shift
+        ;;
+      -p)
+        CONFIGURE_PRESET="$2"
+        shift 2
         ;;
       -*)
         dump_error "Unknown argument: $1"
@@ -136,22 +132,47 @@ process_args() {
     exit 1
   fi
 
+  if [[ -n "$CONFIGURE_PRESET" && -z "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}" ]]; then
+    dump_error "Unsupported feature flag preset: $CONFIGURE_PRESET. Use -h for help."
+    exit 1
+  fi
+
   # Set default values if not provided
-  [[ -z "$CONFIGURE_BUILD_DIR" ]] && CONFIGURE_BUILD_DIR="${CONFIGURE_DIR}/../build"
-  [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../tools"
+  [[ -z "$CONFIGURE_BUILD_DIR" ]] && CONFIGURE_BUILD_DIR="${CONFIGURE_DIR}/../../build"
+  [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../../tools"
 }
 
-run() {
+configure_script_welcome() {
   pretty_info "Configuring AlkOS build..."
   pretty_info "Architecture: $CONFIGURE_ARCH"
   pretty_info "Build type: $CONFIGURE_BUILD_TYPE"
   pretty_info "Build directory: $CONFIGURE_BUILD_DIR"
   pretty_info "Tool binaries directory: $CONFIGURE_TOOL_BINARIES_DIR"
   pretty_info "Verbose mode: $CONFIGURE_VERBOSE"
+}
 
+configure_script_feature_flags() {
+  pretty_info "Preparing feature flags..."
+
+  feature_flags_process
+
+  if [[ -n "$CONFIGURE_PRESET" ]]; then
+    if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
+      pretty_info "Resetting all feature flags to defaults..."
+      feature_flags_reset_to_defaults
+    else
+      pretty_info "Applying feature flag preset: $CONFIGURE_PRESET"
+      feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}"
+    fi
+  fi
+
+  feature_flags_generate_cxx_files
+}
+
+configure_script_cmake_config() {
   pretty_info "Creating cmake configuration files..."
-  # prepare conf.cmake
-  local conf_cmake="${CONFIGURE_DIR}/conf.cmake"
+  # prepare conf.generated.cmake
+  local conf_cmake="${CONFIGURE_DIR}/../../config/conf.generated.cmake"
 
   echo "# This file is generated by configure script. Do not edit manually." > "$conf_cmake"
   echo "" >> "$conf_cmake"
@@ -162,10 +183,13 @@ run() {
   echo "set(TOOL_BINARIES_DIR \"${CONFIGURE_TOOL_BINARIES_DIR}\")" >> "$conf_cmake"
   echo "set(CMAKE_BUILD_DIR \"${CONFIGURE_BUILD_DIR}\")" >> "$conf_cmake"
 
-  local cmake_arg
-  for cmake_arg in ${CONFIGURE_BUILD_TYPES_DEFINES[$CONFIGURE_BUILD_TYPE]}; do
-      echo "set(${cmake_arg} ON)" >> "$conf_cmake"
-  done
+  feature_flags_generate_cmake
+}
+
+run() {
+  configure_script_welcome
+  configure_script_feature_flags
+  configure_script_cmake_config
 
   pretty_info "Preparing build directory..."
   base_runner "Failed to create build directory" "${CONFIGURE_VERBOSE}" mkdir -p "${CONFIGURE_BUILD_DIR}"

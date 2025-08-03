@@ -13,7 +13,7 @@ main () {
 
   pretty_info "Running release regression test"
 
-  init "release_qemu" "${ARCH}"
+  init "release -p regression_mode" "${ARCH}"
 
   # Tests
   boot_test
