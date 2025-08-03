@@ -64,8 +64,8 @@
 
 #ifdef __cplusplus
 
-#include <defines.hpp>
 #include <extensions/assert_base.hpp>
+#include <extensions/defines.hpp>
 
 /* usual C-style asserts */
 #define ASSERT_EQ(expected, value, ...) \

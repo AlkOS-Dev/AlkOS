@@ -109,3 +109,23 @@ add_to_user_env_path() {
 get_supported_distro_name() {
     cat /etc/*-release | tr [:upper:] [:lower:] | grep -Poi '(arch|ubuntu)' | uniq
 }
+
+snake_case_to_pascal_case() {
+    assert_argument_provided "$1"
+    local input="$1"
+    input=$(echo "$input" | sed 's/^\(.\)/\U\1/')               # Capitalize first letter
+    input=$(echo "$input" | sed 's/_\([a-z]\)/\U\1/g')          # Capitalize letters after underscores
+    echo "$input"
+}
+
+convert_to_upper_case() {
+    assert_argument_provided "$1"
+    local input="$1"
+    echo "$input" | tr '[:lower:]' '[:upper:]'
+}
+
+strip_quotes() {
+    assert_argument_provided "$1"
+    local input="$1"
+    echo "$input" | sed 's/^"\(.*\)"$/\1/' | sed "s/^'\(.*\)'$/\1/"
+}

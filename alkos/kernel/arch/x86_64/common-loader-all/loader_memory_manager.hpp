@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_HPP_
 
-#include "defines.hpp"
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 #include "multiboot2/extensions.hpp"
 #include "multiboot2/multiboot2.h"

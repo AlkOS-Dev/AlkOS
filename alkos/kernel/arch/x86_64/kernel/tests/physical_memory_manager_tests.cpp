@@ -32,7 +32,7 @@ template_lib::SingletonInstanceCreator<memory::PhysicalMemoryManager>
 TEST_F(PhysicalMemoryManagerTest, Free_WhenCalled_ShouldIncreaseNumFreePages)
 {
     // Given
-    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 0);
+    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 0_u64);
     const auto page_address = buffer_[0];
 
     // When

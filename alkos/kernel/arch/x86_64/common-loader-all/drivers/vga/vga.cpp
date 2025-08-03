@@ -1,7 +1,7 @@
 /* internal includes */
 #include <string.h>
-#include <defines.hpp>
 #include <drivers/vga/vga.hpp>
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 
 /**
