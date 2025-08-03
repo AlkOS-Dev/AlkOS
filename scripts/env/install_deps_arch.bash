@@ -28,7 +28,7 @@ run_install() {
 
   while IFS= read -r package || [ -n "$package" ]; do
     pretty_info "Installing ${package}"
-    base_runner "Failed to install ${package}" $(argparse_get "v|verbose") sudo "$(argparse_get "a|aur-helper")" -S --noconfirm "${package}"
+    base_runner "Failed to install ${package}" "$(argparse_get "v|verbose")" sudo "$(argparse_get "a|aur-helper")" -S --noconfirm "${package}"
     pretty_success "Correctly installed: ${package}"
   done < "${INSTALL_DEPS_ARCH_SCRIPT_PACKAGES_TXT_FILE}"
 

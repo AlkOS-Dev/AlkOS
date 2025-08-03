@@ -179,8 +179,8 @@ argparse_show_help() {
         fi
 
         echo -e "\t\"$opt_display\" - $desc"
-        [[ -n "$default" ]] && echo "    Default: $default"
-        [[ -n "$choices" ]] && echo "    Supported: $choices"
+        [[ -n "$default" ]] && echo -e "\tDefault: $default"
+        [[ -n "$choices" ]] && echo -e "\tSupported: $choices"
     done
 
     # Call custom help function if provided

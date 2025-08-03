@@ -20,14 +20,6 @@ parse_args() {
   argparse_parse "$@"
 }
 
-process_args() {
-  if [[ $(argparse_get "v|verbose") == "true" ]]; then
-    CLEAN_BUILD_VERBOSE_FLAG="--verbose"
-  else
-    CLEAN_BUILD_VERBOSE_FLAG=""
-  fi
-}
-
 main() {
   parse_args "$@"
   process_args
@@ -37,8 +29,8 @@ main() {
     exit 0
   fi
 
-  base_runner "Deleting config.cache" ${CLEAN_BUILD_VERBOSE} find ${CONF_BUILD_DIR} -name "config.cache" -delete
-  base_runner "Finding and running distclean" ${CLEAN_BUILD_VERBOSE} \
+  base_runner "Deleting config.cache" $(argparse_get "v|verbose") find ${CONF_BUILD_DIR} -name "config.cache" -delete
+  base_runner "Finding and running distclean" $(argparse_get "v|verbose") \
   find "${CONF_BUILD_DIR}" -type f \( -iname "Makefile" -o -iname "makefile" -o -iname "GNUmakefile" \) -printf '%h\n' | sort -u | while read -r dir; do
       (cd "$dir" && make distclean && make clean)
   done
