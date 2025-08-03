@@ -1,8 +1,6 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MODULES_HELPERS_HPP_
 #define ALKOS_KERNEL_INCLUDE_MODULES_HELPERS_HPP_
 
-#include "defines.hpp"
-
 #define DEFINE_MODULE_FIELD(name_space, type) \
                                               \
     private:                                  \

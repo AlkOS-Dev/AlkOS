@@ -31,6 +31,10 @@ void Interrupts::FirstStageInit()
 void Interrupts::AllocateIoApic(const size_t num_apic)
 {
     R_ASSERT_NOT_ZERO(num_apic, "No I/O APIC devices were found...");
+    R_ASSERT_LT(
+        num_apic, kTemporaryIoApicTableSize,
+        "Number of Allocated apic devices overflows the table..."
+    );
     ASSERT_ZERO(num_apic_, "I/O APIC devices should be initialized only once");
 
     TODO_WHEN_VMEM_WORKS
@@ -41,6 +45,8 @@ void Interrupts::InitializeIoApic(
     const size_t idx, const u8 id, const u32 address, const u32 gsi_base
 )
 {
+    ASSERT_LT(idx, num_apic_, "Overflow detected on IO Apic table...");
+
     byte *ptr = mem_ + idx * sizeof(IoApic);
     new (reinterpret_cast<IoApic *>(ptr)) IoApic(id, address, gsi_base);
 }

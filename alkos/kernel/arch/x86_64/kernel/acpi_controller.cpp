@@ -5,6 +5,8 @@
 
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <trace.hpp>
+
 using namespace arch;
 
 // ------------------------------
@@ -48,6 +50,7 @@ NODISCARD static size_t CountCores_(MadtTable &table)
 
 static void InitializeCores_(MadtTable &table)
 {
+    /* Initialize core structures */
     size_t cores{};
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
@@ -113,7 +116,7 @@ static void PrepareApicRules_(MadtTable &table)
                 TRACE_INFO("x2apic not supported yet...");
                 break;
             default:
-                R_FAIL_ALWAYS("Found unsupported MADT table...");
+                KernelTraceWarning("Found unsupported MADT table. Skipping...");
         }
     });
 }

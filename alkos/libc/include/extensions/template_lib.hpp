@@ -18,17 +18,14 @@ namespace template_lib
 // ------------------------------
 
 struct NoCopy {
-    NoCopy() = default;
-
+    NoCopy()  = default;
     ~NoCopy() = default;
 
     NoCopy(const NoCopy &) = delete;
-
-    NoCopy(NoCopy &&) = delete;
+    NoCopy(NoCopy &&)      = delete;
 
     NoCopy &operator=(const NoCopy &) = delete;
-
-    NoCopy &operator=(NoCopy &&) = delete;
+    NoCopy &operator=(NoCopy &&)      = delete;
 };
 
 // ------------------------------
@@ -36,18 +33,15 @@ struct NoCopy {
 // ------------------------------
 
 struct MoveOnly {
-    MoveOnly() = default;
-
+    MoveOnly()  = default;
     ~MoveOnly() = default;
 
     /* remove copying */
-    MoveOnly(const MoveOnly &) = delete;
-
+    MoveOnly(const MoveOnly &)            = delete;
     MoveOnly &operator=(const MoveOnly &) = delete;
 
     /* allow moving */
-    MoveOnly(MoveOnly &&) = default;
-
+    MoveOnly(MoveOnly &&)            = default;
     MoveOnly &operator=(MoveOnly &&) = default;
 };
 
@@ -258,8 +252,7 @@ class StaticSingletonHelper : public NoCopy
 {
     protected:
     /* Non instantiable */
-    StaticSingletonHelper() = default;
-
+    StaticSingletonHelper()  = default;
     ~StaticSingletonHelper() = default;
 };
 
@@ -375,8 +368,7 @@ class StaticEventTable : MoveOnly
     // ------------------------------
 
     public:
-    StaticEventTable() noexcept = default;
-
+    StaticEventTable() noexcept  = default;
     ~StaticEventTable() noexcept = default;
 
     // ------------------------------
@@ -439,7 +431,6 @@ class Settings : public NoCopy
     // ------------------------------
 
     explicit constexpr Settings(TupleT &&settings) : settings_(std::move(settings)) {}
-
     explicit constexpr Settings(const TupleT &settings) : settings_(settings) {}
 
     // ------------------------------
@@ -511,6 +502,81 @@ class Settings : public NoCopy
 };
 
 // ------------------------------
+// StaticPlainMap
+// ------------------------------
+
+template <class ItemT, size_t kSize, class KeyT = size_t>
+    requires(
+        std::convertible_to<KeyT, size_t> && std::is_trivially_copyable_v<ItemT> &&
+        std::is_default_constructible_v<ItemT> && kSize > 0 &&
+        kSize < 256  // Static maps should not be too large to avoid excessive memory usage
+    )
+class StaticPlainMapDefaultConstructible
+{
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    constexpr StaticPlainMapDefaultConstructible()  = default;
+    constexpr ~StaticPlainMapDefaultConstructible() = default;
+
+    constexpr StaticPlainMapDefaultConstructible(const StaticPlainMapDefaultConstructible &) =
+        default;
+    constexpr StaticPlainMapDefaultConstructible(StaticPlainMapDefaultConstructible &&) = default;
+
+    constexpr StaticPlainMapDefaultConstructible &operator=(
+        const StaticPlainMapDefaultConstructible &
+    ) = default;
+    constexpr StaticPlainMapDefaultConstructible &operator=(StaticPlainMapDefaultConstructible &&) =
+        default;
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    FORCE_INLINE_F constexpr ItemT &operator[](const KeyT &key) noexcept
+    {
+        const size_t idx = static_cast<size_t>(key);
+
+        ASSERT_LT(idx, kSize, "Index out of range");
+        return map_[idx];
+    }
+
+    FORCE_INLINE_F constexpr const ItemT &operator[](const KeyT &key) const noexcept
+    {
+        const size_t idx = static_cast<size_t>(key);
+
+        ASSERT_LT(idx, kSize, "Index out of range");
+        return map_[idx];
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    ItemT map_[kSize]{};
+};
+
+// ------------------------------
+// EnumMap
+// ------------------------------
+
+template <class ItemT, class EnumT>
+    requires std::is_enum_v<EnumT>
+using EnumMap = StaticPlainMapDefaultConstructible<ItemT, static_cast<size_t>(EnumT::kLast), EnumT>;
+
+// ------------------------------
+// EnumFlagMap
+// ------------------------------
+
+template <class EnumT>
+    requires std::is_enum_v<EnumT>
+using EnumFlagMap =
+    StaticPlainMapDefaultConstructible<bool, static_cast<size_t>(EnumT::kLast), EnumT>;
+
+// ------------------------------
 // ArrayStaticStack
 // ------------------------------
 
@@ -522,17 +588,14 @@ class ArrayStaticStack
     // ------------------------------
 
     public:
-    ArrayStaticStack() = default;
-
+    ArrayStaticStack()  = default;
     ~ArrayStaticStack() = default;
 
     ArrayStaticStack(const ArrayStaticStack &) = default;
-
-    ArrayStaticStack(ArrayStaticStack &&) = default;
+    ArrayStaticStack(ArrayStaticStack &&)      = default;
 
     ArrayStaticStack &operator=(const ArrayStaticStack &) = default;
-
-    ArrayStaticStack &operator=(ArrayStaticStack &&) = default;
+    ArrayStaticStack &operator=(ArrayStaticStack &&)      = default;
 
     // ------------------------------
     // Class interaction

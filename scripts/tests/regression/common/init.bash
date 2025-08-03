@@ -26,7 +26,7 @@ init() {
   fi
 
   pretty_info "Reconfiguring build environment..."
-  base_runner "init" true "${REGRESSION_INIT_DIR}/../../../configure.bash" ${conf_arg}
+  base_runner "init" true "${REGRESSION_INIT_DIR}/../../../config/configure.bash" ${conf_arg}
   pretty_success "Build environment reconfigured"
 
   pretty_info "Rebuilding the project..."

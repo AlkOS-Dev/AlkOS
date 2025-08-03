@@ -2,11 +2,10 @@
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_PIC8259_PIC8259_HPP_
 
 /* internal includes */
-#include <defines.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <extensions/defines.hpp>
 #include <io.hpp>
-
 #include "extensions/types.hpp"
 
 /**

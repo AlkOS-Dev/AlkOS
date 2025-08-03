@@ -3,9 +3,8 @@
 
 #include <multiboot2/multiboot2.h>
 #include <stddef.h>
-#include <multiboot2/extensions.hpp>
-
-TODO_WHEN_DEBUGGING_FRAMEWORK
+#include <extensions/template_lib.hpp>
+#include <extensions/types.hpp>
 
 namespace memory
 {
@@ -40,7 +39,7 @@ class PhysicalMemoryManager : template_lib::StaticSingletonHelper
     //------------------------------------------------------------------------------//
 
     void SetPageBuffer(PageBufferInfo_t page_buffer_info);
-    void PopulatePageBuffer(multiboot::tag_mmap_t* mmap);
+    void PopulatePageBuffer(Multiboot::TagMmap* mmap);
 
     uintptr_t Allocate();
     void Free(uintptr_t page_address_physical);

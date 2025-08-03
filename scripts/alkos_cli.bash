@@ -9,8 +9,8 @@ readonly ALK_OS_CLI_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/$(basename "$0")"
 readonly ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/install_toolchain.bash"
 readonly ALK_OS_CLI_BUILD_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/build_alkos.bash"
 readonly ALK_OS_CLI_QEMU_RUN_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/run_alkos.bash"
-readonly ALK_OS_CLI_CONFIGURE_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/configure.bash"
-readonly ALK_OS_CLI_CONF_PATH="${ALK_OS_CLI_SCRIPT_DIR}/conf.bash"
+readonly ALK_OS_CLI_CONFIGURE_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/config/configure.bash"
+readonly ALK_OS_CLI_CONF_PATH="${ALK_OS_CLI_SCRIPT_DIR}/../config/conf.generated.bash"
 readonly ALK_OS_CLI_SETUP_HOOKS_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/git-hooks/setup-hooks.bash"
 
 # Import utilities
@@ -132,7 +132,7 @@ run_default_configuration() {
     if [[ ${ALK_OS_CLI_CONFIG[configure]} == true ]]; then
         pretty_info "Running default configuration"
         base_runner "Failed to run default configuration" true \
-            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug_qemu ${ALK_OS_CLI_CONFIG[verbose]}
+            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug ${ALK_OS_CLI_CONFIG[verbose]} -p regression_mode
     fi
 }
 

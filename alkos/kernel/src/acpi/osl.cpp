@@ -4,7 +4,9 @@
 #include <uacpi/kernel_api.h>
 #include <constants.hpp>
 #include <definitions/loader64_data.hpp>
-#include <loader_memory_manager.hpp>
+#include "todo.hpp"
+TODO_WHEN_VMEM_WORKS
+#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <memory_management/physical_memory_manager.hpp>
 #include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
@@ -258,6 +260,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 }
 
 /* mutex */
+TODO_WHEN_MUTEX_IMPLEMENTED
 uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 {
     ASSERT_NOT_NULL(handle);

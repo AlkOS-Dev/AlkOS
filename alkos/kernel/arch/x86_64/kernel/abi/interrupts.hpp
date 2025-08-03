@@ -10,9 +10,11 @@ namespace arch
 {
 class Interrupts : public InterruptsABI
 {
-    public:
-    Interrupts() = default;
+    TODO_WHEN_VMEM_WORKS
+    static constexpr size_t kTemporaryIoApicTableSize = 8;
 
+    public:
+    Interrupts()  = default;
     ~Interrupts() = default;
 
     // ------------------------------
@@ -39,6 +41,8 @@ class Interrupts : public InterruptsABI
 
     NODISCARD FORCE_INLINE_F IoApic &GetIoApic(const size_t idx)
     {
+        ASSERT_LT(idx, num_apic_, "Overflow detected on IO Apic table...");
+
         byte *ptr = mem_ + idx * sizeof(IoApic);
         return *reinterpret_cast<IoApic *>(ptr);
     }
@@ -68,11 +72,10 @@ class Interrupts : public InterruptsABI
     // ------------------------------
     // Class fields
     // ------------------------------
-
     Idt idt_{};
 
     TODO_WHEN_VMEM_WORKS
-    alignas(IoApic) byte mem_[sizeof(IoApic) * 8]{};
+    alignas(IoApic) byte mem_[sizeof(IoApic) * kTemporaryIoApicTableSize]{};
     size_t num_apic_{};
     bool is_apic_initialized_{};
     u64 local_apic_physical_address_{};

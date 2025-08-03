@@ -10,7 +10,7 @@ FAST_CALL u64 CpuGetMSR(const u32 msr)
 
     asm volatile("rdmsr" : "=a"(lo), "=d"(hi) : "c"(msr));
 
-    return static_cast<u64>(hi) << 32 | lo;
+    return (static_cast<u64>(hi)) << 32 | lo;
 }
 
 FAST_CALL void CpuSetMSR(const u32 msr, const u64 value)

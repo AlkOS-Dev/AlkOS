@@ -9,11 +9,11 @@
  *       to help diagnose the issue.
  * @param msg A message providing additional information about the panic.
  */
-extern "C" void KernelPanic(const char *msg);
+extern "C" NO_RET void KernelPanic(const char *msg);
 
 namespace arch
 {
-WRAP_CALL void KernelPanic(const char *msg) { ::KernelPanic(msg); }
+WRAP_CALL NO_RET void KernelPanic(const char *msg) { ::KernelPanic(msg); }
 }  // namespace arch
 
 template <typename... Args>

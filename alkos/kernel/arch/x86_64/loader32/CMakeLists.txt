@@ -24,10 +24,6 @@ add_executable(alkos.loader32
 message(STATUS "32 bit compiler: ${CMAKE_CXX_COMPILER_32}")
 set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
-############################### Applying Flags ###############################
-
-target_compile_definitions(alkos.loader32 PRIVATE __USE_DEBUG_OUTPUT__=1)
-
 ############################## Finding Headers ###############################
 
 target_include_directories(alkos.loader32 PRIVATE .)
@@ -62,4 +58,5 @@ target_link_libraries(alkos.loader32 PRIVATE
         arch.common.all.32
         libk.32
         alkos.kernel.headers
+        AutoGenLib
 )
