@@ -6,7 +6,6 @@ INSTALL_TOOLCHAIN_PATH="${INSTALL_TOOLCHAIN_DIR}/$(basename "$0")"
 
 # script dirs
 INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH="${INSTALL_TOOLCHAIN_DIR}/build_cross_compile.bash"
-INSTALL_TOOLCHAIN_CLEAN_BUILD_SCRIPT_PATH="${INSTALL_TOOLCHAIN_DIR}/clean_build_dir.bash"
 
 # sources
 source "${INSTALL_TOOLCHAIN_DIR}/../utils/pretty_print.bash"
@@ -24,7 +23,7 @@ INSTALL_TOOLCHAIN_BUILD_DIR=""
 INSTALL_TOOLCHAIN_VERBOSE=false
 
 help() {
-  echo "${INSTALL_TOOLCHAIN_PATH} <install_dir> <build_dir> <arch> [--verbose | -v]"
+  echo "SCRIPT <install_dir> <build_dir> <arch> [--verbose | -v]"
   echo "Where:"
   echo "install_dir - path to the directory where the toolchain will be installed"
   echo "build_dir   - path to the directory where the build files will be located"
@@ -38,8 +37,6 @@ help() {
 }
 
 parse_args() {
-  echo $@
-
   if [ $# -lt 3 ]; then
     echo "Error: Missing required arguments."
     help
@@ -99,7 +96,7 @@ main() {
     # Spawn a subshell to run the build script (to avoid polluting the current shell)
     (
       base_runner "Failed to install cross-compile toolchain" true "${INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH}" --install \
-          "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"   \
+        toolchain "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"   \
           -t "${INSTALL_TOOLCHAIN_INSTALL_DIR}/${arch}" \
           -b "${INSTALL_TOOLCHAIN_BUILD_DIR}/${arch}"   \
           -c "${arch}"
