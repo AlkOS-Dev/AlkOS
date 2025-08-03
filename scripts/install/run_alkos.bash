@@ -27,7 +27,6 @@ parse_args() {
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "g|gdb" "Run AlkOS in QEMU with GDB" false false "" "flag"
 
-  shift
   argparse_parse "$@"
 }
 
