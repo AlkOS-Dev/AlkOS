@@ -9,7 +9,7 @@
  *       to help diagnose the issue.
  * @param msg A message providing additional information about the panic.
  */
-extern "C" void KernelPanic(const char *msg);
+extern "C" NO_RET void KernelPanic(const char *msg);
 
 namespace arch
 {

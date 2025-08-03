@@ -13,10 +13,13 @@
 #include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <loader_memory_manager.hpp>
+#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <modules/hardware.hpp>
-#include <multiboot2/extensions.hpp>
 #include <terminal.hpp>
+
+#include "multiboot2/memory_map.hpp"
+#include "multiboot2/multiboot2.h"
+#include "multiboot2/multiboot_info.hpp"
 
 #include "memory_management/physical_memory_manager.hpp"
 
@@ -37,17 +40,16 @@ static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
 {
     TRACE_INFO("Creating page buffer...");
     memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};
-    auto *mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(
-        reinterpret_cast<void *>(loader_data->multiboot_info_addr)
-    );
+    Multiboot::MultibootInfo multiboot_info(loader_data->multiboot_info_addr);
+    auto *mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
 
     u64 total_memory_bytes = 0;
-    multiboot::WalkMemoryMap(mmap_tag, [&total_memory_bytes](multiboot::memory_map_t *entry) {
-        if (entry->type == multiboot::mmap_entry_t::kMemoryAvailable) {
-            total_memory_bytes += entry->len;
+    Multiboot::MemoryMap memory_map(mmap_tag);
+    memory_map.WalkEntries([&total_memory_bytes](Multiboot::MmapEntry &entry) {
+        if (entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
+            total_memory_bytes += entry.len;
         }
     });
-
     u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
 
     buffer_info.start_addr = AlignUp(
@@ -126,9 +128,9 @@ extern "C" void PreKernelInit(loader64::LoaderData *loader_data)
         CreatePageBuffer(loader_data, loader_memory_manager);
     PhysicalMemoryManager::Init(page_buffer_info);
 
-    auto *multiboot_info =
-        reinterpret_cast<multiboot::header_t *>(loader_data->multiboot_info_addr);
-    auto *mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info);
+    Multiboot::MultibootInfo multiboot_info(loader_data->multiboot_info_addr);
+    auto *mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
+
     PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
 
     kLoaderData = loader_data;

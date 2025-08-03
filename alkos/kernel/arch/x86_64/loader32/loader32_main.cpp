@@ -1,13 +1,17 @@
-#include <extensions/new.hpp>
-
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
+#include <extensions/new.hpp>
+
 #include "arch_utils.hpp"
 #include "definitions/loader32_data.hpp"
 #include "elf64.hpp"
-#include "loader_memory_manager.hpp"
+#include "loader_memory_manager/loader_memory_manager.hpp"
 #include "terminal.hpp"
+
+#include "multiboot2/memory_map.hpp"
+#include "multiboot2/multiboot2.h"
+#include "multiboot2/multiboot_info.hpp"
 
 // External functions defined in assembly
 extern "C" int CheckCpuId();
@@ -29,13 +33,15 @@ extern const char loader32_end[];
 // Pre-allocated memory for the loader memory manager
 extern byte kLoaderPreAllocatedMemory[];
 
+using namespace Multiboot;
+
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
 loader32::LoaderData loader_data;
 
 static void MultibootCheck(u32 boot_loader_magic)
 {
     TRACE_INFO("Checking for Multiboot2...");
-    if (boot_loader_magic != multiboot::kMultiboot2BootloaderMagic) {
+    if (boot_loader_magic != Multiboot::kMultiboot2BootloaderMagic) {
         arch::KernelPanic("Multiboot2 check failed!");
     }
     TRACE_SUCCESS("Multiboot2 check passed!");
@@ -72,45 +78,40 @@ static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
             LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
         );
     }
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    loader_memory_manager->DumpPmlTables();
 
     TRACE_SUCCESS("Identity mapping complete!");
 }
 
+// TODO: Should just be a method of LoaderMemoryManager
 static void InitializeMemoryManagerWithFreeMemoryRegions(
-    LoaderMemoryManager* loader_memory_manager, multiboot::tag_mmap_t* mmap_tag
+    LoaderMemoryManager* loader_memory_manager, Multiboot::MemoryMap memory_map
 )
 {
     TRACE_INFO("Adding available memory regions to memory manager...");
-    WalkMemoryMap(mmap_tag, [&](multiboot::memory_map_t* mmap_entry) FORCE_INLINE_L {
-        if (mmap_entry->type == multiboot::memory_map_t::kMemoryAvailable) {
+    memory_map.WalkEntries([&](Multiboot::MmapEntry& mmap_entry) FORCE_INLINE_L {
+        if (mmap_entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
             loader_memory_manager->AddFreeMemoryRegion(
-                mmap_entry->addr, mmap_entry->addr + mmap_entry->len
+                mmap_entry.addr, mmap_entry.addr + mmap_entry.len
             );
             TRACE_INFO(
                 "Memory region: 0x%llX-0x%llX, length: %sB - Added to memory manager",
-                mmap_entry->addr, mmap_entry->addr + mmap_entry->len,
-                FormatMetricUint(mmap_entry->len)
+                mmap_entry.addr, mmap_entry.addr + mmap_entry.len, FormatMetricUint(mmap_entry.len)
             );
         }
     });
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    loader_memory_manager->DumpMemoryMap();
-
     TRACE_INFO(
         "Total available memory: %s",
         FormatMetricUint(loader_memory_manager->GetAvailableMemoryBytes())
     );
 }
 
-static multiboot::tag_module_t* GetLoader64Module(void* multiboot_info_addr)
+static Multiboot::TagModule* GetLoader64Module(MultibootInfo& multiboot_info)
 {
     TRACE_INFO("Searching for loader64 module...");
-    auto* loader64_module = multiboot::FindTagInMultibootInfo<
-        multiboot::tag_module_t, [](multiboot::tag_module_t* tag) -> bool {
+    auto* loader64_module =
+        multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "loader64") == 0;
-        }>(multiboot_info_addr);
+        });
     if (loader64_module == nullptr) {
         arch::KernelPanic("loader64 module not found in multiboot tags!");
     }
@@ -119,19 +120,7 @@ static multiboot::tag_module_t* GetLoader64Module(void* multiboot_info_addr)
     return loader64_module;
 }
 
-static multiboot::tag_mmap_t* GetMemoryMapTag(void* multiboot_info_addr)
-{
-    TRACE_INFO("Searching for memory map tag...");
-    auto* mmap_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_mmap_t>(multiboot_info_addr);
-    if (mmap_tag == nullptr) {
-        arch::KernelPanic("Memory map tag not found in multiboot tags!");
-    }
-    TRACE_SUCCESS("Memory map tag found!");
-
-    return mmap_tag;
-}
-
-static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
+static u64 LoadLoader64Module(Multiboot::TagModule* loader64_module)
 {
     byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
 
@@ -145,7 +134,7 @@ static u64 LoadLoader64Module(multiboot::tag_module_t* loader64_module)
     return kernel_entry_point;
 }
 
-extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
+extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
 {
     //    OsHang();
     arch::TerminalInit();
@@ -177,7 +166,12 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
     /////////////////////// Preparation for jump to 64 bit ///////////////////////
     TRACE_INFO("Starting 64-bit kernel...");
 
-    auto* mmap_tag = GetMemoryMapTag(multiboot_info_addr);
+    MultibootInfo multiboot_info = MultibootInfo(static_cast<u64>(multiboot_info_addr));
+    auto* mmap_tag               = multiboot_info.FindTag<TagMmap>();
+    if (mmap_tag == nullptr) {
+        KernelPanic("Memory map tag not found in multiboot info!");
+    }
+    MemoryMap memory_map{mmap_tag};
     InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
     loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
@@ -196,7 +190,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, void* multiboot_info_addr)
 
     //////////////////////////// Loading Loader64 Module //////////////////////////
 
-    auto* loader64_module  = GetLoader64Module(multiboot_info_addr);
+    auto* loader64_module  = GetLoader64Module(multiboot_info);
     u64 kernel_entry_point = LoadLoader64Module(loader64_module);
 
     ///////////////////// Initializing LoaderData Structure //////////////////////

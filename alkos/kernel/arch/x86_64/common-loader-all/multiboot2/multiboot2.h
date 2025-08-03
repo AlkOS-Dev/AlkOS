@@ -3,7 +3,7 @@
 
 #include "extensions/types.hpp"
 
-namespace multiboot
+namespace Multiboot
 {
 
 /*   multiboot2.h - Multiboot 2 header file. */
@@ -46,7 +46,7 @@ static constexpr u32 kMultibootModAlign = 0x00001000;
 // Alignment of the multiboot info structure.
 static constexpr u32 kMultibootInfoAlign = 0x00000008;
 
-// Flags set in the \'flags\' member of the multiboot header.
+// Flags set in the 'flags' member of the multiboot header.
 static constexpr u32 kMultibootTagAlign              = 8;
 static constexpr u32 kMultibootTagTypeEnd            = 0;
 static constexpr u32 kMultibootTagTypeCmdline        = 1;
@@ -96,7 +96,7 @@ static constexpr u32 kMultibootConsoleFlagsEgaTextSupported = 2;
 
 #ifndef ASM_FILE
 
-struct header_t {
+struct Header {
     /*  Must be MULTIBOOT_MAGIC - see above. */
     u32 magic;
 
@@ -110,20 +110,20 @@ struct header_t {
     u32 checksum;
 };
 
-struct header_tag_t {
+struct HeaderTag {
     u16 type;
     u16 flags;
     u32 size;
 };
 
-struct header_tag_information_request_t {
+struct HeaderTagInformationRequest {
     u16 type;
     u16 flags;
     u32 size;
     u32 requests[0];
 };
 
-struct header_tag_address_t {
+struct HeaderTagAddress {
     u16 type;
     u16 flags;
     u32 size;
@@ -133,21 +133,21 @@ struct header_tag_address_t {
     u32 bss_end_addr;
 };
 
-struct header_tag_entry_address_t {
+struct HeaderTagEntryAddress {
     u16 type;
     u16 flags;
     u32 size;
     u32 entry_addr;
 };
 
-struct header_tag_console_flags_t {
+struct HeaderTagConsoleFlags {
     u16 type;
     u16 flags;
     u32 size;
     u32 console_flags;
 };
 
-struct header_tag_framebuffer_t {
+struct HeaderTagFramebuffer {
     u16 type;
     u16 flags;
     u32 size;
@@ -156,13 +156,13 @@ struct header_tag_framebuffer_t {
     u32 depth;
 };
 
-struct header_tag_module_align_t {
+struct HeaderTagModuleAlign {
     u16 type;
     u16 flags;
     u32 size;
 };
 
-struct header_tag_relocatable_t {
+struct HeaderTagRelocatable {
     u16 type;
     u16 flags;
     u32 size;
@@ -172,37 +172,37 @@ struct header_tag_relocatable_t {
     u32 preference;
 };
 
-struct color_t {
+struct Color {
     u8 red;
     u8 green;
     u8 blue;
 };
 
-struct mmap_entry_t {
+struct MmapEntry {
     u64 addr;
     u64 len;
     u32 type;
     u32 zero;
+
     static constexpr u32 kMemoryAvailable       = 1;
     static constexpr u32 kMemoryReserved        = 2;
     static constexpr u32 kMemoryAcpiReclaimable = 3;
     static constexpr u32 kMemoryNvs             = 4;
     static constexpr u32 kMemoryBadram          = 5;
 };
-typedef struct mmap_entry_t memory_map_t;
 
-struct tag_t {
+struct Tag {
     u32 type;
     u32 size;
 };
 
-struct tag_string_t {
+struct TagString {
     u32 type;
     u32 size;
     char string[0];
 };
 
-struct tag_module_t {
+struct TagModule {
     u32 type;
     u32 size;
     u32 mod_start;
@@ -210,14 +210,14 @@ struct tag_module_t {
     char cmdline[0];
 };
 
-struct tag_basic_meminfo_t {
+struct TagBasicMeminfo {
     u32 type;
     u32 size;
     u32 mem_lower;
     u32 mem_upper;
 };
 
-struct tag_bootdev_t {
+struct TagBootdev {
     u32 type;
     u32 size;
     u32 biosdev;
@@ -225,23 +225,23 @@ struct tag_bootdev_t {
     u32 part;
 };
 
-struct tag_mmap_t {
+struct TagMmap {
     u32 type;
     u32 size;
     u32 entry_size;
     u32 entry_version;
-    struct mmap_entry_t entries[0];
+    struct MmapEntry entries[0];
 };
 
-struct vbe_info_block_t {
+struct VbeInfoBlock {
     u8 external_specification[512];
 };
 
-struct vbe_mode_info_block_t {
+struct VbeModeInfoBlock {
     u8 external_specification[256];
 };
 
-struct tag_vbe_t {
+struct TagVbe {
     u32 type;
     u32 size;
 
@@ -250,11 +250,11 @@ struct tag_vbe_t {
     u16 vbe_interface_off;
     u16 vbe_interface_len;
 
-    struct vbe_info_block_t vbe_control_info;
-    struct vbe_mode_info_block_t vbe_mode_info;
+    struct VbeInfoBlock vbe_control_info;
+    struct VbeModeInfoBlock vbe_mode_info;
 };
 
-struct tag_framebuffer_common_t {
+struct TagFramebufferCommon {
     u32 type;
     u32 size;
 
@@ -263,20 +263,21 @@ struct tag_framebuffer_common_t {
     u32 framebuffer_width;
     u32 framebuffer_height;
     u8 framebuffer_bpp;
-#define MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED  0
-#define MULTIBOOT_FRAMEBUFFER_TYPE_RGB      1
-#define MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT 2
     u8 framebuffer_type;
     u16 reserved;
+
+    static constexpr u8 kFramebufferTypeIndexed = 0;
+    static constexpr u8 kFramebufferTypeRgb     = 1;
+    static constexpr u8 kFramebufferTypeEgaText = 2;
 };
 
-struct tag_framebuffer_t {
-    struct tag_framebuffer_common_t common;
+struct TagFramebuffer {
+    struct TagFramebufferCommon common;
 
     union {
         struct {
             u16 framebuffer_palette_num_colors;
-            struct color_t framebuffer_palette[0];
+            struct Color framebuffer_palette[0];
         };
         struct {
             u8 framebuffer_red_field_position;
@@ -289,7 +290,7 @@ struct tag_framebuffer_t {
     };
 };
 
-struct tag_elf_sections_t {
+struct TagElfSections {
     u32 type;
     u32 size;
     u32 num;
@@ -298,7 +299,7 @@ struct tag_elf_sections_t {
     char sections[0];
 };
 
-struct tag_apm_t {
+struct TagApm {
     u32 type;
     u32 size;
     u16 version;
@@ -312,19 +313,19 @@ struct tag_apm_t {
     u16 dseg_len;
 };
 
-struct tag_efi32_t {
+struct TagEfi32 {
     u32 type;
     u32 size;
     u32 pointer;
 };
 
-struct tag_efi64_t {
+struct TagEfi64 {
     u32 type;
     u32 size;
     u64 pointer;
 };
 
-struct tag_smbios_t {
+struct TagSmbios {
     u32 type;
     u32 size;
     u8 major;
@@ -333,25 +334,25 @@ struct tag_smbios_t {
     u8 tables[0];
 };
 
-struct tag_old_acpi_t {
+struct TagOldAcpi {
     u32 type;
     u32 size;
     u8 rsdp[0];
 };
 
-struct tag_new_acpi_t {
+struct TagNewAcpi {
     u32 type;
     u32 size;
     u8 rsdp[0];
 };
 
-struct tag_network_t {
+struct TagNetwork {
     u32 type;
     u32 size;
     u8 dhcpack[0];
 };
 
-struct tag_efi_mmap_t {
+struct TagEfiMmap {
     u32 type;
     u32 size;
     u32 descr_size;
@@ -359,19 +360,19 @@ struct tag_efi_mmap_t {
     u8 efi_mmap[0];
 };
 
-struct tag_efi32_ih_t {
+struct TagEfi32Ih {
     u32 type;
     u32 size;
     u32 pointer;
 };
 
-struct tag_efi64_ih_t {
+struct TagEfi64Ih {
     u32 type;
     u32 size;
     u64 pointer;
 };
 
-struct tag_load_base_addr_t {
+struct TagLoadBaseAddr {
     u32 type;
     u32 size;
     u32 load_base_addr;
@@ -381,6 +382,6 @@ struct tag_load_base_addr_t {
 
 #endif /*  ! MULTIBOOT_HEADER */
 
-}  // namespace multiboot
+}  // namespace Multiboot
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_MULTIBOOT2_H_
