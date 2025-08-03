@@ -24,8 +24,9 @@ parse_args() {
   argparse_add_positional "build_dir" "Directory to store build files" true ""
   argparse_add_positional "arch" "Architecture to build the toolchain for" true "x86_64"
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
+  argparse_parse "$@"
 
-  if [[ $(argparse_get "v|verbose") == true ]]; then
+  if [[ $(argparse_get "v|verbose") == "true" ]]; then
     INSTALL_TOOLCHAIN_VERBOSE_FLAG="--verbose"
   fi
 }
