@@ -28,7 +28,7 @@ run_install() {
 
   while IFS= read -r package || [ -n "$package" ]; do
     pretty_info "Installing ${package}"
-    base_runner "Failed to install ${package}" $(argparse_get "v|verbose")" sudo "$(argparse_get "a|aur-helper")" -S --noconfirm "${package}"
+    base_runner "Failed to install ${package}" $(argparse_get "v|verbose") sudo "$(argparse_get "a|aur-helper")" -S --noconfirm "${package}"
     pretty_success "Correctly installed: ${package}"
   done < "${INSTALL_DEPS_ARCH_SCRIPT_PACKAGES_TXT_FILE}"
 
@@ -68,8 +68,8 @@ enable_kvm() {
 
   # Load KVM modules
   pretty_info "Loading KVM modules for ${cpu_vendor} CPU"
-  base_runner "Failed to load KVM modules" $(argparse_get "v|verbose")" sudo modprobe "${kvm_module}"
-  base_runner "Failed to load KVM CPU module" $(argparse_get "v|verbose")" sudo modprobe "${kvm_cpu_module}"
+  base_runner "Failed to load KVM modules" $(argparse_get "v|verbose") sudo modprobe "${kvm_module}"
+  base_runner "Failed to load KVM CPU module" $(argparse_get "v|verbose") sudo modprobe "${kvm_cpu_module}"
 
   # Verify KVM modules are loaded
   if ! lsmod | grep -q "${kvm_module}"; then
@@ -79,7 +79,7 @@ enable_kvm() {
   # Enable KVM modules on boot
   pretty_info "Configuring KVM modules to load on boot"
   if [ ! -f "/etc/modules-load.d/kvm.conf" ]; then
-    base_runner "Failed to create KVM modules config" $(argparse_get "v|verbose")" \
+    base_runner "Failed to create KVM modules config" $(argparse_get "v|verbose") \
       sudo bash -c "echo -e '${kvm_module}\n${kvm_cpu_module}' > /etc/modules-load.d/kvm.conf"
   fi
 
