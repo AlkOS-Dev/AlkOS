@@ -18,6 +18,8 @@ source "${ALK_OS_CLI_SCRIPT_DIR}/utils/pretty_print.bash"
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/helpers.bash"
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/argparse.bash"
 
+ALK_OS_CLI_VERBOSE_FLAG=""
+
 # Install dependencies scripts dictionary
 declare -A ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH_DICT=(
     [arch]="env/install_deps_arch.bash"
@@ -45,6 +47,11 @@ parse_args() {
   argparse_add_option "c|configure" "Run default configuration" false false "" "flag"
   argparse_add_option "g|git-hooks" "Setup git hooks" false false "" "flag"
   argparse_parse "$@"
+
+  if [[ $(argparse_get "v|verbose") == true ]]; then
+    ALK_OS_CLI_VERBOSE_FLAG="--verbose"
+  fi
+
 }
 
 validate_args() {
@@ -61,7 +68,7 @@ run_default_configuration() {
     if [[ $(argparse_get "c|configure") == true ]]; then
         pretty_info "Running default configuration"
         base_runner "Failed to run default configuration" true \
-            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug $(argparse_get "v|verbose") -p regression_mode
+            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug ${ALK_OS_CLI_VERBOSE_FLAG} -p regression_mode
     fi
 }
 
@@ -75,9 +82,10 @@ install_dependencies() {
         exit 1
       fi
 
+
       local install_script_path="${ALK_OS_CLI_SCRIPT_DIR}/${ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH_DICT[$distro]}"
       base_runner "Failed to install dependencies" true \
-        "${install_script_path}" --install $(argparse_get "v|verbose")
+        "${install_script_path}" --install ${ALK_OS_CLI_VERBOSE_FLAG}
     fi
 }
 
@@ -94,16 +102,16 @@ install_toolchain() {
 
         pretty_info "Installing cross-compile toolchain for ${ALK_OS_CLI_CONFIG[arch]}"
         base_runner "Failed to install cross-compile toolchain" true \
-            "${ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH}" $(argparse_get "v|verbose")
+            "${ALK_OS_CLI_INSTALL_TOOLCHAIN_PATH}" ${ALK_OS_CLI_VERBOSE_FLAG}
     fi
 }
 
 build_and_run() {
-    if [[ $(argparse_get "r|run")} == true ]]; then
+    if [[ $(argparse_get "r|run") == true ]]; then
         validate_configuration_exists
 
         pretty_info "Building AlkOS..."
-        base_runner "Failed to build AlkOS" true "${ALK_OS_CLI_BUILD_SCRIPT_PATH}" $(argparse_get "v|verbose")
+        base_runner "Failed to build AlkOS" true "${ALK_OS_CLI_BUILD_SCRIPT_PATH}" ${ALK_OS_CLI_VERBOSE_FLAG}
 
         pretty_info "Running AlkOS in QEMU"
         base_runner "Failed to run AlkOS in QEMU" true "${ALK_OS_CLI_QEMU_RUN_SCRIPT_PATH}" --verbose
