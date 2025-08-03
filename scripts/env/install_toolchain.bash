@@ -45,7 +45,7 @@ main() {
     # Spawn a subshell to run the build script (to avoid polluting the current shell)
     (
       base_runner "Failed to install cross-compile toolchain" true "${INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH}" --install \
-        toolchain "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"   \
+        "${INSTALL_TOOLCHAIN_VERBOSE_FLAG}"   \
           -t "$(argparse_get "install_dir")/${arch}" \
           -b "$(argparse_get "build_dir")/${arch}"   \
           -c "${arch}"
