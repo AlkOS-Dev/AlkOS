@@ -108,7 +108,7 @@ argparse_show_help() {
             if [[ "$type" == "flag" ]]; then
                 option_display="[--$long | -$short]"
             else
-                option_display="[-$short <${short^^}>]"
+                option_display="[-$short <${short^^}> | --$long <${long^^}>]"
             fi
         else
             # Single option
@@ -168,7 +168,7 @@ argparse_show_help() {
             if [[ "$type" == "flag" ]]; then
                 opt_display="--$long | -$short"
             else
-                opt_display="-$short <${short^^}>"
+                opt_display="-$short <${short^^}> | --$long <${long^^}>"
             fi
         else
             if [[ "$type" == "flag" ]]; then
