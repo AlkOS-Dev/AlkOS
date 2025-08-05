@@ -1,26 +1,18 @@
 message(STATUS "Configuring x86_64 kernel")
 
-############################## Finding Sources ###############################
-
-file(GLOB_RECURSE ARCH_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.s"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.asm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.nasm"
-)
-
-# Exclude specific files like crti.nasm and crtn.nasm
-list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/(crti\\.nasm|crtn\\.nasm)$")
-
-if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
-    list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/tests/.*")
-endif ()
-
 ############################### Adding Sources ###############################
 
-target_sources(alkos.kernel PRIVATE ${ARCH_SOURCES})
+# Define patterns to always exclude
+set(exclude_patterns ".*/(crti\\.nasm|crtn\\.nasm)$")
+
+# Conditionally exclude test files
+if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
+    list(APPEND exclude_patterns ".*/tests/.*")
+endif ()
+
+alkos_target_sources(alkos.kernel
+    EXCLUDE ${exclude_patterns}
+)
 
 ############################### Adding Headers ###############################
 
