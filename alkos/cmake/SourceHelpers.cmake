@@ -3,7 +3,6 @@
 # to targets or variables.
 #
 
-include(CMakeParseArguments)
 include(ValidationHelpers)
 
 #===============================================================================
