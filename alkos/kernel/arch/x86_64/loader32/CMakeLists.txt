@@ -33,9 +33,7 @@ target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
 
-set_source_files_properties(${ARCH_SOURCES_32} PROPERTIES COMPILE_FLAGS "-m32")
-
-set_source_files_properties(${ARCH_ASM_32} PROPERTIES COMPILE_FLAGS "-f elf32 ")
+target_link_libraries(alkos.loader32 PRIVATE target.properties.32)
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 
