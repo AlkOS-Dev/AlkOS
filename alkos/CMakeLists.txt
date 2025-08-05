@@ -13,6 +13,14 @@ set(PROJECT_VERSION "0.0")
 set(PROJECT_AUTHOR "ALK Organisation")
 
 ################################################################################
+#                                  Helpers                                     #
+################################################################################
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(ValidationHelpers)
+include(SourceHelpers)
+
+################################################################################
 #                                  Conf file                                   #
 ################################################################################
 
@@ -78,9 +86,10 @@ add_subdirectory(libc)
 add_subdirectory(generated)
 add_subdirectory(kernel)
 
-if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
-    message(FATAL_ERROR "No primary kernel executable defined")
-endif()
+alkos_ensure_defined(
+    VARS BOOTABLE_KERNEL_EXECUTABLE
+    MESSAGE "No primary kernel executable defined by the end of the configuration."
+)
 
 ################################################################################
 #                               Prepare variables                              #

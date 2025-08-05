@@ -51,7 +51,7 @@ function(alkos_find_sources output_var)
         # Default
         set(default_extensions "cpp;c;s;S;asm;nasm")
         foreach(ext ${default_extensions})
-            list(APPEND source_patterns "${CMAKE_CURRENT_SOURCE_DIR}/**/*.${ext}")
+            list(APPEND source_patterns "${CMAKE_CURRENT_SOURCE_DIR}/*.${ext}")
         endforeach()
     else()
         # Use the user-provided source patterns.

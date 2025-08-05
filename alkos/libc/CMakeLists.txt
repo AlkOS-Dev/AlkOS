@@ -1,12 +1,9 @@
 ############################### Error Checking ###############################
 
-if (NOT DEFINED SYSROOT)
-    message(FATAL_ERROR "SYSROOT is not defined")
-endif ()
-
-if (NOT DEFINED SYSTEM_LIB_TYPE)
-    message(FATAL_ERROR "SYSTEM_LIB_TYPE is not defined")
-endif ()
+alkos_ensure_defined(
+    VARS SYSROOT SYSTEM_LIB_TYPE
+    MESSAGE "Critical variable '<VAR_NAME>' is not defined for libc build."
+)
 
 ############################### Processing lib type ###############################
 
@@ -21,10 +18,7 @@ endif ()
 
 ############################### Configuring files ###############################
 
-file(GLOB_RECURSE LIB_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-)
+alkos_find_sources(LIB_SOURCES)
 
 ########################## Configure for given Arch ##########################
 

@@ -2,13 +2,10 @@ message(STATUS "Configuring kernel...")
 
 ############################### Error Checking ###############################
 
-if (NOT DEFINED SYSROOT)
-    message(FATAL_ERROR "SYSROOT is not defined")
-endif ()
-
-if (NOT DEFINED ARCH)
-    message(FATAL_ERROR "ARCH is not defined")
-endif ()
+alkos_ensure_defined(
+    VARS SYSROOT ARCH
+    MESSAGE "Critical variable '<VAR_NAME>' is not defined for kernel build."
+)
 
 ############################ Compile Definitions #############################
 
@@ -37,7 +34,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SYSROOT}/boot)
 
 # NOTE: kernel should not include any architecture specific code
 # including assembly
-file(GLOB_RECURSE KERNEL_SOURCES
+alkos_find_sources(KERNEL_SOURCES
+    SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
 )
@@ -77,18 +75,22 @@ add_subdirectory(arch/${ARCH})
 
 ############################### Error Checking ###############################
 
-if (NOT DEFINED BOOTABLE_KERNEL_EXECUTABLE)
-    message(FATAL_ERROR "No primary kernel executable defined")
-endif ()
+alkos_ensure_defined(
+    VARS
+        BOOTABLE_KERNEL_EXECUTABLE
+        KERNEL_MODULES
+        KERNEL_COMMANDS
+        ARCH_QEMU_COMMAND
+        ARCH_QEMU_NORMAL_FLAGS
+        ARCH_QEMU_TEST_FLAGS
+        CRTI_OBJ
+        CRTN_OBJ
+    MESSAGE "Architecture-specific variable '<VAR_NAME>' was not defined."
+)
 
 message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")
 message(STATUS "Kernel modules: ${KERNEL_MODULES}")
 message(STATUS "Kernel commands: ${KERNEL_COMMANDS}")
-
-# Check if KERNEL_MODULES and KERNEL_COMMANDS are the same size and defined
-if (NOT DEFINED KERNEL_COMMANDS OR NOT DEFINED KERNEL_MODULES)
-    message(FATAL_ERROR "KERNEL_MODULES or KERNEL_COMMANDS are not defined")
-endif ()
 
 list(LENGTH KERNEL_MODULES KERNEL_MODULES_LENGTH)
 list(LENGTH KERNEL_COMMANDS KERNEL_COMMANDS_LENGTH)
@@ -97,10 +99,6 @@ list(LENGTH KERNEL_COMMANDS KERNEL_COMMANDS_LENGTH)
 if(NOT KERNEL_MODULES_LENGTH EQUAL KERNEL_COMMANDS_LENGTH)
     message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS have different sizes: ${KERNEL_MODULES_LENGTH} vs ${KERNEL_COMMANDS_LENGTH}")
 endif()
-
-if(NOT DEFINED ARCH_QEMU_COMMAND OR NOT DEFINED ARCH_QEMU_NORMAL_FLAGS OR NOT DEFINED ARCH_QEMU_TEST_FLAGS)
-    message(FATAL_ERROR "ARCH_QEMU_COMMAND, ARCH_QEMU_NORMAL_FLAGS, ARCH_QEMU_TEST_FLAGS are not defined")
-endif ()
 
 ################################# ThirdParty #################################
 
