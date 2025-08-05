@@ -14,7 +14,7 @@ struct ClockRegistryEntry {
 };
 
 static constexpr size_t kMaxClocks = 8;
-using ClockRegistry                = template_lib::StaticRegistry<ClockRegistryEntry, kMaxClocks>;
+using ClockRegistry                = template_lib::StaticVector<ClockRegistryEntry, kMaxClocks>;
 
 }  // namespace hardware
 

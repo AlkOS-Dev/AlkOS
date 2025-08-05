@@ -77,18 +77,16 @@ static void PrepareIoApic_(MadtTable &table)
     });
     TRACE_INFO("Detected %lu I/O APIC devices...", num_apic);
 
-    HardwareModule::Get().GetInterrupts().AllocateIoApic(num_apic);
-
-    num_apic = 0;
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
         if (!table_ptr) {
             return;
         }
 
-        HardwareModule::Get().GetInterrupts().InitializeIoApic(
-            num_apic++, table_ptr->id, table_ptr->address, table_ptr->gsi_base
+        HardwareModule::Get().GetInterrupts().GetIoApicTable().PushEmplace(
+            static_cast<u8>(table_ptr->id), static_cast<u32>(table_ptr->address),
+            static_cast<u32>(table_ptr->gsi_base)
         );
     });
 }

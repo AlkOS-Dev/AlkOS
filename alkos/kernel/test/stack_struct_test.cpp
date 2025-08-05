@@ -268,7 +268,7 @@ TEST_F(StaticStackTest, CopyConstructor)
 
 TEST_F(StaticRegisteryTest, FunctionalityTest)
 {
-    StaticRegistry<int, 3> reg{};
+    StackBasedVector<int, 3> reg{};
 
     reg.RegisterObject(1);
     reg.RegisterObject(2);

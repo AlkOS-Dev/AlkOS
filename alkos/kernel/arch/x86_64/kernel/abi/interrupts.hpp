@@ -6,6 +6,8 @@
 #include "interrupts/idt.hpp"
 #include "todo.hpp"
 
+#include <extensions/optional.hpp>
+
 namespace arch
 {
 class Interrupts : public InterruptsABI
@@ -14,6 +16,8 @@ class Interrupts : public InterruptsABI
     static constexpr size_t kTemporaryIoApicTableSize = 8;
 
     public:
+    using IoApicTable = template_lib::StaticVector<IoApic, kTemporaryIoApicTableSize>;
+
     Interrupts()  = default;
     ~Interrupts() = default;
 
@@ -31,21 +35,13 @@ class Interrupts : public InterruptsABI
      * code */
     void FirstStageInit();
 
-    void AllocateIoApic(size_t num_apic);
-
-    void InitializeIoApic(size_t idx, u8 id, u32 address, u32 gsi_base);
-
     void ApplyIoApicOverride(const acpi_madt_interrupt_source_override *override);
 
     void ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source);
 
-    NODISCARD FORCE_INLINE_F IoApic &GetIoApic(const size_t idx)
-    {
-        ASSERT_LT(idx, num_apic_, "Overflow detected on IO Apic table...");
+    NODISCARD FORCE_INLINE_F IoApicTable &GetIoApicTable() { return io_apic_table_; }
 
-        byte *ptr = mem_ + idx * sizeof(IoApic);
-        return *reinterpret_cast<IoApic *>(ptr);
-    }
+    NODISCARD FORCE_INLINE_F const IoApicTable &GetIoApicTable() const { return io_apic_table_; }
 
     NODISCARD IoApic &GetIoApicHandler(u32 gsi);
 
@@ -76,8 +72,8 @@ class Interrupts : public InterruptsABI
     Idt idt_{};
 
     TODO_WHEN_VMEM_WORKS
-    alignas(IoApic) byte mem_[sizeof(IoApic) * kTemporaryIoApicTableSize]{};
-    size_t num_apic_{};
+    IoApicTable io_apic_table_;
+
     bool is_apic_initialized_{};
     u64 local_apic_physical_address_{};
 };

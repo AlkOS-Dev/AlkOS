@@ -13,7 +13,7 @@ struct EventClockRegistryEntry {
 };
 
 static constexpr size_t kMaxEventClocks = 8;
-using EventClockRegistry = template_lib::StaticRegistry<EventClockRegistryEntry, kMaxEventClocks>;
+using EventClockRegistry = template_lib::StaticVector<EventClockRegistryEntry, kMaxEventClocks>;
 
 }  // namespace hardware
 

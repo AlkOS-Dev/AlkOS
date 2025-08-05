@@ -587,6 +587,9 @@ class ArrayStaticStack
     // Class creation
     // ------------------------------
 
+    template <class T>
+    using clean_type = std::remove_reference_t<std::remove_const_t<T>>;
+
     public:
     ArrayStaticStack()  = default;
     ~ArrayStaticStack() = default;
@@ -602,30 +605,27 @@ class ArrayStaticStack
     // ------------------------------
 
     template <class T>
-    FORCE_INLINE_F void Push(const T &item)
+    FORCE_INLINE_F T &Push(const T &item)
     {
-        const size_t start = top_;
-        top_ += sizeof(T);
-
-        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
-
-        auto ptr = reinterpret_cast<void *>(stack_.data + start);
-        new (ptr)
-            std::remove_reference_t<std::remove_const_t<T>>(item); /* Checks alignment on debug */
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(item); /* Checks alignment on debug */
+        return *ptr;
     }
 
     template <class T>
-    FORCE_INLINE_F void Push(T &&item)
+    FORCE_INLINE_F T &Push(T &&item)
     {
-        const size_t start = top_;
-        top_ += sizeof(T);
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(std::move(item)); /* Checks alignment on debug */
+        return *ptr;
+    }
 
-        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
-
-        auto ptr = reinterpret_cast<void *>(stack_.data + start);
-        new (ptr) std::remove_reference_t<std::remove_const_t<T>>(
-            std::move(item)
-        ); /* Checks alignment on debug */
+    template <class T, class... Args>
+    FORCE_INLINE_F T &PushEmplace(Args &&...args)
+    {
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(std::move(args)...); /* Checks alignment on debug */
+        return *ptr;
     }
 
     template <class T>
@@ -634,14 +634,29 @@ class ArrayStaticStack
         ASSERT_LE(sizeof(T), top_, "Stack overflow!!");
         top_ -= sizeof(T);
 
-        auto ptr =
-            reinterpret_cast<std::remove_reference_t<std::remove_const_t<T>> *>(stack_.data + top_);
+        auto ptr = reinterpret_cast<clean_type<T> *>(stack_.data + top_);
         return std::move(*ptr);
     }
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return top_; }
 
     NODISCARD FORCE_INLINE_F const void *Data() const { return stack_.data; }
+
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    private:
+    template <class T>
+    clean_type<T> *PushMem_() noexcept
+    {
+        const size_t start = top_;
+        top_ += sizeof(T);
+
+        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
+
+        return reinterpret_cast<clean_type<T> *>(stack_.data + start);
+    }
 
     // ------------------------------
     // Class fields
@@ -657,7 +672,7 @@ class ArrayStaticStack
 // ------------------------------
 
 template <class T, size_t kNumObjects>
-class ArraySingleTypeStaticStack : protected ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>
+class ArraySingleTypeStaticStack : public ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>
 {
     using base_t = ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>;
     // ------------------------------
@@ -665,85 +680,114 @@ class ArraySingleTypeStaticStack : protected ArrayStaticStack<sizeof(T) * kNumOb
     // ------------------------------
 
     public:
-    ArraySingleTypeStaticStack() = default;
-
+    ArraySingleTypeStaticStack()  = default;
     ~ArraySingleTypeStaticStack() = default;
 
     ArraySingleTypeStaticStack(const ArraySingleTypeStaticStack &) = default;
-
-    ArraySingleTypeStaticStack(ArraySingleTypeStaticStack &&) = default;
+    ArraySingleTypeStaticStack(ArraySingleTypeStaticStack &&)      = default;
 
     ArraySingleTypeStaticStack &operator=(const ArraySingleTypeStaticStack &) = default;
-
-    ArraySingleTypeStaticStack &operator=(ArraySingleTypeStaticStack &&) = default;
+    ArraySingleTypeStaticStack &operator=(ArraySingleTypeStaticStack &&)      = default;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    FORCE_INLINE_F void Push(const T &item) { base_t::Push(item); }
+    FORCE_INLINE_F T &Push(const T &item) { return base_t::Push(item); }
 
-    FORCE_INLINE_F void Push(T &&item) { base_t::Push(std::move(item)); }
+    FORCE_INLINE_F T &Push(T &&item) { return base_t::Push(std::move(item)); }
+
+    template <class... Args>
+    FORCE_INLINE_F T &PushEmplace(Args &&...args)
+    {
+        return base_t::template PushEmplace<T>(std::forward<Args>(args)...);
+    }
 
     FORCE_INLINE_F T &&Pop() { return std::move(base_t::template Pop<T>()); }
 
-    using base_t::Size;
+    FORCE_INLINE_F size_t Size() const { return base_t::Size() / sizeof(T); }
+
+    FORCE_INLINE_F size_t SizeBytes() const { return base_t::Size(); }
 
     using base_t::Data;
-
-    // Iterator support
-    FORCE_INLINE_F const T *begin() const { return static_cast<const T *>(Data()); }
-    FORCE_INLINE_F const T *end() const
-    {
-        return static_cast<const T *>(Data()) + (Size() / sizeof(T));
-    }
-
-    FORCE_INLINE_F const T *cbegin() const { return static_cast<const T *>(Data()); }
-    FORCE_INLINE_F const T *cend() const
-    {
-        return static_cast<const T *>(Data()) + (Size() / sizeof(T));
-    }
 };
 
 // ------------------------------
-// Static Registry
+// Static Vector
 // ------------------------------
 
 template <class T, size_t kMaxObjects>
-class StaticRegistry
+class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
 {
+    using base_t = ArraySingleTypeStaticStack<T, kMaxObjects>;
+
     // ------------------------------
     // Class creation
     // ------------------------------
 
     public:
-    StaticRegistry()  = default;
-    ~StaticRegistry() = default;
+    StaticVector()  = default;
+    ~StaticVector() = default;
 
-    StaticRegistry(const StaticRegistry &) = default;
-    StaticRegistry(StaticRegistry &&)      = default;
+    StaticVector(const StaticVector &) = default;
+    StaticVector(StaticVector &&)      = default;
 
-    StaticRegistry &operator=(const StaticRegistry &) = default;
-    StaticRegistry &operator=(StaticRegistry &&)      = default;
+    StaticVector &operator=(const StaticVector &) = default;
+    StaticVector &operator=(StaticVector &&)      = default;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    void RegisterObject(T &&item) { stack_.Push(std::forward<T>(item)); }
+    using base_t::Pop;
+    using base_t::Push;
+    using base_t::PushEmplace;
+    using base_t::Size;
 
-    auto begin() const { return stack_.begin(); }
-    auto end() const { return stack_.end(); }
+    // Iterator support
+    FORCE_INLINE_F T *begin() { return reinterpret_cast<T *>(this->stack_.data); }
+    FORCE_INLINE_F T *end() { return reinterpret_cast<T *>(this->stack_.data) + Size(); }
 
-    auto cbegin() const { return stack_.cbegin(); }
-    auto cend() const { return stack_.cend(); }
+    FORCE_INLINE_F const T *cbegin() const
+    {
+        return reinterpret_cast<const T *>(this->stack_.data);
+    }
+    FORCE_INLINE_F const T *cend() const
+    {
+        return reinterpret_cast<const T *>(this->stack_.data) + Size();
+    }
 
-    // ------------------------------
-    // Class fields
-    // ------------------------------
+    FORCE_INLINE_F T &operator[](const size_t idx)
+    {
+        ASSERT_LT(idx, Size(), "Overflow detected!");
+        return (begin()[idx]);
+    }
 
-    protected:
-    ArraySingleTypeStaticStack<T, kMaxObjects> stack_{};
+    FORCE_INLINE_F const T &operator[](const size_t idx) const
+    {
+        ASSERT_LT(idx, Size(), "Overflow detected!");
+        return (begin()[idx]);
+    }
+
+    void Resize(const size_t size)
+    {
+        ASSERT_LT(size, kMaxObjects, "Too many objects requested!!");
+
+        if (size == Size()) {
+            return;
+        }
+
+        if (size < Size()) {
+            for (auto iter = begin() + size; iter != end(); ++iter) {
+                iter->~T();
+            }
+        } else {
+            for (auto iter = begin() + Size(); iter != begin() + size; ++iter) {
+                new (iter) T();
+            }
+        }
+        this->top_ = size * sizeof(T);
+    }
 };
 
 }  // namespace template_lib

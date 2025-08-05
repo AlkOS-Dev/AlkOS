@@ -49,7 +49,7 @@ class optional
         return *reinterpret_cast<T*>(mem_.data);
     }
 
-    NODISCARD has_value() const noexcept { return initialized_; }
+    NODISCARD bool has_value() const noexcept { return initialized_; }
 
     explicit operator bool() const noexcept { return initialized_; }
 
