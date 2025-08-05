@@ -2,6 +2,9 @@ message(STATUS "Configuring x86_64 common-loader-all")
 
 ############################## Finding Sources ###############################
 
+# TODO: Update this when there is a separate solution to applying custom properties based on file extensions
+# for .c, .cpp and .asm files, prefferably from an arch defined preset
+
 file(GLOB_RECURSE COMMON_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
