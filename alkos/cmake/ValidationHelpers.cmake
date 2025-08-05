@@ -7,21 +7,27 @@
 # alkos_ensure_defined
 #===============================================================================
 #
-# Checks if one or more variables are defined and halts with a fatal error
-# if any are not.
+# Checks if one or more variables are defined and halts with a fatal error,
+# listing all undefined variables at once.
 #
 # Parameters:
 #   VARS <var>...          A list of variable names to check.
-#   MESSAGE <message>      The error message to display if a variable is not
-#                          defined. The message can include the placeholder
-#                          <VAR_NAME> which will be replaced with the name of
-#                          the undefined variable.
+#   MESSAGE <message>      (Optional) A supplementary message to append to the
+#                          standard error output. This is useful for providing
+#                          additional context or instructions to the user.
 #
 # Example:
+#   # Assume ARCH is defined but SYSROOT is not.
 #   alkos_ensure_defined(
 #       VARS SYSROOT ARCH
-#       MESSAGE "Configuration error: The variable <VAR_NAME> is not defined."
+#       MESSAGE "The SYSROOT variable must be set to the toolchain's root path."
 #   )
+#
+#   # The above call would produce the following fatal error:
+#   #
+#   #   CMake Error at CMakeLists.txt:XX (message):
+#   #     The following required variables are not defined: SYSROOT
+#   #     The SYSROOT variable must be set to the toolchain's root path.
 #
 function(alkos_ensure_defined)
     set(options)
@@ -34,14 +40,22 @@ function(alkos_ensure_defined)
         message(FATAL_ERROR "alkos_ensure_defined() called without any VARS to check.")
     endif()
 
-    if(NOT ARG_MESSAGE)
-        message(FATAL_ERROR "alkos_ensure_defined() called without a MESSAGE.")
-    endif()
-
+    set(undefined_vars "")
     foreach(var_name ${ARG_VARS})
         if(NOT DEFINED ${var_name})
-            string(REPLACE "<VAR_NAME>" "${var_name}" error_message "${ARG_MESSAGE}")
-            message(FATAL_ERROR "${error_message}")
+            list(APPEND undefined_vars "${var_name}")
         endif()
     endforeach()
+
+    if(undefined_vars)
+        string(JOIN ", " undefined_vars_str "${undefined_vars}")
+
+        set(error_message "The following required variables are not defined: ${undefined_vars_str}")
+
+        if(ARG_MESSAGE)
+            string(APPEND error_message "\n${ARG_MESSAGE}")
+        endif()
+
+        message(FATAL_ERROR "${error_message}")
+    endif()
 endfunction()

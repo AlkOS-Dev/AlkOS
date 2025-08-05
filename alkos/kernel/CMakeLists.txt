@@ -4,7 +4,6 @@ message(STATUS "Configuring kernel...")
 
 alkos_ensure_defined(
     VARS SYSROOT ARCH
-    MESSAGE "Critical variable '<VAR_NAME>' is not defined for kernel build."
 )
 
 ############################ Compile Definitions #############################
@@ -85,7 +84,6 @@ alkos_ensure_defined(
         ARCH_QEMU_TEST_FLAGS
         CRTI_OBJ
         CRTN_OBJ
-    MESSAGE "Architecture-specific variable '<VAR_NAME>' was not defined."
 )
 
 message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")

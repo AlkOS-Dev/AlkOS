@@ -2,7 +2,6 @@
 
 alkos_ensure_defined(
     VARS SYSROOT SYSTEM_LIB_TYPE
-    MESSAGE "Critical variable '<VAR_NAME>' is not defined for libc build."
 )
 
 ############################### Processing lib type ###############################
