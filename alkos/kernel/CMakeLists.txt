@@ -100,7 +100,6 @@ endif()
 
 ################################# ThirdParty #################################
 
-message(STATUS "Adding third-party libraries...")
 add_subdirectory(thirdparty)
 
 target_link_libraries(alkos.kernel.headers INTERFACE
