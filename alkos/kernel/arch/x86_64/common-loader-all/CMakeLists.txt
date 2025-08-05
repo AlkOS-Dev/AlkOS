@@ -24,12 +24,7 @@ target_link_libraries(arch.common.all.32 PRIVATE
 
 ############################### Applying Flags ###############################
 
-target_compile_options(arch.common.all.32 PRIVATE "-m32")
-
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
-
-set_source_files_properties(${COMMON_ASM_32} PROPERTIES COMPILE_FLAGS "-f elf32")
-set_source_files_properties(${COMMON_ASM} PROPERTIES COMPILE_FLAGS "-f elf64")
 
 ############################### Adding Headers ###############################
 
