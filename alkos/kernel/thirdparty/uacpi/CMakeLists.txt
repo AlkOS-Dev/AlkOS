@@ -40,5 +40,6 @@ target_link_libraries(uacpi PRIVATE
         target.properties
 )
 
-# Propagate the uACPI library to the parent scope
-set(THIRD_PARTY_LIBRARIES ${THIRD_PARTY_LIBRARIES} uacpi PARENT_SCOPE)
+################################ Export itself #################################
+
+target_link_libraries(alkos.kernel.thirdparty INTERFACE uacpi)

@@ -103,9 +103,13 @@ endif()
 message(STATUS "Adding third-party libraries...")
 add_subdirectory(thirdparty)
 
+target_link_libraries(alkos.kernel.headers INTERFACE
+    alkos.kernel.thirdparty
+)
+
 ################################## Linking ###################################
 
-target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES} AutoGenLib)
+target_link_libraries(alkos.kernel PRIVATE libk gcc AutoGenLib)
 
 ############## Linker Configuration for CXX Global Constructors ##############
 # Set the linker to link objects in the correct order
