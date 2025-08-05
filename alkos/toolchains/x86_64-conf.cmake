@@ -44,7 +44,9 @@ if (NOT TARGET target.properties)
   message(FATAL_ERROR "target.properties INTERFACE library is not defined. This should be defined by main CMakeLists.txt")
 endif ()
 
-#################################### 64 bit ####################################
+#------------------------------------------------------------------------------#
+#                                    64 bit                                    #
+#------------------------------------------------------------------------------#
 
 target_compile_options(target.properties INTERFACE
     "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
@@ -53,8 +55,9 @@ target_compile_options(target.properties INTERFACE
     "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
     "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>"
 )
-
-#################################### 32 bit ####################################
+#------------------------------------------------------------------------------#
+#                                    32 bit                                    #
+#------------------------------------------------------------------------------#
 
 add_library(target.properties.32 INTERFACE)
 target_compile_options(target.properties.32 INTERFACE

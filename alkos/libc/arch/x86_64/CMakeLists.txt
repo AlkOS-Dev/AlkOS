@@ -17,7 +17,7 @@ target_include_directories(lib${LIB_NAME}.32 PRIVATE
 
 ############################# Setting Custom Properties #########################
 
-target_link_libraries(lib${LIB_NAME}.32 INTERFACE target.properties.32)
+target_link_libraries(lib${LIB_NAME}.32 PUBLIC target.properties.32)
 
 ################################# Dependencies ################################
 
