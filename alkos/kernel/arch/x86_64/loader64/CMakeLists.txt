@@ -1,21 +1,12 @@
 message(STATUS "Configuring x86_64 64-bit loader")
 
-############################## Finding Sources ###############################
-
-file(GLOB_RECURSE ARCH_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.s"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.asm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.nasm"
-)
-
 #################################### Exec ####################################
 
-add_executable(alkos.loader64
-        ${ARCH_SOURCES}
-)
+add_executable(alkos.loader64 "")
+
+############################### Adding Sources ###############################
+
+alkos_target_sources(alkos.loader64)
 
 ############################### Adding Headers ###############################
 
