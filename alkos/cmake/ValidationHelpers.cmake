@@ -85,8 +85,8 @@ endfunction()
 #
 function(alkos_ensure_property_defined)
     set(options)
-    set(oneValueArgs MESSAGE)
-    set(multiValueArgs TARGET PROPS)
+    set(oneValueArgs TARGET MESSAGE)
+    set(multiValueArgs PROPS)
 
     cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
