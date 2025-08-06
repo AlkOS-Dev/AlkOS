@@ -21,7 +21,6 @@ runs:
         path: tools
 
     - name: Build toolchain and Setup PATH
-      id: build_toolchain 
       env:
         TOOLCHAIN_PATH: ${{ github.workspace }}/tools
         BUILD_PATH: ${{ github.workspace }}/build
@@ -46,7 +45,6 @@ runs:
         fi
 
     - name: Configure environment
-      needs: build_toolchain 
       env:
         ARCH: ${{ inputs.arch }}
       shell: bash
