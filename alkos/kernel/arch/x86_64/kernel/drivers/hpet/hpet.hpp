@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
 
 #include <uacpi/acpi.h>
+#include <extensions/array.hpp>
 #include <extensions/bit_array.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/types.hpp>
@@ -15,6 +16,10 @@
 /**
  * HPET Driver - Manages High Precision Event Timer hardware
  * Used for high-resolution timing and as a potential system timer source
+ *
+ * Refer to:
+ * https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf
+ * and: https://wiki.osdev.org/HPET
  */
 class Hpet final
 {
@@ -37,6 +42,8 @@ class Hpet final
     static constexpr u32 kTimerComparatorValueRegRW   = 0x108;
     static constexpr u32 kTimerFSBInterruptRouteRegRW = 0x110;
     static constexpr u32 kTimerAllRegSize             = 0x20;
+    static constexpr u32 kComparatorMaxIrqMap         = 32;
+    static constexpr u32 kMaxComparators              = 32;
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -118,7 +125,7 @@ class Hpet final
      * Writing 1 to a bit clears the corresponding interrupt
      */
     struct PACK GeneralInterruptStatusReg {
-        BitArray<32> interrupt_status;  // Bit set for each timer that triggered
+        BitArray<kMaxComparators> interrupt_status;  // Bit set for each timer that triggered
         u32 reserved;
     };
     static_assert(sizeof(GeneralInterruptStatusReg) == 8);
@@ -167,21 +174,25 @@ class Hpet final
             kSupported    = 1,  // Timer supports FSB routing
         };
 
+        enum class PeriodMemAccess : u8 {
+            kEnabled = 1,  // Next write to the register will write to periodic comparator increment
+            kDisabled = 0,
+        };
+
         u8 reserved1 : 1;
         InterruptType interrupt_type : 1;
         Enabled enabled : 1;
         TimerType timer_type : 1;
         const PeriodicSupported periodic_supported : 1;
         const Is64BitComparator is_64_bit_comparator : 1;
-        u8 allow_direct_periodic_access : 1;  // Enables direct writes to comparator for periodic
-                                              // mode
+        PeriodMemAccess periodic_mem_access : 1;
         u8 reserved2 : 1;
         Forced32Bit forced_32_bit : 1;
         u8 vector : 5;  // Interrupt vector to trigger
         FsbRoute fsb_route : 1;
         const FsbSupported fsb_supported : 1;
         u16 reserved3;
-        const BitArray<32> route_capabilities;  // Which interrupt routes are available
+        const BitArray<kMaxComparators> route_capabilities;  // Which interrupt routes are available
     };
     static_assert(sizeof(TimerConfigurationReg) == 8);
 
@@ -221,19 +232,113 @@ class Hpet final
     // Class methods
     // ------------------------------
 
-    void Enable();
+    void Setup();
 
-    void Disable();
+    NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+        return comparators_periodic_supported_.Get(timer_idx);
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsTimer64Bit(const u32 timer_idx) const
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+        return comparators_64bit_supported_.Get(timer_idx);
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsIrqSupportedOnTimer(
+        const u32 timer_idx, const u32 irq_map
+    ) const
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+        return comparators_allowed_irqs_[timer_idx].Get(irq_map);
+    }
+
+    NODISCARD FORCE_INLINE_F u64 ReadMainCounter()
+    {
+        return ReadRegister<u64>(kMainCounterValueRegRO);
+    }
+
+    FORCE_INLINE_F void SetupOneShotTimer(
+        const u32 timer_idx, const u64 time_femto_seconds, const u32 irq_map
+    )
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+        ASSERT_LT(irq_map, kComparatorMaxIrqMap);
+
+        auto timer_conf =
+            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx));
+        ASSERT_TRUE(
+            IsIrqSupportedOnTimer(timer_idx, irq_map),
+            "Given irq map is not allowed for this HPET timer"
+        );
+
+        timer_conf.enabled    = TimerConfigurationReg::Enabled::kEnable;
+        timer_conf.timer_type = TimerConfigurationReg::TimerType::kOneShot;
+        timer_conf.vector     = irq_map;
+
+        WriteRegister(GetTimerConfigurationRegRW(timer_idx), timer_conf);
+        WriteRegister(
+            GetTimerComparatorValueRegRW(timer_idx),
+            ReadMainCounter() + AdjustTimeToHpetCapabilities(time_femto_seconds)
+        );
+    }
+
+    FORCE_INLINE_F void SetupPeriodicTimer(
+        const u32 timer_idx, const u64 period_femto_seconds, const u32 irq_map
+    )
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+        ASSERT_LT(irq_map, kComparatorMaxIrqMap);
+        ASSERT_TRUE(IsTimerSupportingPeriodic(timer_idx));
+
+        auto timer_conf =
+            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx));
+        ASSERT_TRUE(
+            IsIrqSupportedOnTimer(timer_idx, irq_map),
+            "Given irq map is not allowed for this HPET timer"
+        );
+
+        timer_conf.enabled             = TimerConfigurationReg::Enabled::kEnable;
+        timer_conf.timer_type          = TimerConfigurationReg::TimerType::kPeriodic;
+        timer_conf.periodic_mem_access = TimerConfigurationReg::PeriodMemAccess::kEnabled;
+        timer_conf.vector              = irq_map;
+
+        WriteRegister(GetTimerConfigurationRegRW(timer_idx), timer_conf);
+
+        /* First periodic shot */
+        WriteRegister(
+            GetTimerComparatorValueRegRW(timer_idx),
+            ReadMainCounter() + AdjustTimeToHpetCapabilities(period_femto_seconds)
+        );
+
+        /* Periodic increment */
+        WriteRegister(
+            GetTimerComparatorValueRegRW(timer_idx),
+            AdjustTimeToHpetCapabilities(period_femto_seconds)
+        );
+    }
+
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    private:
+    NODISCARD u64 AdjustTimeToHpetCapabilities(u64 time_femto) const;
 
     // ------------------------------
     // Class fields
     // ------------------------------
 
-    private:
     acpi_gas address_{};        // Memory-mapped register address information
     u8 num_comparators_{};      // Number of timer comparators available
     bool is_counter_32_bit_{};  // Whether comparators are 64-bit capable
-    u16 ticks_{};               // Timer frequency information
+    u16 ticks_{};               // Amount of femto-seconds needed for HPET to update the counter
+
+    /* comparators gathered data */
+    BitArray<kMaxComparators> comparators_64bit_supported_{};
+    BitArray<kMaxComparators> comparators_periodic_supported_{};
+    std::array<BitArray<kComparatorMaxIrqMap>, kMaxComparators> comparators_allowed_irqs_{};
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
