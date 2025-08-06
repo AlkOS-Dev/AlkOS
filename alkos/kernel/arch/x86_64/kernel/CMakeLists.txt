@@ -48,7 +48,7 @@ add_library(alkos.kernel.crtn OBJECT
 
 set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "$<TARGET_OBJECTS:alkos.kernel.crti>")
 set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "$<TARGET_OBJECTS:alkos.kernel.crtn>")
-add_dependencies(alkos.kernel PRIVATE alkos.kernel.crti alkos.kernel.crtn)
+add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 
 ############################### Link Libraries ###############################
 
