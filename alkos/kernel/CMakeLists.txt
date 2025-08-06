@@ -80,14 +80,6 @@ target_link_libraries(alkos.kernel.deps INTERFACE
 # NOTE: This linking must be done at this level as global constructors
 # should be supported on each architecture
 
-# Retrieve our custom CRT object paths from the arch-specific configuration.
-get_property(CRTI_OBJ_PATH TARGET alkos.kernel.config PROPERTY CRTI_OBJ)
-get_property(CRTN_OBJ_PATH TARGET alkos.kernel.config PROPERTY CRTN_OBJ)
-alkos_ensure_defined(
-    VARS CRTI_OBJ_PATH CRTN_OBJ_PATH
-    MESSAGE "CRTI_OBJ/CRTN_OBJ properties were not set by the architecture-specific CMake file."
-)
-
 # Find the compiler's CRT object files at configure-time.
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
@@ -108,20 +100,27 @@ alkos_ensure_defined(
 )
 
 message(STATUS "Found CRT Objects:")
-message(STATUS "  crti: ${CRTI_OBJ_PATH}")
 message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
 message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
-message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 
 target_link_libraries(alkos.kernel PUBLIC
+    # Custom properties (flags)
     target.properties
     alkos.kernel.config
+
+    # Linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
+    
+    # We link directly to the OBJECT library. CMake will expand this to the .o file.
+    alkos.kernel.crti
+
+    # Then the compiler's CRT begin object.
+    ${CRTBEGIN_OBJ_PATH}
+
+    # Then all other dependencies (your kernel's .cpp.o files, libk, uacpi, etc.).
     alkos.kernel.headers
     alkos.kernel.deps
-)
 
-# Add all objects and libraries to the kernel target in the correct link order.
-#    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
-set(CMAKE_CXX_LINK_EXECUTABLE
-  "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
+    # Finally, the compiler's CRT end object and our custom CRT end object.
+    ${CRTEND_OBJ_PATH}
+    alkos.kernel.crtn
 )
