@@ -6,6 +6,9 @@ add_library(alkos.kernel.config INTERFACE)
 add_library(alkos.kernel.headers INTERFACE) # Kernel headers for exporting
 add_library(alkos.kernel.deps INTERFACE)    # Target to link all dependencies to, to ensure
                                             # proper linking order
+# Note: Caveat - linking objects to this target also requires
+# using target_sources $<TARGET_OBJECTS:{some lib name}> syntax because
+# interface libraries are only carriers for headers and properties
 
 ############################### Error Checking ###############################
 
