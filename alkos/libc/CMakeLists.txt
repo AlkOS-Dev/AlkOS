@@ -28,10 +28,6 @@ add_subdirectory(arch/${ARCH})
 add_library(lib${LIB_NAME} STATIC ${LIB_SOURCES})
 set_target_properties(lib${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
-############################# Setting Custom Properties #########################
-
-target_link_libraries(lib${LIB_NAME} PUBLIC target.properties)
-
 ############################### Adding includes ###############################
 
 target_include_directories(lib${LIB_NAME} PUBLIC
@@ -42,9 +38,13 @@ target_include_directories(lib${LIB_NAME} PRIVATE
         internal
 )
 
-target_link_libraries(lib${LIB_NAME} PRIVATE gcc)
+############################### Adding dependencies ###############################
 
-target_link_libraries(lib${LIB_NAME} PRIVATE AutoGenLib)
+target_link_libraries(lib${LIB_NAME} PRIVATE 
+  target.properties
+  gcc
+  AutoGenLib
+)
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     target_link_libraries(lib${LIB_NAME} PRIVATE alkos.kernel.headers)
