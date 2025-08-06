@@ -45,12 +45,10 @@ if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND KERNEL_SOURCES ${KERNEL_TEST_SOURCES})
 endif ()
 
-add_library(alkos.kernel.objects OBJECT ${KERNEL_SOURCES})
 
 #################################### Exec ####################################
 
-add_executable(alkos.kernel "")
-target_link_libraries(alkos.kernel.objects PRIVATE target.properties)
+add_executable(alkos.kernel ${KERNEL_SOURCES})
 
 ############################### Adding Headers ###############################
 
@@ -104,16 +102,6 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-# !!! Debug start !!!
-message(STATUS "!!! DEBUG START !!!")
-message(STATUS "DEBUG: CMAKE_C_COMPILER is ${CMAKE_C_COMPILER}")
-message(STATUS "DEBUG: Output of crtbegin search: '${CRTBEGIN_OBJ_PATH}'")
-message(STATUS "DEBUG: Error of crtbegin search: '${CRTBEGIN_ERROR}'")
-message(STATUS "DEBUG: Output of crtend search: '${CRTEND_OBJ_PATH}'")
-message(STATUS "DEBUG: Error of crtend search: '${CRTEND_ERROR}'")
-message(STATUS "!!! DEBUG END !!!")
-# !!! Debug end !!!
-
 alkos_ensure_defined(
     VARS CRTBEGIN_OBJ_PATH CRTEND_OBJ_PATH
     MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
@@ -125,27 +113,15 @@ message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
 message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
 message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 
-target_link_libraries(alkos.kernel.objects PUBLIC
+target_link_libraries(alkos.kernel PUBLIC
     target.properties
+    alkos.kernel.config
     alkos.kernel.headers
     alkos.kernel.deps
 )
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
-#    target_link_libraries preserves this order.
-target_link_libraries(alkos.kernel PRIVATE
-    target.properties
-
-    ${CRTI_OBJ_PATH}
-    ${CRTBEGIN_OBJ_PATH}
-
-    # Order is important here!
-    # Do not link ANYTHING before crtbegin.o
-    alkos.kernel.objects
-
-    ${CRTEND_OBJ_PATH}
-    ${CRTN_OBJ_PATH}
-
-    gcc
+set(CMAKE_CXX_LINK_EXECUTABLE
+  "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
 )

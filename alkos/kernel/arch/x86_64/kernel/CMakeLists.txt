@@ -10,7 +10,7 @@ if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND exclude_patterns ".*/tests/.*")
 endif ()
 
-alkos_target_sources(alkos.kernel.objects
+alkos_target_sources(alkos.kernel
     EXCLUDE ${exclude_patterns}
 )
 
