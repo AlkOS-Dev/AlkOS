@@ -28,26 +28,6 @@ NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t co
     return true;
 }
 
-NODISCARD static size_t CountCores_(MadtTable &table)
-{
-    size_t cores{};
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
-        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
-
-        if (!table_ptr) {
-            return;
-        }
-
-        if (!IsCoreUsable(table_ptr, cores)) {
-            return;
-        }
-
-        ++cores;
-    });
-
-    return cores;
-}
-
 static void InitializeCores_(MadtTable &table)
 {
     /* Initialize core structures */
@@ -59,14 +39,16 @@ static void InitializeCores_(MadtTable &table)
             return;
         }
 
-        if (!IsCoreUsable(table_ptr, cores)) {
+        if (!IsCoreUsable(table_ptr, cores++)) {
             return;
         }
 
-        HardwareModule::Get().GetCoresController().AllocateCore(
-            cores++, static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
+        HardwareModule::Get().GetCoresController().GetCoreTable().PushEmplace(
+            static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
         );
     });
+
+    TRACE_INFO("Found %zu cores", cores);
 }
 
 static void PrepareIoApic_(MadtTable &table)
@@ -167,11 +149,6 @@ void AcpiController::ParseMadt_()
 
     /* Prepare LAPIC */
     ParseLApicAddress_(table);
-
-    /* Prepare cores */
-    const size_t cores = CountCores_(table);
-    TRACE_INFO("Found %zu cores", cores);
-    HardwareModule::Get().GetCoresController().AllocateCores(cores);
 
     /* Initialize core structures */
     InitializeCores_(table);
