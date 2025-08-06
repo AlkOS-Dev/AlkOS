@@ -21,8 +21,6 @@ target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
 
-target_link_libraries(alkos.loader32 PRIVATE target.properties.32)
-
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 
 ################################ Linker Flags ################################
@@ -42,8 +40,10 @@ target_compile_definitions(alkos.loader32 PUBLIC
         __i386__=1
 )
 
+################################### Linking ####################################
+
 target_link_libraries(alkos.loader32 PRIVATE
-        gcc
+        target.properties.32
         arch.common.all.32
         libk.32
         alkos.kernel.headers

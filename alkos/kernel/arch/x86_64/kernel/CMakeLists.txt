@@ -31,12 +31,6 @@ target_link_options(alkos.kernel PRIVATE
         -lgcc                   # Link against GCC
 )
 
-######################### Setting Custom Properties ##########################
-
-target_link_libraries(alkos.kernel PRIVATE
-        target.properties
-)
-
 ########################## CXX Global Constructors ###########################
 
 add_library(alkos.kernel.crti OBJECT
@@ -63,6 +57,7 @@ add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 ############################### Link Libraries ###############################
 
 target_link_libraries(alkos.kernel.deps INTERFACE
+        target.properties
         arch.common.all.64
         arch.common.kernel-loader.64
 )

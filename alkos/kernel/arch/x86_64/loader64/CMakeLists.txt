@@ -28,10 +28,11 @@ target_link_options(alkos.loader64 PRIVATE
 ############################### Link Libraries ###############################
 
 target_link_libraries(alkos.loader64 PRIVATE
-        gcc
+        target.properties
         libk
         arch.common.all.64
         arch.common.kernel-loader.64
         alkos.kernel.headers
         AutoGenLib
+        gcc
 )

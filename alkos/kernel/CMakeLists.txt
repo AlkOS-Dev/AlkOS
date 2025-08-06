@@ -77,13 +77,6 @@ add_subdirectory(arch/${ARCH})
 # But the error checking itself fails!!! and for some reason
 # alkos_ensure_property_defined() says the property is not defined
 
-################################ Linking Kernel ################################
-
-target_link_libraries(alkos.kernel PUBLIC
-    target.properties
-    alkos.kernel.config
-    alkos.kernel.headers
-    alkos.kernel.deps
 )
 
 ################################# ThirdParty #################################
@@ -95,6 +88,14 @@ target_link_libraries(alkos.kernel.deps INTERFACE
     libk
     AutoGenLib
 )
+
+################################ Linking Kernel ################################
+
+target_link_libraries(alkos.kernel PUBLIC
+    target.properties
+    alkos.kernel.config
+    alkos.kernel.headers
+    alkos.kernel.deps
 
 ############## Linker Configuration for CXX Global Constructors ##############
 # NOTE: This linking must be done at this level as global constructors
@@ -133,9 +134,15 @@ message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
 message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
 message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 
+# TODO:
+# The below code could technically be replaced with target_link_libraries()
+# it also should enforce the correct linking order.
+# I have done so with success, but it introduced a bug where no tests were 
+# detected in the kernel and I was unable to reslove it so gave up for now.
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
 set(CMAKE_CXX_LINK_EXECUTABLE
   "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
 )
+
