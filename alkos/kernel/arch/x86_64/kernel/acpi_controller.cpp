@@ -196,5 +196,9 @@ void AcpiController::ParseHpet_()
     TOOD_WHEN_TIMER_INFRA_DONE
     /* TODO: Use the driver */
 
-    Hpet hpet(table.GetNative());
+    ASSERT_FALSE(
+        static_cast<bool>(HardwareModule::Get().GetInterrupts().GetHpet()),
+        "HPET already initialized!"
+    );
+    HardwareModule::Get().GetInterrupts().GetHpet().emplace(table.GetNative());
 }

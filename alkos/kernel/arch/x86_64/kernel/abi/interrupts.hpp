@@ -4,6 +4,7 @@
 #include "acpi/acpi.hpp"
 #include "drivers/apic/io_apic.hpp"
 #include "drivers/apic/local_apic.hpp"
+#include "drivers/hpet/hpet.hpp"
 #include "interrupts/idt.hpp"
 #include "todo.hpp"
 
@@ -50,6 +51,8 @@ class Interrupts : public InterruptsABI
     /* Note: If APIC is initialized all cores will use apic functionality instead of PIC */
     NODISCARD FORCE_INLINE_F LocalApic &GetLocalApic() { return local_apic_; }
 
+    NODISCARD FORCE_INLINE_F std::optional<Hpet> &GetHpet() { return hpet_; }
+
     // ------------------------------
     // Protected methods
     // ------------------------------
@@ -64,6 +67,7 @@ class Interrupts : public InterruptsABI
     Idt idt_{};
     IoApicTable io_apic_table_{};
     LocalApic local_apic_{};
+    std::optional<Hpet> hpet_{};
 };
 }  // namespace arch
 

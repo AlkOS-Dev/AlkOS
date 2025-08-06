@@ -32,7 +32,11 @@ class Hpet final
     static constexpr u32 kGeneralConfigurationRegRW = 0x10;  // Controls overall HPET functionality
     static constexpr u32 kGeneralInterruptStatusRegRW =
         0x20;  // Shows which timers have triggered interrupts
-    static constexpr u32 kMainCounterValueRegRO = 0xF0;  // Current value of the main counter
+    static constexpr u32 kMainCounterValueRegRO       = 0xF0;  // Current value of the main counter
+    static constexpr u32 kTimerConfigurationRegBaseRW = 0x100;
+    static constexpr u32 kTimerComparatorValueRegRW   = 0x108;
+    static constexpr u32 kTimerFSBInterruptRouteRegRW = 0x110;
+    static constexpr u32 kTimerAllRegSize             = 0x20;
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -40,7 +44,7 @@ class Hpet final
      */
     FAST_CALL constexpr u32 GetTimerConfigurationRegRW(const u32 timer_idx)
     {
-        return 0x100 + (timer_idx * 0x20);
+        return kTimerConfigurationRegBaseRW + (timer_idx * kTimerAllRegSize);
     }
 
     /**
@@ -49,7 +53,7 @@ class Hpet final
      */
     FAST_CALL constexpr u32 GetTimerComparatorValueRegRW(const u32 timer_idx)
     {
-        return 0x108 + (timer_idx * 0x20);
+        return kTimerComparatorValueRegRW + (timer_idx * kTimerAllRegSize);
     }
 
     /**
@@ -58,7 +62,7 @@ class Hpet final
      */
     FAST_CALL constexpr u32 GetTimerFSBRouteRegRW(const u32 timer_idx)
     {
-        return 0x110 + (timer_idx * 0x20);
+        return kTimerFSBInterruptRouteRegRW + (timer_idx * kTimerAllRegSize);
     }
 
     // ------------------------------
@@ -192,7 +196,7 @@ class Hpet final
     explicit Hpet(acpi_hpet *table);
 
     // ------------------------------
-    // Class methods
+    // Utilities
     // ------------------------------
 
     NODISCARD FORCE_INLINE_F u64 GetPhysicalAddress() const { return address_.address; }
@@ -212,6 +216,10 @@ class Hpet final
         // TODO : REPLACE WITH VIRTUAL ADDRESS
         return ReadMemoryIo<u64, RetT>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset);
     }
+
+    // ------------------------------
+    // Class methods
+    // ------------------------------
 
     void Enable();
 

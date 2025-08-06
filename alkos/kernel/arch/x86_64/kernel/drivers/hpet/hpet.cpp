@@ -30,7 +30,7 @@ Hpet::Hpet(acpi_hpet *table)
         "address: %016X, "
         "num_comparators: %u, "
         "is_counter_32_bit_: %u, "
-        "ticks: %u",
+        "ticks: %u femtoseconds",
         address_.address, num_comparators_, is_counter_32_bit_, ticks_
     );
 }
