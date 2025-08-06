@@ -2,10 +2,9 @@ message(STATUS "Configuring kernel...")
 
 # This target acts as a central hub for configuration data (e.g., kernel modules)
 # that needs to be communicated to the top-level CMakeLists.txt.
-add_library(alkos.kernel.config INTERFACE)  
-add_library(alkos.kernel.headers INTERFACE) # Kernel headers for exporting
-add_library(alkos.kernel.deps INTERFACE)    # Target to link all dependencies to, to ensure
-                                            # proper linking order
+add_library(alkos.kernel.config INTERFACE)
+add_library(alkos.kernel.headers INTERFACE)  # Kernel headers for exporting
+add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
 # Note: Caveat - linking objects to this target also requires
 # using target_sources $<TARGET_OBJECTS:{some lib name}> syntax because
 # interface libraries are only carriers for headers and properties
@@ -46,11 +45,12 @@ if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND KERNEL_SOURCES ${KERNEL_TEST_SOURCES})
 endif ()
 
+add_library(alkos.kernel.objects OBJECT ${KERNEL_SOURCES})
+
 #################################### Exec ####################################
 
-add_executable(alkos.kernel
-        ${KERNEL_SOURCES}
-)
+add_executable(alkos.kernel "")
+target_link_libraries(alkos.kernel.objects PRIVATE target.properties)
 
 ############################### Adding Headers ###############################
 
@@ -65,7 +65,7 @@ target_include_directories(alkos.kernel.headers INTERFACE
 add_subdirectory(arch/${ARCH})
 
 # TODO: Immediately here, error checking should happen
-# But the error checking itself fails!!! and for some reason 
+# But the error checking itself fails!!! and for some reason
 # alkos_ensure_property_defined() says the property is not defined
 
 ################################# ThirdParty #################################
@@ -125,6 +125,12 @@ message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
 message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
 message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 
+target_link_libraries(alkos.kernel.objects PUBLIC
+    target.properties
+    alkos.kernel.headers
+    alkos.kernel.deps
+)
+
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
 #    target_link_libraries preserves this order.
@@ -136,8 +142,7 @@ target_link_libraries(alkos.kernel PRIVATE
 
     # Order is important here!
     # Do not link ANYTHING before crtbegin.o
-    alkos.kernel.headers
-    alkos.kernel.deps
+    alkos.kernel.objects
 
     ${CRTEND_OBJ_PATH}
     ${CRTN_OBJ_PATH}

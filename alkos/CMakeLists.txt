@@ -12,6 +12,8 @@ set(PROJECT_NAME AlkOS)
 set(PROJECT_VERSION "0.0")
 set(PROJECT_AUTHOR "ALK Organisation")
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 ################################################################################
 #                                  Helpers                                     #
 ################################################################################
