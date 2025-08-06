@@ -42,17 +42,12 @@ alkos_ensure_defined(
 message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")
 message(STATUS "Kernel modules: ${KERNEL_MODULES}")
 
-message(STATUS "CRTI_OBJ: ${CRTI_OBJ}, CRTN_OBJ: ${CRTN_OBJ}")
+########################## Set Kernel Properties ##########################
 
-########################## Back-Propagate Variables ##########################
+set_property(TARGET alkos.kernel.config PROPERTY BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE})
+set_property(TARGET alkos.kernel.config PROPERTY KERNEL_MODULES ${KERNEL_MODULES})
+set_property(TARGET alkos.kernel.config PROPERTY KERNEL_COMMANDS ${KERNEL_COMMANDS})
 
-set(CRTI_OBJ "${CRTI_OBJ}" PARENT_SCOPE)
-set(CRTN_OBJ "${CRTN_OBJ}" PARENT_SCOPE)
-
-set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
-set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
-set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)
-
-set(ARCH_QEMU_COMMAND ${ARCH_QEMU_COMMAND} PARENT_SCOPE)
-set(ARCH_QEMU_NORMAL_FLAGS ${ARCH_QEMU_NORMAL_FLAGS} PARENT_SCOPE)
-set(ARCH_QEMU_TEST_FLAGS ${ARCH_QEMU_TEST_FLAGS} PARENT_SCOPE)
+set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_COMMAND ${ARCH_QEMU_COMMAND})
+set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_NORMAL_FLAGS ${ARCH_QEMU_NORMAL_FLAGS})
+set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_TEST_FLAGS ${ARCH_QEMU_TEST_FLAGS})

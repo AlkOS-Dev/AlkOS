@@ -7,8 +7,8 @@
 # alkos_ensure_defined
 #===============================================================================
 #
-# Checks if one or more variables are defined and halts with a fatal error,
-# listing all undefined variables at once.
+# Checks if one or more variables are defined (and nonempty) and halts with a 
+# fatal error, listing all undefined variables at once.
 #
 # Parameters:
 #   VARS <var>...          A list of variable names to check.
@@ -45,6 +45,9 @@ function(alkos_ensure_defined)
         if(NOT DEFINED ${var_name})
             list(APPEND undefined_vars "${var_name}")
         endif()
+        if(${var_name} STREQUAL "")
+            list(APPEND undefined_vars "${var_name}")
+        endif()
     endforeach()
 
     if(undefined_vars)
@@ -59,3 +62,63 @@ function(alkos_ensure_defined)
         message(FATAL_ERROR "${error_message}")
     endif()
 endfunction()
+
+#===============================================================================
+# alkos_ensure_property_defined
+#===============================================================================
+#
+# Checks if a property is defined for a target and halts with a fatal error_message,
+# listing all undefined properties at once.
+#
+# Parameters:
+#   TARGET <target>        The target to check the properties for.
+#   PROPS <prop>...       A list of property names to check.
+#   MESSAGE <message>      (Optional) A supplementary message to append to the
+#                          standard error output. This is useful for providing
+#                          additional context or instructions to the user.
+#
+# Example:
+#   # Assume alkos.kernel.config is a target and BOOTABLE_KERNEL_EXECUTABLE
+#   # is not defined.
+#   alkos_ensure_property_defined(
+#       TARGET alkos.kernel.config
+#       PROPS BOOTABLE_KERNEL_EXECUTABLE KERNEL_MODULES
+#       MESSAGE "The BOOTABLE_KERNEL_EXECUTABLE property must be set for the KERNEL_MODULES target."
+#   )
+#
+function(alkos_ensure_property_defined)
+    set(options)
+    set(oneValueArgs MESSAGE)
+    set(multiValueArgs TARGET PROPS)
+
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(NOT ARG_TARGET)
+        message(FATAL_ERROR "alkos_ensure_property_defined() called without a TARGET to check.")
+    endif()
+
+    if(NOT ARG_PROPS)
+        message(FATAL_ERROR "alkos_ensure_property_defined() called without any PROPS to check.")
+    endif()
+
+    set(undefined_props "")
+    foreach(prop_name ${ARG_PROPS})
+        get_property(is_defined TARGET ${ARG_TARGET} PROPERTY ${prop_name} DEFINED)
+        if(NOT is_defined)
+            list(APPEND undefined_props "${prop_name}")
+        endif()
+    endforeach()
+
+    if(undefined_props)
+        string(JOIN ", " undefined_props_str "${undefined_props}")
+
+        set(error_message "The following required properties are not defined for target '${ARG_TARGET}': ${undefined_props_str}")
+
+        if(ARG_MESSAGE)
+            string(APPEND error_message "\n${ARG_MESSAGE}")
+        endif()
+
+        message(FATAL_ERROR "${error_message}")
+    endif()
+endfunction()
+

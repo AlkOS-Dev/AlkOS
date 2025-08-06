@@ -88,9 +88,21 @@ add_subdirectory(libc)
 add_subdirectory(generated)
 add_subdirectory(kernel)
 
+get_property(BOOTABLE_KERNEL_EXECUTABLE TARGET alkos.kernel.config PROPERTY BOOTABLE_KERNEL_EXECUTABLE)
+get_property(KERNEL_MODULES TARGET alkos.kernel.config PROPERTY KERNEL_MODULES)
+get_property(KERNEL_COMMANDS TARGET alkos.kernel.config PROPERTY KERNEL_COMMANDS)
+get_property(ARCH_QEMU_COMMAND TARGET alkos.kernel.config PROPERTY ARCH_QEMU_COMMAND)
+get_property(ARCH_QEMU_NORMAL_FLAGS TARGET alkos.kernel.config PROPERTY ARCH_QEMU_NORMAL_FLAGS)
+get_property(ARCH_QEMU_TEST_FLAGS TARGET alkos.kernel.config PROPERTY ARCH_QEMU_TEST_FLAGS)
+
 alkos_ensure_defined(
-    VARS BOOTABLE_KERNEL_EXECUTABLE
-    MESSAGE "No primary kernel executable defined by the end of the configuration."
+    VARS
+        BOOTABLE_KERNEL_EXECUTABLE
+        KERNEL_MODULES
+        KERNEL_COMMANDS
+        ARCH_QEMU_COMMAND
+        ARCH_QEMU_NORMAL_FLAGS
+        ARCH_QEMU_TEST_FLAGS
 )
 
 ################################################################################

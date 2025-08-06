@@ -48,8 +48,8 @@ add_library(alkos.kernel.crts OBJECT
 )
 
 # Set the CRT object paths
-set(CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crti.nasm.o" PARENT_SCOPE)
-set(CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crtn.nasm.o" PARENT_SCOPE)
+set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crti.nasm.o")
+set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crtn.nasm.o")
 
 add_dependencies(alkos.kernel alkos.kernel.crts)
 
