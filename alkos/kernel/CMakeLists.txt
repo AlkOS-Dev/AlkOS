@@ -91,7 +91,7 @@ target_link_libraries(alkos.kernel.deps INTERFACE
 
 ################################ Linking Kernel ################################
 
-target_link_libraries(alkos.kernel PUBLIC
+target_link_libraries(alkos.kernel PRIVATE
     target.properties
     alkos.kernel.config
     alkos.kernel.headers
