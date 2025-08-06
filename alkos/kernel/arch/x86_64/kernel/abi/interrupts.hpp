@@ -3,6 +3,7 @@
 
 #include "acpi/acpi.hpp"
 #include "drivers/apic/io_apic.hpp"
+#include "drivers/apic/local_apic.hpp"
 #include "interrupts/idt.hpp"
 #include "todo.hpp"
 
@@ -16,6 +17,7 @@ class Interrupts : public InterruptsABI
     static constexpr size_t kTemporaryIoApicTableSize = 8;
 
     public:
+    TODO_WHEN_VMEM_WORKS
     using IoApicTable = template_lib::StaticVector<IoApic, kTemporaryIoApicTableSize>;
 
     Interrupts()  = default;
@@ -46,17 +48,7 @@ class Interrupts : public InterruptsABI
     NODISCARD IoApic &GetIoApicHandler(u32 gsi);
 
     /* Note: If APIC is initialized all cores will use apic functionality instead of PIC */
-    NODISCARD FORCE_INLINE_F bool IsApicInitialized() const { return is_apic_initialized_; }
-
-    NODISCARD FORCE_INLINE_F u64 GetLocalApicPhysicalAddress() const
-    {
-        return local_apic_physical_address_;
-    }
-
-    FORCE_INLINE_F void SetLocalApicPhysicalAddress(const u64 value)
-    {
-        local_apic_physical_address_ = value;
-    }
+    NODISCARD FORCE_INLINE_F LocalApic &GetLocalApic() { return local_apic_; }
 
     // ------------------------------
     // Protected methods
@@ -70,12 +62,8 @@ class Interrupts : public InterruptsABI
     // ------------------------------
 
     Idt idt_{};
-
-    TODO_WHEN_VMEM_WORKS
-    IoApicTable io_apic_table_;
-
-    bool is_apic_initialized_{};
-    u64 local_apic_physical_address_{};
+    IoApicTable io_apic_table_{};
+    LocalApic local_apic_{};
 };
 }  // namespace arch
 

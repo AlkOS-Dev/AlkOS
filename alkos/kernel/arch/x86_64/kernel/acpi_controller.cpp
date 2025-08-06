@@ -125,7 +125,7 @@ static void ParseLApicAddress_(MadtTable &table)
         "Local APIC physical address: %08X", table.GetNative()->local_interrupt_controller_address
     );
 
-    HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(
+    HardwareModule::Get().GetInterrupts().GetLocalApic().SetPhysicalAddress(
         table.GetNative()->local_interrupt_controller_address
     );
 
@@ -143,7 +143,7 @@ static void ParseLApicAddress_(MadtTable &table)
             table_ptr->address, table_ptr->rsvd
         );
 
-        HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(table_ptr->address);
+        HardwareModule::Get().GetInterrupts().GetLocalApic().SetPhysicalAddress(table_ptr->address);
     });
 }
 

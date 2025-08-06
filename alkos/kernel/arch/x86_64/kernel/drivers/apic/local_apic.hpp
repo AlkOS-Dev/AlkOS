@@ -36,6 +36,7 @@
  */
 class LocalApic
 {
+    public:
     // ------------------------------
     // Architecture Defines and Constants
     // ------------------------------
@@ -311,7 +312,7 @@ class LocalApic
      *
      * @return 4K-aligned physical address of the Local APIC MMIO region
      */
-    NODISCARD FAST_CALL u64 GetPhysicalAddress()
+    NODISCARD FAST_CALL u64 GetPhysicalAddressOnCore()
     {
         /* Return 4k page aligned address, removing the lower 12 bits (flags) */
         return CpuGetMSR(kIA32ApicBaseMsr) & ~kBitMaskRight<u64, 12>;
@@ -325,25 +326,11 @@ class LocalApic
      *
      * @param new_address New 4K-aligned physical address for the Local APIC
      */
-    FAST_CALL void SetPhysicalAddress(const u64 new_address)
+    FAST_CALL void SetPhysicalAddressOnCore(const u64 new_address)
     {
         ASSERT_TRUE(IsAligned(new_address, 12), "Local APIC address is not aligned to 4k page!");
         CpuSetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
     }
-
-    // --------------------------------
-    // Main Control Functions
-    // --------------------------------
-
-    /**
-     * @brief Enables the Local APIC
-     *
-     * Initializes and enables the Local APIC by:
-     * 1. Setting the enable bit in the IA32_APIC_BASE MSR
-     * 2. Configuring the Spurious Interrupt Vector Register
-     * 3. Setting up default values for critical registers
-     */
-    void Enable();
 
     /**
      * @brief Writes a value to a Local APIC register
@@ -359,7 +346,9 @@ class LocalApic
     {
         TODO_WHEN_VMEM_WORKS
         WriteMemoryIo<u32>(
-            reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
+            reinterpret_cast<byte *>(
+                GetPhysicalAddressOnCore()
+            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
             offset, value
         );
     }
@@ -377,7 +366,9 @@ class LocalApic
     {
         TODO_WHEN_VMEM_WORKS
         return ReadMemoryIo<u32, RetT>(
-            reinterpret_cast<byte *>(GetPhysicalAddress()),  // TODO : REPLACE WITH VIRTUAL ADDRESS
+            reinterpret_cast<byte *>(
+                GetPhysicalAddressOnCore()
+            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
             offset
         );
     }
@@ -394,5 +385,42 @@ class LocalApic
 
     FAST_CALL u8 GetCoreId() { return ReadRegister(kIdRegRW) >> 24; }
 
-}  // namespace LocalApic
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    LocalApic()  = default;
+    ~LocalApic() = default;
+
+    // --------------------------------
+    // Main Control Functions
+    // --------------------------------
+
+    /**
+     * @brief Enables the Local APIC
+     *
+     * Initializes and enables the Local APIC by:
+     * 1. Setting the enable bit in the IA32_APIC_BASE MSR
+     * 2. Configuring the Spurious Interrupt Vector Register
+     * 3. Setting up default values for critical registers
+     */
+    void Enable();
+
+    FORCE_INLINE_F void SetPhysicalAddress(const u64 address)
+    {
+        local_apic_physical_address_ = address;
+    }
+
+    FORCE_INLINE_F u64 GetPhysicalAddress() const { return local_apic_physical_address_; }
+
+    NODISCARD FORCE_INLINE_F bool IsEnabled() const { return is_enabled_; }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    bool is_enabled_{};
+    u64 local_apic_physical_address_{};
+};
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_LOCAL_APIC_HPP_

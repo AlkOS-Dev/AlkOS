@@ -14,8 +14,7 @@ void Interrupts::Initialise()
     TRACE_INFO("Initialising interrupts system...");
 
     /* Replace first stage PIC with new APIC chip on startup Core */
-    LocalApic::Enable();
-    is_apic_initialized_ = true;
+    local_apic_.Enable();
 
     TRACE_INFO("Interrupts system initialised...");
 }
