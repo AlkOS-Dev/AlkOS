@@ -64,7 +64,7 @@ endfunction()
 # alkos_ensure_property_defined
 #===============================================================================
 #
-# Checks if a property is defined for a target and halts with a fatal error_message,
+# Checks if a property is defined for a target and halts with a fatal error,
 # listing all undefined properties at once.
 #
 # Parameters:
