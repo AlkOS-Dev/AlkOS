@@ -77,8 +77,6 @@ add_subdirectory(arch/${ARCH})
 # But the error checking itself fails!!! and for some reason
 # alkos_ensure_property_defined() says the property is not defined
 
-)
-
 ################################# ThirdParty #################################
 
 add_subdirectory(thirdparty)
@@ -96,6 +94,7 @@ target_link_libraries(alkos.kernel PRIVATE
     alkos.kernel.config
     alkos.kernel.headers
     alkos.kernel.deps
+)
 
 ############## Linker Configuration for CXX Global Constructors ##############
 # NOTE: This linking must be done at this level as global constructors

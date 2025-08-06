@@ -12,7 +12,6 @@ alkos_target_sources(alkos.loader32)
 
 ############################## Finding CXX Compiler ############################
 
-message(STATUS "32 bit compiler: ${CMAKE_CXX_COMPILER_32}")
 set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 ############################## Finding Headers ###############################
