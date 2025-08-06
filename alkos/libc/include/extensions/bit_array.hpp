@@ -9,7 +9,7 @@
 template <size_t kNumBits>
 class BitArray final
 {
-    using StorageT                        = u32;
+    using StorageT                        = u8;
     static constexpr size_t kStorageTBits = sizeof(StorageT) * 8;
     static constexpr size_t kNumStorageT  = (kNumBits + kStorageTBits - 1) / kStorageTBits;
 
@@ -58,6 +58,18 @@ class BitArray final
     FORCE_INLINE_F void SetAll(const bool value)
     {
         memset(storage_, value ? UINT8_MAX : 0, kNumStorageT * sizeof(StorageT));
+    }
+
+    FORCE_INLINE_F u64 ToU64() const
+    {
+        ASSERT_LE(kNumBits, 64, "ToU64 supported only for small enough arrays");
+        return *reinterpret_cast<u64 *>(storage_);
+    }
+
+    FORCE_INLINE_F u32 ToU32() const
+    {
+        ASSERT_LE(kNumBits, 32, "ToU32 supported only for small enough arrays");
+        return *reinterpret_cast<const u32 *>(storage_);
     }
 
     // ------------------------------

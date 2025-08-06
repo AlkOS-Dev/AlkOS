@@ -28,7 +28,9 @@ void Interrupts::Initialise()
 
     TOOD_WHEN_TIMER_INFRA_DONE
     // TODO: temporary location -> move to the infra
-    GetHpet()->Setup();
+    if (GetHpet()) {
+        GetHpet()->Setup();
+    }
 
     EnableHardwareInterrupts();
 

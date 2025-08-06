@@ -232,6 +232,8 @@ class Hpet final
     // Class methods
     // ------------------------------
 
+    TOOD_WHEN_TIMER_INFRA_DONE
+    // Temporary function replacing PIT
     void Setup();
 
     NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const
@@ -319,6 +321,46 @@ class Hpet final
         );
     }
 
+    FORCE_INLINE_F void SetupStandardMapping()
+    {
+        auto conf_reg = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
+        conf_reg.legacy_replacement = GeneralConfigurationReg::LegacyReplacementBit::kDisable;
+
+        WriteRegister(kGeneralConfigurationRegRW, conf_reg);
+        is_legacy_mode_ = false;
+    }
+
+    FORCE_INLINE_F void SetupLegacyMapping()
+    {
+        auto conf_reg = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
+        conf_reg.legacy_replacement = GeneralConfigurationReg::LegacyReplacementBit::kEnable;
+
+        WriteRegister(kGeneralConfigurationRegRW, conf_reg);
+        is_legacy_mode_ = true;
+    }
+
+    FORCE_INLINE_F void IsLegacyModeEnabled() {}
+
+    FORCE_INLINE_F void StartMainCounter()
+    {
+        auto conf_reg   = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
+        conf_reg.enable = GeneralConfigurationReg::EnableBit::kEnable;
+
+        WriteRegister(kGeneralConfigurationRegRW, conf_reg);
+        is_main_counter_enabled_ = true;
+    }
+
+    FORCE_INLINE_F void StopMainCounter()
+    {
+        auto conf_reg   = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
+        conf_reg.enable = GeneralConfigurationReg::EnableBit::kDisable;
+
+        WriteRegister(kGeneralConfigurationRegRW, conf_reg);
+        is_main_counter_enabled_ = false;
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsMainCounterEnabled() const { return is_main_counter_enabled_; }
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -339,6 +381,10 @@ class Hpet final
     BitArray<kMaxComparators> comparators_64bit_supported_{};
     BitArray<kMaxComparators> comparators_periodic_supported_{};
     std::array<BitArray<kComparatorMaxIrqMap>, kMaxComparators> comparators_allowed_irqs_{};
+
+    /* General hpet information */
+    bool is_legacy_mode_{};
+    bool is_main_counter_enabled_{};
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_

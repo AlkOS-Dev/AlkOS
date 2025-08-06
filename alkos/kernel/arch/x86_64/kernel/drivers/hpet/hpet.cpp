@@ -1,4 +1,5 @@
-#include <drivers/hpet/hpet.hpp>
+#include "drivers/hpet/hpet.hpp"
+#include "arch_utils.hpp"
 
 Hpet::Hpet(acpi_hpet *table)
 {
@@ -36,24 +37,47 @@ Hpet::Hpet(acpi_hpet *table)
 
     /* Gather information about comparators to avoid reading registers each time */
     for (u32 timer_idx = 0; timer_idx < num_comparators_; ++timer_idx) {
+        const auto conf_reg =
+            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx));
+
         const bool supports_64_bit =
-            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx))
-                .is_64_bit_comparator == TimerConfigurationReg::Is64BitComparator::k64Bit;
+            conf_reg.is_64_bit_comparator == TimerConfigurationReg::Is64BitComparator::k64Bit;
         comparators_64bit_supported_.Set(timer_idx, supports_64_bit);
 
         const bool supports_periodic =
-            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx))
-                .periodic_supported == TimerConfigurationReg::PeriodicSupported::kSupported;
+            conf_reg.periodic_supported == TimerConfigurationReg::PeriodicSupported::kSupported;
         comparators_periodic_supported_.Set(timer_idx, supports_periodic);
 
+        comparators_allowed_irqs_[timer_idx] = conf_reg.route_capabilities;
+
         TRACE_DEBUG(
-            "Comp %u 64-bit capable: %u, periodic capable: %u", timer_idx,
-            static_cast<u32>(supports_64_bit), static_cast<u32>(supports_periodic)
+            "Comp %u 64-bit capable: %u, periodic capable: %u, allowed irqs: %08X", timer_idx,
+            static_cast<u32>(supports_64_bit), static_cast<u32>(supports_periodic),
+            conf_reg.route_capabilities.ToU32()
         );
     }
+
+    /* Ensure sensible initial state */
+    SetupStandardMapping();
+    StopMainCounter();
 }
 
-void Hpet::Setup() {}
+void Hpet::Setup()
+{
+    static constexpr u64 kFemtoPerNs = 1'000'000ULL;
+    static constexpr u64 kNsPerMs    = 1'000'000ULL;
+
+    const u64 cur_counter = ReadMainCounter();
+    TRACE_DEBUG("Loading default settings to HPET timer. Current counter: %zu", cur_counter);
+
+    BlockHardwareInterrupts();
+
+    SetupLegacyMapping();
+    SetupPeriodicTimer(0, 1'000'000'00, 2);
+    StartMainCounter();
+
+    EnableHardwareInterrupts();
+}
 
 u64 Hpet::AdjustTimeToHpetCapabilities(const u64 time_femto) const
 {
