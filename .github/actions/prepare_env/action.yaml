@@ -13,20 +13,15 @@ runs:
       shell: bash
       run: sudo "$GITHUB_WORKSPACE/scripts/env/install_deps_ubuntu.bash" --install -v
 
-    - name: Configure environment
-      env:
-        ARCH: ${{ inputs.arch }}
-      shell: bash
-      run: sudo "$GITHUB_WORKSPACE/scripts/config/configure.bash" "$ARCH" debug -v -p test_mode
-
     - name: Cache toolchain
       uses: actions/cache@v4
       id: cache-build-tools
       with:
-        key: tools-${{ inputs.arch }}-${{ hashFiles('scripts/env/toolchain_versions.txt') }}
+        key: tools-${{ inputs.arch }}-${{ hashFiles('scripts/env/toolchain_versions.txt', 'scripts/env/build_cross_compile.bash') }}
         path: tools
 
-    - name: Build toolchain
+    - name: Build toolchain and Setup PATH
+      id: build_toolchain 
       env:
         TOOLCHAIN_PATH: ${{ github.workspace }}/tools
         BUILD_PATH: ${{ github.workspace }}/build
@@ -35,16 +30,24 @@ runs:
       shell: bash
       run: |
         if [[ $BUILD_TOOLS_CACHE_HIT == 'true' ]]; then
-          echo "Toolchain is cached, skipping build"      
-          if [[ $ARCH == 'x86_64' ]]; then
-            echo "Adding x86 toolchain paths to the PATH"
-            echo "$TOOLCHAIN_PATH/i386-elf/bin" >> $GITHUB_PATH
-            echo "$TOOLCHAIN_PATH/x86_64-elf/bin" >> $GITHUB_PATH
-          else
-            echo "Unsupported arch"
-            exit 1
-          fi     
+          echo "Toolchain is cached, skipping build"
         else
           echo "Building toolchain"
           sudo "$GITHUB_WORKSPACE/scripts/env/install_toolchain.bash" "$TOOLCHAIN_PATH" "$BUILD_PATH" "$ARCH" -v
         fi
+        
+        echo "Adding toolchain to PATH for subsequent steps"
+        if [[ $ARCH == 'x86_64' ]]; then
+          echo "$TOOLCHAIN_PATH/i386-elf/bin" >> $GITHUB_PATH
+          echo "$TOOLCHAIN_PATH/x86_64-elf/bin" >> $GITHUB_PATH
+        else
+          echo "Unsupported arch"
+          exit 1
+        fi
+
+    - name: Configure environment
+      needs: build_toolchain 
+      env:
+        ARCH: ${{ inputs.arch }}
+      shell: bash
+      run: sudo "$GITHUB_WORKSPACE/scripts/config/configure.bash" "$ARCH" debug -v -p test_mode
