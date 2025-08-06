@@ -2,7 +2,10 @@ message(STATUS "Configuring kernel...")
 
 # This target acts as a central hub for configuration data (e.g., kernel modules)
 # that needs to be communicated to the top-level CMakeLists.txt.
-add_library(alkos.kernel.config INTERFACE)
+add_library(alkos.kernel.config INTERFACE)  
+add_library(alkos.kernel.headers INTERFACE) # Kernel headers for exporting
+add_library(alkos.kernel.deps INTERFACE)    # Target to link all dependencies to, to ensure
+                                            # proper linking order
 
 ############################### Error Checking ###############################
 
@@ -48,15 +51,10 @@ add_executable(alkos.kernel
 
 ############################### Adding Headers ###############################
 
-add_library(alkos.kernel.headers INTERFACE)
 target_include_directories(alkos.kernel.headers INTERFACE
     include
     test
     abi
-)
-
-target_link_libraries(alkos.kernel PRIVATE
-    alkos.kernel.headers
 )
 
 ########################## Configure for given Arch ##########################
@@ -71,13 +69,11 @@ add_subdirectory(arch/${ARCH})
 
 add_subdirectory(thirdparty)
 
-target_link_libraries(alkos.kernel.headers INTERFACE
+target_link_libraries(alkos.kernel.deps INTERFACE
     alkos.kernel.thirdparty
+    libk
+    AutoGenLib
 )
-
-################################## Linking ###################################
-
-target_link_libraries(alkos.kernel PRIVATE libk AutoGenLib)
 
 ############## Linker Configuration for CXX Global Constructors ##############
 # NOTE: This linking must be done at this level as global constructors
@@ -130,8 +126,15 @@ message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
 #    target_link_libraries preserves this order.
 target_link_libraries(alkos.kernel PRIVATE
+    target.properties
+
     ${CRTI_OBJ_PATH}
     ${CRTBEGIN_OBJ_PATH}
+
+    # Order is important here!
+    # Do not link ANYTHING before crtbegin.o
+    alkos.kernel.headers
+    alkos.kernel.deps
 
     ${CRTEND_OBJ_PATH}
     ${CRTN_OBJ_PATH}
