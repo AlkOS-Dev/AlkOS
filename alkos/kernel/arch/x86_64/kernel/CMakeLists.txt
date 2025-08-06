@@ -39,19 +39,16 @@ target_link_libraries(alkos.kernel PRIVATE
 
 ########################## CXX Global Constructors ###########################
 
-set(SRTI_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cxx/crti.nasm")
-set(SRTN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cxx/crtn.nasm")
-
-add_library(alkos.kernel.crts OBJECT
-        ${SRTI_FILE}
-        ${SRTN_FILE}
+add_library(alkos.kernel.crti OBJECT
+    cxx/crti.nasm
+)
+add_library(alkos.kernel.crtn OBJECT
+    cxx/crtn.nasm
 )
 
-# Set the CRT object paths
-set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crti.nasm.o")
-set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crtn.nasm.o")
-
-add_dependencies(alkos.kernel alkos.kernel.crts)
+set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "$<TARGET_OBJECTS:alkos.kernel.crti>")
+set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "$<TARGET_OBJECTS:alkos.kernel.crtn>")
+add_dependencies(alkos.kernel PRIVATE alkos.kernel.crti alkos.kernel.crtn)
 
 ############################### Link Libraries ###############################
 
