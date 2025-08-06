@@ -1,11 +1,11 @@
 #include "interrupts.hpp"
 
+#include "arch_utils.hpp"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
 
 #include <extensions/debug.hpp>
-#include <extensions/new.hpp>
 
 using namespace arch;
 
@@ -13,8 +13,20 @@ void Interrupts::Initialise()
 {
     TRACE_INFO("Initialising interrupts system...");
 
+    BlockHardwareInterrupts();
+
+    /* Disable PIC unit */
+    Pic8259Disable();
+
+    /* Enable IO apics */
+    for (IoApic &io_apic : GetIoApicTable()) {
+        io_apic.PrepareDefaultConfig();
+    }
+
     /* Replace first stage PIC with new APIC chip on startup Core */
     local_apic_.Enable();
+
+    EnableHardwareInterrupts();
 
     TRACE_INFO("Interrupts system initialised...");
 }

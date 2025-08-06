@@ -50,8 +50,6 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
         "base: 0x%llX",
         id_, virtual_address_, version_, num_entries_, gsi_base_
     );
-
-    PrepareDefaultConfig();
 }
 
 void IoApic::PrepareDefaultConfig() const

@@ -56,9 +56,6 @@ void LocalApic::Enable()
 {
     R_ASSERT_TRUE(IsSupported(), "APIC is not supported on this platform...");
 
-    /* Disable PIC unit */
-    Pic8259Disable();
-
     TODO_WHEN_VMEM_WORKS
     /* Map local apic address to vmem */
     // TODO: currently: identity

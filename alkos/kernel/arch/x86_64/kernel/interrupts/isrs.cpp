@@ -23,7 +23,7 @@ extern "C" {
 
 void isr_32([[maybe_unused]] void *const stack_frame)
 {
-    LogIrqReceived(stack_frame, 32);
+    // LogIrqReceived(stack_frame, 32);
     HardwareModule::Get().GetInterrupts().GetLocalApic().IsEnabled() ? LocalApic::SendEOI()
                                                                      : Pic8259SendEOI(0);
 }
