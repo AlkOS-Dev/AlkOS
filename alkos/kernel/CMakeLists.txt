@@ -95,13 +95,26 @@ alkos_ensure_defined(
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
     OUTPUT_VARIABLE CRTBEGIN_OBJ_PATH
+    ERROR_VARIABLE CRTBEGIN_ERROR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
     OUTPUT_VARIABLE CRTEND_OBJ_PATH
+    ERROR_VARIABLE CRTEND_ERROR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+# !!! Debug start !!!
+message(STATUS "!!! DEBUG START !!!")
+message(STATUS "DEBUG: CMAKE_C_COMPILER is ${CMAKE_C_COMPILER}")
+message(STATUS "DEBUG: Output of crtbegin search: '${CRTBEGIN_OBJ_PATH}'")
+message(STATUS "DEBUG: Error of crtbegin search: '${CRTBEGIN_ERROR}'")
+message(STATUS "DEBUG: Output of crtend search: '${CRTEND_OBJ_PATH}'")
+message(STATUS "DEBUG: Error of crtend search: '${CRTEND_ERROR}'")
+message(STATUS "!!! DEBUG END !!!")
+# !!! Debug end !!!
+
 alkos_ensure_defined(
     VARS CRTBEGIN_OBJ_PATH CRTEND_OBJ_PATH
     MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
