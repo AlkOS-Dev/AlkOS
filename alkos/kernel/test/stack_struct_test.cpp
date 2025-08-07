@@ -16,7 +16,7 @@ class SingleTypeStaticStackTest : public TestGroupBase
 {
 };
 
-class StaticRegisteryTest : public TestGroupBase
+class StaticVectorTest : public TestGroupBase
 {
 };
 
@@ -266,7 +266,7 @@ TEST_F(StaticStackTest, CopyConstructor)
 // StackRegisterTest
 // ------------------------------
 
-TEST_F(StaticRegisteryTest, FunctionalityTest)
+TEST_F(StaticVectorTest, FunctionalityTest)
 {
     StaticVector<int, 3> reg{};
 

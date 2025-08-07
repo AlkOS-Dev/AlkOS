@@ -28,7 +28,7 @@ Hpet::Hpet(acpi_hpet *table)
         capabilities.timer_type == GeneralCapabilitiesAndIdReg::TimerType::kLegacyReplacement;
 
     /* According to spec must not be 00h */
-    R_ASSERT_NEQ(capabilities.revision_id, static_cast<u8>(0x00));
+    ASSERT_NOT_ZERO(capabilities.revision_id);
 
     TRACE_INFO(
         "Initialized driver for HPET: "

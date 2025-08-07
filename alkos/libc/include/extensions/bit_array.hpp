@@ -63,7 +63,7 @@ class BitArray final
     FORCE_INLINE_F u64 ToU64() const
     {
         ASSERT_LE(kNumBits, 64, "ToU64 supported only for small enough arrays");
-        return *reinterpret_cast<u64 *>(storage_);
+        return *reinterpret_cast<const u64 *>(storage_);
     }
 
     FORCE_INLINE_F u32 ToU32() const

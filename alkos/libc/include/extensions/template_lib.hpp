@@ -624,7 +624,7 @@ class ArrayStaticStack
     FORCE_INLINE_F T &PushEmplace(Args &&...args)
     {
         auto ptr = PushMem_<T>();
-        new (ptr) clean_type<T>(std::move(args)...); /* Checks alignment on debug */
+        new (ptr) clean_type<T>(std::forward<Args>(args)...); /* Checks alignment on debug */
         return *ptr;
     }
 
@@ -771,7 +771,7 @@ class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
 
     void Resize(const size_t size)
     {
-        ASSERT_LT(size, kMaxObjects, "Too many objects requested!!");
+        ASSERT_LE(size, kMaxObjects, "Too many objects requested!!");
 
         if (size == Size()) {
             return;
