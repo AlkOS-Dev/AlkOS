@@ -11,8 +11,6 @@ add_subdirectory(common-loader-64-kernel)
 
 ################################# Register Env #################################
 
-# This call now forms an explicit, self-documenting contract for how to
-# build and run the x86_64 version of the OS.
 alkos_register_runtime_environment(
     ARCH_NAME           x86_64
     BOOTABLE_EXECUTABLE alkos.loader32
