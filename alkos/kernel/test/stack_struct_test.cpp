@@ -123,7 +123,7 @@ TEST_F(SingleTypeStaticStackTest, PushPopInt)
     ArraySingleTypeStaticStack<int, 10> stack;
 
     stack.Push(42);
-    EXPECT_EQ(sizeof(int), stack.Size());
+    EXPECT_EQ(1, stack.Size());
 
     int popped = stack.Pop();
     EXPECT_EQ(42, popped);
@@ -138,7 +138,7 @@ TEST_F(SingleTypeStaticStackTest, PushPopMultipleInts)
         stack.Push(i);
     }
 
-    EXPECT_EQ(10 * sizeof(int), stack.Size());
+    EXPECT_EQ(10, stack.Size());
 
     for (int i = 9; i >= 0; --i) {
         EXPECT_EQ(i, stack.Pop());
@@ -161,7 +161,7 @@ TEST_F(SingleTypeStaticStackTest, CustomAlignment)
         stack.Push(temp);
     }
 
-    EXPECT_EQ(8 * sizeof(AlignedStruct), stack.Size());
+    EXPECT_EQ(8, stack.Size());
 
     AlignedStruct last = stack.Pop();
     EXPECT_EQ(6.0, last.x);
@@ -192,7 +192,7 @@ TEST_F(SingleTypeStaticStackTest, MoveSemantics)
     stack.Push(MoveOnlyInt(42));
     stack.Push(MoveOnlyInt(43));
 
-    EXPECT_EQ(2 * sizeof(MoveOnlyInt), stack.Size());
+    EXPECT_EQ(2, stack.Size());
 
     MoveOnlyInt popped = stack.Pop();
     EXPECT_EQ(43, popped.getValue());
