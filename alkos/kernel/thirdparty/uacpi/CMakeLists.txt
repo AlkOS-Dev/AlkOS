@@ -36,9 +36,8 @@ target_link_libraries(uacpi PRIVATE libk)
 
 ######################### Setting Custom Properties ##########################
 
-target_compile_options(uacpi PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
+target_link_libraries(uacpi PRIVATE
+        target.properties
 )
 
 # Propagate the uACPI library to the parent scope

@@ -107,19 +107,6 @@ add_subdirectory(thirdparty)
 
 target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES} AutoGenLib)
 
-############################## Post Arch Action ##############################
-
-# Note: architecture file has a possibility to define custom command to run
-# before linking
-if (DEFINED POST_ARCH_ACTION)
-    message(STATUS "POST ACTION: ${POST_ARCH_ACTION}")
-
-    add_custom_command(TARGET alkos.kernel PRE_LINK
-            COMMAND ${POST_ARCH_ACTION}
-            COMMENT "Running post build arch action"
-    )
-endif ()
-
 ############## Linker Configuration for CXX Global Constructors ##############
 # Set the linker to link objects in the correct order
 # NOTE: ARCH cmake is expected to provide variables for global constructors
