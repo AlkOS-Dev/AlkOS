@@ -93,7 +93,10 @@ add_subdirectory(kernel)
 ################################################################################
 #                                   Aliases                                    #
 ################################################################################
-alkos_ensure_property_defined(ARCH "Architecture must be defined in the toolchain file!")
+alkos_ensure_defined(
+    VARS ARCH
+    MESSAGE "The ARCH variable must be set to the target architecture (e.g., x86_64, i686, arm64)."
+)
 
 message(STATUS "Creating build aliases for ARCH='${ARCH}'")
 

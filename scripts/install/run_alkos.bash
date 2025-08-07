@@ -18,17 +18,21 @@ RUN_ALKOS_SCRIPT_QEMU_ARGS="${CONF_QEMU_NORMAL_FLAGS}"
 # Flags
 RUN_ALKOS_SCRIPT_VERBOSE=false
 RUN_ALKOS_SCRIPT_GDB=false
+RUN_ALKOS_SCRIPT_MOUNT=false
+RUN_ALKOS_SCRIPT_TESTS=false
 
 # Sources
 source "${RUN_ALKOS_SCRIPT_SOURCE_DIR}/scripts/utils/helpers.bash"
 source "${RUN_ALKOS_SCRIPT_SOURCE_DIR}/scripts/utils/pretty_print.bash"
 
 help() {
-  echo "${RUN_ALKOS_SCRIPT_PATH} <alkos_iso_path> [--verbose | -v] [--gdb | -g]"
+  echo "${RUN_ALKOS_SCRIPT_PATH} <alkos_iso_path> [--verbose | -v] [--gdb | -g] [--mount] [--tests]"
   echo "Where:"
   echo "alkos_iso_path - path to the .iso file (Positional, must be provided)"
   echo "--verbose | -v - flag to enable verbose output"
   echo "--gdb     | -g - flag to run AlkOS in QEMU with GDB"
+  echo "--mount        - (Not Implemented) flag to mount the AlkOS ISO"
+  echo "--tests        - (Not Implemented) flag to run tests"
 }
 
 parse_args() {
@@ -58,6 +62,14 @@ parse_args() {
         RUN_ALKOS_SCRIPT_GDB=true
         shift
         ;;
+      --mount)
+        RUN_ALKOS_SCRIPT_MOUNT=true
+        shift
+        ;;
+      --tests)
+        RUN_ALKOS_SCRIPT_TESTS=true
+        shift
+        ;;
       *)
         echo "Unknown argument: $1"
         help
@@ -80,6 +92,16 @@ process_args() {
   # If GDB flag is set, add GDB arguments to QEMU command
   if [ "$RUN_ALKOS_SCRIPT_GDB" = true ] ; then
     RUN_ALKOS_SCRIPT_QEMU_ARGS="${RUN_ALKOS_SCRIPT_QEMU_ARGS} ${RUN_ALKOS_SCRIPT_GDB_ARGS}"
+  fi
+  
+  if [ "$RUN_ALKOS_SCRIPT_MOUNT" = true ] ; then
+    pretty_error "The --mount feature is not yet implemented."
+    exit 1
+  fi
+  
+  if [ "$RUN_ALKOS_SCRIPT_TESTS" = true ] ; then
+    pretty_error "The --tests flag is not implemented in this script. Use 'make tests' or the run_tests.bash script directly."
+    exit 1
   fi
 }
 
