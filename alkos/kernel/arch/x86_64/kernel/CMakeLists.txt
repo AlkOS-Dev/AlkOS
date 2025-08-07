@@ -33,11 +33,8 @@ target_link_options(alkos.kernel PRIVATE
 
 ######################### Setting Custom Properties ##########################
 
-target_compile_options(alkos.kernel PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+target_link_libraries(alkos.kernel PRIVATE
+        target.properties
 )
 
 ########################## CXX Global Constructors ###########################

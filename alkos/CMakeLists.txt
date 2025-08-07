@@ -20,6 +20,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(ValidationHelpers)
 include(SourceHelpers)
 
+add_library(target.properties INTERFACE) # Populated by the toolchain file
+
 ################################################################################
 #                                  Conf file                                   #
 ################################################################################
