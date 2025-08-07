@@ -268,11 +268,11 @@ TEST_F(StaticStackTest, CopyConstructor)
 
 TEST_F(StaticRegisteryTest, FunctionalityTest)
 {
-    StackBasedVector<int, 3> reg{};
+    StaticVector<int, 3> reg{};
 
-    reg.RegisterObject(1);
-    reg.RegisterObject(2);
-    reg.RegisterObject(3);
+    reg.Push(1);
+    reg.Push(2);
+    reg.Push(3);
 
     int idx{};
     for (const auto& obj : reg) {

@@ -62,7 +62,7 @@ class optional
     const T& operator*() const noexcept
     {
         ASSERT_TRUE(initialized_);
-        return *reinterpret_cast<T*>(mem_.data);
+        return *reinterpret_cast<const T*>(mem_.data);
     }
 
     T* operator->() noexcept
@@ -74,7 +74,7 @@ class optional
     const T* operator->() const noexcept
     {
         ASSERT_TRUE(initialized_);
-        return reinterpret_cast<T*>(mem_.data);
+        return reinterpret_cast<const T*>(mem_.data);
     }
 
     // ------------------------------
