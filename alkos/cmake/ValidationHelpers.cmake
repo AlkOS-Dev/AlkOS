@@ -69,7 +69,7 @@ endfunction()
 #
 # Parameters:
 #   TARGET <target>        The target to check the properties for.
-#   PROPS <prop>...       A list of property names to check.
+#   PROPS <prop>...        A list of property names to check.
 #   MESSAGE <message>      (Optional) A supplementary message to append to the
 #                          standard error output. This is useful for providing
 #                          additional context or instructions to the user.
@@ -119,3 +119,52 @@ function(alkos_ensure_property_defined)
     endif()
 endfunction()
 
+#===============================================================================
+# alkos_ensure_path_exists
+#===============================================================================
+#
+# Checks if a specified path/paths exists and halts with a fatal error if it does not.
+#
+# Parameters:
+#   PATHS <path>...        A list of paths to check for existence.
+#   MESSAGE <message>      (Optional) A supplementary message to append to the
+#                          standard error output. This is useful for providing
+#                          additional context or instructions to the user.
+#
+# Example:
+#   # Assume /usr/local/bin is a critical path that must exist.
+#   alkos_ensure_path_exists(
+#       PATHS /usr/local/bin
+#       MESSAGE "The /usr/local/bin directory is required for the build process."
+#   )
+#
+function(alkos_ensure_path_exists)
+    set(options)
+    set(oneValueArgs MESSAGE)
+    set(multiValueArgs PATHS)
+
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(NOT ARG_PATHS)
+        message(FATAL_ERROR "alkos_ensure_path_exists() called without any PATHS to check.")
+    endif()
+
+    set(nonexistent_paths "")
+    foreach(path ${ARG_PATHS})
+        if(NOT EXISTS ${path})
+            list(APPEND nonexistent_paths "${path}")
+        endif()
+    endforeach()
+
+    if(nonexistent_paths)
+        string(JOIN ", " nonexistent_paths_str "${nonexistent_paths}")
+
+        set(error_message "The following required paths do not exist: ${nonexistent_paths_str}")
+
+        if(ARG_MESSAGE)
+            string(APPEND error_message "\n${ARG_MESSAGE}")
+        endif()
+
+        message(FATAL_ERROR "${error_message}")
+    endif()
+endfunction()

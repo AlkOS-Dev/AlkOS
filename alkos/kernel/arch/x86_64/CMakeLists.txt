@@ -1,32 +1,31 @@
 message(STATUS "Configuring for x86_64")
 
-############################# Arch Dependent Vars ############################
-
-set_property(TARGET alkos.kernel.config PROPERTY KERNEL_MODULES "")
-set_property(TARGET alkos.kernel.config PROPERTY KERNEL_COMMANDS "")
-set_property(TARGET alkos.kernel.config PROPERTY BOOTABLE_KERNEL_EXECUTABLE "")
-set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_COMMAND "qemu-system-x86_64")
-set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_NORMAL_FLAGS "-serial stdio -enable-kvm -cpu host -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1")
-set_property(TARGET alkos.kernel.config PROPERTY ARCH_QEMU_TEST_FLAGS "-serial stdio -enable-kvm -cpu host -display none -m 4G -smp sockets=1,cores=4,threads=1")
-
-################################### Boot32 ###################################
+################################# Add Modules ##################################
 
 add_subdirectory(loader32)
-set_property(TARGET alkos.kernel.config PROPERTY BOOTABLE_KERNEL_EXECUTABLE alkos.loader32)
-
-################################### Boot64 ###################################
-
 add_subdirectory(loader64)
-set_property(TARGET alkos.kernel.config APPEND PROPERTY KERNEL_MODULES alkos.loader64)
-set_property(TARGET alkos.kernel.config APPEND PROPERTY KERNEL_COMMANDS "loader64")
-
-################################### Kernel ###################################
-
 add_subdirectory(kernel)
-set_property(TARGET alkos.kernel.config APPEND PROPERTY KERNEL_MODULES alkos.kernel)
-set_property(TARGET alkos.kernel.config APPEND PROPERTY KERNEL_COMMANDS "kernel")
-
-################################### Common ###################################
 
 add_subdirectory(common-loader-all)
 add_subdirectory(common-loader-64-kernel)
+
+################################# Register Env #################################
+
+# This call now forms an explicit, self-documenting contract for how to
+# build and run the x86_64 version of the OS.
+alkos_register_runtime_environment(
+    ARCH_NAME           x86_64
+    BOOTABLE_EXECUTABLE alkos.loader32
+    QEMU_COMMAND
+        "qemu-system-x86_64"
+    QEMU_NORMAL_FLAGS
+        "-serial stdio -enable-kvm -cpu host -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1"
+    QEMU_TEST_FLAGS 
+        "-serial stdio -enable-kvm -cpu host -display none -m 4G -smp sockets=1,cores=4,threads=1"
+    MODULES
+        alkos.loader64
+        alkos.kernel
+    MODULE_COMMANDS
+        "loader64"
+        "kernel"
+)

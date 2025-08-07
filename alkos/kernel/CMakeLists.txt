@@ -1,6 +1,6 @@
 message(STATUS "Configuring kernel...")
 
-# This target acts as a central hub for configuration data (e.g., kernel modules)
+# This target acts as a central hub for configuration data 
 # that needs to be communicated to the top-level CMakeLists.txt.
 add_library(alkos.kernel.config INTERFACE)
 add_library(alkos.kernel.headers INTERFACE)  # Kernel headers for exporting
