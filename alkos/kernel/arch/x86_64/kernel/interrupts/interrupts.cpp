@@ -26,7 +26,7 @@ void Interrupts::Initialise()
     /* Replace first stage PIC with new APIC chip on startup Core */
     local_apic_.Enable();
 
-    TOOD_WHEN_TIMER_INFRA_DONE
+    TODO_WHEN_TIMER_INFRA_DONE
     // TODO: temporary location -> move to the infra
     if (GetHpet()) {
         GetHpet()->Setup();

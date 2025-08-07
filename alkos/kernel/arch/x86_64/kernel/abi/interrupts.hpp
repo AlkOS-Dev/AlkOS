@@ -42,16 +42,24 @@ class Interrupts : public InterruptsABI
 
     void ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source);
 
+    NODISCARD IoApic &GetIoApicHandler(u32 gsi);
+
+    // ------------------------------
+    // Getters
+    // ------------------------------
+
     NODISCARD FORCE_INLINE_F IoApicTable &GetIoApicTable() { return io_apic_table_; }
 
     NODISCARD FORCE_INLINE_F const IoApicTable &GetIoApicTable() const { return io_apic_table_; }
 
-    NODISCARD IoApic &GetIoApicHandler(u32 gsi);
-
     /* Note: If APIC is initialized all cores will use apic functionality instead of PIC */
     NODISCARD FORCE_INLINE_F LocalApic &GetLocalApic() { return local_apic_; }
 
+    NODISCARD FORCE_INLINE_F const LocalApic &GetLocalApic() const { return local_apic_; }
+
     NODISCARD FORCE_INLINE_F std::optional<Hpet> &GetHpet() { return hpet_; }
+
+    NODISCARD FORCE_INLINE_F const std::optional<Hpet> &GetHpet() const { return hpet_; }
 
     // ------------------------------
     // Protected methods

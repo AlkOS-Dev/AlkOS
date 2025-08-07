@@ -170,7 +170,7 @@ void AcpiController::ParseHpet_()
         return;
     }
 
-    TOOD_WHEN_TIMER_INFRA_DONE
+    TODO_WHEN_TIMER_INFRA_DONE
     /* TODO: Use the driver */
 
     ASSERT_FALSE(

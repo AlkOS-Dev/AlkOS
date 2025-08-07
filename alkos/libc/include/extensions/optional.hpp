@@ -82,8 +82,8 @@ class optional
     // ------------------------------
 
     private:
-    std::aligned_storage_t<sizeof(T), alignof(T)> mem_;
-    bool initialized_;
+    std::aligned_storage_t<sizeof(T), alignof(T)> mem_{};
+    bool initialized_{};
 };
 
 }  // namespace std

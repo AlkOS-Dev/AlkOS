@@ -629,9 +629,9 @@ class ArrayStaticStack
     }
 
     template <class T>
-    FORCE_INLINE_F std::remove_reference_t<std::remove_const_t<T>> &&Pop()
+    FORCE_INLINE_F std::remove_reference_t<std::remove_const_t<T>> Pop()
     {
-        ASSERT_LE(sizeof(T), top_, "Stack overflow!!");
+        ASSERT_LE(sizeof(T), top_, "Stack underflow!!");
         top_ -= sizeof(T);
 
         auto ptr = reinterpret_cast<clean_type<T> *>(stack_.data + top_);
@@ -703,7 +703,7 @@ class ArraySingleTypeStaticStack : public ArrayStaticStack<sizeof(T) * kNumObjec
         return base_t::template PushEmplace<T>(std::forward<Args>(args)...);
     }
 
-    FORCE_INLINE_F T &&Pop() { return std::move(base_t::template Pop<T>()); }
+    FORCE_INLINE_F T Pop() { return std::move(base_t::template Pop<T>()); }
 
     FORCE_INLINE_F size_t Size() const { return base_t::Size() / sizeof(T); }
 

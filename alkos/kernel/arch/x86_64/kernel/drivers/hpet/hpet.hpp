@@ -20,6 +20,10 @@
  * Refer to:
  * https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf
  * and: https://wiki.osdev.org/HPET
+ *
+ * TODO: Things to be done:
+ * - make real use of the timers
+ * - state is not restored after sleep operation
  */
 class Hpet final
 {
@@ -81,8 +85,8 @@ class Hpet final
      */
     struct PACK GeneralCapabilitiesAndIdReg {
         enum class TimerType : u8 {
-            kLegacyReplacement = 0,  // HPET can replace legacy 8254 PIT
-            kGeneralPurpose    = 1,  // General purpose timer
+            kLegacyReplacement = 1,  // HPET can replace legacy 8254 PIT
+            kGeneralPurpose    = 0,  // General purpose timer
         };
 
         enum class TimerSize : u8 {
@@ -232,7 +236,7 @@ class Hpet final
     // Class methods
     // ------------------------------
 
-    TOOD_WHEN_TIMER_INFRA_DONE
+    TODO_WHEN_TIMER_INFRA_DONE
     // Temporary function replacing PIT
     void Setup();
 
@@ -321,6 +325,11 @@ class Hpet final
         );
     }
 
+    NODISCARD FORCE_INLINE_F bool IsLegacyReplacementSupported() const
+    {
+        return is_legacy_mode_available_;
+    }
+
     FORCE_INLINE_F void SetupStandardMapping()
     {
         auto conf_reg = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
@@ -332,6 +341,8 @@ class Hpet final
 
     FORCE_INLINE_F void SetupLegacyMapping()
     {
+        ASSERT_TRUE(IsLegacyReplacementSupported());
+
         auto conf_reg = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
         conf_reg.legacy_replacement = GeneralConfigurationReg::LegacyReplacementBit::kEnable;
 
@@ -372,17 +383,18 @@ class Hpet final
     // Class fields
     // ------------------------------
 
-    acpi_gas address_{};        // Memory-mapped register address information
-    u8 num_comparators_{};      // Number of timer comparators available
-    bool is_counter_32_bit_{};  // Whether comparators are 64-bit capable
-    u16 ticks_{};               // Amount of femto-seconds needed for HPET to update the counter
-
     /* comparators gathered data */
     BitArray<kMaxComparators> comparators_64bit_supported_{};
     BitArray<kMaxComparators> comparators_periodic_supported_{};
     std::array<BitArray<kComparatorMaxIrqMap>, kMaxComparators> comparators_allowed_irqs_{};
 
     /* General hpet information */
+    acpi_gas address_{};    // Memory-mapped register address information
+    u8 num_comparators_{};  // Number of timer comparators available
+    u32 clock_period_{};    // Amount of femto-seconds needed for HPET to update the counter
+
+    bool is_legacy_mode_available_{};
+    bool is_counter_32_bit_{};
     bool is_legacy_mode_{};
     bool is_main_counter_enabled_{};
 };
