@@ -350,7 +350,7 @@ class Hpet final
         is_legacy_mode_ = true;
     }
 
-    FORCE_INLINE_F void IsLegacyModeEnabled() {}
+    NODISCARD FORCE_INLINE_F bool IsLegacyModeEnabled() const { return is_legacy_mode_; }
 
     FORCE_INLINE_F void StartMainCounter()
     {
