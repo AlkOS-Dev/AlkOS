@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 CROSS_COMPILE_BUILD_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -6,26 +7,21 @@ CROSS_COMPILE_BUILD_SCRIPT_PATH="${CROSS_COMPILE_BUILD_SCRIPT_DIR}/$(basename "$
 CROSS_COMPILE_BUILD_BIN_UTILS_VER=""
 CROSS_COMPILE_BUILD_GDB_VER=""
 CROSS_COMPILE_BUILD_GCC_VER=""
-CROSS_COMPILE_BUILD_TARGET=x86_64-elf
-
-CROSS_COMPILE_BUILD_POSITIONAL_ARGS=()
-CROSS_COMPILE_BUILD_INSTALL_FOUND=false
-CROSS_COMPILE_BUILD_VERBOSE=false
-CROSS_COMPILE_USES_DEFAULT_TARGET=true
 
 PROC_COUNT=$(nproc --all)
 
 source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/pretty_print.bash"
 source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/helpers.bash"
+source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/argparse.bash"
 
-help() {
-    echo "${CROSS_COMPILE_BUILD_SCRIPT_PATH} --install [--build_dir | -b <dir>] [--tool_dir | -t <dir>] [--custom_target | -c <target>]"
-    echo "Where:"
-    echo "--install         | -i - required flag to start installation"
-    echo "--build_dir <dir> | -b <dir> - provides directory <dir> to save all build files"
-    echo "--tool_dir  <dir> | -t <dir> - directory where tooling should be saved"
-    echo "--custom_target   | -c - custom target to build cross-compiler for (default: x86_64-elf)"
-    echo "--verbose         | -v - flag to enable verbose output"
+parse_args() {
+    argparse_init "${CROSS_COMPILE_BUILD_SCRIPT_PATH}" "Build cross-compiler toolchain"
+    argparse_add_option "i|install" "Install the cross-compiler toolchain" true false "" "flag"
+    argparse_add_option "b|build_dir" "Directory to save build files" true "" "" "string"
+    argparse_add_option "t|tool_dir" "Directory to save toolchain files" true "" "" "string"
+    argparse_add_option "c|custom_target" "Custom target to build cross-compiler for" false "x86_64-elf" "x86_64-elf|i386-elf" "string"
+    argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
+    argparse_parse "$@"
 }
 
 runner() {
@@ -34,7 +30,7 @@ runner() {
     local dump_info="$1"
     shift
 
-    base_runner "${dump_info}" "${CROSS_COMPILE_BUILD_VERBOSE}" "$@"
+    base_runner "${dump_info}" "$(argparse_get "v|verbose")" "$@"
 }
 
 load_toolchain_versions() {
@@ -127,7 +123,7 @@ download_extract_gnu_source() {
 }
 
 build_binutils() {
-    local binutils_dir="${CROSS_COMPILE_BUILD_BUILD_DIR}/build_binutils"
+    local binutils_dir="$(argparse_get "b|build_dir")/build_binutils"
     local binutils_name="binutils-${CROSS_COMPILE_BUILD_BIN_UTILS_VER}"
 
     pretty_info "Building binutils"
@@ -138,7 +134,7 @@ build_binutils() {
     download_extract_gnu_source "${binutils_name}.tar.gz" "https://ftp.gnu.org/gnu/binutils"
 
     pretty_info "Configuring binutils"
-    runner "Failed to configure binutils" ${binutils_name}/configure --target="${CROSS_COMPILE_BUILD_TARGET}" --prefix="${CROSS_COMPILE_BUILD_TOOL_DIR}" --with-sysroot --disable-nls --disable-werror
+    runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot --disable-nls --disable-werror
     pretty_success "Binutils configured correctly"
 
     pretty_info "Building binutils with ${PROC_COUNT} threads"
@@ -160,7 +156,7 @@ build_libgcc_with_retry_x86_64_fix() {
         make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     if [ $? -ne 0 ]; then
         pretty_info "Libgcc build failed due to PIC issues; applying sed fix."
-        sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "${CROSS_COMPILE_BUILD_TARGET}/libgcc/Makefile"
+        sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "$(argparse_get "c|custom_target")/libgcc/Makefile"
         pretty_info "Retrying libgcc build after sed fix."
         attempt_runner "Failed to build libgcc even after applying the sed fix" \
             make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
@@ -169,7 +165,7 @@ build_libgcc_with_retry_x86_64_fix() {
 }
 
 build_gcc() {
-    local gcc_dir="${CROSS_COMPILE_BUILD_BUILD_DIR}/build_gcc"
+    local gcc_dir="$(argparse_get "b|build_dir")/build_gcc"
     local gcc_name="gcc-${CROSS_COMPILE_BUILD_GCC_VER}"
 
     pretty_info "Building GCC"
@@ -180,7 +176,7 @@ build_gcc() {
     download_extract_gnu_source "${gcc_name}.tar.gz" "https://ftp.gnu.org/gnu/gcc/${gcc_name}"
 
     pretty_info "Configuring GCC"
-    runner "Failed to configure GCC" ${gcc_name}/configure --target="${CROSS_COMPILE_BUILD_TARGET}" --prefix="${CROSS_COMPILE_BUILD_TOOL_DIR}" --disable-nls --enable-languages=c,c++ --without-headers
+    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers
     pretty_success "GCC configured correctly"
 
     pretty_info "Building GCC with ${PROC_COUNT} threads"
@@ -188,7 +184,7 @@ build_gcc() {
     pretty_success "GCC built correctly"
 
     pretty_info "Building libgcc"
-    if [ "$CROSS_COMPILE_BUILD_TARGET" = "x86_64-elf" ]; then
+    if [ "$(argparse_get "c|custom_target")" = "x86_64-elf" ]; then
             build_libgcc_with_retry_x86_64_fix
     else
         runner "Failed to build libgcc" make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-mno-red-zone'
@@ -207,7 +203,7 @@ build_gcc() {
 }
 
 build_gdb() {
-    local gdb_dir="${CROSS_COMPILE_BUILD_BUILD_DIR}/build_gdb"
+    local gdb_dir="$(argparse_get "b|build_dir")/build_gdb"
     local gdb_name="gdb-${CROSS_COMPILE_BUILD_GDB_VER}"
 
     pretty_info "Building GDB"
@@ -218,7 +214,7 @@ build_gdb() {
     download_extract_gnu_source "${gdb_name}.tar.gz" "https://ftp.gnu.org/gnu/gdb/"
 
     pretty_info "Configuring GDB"
-    runner "Failed to configure GDB" ${gdb_name}/configure --target=${CROSS_COMPILE_BUILD_TARGET} --prefix="${CROSS_COMPILE_BUILD_TOOL_DIR}" --disable-werror
+    runner "Failed to configure GDB" ${gdb_name}/configure --target=$(argparse_get "c|custom_target") --prefix="$(argparse_get "t|tool_dir")" --disable-werror
     pretty_success "GDB configured correctly"
 
     pretty_info "Building GDB with ${PROC_COUNT} threads"
@@ -233,90 +229,25 @@ build_gdb() {
 }
 
 run_build() {
-    pretty_info "Starting GCC cross-compiler build with build directory: ${CROSS_COMPILE_BUILD_BUILD_DIR} and target directory: ${CROSS_COMPILE_BUILD_TOOL_DIR}"
+    pretty_info "Starting GCC cross-compiler build with build directory: $(argparse_get "b|build_dir") and target directory: $(argparse_get "t|tool_dir")"
 
-    check_is_in_env_path "${CROSS_COMPILE_BUILD_TOOL_DIR}/bin"
+    check_is_in_env_path "$(argparse_get "t|tool_dir")/bin"
     local is_in_path=$?
 
-    export PATH="${CROSS_COMPILE_BUILD_TOOL_DIR}/bin:${PATH}"
-    export PREFIX="${CROSS_COMPILE_BUILD_TOOL_DIR}"
+    export PATH="$(argparse_get "t|tool_dir")/bin:${PATH}"
+    export PREFIX="$(argparse_get "t|tool_dir")"
 
     build_binutils
     build_gdb
     build_gcc
 
-    add_to_user_env_path "${CROSS_COMPILE_BUILD_TOOL_DIR}/bin" "${is_in_path}"
+    add_to_user_env_path "$(argparse_get "t|tool_dir")/bin" "${is_in_path}"
 
     pretty_success "Build: ${CROSS_COMPILE_BUILD_SCRIPT_PATH} completed successfully"
 }
 
-parse_args() {
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -t|--tool_dir)
-                CROSS_COMPILE_BUILD_TOOL_DIR="$2"
-                shift
-                shift
-                ;;
-            -b|--build_dir)
-                CROSS_COMPILE_BUILD_BUILD_DIR="$2"
-                shift
-                shift
-                ;;
-            -h|--help)
-                help
-                exit 0
-                ;;
-            -i|--install)
-                CROSS_COMPILE_BUILD_INSTALL_FOUND=true
-                shift
-                ;;
-            -v|--verbose)
-                CROSS_COMPILE_BUILD_VERBOSE=true
-                shift
-                ;;
-            -c|--custom_target)
-                CROSS_COMPILE_BUILD_TARGET="$2"
-                CROSS_COMPILE_USES_DEFAULT_TARGET=false
-                shift
-                shift
-                ;;
-            -*)
-                dump_error "Unknown option $1"
-                ;;
-            *)
-                CROSS_COMPILE_BUILD_POSITIONAL_ARGS+=("$1")
-                shift
-                ;;
-        esac
-    done
-
-    set -- "${CROSS_COMPILE_BUILD_POSITIONAL_ARGS[@]}"
-}
-
-process_args() {
-    if [ $CROSS_COMPILE_BUILD_INSTALL_FOUND = false ] ; then
-        dump_error "--install flag was not provided!"
-    fi
-
-    if [ -z "${CROSS_COMPILE_BUILD_TOOL_DIR}" ] ; then
-        dump_error "--tool_dir | -t flag with directory where save tooling was not provided!"
-    fi
-
-    if [ -z "${CROSS_COMPILE_BUILD_BUILD_DIR}" ] ; then
-        dump_error "--build_dir | -t flag with directory where save build files was not provided!"
-    fi
-
-    if [ $CROSS_COMPILE_USES_DEFAULT_TARGET = false ] ; then
-        pretty_info "Using custom target: ${CROSS_COMPILE_BUILD_TARGET}"
-    else
-        pretty_info "Using default target: ${CROSS_COMPILE_BUILD_TARGET}"
-    fi
-}
-
 main() {
     parse_args "$@"
-    process_args
     load_toolchain_versions
     run_build
 }
