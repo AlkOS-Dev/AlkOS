@@ -1,33 +1,14 @@
 ############################### Error Checking ###############################
 
-if (NOT DEFINED SYSROOT)
-    message(FATAL_ERROR "SYSROOT is not defined")
-endif ()
-
-if (NOT DEFINED SYSTEM_LIB_TYPE)
-    message(FATAL_ERROR "SYSTEM_LIB_TYPE is not defined")
-endif ()
+alkos_ensure_defined(
+    VARS SYSROOT SYSTEM_LIB_TYPE
+)
 
 ############################### Processing lib type ###############################
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     set(LIB_NAME "k")
     add_compile_definitions(__ALKOS_LIBK__=1)
-
-    if (USE_DEBUG_OUTPUT)
-        message(STATUS "Enabled debug output for libc...")
-
-        # Defining this macro enables debug output
-        add_compile_definitions(__USE_DEBUG_OUTPUT__=1)
-    endif ()
-
-    if (USE_DEBUG_TRACES)
-        message(STATUS "Enabled debug traces for libc...")
-
-        # Controls whether various traces should be printed to debug output
-        add_compile_definitions(__USE_DEBUG_TRACES__=1)
-    endif ()
-
 elseif (SYSTEM_LIB_TYPE STREQUAL "c" OR SYSTEM_LIB_TYPE STREQUAL "C")
     set(LIB_NAME "c")
 else ()
@@ -36,10 +17,7 @@ endif ()
 
 ############################### Configuring files ###############################
 
-file(GLOB_RECURSE LIB_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-)
+alkos_find_sources(LIB_SOURCES)
 
 ########################## Configure for given Arch ##########################
 
@@ -52,17 +30,7 @@ set_target_properties(lib${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 ############################# Setting Custom Properties #########################
 
-target_compile_options(lib${LIB_NAME} PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
-)
-target_compile_options(lib${LIB_NAME}.32 PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
-)
-
+target_link_libraries(lib${LIB_NAME} PUBLIC target.properties)
 
 ############################### Adding includes ###############################
 
@@ -75,6 +43,8 @@ target_include_directories(lib${LIB_NAME} PRIVATE
 )
 
 target_link_libraries(lib${LIB_NAME} PRIVATE gcc)
+
+target_link_libraries(lib${LIB_NAME} PRIVATE AutoGenLib)
 
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     target_link_libraries(lib${LIB_NAME} PRIVATE alkos.kernel.headers)

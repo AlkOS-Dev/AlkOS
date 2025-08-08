@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
 
 /* internal includes */
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 #include <test_module/test_group_base.hpp>
 
 namespace test

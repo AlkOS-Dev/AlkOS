@@ -1,4 +1,5 @@
 /* internal includes */
+#include <autogen/feature_flags.h>
 #include <arch_utils.hpp>
 #include <panic.hpp>
 #include <terminal.hpp>
@@ -15,7 +16,7 @@ extern "C" void NO_RET KernelPanic(const char *msg)
 #ifndef __i386__
     /* Tests are supposed to run only in x86_64 target */
 
-    if constexpr (kIsAlkosTestBuild) {
+    if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         /* When running tests */
         test::OnKernelPanic();
     } else {

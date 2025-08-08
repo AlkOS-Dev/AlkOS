@@ -1,7 +1,8 @@
 #ifndef ALKOS_KERNEL_ABI_DEBUG_TERMINAL_HPP_
 #define ALKOS_KERNEL_ABI_DEBUG_TERMINAL_HPP_
 
-#include <defines.hpp>
+#include <autogen/feature_flags.h>
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 
 /* Should be implemented inside architecture-specific code */
@@ -27,14 +28,14 @@ WRAP_CALL void DebugTerminalWrite(const char *buffer);
 
 WRAP_CALL void DebugTerminalWrite(const char *str)
 {
-    if constexpr (kUseDebugOutput) {
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         arch::DebugTerminalWrite(str);
     }
 }
 
 WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_size)
 {
-    if constexpr (kUseDebugOutput) {
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         return arch::DebugTerminalReadLine(buffer, buffer_size);
     }
 

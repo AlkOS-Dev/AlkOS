@@ -1,7 +1,9 @@
 #include "physical_memory_manager.hpp"
-#include <multiboot2/multiboot2.h>
+#include <extensions/debug.hpp>
+
 #include <extensions/internal/intervals.hpp>
-#include <multiboot2/extensions.hpp>
+#include "multiboot2/memory_map.hpp"
+#include "multiboot2/multiboot_info.hpp"
 
 namespace memory
 {
@@ -14,27 +16,29 @@ PhysicalMemoryManager::PhysicalMemoryManager(
 void PhysicalMemoryManager::SetPageBuffer(PhysicalMemoryManager::PageBufferInfo_t page_buffer_info)
 {
     page_buffer_info_   = page_buffer_info;
-    page_buffer_        = reinterpret_cast<u64 *>(page_buffer_info_.start_addr);
+    page_buffer_        = reinterpret_cast<u64*>(page_buffer_info_.start_addr);
     num_pages_on_stack_ = 0;
 }
 
-void PhysicalMemoryManager::PopulatePageBuffer(multiboot::tag_mmap_t *mmap)
+void PhysicalMemoryManager::PopulatePageBuffer(Multiboot::TagMmap* mmap)
 {
     R_ASSERT_NOT_NULL(page_buffer_);
     R_ASSERT_GT(page_buffer_info_.start_addr, 0);
 
-    multiboot::WalkMemoryMap(mmap, [&](multiboot::memory_map_t *entry) {
-        if (entry->type != multiboot::mmap_entry_t::kMemoryAvailable) {
+    Multiboot::MemoryMap memory_map(mmap);
+    memory_map.WalkEntries([&](Multiboot::MmapEntry& entry) {
+        if (entry.type != Multiboot::MmapEntry::kMemoryAvailable) {
             return;
         }
 
-        for (u64 page_addr = AlignUp(entry->addr, kPageSize); page_addr < entry->addr + entry->len;
+        for (u64 page_addr = AlignUp(entry.addr, kPageSize); page_addr < entry.addr + entry.len;
              page_addr += kPageSize) {
             R_ASSERT_GE(page_buffer_info_.size_bytes / sizeof(u64), num_pages_on_stack_ + 1);
             page_buffer_[num_pages_on_stack_++] = page_addr;
         }
     });
 }
+
 uintptr_t PhysicalMemoryManager::Allocate()
 {
     R_ASSERT_GT(num_pages_on_stack_, 0);

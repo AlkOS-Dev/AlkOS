@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
 
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 #include <io.hpp>
 #include "extensions/types.hpp"
 

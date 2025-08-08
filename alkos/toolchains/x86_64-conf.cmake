@@ -35,3 +35,34 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEAS
 else ()
     message(FATAL_ERROR "UNKNOWN BUILD TYPE: ${CMAKE_BUILD_TYPE}")
 endif ()
+
+################################################################################
+#                         Property Interface Libraries                         #
+################################################################################
+
+if (NOT TARGET target.properties)
+  message(FATAL_ERROR "target.properties INTERFACE library is not defined. This should be defined by main CMakeLists.txt")
+endif ()
+
+#------------------------------------------------------------------------------#
+#                                    64 bit                                    #
+#------------------------------------------------------------------------------#
+
+target_compile_options(target.properties INTERFACE
+    "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
+    "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
+    "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
+    "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+    "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>"
+)
+#------------------------------------------------------------------------------#
+#                                    32 bit                                    #
+#------------------------------------------------------------------------------#
+
+add_library(target.properties.32 INTERFACE)
+target_compile_options(target.properties.32 INTERFACE
+    "$<$<COMPILE_LANGUAGE:CXX>:-m32>"
+    "$<$<COMPILE_LANGUAGE:C>:-m32>"
+    "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf32>"
+)
+
