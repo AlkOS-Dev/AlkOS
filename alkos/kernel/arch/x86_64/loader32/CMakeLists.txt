@@ -1,28 +1,16 @@
 message(STATUS "Configuring x86_64 32-bit loader")
 
-############################## Finding Sources ###############################
-
-# TODO: Use alkos_find_sources() to find Sources
-# But this requires adding another function that will
-# handle adding compiler flags appropriately for 32-bit .c, .cpp and .asm files
-file(GLOB_RECURSE ARCH_SOURCES_32
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-)
-
-file(GLOB_RECURSE ARCH_ASM_32
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.s"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.asm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.nasm"
-)
 
 #################################### Exec ####################################
 
 add_executable(alkos.loader32
-        ${ARCH_SOURCES_32}
-        ${ARCH_ASM_32}
 )
+
+############################## Finding Sources ###############################
+
+alkos_target_sources(alkos.loader32)
+
+############################## Finding CXX Compiler ############################
 
 message(STATUS "32 bit compiler: ${CMAKE_CXX_COMPILER_32}")
 set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
@@ -33,9 +21,7 @@ target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
 
-set_source_files_properties(${ARCH_SOURCES_32} PROPERTIES COMPILE_FLAGS "-m32")
-
-set_source_files_properties(${ARCH_ASM_32} PROPERTIES COMPILE_FLAGS "-f elf32 ")
+target_link_libraries(alkos.loader32 PRIVATE target.properties.32)
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 

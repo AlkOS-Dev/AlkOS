@@ -15,7 +15,7 @@ declare -A CONFIGURE_TOOLCHAINS=(
 )
 
 declare -A CONFIGURE_FLAGS=(
-  ["x86_64"]="${CONFIGURE_TOOLCHAIN_DIR}/x86_64-flags.cmake"
+  ["x86_64"]="${CONFIGURE_TOOLCHAIN_DIR}/x86_64-conf.cmake"
 )
 
 declare -A CONFIGURE_BUILD_TYPES_DESC=(

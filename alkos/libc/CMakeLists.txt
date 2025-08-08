@@ -30,17 +30,7 @@ set_target_properties(lib${LIB_NAME} PROPERTIES OUTPUT_NAME "${LIB_NAME}")
 
 ############################# Setting Custom Properties #########################
 
-target_compile_options(lib${LIB_NAME} PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
-)
-target_compile_options(lib${LIB_NAME}.32 PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
-)
-
+target_link_libraries(lib${LIB_NAME} PUBLIC target.properties)
 
 ############################### Adding includes ###############################
 
