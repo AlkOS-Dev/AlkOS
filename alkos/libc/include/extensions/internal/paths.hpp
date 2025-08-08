@@ -2,13 +2,14 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_PATHS_HPP_
 
 #include <extensions/array.hpp>
+#include <extensions/internal/macro.hpp>
 #include <extensions/string.hpp>
 #include <extensions/tuple.hpp>
 
 namespace path
 {
 
-static constexpr char kSeparator = '/';
+constexpr char kSeparator = '/';
 
 namespace internal
 {
@@ -40,13 +41,114 @@ consteval auto ConvertToStringView(Callback callback)
 
 }  // namespace internal
 
+template <size_t N>
+consteval auto Dirname(const std::string_view path)
+{
+    std::array<char, N> buffer{};
+    size_t len = path.size();
+
+    if (len == 0) {
+        buffer[0] = '\0';
+        return std::make_tuple(buffer, 1_size);
+    }
+
+    // Find last separator
+    size_t pos = len;
+    while (pos > 0 && path[pos - 1] != kSeparator) {
+        --pos;
+    }
+
+    if (pos == 0) {
+        buffer[0] = '.';
+        buffer[1] = '\0';
+        return std::make_tuple(buffer, 2_size);
+    }
+
+    // Copy dirname
+    size_t out_pos = 0;
+    for (size_t i = 0; i < pos && out_pos < N; ++i) {
+        buffer[out_pos++] = path[i];
+    }
+    if (out_pos == 0) {
+        buffer[out_pos++] = '.';
+    }
+    if (out_pos < N)
+        buffer[out_pos++] = '\0';
+
+    return std::make_tuple(buffer, out_pos);
+}
+
+template <size_t N>
+consteval auto Basename(const std::string_view path)
+{
+    std::array<char, N> buffer{};
+    size_t len = path.size();
+
+    if (len == 0) {
+        buffer[0] = '\0';
+        return std::make_tuple(buffer, 1_size);
+    }
+
+    // Find last separator
+    size_t pos = len;
+    while (pos > 0 && path[pos - 1] != kSeparator) {
+        --pos;
+    }
+
+    // Copy basename
+    size_t out_pos = 0;
+    for (size_t i = pos; i < len && out_pos < N; ++i) {
+        buffer[out_pos++] = path[i];
+    }
+    if (out_pos == 0) {
+        buffer[0] = '\0';
+        out_pos   = 1;
+    } else if (out_pos < N) {
+        buffer[out_pos++] = '\0';
+    }
+
+    return std::make_tuple(buffer, out_pos);
+}
+
+template <size_t N1, size_t N2>
+consteval auto Join(const std::string_view p1, const std::string_view p2)
+{
+    std::array<char, N1 + N2 + 2> buffer{};
+    size_t out_pos = 0;
+
+    // Copy first
+    if (p1 != "." && !p1.empty()) {
+        for (size_t i = 0; i < p1.size() && out_pos < buffer.size(); ++i) {
+            buffer[out_pos++] = p1[i];
+        }
+    }
+
+    // Add separator if needed
+    if (!p1.empty() && p1 != "." && p1.back() != kSeparator && !p2.empty() && p2 != ".") {
+        buffer[out_pos++] = kSeparator;
+    }
+
+    // Copy second
+    if (p2 != "." && !p2.empty()) {
+        for (size_t i = 0; i < p2.size() && out_pos < buffer.size(); ++i) {
+            buffer[out_pos++] = p2[i];
+        }
+    }
+
+    if (out_pos < buffer.size()) {
+        buffer[out_pos++] = '\0';
+    }
+
+    return std::make_tuple(buffer, out_pos);
+}
+
 consteval bool IsAbsolute(std::string_view path)
 {
     return path.size() > 0 && path[0] == kSeparator;
 }
 
 template <size_t N>
-consteval auto weakly_canonical(const std::string_view path)
+consteval auto WeaklyCanonical(const std::string_view path)
 {
     const size_t len       = path.size();
     const bool kIsAbsolute = IsAbsolute(path);
@@ -146,7 +248,7 @@ consteval auto weakly_canonical(const std::string_view path)
 }
 
 template <size_t MaxSize1, size_t MaxSize2>
-consteval auto lexically_relative(const std::string_view path, const std::string_view base_path)
+consteval auto LexicallyRelative(const std::string_view path, const std::string_view base_path)
 {
     constexpr size_t kMaxSize = 2 * (MaxSize1 + MaxSize2);
 
@@ -316,18 +418,38 @@ consteval auto lexically_relative(const std::string_view path, const std::string
 
 }  // namespace path
 
-#define TRANSFORM_STRING(transform, str, ...)                          \
-    path::internal::ConvertToStringView([]() consteval {               \
-        return transform<sizeof(str)>(str __VA_OPT__(, ) __VA_ARGS__); \
+#define __SIZEOF(x) sizeof(x)
+#define __SIZE(x)   x.size() + 1
+
+#define TRANSFORM_STRING(transform, ...)                                \
+    path::internal::ConvertToStringView([]() consteval {                \
+        return transform<FOR_EACH(__SIZEOF, __VA_ARGS__)>(__VA_ARGS__); \
     })
 
-#define RELATIVE(base_path, target_path)                                                       \
-    path::internal::ConvertToStringView([]() consteval {                                       \
-        constexpr auto path_canonical = TRANSFORM_STRING(path::weakly_canonical, target_path); \
-        constexpr auto base_canonical = TRANSFORM_STRING(path::weakly_canonical, base_path);   \
-        constexpr auto path_size      = path_canonical.size();                                 \
-        constexpr auto base_size      = base_canonical.size();                                 \
-        return path::lexically_relative<path_size, base_size>(path_canonical, base_canonical); \
+#define TRANSFORM_STRING_VIEW(transform, ...)                         \
+    path::internal::ConvertToStringView([&]() consteval {             \
+        return transform<FOR_EACH(__SIZE, __VA_ARGS__)>(__VA_ARGS__); \
     })
+
+#define RELATIVE_DIR(base_dir, target_dir)                                                       \
+    ([]() consteval {                                                                            \
+        constexpr auto target_canonical = TRANSFORM_STRING(path::WeaklyCanonical, target_dir);   \
+        constexpr auto base_canonical   = TRANSFORM_STRING(path::WeaklyCanonical, base_dir);     \
+        return TRANSFORM_STRING_VIEW(path::LexicallyRelative, target_canonical, base_canonical); \
+    })()
+
+#define RELATIVE(base_dir, target_path)                                                       \
+    ([]() consteval {                                                                         \
+        constexpr auto base_canonical = TRANSFORM_STRING(path::WeaklyCanonical, base_dir);    \
+        constexpr auto target_dir     = TRANSFORM_STRING(path::Dirname, target_path);         \
+        constexpr auto target_file    = TRANSFORM_STRING(path::Basename, target_path);        \
+        constexpr auto target_canonical =                                                     \
+            TRANSFORM_STRING_VIEW(path::WeaklyCanonical, target_dir);                         \
+        constexpr auto rel_dir =                                                              \
+            TRANSFORM_STRING_VIEW(path::LexicallyRelative, target_canonical, base_canonical); \
+        if (rel_dir == "")                                                                    \
+            return rel_dir;                                                                   \
+        return TRANSFORM_STRING_VIEW(path::Join, rel_dir, target_file);                       \
+    })()
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_PATHS_HPP_
