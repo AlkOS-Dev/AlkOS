@@ -3,6 +3,7 @@
 
 #include <spinlock.hpp>
 
+#include <autogen/feature_flags.h>
 #include <constants.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/types.hpp>
@@ -23,7 +24,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     ~Spinlock()
     {
-        if constexpr (kIsDebugBuild) {
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
             R_ASSERT_FALSE(
                 IsLocked(), "Spinlock is locked, but destructor is called (%p, core: %hu)", this,
                 CastRegister<DebugLock>(lock_).owner
@@ -37,7 +38,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FORCE_INLINE_F void Lock()
     {
-        if constexpr (kIsDebugBuild) {
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
             LockDebug_();
             return;
         }
@@ -49,7 +50,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FORCE_INLINE_F void Unlock()
     {
-        if constexpr (kIsDebugBuild) {
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
             UnlockDebug_();
             return;
         }
@@ -59,7 +60,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAbi
 
     FORCE_INLINE_F NODISCARD bool TryLock()
     {
-        if constexpr (kIsDebugBuild) {
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
             return TryLockDebug_();
         }
 

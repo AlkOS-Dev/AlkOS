@@ -9,11 +9,11 @@ source "${RELEASE_REGRESSION_DIR}/common/parsing.bash"
 source "${RELEASE_REGRESSION_DIR}/common/boot_test.bash"
 
 main () {
-  parse_args "${RELEASE_REGRESSION_SCRIPT}" "$@"
+  parse_args "${RELEASE_REGRESSION_SCRIPT}" "Release regression script" "$@"
 
   pretty_info "Running release regression test"
 
-  init "release_qemu" "${ARCH}"
+  init "release -p regression_mode" "${ARCH}"
 
   # Tests
   boot_test

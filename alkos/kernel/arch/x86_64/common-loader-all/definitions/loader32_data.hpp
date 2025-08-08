@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DEFINITIONS_LOADER32_DATA_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DEFINITIONS_LOADER32_DATA_HPP_
 
-#include <defines.hpp>
+#include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 
 namespace loader32

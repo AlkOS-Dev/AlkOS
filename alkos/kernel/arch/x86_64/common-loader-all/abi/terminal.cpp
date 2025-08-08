@@ -6,7 +6,7 @@ void TerminalInit()
     /* Initialize VGA terminal -> when multiboot allows: TODO */
     // VgaTerminalInit();
 
-    if constexpr (kUseDebugOutput) {
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         QemuTerminalInit();
     }
 }

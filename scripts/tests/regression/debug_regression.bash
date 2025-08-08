@@ -9,11 +9,11 @@ source "${DEBUG_REGRESSION_DIR}/common/parsing.bash"
 source "${DEBUG_REGRESSION_DIR}/common/boot_test.bash"
 
 main() {
-  parse_args "${DEBUG_REGRESSION_SCRIPT}" "$@"
+  parse_args "${DEBUG_REGRESSION_SCRIPT}" "Debug regression script" "$@"
 
   pretty_info "Running debug regression test"
 
-  init "debug_qemu" "${ARCH}"
+  init "debug -p regression_mode" "${ARCH}"
 
   # Tests
   boot_test

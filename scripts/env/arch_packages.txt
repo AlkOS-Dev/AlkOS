@@ -12,3 +12,4 @@ cmake
 bash
 python
 clang
+yq

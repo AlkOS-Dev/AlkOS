@@ -1,3 +1,4 @@
+#include <autogen/feature_flags.h>
 #include <time.h>
 #include <test_module/test_module.hpp>
 
@@ -24,7 +25,7 @@ extern "C" void KernelMain()
     KernelTraceInfo("Running kernel initialization...");
     KernelInit();
 
-    if constexpr (kIsAlkosTestBuild) {
+    if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         KernelTraceInfo("Running tests...");
         test::TestModule test_module{};
         test_module.RunTestModule();

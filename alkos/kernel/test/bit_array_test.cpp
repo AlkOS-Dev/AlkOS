@@ -38,10 +38,10 @@ TEST_F(BitArrayTest, CrossBoundary)
 TEST_F(BitArrayTest, Size)
 {
     BitArray<100> bits;
-    EXPECT_EQ(bits.Size(), 100);
+    EXPECT_EQ(bits.Size(), 100_size);
 
     BitArray<32> smallBits;
-    EXPECT_EQ(smallBits.Size(), 32);
+    EXPECT_EQ(smallBits.Size(), 32_size);
 }
 
 TEST_F(BitArrayTest, SetAll)

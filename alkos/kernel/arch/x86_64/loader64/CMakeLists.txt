@@ -1,25 +1,12 @@
 message(STATUS "Configuring x86_64 64-bit loader")
 
-############################## Finding Sources ###############################
-
-file(GLOB_RECURSE ARCH_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.s"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.asm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.nasm"
-)
-
 #################################### Exec ####################################
 
-add_executable(alkos.loader64
-        ${ARCH_SOURCES}
-)
+add_executable(alkos.loader64 "")
 
-############################### Applying Flags ###############################
+############################### Adding Sources ###############################
 
-target_compile_definitions(alkos.loader64 PRIVATE __USE_DEBUG_OUTPUT__=1)
+alkos_target_sources(alkos.loader64)
 
 ############################### Adding Headers ###############################
 
@@ -46,4 +33,5 @@ target_link_libraries(alkos.loader64 PRIVATE
         arch.common.all.64
         arch.common.kernel-loader.64
         alkos.kernel.headers
+        AutoGenLib
 )

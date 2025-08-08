@@ -6,7 +6,7 @@
 #include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <multiboot2/extensions.hpp>
+#include <multiboot2/multiboot_info.hpp>
 
 /* External includes */
 #include <uacpi/event.h>
@@ -14,25 +14,24 @@
 
 extern loader64::LoaderData* kLoaderData;
 
-static multiboot::tag_new_acpi_t* FindAcpiTag(u32 multiboot_info_addr)
+static Multiboot::TagNewAcpi* FindAcpiTag(u64 multiboot_info_addr)
 {
+    // TODO: 1. Multiboot Tags should be in both the arch and the kernel, so maybe move to libk?
+    // TODO: 2. This should probably recieve a MultibootInfo object instead of an address.
     TRACE_INFO("Finding ACPI tag in multiboot tags...");
-    auto* new_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_new_acpi_t>(
-        reinterpret_cast<void*>(multiboot_info_addr)
-    );
+    Multiboot::MultibootInfo multiboot_info(multiboot_info_addr);
+
+    auto* new_acpi_tag = multiboot_info.FindTag<Multiboot::TagNewAcpi>();
 
     if (new_acpi_tag == nullptr) {
         TRACE_INFO("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
-        auto* old_acpi_tag = multiboot::FindTagInMultibootInfo<multiboot::tag_old_acpi_t>(
-            reinterpret_cast<void*>(multiboot_info_addr)
-        );
+        auto* old_acpi_tag = multiboot_info.FindTag<Multiboot::TagOldAcpi>();
 
-        new_acpi_tag = reinterpret_cast<multiboot::tag_new_acpi_t*>(old_acpi_tag);
+        new_acpi_tag = reinterpret_cast<Multiboot::TagNewAcpi*>(old_acpi_tag);
     }
 
     return new_acpi_tag;
 }
-
 int ACPI::ACPIController::Init()
 {
     TRACE_INFO("ACPI initialization...");

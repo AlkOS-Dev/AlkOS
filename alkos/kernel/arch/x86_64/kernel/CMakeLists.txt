@@ -1,27 +1,18 @@
 message(STATUS "Configuring x86_64 kernel")
 
-############################## Finding Sources ###############################
-
-file(GLOB_RECURSE ARCH_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.s"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.S"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.asm"
-        "${CMAKE_CURRENT_SOURCE_DIR}/*.nasm"
-)
-
-# Exclude specific files like crti.nasm and crtn.nasm
-list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/(crti\\.nasm|crtn\\.nasm)$")
-
-# If ENABLE_TESTS is NOT defined, exclude files from the 'tests/' directory
-if (NOT DEFINED ENABLE_TESTS)
-    list(FILTER ARCH_SOURCES EXCLUDE REGEX ".*/tests/.*")
-endif ()
-
 ############################### Adding Sources ###############################
 
-target_sources(alkos.kernel PRIVATE ${ARCH_SOURCES})
+# Define patterns to always exclude
+set(exclude_patterns ".*/(crti\\.nasm|crtn\\.nasm)$")
+
+# Conditionally exclude test files
+if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
+    list(APPEND exclude_patterns ".*/tests/.*")
+endif ()
+
+alkos_target_sources(alkos.kernel
+    EXCLUDE ${exclude_patterns}
+)
 
 ############################### Adding Headers ###############################
 
@@ -42,11 +33,8 @@ target_link_options(alkos.kernel PRIVATE
 
 ######################### Setting Custom Properties ##########################
 
-target_compile_options(alkos.kernel PRIVATE
-        "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-        "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
-        "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
+target_link_libraries(alkos.kernel PRIVATE
+        target.properties
 )
 
 ########################## CXX Global Constructors ###########################
@@ -70,4 +58,5 @@ add_dependencies(alkos.kernel alkos.kernel.crts)
 target_link_libraries(alkos.kernel PRIVATE
         arch.common.all.64
         arch.common.kernel-loader.64
+        AutoGenLib
 )

@@ -1,4 +1,7 @@
 cmake-build-*
+compile_commands.json
+.cache
+out
 
 # Prerequisites
 *.d
@@ -47,7 +50,3 @@ tools
 __pycache__
 logs
 test_framework_logs
-
-# build configuration
-conf.bash
-conf.cmake

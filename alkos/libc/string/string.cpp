@@ -10,7 +10,7 @@ size_t strlen(const char *str)
 size_t strnlen(const char *str, size_t n)
 {
     const char *s;
-    for (s = str; *s && s - str < n; ++s) continue;
+    for (s = str; *s && static_cast<size_t>(s - str) < n; ++s) continue;
     return s - str;
 }
 

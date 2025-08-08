@@ -15,6 +15,10 @@ target_include_directories(lib${LIB_NAME}.32 PRIVATE
         ../../internal
 )
 
+############################# Setting Custom Properties #########################
+
+target_link_libraries(lib${LIB_NAME}.32 PUBLIC target.properties.32)
+
 ################################# Dependencies ################################
 
 add_dependencies(lib${LIB_NAME}.32 lib${LIB_NAME})
@@ -22,6 +26,8 @@ add_dependencies(lib${LIB_NAME}.32 lib${LIB_NAME})
 if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
     target_link_libraries(lib${LIB_NAME}.32 PRIVATE alkos.kernel.headers)
 endif ()
+
+target_link_libraries(lib${LIB_NAME}.32 PRIVATE AutoGenLib)
 
 ############################### Processing output ###############################
 
