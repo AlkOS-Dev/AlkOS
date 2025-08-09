@@ -58,6 +58,12 @@ target_compile_options(target.properties INTERFACE
 target_compile_definitions(target.properties INTERFACE
     "__x86_64__=1"
 )
+target_link_options(target.properties INTERFACE
+    -nostdlib
+    -z max-page-size=0x1000
+    -n
+    -lgcc
+)
 
 #------------------------------------------------------------------------------#
 #                                    32 bit                                    #
@@ -71,4 +77,10 @@ target_compile_options(target.properties.32 INTERFACE
 )
 target_compile_definitions(target.properties.32 INTERFACE 
     "__i386__=1"
+)
+target_link_options(target.properties.32 INTERFACE
+    -nostdlib
+    -z max-page-size=0x1000
+    -n
+    -lgcc
 )

@@ -21,11 +21,7 @@ target_include_directories(alkos.kernel.headers INTERFACE
 
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld")
 target_link_options(alkos.kernel PRIVATE
-        -T ${LINKER_SCRIPT}     # Linker script
-        -nostdlib               # No standard libs
-        -z max-page-size=0x1000 # Maximum page size (For 1k alignment)
-        -n                      # Omit default mem map
-        -lgcc                   # Link against GCC
+        -T ${LINKER_SCRIPT}
 )
 
 ########################## CXX Global Constructors ###########################
