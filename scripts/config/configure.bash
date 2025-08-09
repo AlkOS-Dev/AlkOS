@@ -8,6 +8,7 @@ CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../alkos/toolchains"
 source "${CONFIGURE_DIR}/../utils/pretty_print.bash"
 source "${CONFIGURE_DIR}/../utils/helpers.bash"
 source "${CONFIGURE_DIR}/../utils/feature_flag_lib.bash"
+source "${CONFIGURE_DIR}/../utils/argparse.bash"
 
 declare -A CONFIGURE_TOOLCHAINS=(
   ["x86_64"]="${CONFIGURE_TOOLCHAIN_DIR}/x86_64-toolchain.cmake"
@@ -33,122 +34,38 @@ declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
   ["default"]="Refer to feature_flags_schema.yaml..."
 )
 
-CONFIGURE_BUILD_DIR=""
-CONFIGURE_TOOL_BINARIES_DIR=""
-CONFIGURE_ARCH=""
-CONFIGURE_BUILD_TYPE=""
-CONFIGURE_VERBOSE=false
-CONFIGURE_PRESET=""
+help_addition() {
+    echo ""
+    echo "Supported build types:"
+    for build in "${!CONFIGURE_BUILD_TYPES_DESC[@]}"; do
+      echo "  ${build} - ${CONFIGURE_BUILD_TYPES_DESC[${build}]}"
+    done
 
-help() {
-  echo "${CONFIGURE_SCRIPT_PATH} <arch> <build> [-b <BUILD_DIR>] [-t <TOOL_DIR>] [--verbose | -v] [ -p <PRESET>]"
-  echo "Where:"
-  echo "<arch> - MANDATORY - architecture to build for. Supported are listed below."
-  echo "<build> - MANDATORY - build type to configure. Supported are listed below."
-  echo "-b <BUILD_DIR> - directory to store build files. Default is 'build' in repo parent dir."
-  echo "-t <TOOL_DIR> - directory to store tool binaries. Default is 'tools' in repo parent dir."
-  echo "-p <PRESET> - optionally use preset for feature flags. "
-  echo "--verbose | -v - flag to enable verbose output"
-
-  echo ""
-  echo "Supported architectures:"
-  for arch in "${!CONFIGURE_TOOLCHAINS[@]}"; do
-    echo "  ${arch}"
-  done
-
-  echo ""
-  echo "Supported build types:"
-  for build in "${!CONFIGURE_BUILD_TYPES_DESC[@]}"; do
-    echo "  ${build} - ${CONFIGURE_BUILD_TYPES_DESC[${build}]}"
-  done
-
-  echo ""
-  echo "Supported feature flag presets:"
-  for preset in "${!CONFIGURE_FEATURE_FLAGS_PRESETS[@]}"; do
-    echo "  ${preset} - ${CONFIGURE_FEATURE_FLAGS_PRESETS[${preset}]}"
-  done
+    echo ""
+    echo "Supported feature flag presets:"
+    for preset in "${!CONFIGURE_FEATURE_FLAGS_PRESETS[@]}"; do
+      echo "  ${preset} - ${CONFIGURE_FEATURE_FLAGS_PRESETS[${preset}]}"
+    done
 }
 
 parse_args() {
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      -h|--help)
-        help
-        exit 0
-        ;;
-      -b)
-        CONFIGURE_BUILD_DIR="$2"
-        shift 2
-        ;;
-      -t)
-        CONFIGURE_TOOL_BINARIES_DIR="$2"
-        shift 2
-        ;;
-      -v|--verbose)
-        CONFIGURE_VERBOSE=true
-        shift
-        ;;
-      -p)
-        CONFIGURE_PRESET="$2"
-        shift 2
-        ;;
-      -*)
-        dump_error "Unknown argument: $1"
-        exit 1
-        ;;
-      *)
-        if [[ -z "$CONFIGURE_ARCH" ]]; then
-          CONFIGURE_ARCH="$1"
-        elif [[ -z "$CONFIGURE_BUILD_TYPE" ]]; then
-          CONFIGURE_BUILD_TYPE="$1"
-        else
-          dump_error "Unknown argument: $1"
-          exit 1
-        fi
-        shift
-        ;;
-    esac
-  done
-}
-
-process_args() {
-  if [[ -z "$CONFIGURE_ARCH" ]]; then
-    dump_error "Architecture not specified. Use -h for help."
-    exit 1
-  fi
-
-  if [[ -z "$CONFIGURE_BUILD_TYPE" ]]; then
-    dump_error "Build type not specified. Use -h for help."
-    exit 1
-  fi
-
-  if [[ -z "${CONFIGURE_TOOLCHAINS[$CONFIGURE_ARCH]}" ]]; then
-    dump_error "Unsupported architecture: $CONFIGURE_ARCH. Use -h for help."
-    exit 1
-  fi
-
-  if [[ -z "${CONFIGURE_BUILD_TYPES_DESC[$CONFIGURE_BUILD_TYPE]}" ]]; then
-    dump_error "Unsupported build type: $CONFIGURE_BUILD_TYPE. Use -h for help."
-    exit 1
-  fi
-
-  if [[ -n "$CONFIGURE_PRESET" && -z "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}" ]]; then
-    dump_error "Unsupported feature flag preset: $CONFIGURE_PRESET. Use -h for help."
-    exit 1
-  fi
-
-  # Set default values if not provided
-  [[ -z "$CONFIGURE_BUILD_DIR" ]] && CONFIGURE_BUILD_DIR="${CONFIGURE_DIR}/../../build"
-  [[ -z "$CONFIGURE_TOOL_BINARIES_DIR" ]] && CONFIGURE_TOOL_BINARIES_DIR="${CONFIGURE_DIR}/../../tools"
+  argparse_init "${CONFIGURE_SCRIPT_PATH}" "Configure AlkOS build" help_addition
+  argparse_add_positional "arch" "Target architecture" true "x86_64"
+  argparse_add_positional "build" "Build type" true "debug|release"
+  argparse_add_option "b|build-dir" "Directory to store build files" false "${CONFIGURE_DIR}/../../build" "" "string"
+  argparse_add_option "t|tool" "Directory to store tool binaries" false "${CONFIGURE_DIR}/../../tools" "" "string"
+  argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
+  argparse_add_option "p|preset" "Feature flag preset to use" false "" "test_mode|default|regression_mode" "string"
+  argparse_parse "$@"
 }
 
 configure_script_welcome() {
   pretty_info "Configuring AlkOS build..."
-  pretty_info "Architecture: $CONFIGURE_ARCH"
-  pretty_info "Build type: $CONFIGURE_BUILD_TYPE"
-  pretty_info "Build directory: $CONFIGURE_BUILD_DIR"
-  pretty_info "Tool binaries directory: $CONFIGURE_TOOL_BINARIES_DIR"
-  pretty_info "Verbose mode: $CONFIGURE_VERBOSE"
+  pretty_info "Architecture: $(argparse_get "arch")"
+  pretty_info "Build type: $(argparse_get "build")"
+  pretty_info "Build directory: $(argparse_get "b|build-dir")"
+  pretty_info "Tool binaries directory: $(argparse_get "t|tool")"
+  pretty_info "Verbose mode: $(argparse_get "v|verbose")"
 }
 
 configure_script_feature_flags() {
@@ -156,13 +73,13 @@ configure_script_feature_flags() {
 
   feature_flags_process
 
-  if [[ -n "$CONFIGURE_PRESET" ]]; then
-    if [[ "${CONFIGURE_PRESET}" == "default" ]]; then
+  if [[ -n "$(argparse_get "p|preset")" ]]; then
+    if [[ "$(argparse_get "p|preset")" == "default" ]]; then
       pretty_info "Resetting all feature flags to defaults..."
       feature_flags_reset_to_defaults
     else
-      pretty_info "Applying feature flag preset: $CONFIGURE_PRESET"
-      feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$CONFIGURE_PRESET]}"
+      pretty_info "Applying feature flag preset: $(argparse_get "p|preset")"
+      feature_flags_apply_preset "${CONFIGURE_FEATURE_FLAGS_PRESETS[$(argparse_get "p|preset")]}"
     fi
   fi
 
@@ -177,11 +94,11 @@ configure_script_cmake_config() {
   echo "# This file is generated by configure script. Do not edit manually." > "$conf_cmake"
   echo "" >> "$conf_cmake"
   echo "message(STATUS \"Configuring AlkOS build...\")" >> "$conf_cmake"
-  echo "set(CMAKE_TOOLCHAIN_FILE \"${CONFIGURE_TOOLCHAINS[$CONFIGURE_ARCH]}\")" >> "$conf_cmake"
-  echo "set(CMAKE_FLAGS_FILE \"${CONFIGURE_FLAGS[$CONFIGURE_ARCH]}\")" >> "$conf_cmake"
-  echo "set(CMAKE_BUILD_TYPE \"${CONFIGURE_CMAKE_BUILD_TYPES[$CONFIGURE_BUILD_TYPE]}\")" >> "$conf_cmake"
-  echo "set(TOOL_BINARIES_DIR \"${CONFIGURE_TOOL_BINARIES_DIR}\")" >> "$conf_cmake"
-  echo "set(CMAKE_BUILD_DIR \"${CONFIGURE_BUILD_DIR}\")" >> "$conf_cmake"
+  echo "set(CMAKE_TOOLCHAIN_FILE \"${CONFIGURE_TOOLCHAINS[$(argparse_get "arch")]}\")" >> "$conf_cmake"
+  echo "set(CMAKE_FLAGS_FILE \"${CONFIGURE_FLAGS[$(argparse_get "arch")]}\")" >> "$conf_cmake"
+  echo "set(CMAKE_BUILD_TYPE \"${CONFIGURE_CMAKE_BUILD_TYPES[$(argparse_get "build")]}\")" >> "$conf_cmake"
+  echo "set(TOOL_BINARIES_DIR \"$(argparse_get "t|tool")\")" >> "$conf_cmake"
+  echo "set(CMAKE_BUILD_DIR \"$(argparse_get "b|build-dir")\")" >> "$conf_cmake"
 
   feature_flags_generate_cmake
 }
@@ -192,17 +109,16 @@ run() {
   configure_script_cmake_config
 
   pretty_info "Preparing build directory..."
-  base_runner "Failed to create build directory" "${CONFIGURE_VERBOSE}" mkdir -p "${CONFIGURE_BUILD_DIR}"
+  base_runner "Failed to create build directory" "$(argparse_get "v|verbose")" mkdir -p "$(argparse_get "b|build-dir")"
 
   # let the cmake generate bash.conf and build files
   pretty_info "Running cmake..."
-  base_runner "Failed to run cmake" "${CONFIGURE_VERBOSE}" cmake "${CONFIGURE_CMAKE_PATH}" -B "${CONFIGURE_BUILD_DIR}/alkos" \
+  base_runner "Failed to run cmake" "$(argparse_get "v|verbose")" cmake "${CONFIGURE_CMAKE_PATH}" -B "$(argparse_get "b|build-dir")/alkos" \
         -G "Unix Makefiles"
 }
 
 main() {
   parse_args "$@"
-  process_args
   run
 }
 
