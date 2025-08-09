@@ -73,7 +73,6 @@ message(STATUS "Using ASM_NASM flags: ${CMAKE_ASM_NASM_FLAGS}")
 set(SYSROOT ${CMAKE_BINARY_DIR}/sysroot)
 set(CMAKE_SYSROOT ${SYSROOT})
 
-# Create the sysroot directories
 file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/usr/include)
 file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/usr/lib)
 file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/boot)
@@ -85,7 +84,6 @@ file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/boot/grub)
 
 set(SYSTEM_LIB_TYPE k)
 
-# Add the subdirectories
 add_subdirectory(libc)
 add_subdirectory(generated)
 add_subdirectory(kernel)
@@ -93,6 +91,7 @@ add_subdirectory(kernel)
 ################################################################################
 #                                   Aliases                                    #
 ################################################################################
+
 alkos_ensure_defined(
     VARS ARCH
     MESSAGE "The ARCH variable must be set to the target architecture (e.g., x86_64, i686, arm64)."

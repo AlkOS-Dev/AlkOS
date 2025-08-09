@@ -2,10 +2,7 @@ message(STATUS "Configuring x86_64 kernel")
 
 ############################### Adding Sources ###############################
 
-# Define patterns to always exclude
 set(exclude_patterns ".*/(crti\\.nasm|crtn\\.nasm)$")
-
-# Conditionally exclude test files
 if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND exclude_patterns ".*/tests/.*")
 endif ()
