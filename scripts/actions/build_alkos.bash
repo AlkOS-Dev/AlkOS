@@ -6,4 +6,4 @@ source "${BUILD_ALKOS_ACTION_DIR}/../utils/conf_handlers.bash"
 
 source_conf_file
 verify_conf_var_exists CONF_BUILD_DIR
-"${BUILD_ALKOS_ACTION_DIR}/../install/build_alkos.bash" "$CONF_BUILD_DIR"/alkos "$@"
+"${BUILD_ALKOS_ACTION_DIR}/../install/build_alkos.bash" "$CONF_BUILD_DIR" "$@"
