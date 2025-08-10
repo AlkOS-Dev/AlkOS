@@ -6,8 +6,8 @@ set(KERNEL_MODULES "")
 set(KERNEL_COMMANDS "") # Kernel commands for the bootloader, has to be same size as KERNEL_MODULES
 set(BOOTABLE_KERNEL_EXECUTABLE "")
 set(ARCH_QEMU_COMMAND "qemu-system-x86_64")
-set(ARCH_QEMU_NORMAL_FLAGS "-serial stdio -enable-kvm -cpu host -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1")
-set(ARCH_QEMU_TEST_FLAGS "-serial stdio -enable-kvm -cpu host -display none -m 4G -smp sockets=1,cores=4,threads=1")
+set(ARCH_QEMU_NORMAL_FLAGS "-serial stdio -enable-kvm -cpu max,+invtsc -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1")
+set(ARCH_QEMU_TEST_FLAGS "-serial stdio -enable-kvm -cpu max,+invtsc -display none -m 4G -smp sockets=1,cores=4,threads=1")
 
 ################################### Boot32 ###################################
 
