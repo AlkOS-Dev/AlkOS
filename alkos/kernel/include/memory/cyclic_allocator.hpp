@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <extensions/bit_array.hpp>
 #include <extensions/new.hpp>
-#include <sync/kernel/spinlock.hpp>
 #include <todo.hpp>
+#include "sync/kernel/spinlock.hpp"
 
 TODO_WHEN_VMEM_WORKS
 /* TODO: STATIC MEMORY ALLOCATOR!!! */

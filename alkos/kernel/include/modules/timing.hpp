@@ -2,8 +2,10 @@
 #define ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
 
 #include <extensions/template_lib.hpp>
-#include <modules/timing_constants.hpp>
-#include <time/daytime.hpp>
+
+#include "modules/helpers.hpp"
+#include "modules/timing_constants.hpp"
+#include "time/daytime.hpp"
 
 namespace internal
 {
@@ -17,24 +19,17 @@ class TimingModule : template_lib::StaticSingletonHelper
     TimingModule() noexcept;
 
     // ------------------------------
-    // Getters
-    // ------------------------------
-
-    public:
-    FORCE_INLINE_F timing::DayTime& GetDayTime() noexcept { return day_time_; }
-
-    // ------------------------------
     // Settings events
     // ------------------------------
 
+    public:
     static void OnIsUtcChanged() noexcept;
 
     // ------------------------------
     // Module fields
     // ------------------------------
 
-    private:
-    timing::DayTime day_time_{};
+    DEFINE_MODULE_FIELD(timing, DayTime)
 };
 }  // namespace internal
 

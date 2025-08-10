@@ -16,10 +16,10 @@ void KernelInit()
     GlobalStateModule::Init();
 
     /* Initialize ACPI */
-    HardwareModule::Get().GetAcpiController().Init();
+    HardwareModule::Get().GetACPIController().Init();
 
     /* Extract all necessary data from ACPI tables */
-    HardwareModule::Get().GetAcpiController().ParseTables();
+    HardwareModule::Get().GetACPIController().ParseTables();
 
     /* Allow hardware to fully initialise interrupt system */
     HardwareModule::Get().GetInterrupts().Initialise();

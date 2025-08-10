@@ -2,9 +2,10 @@
 #define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 
 #include <extensions/template_lib.hpp>
-#include <memory/cyclic_allocator.hpp>
-#include <modules/global_state_constants.hpp>
-#include <sync/kernel/spinlock.hpp>
+#include "memory/cyclic_allocator.hpp"
+#include "modules/global_state_constants.hpp"
+#include "modules/helpers.hpp"
+#include "sync/kernel/spinlock.hpp"
 
 // ------------------------------
 // Module
@@ -22,30 +23,18 @@ class GlobalStateModule : template_lib::StaticSingletonHelper
     GlobalStateModule() noexcept;
 
     // ------------------------------
-    // Getters
-    // ------------------------------
-
-    public:
-    using SettingsT = template_lib::Settings<
-        global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
-
-    NODISCARD FORCE_INLINE_F SettingsT& GetSettings() noexcept { return settings_; }
-
-    using LockAllocatorT =
-        CyclicAllocator<Spinlock, global_state_constants::kStaticSpinlockAllocCount>;
-
-    NODISCARD FORCE_INLINE_F LockAllocatorT& GetSpinlockAllocator() noexcept
-    {
-        return spinlock_alloc_;
-    }
-
-    // ------------------------------
     // Module fields
     // ------------------------------
 
-    private:
-    SettingsT settings_;
-    LockAllocatorT spinlock_alloc_;
+    public:
+    using Settings = template_lib::Settings<
+        global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
+
+    using SpinlockAllocator =
+        CyclicAllocator<Spinlock, global_state_constants::kStaticSpinlockAllocCount>;
+
+    DEFINE_MODULE_FIELD(GlobalStateModule, Settings);
+    DEFINE_MODULE_FIELD(GlobalStateModule, SpinlockAllocator);
 };
 }  // namespace internal
 
