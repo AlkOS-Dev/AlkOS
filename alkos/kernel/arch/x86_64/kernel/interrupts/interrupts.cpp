@@ -3,7 +3,7 @@
 #include "arch_utils.hpp"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
-#include "drivers/tsc.hpp"
+#include "drivers/tsc/tsc.hpp"
 #include "interrupts/idt.hpp"
 
 #include <extensions/debug.hpp>
