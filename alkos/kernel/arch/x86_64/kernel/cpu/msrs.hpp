@@ -5,7 +5,7 @@
 
 namespace cpu
 {
-FAST_CALL u64 GetMSR(const u32 msr)
+NODISCARD FAST_CALL u64 GetMSR(const u32 msr)
 {
     u32 lo;
     u32 hi;

@@ -3,7 +3,7 @@
 void tsc::Initialize()
 {
     if (!IsAvailable()) {
-        KernelTraceInfo("TSC is not available. Fallback to old technology...");
+        KernelTraceWarning("TSC is not available. Fallback to old technology...");
         return;
     }
 
@@ -11,6 +11,10 @@ void tsc::Initialize()
     SetUserSpaceAccess(false);
 
     TRACE_DEBUG("Detected TSC, current counter: %zu", Read());
+
+    if (!IsStable()) {
+        KernelTraceWarning("TSC is not stable. Fallback to old technology...");
+    }
 
     TODO_WHEN_TIMER_INFRA_DONE
     // TODO: add to the infra
