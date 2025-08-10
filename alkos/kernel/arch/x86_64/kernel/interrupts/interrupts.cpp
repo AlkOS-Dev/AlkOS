@@ -3,6 +3,7 @@
 #include "arch_utils.hpp"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
+#include "drivers/tsc.hpp"
 #include "interrupts/idt.hpp"
 
 #include <extensions/debug.hpp>
@@ -31,6 +32,9 @@ void Interrupts::Initialise()
     if (GetHpet()) {
         GetHpet()->Setup();
     }
+
+    TODO_WHEN_TIMER_INFRA_DONE
+    tsc::Initialize();
 
     EnableHardwareInterrupts();
 
