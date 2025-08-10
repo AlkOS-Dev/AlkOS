@@ -82,8 +82,9 @@ template <typename T>
 concept IsControlRegister = std::is_same_v<T, Cr0> || std::is_same_v<T, Cr2> ||
                             std::is_same_v<T, Cr3> || std::is_same_v<T, Cr4>;
 
-template <IsControlRegister T>
-u64 GetCR()
+template <class T>
+    requires IsControlRegister<T>
+T GetCR()
 {
     u64 value;
     if constexpr (std::is_same_v<T, Cr0>) {
@@ -95,11 +96,12 @@ u64 GetCR()
     } else if constexpr (std::is_same_v<T, Cr4>) {
         asm volatile("mov %%cr4, %0" : "=r"(value));
     }
-    return value;
+
+    return *reinterpret_cast<T *>(&value);
 }
 
 template <IsControlRegister T>
-void SetCR(u64 value)
+void SetCR(T value)
 {
     if constexpr (std::is_same_v<T, Cr0>) {
         asm volatile("mov %0, %%cr0" : : "r"(value));

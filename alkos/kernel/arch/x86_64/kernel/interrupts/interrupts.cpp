@@ -33,7 +33,6 @@ void Interrupts::Initialise()
         GetHpet()->Setup();
     }
 
-    TODO_WHEN_TIMER_INFRA_DONE
     tsc::Initialize();
 
     EnableHardwareInterrupts();
