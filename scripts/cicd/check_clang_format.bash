@@ -11,7 +11,7 @@ check_clang_format() {
 
   echo "Checking clang-format using $(nproc) CPU cores..."
 
-  parallel -j $(nproc) --halt now,fail=1 clang-format -style="file:${CHECK_CLANG_FORMAT_FORMAT_FILE}" --dry-run -Werror ::: ${files[@]}
+  parallel -j $(nproc) --halt now,fail=1 clang-format -style="file:${CHECK_CLANG_FORMAT_FORMAT_FILE}" --dry-run -Werror ::: "${files[@]}"
 
   if [ $? -ne 0 ]; then
     echo "Some files are not correctly clang-formatted."
