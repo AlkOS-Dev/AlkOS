@@ -97,7 +97,7 @@ class Hpet final
         u8 revision_id;            // Hardware revision number
         u8 num_comparators : 5;    // Number of timers available (0-31)
         TimerSize timer_size : 1;  // Whether counters are 64-bit (1) or 32-bit (0)
-        u8 reserved : 1;
+        u8 : 1;
         TimerType timer_type : 1;  // Can replace legacy 8254 PIT
         u16 vendor_id;             // Hardware vendor identifier
         u32 clock_period;          // Timer period in femtoseconds
@@ -108,19 +108,14 @@ class Hpet final
      * Controls the overall HPET timer operation
      */
     struct PACK GeneralConfigurationReg {
-        enum class EnableBit : u8 {
-            kEnable  = 1,  // Start the main counter
-            kDisable = 0,  // Stop the main counter
-        };
-
         enum class LegacyReplacementBit : u8 {
             kEnable  = 1,  // Enable PIT replacement routing
             kDisable = 0,  // Disable PIT replacement routing
         };
 
-        EnableBit enable : 1;
+        bool enable : 1;
         LegacyReplacementBit legacy_replacement : 1;
-        u64 reserved : 62;
+        u64 : 62;
     };
     static_assert(sizeof(GeneralConfigurationReg) == 8);
 
@@ -130,7 +125,7 @@ class Hpet final
      */
     struct PACK GeneralInterruptStatusReg {
         BitArray<kMaxComparators> interrupt_status;  // Bit set for each timer that triggered
-        u32 reserved;
+        u32 : 32;
     };
     static_assert(sizeof(GeneralInterruptStatusReg) == 8);
 
@@ -178,18 +173,13 @@ class Hpet final
             kSupported    = 1,  // Timer supports FSB routing
         };
 
-        enum class PeriodMemAccess : u8 {
-            kEnabled = 1,  // Next write to the register will write to periodic comparator increment
-            kDisabled = 0,
-        };
-
         u8 reserved1 : 1;
         InterruptType interrupt_type : 1;
         Enabled enabled : 1;
         TimerType timer_type : 1;
         const PeriodicSupported periodic_supported : 1;
         const Is64BitComparator is_64_bit_comparator : 1;
-        PeriodMemAccess periodic_mem_access : 1;
+        bool periodic_mem_access : 1;
         u8 reserved2 : 1;
         Forced32Bit forced_32_bit : 1;
         u8 vector : 5;  // Interrupt vector to trigger
@@ -307,7 +297,7 @@ class Hpet final
 
         timer_conf.enabled             = TimerConfigurationReg::Enabled::kEnable;
         timer_conf.timer_type          = TimerConfigurationReg::TimerType::kPeriodic;
-        timer_conf.periodic_mem_access = TimerConfigurationReg::PeriodMemAccess::kEnabled;
+        timer_conf.periodic_mem_access = true;
         timer_conf.vector              = irq_map;
 
         WriteRegister(GetTimerConfigurationRegRW(timer_idx), timer_conf);
@@ -355,7 +345,7 @@ class Hpet final
     FORCE_INLINE_F void StartMainCounter()
     {
         auto conf_reg   = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
-        conf_reg.enable = GeneralConfigurationReg::EnableBit::kEnable;
+        conf_reg.enable = true;
 
         WriteRegister(kGeneralConfigurationRegRW, conf_reg);
         is_main_counter_enabled_ = true;
@@ -364,7 +354,7 @@ class Hpet final
     FORCE_INLINE_F void StopMainCounter()
     {
         auto conf_reg   = ReadRegister<GeneralConfigurationReg>(kGeneralConfigurationRegRW);
-        conf_reg.enable = GeneralConfigurationReg::EnableBit::kDisable;
+        conf_reg.enable = false;
 
         WriteRegister(kGeneralConfigurationRegRW, conf_reg);
         is_main_counter_enabled_ = false;
