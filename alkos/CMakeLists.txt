@@ -24,8 +24,6 @@ include(RuntimeHelpers)
 
 add_library(target.properties INTERFACE) # Populated by the toolchain file
 
-add_library(target.properties INTERFACE) # Populated by the toolchain file
-
 ################################################################################
 #                                   Conf file                                  #
 ################################################################################
