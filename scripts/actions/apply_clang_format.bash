@@ -15,6 +15,9 @@ CLANG_FORMAT_STYLE="file"
 num_cores=$(nproc)
 echo "Using $num_cores CPU cores for formatting."
 
+# Check version of clang-format
+clang-format --version
+
 # Construct the find command with multiple -name options
 find_command=(find "$TARGET_FOLDER" -type f \( )
 for ext in "${FILE_EXTENSIONS[@]}"; do
