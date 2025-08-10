@@ -7,8 +7,8 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
+#include "cpu/msrs.hpp"
 #include "memory_io.hpp"
-#include "msrs.hpp"
 
 /**
  * TODO: SUPPORT 2x APIC
@@ -315,7 +315,7 @@ class LocalApic
     NODISCARD FAST_CALL u64 GetPhysicalAddressOnCore()
     {
         /* Return 4k page aligned address, removing the lower 12 bits (flags) */
-        return CpuGetMSR(kIA32ApicBaseMsr) & ~kBitMaskRight<u64, 12>;
+        return cpu::GetMSR(kIA32ApicBaseMsr) & ~kBitMaskRight<u64, 12>;
     }
 
     /**
@@ -329,7 +329,7 @@ class LocalApic
     FAST_CALL void SetPhysicalAddressOnCore(const u64 new_address)
     {
         ASSERT_TRUE(IsAligned(new_address, 12), "Local APIC address is not aligned to 4k page!");
-        CpuSetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
+        cpu::SetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
     }
 
     /**
