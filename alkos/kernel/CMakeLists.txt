@@ -1,7 +1,7 @@
 message(STATUS "Configuring kernel...")
 
-# This target acts as a central hub for configuration data (e.g., kernel modules)
-# that needs to be communicated to the top-level CMakeLists.txt.
+# This target acts as a central hub for configuration data that 
+# need to be shared across the kernel and its components.
 add_library(alkos.kernel.config INTERFACE)
 add_library(alkos.kernel.headers INTERFACE)  # Kernel headers for exporting
 add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
@@ -52,7 +52,6 @@ if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"
     )
 
-    # Append test sources to the kernel sources
     list(APPEND KERNEL_SOURCES ${KERNEL_TEST_SOURCES})
 endif ()
 
@@ -135,9 +134,7 @@ message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
 
 # TODO:
 # The below code could technically be replaced with target_link_libraries()
-# it also should enforce the correct linking order.
-# I have done so with success, but it introduced a bug where no tests were 
-# detected in the kernel and I was unable to reslove it so gave up for now.
+# It didn't preserve the order of the objects and libraries, so giving up for now.
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
