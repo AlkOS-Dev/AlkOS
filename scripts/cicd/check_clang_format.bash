@@ -24,6 +24,9 @@ check_clang_format() {
 main() {
   echo "Checking clang-format..."
 
+  # Check version of clang-format
+  clang-format --version
+
   # NOTE: Omitting osl.cpp as it generate strange errors with clang-format on github actions
   files_to_check=$(find_files | tr ' ' '\n' | grep -v '/osl\.cpp$')
 
