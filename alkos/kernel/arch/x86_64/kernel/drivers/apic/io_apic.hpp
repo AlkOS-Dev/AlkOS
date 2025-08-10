@@ -151,19 +151,19 @@ class IoApic final
     FORCE_INLINE_F void WriteRegister(const u8 offset, const u32 value) const
     {
         /* Select register we want to operate on by writing to SELECT register */
-        WriteMemoryIo<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegSelOffset, offset);
+        WriteMemoryIoRaw<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegSelOffset, offset);
 
         /* Write actual value to IO register */
-        WriteMemoryIo<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegWin, value);
+        WriteMemoryIoRaw<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegWin, value);
     }
 
     NODISCARD FORCE_INLINE_F u32 ReadRegister(const u8 offset) const
     {
         /* Select register we want to operate on by writing to SELECT register */
-        WriteMemoryIo<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegSelOffset, offset);
+        WriteMemoryIoRaw<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegSelOffset, offset);
 
         /* Read actual value from IO register */
-        return ReadMemoryIo<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegWin);
+        return ReadMemoryIoRaw<u32>(reinterpret_cast<byte *>(virtual_address_), kIoRegWin);
     }
 
     NODISCARD FORCE_INLINE_F LowerTableRegister ReadLowerTableRegister(const u32 reg_idx) const

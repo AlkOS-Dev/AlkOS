@@ -72,6 +72,10 @@ target_include_directories(alkos.kernel.headers INTERFACE
 
 add_subdirectory(arch/${ARCH})
 
+# TODO: Immediately here, error checking should happen
+# But the error checking itself fails!!! and for some reason
+# alkos_ensure_property_defined() says the property is not defined
+
 ################################# ThirdParty #################################
 
 add_subdirectory(thirdparty)

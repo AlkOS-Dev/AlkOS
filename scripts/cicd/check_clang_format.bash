@@ -24,6 +24,9 @@ check_clang_format() {
 main() {
   echo "Checking clang-format..."
 
+  # Check version of clang-format
+  clang-format --version
+
   files_to_check=$(find_files)
 
   if [ -z "$files_to_check" ]; then

@@ -576,5 +576,219 @@ template <class EnumT>
 using EnumFlagMap =
     StaticPlainMapDefaultConstructible<bool, static_cast<size_t>(EnumT::kLast), EnumT>;
 
+// ------------------------------
+// ArrayStaticStack
+// ------------------------------
+
+template <size_t kSizeBytes, size_t kAlignment = 8>
+class ArrayStaticStack
+{
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    template <class T>
+    using clean_type = std::remove_reference_t<std::remove_const_t<T>>;
+
+    public:
+    ArrayStaticStack()  = default;
+    ~ArrayStaticStack() = default;
+
+    ArrayStaticStack(const ArrayStaticStack &) = default;
+    ArrayStaticStack(ArrayStaticStack &&)      = default;
+
+    ArrayStaticStack &operator=(const ArrayStaticStack &) = default;
+    ArrayStaticStack &operator=(ArrayStaticStack &&)      = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    template <class T>
+    FORCE_INLINE_F T &Push(const T &item)
+    {
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(item); /* Checks alignment on debug */
+        return *ptr;
+    }
+
+    template <class T>
+    FORCE_INLINE_F T &Push(T &&item)
+    {
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(std::move(item)); /* Checks alignment on debug */
+        return *ptr;
+    }
+
+    template <class T, class... Args>
+    FORCE_INLINE_F T &PushEmplace(Args &&...args)
+    {
+        auto ptr = PushMem_<T>();
+        new (ptr) clean_type<T>(std::forward<Args>(args)...); /* Checks alignment on debug */
+        return *ptr;
+    }
+
+    template <class T>
+    FORCE_INLINE_F std::remove_reference_t<std::remove_const_t<T>> Pop()
+    {
+        ASSERT_LE(sizeof(T), top_, "Stack underflow!!");
+        top_ -= sizeof(T);
+
+        auto ptr = reinterpret_cast<clean_type<T> *>(stack_.data + top_);
+        return std::move(*ptr);
+    }
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return top_; }
+
+    NODISCARD FORCE_INLINE_F const void *Data() const { return stack_.data; }
+
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    private:
+    template <class T>
+    clean_type<T> *PushMem_() noexcept
+    {
+        const size_t start = top_;
+        top_ += sizeof(T);
+
+        ASSERT_LE(top_, kSizeBytes, "Stack overflow!");
+
+        return reinterpret_cast<clean_type<T> *>(stack_.data + start);
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    size_t top_{};
+    std::aligned_storage_t<kSizeBytes, kAlignment> stack_{};
+};
+
+// ------------------------------
+// ArraySingleTypeStaticStack
+// ------------------------------
+
+template <class T, size_t kNumObjects>
+class ArraySingleTypeStaticStack : public ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>
+{
+    using base_t = ArrayStaticStack<sizeof(T) * kNumObjects, alignof(T)>;
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    ArraySingleTypeStaticStack()  = default;
+    ~ArraySingleTypeStaticStack() = default;
+
+    ArraySingleTypeStaticStack(const ArraySingleTypeStaticStack &) = default;
+    ArraySingleTypeStaticStack(ArraySingleTypeStaticStack &&)      = default;
+
+    ArraySingleTypeStaticStack &operator=(const ArraySingleTypeStaticStack &) = default;
+    ArraySingleTypeStaticStack &operator=(ArraySingleTypeStaticStack &&)      = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    FORCE_INLINE_F T &Push(const T &item) { return base_t::Push(item); }
+
+    FORCE_INLINE_F T &Push(T &&item) { return base_t::Push(std::move(item)); }
+
+    template <class... Args>
+    FORCE_INLINE_F T &PushEmplace(Args &&...args)
+    {
+        return base_t::template PushEmplace<T>(std::forward<Args>(args)...);
+    }
+
+    FORCE_INLINE_F T Pop() { return std::move(base_t::template Pop<T>()); }
+
+    FORCE_INLINE_F size_t Size() const { return base_t::Size() / sizeof(T); }
+
+    FORCE_INLINE_F size_t SizeBytes() const { return base_t::Size(); }
+
+    using base_t::Data;
+};
+
+// ------------------------------
+// Static Vector
+// ------------------------------
+
+template <class T, size_t kMaxObjects>
+class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
+{
+    using base_t = ArraySingleTypeStaticStack<T, kMaxObjects>;
+
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    public:
+    StaticVector()  = default;
+    ~StaticVector() = default;
+
+    StaticVector(const StaticVector &) = default;
+    StaticVector(StaticVector &&)      = default;
+
+    StaticVector &operator=(const StaticVector &) = default;
+    StaticVector &operator=(StaticVector &&)      = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    using base_t::Pop;
+    using base_t::Push;
+    using base_t::PushEmplace;
+    using base_t::Size;
+
+    // Iterator support
+    FORCE_INLINE_F T *begin() { return reinterpret_cast<T *>(this->stack_.data); }
+    FORCE_INLINE_F T *end() { return reinterpret_cast<T *>(this->stack_.data) + Size(); }
+
+    FORCE_INLINE_F const T *cbegin() const
+    {
+        return reinterpret_cast<const T *>(this->stack_.data);
+    }
+    FORCE_INLINE_F const T *cend() const
+    {
+        return reinterpret_cast<const T *>(this->stack_.data) + Size();
+    }
+
+    FORCE_INLINE_F T &operator[](const size_t idx)
+    {
+        ASSERT_LT(idx, Size(), "Overflow detected!");
+        return (begin()[idx]);
+    }
+
+    FORCE_INLINE_F const T &operator[](const size_t idx) const
+    {
+        ASSERT_LT(idx, Size(), "Overflow detected!");
+        return (begin()[idx]);
+    }
+
+    void Resize(const size_t size)
+    {
+        ASSERT_LE(size, kMaxObjects, "Too many objects requested!!");
+
+        if (size == Size()) {
+            return;
+        }
+
+        if (size < Size()) {
+            for (auto iter = begin() + size; iter != end(); ++iter) {
+                iter->~T();
+            }
+        } else {
+            for (auto iter = begin() + Size(); iter != begin() + size; ++iter) {
+                new (iter) T();
+            }
+        }
+        this->top_ = size * sizeof(T);
+    }
+};
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

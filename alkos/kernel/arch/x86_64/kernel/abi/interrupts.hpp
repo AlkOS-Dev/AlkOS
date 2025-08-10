@@ -3,8 +3,12 @@
 
 #include "acpi/acpi.hpp"
 #include "drivers/apic/io_apic.hpp"
+#include "drivers/apic/local_apic.hpp"
+#include "drivers/hpet/hpet.hpp"
 #include "interrupts/idt.hpp"
 #include "todo.hpp"
+
+#include <extensions/optional.hpp>
 
 namespace arch
 {
@@ -14,8 +18,10 @@ class Interrupts : public InterruptsABI
     static constexpr size_t kTemporaryIoApicTableSize = 8;
 
     public:
-    Interrupts() = default;
+    TODO_WHEN_VMEM_WORKS
+    using IoApicTable = template_lib::StaticVector<IoApic, kTemporaryIoApicTableSize>;
 
+    Interrupts()  = default;
     ~Interrupts() = default;
 
     // ------------------------------
@@ -32,36 +38,28 @@ class Interrupts : public InterruptsABI
      * code */
     void FirstStageInit();
 
-    void AllocateIoApic(size_t num_apic);
-
-    void InitializeIoApic(size_t idx, u8 id, u32 address, u32 gsi_base);
-
     void ApplyIoApicOverride(const acpi_madt_interrupt_source_override *override);
 
     void ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source);
 
-    NODISCARD FORCE_INLINE_F IoApic &GetIoApic(const size_t idx)
-    {
-        ASSERT_LT(idx, num_apic_, "Overflow detected on IO Apic table...");
-
-        byte *ptr = mem_ + idx * sizeof(IoApic);
-        return *reinterpret_cast<IoApic *>(ptr);
-    }
-
     NODISCARD IoApic &GetIoApicHandler(u32 gsi);
 
+    // ------------------------------
+    // Getters
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F IoApicTable &GetIoApicTable() { return io_apic_table_; }
+
+    NODISCARD FORCE_INLINE_F const IoApicTable &GetIoApicTable() const { return io_apic_table_; }
+
     /* Note: If APIC is initialized all cores will use apic functionality instead of PIC */
-    NODISCARD FORCE_INLINE_F bool IsApicInitialized() const { return is_apic_initialized_; }
+    NODISCARD FORCE_INLINE_F LocalApic &GetLocalApic() { return local_apic_; }
 
-    NODISCARD FORCE_INLINE_F u64 GetLocalApicPhysicalAddress() const
-    {
-        return local_apic_physical_address_;
-    }
+    NODISCARD FORCE_INLINE_F const LocalApic &GetLocalApic() const { return local_apic_; }
 
-    FORCE_INLINE_F void SetLocalApicPhysicalAddress(const u64 value)
-    {
-        local_apic_physical_address_ = value;
-    }
+    NODISCARD FORCE_INLINE_F std::optional<Hpet> &GetHpet() { return hpet_; }
+
+    NODISCARD FORCE_INLINE_F const std::optional<Hpet> &GetHpet() const { return hpet_; }
 
     // ------------------------------
     // Protected methods
@@ -75,12 +73,9 @@ class Interrupts : public InterruptsABI
     // ------------------------------
 
     Idt idt_{};
-
-    TODO_WHEN_VMEM_WORKS
-    alignas(IoApic) byte mem_[sizeof(IoApic) * kTemporaryIoApicTableSize]{};
-    size_t num_apic_{};
-    bool is_apic_initialized_{};
-    u64 local_apic_physical_address_{};
+    IoApicTable io_apic_table_{};
+    LocalApic local_apic_{};
+    std::optional<Hpet> hpet_{};
 };
 }  // namespace arch
 
