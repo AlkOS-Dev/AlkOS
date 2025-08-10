@@ -12,4 +12,4 @@ jobs:
       - name: Run in Arch container
         uses: docker://archlinux:latest
         with:
-          args: bash -c "pacman -Sy --noconfirm clang && scripts/cicd/check_clang_format.bash"
+          args: bash -c "pacman -Sy --noconfirm clang parallel && scripts/cicd/check_clang_format.bash"
