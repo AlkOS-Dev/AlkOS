@@ -16,11 +16,13 @@
  * constant rate regardless of changes in the CPU's core frequency. This makes
  * it a reliable source for timekeeping.
  *
- * Reference: Intel 64 and IA-32 Architectures Software Developer's Manual,
+ * @see: Intel 64 and IA-32 Architectures Software Developer's Manual,
  * Volume 3A: System Programming Guide, Part 1.
  */
 namespace tsc
 {
+
+FORCE_INLINE_F void SetUserSpaceAccess(const bool enabled) {}
 
 void Initialize() {}
 
