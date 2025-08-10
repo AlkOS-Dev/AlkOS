@@ -13,13 +13,17 @@ alkos_target_sources(arch.common.all.32)
 ############################# Linking libraries ##############################
 
 target_link_libraries(arch.common.all.64 PRIVATE
-        libk
         target.properties
+        libk
+        alkos.kernel.headers
+        AutoGenLib
 )
 
 target_link_libraries(arch.common.all.32 PRIVATE
-        libk.32
         target.properties.32
+        libk.32
+        alkos.kernel.headers
+        AutoGenLib
 )
 
 ############################### Applying Flags ###############################
@@ -30,14 +34,4 @@ set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> 
 
 target_include_directories(alkos.kernel.headers INTERFACE
     .
-)
-
-target_link_libraries(arch.common.all.64 PRIVATE
-        alkos.kernel.headers
-        AutoGenLib
-)
-
-target_link_libraries(arch.common.all.32 PRIVATE
-        alkos.kernel.headers
-        AutoGenLib
 )

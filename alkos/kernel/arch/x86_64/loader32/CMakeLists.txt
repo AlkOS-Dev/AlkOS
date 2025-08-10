@@ -12,7 +12,6 @@ alkos_target_sources(alkos.loader32)
 
 ############################## Finding CXX Compiler ############################
 
-message(STATUS "32 bit compiler: ${CMAKE_CXX_COMPILER_32}")
 set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 ############################## Finding Headers ###############################
@@ -20,8 +19,6 @@ set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER_32} <FLAGS> <CMAKE_CXX_LINK_
 target_include_directories(alkos.loader32 PRIVATE .)
 
 ################################ Exec Flags ##################################
-
-target_link_libraries(alkos.loader32 PRIVATE target.properties.32)
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> <FLAGS> -o <OBJECT> <SOURCE>")
 
@@ -42,8 +39,10 @@ target_compile_definitions(alkos.loader32 PUBLIC
         __i386__=1
 )
 
+################################### Linking ####################################
+
 target_link_libraries(alkos.loader32 PRIVATE
-        gcc
+        target.properties.32
         arch.common.all.32
         libk.32
         alkos.kernel.headers
