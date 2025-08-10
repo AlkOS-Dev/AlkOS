@@ -315,7 +315,7 @@ FAST_CALL void VerboseAssertTrue(
     VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) FORCE_INLINE_L {
-            return v == true;
+            return static_cast<bool>(v) == true;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
@@ -345,7 +345,7 @@ FAST_CALL void VerboseAssertFalse(
     VerboseAssertOneArgBase<Handler>(
         value,
         [](const ValueT &v) FORCE_INLINE_L {
-            return v == false;
+            return static_cast<bool>(v) == false;
         },
         [](char *msg, const int size, const char *v_str, const char *v_dump) FORCE_INLINE_L {
             [[maybe_unused]] const int bytes_written = snprintf(
