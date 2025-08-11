@@ -6,9 +6,6 @@ CONF_BUILD_DIR="${CLEAN_BUILD_SCRIPT_DIR}/../../build"
 
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/conf_handlers.bash"
 
-source_conf_file
-verify_conf_var_exists CONF_BUILD_DIR
-
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/pretty_print.bash"
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/helpers.bash"
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/argparse.bash"
