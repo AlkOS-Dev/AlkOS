@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_SPINLOCK_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_SPINLOCK_HPP_
 
-#include <spinlock.hpp>
+#include "spinlock.hpp"
 
 #include <autogen/feature_flags.h>
 #include <constants.hpp>

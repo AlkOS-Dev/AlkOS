@@ -13,5 +13,5 @@ internal::TimingModule::TimingModule() noexcept
 
 void internal::TimingModule::OnIsUtcChanged() noexcept
 {
-    ::TimingModule::Get().day_time_.SyncWithHardware();
+    ::TimingModule::Get().GetDayTime().SyncWithHardware();
 }

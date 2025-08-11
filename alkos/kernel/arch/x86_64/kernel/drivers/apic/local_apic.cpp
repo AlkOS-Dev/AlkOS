@@ -7,8 +7,6 @@
 #include <extensions/debug.hpp>
 #include <todo.hpp>
 
-using namespace LocalApic;
-
 // ------------------------------
 // Static functions
 // ------------------------------
@@ -26,11 +24,12 @@ static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
     );
 
     ASSERT_LT(nmi_source->lint, 2, "LINT number is out of range (0-1)");
-    const u32 reg_offset = nmi_source->lint == 0 ? kLvtLint0RegRW : kLvtLint1RegRW;
+    const u32 reg_offset =
+        nmi_source->lint == 0 ? LocalApic::kLvtLint0RegRW : LocalApic::kLvtLint1RegRW;
 
-    auto reg          = ReadRegister<LocalVectorTableRegister>(reg_offset);
-    reg.delivery_mode = LocalVectorTableRegister::DeliveryMode::kNMI;
-    WriteRegister(reg_offset, reg);
+    auto reg          = LocalApic::ReadRegister<LocalApic::LocalVectorTableRegister>(reg_offset);
+    reg.delivery_mode = LocalApic::LocalVectorTableRegister::DeliveryMode::kNMI;
+    LocalApic::WriteRegister(reg_offset, reg);
 }
 
 static void ParseMadtRules_()
@@ -57,18 +56,15 @@ void LocalApic::Enable()
 {
     R_ASSERT_TRUE(IsSupported(), "APIC is not supported on this platform...");
 
-    /* Disable PIC unit */
-    Pic8259Disable();
-
     TODO_WHEN_VMEM_WORKS
     /* Map local apic address to vmem */
     // TODO: currently: identity
 
-    const u64 lapic_address = HardwareModule::Get().GetInterrupts().GetLocalApicPhysicalAddress();
-    TRACE_INFO("Assuming APIC address as: %016X", lapic_address);
+    TRACE_INFO("Assuming APIC address as: %016X", local_apic_physical_address_);
 
     /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
-    SetPhysicalAddress(lapic_address);
+    is_enabled_ = true;
+    SetPhysicalAddressOnCore(local_apic_physical_address_);
 
     TRACE_INFO("Configuring LAPIC for core with id: %u", GetCoreId());
 
@@ -77,7 +73,7 @@ void LocalApic::Enable()
 
     /* Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts */
     auto reg    = ReadRegister<SpuriousInterruptRegister>(kSpuriousInterruptRegRW);
-    reg.enabled = SpuriousInterruptRegister::State::kEnabled;
+    reg.enabled = true;
     reg.vector  = kSpuriousVector;
 
     WriteRegister(kSpuriousInterruptRegRW, reg);

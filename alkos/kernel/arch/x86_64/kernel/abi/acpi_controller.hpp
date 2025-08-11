@@ -24,6 +24,7 @@ class AcpiController : public AcpiABI
 
     private:
     void ParseMadt_();
+    void ParseHpet_();
 
     // ------------------------------
     // Class fields
