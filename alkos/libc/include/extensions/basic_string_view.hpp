@@ -44,14 +44,9 @@ class basic_string_view
     constexpr basic_string_view(const CharT *str) noexcept : data_(str), size_(Traits::length(str))
     {
     }
-    template <class R>
-        requires requires(R &&r) {
-            { r.data() } -> std::convertible_to<const CharT *>;
-            { r.size() } -> std::convertible_to<size_type>;
-        }
-    constexpr explicit basic_string_view(R &&r) : data_(r.data()), size_(r.size())
-    {
-    }
+
+    TODO_LIBCPP_COMPLIANCE
+    // constexpr explicit basic_string_view(R &&r);
 
     basic_string_view(nullptr_t) = delete;
 
@@ -318,7 +313,7 @@ class basic_string_view
     // std::string_view::find
     // ------------------------------
 
-    // Used Knuth-Morris-Pratt (KMP) algorithm for substring search
+    // Knuth-Morris-Pratt (KMP) algorithm for substring search
     NODISCARD FORCE_INLINE_F constexpr size_type find(
         basic_string_view v, size_type pos = 0
     ) const noexcept
