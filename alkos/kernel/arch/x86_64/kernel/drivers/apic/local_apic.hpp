@@ -7,8 +7,8 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
+#include "cpu/msrs.hpp"
 #include "memory_io.hpp"
-#include "msrs.hpp"
 
 /**
  * TODO: SUPPORT 2x APIC
@@ -147,7 +147,7 @@ class LocalApic
      */
     static constexpr u32 kEOISignal = 0;
 
-    struct LocalVectorTableRegister {
+    struct PACK LocalVectorTableRegister {
         enum class DeliveryMode : u8 {
             kFixed   = 0b000,  ///< Normal interrupt delivery to vector specified
             kSMI     = 0b010,  ///< System Management Interrupt (enters SMM)
@@ -178,17 +178,17 @@ class LocalApic
 
         u32 vector : 8;
         DeliveryMode delivery_mode : 3;
-        u32 reserved1 : 1;
+        u32 : 1;  // Reserved
         DeliveryStatus delivery_status : 1;
         Polarity polarity : 1;
         u32 remote_irr : 1;
         TriggerMode trigger_mode : 1;
         Mask mask : 1;
-        u32 reserved2 : 15;
+        u32 : 15;  // Reserved
     };
     static_assert(sizeof(LocalVectorTableRegister) == 4);
 
-    struct LocalVectorTableTimerRegister {
+    struct PACK LocalVectorTableTimerRegister {
         enum class DeliveryStatus : u8 {
             kIdle    = 0,
             kPending = 1,
@@ -206,11 +206,12 @@ class LocalApic
         };
 
         u32 vector : 8;
-        u32 reserved1 : 4;
+        u32 : 4;  // Reserved
         DeliveryStatus delivery_status : 1;
-        u32 reserved2 : 3;
+        u32 : 3;  // Reserved
         Mask mask : 1;
         TimerMode timer_mode : 2;
+        u32 : 13;  // Reserved
     };
     static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
 
@@ -220,17 +221,12 @@ class LocalApic
      * Controls global APIC enable/disable and defines the vector
      * for spurious interrupts (false or unwanted interrupts).
      */
-    struct SpuriousInterruptRegister {
-        enum class State {
-            kDisabled = 0,
-            kEnabled  = 1,
-        };
-
+    struct PACK SpuriousInterruptRegister {
         u32 vector : 8;  ///< Vector to deliver for spurious interrupts
-        State enabled : 1;
-        u32 reserved1 : 3;
+        bool enabled : 1;
+        u32 : 3;                   // Reserved
         u32 no_eoi_broadcast : 1;  ///< 1 = Suppress EOI broadcasts in x2APIC mode
-        u32 reserved2 : 19;
+        u32 : 19;                  // Reserved
     };
     static_assert(sizeof(SpuriousInterruptRegister) == 4);
 
@@ -241,7 +237,7 @@ class LocalApic
      * in the system. This structure represents the lower 32 bits of the ICR.
      * The upper 32 bits contain the destination processor ID.
      */
-    struct InterruptCommandRegister {
+    struct PACK InterruptCommandRegister {
         enum class DeliveryMode : u8 {
             kFixed         = 0b000,  ///< Normal interrupt delivery to vector specified
             kLowerPriority = 0b001,  ///< Lowest-priority delivery (for load balancing)
@@ -277,10 +273,10 @@ class LocalApic
         DeliveryMode delivery_mode : 3;  ///< How the interrupt should be handled by destination
         DestinationMode destination_mode : 1;  ///< 0 = Physical ID, 1 = Logical ID
         DeliveryStatus delivery_status : 1;    ///< Set by hardware when IPI is pending (read-only)
-        u32 reserved1 : 1;                     ///< Reserved bit
+        u32 : 1;                               ///< Reserved bit
         InitType init_type : 2;                ///< Additional flags for INIT IPIs
         DestinationType destination_type : 2;  ///< Destination shorthand for common IPI targets
-        u32 reserved2 : 12;                    ///< Reserved bits
+        u32 : 12;                              ///< Reserved bits
     };
     static_assert(sizeof(InterruptCommandRegister) == 4);
 
@@ -315,7 +311,7 @@ class LocalApic
     NODISCARD FAST_CALL u64 GetPhysicalAddressOnCore()
     {
         /* Return 4k page aligned address, removing the lower 12 bits (flags) */
-        return CpuGetMSR(kIA32ApicBaseMsr) & ~kBitMaskRight<u64, 12>;
+        return cpu::GetMSR(kIA32ApicBaseMsr) & ~kBitMaskRight<u64, 12>;
     }
 
     /**
@@ -329,7 +325,7 @@ class LocalApic
     FAST_CALL void SetPhysicalAddressOnCore(const u64 new_address)
     {
         ASSERT_TRUE(IsAligned(new_address, 12), "Local APIC address is not aligned to 4k page!");
-        CpuSetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
+        cpu::SetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
     }
 
     /**

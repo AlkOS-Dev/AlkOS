@@ -71,7 +71,7 @@ class IoApic final
      *
      * Controls how an interrupt is routed to processor(s)
      */
-    struct LowerTableRegister {
+    struct PACK LowerTableRegister {
         enum class TriggerMode : u8 {
             kEdge  = 0,  ///< Edge-triggered interrupt
             kLevel = 1,  ///< Level-triggered interrupt
@@ -114,7 +114,7 @@ class IoApic final
         u32 remote_IRR : 1;                    ///< Remote IRR (for level-triggered)
         TriggerMode trigger_mode : 1;          ///< Edge or level triggered
         EnabledFlag mask : 1;                  ///< Enable/disable interrupt
-        u32 reserved : 15;                     ///< Reserved bits
+        u32 : 15;                              ///< Reserved bits
     };
     static_assert(sizeof(LowerTableRegister) == 4);
 
@@ -123,8 +123,8 @@ class IoApic final
      *
      * Contains destination processor information
      */
-    struct HigherTableRegister {
-        u32 reserved : 24;    ///< Reserved bits
+    struct PACK HigherTableRegister {
+        u32 : 24;             ///< Reserved bits
         u32 destination : 8;  ///< Destination APIC ID
     };
     static_assert(sizeof(HigherTableRegister) == 4);
