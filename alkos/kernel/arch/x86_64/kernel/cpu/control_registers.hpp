@@ -3,6 +3,7 @@
 
 #include <extensions/concepts.hpp>
 #include <extensions/types.hpp>
+#include <extensions/concepts_ext.hpp>
 
 /**
  * @file control_registers.hpp
@@ -79,8 +80,7 @@ static_assert(sizeof(Cr4) == 8, "Cr4 structure must be 8 bytes");
 // clang-format on
 
 template <typename T>
-concept IsControlRegister = std::is_same_v<T, Cr0> || std::is_same_v<T, Cr2> ||
-                            std::is_same_v<T, Cr3> || std::is_same_v<T, Cr4>;
+concept IsControlRegister = concepts_ext::OneOf<T,  Cr0, Cr2, Cr3, Cr4>;
 
 template <class T>
     requires IsControlRegister<T>

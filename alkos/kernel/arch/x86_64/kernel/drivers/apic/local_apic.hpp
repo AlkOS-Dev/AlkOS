@@ -178,13 +178,13 @@ class LocalApic
 
         u32 vector : 8;
         DeliveryMode delivery_mode : 3;
-        u32 : 1;
+        u32 : 1; // Reserved
         DeliveryStatus delivery_status : 1;
         Polarity polarity : 1;
         u32 remote_irr : 1;
         TriggerMode trigger_mode : 1;
         Mask mask : 1;
-        u32 : 15;
+        u32 : 15; // Reserved
     };
     static_assert(sizeof(LocalVectorTableRegister) == 4);
 
@@ -206,12 +206,12 @@ class LocalApic
         };
 
         u32 vector : 8;
-        u32 : 4;
+        u32 : 4; // Reserved
         DeliveryStatus delivery_status : 1;
-        u32 : 3;
+        u32 : 3; // Reserved
         Mask mask : 1;
         TimerMode timer_mode : 2;
-        u32 : 13;
+        u32 : 13; // Reserved
     };
     static_assert(sizeof(LocalVectorTableTimerRegister) == 4);
 
@@ -224,9 +224,9 @@ class LocalApic
     struct PACK SpuriousInterruptRegister {
         u32 vector : 8;  ///< Vector to deliver for spurious interrupts
         bool enabled : 1;
-        u32 : 3;
+        u32 : 3; // Reserved
         u32 no_eoi_broadcast : 1;  ///< 1 = Suppress EOI broadcasts in x2APIC mode
-        u32 : 19;
+        u32 : 19; // Reserved
     };
     static_assert(sizeof(SpuriousInterruptRegister) == 4);
 
