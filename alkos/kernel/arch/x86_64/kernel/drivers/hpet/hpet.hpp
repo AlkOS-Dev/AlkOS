@@ -115,7 +115,7 @@ class Hpet final
 
         bool enable : 1;
         LegacyReplacementBit legacy_replacement : 1;
-        u64 : 62; // Reserved
+        u64 : 62;  // Reserved
     };
     static_assert(sizeof(GeneralConfigurationReg) == 8);
 
@@ -125,7 +125,7 @@ class Hpet final
      */
     struct PACK GeneralInterruptStatusReg {
         BitArray<kMaxComparators> interrupt_status;  // Bit set for each timer that triggered
-        u32 : 32; // Reserved
+        u32 : 32;                                    // Reserved
     };
     static_assert(sizeof(GeneralInterruptStatusReg) == 8);
 
@@ -173,19 +173,19 @@ class Hpet final
             kSupported    = 1,  // Timer supports FSB routing
         };
 
-        u8 : 1; // Reserved
+        u8 : 1;  // Reserved
         InterruptType interrupt_type : 1;
         Enabled enabled : 1;
         TimerType timer_type : 1;
         const PeriodicSupported periodic_supported : 1;
         const Is64BitComparator is_64_bit_comparator : 1;
         bool periodic_mem_access : 1;
-        u8 : 1; // Reserved
+        u8 : 1;  // Reserved
         Forced32Bit forced_32_bit : 1;
         u8 vector : 5;  // Interrupt vector to trigger
         FsbRoute fsb_route : 1;
         const FsbSupported fsb_supported : 1;
-        u16 : 16; // Reserved
+        u16 : 16;                                            // Reserved
         const BitArray<kMaxComparators> route_capabilities;  // Which interrupt routes are available
     };
     static_assert(sizeof(TimerConfigurationReg) == 8);

@@ -2,8 +2,8 @@
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_CPU_CONTROL_REGISTERS_HPP_
 
 #include <extensions/concepts.hpp>
-#include <extensions/types.hpp>
 #include <extensions/concepts_ext.hpp>
+#include <extensions/types.hpp>
 
 /**
  * @file control_registers.hpp
@@ -80,7 +80,7 @@ static_assert(sizeof(Cr4) == 8, "Cr4 structure must be 8 bytes");
 // clang-format on
 
 template <typename T>
-concept IsControlRegister = concepts_ext::OneOf<T,  Cr0, Cr2, Cr3, Cr4>;
+concept IsControlRegister = concepts_ext::OneOf<T, Cr0, Cr2, Cr3, Cr4>;
 
 template <class T>
     requires IsControlRegister<T>
