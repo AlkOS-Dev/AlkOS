@@ -2,9 +2,23 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
 
 #include <stdint.h>
+#include <extensions/concepts.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
+
+// ------------------------------
+// std namespace
+// ------------------------------
+
+namespace std
+{
+
+}  // namespace std
+
+// ------------------------------
+// extensions
+// ------------------------------
 
 // ------------------------------
 // Various defines
