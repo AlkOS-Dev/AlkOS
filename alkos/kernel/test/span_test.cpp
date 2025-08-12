@@ -102,6 +102,31 @@ TEST_F(SpanTest, FromInitializerList)
     EXPECT_EQ(5, span[4]);
 }
 
+TEST_F(SpanTest, FromFixedSpan)
+{
+    int arr[] = {1, 2, 3, 4};
+    std::span<int, 4> fixed_span(arr);
+    std::span<int> dynamic_span(fixed_span);
+
+    EXPECT_EQ(4_size, dynamic_span.size());
+    EXPECT_EQ(1, dynamic_span[0]);
+    EXPECT_EQ(2, dynamic_span[1]);
+    EXPECT_EQ(3, dynamic_span[2]);
+    EXPECT_EQ(4, dynamic_span[3]);
+}
+
+TEST_F(SpanTest, FromDynamicSpan)
+{
+    int arr[] = {10, 20, 30};
+    std::span<int> dynamic_span(arr);
+    std::span<const int, 3> fixed_span(dynamic_span);
+
+    EXPECT_EQ(3_size, fixed_span.size());
+    EXPECT_EQ(10, fixed_span[0]);
+    EXPECT_EQ(20, fixed_span[1]);
+    EXPECT_EQ(30, fixed_span[2]);
+}
+
 // ------------------------------
 // Element Access Tests
 // ------------------------------
@@ -252,35 +277,6 @@ TEST_F(SpanTest, ComplexTypes)
 
     span[1].x = 42;
     EXPECT_EQ(42, arr[1].x);
-}
-
-// ------------------------------
-// Conversion Tests
-// ------------------------------
-
-TEST_F(SpanTest, SpanToSpanConversion)
-{
-    int arr[] = {1, 2, 3, 4};
-    std::span<int, 4> fixed_span(arr);
-    std::span<int> dynamic_span(fixed_span);
-
-    EXPECT_EQ(4_size, dynamic_span.size());
-    EXPECT_EQ(1, dynamic_span[0]);
-    EXPECT_EQ(2, dynamic_span[1]);
-    EXPECT_EQ(3, dynamic_span[2]);
-    EXPECT_EQ(4, dynamic_span[3]);
-}
-
-TEST_F(SpanTest, ConstConversion)
-{
-    int arr[] = {10, 20, 30};
-    std::span<int> mutable_span(arr);
-    std::span<const int> const_span(mutable_span);
-
-    EXPECT_EQ(3_size, const_span.size());
-    EXPECT_EQ(10, const_span[0]);
-    EXPECT_EQ(20, const_span[1]);
-    EXPECT_EQ(30, const_span[2]);
 }
 
 // ------------------------------

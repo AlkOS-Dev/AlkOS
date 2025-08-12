@@ -179,7 +179,7 @@ class span
     explicit(!is_dynamic_extent_ && N == std::dynamic_extent) constexpr span(
         const std::span<U, N>& source
     ) noexcept
-        : data_(source.data()), size_(source.size())
+        : data_(source.data())
     {
         ASSERT_EQ(source.size(), Extent);
     }
@@ -333,7 +333,7 @@ class span
     }
 
     template <std::size_t Offset, std::size_t Count = std::dynamic_extent>
-        requires(Offset > Extent || (Count != std::dynamic_extent && Count + Offset > Extent))
+        requires(Offset <= Extent && (Count == std::dynamic_extent || Count <= Extent - Offset))
     NODISCARD FORCE_INLINE_F constexpr auto subspan() const
     {
         constexpr bool is_dynamic_extent = (Count == std::dynamic_extent);
