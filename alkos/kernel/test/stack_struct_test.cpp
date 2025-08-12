@@ -1,10 +1,10 @@
 #include <extensions/array.hpp>
-#include <extensions/template_lib.hpp>
+#include <extensions/data_structures/data_structures.hpp>
 #include <test_module/test.hpp>
 #include "test_structs.hpp"
 
 using namespace std;
-using namespace template_lib;
+using namespace data_structures;
 
 // Test fixture for StaticStack
 class StaticStackTest : public TestGroupBase

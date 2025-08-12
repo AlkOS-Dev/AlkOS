@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <extensions/data_structures/data_structures.hpp>
 
 namespace hardware
 {
@@ -13,7 +13,7 @@ struct EventClockRegistryEntry {
 };
 
 static constexpr size_t kMaxEventClocks = 8;
-using EventClockRegistry = template_lib::StaticVector<EventClockRegistryEntry, kMaxEventClocks>;
+using EventClockRegistry = data_structures::StaticVector<EventClockRegistryEntry, kMaxEventClocks>;
 
 }  // namespace hardware
 

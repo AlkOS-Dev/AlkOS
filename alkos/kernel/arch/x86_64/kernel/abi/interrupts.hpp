@@ -8,6 +8,7 @@
 #include "interrupts/idt.hpp"
 #include "todo.hpp"
 
+#include <extensions/data_structures/array_structures.hpp>
 #include <extensions/optional.hpp>
 
 namespace arch
@@ -19,7 +20,7 @@ class Interrupts : public InterruptsABI
 
     public:
     TODO_WHEN_VMEM_WORKS
-    using IoApicTable = template_lib::StaticVector<IoApic, kTemporaryIoApicTableSize>;
+    using IoApicTable = data_structures::StaticVector<IoApic, kTemporaryIoApicTableSize>;
 
     Interrupts()  = default;
     ~Interrupts() = default;
