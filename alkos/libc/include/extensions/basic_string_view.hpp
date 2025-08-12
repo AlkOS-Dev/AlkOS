@@ -1,12 +1,13 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BASIC_STRING_VIEW_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_BASIC_STRING_VIEW_HPP_
 
-#include <todo.h>
 #include <extensions/algorithm.hpp>
 #include <extensions/array.hpp>
 #include <extensions/char_traits.hpp>
 #include <extensions/concepts.hpp>
+#include <extensions/type_traits.hpp>
 #include <extensions/utility.hpp>
+#include <todo.hpp>
 
 namespace std
 {
@@ -87,7 +88,7 @@ class basic_string_view
     // Element access
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F constexpr const_reference operator[](size_type pos) const noexcept
+    NODISCARD FORCE_INLINE_F constexpr const_reference operator[](size_type pos) const
     {
         if constexpr (kIsKernel) {
             ASSERT_LT(pos, size_);
@@ -105,7 +106,7 @@ class basic_string_view
         return data_[pos];
     }
 
-    NODISCARD FORCE_INLINE_F constexpr const_reference front() const noexcept
+    NODISCARD FORCE_INLINE_F constexpr const_reference front() const
     {
         if constexpr (kIsKernel) {
             ASSERT_GT(size_, 0);
@@ -113,7 +114,7 @@ class basic_string_view
         return data_[0];
     }
 
-    NODISCARD FORCE_INLINE_F constexpr const_reference back() const noexcept
+    NODISCARD FORCE_INLINE_F constexpr const_reference back() const
     {
         if constexpr (kIsKernel) {
             ASSERT_GT(size_, 0);
@@ -292,7 +293,7 @@ class basic_string_view
     }
 
     // ------------------------------
-    // std::string_view::constains
+    // std::string_view::contains
     // ------------------------------
     NODISCARD FORCE_INLINE_F constexpr bool contains(basic_string_view v) const noexcept
     {
@@ -378,26 +379,33 @@ class basic_string_view
         if (v.empty()) {
             return pos < size_ ? pos : npos;
         }
-        if (size_ < v.size_) {
+
+        if (v.size_ > size_) {
             return npos;
         }
 
-        auto prefix_table = compute_prefix_table_(v);
-        size_type i       = pos < size_ ? pos : size_ - 1;
-        size_type j       = v.size_ - 1;
+        if (pos == npos || pos >= size_) {
+            pos = size_ - 1;
+        }
 
-        while (i >= 0) {
-            if (v[j] == data_[i]) {
-                i--;
-                j--;
-            }
-            if (j < 0) {
-                return i + 1;  // Found the substring
-            } else if (i >= 0 && v[j] != data_[i]) {
-                if (j != v.size_ - 1) {
-                    j = prefix_table[j];  // Use the prefix table to skip characters
+        auto rev_pat      = reversed_view_<basic_string_view>{v};
+        auto prefix_table = compute_prefix_table_(rev_pat);
+
+        size_type i = pos + v.size_ - 1;
+        size_type j = 0;
+
+        while (i != static_cast<size_type>(-1)) {
+            if (data_[i] == rev_pat[j]) {
+                ++j;
+                --i;
+                if (j == v.size_) {
+                    return i + 1;  // Found the substring
+                }
+            } else {
+                if (j != 0) {
+                    j = prefix_table[j - 1];  // Use the prefix table to skip characters
                 } else {
-                    i--;
+                    --i;
                 }
             }
         }
@@ -589,18 +597,20 @@ class basic_string_view
     }
 
     // ------------------------------
-    // Helper functions
+    // Helper functions and structs
     // ------------------------------
 
     private:
     // Computes the prefix table for the Knuth-Morris-Pratt (KMP) algorithm.
-    NODISCARD FORCE_INLINE_F constexpr auto compute_prefix_table_(basic_string_view v) const
+    template <typename T>
+    NODISCARD FORCE_INLINE_F constexpr auto compute_prefix_table_(T v) const
     {
+        TODO_WHEN_VMEM_WORKS
         constexpr size_type kMaxPrefixTableSize =
             4096;  // Arbitrary size limit for the prefix table
         array<size_type, kMaxPrefixTableSize> prefix_table{};
         size_type j = 0;
-        for (size_type i = 1; i < v.size_; i++) {
+        for (size_type i = 1; i < v.size(); i++) {
             while (j > 0 && v[j] != v[i]) j = prefix_table[j - 1];
 
             if (v[j] == v[i])
@@ -610,6 +620,20 @@ class basic_string_view
         }
         return prefix_table;
     }
+
+    template <typename T>
+        requires requires(T t) {
+            { t.size() } -> std::convertible_to<size_type>;
+            { t[0] } -> std::convertible_to<const_reference>;
+        }
+    struct reversed_view_ {
+        T base;
+        NODISCARD FORCE_INLINE_F constexpr const_reference operator[](size_type idx) const
+        {
+            return base[base.size() - 1 - idx];
+        }
+        NODISCARD FORCE_INLINE_F constexpr size_type size() const noexcept { return base.size(); }
+    };
 
     // ------------------------------
     // Data members

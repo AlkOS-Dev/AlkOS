@@ -110,9 +110,7 @@ class char_traits
         }
         return dest;
     }
-    FAST_CALL constexpr const char_type *copy(
-        char_type *dest, const char_type *src, size_t n
-    ) noexcept
+    FAST_CALL constexpr char_type *copy(char_type *dest, const char_type *src, size_t n) noexcept
     {
         for (size_t i = 0; i < n; ++i) {
             dest[i] = src[i];
@@ -132,13 +130,13 @@ class char_traits
         }
         return 0;
     }
-    NODISCARD FAST_CALL constexpr int length(const char_type *s) noexcept
+    NODISCARD FAST_CALL constexpr size_t length(const char_type *s) noexcept
     {
         const char_type *p = s;
         while (*p) {
             ++p;
         }
-        return p - s;
+        return static_cast<size_t>(p - s);
     }
     NODISCARD FAST_CALL constexpr const char_type *find(
         const char_type *p, size_t n, const char_type &c

@@ -10,16 +10,16 @@ class StringViewTest : public TestGroupBase
 
 TEST_F(StringViewTest, Constructors)
 {
-    constexpr basic_string_view<char> sv1;
+    constexpr string_view sv1;
     R_ASSERT_EQ(0, sv1.size());
     R_ASSERT_EQ(nullptr, sv1.data());
 
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv2(str);
+    const string_view sv2(str);
     R_ASSERT_EQ(13, sv2.size());
     R_ASSERT_EQ(str, sv2.data());
 
-    const basic_string_view<char> sv3(str, 5);
+    const string_view sv3(str, 5);
     R_ASSERT_EQ(5, sv3.size());
     R_ASSERT_EQ(str, sv3.data());
 }
@@ -27,7 +27,7 @@ TEST_F(StringViewTest, Constructors)
 TEST_F(StringViewTest, Substr)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     const auto sub_sv = sv.substr(7, 5);
     R_ASSERT_EQ(5, sub_sv.size());
@@ -42,12 +42,35 @@ TEST_F(StringViewTest, Substr)
 TEST_F(StringViewTest, Find)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ(7, sv.find('W'));
     R_ASSERT_EQ(7, sv.find("World"));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find('x'));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find("xyz"));
+    R_ASSERT_EQ(string_view::npos, sv.find('x'));
+    R_ASSERT_EQ(string_view::npos, sv.find("xyz"));
+}
+
+TEST_F(StringViewTest, RFind)
+{
+    using namespace std::literals::string_view_literals;
+
+    R_ASSERT_EQ(6, "AB AB AB"sv.rfind("AB"));
+    R_ASSERT_EQ(6, "AB AB AB"sv.rfind("ABCD", string_view::npos, 2));
+    R_ASSERT_EQ(3, "AB AB AB"sv.rfind("AB", 5));
+    R_ASSERT_EQ(0, "AB CD EF"sv.rfind("AB", 0));
+    R_ASSERT_EQ(2, "B AB AB "sv.rfind("AB", 2));
+    R_ASSERT_EQ(string_view::npos, "B AB AB "sv.rfind("AB", 1));
+    R_ASSERT_EQ(5, "B AB AB "sv.rfind('A'));
+    R_ASSERT_EQ(4, "AB AB AB"sv.rfind('B', 4));
+    R_ASSERT_EQ(string_view::npos, "AB AB AB"sv.rfind('C'));
+
+    const string_view sv("Hello, World!");
+    R_ASSERT_EQ(0, sv.rfind("Hello"));
+    R_ASSERT_EQ(7, sv.rfind("World"));
+    R_ASSERT_EQ(7, sv.rfind("Wo"));
+    R_ASSERT_EQ(1, sv.rfind("el"));
+    R_ASSERT_EQ(12, sv.rfind('!'));
+    R_ASSERT_EQ(string_view::npos, sv.rfind('z'));
 }
 
 TEST_F(StringViewTest, Compare)
@@ -55,9 +78,9 @@ TEST_F(StringViewTest, Compare)
     const auto str1 = "Hello, World!";
     const auto str2 = "Hello, World!";
     const auto str3 = "Goodbye, World!";
-    const basic_string_view<char> sv1(str1);
-    const basic_string_view<char> sv2(str2);
-    const basic_string_view<char> sv3(str3);
+    const string_view sv1(str1);
+    const string_view sv2(str2);
+    const string_view sv3(str3);
 
     R_ASSERT_EQ(0, sv1.compare(sv2));
     R_ASSERT_EQ(1, sv1.compare(sv3));
@@ -67,29 +90,29 @@ TEST_F(StringViewTest, Compare)
 TEST_F(StringViewTest, FindFirstOf)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ(7, sv.find_first_of('W'));
     R_ASSERT_EQ(2, sv.find_first_of("World"));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of('x'));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of("xyz"));
+    R_ASSERT_EQ(string_view::npos, sv.find_first_of('x'));
+    R_ASSERT_EQ(string_view::npos, sv.find_first_of("xyz"));
 }
 
 TEST_F(StringViewTest, FindLastOf)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ(8, sv.find_last_of('o'));
     R_ASSERT_EQ(11, sv.find_last_of("World"));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of('x'));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of("xyz"));
+    R_ASSERT_EQ(string_view::npos, sv.find_last_of('x'));
+    R_ASSERT_EQ(string_view::npos, sv.find_last_of("xyz"));
 }
 
 TEST_F(StringViewTest, FindFirstNotOf)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ(1, sv.find_first_not_of('H'));
     R_ASSERT_EQ(5, sv.find_first_not_of("Hello"));
@@ -99,7 +122,7 @@ TEST_F(StringViewTest, FindFirstNotOf)
 TEST_F(StringViewTest, FindLastNotOf)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ(11, sv.find_last_not_of('!'));
     R_ASSERT_EQ(6, sv.find_last_not_of("World!"));
@@ -108,31 +131,31 @@ TEST_F(StringViewTest, FindLastNotOf)
 
 TEST_F(StringViewTest, Empty)
 {
-    constexpr basic_string_view<char> sv1;
+    constexpr string_view sv1;
     R_ASSERT_TRUE(sv1.empty());
 
     const auto str = "Hello";
-    const basic_string_view<char> sv2(str);
+    const string_view sv2(str);
     R_ASSERT_FALSE(sv2.empty());
 }
 
 TEST_F(StringViewTest, Size)
 {
-    constexpr basic_string_view<char> sv1;
+    constexpr string_view sv1;
     R_ASSERT_EQ(0, sv1.size());
 
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv2(str);
+    const string_view sv2(str);
     R_ASSERT_EQ(13, sv2.size());
 
-    const basic_string_view<char> sv3(str, 5);
+    const string_view sv3(str, 5);
     R_ASSERT_EQ(5, sv3.size());
 }
 
 TEST_F(StringViewTest, FrontAndBack)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_EQ('H', sv.front());
     R_ASSERT_EQ('!', sv.back());
@@ -141,7 +164,7 @@ TEST_F(StringViewTest, FrontAndBack)
 TEST_F(StringViewTest, StartsAndEnds)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     R_ASSERT_TRUE(sv.starts_with("Hello"));
     R_ASSERT_FALSE(sv.starts_with("World"));
@@ -159,8 +182,8 @@ TEST_F(StringViewTest, Swap)
     const auto str1 = "Hello";
     const auto str2 = "World!";
 
-    basic_string_view<char> sv1(str1);
-    basic_string_view<char> sv2(str2);
+    string_view sv1(str1);
+    string_view sv2(str2);
 
     sv1.swap(sv2);
     R_ASSERT_EQ(str2, sv1.data());
@@ -172,7 +195,7 @@ TEST_F(StringViewTest, Swap)
 TEST_F(StringViewTest, RemovePrefixSuffix)
 {
     const auto str = "Hello, World!";
-    basic_string_view<char> sv(str);
+    string_view sv(str);
 
     sv.remove_prefix(7);
     R_ASSERT_EQ(str + 7, sv.data());
@@ -187,29 +210,29 @@ TEST_F(StringViewTest, RemovePrefixSuffix)
 TEST_F(StringViewTest, FindFirstOfEmpty)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of(basic_string_view<char>()));
+    R_ASSERT_EQ(string_view::npos, sv.find_first_of(string_view()));
     R_ASSERT_EQ(0, sv.find_first_of('H'));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_first_of('x'));
+    R_ASSERT_EQ(string_view::npos, sv.find_first_of('x'));
 }
 
 TEST_F(StringViewTest, FindLastOfEmpty)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of(basic_string_view<char>()));
+    R_ASSERT_EQ(string_view::npos, sv.find_last_of(string_view()));
     R_ASSERT_EQ(12, sv.find_last_of('!'));
-    R_ASSERT_EQ(basic_string_view<char>::npos, sv.find_last_of('x'));
+    R_ASSERT_EQ(string_view::npos, sv.find_last_of('x'));
 }
 
 TEST_F(StringViewTest, FindFirstNotOfEmpty)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
-    R_ASSERT_EQ(0, sv.find_first_not_of(basic_string_view<char>()));
+    R_ASSERT_EQ(0, sv.find_first_not_of(string_view()));
     R_ASSERT_EQ(1, sv.find_first_not_of('H'));
     R_ASSERT_EQ(0, sv.find_first_not_of('x'));
 }
@@ -217,9 +240,9 @@ TEST_F(StringViewTest, FindFirstNotOfEmpty)
 TEST_F(StringViewTest, FindLastNotOfEmpty)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
-    R_ASSERT_EQ(12, sv.find_last_not_of(basic_string_view<char>()));
+    R_ASSERT_EQ(12, sv.find_last_not_of(string_view()));
     R_ASSERT_EQ(11, sv.find_last_not_of('!'));
     R_ASSERT_EQ(12, sv.find_last_not_of('x'));
 }
@@ -227,7 +250,7 @@ TEST_F(StringViewTest, FindLastNotOfEmpty)
 TEST_F(StringViewTest, Copy)
 {
     const auto str = "Hello, World!";
-    const basic_string_view<char> sv(str);
+    const string_view sv(str);
 
     char buffer[20];
     const size_t copied = sv.copy(buffer, 5);
@@ -241,14 +264,14 @@ TEST_F(StringViewTest, Assignment)
 {
     const auto str1 = "Hello, World!";
     const auto str2 = "Goodbye, World!";
-    const basic_string_view<char> sv1(str1);
-    basic_string_view<char> sv2;
+    const string_view sv1(str1);
+    string_view sv2;
 
     sv2 = sv1;
     R_ASSERT_EQ(str1, sv2.data());
     R_ASSERT_EQ(13, sv2.size());
 
-    sv2 = basic_string_view<char>(str2);
+    sv2 = string_view(str2);
     R_ASSERT_EQ(str2, sv2.data());
     R_ASSERT_EQ(15, sv2.size());
 }
@@ -258,9 +281,9 @@ TEST_F(StringViewTest, Operators)
     const auto str1 = "Hello, World!";
     const auto str2 = "Hello, World!";
     const auto str3 = "Goodbye, World!";
-    basic_string_view<char> sv1(str1);
-    basic_string_view<char> sv2(str2);
-    basic_string_view<char> sv3(str3);
+    string_view sv1(str1);
+    string_view sv2(str2);
+    string_view sv3(str3);
 
     R_ASSERT_TRUE(sv1 == sv2);
     R_ASSERT_FALSE(sv1 == sv3);
@@ -295,8 +318,8 @@ TEST_F(StringViewTest, SwapFunction)
 {
     const auto str1 = "Hello";
     const auto str2 = "World";
-    basic_string_view<char> sv1(str1);
-    basic_string_view<char> sv2(str2);
+    string_view sv1(str1);
+    string_view sv2(str2);
 
     swap(sv1, sv2);
     R_ASSERT_EQ(str2, sv1.data());
