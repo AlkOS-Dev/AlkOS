@@ -13,7 +13,7 @@
 namespace std
 {
 
-inline constexpr std::size_t dynamic_extent = -1;
+inline constexpr std::size_t dynamic_extent = static_cast<std::size_t>(-1);
 
 template <typename T, std::size_t Extent = dynamic_extent>
 class span

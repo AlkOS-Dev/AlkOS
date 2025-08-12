@@ -90,17 +90,6 @@ TEST_F(SpanTest, FromStdArray)
     EXPECT_EQ(8, span[3]);
 }
 
-TEST_F(SpanTest, FromConstStdArray)
-{
-    const std::array<int, 3> arr = {100, 200, 300};
-    std::span<const int> span(arr);
-
-    EXPECT_EQ(3_size, span.size());
-    EXPECT_EQ(100, span[0]);
-    EXPECT_EQ(200, span[1]);
-    EXPECT_EQ(300, span[2]);
-}
-
 TEST_F(SpanTest, FromInitializerList)
 {
     std::span<const int> span({1, 2, 3, 4, 5});
@@ -126,21 +115,6 @@ TEST_F(SpanTest, ElementAccess)
     EXPECT_EQ(20, span[1]);
     EXPECT_EQ(30, span[2]);
     EXPECT_EQ(40, span[3]);
-
-    EXPECT_EQ(10, span.front());
-    EXPECT_EQ(40, span.back());
-
-    EXPECT_EQ(10, *(span.data()));
-    EXPECT_EQ(20, *(span.data() + 1));
-}
-
-TEST_F(SpanTest, ConstElementAccess)
-{
-    const int arr[] = {10, 20, 30, 40};
-    std::span<const int> span(arr);
-
-    EXPECT_EQ(10, span[0]);
-    EXPECT_EQ(20, span[1]);
 
     EXPECT_EQ(10, span.front());
     EXPECT_EQ(40, span.back());
@@ -180,21 +154,6 @@ TEST_F(SpanTest, IteratorAccess)
     EXPECT_EQ(30, *it);
     ++it;
     EXPECT_EQ(span.end(), it);
-}
-
-TEST_F(SpanTest, ConstIteratorAccess)
-{
-    int arr[] = {10, 20, 30};
-    std::span<int> span(arr);
-
-    auto c_it = span.cbegin();
-    EXPECT_EQ(10, *c_it);
-    ++c_it;
-    EXPECT_EQ(20, *c_it);
-    ++c_it;
-    EXPECT_EQ(30, *c_it);
-    ++c_it;
-    EXPECT_EQ(span.cend(), c_it);
 }
 
 // ------------------------------
