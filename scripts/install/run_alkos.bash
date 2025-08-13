@@ -26,7 +26,6 @@ parse_args() {
   argparse_add_positional "alkos_iso_path" "Path to the AlkOS ISO file" true
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "g|gdb" "Run AlkOS in QEMU with GDB" false false "" "flag"
-
   argparse_parse "$@"
 }
 
@@ -37,6 +36,16 @@ process_args() {
   # If GDB flag is set, add GDB arguments to QEMU command
   if [[ $(argparse_get 'g|gdb') == true ]] ; then
     RUN_ALKOS_SCRIPT_QEMU_ARGS="${RUN_ALKOS_SCRIPT_QEMU_ARGS} ${RUN_ALKOS_SCRIPT_GDB_ARGS}"
+  fi
+  
+  if [ "$RUN_ALKOS_SCRIPT_MOUNT" = true ] ; then
+    pretty_error "The --mount feature is not yet implemented."
+    exit 1
+  fi
+  
+  if [ "$RUN_ALKOS_SCRIPT_TESTS" = true ] ; then
+    pretty_error "The --tests flag is not implemented in this script. Use 'make tests' or the run_tests.bash script directly."
+    exit 1
   fi
 }
 

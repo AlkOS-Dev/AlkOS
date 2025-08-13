@@ -1,3 +1,4 @@
+
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 
@@ -18,6 +19,24 @@ constexpr T* construct_at(T* location, Args&&... args)
         return ::new (std::addressof(*location)) T[1]();
     else
         return ::new (std::addressof(*location)) T(std::forward<Args>(args)...);
+}
+
+// ------------------------------
+// std::to_address
+// ------------------------------
+
+template <class T>
+constexpr T* to_address(T* p) noexcept
+{
+    static_assert(!std::is_function_v<T>);
+    return p;
+}
+
+template <class T>
+constexpr auto to_address(const T& p) noexcept
+{
+    TODO_LIBCPP_COMPLIANCE
+    return std::to_address(p.operator->());
 }
 
 }  // namespace std

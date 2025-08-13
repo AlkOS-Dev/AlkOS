@@ -1,5 +1,25 @@
 message(STATUS "Configuring kernel...")
 
+# This target acts as a central hub for configuration data that 
+# need to be shared across the kernel and its components.
+add_library(alkos.kernel.config INTERFACE)
+add_library(alkos.kernel.headers INTERFACE)  # Kernel headers for exporting
+add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
+#------------------------------------------------------------------------------#
+#                           Notes: alkos.kernel.deps                           #
+#------------------------------------------------------------------------------#
+# Note: Caveat - linking objects to this target also requires
+# using target_sources $<TARGET_OBJECTS:{some lib name}> syntax because
+# interface libraries are only carriers for headers and properties
+#
+#------------------------------------------------------------------------------#
+# Note: This target is used to ensure proper linking order 
+# Idea was that this is the linking "api" of the kernel
+# So that arch etc, doesn't have to care about the linking order
+# This is current unused in the intended way, but may be useful in the future
+#
+#------------------------------------------------------------------------------#
+
 ############################### Error Checking ###############################
 
 alkos_ensure_defined(
@@ -10,19 +30,6 @@ alkos_ensure_defined(
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
 add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
-
-############################# Arch Dependent Vars ############################
-
-# ----------------------------------------------------------------------------
-# Arch can optionally create other executables (for chainloading, etc)
-# They need to place themselves in sysroot/boot
-# This is the list of executables that will be loaded by the bootloader as
-# modules
-set(KERNEL_MODULES "")
-# ----------------------------------------------------------------------------
-# This is the executable that the bootloader will give control to
-set(BOOTABLE_KERNEL_EXECUTABLE alkos.kernel)
-# ----------------------------------------------------------------------------
 
 ########################### Setting Sysroot Boot #############################
 
@@ -45,95 +52,92 @@ if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
             "${CMAKE_CURRENT_SOURCE_DIR}/test/*.c"
     )
 
-    # Append test sources to the kernel sources
     list(APPEND KERNEL_SOURCES ${KERNEL_TEST_SOURCES})
 endif ()
 
+
 #################################### Exec ####################################
 
-add_executable(alkos.kernel
-        ${KERNEL_SOURCES}
-)
+add_executable(alkos.kernel ${KERNEL_SOURCES})
 
 ############################### Adding Headers ###############################
 
-add_library(alkos.kernel.headers INTERFACE)
 target_include_directories(alkos.kernel.headers INTERFACE
     include
     test
     abi
 )
 
-target_link_libraries(alkos.kernel PRIVATE
-    alkos.kernel.headers
-)
-
 ########################## Configure for given Arch ##########################
 
 add_subdirectory(arch/${ARCH})
 
-############################### Error Checking ###############################
-
-alkos_ensure_defined(
-    VARS
-        BOOTABLE_KERNEL_EXECUTABLE
-        KERNEL_MODULES
-        KERNEL_COMMANDS
-        ARCH_QEMU_COMMAND
-        ARCH_QEMU_NORMAL_FLAGS
-        ARCH_QEMU_TEST_FLAGS
-        CRTI_OBJ
-        CRTN_OBJ
-)
-
-message(STATUS "Bootable kernel executable: ${BOOTABLE_KERNEL_EXECUTABLE}")
-message(STATUS "Kernel modules: ${KERNEL_MODULES}")
-message(STATUS "Kernel commands: ${KERNEL_COMMANDS}")
-
-list(LENGTH KERNEL_MODULES KERNEL_MODULES_LENGTH)
-list(LENGTH KERNEL_COMMANDS KERNEL_COMMANDS_LENGTH)
-
-# Check if the two lists are the same size
-if(NOT KERNEL_MODULES_LENGTH EQUAL KERNEL_COMMANDS_LENGTH)
-    message(FATAL_ERROR "KERNEL_MODULES and KERNEL_COMMANDS have different sizes: ${KERNEL_MODULES_LENGTH} vs ${KERNEL_COMMANDS_LENGTH}")
-endif()
+# TODO: Immediately here, error checking should happen
+# But the error checking itself fails!!! and for some reason
+# alkos_ensure_property_defined() says the property is not defined
 
 ################################# ThirdParty #################################
 
-message(STATUS "Adding third-party libraries...")
 add_subdirectory(thirdparty)
 
-################################## Linking ###################################
-
-target_link_libraries(alkos.kernel PRIVATE libk gcc ${THIRD_PARTY_LIBRARIES} AutoGenLib)
-
-############## Linker Configuration for CXX Global Constructors ##############
-# Set the linker to link objects in the correct order
-# NOTE: ARCH cmake is expected to provide variables for global constructors
-# according to the compiler needs
-# NOTE: This linking must be done at this level as global constructors
-# should be supported on each architecture
-if (NOT DEFINED CRTI_OBJ  OR NOT DEFINED CRTN_OBJ)
-    message(FATAL_ERROR "One of: crti.o, crtn.o is not defined. Those should be defined in the ARCH CMakeLists.txt file")
-endif ()
-
-set(CMAKE_CXX_LINKER_LAUNCHER "/bin/bash -c")
-set(CMAKE_CXX_LINK_EXECUTABLE
-"/bin/bash -c \"${CMAKE_CXX_COMPILER} <CMAKE_CXX_LINK_FLAGS> <FLAGS> <LINK_FLAGS> \
-${CRTI_OBJ} \
-\$\(${CMAKE_C_COMPILER} -print-file-name=crtbegin.o\) \
-<OBJECTS> \
-\$\(${CMAKE_C_COMPILER} -print-file-name=crtend.o\) \
-${CRTN_OBJ} \
--o <TARGET> <LINK_LIBRARIES>\""
+target_link_libraries(alkos.kernel.deps INTERFACE
+    alkos.kernel.thirdparty
+    libk
+    AutoGenLib
 )
 
-########################## Back-Propagate Variables ##########################
+################################ Linking Kernel ################################
 
-set(BOOTABLE_KERNEL_EXECUTABLE ${BOOTABLE_KERNEL_EXECUTABLE} PARENT_SCOPE)
-set(KERNEL_MODULES ${KERNEL_MODULES} PARENT_SCOPE)
-set(KERNEL_COMMANDS ${KERNEL_COMMANDS} PARENT_SCOPE)
+target_link_libraries(alkos.kernel PRIVATE
+    target.properties
+    alkos.kernel.config
+    alkos.kernel.headers
+    alkos.kernel.deps
+)
 
-set(ARCH_QEMU_COMMAND ${ARCH_QEMU_COMMAND} PARENT_SCOPE)
-set(ARCH_QEMU_NORMAL_FLAGS ${ARCH_QEMU_NORMAL_FLAGS} PARENT_SCOPE)
-set(ARCH_QEMU_TEST_FLAGS ${ARCH_QEMU_TEST_FLAGS} PARENT_SCOPE)
+############## Linker Configuration for CXX Global Constructors ##############
+# NOTE: This linking must be done at this level as global constructors
+# should be supported on each architecture
+
+# Retrieve our custom CRT object paths from the arch-specific configuration.
+get_property(CRTI_OBJ_PATH TARGET alkos.kernel.config PROPERTY CRTI_OBJ)
+get_property(CRTN_OBJ_PATH TARGET alkos.kernel.config PROPERTY CRTN_OBJ)
+alkos_ensure_defined(
+    VARS CRTI_OBJ_PATH CRTN_OBJ_PATH
+    MESSAGE "CRTI_OBJ/CRTN_OBJ properties were not set by the architecture-specific CMake file."
+)
+
+# Find the compiler's CRT object files at configure-time.
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
+    OUTPUT_VARIABLE CRTBEGIN_OBJ_PATH
+    ERROR_VARIABLE CRTBEGIN_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
+    OUTPUT_VARIABLE CRTEND_OBJ_PATH
+    ERROR_VARIABLE CRTEND_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+alkos_ensure_defined(
+    VARS CRTBEGIN_OBJ_PATH CRTEND_OBJ_PATH
+    MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
+)
+
+message(STATUS "Found CRT Objects:")
+message(STATUS "  crti: ${CRTI_OBJ_PATH}")
+message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
+message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
+message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
+
+# TODO:
+# The below code could technically be replaced with target_link_libraries()
+# It didn't preserve the order of the objects and libraries, so giving up for now.
+
+# Add all objects and libraries to the kernel target in the correct link order.
+#    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
+set(CMAKE_CXX_LINK_EXECUTABLE
+  "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
+)

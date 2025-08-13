@@ -2,10 +2,7 @@ message(STATUS "Configuring x86_64 kernel")
 
 ############################### Adding Sources ###############################
 
-# Define patterns to always exclude
 set(exclude_patterns ".*/(crti\\.nasm|crtn\\.nasm)$")
-
-# Conditionally exclude test files
 if (NOT CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND exclude_patterns ".*/tests/.*")
 endif ()
@@ -24,39 +21,42 @@ target_include_directories(alkos.kernel.headers INTERFACE
 
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld")
 target_link_options(alkos.kernel PRIVATE
-        -T ${LINKER_SCRIPT}     # Linker script
-        -nostdlib               # No standard libs
-        -z max-page-size=0x1000 # Maximum page size (For 1k alignment)
-        -n                      # Omit default mem map
-        -lgcc                   # Link against GCC
-)
-
-######################### Setting Custom Properties ##########################
-
-target_link_libraries(alkos.kernel PRIVATE
-        target.properties
+        -T ${LINKER_SCRIPT}
 )
 
 ########################## CXX Global Constructors ###########################
 
-set(SRTI_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cxx/crti.nasm")
-set(SRTN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cxx/crtn.nasm")
-
-add_library(alkos.kernel.crts OBJECT
-        ${SRTI_FILE}
-        ${SRTN_FILE}
+add_library(alkos.kernel.crti OBJECT
+    cxx/crti.nasm
+)
+add_library(alkos.kernel.crtn OBJECT
+    cxx/crtn.nasm
 )
 
-# Set the CRT object paths
-set(CRTI_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crti.nasm.o" PARENT_SCOPE)
-set(CRTN_OBJ "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crts.dir/cxx/crtn.nasm.o" PARENT_SCOPE)
+# TODO: Maybe later we can get this code to work
+# set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "$<TARGET_OBJECTS:alkos.kernel.crti>")
+# set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "$<TARGET_OBJECTS:alkos.kernel.crtn>")
+# I used combination of the above code, and target_link_libraries to link in specific order
+# Worked but introduced a bug where no tests were detected
+# So I reverted to the old way of linking the object files
 
-add_dependencies(alkos.kernel alkos.kernel.crts)
+set(CRTI_OBJ_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crti.dir/cxx/crti.nasm.o")
+set(CRTN_OBJ_FILE_PATH "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/alkos.kernel.crtn.dir/cxx/crtn.nasm.o")
+set_property(TARGET alkos.kernel.config PROPERTY CRTI_OBJ "${CRTI_OBJ_FILE_PATH}")
+set_property(TARGET alkos.kernel.config PROPERTY CRTN_OBJ "${CRTN_OBJ_FILE_PATH}")
+
+add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 
 ############################### Link Libraries ###############################
 
-target_link_libraries(alkos.kernel PRIVATE
+target_link_libraries(alkos.kernel.deps INTERFACE
+        target.properties
         arch.common.all.64
         arch.common.kernel-loader.64
-        AutoGenLib
+)
+
+# This makes the interface also properly link to object files
+target_sources(alkos.kernel.deps INTERFACE
+    $<TARGET_OBJECTS:arch.common.all.64>
+    $<TARGET_OBJECTS:arch.common.kernel-loader.64>
 )

@@ -55,6 +55,16 @@ target_compile_options(target.properties INTERFACE
     "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
     "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>"
 )
+target_compile_definitions(target.properties INTERFACE
+    "__x86_64__=1"
+)
+target_link_options(target.properties INTERFACE
+    -nostdlib
+    -z max-page-size=0x1000
+    -n
+    -lgcc
+)
+
 #------------------------------------------------------------------------------#
 #                                    32 bit                                    #
 #------------------------------------------------------------------------------#
@@ -65,4 +75,12 @@ target_compile_options(target.properties.32 INTERFACE
     "$<$<COMPILE_LANGUAGE:C>:-m32>"
     "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf32>"
 )
-
+target_compile_definitions(target.properties.32 INTERFACE 
+    "__i386__=1"
+)
+target_link_options(target.properties.32 INTERFACE
+    -nostdlib
+    -z max-page-size=0x1000
+    -n
+    -lgcc
+)

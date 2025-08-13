@@ -1,5 +1,6 @@
 #include "acpi_controller.hpp"
 #include "acpi/acpi_tables.hpp"
+#include "drivers/hpet/hpet.hpp"
 #include "modules/hardware.hpp"
 
 #include <extensions/bit.hpp>
@@ -27,44 +28,28 @@ NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t co
     return true;
 }
 
-NODISCARD static size_t CountCores_(MadtTable &table)
-{
-    size_t cores{};
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
-        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
-
-        if (!table_ptr) {
-            return;
-        }
-
-        if (!IsCoreUsable(table_ptr, cores)) {
-            return;
-        }
-
-        ++cores;
-    });
-
-    return cores;
-}
-
 static void InitializeCores_(MadtTable &table)
 {
-    size_t cores{};
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+    /* Initialize core structures */
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
 
         if (!table_ptr) {
             return;
         }
 
-        if (!IsCoreUsable(table_ptr, cores)) {
+        if (!IsCoreUsable(
+                table_ptr, HardwareModule::Get().GetCoresController().GetCoreTable().Size()
+            )) {
             return;
         }
 
-        HardwareModule::Get().GetCoresController().AllocateCore(
-            cores++, static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
+        HardwareModule::Get().GetCoresController().GetCoreTable().PushEmplace(
+            static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
         );
     });
+
+    TRACE_INFO("Found %zu cores", HardwareModule::Get().GetCoresController().GetCoreTable().Size());
 }
 
 static void PrepareIoApic_(MadtTable &table)
@@ -75,18 +60,16 @@ static void PrepareIoApic_(MadtTable &table)
     });
     TRACE_INFO("Detected %lu I/O APIC devices...", num_apic);
 
-    HardwareModule::Get().GetInterrupts().AllocateIoApic(num_apic);
-
-    num_apic = 0;
-    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
         if (!table_ptr) {
             return;
         }
 
-        HardwareModule::Get().GetInterrupts().InitializeIoApic(
-            num_apic++, table_ptr->id, table_ptr->address, table_ptr->gsi_base
+        HardwareModule::Get().GetInterrupts().GetIoApicTable().PushEmplace(
+            static_cast<u8>(table_ptr->id), static_cast<u32>(table_ptr->address),
+            static_cast<u32>(table_ptr->gsi_base)
         );
     });
 }
@@ -125,7 +108,7 @@ static void ParseLApicAddress_(MadtTable &table)
         "Local APIC physical address: %08X", table.GetNative()->local_interrupt_controller_address
     );
 
-    HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(
+    HardwareModule::Get().GetInterrupts().GetLocalApic().SetPhysicalAddress(
         table.GetNative()->local_interrupt_controller_address
     );
 
@@ -143,7 +126,7 @@ static void ParseLApicAddress_(MadtTable &table)
             table_ptr->address, table_ptr->rsvd
         );
 
-        HardwareModule::Get().GetInterrupts().SetLocalApicPhysicalAddress(table_ptr->address);
+        HardwareModule::Get().GetInterrupts().GetLocalApic().SetPhysicalAddress(table_ptr->address);
     });
 }
 
@@ -155,6 +138,7 @@ void AcpiController::ParseTables()
 {
     TRACE_INFO("Parsing ACPI Tables...");
     ParseMadt_();
+    ParseHpet_();
 }
 
 void AcpiController::ParseMadt_()
@@ -167,11 +151,6 @@ void AcpiController::ParseMadt_()
     /* Prepare LAPIC */
     ParseLApicAddress_(table);
 
-    /* Prepare cores */
-    const size_t cores = CountCores_(table);
-    TRACE_INFO("Found %zu cores", cores);
-    HardwareModule::Get().GetCoresController().AllocateCores(cores);
-
     /* Initialize core structures */
     InitializeCores_(table);
 
@@ -180,4 +159,24 @@ void AcpiController::ParseMadt_()
 
     /* Finally, process apic rules */
     PrepareApicRules_(table);
+}
+
+void AcpiController::ParseHpet_()
+{
+    TRACE_INFO("Parsing HPET table...");
+    const auto table = ACPI::GetTable<acpi_hpet>();
+
+    if (!table.IsValid()) {
+        TRACE_INFO("HPET table not found...");
+        return;
+    }
+
+    TODO_WHEN_TIMER_INFRA_DONE
+    /* TODO: Use the driver */
+
+    ASSERT_FALSE(
+        static_cast<bool>(HardwareModule::Get().GetInterrupts().GetHpet()),
+        "HPET already initialized!"
+    );
+    HardwareModule::Get().GetInterrupts().GetHpet().emplace(table.GetNative());
 }
