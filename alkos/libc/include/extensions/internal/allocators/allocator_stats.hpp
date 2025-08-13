@@ -11,18 +11,18 @@ namespace internal
 template <flags::AllocatorStats_t Flags>
 struct GlobalAllocatorStats {
     NO_UNIQUE_ADDRESS
-        std::conditional_t<Flags & flags::AllocatorStats::Allocations, size_t, UNIQUE_EMPTY>
-            allocations{};
+    std::conditional_t<Flags & flags::AllocatorStats::Allocations, size_t, UNIQUE_EMPTY>
+        allocations{};
     NO_UNIQUE_ADDRESS
-        std::conditional_t<Flags & flags::AllocatorStats::Allocations, size_t, UNIQUE_EMPTY>
-            bytes_allocated{};
+    std::conditional_t<Flags & flags::AllocatorStats::Allocations, size_t, UNIQUE_EMPTY>
+        bytes_allocated{};
 
     NO_UNIQUE_ADDRESS
-        std::conditional_t<Flags & flags::AllocatorStats::Deallocations, size_t, UNIQUE_EMPTY>
-            deallocations{};
+    std::conditional_t<Flags & flags::AllocatorStats::Deallocations, size_t, UNIQUE_EMPTY>
+        deallocations{};
     NO_UNIQUE_ADDRESS
-        std::conditional_t<Flags & flags::AllocatorStats::Deallocations, size_t, UNIQUE_EMPTY>
-            bytes_deallocated{};
+    std::conditional_t<Flags & flags::AllocatorStats::Deallocations, size_t, UNIQUE_EMPTY>
+        bytes_deallocated{};
 };
 
 template <flags::AllocatorStats_t Flags>
@@ -159,8 +159,8 @@ class AllocatorStats : private internal::BaseAllocator<T, Flags>
     private:
     NO_UNIQUE_ADDRESS GlobalStats global_stats_;
     NO_UNIQUE_ADDRESS
-        std::conditional_t<Flags & flags::AllocatorStats::DebugInfo, Stats*, UNIQUE_EMPTY>
-            allocation_head_{};
+    std::conditional_t<Flags & flags::AllocatorStats::DebugInfo, Stats*, UNIQUE_EMPTY>
+        allocation_head_{};
 };
 
 #include <extensions/internal/allocators/stub_allocator.hpp>
