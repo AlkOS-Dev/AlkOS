@@ -1,6 +1,7 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_LIMITS_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_LIMITS_HPP_
 
+#include <extensions/bits_ext.hpp>
 #include <extensions/type_traits.hpp>
 
 namespace internal
@@ -147,10 +148,6 @@ struct numeric_limits<T> {
     static constexpr T denorm_min() noexcept { return 0; }
 };
 
-// ------------------------------
-// Specializations
-// ------------------------------
-
 template <class T>
     requires(is_integral_v<T> && !is_unsigned_v<T> && !is_same_v<T, bool>)
 struct numeric_limits<T> {
@@ -194,8 +191,11 @@ struct numeric_limits<T> {
     // Functions
     // ------------------------------
 
-    static constexpr T min() noexcept { return static_cast<T>(0ull); }
-    static constexpr T max() noexcept { return min() - 1; }
+    static constexpr T min() noexcept { return kMsb<T>; }
+    static constexpr T max() noexcept
+    {
+        return kFullMask<T> ^ kMsb<T>;  // All bits set except sign bit
+    }
     static constexpr T lowest() noexcept { return min(); }
 
     // ------------------------------
@@ -209,6 +209,68 @@ struct numeric_limits<T> {
     static constexpr T signaling_NaN() noexcept { return 0; }
     static constexpr T denorm_min() noexcept { return 0; }
 };
+
+template <>
+struct numeric_limits<bool> {
+    // ------------------------------
+    // Constant Fields
+    // ------------------------------
+
+    static constexpr bool is_specialized = true;
+
+    static constexpr bool is_signed  = false;
+    static constexpr bool is_integer = true;
+    static constexpr bool is_exact   = true;
+
+    static constexpr int digits       = 1;
+    static constexpr int digits10     = 0;
+    static constexpr int max_digits10 = 0;
+
+    static constexpr int radix       = 2;
+    static constexpr bool is_bounded = true;
+    static constexpr bool is_modulo  = false;
+    static constexpr bool traps      = true;
+
+    // ------------------------------
+    // Float constants
+    // ------------------------------
+
+    static constexpr int min_exponent              = 0;
+    static constexpr int min_exponent10            = 0;
+    static constexpr int max_exponent              = 0;
+    static constexpr int max_exponent10            = 0;
+    static constexpr bool has_infinity             = false;
+    static constexpr bool has_quiet_NaN            = false;
+    static constexpr bool has_signaling_NaN        = false;
+    static constexpr bool has_denorm_loss          = false;
+    static constexpr float_denorm_style has_denorm = denorm_absent;
+    static constexpr bool is_iec559                = false;
+    static constexpr float_round_style round_style = round_toward_zero;
+    static constexpr bool tinyness_before          = false;
+
+    // ------------------------------
+    // Functions
+    // ------------------------------
+
+    static constexpr bool min() noexcept { return false; }
+    static constexpr bool max() noexcept { return true; }
+    static constexpr bool lowest() noexcept { return min(); }
+
+    // ------------------------------
+    // Float functions
+    // ------------------------------
+
+    static constexpr bool epsilon() noexcept { return false; }
+    static constexpr bool round_error() noexcept { return false; }
+    static constexpr bool infinity() noexcept { return false; }
+    static constexpr bool quiet_NaN() noexcept { return false; }
+    static constexpr bool signaling_NaN() noexcept { return false; }
+    static constexpr bool denorm_min() noexcept { return false; }
+};
+
+TODO_LIBCPP_COMPLIANCE
+// TODO: Add floats...
+// TODO: Recheck various chars
 
 }  // namespace std
 
