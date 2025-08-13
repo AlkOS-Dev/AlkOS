@@ -17,8 +17,7 @@ static constexpr u64 kBitMask16 = kBitMask8 | (kBitMask8 << 8);
 static constexpr u64 kBitMask32 = kBitMask16 | (kBitMask16 << 16);
 static constexpr u64 kBitMask64 = kBitMask32 | (kBitMask32 << 32);
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
+template <std::unsigned_integral NumT>
 static constexpr NumT kLsb = 1;
 
 template <typename NumT, u16 Bit>
@@ -184,6 +183,12 @@ template <typename NumT>
 FAST_CALL constexpr bool AreBitsEnabled(const NumT num, const NumT mask)
 {
     return (num & mask) == mask;
+}
+
+template <std::unsigned_integral NumT>
+FAST_CALL constexpr bool AreIntersecting(const NumT a, const NumT b)
+{
+    return (a & b) != 0;
 }
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
