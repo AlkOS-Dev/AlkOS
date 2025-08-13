@@ -127,6 +127,53 @@ constexpr FAST_CALL int popcount(T x) noexcept
     }
 }
 
+// ------------------------------
+// bit_width
+// ------------------------------
+
+template <unsigned_integral T>
+constexpr FAST_CALL int bit_width(const T x) noexcept
+{
+    return std::numeric_limits<T>::digits - std::countl_zero(x);
+}
+
+// ------------------------------
+// bit_floor
+// ------------------------------
+
+template <std::unsigned_integral T>
+constexpr FAST_CALL T bit_floor(T x) noexcept
+{
+    if (x != 0) {
+        return kLsb<T> << (std::bit_width(x) - 1);
+    }
+
+    return 0;
+}
+
+// ------------------------------
+// bit_ceil
+// ------------------------------
+
+template <std::unsigned_integral T>
+constexpr FAST_CALL T bit_ceil(T x) noexcept
+{
+    if (x <= static_cast<T>(1)) {
+        return kLsb<T>;
+    }
+
+    if constexpr (std::same_as<T, decltype(+x)>) {
+        return kLsb<T> << std::bit_width(T(x - static_cast<T>(1)));
+    } else {  // Types with promotion possible only up to unsigned promotion possible
+        constexpr int offset_for_ub =
+            std::numeric_limits<unsigned>::digits - std::numeric_limits<T>::digits;
+        return T(1u << (std::bit_width(T(x - static_cast<T>(1))) + offset_for_ub) >> offset_for_ub);
+    }
+}
+
+TODO_LIBCPP_COMPLIANCE
+// TODO: Implement other functions from standard
+
 }  // namespace std
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
