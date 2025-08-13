@@ -40,7 +40,7 @@ static constexpr int countl_one_constexpr(const T x) noexcept
 template <std::unsigned_integral T>
 FAST_CALL constexpr int countl_zero_constexpr(const T x) noexcept
 {
-    return countl_one_constexpr(~x);
+    return countl_one_constexpr(static_cast<T>(~x));
 }
 
 template <std::unsigned_integral T>
@@ -64,7 +64,7 @@ static constexpr int countr_one_constexpr(const T x) noexcept
 template <std::unsigned_integral T>
 FAST_CALL constexpr int countr_zero_constexpr(const T x) noexcept
 {
-    return countr_one_constexpr(~x);
+    return countr_one_constexpr(static_cast<T>(~x));
 }
 
 // ------------------------------
@@ -158,17 +158,14 @@ constexpr FAST_CALL T bit_floor(T x) noexcept
 template <std::unsigned_integral T>
 constexpr FAST_CALL T bit_ceil(T x) noexcept
 {
+    TODO_LIBCPP_COMPLIANCE
+    // TODO: Implement code for overflows according to standard
+
     if (x <= static_cast<T>(1)) {
         return kLsb<T>;
     }
 
-    if constexpr (std::same_as<T, decltype(+x)>) {
-        return kLsb<T> << std::bit_width(T(x - static_cast<T>(1)));
-    } else {  // Types with promotion possible only up to unsigned promotion possible
-        constexpr int offset_for_ub =
-            std::numeric_limits<unsigned>::digits - std::numeric_limits<T>::digits;
-        return T(1u << (std::bit_width(T(x - static_cast<T>(1))) + offset_for_ub) >> offset_for_ub);
-    }
+    return kLsb<T> << std::bit_width(T(x - static_cast<T>(1)));
 }
 
 TODO_LIBCPP_COMPLIANCE
