@@ -2,7 +2,10 @@
 #include <assert.h>
 #include <string.h>
 #include <extensions/array.hpp>
+#include <extensions/data_structures/array_structures.hpp>
 #include <test_module/test.hpp>
+
+using namespace data_structures;
 
 class ArrayTest : public TestGroupBase
 {
@@ -228,4 +231,56 @@ TEST_F(ArrayTest, ComplexTypes)
     EXPECT_EQ(5.5, arr[0].y);
     EXPECT_EQ(5, arr[1].x);
     EXPECT_EQ(5.5, arr[1].y);
+}
+
+// ------------------------------
+// StringArray Tests
+// ------------------------------
+
+TEST_F(ArrayTest, StringArrayConstruction)
+{
+    StringArray<5> str("hello");
+    EXPECT_EQ(sizeof(StringArray<5>), 5u);
+    EXPECT_EQ('h', str[0]);
+    EXPECT_EQ('e', str[1]);
+    EXPECT_EQ('l', str[2]);
+    EXPECT_EQ('l', str[3]);
+    EXPECT_EQ('o', str[4]);
+}
+
+TEST_F(ArrayTest, StringArrayShortString)
+{
+    StringArray<10> str("test");
+    EXPECT_EQ('t', str[0]);
+    EXPECT_EQ('e', str[1]);
+    EXPECT_EQ('s', str[2]);
+    EXPECT_EQ('t', str[3]);
+
+    // Remaining characters should be uninitialized
+    for (size_t i = 4; i < 10; ++i) {
+        EXPECT_EQ('\0', str[i]);
+    }
+}
+
+TEST_F(ArrayTest, StringArrayEmptyString)
+{
+    StringArray<3> str("");
+    // All characters should be uninitialized since empty string
+    EXPECT_EQ(3u, str.size());
+}
+
+TEST_F(ArrayTest, StringArrayGetSafeStr)
+{
+    StringArray<4> str("test");
+    auto safe = str.GetSafeStr();
+    EXPECT_EQ(5u, safe.size());  // kSize + 1
+    EXPECT_EQ('\0', safe[4]);    // Null terminator
+}
+
+TEST_F(ArrayTest, StringArrayGetCStr)
+{
+    StringArray<5> str("hello");
+    const char* cstr = str.GetCStr();
+    EXPECT_EQ('h', cstr[0]);
+    EXPECT_EQ('e', cstr[1]);
 }

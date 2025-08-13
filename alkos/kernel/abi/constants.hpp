@@ -5,6 +5,7 @@
  * Expected fields in arch namespace:
  * - u64 kKernelVirtualAddressStart;
  * - u64 kKernelDirectMapAddressStart;
+ * - size_t kCacheLineSizeBytes;
  */
 
 #include <abi/constants.hpp>

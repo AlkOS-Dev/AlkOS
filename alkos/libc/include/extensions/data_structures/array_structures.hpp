@@ -1,6 +1,8 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
 
+#include <string.h>
+#include <extensions/array.hpp>
 #include <extensions/concepts.hpp>
 #include <extensions/debug.hpp>
 
@@ -293,6 +295,35 @@ class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
         }
         this->top_ = size * sizeof(T);
     }
+};
+
+// ------------------------------
+// StaticString
+// ------------------------------
+
+/*
+ * A static string implementation that can hold a fixed-size string.
+ * It is not null-terminated, so it should be used with care.
+ * Use GetSafeStr() to get a null-terminated version of the string.
+ */
+template <size_t kSize>
+struct StringArray : public std::array<char, kSize> {
+    constexpr StringArray(const char *str) noexcept
+    {
+        for (size_t i = 0; i < kSize && str[i] != '\0'; ++i) {
+            this->at(i) = str[i];
+        }
+    }
+
+    std::array<char, kSize + 1> GetSafeStr() const noexcept
+    {
+        std::array<char, kSize + 1> result{};
+        strncpy(result.data(), this->data(), kSize);
+
+        return result;
+    }
+
+    const char *GetCStr() const noexcept { return this->data(); }
 };
 
 }  // namespace data_structures
