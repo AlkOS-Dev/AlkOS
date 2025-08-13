@@ -74,7 +74,7 @@ FAST_CALL constexpr int countr_zero_constexpr(const T x)
     template <std::unsigned_integral T>                \
     constexpr FAST_CALL int func_name(T x) noexcept    \
     {                                                  \
-        if constexpr (std::is_constant_evaluated()) {  \
+        if (std::is_constant_evaluated()) {            \
             return internal::func_name##_constexpr(x); \
         } else {                                       \
             TODO_OPTIMISE                              \
