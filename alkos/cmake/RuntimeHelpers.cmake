@@ -114,8 +114,9 @@ function(alkos_register_runtime_environment)
     )
 
     if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
-      add_custom_target(tests-${ARG_ARCH_NAME}
-          COMMAND ${RUN_TESTS_SCRIPT_PATH}
+        separate_arguments(SPLIT_TEST_ARGS UNIX_COMMAND "${CMAKE_TEST_ARGS}")
+        add_custom_target(tests-${ARG_ARCH_NAME}
+          COMMAND ${RUN_TESTS_SCRIPT_PATH} ${SPLIT_TEST_ARGS}
           DEPENDS iso-${ARG_ARCH_NAME}
           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/../scripts/tests
           COMMENT "Running tests for AlkOS on ${ARG_ARCH_NAME}"

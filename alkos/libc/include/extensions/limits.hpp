@@ -102,7 +102,7 @@ struct numeric_limits<T> {
     static constexpr bool is_integer = true;
     static constexpr bool is_exact   = true;
 
-    static constexpr int digits       = sizeof(byte) * sizeof(T);
+    static constexpr int digits       = 8 * sizeof(T);
     static constexpr int digits10     = ::internal::digits10(digits);
     static constexpr int max_digits10 = 0;
 
@@ -161,7 +161,7 @@ struct numeric_limits<T> {
     static constexpr bool is_integer = true;
     static constexpr bool is_exact   = true;
 
-    static constexpr int digits       = sizeof(byte) * sizeof(T) - 1;  // Sign bit is not counted
+    static constexpr int digits       = 8 * sizeof(T) - 1;  // Sign bit is not counted
     static constexpr int digits10     = ::internal::digits10(digits);
     static constexpr int max_digits10 = 0;
 
@@ -191,10 +191,17 @@ struct numeric_limits<T> {
     // Functions
     // ------------------------------
 
-    static constexpr T min() noexcept { return kMsb<T>; }
+    static constexpr T min() noexcept
+    {
+        using UnsignedT = typename UnsignedIntegral<sizeof(T)>::type;
+        return static_cast<T>(kMsb<UnsignedT>);
+    }
     static constexpr T max() noexcept
     {
-        return kFullMask<T> ^ kMsb<T>;  // All bits set except sign bit
+        using UnsignedT = typename UnsignedIntegral<sizeof(T)>::type;
+        return static_cast<T>(
+            kFullMask<UnsignedT> ^ kMsb<UnsignedT>
+        );  // All bits set except sign bit
     }
     static constexpr T lowest() noexcept { return min(); }
 
