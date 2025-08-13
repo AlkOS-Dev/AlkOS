@@ -98,7 +98,7 @@ TEST_F(BitManipTest, SetBitValue)
     EXPECT_EQ(val16, kMsb<u16>);
 }
 
-TEST_F(BitManipTest, Countl) { auto x = std::countl_one(0b111); }
+TEST_F(BitManipTest, Countl) { auto x = std::countl_one(static_cast<unsigned>(0b111)); }
 
 class AlignementTest : public TestGroupBase
 {
