@@ -70,49 +70,22 @@ FAST_CALL constexpr int countr_zero_constexpr(const T x)
 // std namespace
 // ------------------------------
 
-template <std::unsigned_integral T>
-constexpr FAST_CALL int countl_one(T x) noexcept
-{
-    if constexpr (std::is_constant_evaluated()) {
-        return internal::countl_one_constexpr(x);
-    } else {
-        TODO_OPTIMISE
-        return internal::countl_one_constexpr(x);
+#define DEFINE_PUBLIC_FUNCTION(func_name)              \
+    template <std::unsigned_integral T>                \
+    constexpr FAST_CALL int func_name(T x) noexcept    \
+    {                                                  \
+        if constexpr (std::is_constant_evaluated()) {  \
+            return internal::func_name##_constexpr(x); \
+        } else {                                       \
+            TODO_OPTIMISE                              \
+            return internal::func_name##_constexpr(x); \
+        }                                              \
     }
-}
 
-template <std::unsigned_integral T>
-constexpr FAST_CALL int countl_zero(T x) noexcept
-{
-    if constexpr (std::is_constant_evaluated()) {
-        return internal::countl_zero_constexpr(x);
-    } else {
-        TODO_OPTIMISE
-        return internal::countl_zero_constexpr(x);
-    }
-}
-
-template <std::unsigned_integral T>
-constexpr FAST_CALL int countr_one(T x) noexcept
-{
-    if constexpr (std::is_constant_evaluated()) {
-        return internal::countr_one_constexpr(x);
-    } else {
-        TODO_OPTIMISE
-        return internal::countr_one_constexpr(x);
-    }
-}
-
-template <std::unsigned_integral T>
-constexpr FAST_CALL int countr_zero(T x) noexcept
-{
-    if constexpr (std::is_constant_evaluated()) {
-        return internal::countr_zero_constexpr(x);
-    } else {
-        TODO_OPTIMISE
-        return internal::countr_zero_constexpr(x);
-    }
-}
+DEFINE_PUBLIC_FUNCTION(countl_one)
+DEFINE_PUBLIC_FUNCTION(countl_zero)
+DEFINE_PUBLIC_FUNCTION(countr_one)
+DEFINE_PUBLIC_FUNCTION(countr_zero)
 
 }  // namespace std
 
