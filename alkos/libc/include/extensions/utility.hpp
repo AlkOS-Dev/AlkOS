@@ -1,6 +1,7 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
 
+#include <extensions/compare.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/type_traits.hpp>
 
@@ -86,6 +87,28 @@ TODO_LIBCPP_COMPLIANCE
     for (size_t idx = 0; idx < N; ++idx) {
         std::swap(a[idx], b[idx]);
     }
+}
+
+// ------------------------------
+// std::addressof
+// ------------------------------
+
+template <typename T>
+NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
+{
+    return __builtin_addressof(arg);
+}
+
+// ------------------------------
+// std::monostate
+// ------------------------------
+
+struct monostate {
+};
+constexpr bool operator==(monostate, monostate) noexcept { return true; }
+constexpr strong_ordering operator<=>(monostate, monostate) noexcept
+{
+    return strong_ordering::equal;
 }
 
 }  // namespace std
