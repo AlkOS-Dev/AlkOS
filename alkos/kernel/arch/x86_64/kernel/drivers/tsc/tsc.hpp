@@ -63,7 +63,7 @@ NODISCARD FAST_CALL u64 Read()
 
 NODISCARD FAST_CALL u64 ReadViaMsr() { return cpu::GetMSR(kIA32TscMsrAddress); }
 
-NODISCARD FAST_CALL void Write(const u64 value) { cpu::SetMSR(kIA32TscMsrAddress, value); }
+FAST_CALL void Write(const u64 value) { cpu::SetMSR(kIA32TscMsrAddress, value); }
 
 NODISCARD FAST_CALL bool IsAvailable()
 {

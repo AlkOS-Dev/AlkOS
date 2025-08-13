@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <extensions/array.hpp>
+#include <extensions/bits_ext.hpp>
 #include <extensions/concepts.hpp>
 #include <extensions/debug.hpp>
 
@@ -210,7 +211,7 @@ class ArraySingleTypeStaticStack : public ArrayStaticStack<sizeof(T) * kNumObjec
         return base_t::template PushEmplace<T>(std::forward<Args>(args)...);
     }
 
-    FORCE_INLINE_F T Pop() { return std::move(base_t::template Pop<T>()); }
+    FORCE_INLINE_F T Pop() { return base_t::template Pop<T>(); }
 
     FORCE_INLINE_F size_t Size() const { return base_t::Size() / sizeof(T); }
 
@@ -315,16 +316,32 @@ struct StringArray : public std::array<char, kSize> {
         }
     }
 
-    std::array<char, kSize + 1> GetSafeStr() const noexcept
+    NODISCARD FORCE_INLINE_F std::array<char, kSize + 1> GetSafeStr() const noexcept
     {
         std::array<char, kSize + 1> result{};
         strncpy(result.data(), this->data(), kSize);
-
         return result;
     }
 
-    const char *GetCStr() const noexcept { return this->data(); }
+    NODISCARD FORCE_INLINE_F const char *GetCStr() const noexcept { return this->data(); }
 };
+
+template <size_t kSize>
+    requires(IsIntegralSize(kSize))
+NODISCARD FAST_CALL typename UnsignedIntegral<kSize>::type StringArrayToIntegral(
+    const StringArray<kSize> &str
+) noexcept
+{
+    using integral_t = typename UnsignedIntegral<kSize>::type;
+    return *reinterpret_cast<const integral_t *>(str.data());
+}
+
+template <class T>
+    requires(std::is_integral_v<T> && std::is_unsigned_v<T>)
+NODISCARD FAST_CALL StringArray<sizeof(T)> IntegralToStringArray(const T &value) noexcept
+{
+    return *reinterpret_cast<const StringArray<sizeof(T)> *>(&value);
+}
 
 }  // namespace data_structures
 

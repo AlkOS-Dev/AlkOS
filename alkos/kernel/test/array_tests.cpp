@@ -17,9 +17,9 @@ class ArrayTest : public TestGroupBase
 
 TEST_F(ArrayTest, DefaultConstructor)
 {
-    std::array<int, 5> arr;
-    EXPECT_EQ(5u, arr.size());
-    EXPECT_EQ(5u, arr.max_size());
+    std::array<int, 5> arr{};
+    EXPECT_EQ(5_size, arr.size());
+    EXPECT_EQ(5_size, arr.max_size());
     EXPECT_EQ(false, arr.empty());
 }
 
@@ -255,17 +255,11 @@ TEST_F(ArrayTest, StringArrayShortString)
     EXPECT_EQ('e', str[1]);
     EXPECT_EQ('s', str[2]);
     EXPECT_EQ('t', str[3]);
-
-    // Remaining characters should be uninitialized
-    for (size_t i = 4; i < 10; ++i) {
-        EXPECT_EQ('\0', str[i]);
-    }
 }
 
 TEST_F(ArrayTest, StringArrayEmptyString)
 {
     StringArray<3> str("");
-    // All characters should be uninitialized since empty string
     EXPECT_EQ(3u, str.size());
 }
 

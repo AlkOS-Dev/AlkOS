@@ -39,7 +39,7 @@ class FastMinimalStaticHashmap
     // ------------------------------
 
     template <bool kOverwrite = false>
-    NODISCARD constexpr bool Insert(const KeyT& key, const ValueT& value) noexcept
+    constexpr bool Insert(const KeyT& key, const ValueT& value)
     {
         ASSERT_LT(
             size_, kSize, "Hashmap overflow attempted, size: %zu, max size: %zu", size_, kSize
@@ -63,14 +63,14 @@ class FastMinimalStaticHashmap
         return true;
     }
 
-    NODISCARD constexpr bool Remove(const KeyT& key) noexcept
+    constexpr bool Remove(const KeyT& key)
     {
         const auto [hashed_idx, integral_key] = ConvertKey(key);
 
         size_t hash_iterator = hashed_idx;
         size_t counted       = 0;
         while (keys_[hash_iterator] != integral_key && counted < size_) {
-            counted++;
+            counted += (keys_[hash_iterator] != 0);               // Count only non-zero keys
             hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
         }
 
@@ -86,7 +86,32 @@ class FastMinimalStaticHashmap
         return true;
     }
 
-    NODISCARD FAST_CALL size_t HashKey(const KeyT& key) noexcept
+    NODISCARD constexpr ValueT* Find(const KeyT& key)
+    {
+        if (size_ == 0) {
+            return nullptr;
+        }
+
+        const auto [hashed_idx, integral_key] = ConvertKey(key);
+
+        size_t hash_iterator = hashed_idx;
+        size_t counted       = 0;
+        while (keys_[hash_iterator] != integral_key && counted < size_) {
+            counted += (keys_[hash_iterator] != 0);               // Count only non-zero keys
+            hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
+        }
+
+        if (counted == size_) {
+            return nullptr;
+        }
+
+        TODO_OPTIMISE
+        // TODO: If rehashed first gaps is stop signal?
+
+        return &values_[hash_iterator];
+    }
+
+    NODISCARD FAST_CALL constexpr size_t HashKey(const KeyT& key)
     {
         static constexpr size_t offset = 2166136261U;
         static constexpr size_t prime  = 16777619U;
@@ -95,12 +120,14 @@ class FastMinimalStaticHashmap
         return ((offset ^ hash) * prime) % kAdjustedSize;
     }
 
+    NODISCARD FORCE_INLINE_F constexpr size_t Size() const { return size_; }
+
     // ------------------------------
     // Implementation details
     // ------------------------------
 
     protected:
-    NODISCARD FAST_CALL std::tuple<size_t, IntegralType> ConvertKey(const KeyT& key)
+    NODISCARD FAST_CALL constexpr std::tuple<size_t, IntegralType> ConvertKey(const KeyT& key)
     {
         size_t hashed_idx               = HashKey(key);
         const IntegralType integral_key = *reinterpret_cast<const IntegralType*>(&key);
