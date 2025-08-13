@@ -14,3 +14,7 @@ feature_flags:
   - name: debug_traces
     description: Enables additional debug traces in the kernel, which can help to identify issues during execution.
     default: false
+
+  - name: relative_paths_experimental
+    description: Enables relative paths in traces output. Slowdowns compilation time quite a bit, so marked as experimental.
+    default: false
