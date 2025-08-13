@@ -9,24 +9,24 @@ namespace data_structures
 // ------------------------------
 
 template <class KeyT, class ValueT, size_t kSize>
-    requires sizeof(KeyT) <= 8 && kSize > 0 &&
-                 kSize < 64
-                     // For bigger size this becomes a performance bottleneck, should be used for
-                     // small key sets only
-                     class FastMinimalStaticHashmap{
-                         public :
-                             // ------------------------------
-                             // Class creation
-                             // ------------------------------
+    requires(sizeof(KeyT) <= 8 && kSize > 0 && kSize < 64)
+// For bigger size this becomes a performance bottleneck, should be used for
+// small key sets only
+class FastMinimalStaticHashmap
+{
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
 
-                             // ------------------------------
-                             // Class methods
-                             // ------------------------------
+    // ------------------------------
+    // Class methods
+    // ------------------------------
 
-                             // ------------------------------
-                             // Class fields
-                             // ------------------------------
-                     };
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+};
 
 }  // namespace data_structures
 

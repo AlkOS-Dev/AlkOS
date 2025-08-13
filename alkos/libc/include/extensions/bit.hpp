@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <extensions/concepts.hpp>
 #include <extensions/defines.hpp>
+#include <extensions/limits.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 

@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
 
 #include <extensions/concepts.hpp>
+#include <extensions/debug.hpp>
 
 namespace data_structures
 {
