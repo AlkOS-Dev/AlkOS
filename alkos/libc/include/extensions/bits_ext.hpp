@@ -53,6 +53,11 @@ template <std::unsigned_integral NumT, const u16 kBitStart, const u16 kBitEnd>
     requires(kBitStart < kBitEnd)
 static constexpr NumT kBitMaskRange = kBitMask<NumT, kBitStart, kBitEnd - kBitStart>;
 
+FAST_CALL constexpr bool IsIntegralSize(const size_t size)
+{
+    return size == 1 || size == 2 || size == 4 || size == 8;
+}
+
 template <size_t kSize = 0>
 struct UnsignedIntegral {
     static_assert(false, "Provided wrong integral size");
