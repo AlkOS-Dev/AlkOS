@@ -12,10 +12,11 @@
 #include <panic.hpp>
 
 #ifdef __cplusplus
+/* Intentionally cause a compile-time error if the assertion fails by dividing by zero. */
 consteval void ConstevalAssert(bool expression)
 {
     if (!expression) {
-        size_t tmp = 42;
+        size_t tmp = 42;  // Any non-zero value will do
         tmp /= (tmp == 0);
     }
 }
