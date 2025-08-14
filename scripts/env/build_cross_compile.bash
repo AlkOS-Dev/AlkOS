@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 CROSS_COMPILE_BUILD_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -8,7 +7,7 @@ CROSS_COMPILE_BUILD_BIN_UTILS_VER=""
 CROSS_COMPILE_BUILD_GDB_VER=""
 CROSS_COMPILE_BUILD_GCC_VER=""
 
-PROC_COUNT=$(nproc --all)
+PROC_COUNT=$(($(nproc) + 1))
 
 source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/pretty_print.bash"
 source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/helpers.bash"
@@ -96,14 +95,34 @@ prepare_directory() {
 download_source() {
     assert_argument_provided "$1"
     assert_argument_provided "$2"
-
     local name="$1"
-    local link="$2"
+    local primary_link="$2"
+    local fallback_link="${3:-}"
 
     if ! [ -f "${name}" ]; then
         pretty_info "Downloading ${name}"
-        runner "Failed to download ${name}" wget --no-verbose --show-progress --progress=bar:force:noscroll "${link}"
-        pretty_success "${name} downloaded correctly"
+
+        # Try primary link first
+        attempt_runner "Failed to download ${name} from primary mirror" "$(argparse_get "v|verbose")" \
+            wget --no-verbose --show-progress --progress=bar:force:noscroll "${primary_link}"
+        if [ $? -eq 0 ]; then
+            pretty_success "${name} downloaded correctly from primary mirror"
+        elif [ -n "${fallback_link}" ]; then
+            # If primary fails and fallback exists, try fallback
+            pretty_info "Primary download failed, trying fallback mirror"
+            attempt_runner "Failed to download ${name} from fallback mirror" "$(argparse_get "v|verbose")" \
+                wget --no-verbose --show-progress --progress=bar:force:noscroll "${fallback_link}"
+            if [ $? -eq 0 ]; then
+                pretty_success "${name} downloaded correctly from fallback mirror"
+            else
+                pretty_error "Failed to download ${name} from both mirrors"
+                exit 1
+            fi
+        else
+            # No fallback provided
+            pretty_error "Failed to download ${name} and no fallback provided"
+            exit 1
+        fi
     else
         pretty_info "Skipping... ${name} already downloaded"
     fi
@@ -113,13 +132,15 @@ download_extract_gnu_source() {
     assert_argument_provided "$1"
     assert_argument_provided "$2"
     local name="$1"
-    local link="$2"
+    local primary_mirror="$2"
+    local fallback_mirror="${3:-https://ftp.gnu.org/gnu}"
+    local filename=$(basename "${name}")
 
-    download_source "${name}" "${link}/${name}"
+    download_source "${filename}" "${primary_mirror}/${name}" "${fallback_mirror}/${name}"
 
-    pretty_info "Extracting ${name}"
-    runner "Failed to extract ${name}" tar -xf "${name}"
-    pretty_success "${name} extracted correctly"
+    pretty_info "Extracting ${filename}"
+    runner "Failed to extract ${filename}" tar -xf "${filename}"
+    pretty_success "${filename} extracted correctly"
 }
 
 build_binutils() {
@@ -131,7 +152,7 @@ build_binutils() {
     prepare_directory "${binutils_dir}"
     cd "${binutils_dir}"
 
-    download_extract_gnu_source "${binutils_name}.tar.gz" "https://ftp.gnu.org/gnu/binutils"
+    download_extract_gnu_source "binutils/${binutils_name}.tar.gz" "https://ftpmirror.gnu.org"
 
     pretty_info "Configuring binutils"
     runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot --disable-nls --disable-werror
@@ -152,13 +173,13 @@ build_libgcc_with_retry_x86_64_fix() {
     # https://wiki.osdev.org/Building_libgcc_for_mcmodel%3Dkernel
     pretty_info "Building libgcc with retry logic"
 
-    attempt_runner "Libgcc build failed due to PIC issues" \
+    attempt_runner "Libgcc build failed due to PIC issues" "$(argparse_get "v|verbose")" \
         make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     if [ $? -ne 0 ]; then
         pretty_info "Libgcc build failed due to PIC issues; applying sed fix."
         sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "$(argparse_get "c|custom_target")/libgcc/Makefile"
         pretty_info "Retrying libgcc build after sed fix."
-        attempt_runner "Failed to build libgcc even after applying the sed fix" \
+        attempt_runner "Failed to build libgcc even after applying the sed fix" "$(argparse_get "v|verbose")" \
             make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     fi
     pretty_success "libgcc built correctly"
@@ -173,7 +194,7 @@ build_gcc() {
     prepare_directory "${gcc_dir}"
     cd "${gcc_dir}"
 
-    download_extract_gnu_source "${gcc_name}.tar.gz" "https://ftp.gnu.org/gnu/gcc/${gcc_name}"
+    download_extract_gnu_source "gcc/${gcc_name}/${gcc_name}.tar.gz" "https://ftpmirror.gnu.org"
 
     pretty_info "Configuring GCC"
     runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers
@@ -211,7 +232,7 @@ build_gdb() {
     prepare_directory "${gdb_dir}"
     cd "${gdb_dir}"
 
-    download_extract_gnu_source "${gdb_name}.tar.gz" "https://ftp.gnu.org/gnu/gdb/"
+    download_extract_gnu_source "gdb/${gdb_name}.tar.gz" "https://ftpmirror.gnu.org"
 
     pretty_info "Configuring GDB"
     runner "Failed to configure GDB" ${gdb_name}/configure --target=$(argparse_get "c|custom_target") --prefix="$(argparse_get "t|tool_dir")" --disable-werror
