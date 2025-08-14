@@ -30,7 +30,7 @@ alkos_ensure_defined(
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
 add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
-add_compile_definitions(__ROOT__="${CMAKE_SOURCE_DIR}")
+target_compile_definitions(alkos.kernel.headers INTERFACE __ROOT__="${CMAKE_SOURCE_DIR}")
 
 ########################### Setting Sysroot Boot #############################
 
