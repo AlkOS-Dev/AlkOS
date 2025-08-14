@@ -2,7 +2,6 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
 
 #include <assert.h>
-#include <extensions/array.hpp>
 #include <extensions/concepts_ext.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/internal/tuple_base.hpp>

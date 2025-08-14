@@ -309,9 +309,20 @@ class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
  */
 template <size_t kSize>
 struct StringArray : public std::array<char, kSize> {
+    StringArray()                    = default;
+    StringArray(const StringArray &) = default;
+    StringArray(StringArray &&)      = default;
+
+    StringArray &operator=(const StringArray &) = default;
+    StringArray &operator=(StringArray &&)      = default;
+
     constexpr StringArray(const char *str) noexcept
     {
-        for (size_t i = 0; i < kSize && str[i] != '\0'; ++i) {
+        if (!std::is_constant_evaluated()) {
+            ASSERT_LT(strlen(str), kSize, "String array size must be below given kSize!");
+        }
+
+        for (size_t i = 0; str[i] != '\0'; ++i) {
             this->at(i) = str[i];
         }
     }
