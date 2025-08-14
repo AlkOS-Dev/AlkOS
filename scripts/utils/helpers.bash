@@ -40,7 +40,6 @@ base_runner() {
 
     if [ $exit_code -ne 0 ]; then
         dump_error "${dump_info}"
-        return $exit_code
     fi
 }
 
@@ -49,16 +48,17 @@ attempt_runner() {
     assert_argument_provided "$1"
     local dump_info="$1"
     shift
+    assert_argument_provided "$1"
+    local verbose="$1"
+    shift
 
-    pretty_info "Running (attempt_runner): $@"
+    pretty_info "Running: $@" >&2
 
     local ret
-    if [ "${CROSS_COMPILE_BUILD_VERBOSE}" = true ]; then
-        "$@" 2>&1 | tee "${HELPERS_LOG_FILE}"
-        ret=${PIPESTATUS[0]}
+    if [ "$verbose" = true ]; then
+        { "$@" 2>&1 | tee "$HELPERS_LOG_FILE"; } && ret=${PIPESTATUS[0]} || ret=${PIPESTATUS[0]}
     else
-        "$@" > "${HELPERS_LOG_FILE}" 2>&1
-        ret=$?
+        { "$@" > "$HELPERS_LOG_FILE" 2>&1; } && ret=$? || ret=$?
     fi
 
     if [ ${ret} -ne 0 ]; then
