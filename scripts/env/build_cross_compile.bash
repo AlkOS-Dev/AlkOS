@@ -112,7 +112,7 @@ download_source() {
             pretty_info "Primary download failed, trying fallback mirror"
             attempt_runner "Failed to download ${name} from fallback mirror" "$(argparse_get "v|verbose")" \
                 wget --no-verbose --show-progress --progress=bar:force:noscroll "${fallback_link}"
-            if [ $? -ne 0 ]; then
+            if [ $? -eq 0 ]; then
                 pretty_success "${name} downloaded correctly from fallback mirror"
             else
                 pretty_error "Failed to download ${name} from both mirrors"
