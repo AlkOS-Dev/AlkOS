@@ -27,20 +27,19 @@ class FastMinimalStaticHashmap
     // Class creation
     // ------------------------------
 
-    constexpr FastMinimalStaticHashmap() noexcept                                = default;
-    constexpr FastMinimalStaticHashmap(const FastMinimalStaticHashmap&) noexcept = default;
-    constexpr FastMinimalStaticHashmap(FastMinimalStaticHashmap&&) noexcept      = default;
+    FastMinimalStaticHashmap() noexcept                                = default;
+    FastMinimalStaticHashmap(const FastMinimalStaticHashmap&) noexcept = default;
+    FastMinimalStaticHashmap(FastMinimalStaticHashmap&&) noexcept      = default;
 
-    constexpr FastMinimalStaticHashmap& operator=(const FastMinimalStaticHashmap&) noexcept =
-        default;
-    constexpr FastMinimalStaticHashmap& operator=(FastMinimalStaticHashmap&&) noexcept = default;
+    FastMinimalStaticHashmap& operator=(const FastMinimalStaticHashmap&) noexcept = default;
+    FastMinimalStaticHashmap& operator=(FastMinimalStaticHashmap&&) noexcept      = default;
 
     // ------------------------------
     // Class methods
     // ------------------------------
 
     template <bool kOverwrite = false>
-    constexpr bool Insert(const KeyT& key, const ValueT& value)
+    bool Insert(const KeyT& key, const ValueT& value)
     {
         ASSERT_LT(
             size_, kSize, "Hashmap overflow attempted, size: %zu, max size: %zu", size_, kSize
@@ -53,19 +52,19 @@ class FastMinimalStaticHashmap
 
         if (keys_[hashed_idx] == integral_key) {
             if constexpr (kOverwrite) {
-                values_[hashed_idx] = value;
+                *GetTypePtr_(hashed_idx) = value;
             }
             return false;
         }
 
-        values_[hashed_idx] = value;
-        keys_[hashed_idx]   = integral_key;
+        *GetTypePtr_(hashed_idx) = value;
+        keys_[hashed_idx]        = integral_key;
         ++size_;
         return true;
     }
 
     template <class... Args>
-    constexpr bool Emplace(const KeyT& key, Args&&... args)
+    bool Emplace(const KeyT& key, Args&&... args)
     {
         ASSERT_LT(
             size_, kSize, "Hashmap overflow attempted, size: %zu, max size: %zu", size_, kSize
@@ -80,13 +79,13 @@ class FastMinimalStaticHashmap
             return false;
         }
 
-        new (values_ + hashed_idx) ValueT(std::forward<Args>(args)...);
+        new (GetTypePtr_(hashed_idx)) ValueT(std::forward<Args>(args)...);
         keys_[hashed_idx] = integral_key;
         ++size_;
         return true;
     }
 
-    constexpr bool Remove(const KeyT& key)
+    bool Remove(const KeyT& key)
     {
         const auto idx = FindIndex_(key);
 
@@ -99,12 +98,12 @@ class FastMinimalStaticHashmap
 
         keys_[idx] = 0;
         --size_;
-        values_[idx].~ValueT();
+        GetTypePtr_(idx)->~ValueT();
 
         return true;
     }
 
-    NODISCARD constexpr ValueT* Find(const KeyT& key)
+    NODISCARD ValueT* Find(const KeyT& key) const
     {
         if (size_ == 0) {
             return nullptr;
@@ -118,13 +117,13 @@ class FastMinimalStaticHashmap
         TODO_OPTIMISE
         // TODO: If rehashed first gaps is stop signal?
 
-        return &values_[idx];
+        return GetTypePtr_(idx);
     }
 
-    NODISCARD constexpr bool HasKey(const KeyT& key)
+    NODISCARD bool HasKey(const KeyT& key) const
     {
         if (size_ == 0) {
-            return nullptr;
+            return false;
         }
 
         const auto idx = FindIndex_(key);
@@ -132,10 +131,10 @@ class FastMinimalStaticHashmap
             return false;  // Key not found
         }
 
-        return &values_[idx];
+        return true;
     }
 
-    NODISCARD FAST_CALL constexpr size_t HashKey(const KeyT& key)
+    NODISCARD FAST_CALL size_t HashKey(const KeyT& key)
     {
         static constexpr size_t offset = 2166136261U;
         static constexpr size_t prime  = 16777619U;
@@ -144,14 +143,14 @@ class FastMinimalStaticHashmap
         return ((offset ^ hash) * prime) % kAdjustedSize;
     }
 
-    NODISCARD FORCE_INLINE_F constexpr size_t Size() const { return size_; }
+    NODISCARD FORCE_INLINE_F size_t Size() const { return size_; }
 
     // ------------------------------
     // Implementation details
     // ------------------------------
 
     protected:
-    NODISCARD FAST_CALL constexpr std::tuple<size_t, IntegralType> ConvertKey_(const KeyT& key)
+    NODISCARD FAST_CALL std::tuple<size_t, IntegralType> ConvertKey_(const KeyT& key)
     {
         size_t hashed_idx               = HashKey(key);
         const IntegralType integral_key = *reinterpret_cast<const IntegralType*>(&key);
@@ -160,7 +159,7 @@ class FastMinimalStaticHashmap
         return {hashed_idx, integral_key};
     }
 
-    NODISCARD FORCE_INLINE_F constexpr size_t FindIndex_(const KeyT& key) const
+    NODISCARD FORCE_INLINE_F size_t FindIndex_(const KeyT& key) const
     {
         const auto [hashed_idx, integral_key] = ConvertKey_(key);
 
@@ -178,6 +177,11 @@ class FastMinimalStaticHashmap
         return hash_iterator;
     }
 
+    NODISCARD FORCE_INLINE_F ValueT* GetTypePtr_(const size_t idx) const
+    {
+        return reinterpret_cast<ValueT*>(values_->data[sizeof(ValueT) * idx]);
+    }
+
     // ------------------------------
     // Class fields
     // ------------------------------
@@ -185,7 +189,9 @@ class FastMinimalStaticHashmap
     static constexpr size_t kAdjustedSize = std::bit_ceil(kSize) * 2;
     // align to power of two and allow for bigger size to minimize collisions
 
-    alignas(arch::kCacheLineSizeBytes) ValueT values_[kAdjustedSize]{};
+    alignas(arch::kCacheLineSizeBytes) std::aligned_storage_t<
+        sizeof(ValueT), alignof(ValueT)> values_[kAdjustedSize];  // No need to initialize
+
     alignas(arch::kCacheLineSizeBytes) IntegralType keys_[kAdjustedSize]{};
     size_t size_{};
 };
@@ -195,6 +201,7 @@ class FastMinimalStaticHashmap
 // ------------------------------
 
 struct RegistryEntry {
+    RegistryEntry() = default;
     u64 id;
 };
 
@@ -202,6 +209,7 @@ template <class T, size_t kSize>
     requires(kSize < 64 && std::is_base_of_v<RegistryEntry, T> && std::is_trivially_copyable_v<T>)
 class Registry
 {
+    public:
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -213,10 +221,12 @@ class Registry
     // Data access
     // ------------------------------
 
+    FORCE_INLINE_F u64* begin() { return key_vector_.begin(); }
+    FORCE_INLINE_F u64* end() { return key_vector_.end(); }
     FORCE_INLINE_F const u64* cbegin() const { return key_vector_.cbegin(); }
     FORCE_INLINE_F const u64* cend() const { return key_vector_.cend(); }
-    FORCE_INLINE_F T& operator[](const u64 key) { return entries_[key]; }
-    FORCE_INLINE_F const T& operator[](const u64 key) const { return entries_[key]; }
+    FORCE_INLINE_F T& operator[](const u64 key) { return *entries_.Find(key); }
+    FORCE_INLINE_F const T& operator[](const u64 key) const { return *entries_.Find(key); }
 
     // ------------------------------
     // Class interaction
@@ -258,9 +268,11 @@ class Registry
         ASSERT_TRUE(
             entries_.HasKey(key), "Tried to set active item with non-existing key: %llu", key
         );
-        active_    = entries_[key];
+        active_    = *entries_.Find(key);
         is_active_ = true;
     }
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return entries_.Size(); }
 
     // ------------------------------
     // Class fields
@@ -268,7 +280,7 @@ class Registry
 
     protected:
     FastMinimalStaticHashmap<u64, T, kSize> entries_{};
-    StaticVector<T, kSize> key_vector_{};
+    StaticVector<u64, kSize> key_vector_{};
     T active_;  // Uninitialized intentionally
     bool is_active_{false};
 };

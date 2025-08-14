@@ -39,7 +39,7 @@ TEST_F(PhysicalMemoryManagerTest, Free_WhenCalled_ShouldIncreaseNumFreePages)
     memory_manager_singleton.Get().Free(page_address);
 
     // Then
-    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 1);
+    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 1ull);
 }
 
 TEST_F(PhysicalMemoryManagerTest, Allocate_WhenCalled_ShouldDecreaseNumFreePages)
@@ -47,13 +47,13 @@ TEST_F(PhysicalMemoryManagerTest, Allocate_WhenCalled_ShouldDecreaseNumFreePages
     // Given
     auto page_address = buffer_[0];
     memory_manager_singleton.Get().Free(page_address);
-    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 1);
+    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 1ull);
 
     // When
     page_address = memory_manager_singleton.Get().Allocate();
 
     // Then
-    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 0);
+    ASSERT_EQ(memory_manager_singleton.Get().GetNumFreePages(), 0ull);
 }
 
 TEST_F(PhysicalMemoryManagerTest, Allocate_WhenCalled_ShouldReturnCorrectPageAddress)
