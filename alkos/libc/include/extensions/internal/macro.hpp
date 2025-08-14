@@ -1,8 +1,6 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_MACRO_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_MACRO_HPP_
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 // https://www.scs.stanford.edu/~dm/blog/va-opt.html
 #define PARENS ()
 
