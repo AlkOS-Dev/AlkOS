@@ -607,7 +607,7 @@ class basic_string_view
     {
         TODO_WHEN_VMEM_WORKS
         constexpr size_type kMaxPrefixTableSize =
-            4096;  // Arbitrary size limit for the prefix table
+            1024;  // Arbitrary size limit for the prefix table
         array<size_type, kMaxPrefixTableSize> prefix_table{};
         size_type j = 0;
         for (size_type i = 1; i < v.size(); i++) {
