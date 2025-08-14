@@ -134,11 +134,8 @@ download_extract_gnu_source() {
     local name="$1"
     local primary_mirror="$2"
     local fallback_mirror="${3:-https://ftp.gnu.org/gnu}"
-
-    # Extract just the filename without the path for extraction
     local filename=$(basename "${name}")
 
-    # Pass both the primary and fallback URLs to download_source
     download_source "${filename}" "${primary_mirror}/${name}" "${fallback_mirror}/${name}"
 
     pretty_info "Extracting ${filename}"
