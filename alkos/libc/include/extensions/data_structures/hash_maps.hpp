@@ -219,12 +219,12 @@ class FastMinimalStaticHashmap
 
     NODISCARD FORCE_INLINE_F ValueT* GetTypePtr_(const size_t idx)
     {
-        return reinterpret_cast<ValueT*>(values_->data + (sizeof(ValueT) * idx));
+        return reinterpret_cast<ValueT*>(values_.data + (sizeof(ValueT) * idx));
     }
 
     NODISCARD FORCE_INLINE_F const ValueT* GetTypePtr_(const size_t idx) const
     {
-        return reinterpret_cast<const ValueT*>(values_->data + (sizeof(ValueT) * idx));
+        return reinterpret_cast<const ValueT*>(values_.data + (sizeof(ValueT) * idx));
     }
 
     // ------------------------------
@@ -234,10 +234,9 @@ class FastMinimalStaticHashmap
     static constexpr size_t kAdjustedSize = std::bit_ceil(kSize) * 2;
     // align to power of two and allow for bigger size to minimize collisions
 
-    alignas(
-        arch::kCacheLineSizeBytes
-    ) std::aligned_storage_t<sizeof(ValueT), alignof(ValueT)> values_[kAdjustedSize];  // No need to
-                                                                                       // initialize
+    alignas(arch::kCacheLineSizeBytes) std::aligned_storage_t<
+        sizeof(ValueT) * kAdjustedSize, alignof(ValueT)> values_;  // No need to
+                                                                   // initialize
 
     alignas(arch::kCacheLineSizeBytes) IntegralType keys_[kAdjustedSize]{};
     size_t size_{};
