@@ -14,11 +14,14 @@ struct ClockRegistryEntry : data_structures::RegistryEntry {
 
     /* Callbacks */
     u64 (*read)(ClockRegistryEntry* clock_entry);
-    u64 (*read_femto_seconds)(ClockRegistryEntry* clock_entry);
+    u64 (*read_nano_seconds)(ClockRegistryEntry* clock_entry);
     bool (*enable_device)(ClockRegistryEntry* clock_entry);
     bool (*disable_device)(ClockRegistryEntry* clock_entry);
     void (*stop_counter)(ClockRegistryEntry* clock_entry);
     void (*resume_counter)(ClockRegistryEntry* clock_entry);
+
+    /* Own data */
+    void* own_data;
 };
 
 static constexpr size_t kMaxClocks = 8;

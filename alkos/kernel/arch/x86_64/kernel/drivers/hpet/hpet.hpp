@@ -48,6 +48,8 @@ class Hpet final
     static constexpr u32 kTimerAllRegSize             = 0x20;
     static constexpr u32 kComparatorMaxIrqMap         = 32;
     static constexpr u32 kMaxComparators              = 32;
+    static constexpr u64 kFemtoSecondsPerSecond =
+        1'000'000'000'000'000;  // 1 second in femto-seconds
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -215,7 +217,7 @@ class Hpet final
     }
 
     template <class RetT>
-    FORCE_INLINE_F RetT ReadRegister(const u32 offset)
+    FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
     {
         TODO_WHEN_VMEM_WORKS
         // TODO : REPLACE WITH VIRTUAL ADDRESS
@@ -225,10 +227,6 @@ class Hpet final
     // ------------------------------
     // Class methods
     // ------------------------------
-
-    TODO_WHEN_TIMER_INFRA_DONE
-    // Temporary function replacing PIT
-    void Setup();
 
     NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const
     {
@@ -250,9 +248,15 @@ class Hpet final
         return comparators_allowed_irqs_[timer_idx].Get(irq_map);
     }
 
-    NODISCARD FORCE_INLINE_F u64 ReadMainCounter()
+    NODISCARD FORCE_INLINE_F u64 ReadMainCounter() const
     {
         return ReadRegister<u64>(kMainCounterValueRegRO);
+    }
+
+    NODISCARD FORCE_INLINE_F u64 ReadNanoSeconds() const
+    {
+        const u64 coef = kFemtoSecondsPerSecond / clock_period_;
+        return coef * ReadMainCounter();
     }
 
     FORCE_INLINE_F void SetupOneShotTimer(
