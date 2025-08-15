@@ -319,7 +319,7 @@ struct StringArray : public std::array<char, kSize> {
     constexpr StringArray(const char *str) noexcept
     {
         if (!std::is_constant_evaluated()) {
-            ASSERT_LT(strlen(str), kSize, "String array size must be below given kSize!");
+            ASSERT_LE(strlen(str), kSize, "String array size must be below given kSize!");
         }
 
         for (size_t i = 0; str[i] != '\0'; ++i) {
