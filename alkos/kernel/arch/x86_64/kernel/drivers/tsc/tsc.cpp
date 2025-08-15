@@ -1,4 +1,13 @@
 #include "drivers/tsc/tsc.hpp"
+#include "modules/hardware.hpp"
+
+// ------------------------------
+// Static functions
+// ------------------------------
+
+// ------------------------------
+// Implementations
+// ------------------------------
 
 void tsc::Initialize()
 {
