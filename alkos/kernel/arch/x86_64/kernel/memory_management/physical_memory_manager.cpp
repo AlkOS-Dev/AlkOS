@@ -23,7 +23,7 @@ void PhysicalMemoryManager::SetPageBuffer(PhysicalMemoryManager::PageBufferInfo_
 void PhysicalMemoryManager::PopulatePageBuffer(Multiboot::TagMmap* mmap)
 {
     R_ASSERT_NOT_NULL(page_buffer_);
-    R_ASSERT_GT(page_buffer_info_.start_addr, 0);
+    R_ASSERT_GT(page_buffer_info_.start_addr, 0ull);
 
     Multiboot::MemoryMap memory_map(mmap);
     memory_map.WalkEntries([&](Multiboot::MmapEntry& entry) {

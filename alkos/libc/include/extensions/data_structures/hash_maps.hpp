@@ -45,20 +45,18 @@ class FastMinimalStaticHashmap
             size_, kSize, "Hashmap overflow attempted, size: %zu, max size: %zu", size_, kSize
         );
 
-        auto [hashed_idx, integral_key] = ConvertKey_(key);
-        while (keys_[hashed_idx] != 0 && keys_[hashed_idx] != integral_key) {
-            hashed_idx = (hashed_idx + 1) % kAdjustedSize;  // Linear probing
-        }
+        const size_t idx        = FindEmpty_(key);
+        const auto integral_key = *reinterpret_cast<const IntegralType*>(&key);
 
-        if (keys_[hashed_idx] == integral_key) {
+        if (keys_[idx] == integral_key) {
             if constexpr (kOverwrite) {
-                *GetTypePtr_(hashed_idx) = value;
+                *GetTypePtr_(idx) = value;
             }
             return false;
         }
 
-        *GetTypePtr_(hashed_idx) = value;
-        keys_[hashed_idx]        = integral_key;
+        new (GetTypePtr_(idx)) ValueT(value);
+        keys_[idx] = integral_key;
         ++size_;
         return true;
     }
@@ -70,17 +68,15 @@ class FastMinimalStaticHashmap
             size_, kSize, "Hashmap overflow attempted, size: %zu, max size: %zu", size_, kSize
         );
 
-        auto [hashed_idx, integral_key] = ConvertKey_(key);
-        while (keys_[hashed_idx] != 0 && keys_[hashed_idx] != integral_key) {
-            hashed_idx = (hashed_idx + 1) % kAdjustedSize;  // Linear probing
-        }
+        const size_t idx        = FindEmpty_(key);
+        const auto integral_key = *reinterpret_cast<const IntegralType*>(&key);
 
-        if (keys_[hashed_idx] == integral_key) {
+        if (keys_[idx] == integral_key) {
             return false;
         }
 
-        new (GetTypePtr_(hashed_idx)) ValueT(std::forward<Args>(args)...);
-        keys_[hashed_idx] = integral_key;
+        new (GetTypePtr_(idx)) ValueT(std::forward<Args>(args)...);
+        keys_[idx] = *reinterpret_cast<const IntegralType*>(&key);
         ++size_;
         return true;
     }
@@ -93,9 +89,6 @@ class FastMinimalStaticHashmap
             return false;  // Key not found
         }
 
-        TODO_OPTIMISE
-        // TODO: Rehash the next elements to fill the gap??
-
         keys_[idx] = 0;
         --size_;
         GetTypePtr_(idx)->~ValueT();
@@ -103,7 +96,7 @@ class FastMinimalStaticHashmap
         return true;
     }
 
-    NODISCARD ValueT* Find(const KeyT& key) const
+    NODISCARD const ValueT* Find(const KeyT& key) const
     {
         if (size_ == 0) {
             return nullptr;
@@ -114,8 +107,35 @@ class FastMinimalStaticHashmap
             return nullptr;  // Key not found
         }
 
-        TODO_OPTIMISE
-        // TODO: If rehashed first gaps is stop signal?
+        return GetTypePtr_(idx);
+    }
+
+    NODISCARD ValueT* Find(const KeyT& key)
+    {
+        if (size_ == 0) {
+            return nullptr;
+        }
+
+        const auto idx = FindIndex_(key);
+        if (idx == kNotFound) {
+            return nullptr;  // Key not found
+        }
+
+        size_t current_idx = (idx + 1) % kAdjustedSize;
+        while (keys_[current_idx] != 0) {
+            const IntegralType integral_key = keys_[current_idx];
+            ValueT value_to_rehash          = std::move(*GetTypePtr_(current_idx));
+
+            // cleanup
+            GetTypePtr_(current_idx)->~ValueT();
+            keys_[current_idx] = 0;
+
+            size_t new_slot_idx = FindEmpty_(*reinterpret_cast<const KeyT*>(&integral_key));
+            new (GetTypePtr_(new_slot_idx)) ValueT(std::move(value_to_rehash));
+            keys_[new_slot_idx] = integral_key;
+
+            current_idx = (current_idx + 1) % kAdjustedSize;
+        }
 
         return GetTypePtr_(idx);
     }
@@ -159,27 +179,42 @@ class FastMinimalStaticHashmap
         return {hashed_idx, integral_key};
     }
 
+    NODISCARD FORCE_INLINE_F size_t FindEmpty_(const KeyT& key) const
+    {
+        const auto [hashed_idx, integral_key] = ConvertKey_(key);
+
+        size_t hash_iterator = hashed_idx;
+        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != 0) {
+            hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
+        }
+
+        return hash_iterator;
+    }
+
     NODISCARD FORCE_INLINE_F size_t FindIndex_(const KeyT& key) const
     {
         const auto [hashed_idx, integral_key] = ConvertKey_(key);
 
         size_t hash_iterator = hashed_idx;
-        size_t counted       = 0;
-        while (keys_[hash_iterator] != integral_key && counted < size_) {
-            counted += (keys_[hash_iterator] != 0);               // Count only non-zero keys
+        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != 0) {
             hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
         }
 
-        if (counted == size_) {
+        if (keys_[hash_iterator] == 0) {
             return kNotFound;  // Key not found
         }
 
         return hash_iterator;
     }
 
-    NODISCARD FORCE_INLINE_F ValueT* GetTypePtr_(const size_t idx) const
+    NODISCARD FORCE_INLINE_F ValueT* GetTypePtr_(const size_t idx)
     {
-        return reinterpret_cast<ValueT*>(values_->data[sizeof(ValueT) * idx]);
+        return reinterpret_cast<ValueT*>(values_->data + (sizeof(ValueT) * idx));
+    }
+
+    NODISCARD FORCE_INLINE_F const ValueT* GetTypePtr_(const size_t idx) const
+    {
+        return reinterpret_cast<const ValueT*>(values_->data + (sizeof(ValueT) * idx));
     }
 
     // ------------------------------
@@ -189,8 +224,10 @@ class FastMinimalStaticHashmap
     static constexpr size_t kAdjustedSize = std::bit_ceil(kSize) * 2;
     // align to power of two and allow for bigger size to minimize collisions
 
-    alignas(arch::kCacheLineSizeBytes) std::aligned_storage_t<
-        sizeof(ValueT), alignof(ValueT)> values_[kAdjustedSize];  // No need to initialize
+    alignas(
+        arch::kCacheLineSizeBytes
+    ) std::aligned_storage_t<sizeof(ValueT), alignof(ValueT)> values_[kAdjustedSize];  // No need to
+                                                                                       // initialize
 
     alignas(arch::kCacheLineSizeBytes) IntegralType keys_[kAdjustedSize]{};
     size_t size_{};
