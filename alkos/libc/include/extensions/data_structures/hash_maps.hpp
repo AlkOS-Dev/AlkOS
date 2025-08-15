@@ -20,8 +20,9 @@ template <class KeyT, class ValueT, size_t kSize>
 class FastMinimalStaticHashmap
 {
     public:
-    using IntegralType                = typename UnsignedIntegral<sizeof(KeyT)>::type;
-    static constexpr size_t kNotFound = kFullMask<size_t>;
+    using IntegralType                              = typename UnsignedIntegral<sizeof(KeyT)>::type;
+    static constexpr size_t kNotFound               = kFullMask<size_t>;
+    static constexpr IntegralType kReservedEmptyKey = 0;
 
     // ------------------------------
     // Class creation
@@ -33,6 +34,15 @@ class FastMinimalStaticHashmap
 
     FastMinimalStaticHashmap& operator=(const FastMinimalStaticHashmap&) noexcept = default;
     FastMinimalStaticHashmap& operator=(FastMinimalStaticHashmap&&) noexcept      = default;
+
+    ~FastMinimalStaticHashmap() noexcept
+    {
+        for (size_t i = kReservedEmptyKey; i < kAdjustedSize; ++i) {
+            if (keys_[i] != kReservedEmptyKey) {
+                GetTypePtr_(i)->~ValueT();
+            }
+        }
+    }
 
     // ------------------------------
     // Class methods
@@ -89,18 +99,18 @@ class FastMinimalStaticHashmap
             return false;  // Key not found
         }
 
-        keys_[idx] = 0;
+        keys_[idx] = kReservedEmptyKey;
         --size_;
         GetTypePtr_(idx)->~ValueT();
 
         size_t current_idx = (idx + 1) % kAdjustedSize;
-        while (keys_[current_idx] != 0) {
+        while (keys_[current_idx] != kReservedEmptyKey) {
             const IntegralType integral_key = keys_[current_idx];
             ValueT value_to_rehash          = std::move(*GetTypePtr_(current_idx));
 
             // cleanup
             GetTypePtr_(current_idx)->~ValueT();
-            keys_[current_idx] = 0;
+            keys_[current_idx] = kReservedEmptyKey;
 
             size_t new_slot_idx = FindEmpty_(*reinterpret_cast<const KeyT*>(&integral_key));
             new (GetTypePtr_(new_slot_idx)) ValueT(std::move(value_to_rehash));
@@ -184,7 +194,7 @@ class FastMinimalStaticHashmap
         const auto [hashed_idx, integral_key] = ConvertKey_(key);
 
         size_t hash_iterator = hashed_idx;
-        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != 0) {
+        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != kReservedEmptyKey) {
             hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
         }
 
@@ -196,11 +206,11 @@ class FastMinimalStaticHashmap
         const auto [hashed_idx, integral_key] = ConvertKey_(key);
 
         size_t hash_iterator = hashed_idx;
-        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != 0) {
+        while (keys_[hash_iterator] != integral_key && keys_[hash_iterator] != kReservedEmptyKey) {
             hash_iterator = (hash_iterator + 1) % kAdjustedSize;  // Linear probing
         }
 
-        if (keys_[hash_iterator] == 0) {
+        if (keys_[hash_iterator] == kReservedEmptyKey) {
             return kNotFound;  // Key not found
         }
 
