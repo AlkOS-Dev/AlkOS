@@ -93,6 +93,22 @@ class FastMinimalStaticHashmap
         --size_;
         GetTypePtr_(idx)->~ValueT();
 
+        size_t current_idx = (idx + 1) % kAdjustedSize;
+        while (keys_[current_idx] != 0) {
+            const IntegralType integral_key = keys_[current_idx];
+            ValueT value_to_rehash          = std::move(*GetTypePtr_(current_idx));
+
+            // cleanup
+            GetTypePtr_(current_idx)->~ValueT();
+            keys_[current_idx] = 0;
+
+            size_t new_slot_idx = FindEmpty_(*reinterpret_cast<const KeyT*>(&integral_key));
+            new (GetTypePtr_(new_slot_idx)) ValueT(std::move(value_to_rehash));
+            keys_[new_slot_idx] = integral_key;
+
+            current_idx = (current_idx + 1) % kAdjustedSize;
+        }
+
         return true;
     }
 
@@ -119,22 +135,6 @@ class FastMinimalStaticHashmap
         const auto idx = FindIndex_(key);
         if (idx == kNotFound) {
             return nullptr;  // Key not found
-        }
-
-        size_t current_idx = (idx + 1) % kAdjustedSize;
-        while (keys_[current_idx] != 0) {
-            const IntegralType integral_key = keys_[current_idx];
-            ValueT value_to_rehash          = std::move(*GetTypePtr_(current_idx));
-
-            // cleanup
-            GetTypePtr_(current_idx)->~ValueT();
-            keys_[current_idx] = 0;
-
-            size_t new_slot_idx = FindEmpty_(*reinterpret_cast<const KeyT*>(&integral_key));
-            new (GetTypePtr_(new_slot_idx)) ValueT(std::move(value_to_rehash));
-            keys_[new_slot_idx] = integral_key;
-
-            current_idx = (current_idx + 1) % kAdjustedSize;
         }
 
         return GetTypePtr_(idx);
