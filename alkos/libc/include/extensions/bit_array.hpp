@@ -62,13 +62,13 @@ class PACK BitArray final
 
     FORCE_INLINE_F u64 ToU64() const
     {
-        ASSERT_LE(kNumBits, 64, "ToU64 supported only for small enough arrays");
+        ASSERT_LE(kNumBits, 64_size, "ToU64 supported only for small enough arrays");
         return *reinterpret_cast<const u64 *>(storage_);
     }
 
     FORCE_INLINE_F u32 ToU32() const
     {
-        ASSERT_LE(kNumBits, 32, "ToU32 supported only for small enough arrays");
+        ASSERT_LE(kNumBits, 32_size, "ToU32 supported only for small enough arrays");
         return *reinterpret_cast<const u32 *>(storage_);
     }
 
