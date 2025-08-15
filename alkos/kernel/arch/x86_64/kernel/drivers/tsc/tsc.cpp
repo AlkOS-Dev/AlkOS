@@ -26,5 +26,8 @@ void tsc::Initialize()
     }
 
     TODO_WHEN_TIMER_INFRA_DONE
-    // TODO: add to the infra
+    hardware::ClockRegistryEntry tsc_entry = {};
+    tsc_entry.id                           = static_cast<u64>(arch::HardwareClockId::kTsc);
+    // tsc_entry.frequency_kHz
+    // tsc_entry.uncertainty_margin_per_sec
 }

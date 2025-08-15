@@ -322,9 +322,17 @@ struct StringArray : public std::array<char, kSize> {
             ASSERT_LE(strlen(str), kSize, "String array size must be below given kSize!");
         }
 
-        for (size_t i = 0; str[i] != '\0'; ++i) {
+        size_t i;
+        for (i = 0; str[i] != '\0'; ++i) {
             this->at(i) = str[i];
         }
+
+        for (; i < kSize; ++i) {
+            this->at(i) = '\0';
+        }
+
+        TODO_OPTIMISE
+        // TODO: Use constexpr strcpy when available
     }
 
     NODISCARD FORCE_INLINE_F std::array<char, kSize + 1> GetSafeStr() const noexcept
