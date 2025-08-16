@@ -283,6 +283,10 @@ class Registry
         [[maybe_unused]] const bool result = entries_.Insert(entry.id, entry);
         ASSERT_TRUE(result, "Tried to register item twice with id: %llu", entry.id);
         key_vector_.Push(entry.id);
+
+        TRACE_DEBUG(
+            "Registered entry with id: %s", IntegralToStringArray(entry.id).GetSafeStr().GetCStr()
+        );
     }
 
     template <class... Args>
@@ -291,6 +295,10 @@ class Registry
         [[maybe_unused]] const bool result = entries_.Emplace(id, std::forward<Args>(args)...);
         ASSERT_TRUE(result, "Tried to register item twice with id: %llu", id);
         key_vector_.Push(id);
+
+        TRACE_DEBUG(
+            "Registered entry with id: %s", IntegralToStringArray(id).GetSafeStr().GetCStr()
+        );
     }
 
     NODISCARD FORCE_INLINE_F bool IsActivePicked() const { return is_active_; }

@@ -19,7 +19,7 @@ namespace arch
  * This enum should define all possible hardware clock IDs.
  * The values should encode name in 8bytes, and never equal 0.
  */
-enum class HardwareClockId;
+enum class HardwareClockId : u64;
 }  // namespace arch
 
 #include <abi/constants.hpp>

@@ -5,7 +5,7 @@
 #include <drivers/cmos/rtc.hpp>
 #include <extensions/time.hpp>
 #include <modules/timing.hpp>
-#include <timers.hpp>
+#include <time.hpp>
 
 namespace arch
 {

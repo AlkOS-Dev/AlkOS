@@ -14,8 +14,15 @@ namespace arch
  *       get rid of any time drift created possibly by inaccurate timers. Returns POSIX time value.
  */
 WRAP_CALL time_t QuerySystemTime(const timezone& tz);
+
+/**
+ * @brief this function based on clock infra should pick the best clock source available
+ *
+ * @note All clock sources should be registered before this function is called.
+ */
+void PickSystemClockSource();
 }  // namespace arch
 
-#include <abi/timers.hpp>
+#include <abi/time.hpp>
 
 #endif  // ALKOS_KERNEL_ABI_TIMERS_HPP_
