@@ -5,6 +5,7 @@
 #include <extensions/array.hpp>
 #include <extensions/bit_array.hpp>
 #include <extensions/debug.hpp>
+#include <extensions/time.hpp>
 #include <extensions/types.hpp>
 #include "memory_io.hpp"
 #include "todo.hpp"

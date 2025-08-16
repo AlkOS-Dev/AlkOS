@@ -19,11 +19,6 @@ static u64 ReadCb(hardware::ClockRegistryEntry *clock_entry)
     return GetHpetFromClockEntry(clock_entry)->ReadMainCounter();
 }
 
-static u64 ReadNanoSecondsCb(hardware::ClockRegistryEntry *clock_entry)
-{
-    return GetHpetFromClockEntry(clock_entry)->ReadNanoSeconds();
-}
-
 static bool EnableDeviceCb(hardware::ClockRegistryEntry *clock_entry)
 {
     GetHpetFromClockEntry(clock_entry)->StartMainCounter();
@@ -122,16 +117,19 @@ Hpet::Hpet(acpi_hpet *table)
 
     /* Clock data */
     hpet_entry.id            = static_cast<u64>(arch::HardwareClockId::kHpet);
-    hpet_entry.frequency_kHz = kFemtoSecondsPerSecond / clock_period_;
-    // hpet_entry.uncertainty_margin_per_sec
+    hpet_entry.frequency_kHz = (kFemtoSecondsPerSecond / clock_period_) / 1000;
+
+    /* According to spec for intervals > 1ms, minimum requirement for clock drift is 0.05% */
+    hpet_entry.ns_uncertainty_margin_per_sec = kNanosInSecond / 2000;  // 0.05% of 1 seconds
+    hpet_entry.clock_numerator               = kFemtoSecondsPerSecond;
+    hpet_entry.clock_denominator             = clock_period_;
 
     /* Callbacks */
-    hpet_entry.read              = ReadCb;
-    hpet_entry.read_nano_seconds = ReadNanoSecondsCb;
-    hpet_entry.enable_device     = EnableDeviceCb;
-    hpet_entry.disable_device    = DisableDeviceCb;
-    hpet_entry.stop_counter      = StopCounterCb;
-    hpet_entry.resume_counter    = ResumeCounterCb;
+    hpet_entry.read           = ReadCb;
+    hpet_entry.enable_device  = EnableDeviceCb;
+    hpet_entry.disable_device = DisableDeviceCb;
+    hpet_entry.stop_counter   = StopCounterCb;
+    hpet_entry.resume_counter = ResumeCounterCb;
 
     /* Own data */
     hpet_entry.own_data = this;

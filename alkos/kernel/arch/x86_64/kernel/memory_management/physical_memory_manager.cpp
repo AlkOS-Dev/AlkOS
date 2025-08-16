@@ -41,7 +41,7 @@ void PhysicalMemoryManager::PopulatePageBuffer(Multiboot::TagMmap* mmap)
 
 uintptr_t PhysicalMemoryManager::Allocate()
 {
-    R_ASSERT_GT(num_pages_on_stack_, 0);
+    R_ASSERT_GT(num_pages_on_stack_, 0ULL);
     return page_buffer_[--num_pages_on_stack_];
 }
 void PhysicalMemoryManager::Free(uintptr_t page_address_physical)

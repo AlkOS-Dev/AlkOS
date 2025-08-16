@@ -4,6 +4,7 @@
 #include <constants.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
+#include <extensions/string.hpp>
 #include <extensions/tuple.hpp>
 
 namespace data_structures
@@ -289,21 +290,26 @@ class Registry
         );
     }
 
-    template <class... Args>
-    FORCE_INLINE_F void RegisterEmplace(const u64 id, Args&&... args)
+    template <class K, class... Args>
+    FORCE_INLINE_F void RegisterEmplace(const K& id, Args&&... args)
     {
-        [[maybe_unused]] const bool result = entries_.Emplace(id, std::forward<Args>(args)...);
-        ASSERT_TRUE(result, "Tried to register item twice with id: %llu", id);
-        key_vector_.Push(id);
+        const u64 id_u64                   = static_cast<u64>(id);
+        [[maybe_unused]] const bool result = entries_.Emplace(id_u64, std::forward<Args>(args)...);
+        ASSERT_TRUE(result, "Tried to register item twice with id: %llu", id_u64);
+        key_vector_.Push(id_u64);
 
         TRACE_DEBUG(
-            "Registered entry with id: %s", IntegralToStringArray(id).GetSafeStr().GetCStr()
+            "Registered entry with id: %s", IntegralToStringArray(id_u64).GetSafeStr().GetCStr()
         );
     }
 
     NODISCARD FORCE_INLINE_F bool IsActivePicked() const { return is_active_; }
 
-    NODISCARD FORCE_INLINE_F bool HasKey(const u64 key) const { return entries_.HasKey(key); }
+    template <class K>
+    NODISCARD FORCE_INLINE_F bool HasKey(const K& key) const
+    {
+        return entries_.HasKey(static_cast<u64>(key));
+    }
 
     NODISCARD FORCE_INLINE_F T& GetActive()
     {
@@ -317,13 +323,20 @@ class Registry
         return active_;
     }
 
-    FORCE_INLINE_F void SetActive(const u64 key)
+    template <class K>
+    FORCE_INLINE_F void SetActive(const K& key)
     {
+        const u64 key_u64 = static_cast<u64>(key);
         ASSERT_TRUE(
-            entries_.HasKey(key), "Tried to set active item with non-existing key: %llu", key
+            entries_.HasKey(key_u64), "Tried to set active item with non-existing key: %s",
+            IntegralToStringArray(key_u64).GetSafeStr().GetCStr()
         );
-        active_    = *entries_.Find(key);
+        active_    = *entries_.Find(key_u64);
         is_active_ = true;
+
+        TRACE_DEBUG(
+            "Set active entry with id: %s", IntegralToStringArray(key_u64).GetSafeStr().GetCStr()
+        );
     }
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return entries_.Size(); }
