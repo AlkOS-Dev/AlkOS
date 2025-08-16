@@ -2,6 +2,8 @@
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
 #include "modules/hardware.hpp"
+#include "modules/timing.hpp"
+#include "trace.hpp"
 
 #include <extensions/debug.hpp>
 
@@ -13,7 +15,7 @@
  */
 void LogIrqReceived([[maybe_unused]] void *stack_frame, const u8 idt_idx)
 {
-    TRACE_INFO("Received interrupt with idx: %hhu\n", idt_idx);
+    TRACE_INFO("Received interrupt with idx: %hhu", idt_idx);
 }
 
 extern "C" {
@@ -23,6 +25,23 @@ extern "C" {
 
 void isr_32([[maybe_unused]] void *const stack_frame)
 {
+    // TODO: Temporary code
+    static u64 counter = 0;
+    if (counter++ % 33 == 0) {
+        static constexpr size_t kBuffSize = 256;
+        char buff[kBuffSize]{};
+
+        if (TimingModule::IsInited()) {
+            const auto t = time(nullptr);
+            strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
+        }
+
+        KernelTraceInfo(
+            "Kernel time update: %s, have a nice day!",
+            TimingModule::IsInited() ? buff : "Timing module is not initialized!"
+        );
+    }
+
     // LogIrqReceived(stack_frame, 32);
     HardwareModule::Get().GetInterrupts().GetLocalApic().IsEnabled() ? LocalApic::SendEOI()
                                                                      : Pic8259SendEOI(0);

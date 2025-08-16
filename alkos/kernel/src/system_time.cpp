@@ -8,7 +8,10 @@
 // Implementations
 // ------------------------------
 
-time_t timing::SystemTime::ReadSysLiveTimeNs() { return 0; }
+time_t timing::SystemTime::ReadSysLiveTimeNs()
+{
+    return HardwareModule::Get().GetClockRegistry().ReadTimeNsUnsafe();
+}
 
 void timing::SystemTime::SyncWithHardware()
 {
