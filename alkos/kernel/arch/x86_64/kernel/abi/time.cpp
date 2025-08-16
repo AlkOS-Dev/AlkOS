@@ -56,7 +56,7 @@ void PickSystemClockSource()
         return;
     }
 
-    FAIL_ALWAYS("Failed to pick system clock source, no clocks available!");
+    R_FAIL_ALWAYS("Failed to pick system clock source, no clocks available!");
 }
 
 }  // namespace arch

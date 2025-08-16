@@ -12,7 +12,6 @@ static constexpr size_t kStaticSpinlockAllocCount = 512;
 // ------------------------------
 
 enum class SettingsType : size_t {
-    kIsDayTimeClockInUTC, /* Is true when hardware stores datetime as UTC */
     kLastSettingsType,
 };
 

@@ -22,11 +22,21 @@ void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zo
     if (time != nullptr) {
         switch (type) {
             case kTimeUtc: {
-                time->seconds   = TimingModule::Get().GetDayTime().GetTime();
+                time->seconds   = TimingModule::Get().GetSystemTime().GetTime();
                 time->remainder = 0;
             } break;
-            case kProcTime: {
-                R_FAIL_ALWAYS("Not implemented yet!");
+            case kProcTime: {  // In microseconds
+                time->seconds =
+                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() / kNanosInSecond;
+                time->remainder =
+                    (TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() % kNanosInSecond) /
+                    1000;
+            } break;
+            case kProcTimePrecise: {  // In nanoseconds
+                time->seconds =
+                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() / kNanosInSecond;
+                time->remainder =
+                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() % kNanosInSecond;
             } break;
             default:
                 R_FAIL_ALWAYS("Provided invalid ClockType!");
@@ -37,12 +47,12 @@ void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zo
 void GetTimezoneSysCall(Timezone* time_zone)
 {
     assert(time_zone != nullptr);
-    *time_zone = TimingModule::Get().GetDayTime().GetTimezone();
+    *time_zone = TimingModule::Get().GetSystemTime().GetTimezone();
 }
 
 u64 GetClockTicksInSecondSysCall(ClockType type)
 {
-    const size_t idx = static_cast<size_t>(type);
+    const auto idx = static_cast<size_t>(type);
     ASSERT(idx != 0 && idx < timing_constants::kClockTicksInSecondSize);
 
     TODO_USERSPACE

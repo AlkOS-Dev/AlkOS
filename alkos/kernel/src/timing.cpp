@@ -6,10 +6,6 @@
 
 internal::TimingModule::TimingModule() noexcept
 {
-    ::GlobalStateModule::Get()
-        .GetSettings()
-        .RegisterEvent<global_state_constants::SettingsType::kIsDayTimeClockInUTC>(&OnIsUtcChanged);
-
     arch::PickSystemClockSource();
     auto& clock_source = ::HardwareModule::Get().GetClockRegistry().GetActive();
 
@@ -22,9 +18,4 @@ internal::TimingModule::TimingModule() noexcept
     }
 
     TRACE_INFO("TimingModule::TimingModule()");
-}
-
-void internal::TimingModule::OnIsUtcChanged() noexcept
-{
-    ::TimingModule::Get().GetDayTime().SyncWithHardware();
 }

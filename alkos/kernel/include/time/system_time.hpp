@@ -4,24 +4,34 @@
 #include <sys/time.h>
 #include <time.h>
 #include <extensions/time.hpp>
-#include <modules/timing_constants.hpp>
+#include "modules/timing_constants.hpp"
+#include "modules/hardware.hpp"
 
 namespace timing
 {
-class DayTime
+class SystemTime
 {
     public:
     // ------------------------------
     // Class creation
     // ------------------------------
 
-    DayTime();
+    SystemTime();
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F time_t GetTime() const noexcept { return time_; }
+    NODISCARD FORCE_INLINE_F time_t GetTime() const noexcept
+    {
+        return boot_time_read_local_ + (GetSysLiveTimeNs() + kNanosInSecond / 2) / kNanosInSecond;
+    }
+
+    NODISCARD FAST_CALL time_t GetSysLiveTimeNs()
+    {
+        TODO_WHEN_MULTITHREADING
+        return HardwareModule::Get().GetClockRegistry().ReadTimeNsUnsafe();
+    }
 
     void SyncWithHardware();
 
@@ -32,7 +42,8 @@ class DayTime
     // ------------------------------
 
     private:
-    time_t time_{};
+    time_t boot_time_read_utc_{};
+    time_t boot_time_read_local_{};
 
     TODO_TIMEZONES
     /* Hard coded Poland */
