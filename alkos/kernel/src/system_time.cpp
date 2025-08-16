@@ -4,29 +4,18 @@
 #include "modules/hardware.hpp"
 #include "time.hpp"
 
-using namespace timing;
-
 // ------------------------------
 // Implementations
 // ------------------------------
 
-SystemTime::SystemTime()
-{
-    TRACE_INFO("DayTime::DayTime()");
-    SyncWithHardware();
-}
+time_t timing::SystemTime::ReadSysLiveTimeNs() { return 0; }
 
-time_t SystemTime::GetSysLiveTimeNs()
-{
-    TODO_WHEN_MULTITHREADING
-    return HardwareModule::Get().GetClockRegistry().ReadTimeNsUnsafe();
-}
-
-void SystemTime::SyncWithHardware()
+void timing::SystemTime::SyncWithHardware()
 {
     static constexpr size_t kBuffSize = 64;
     [[maybe_unused]] char buffer[kBuffSize];
     boot_time_read_utc_ = arch::QuerySystemTime(kUtcTimezone);
+    sys_time_on_read_   = ReadSysLiveTimeNs();
 
     tm time;
     ConvertFromPosixToTm(boot_time_read_utc_, time, kUtcTimezone);

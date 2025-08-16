@@ -15,6 +15,13 @@ void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zo
 {
     assert(time != nullptr || time_zone != nullptr);
 
+    if (!TimingModule::IsInited()) {
+        time->seconds   = 0;
+        time->remainder = 0;
+        return;
+        ;
+    }
+
     if (time_zone != nullptr) {
         GetTimezoneSysCall(time_zone);
     }
@@ -22,21 +29,16 @@ void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zo
     if (time != nullptr) {
         switch (type) {
             case kTimeUtc: {
-                time->seconds   = TimingModule::Get().GetSystemTime().GetTime();
+                time->seconds   = TimingModule::Get().GetSystemTime().ReadSystemTime();
                 time->remainder = 0;
             } break;
             case kProcTime: {  // In microseconds
-                time->seconds =
-                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() / kNanosInSecond;
-                time->remainder =
-                    (TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() % kNanosInSecond) /
-                    1000;
+                time->seconds   = 0;
+                time->remainder = timing::SystemTime::ReadSysLiveTimeNs() / 1000;
             } break;
             case kProcTimePrecise: {  // In nanoseconds
-                time->seconds =
-                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() / kNanosInSecond;
-                time->remainder =
-                    TimingModule::Get().GetSystemTime().GetSysLiveTimeNs() % kNanosInSecond;
+                time->seconds   = 0;
+                time->remainder = timing::SystemTime::ReadSysLiveTimeNs();
             } break;
             default:
                 R_FAIL_ALWAYS("Provided invalid ClockType!");

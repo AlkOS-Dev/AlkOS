@@ -4,7 +4,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <extensions/time.hpp>
-#include "modules/timing_constants.hpp"
 
 namespace timing
 {
@@ -15,18 +14,19 @@ class SystemTime
     // Class creation
     // ------------------------------
 
-    SystemTime();
+    SystemTime() = default;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F time_t GetTime() const noexcept
+    NODISCARD FORCE_INLINE_F time_t ReadSystemTime() const noexcept
     {
-        return boot_time_read_local_ + (GetSysLiveTimeNs() + kNanosInSecond / 2) / kNanosInSecond;
+        return boot_time_read_local_ +
+               (ReadSysLiveTimeNs() - sys_time_on_read_ + kNanosInSecond / 2) / kNanosInSecond;
     }
 
-    NODISCARD static time_t GetSysLiveTimeNs();
+    NODISCARD static time_t ReadSysLiveTimeNs();
 
     void SyncWithHardware();
 
@@ -39,6 +39,7 @@ class SystemTime
     private:
     time_t boot_time_read_utc_{};
     time_t boot_time_read_local_{};
+    u64 sys_time_on_read_{};
 
     TODO_TIMEZONES
     /* Hard coded Poland */

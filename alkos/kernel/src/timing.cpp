@@ -17,5 +17,6 @@ internal::TimingModule::TimingModule() noexcept
         clock_source.resume_counter(&clock_source);
     }
 
+    GetSystemTime().SyncWithHardware();
     TRACE_INFO("TimingModule::TimingModule()");
 }
