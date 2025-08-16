@@ -1,11 +1,10 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
-#define ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
+#define ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
 
 #include <sys/time.h>
 #include <time.h>
 #include <extensions/time.hpp>
 #include "modules/timing_constants.hpp"
-#include "modules/hardware.hpp"
 
 namespace timing
 {
@@ -27,11 +26,7 @@ class SystemTime
         return boot_time_read_local_ + (GetSysLiveTimeNs() + kNanosInSecond / 2) / kNanosInSecond;
     }
 
-    NODISCARD FAST_CALL time_t GetSysLiveTimeNs()
-    {
-        TODO_WHEN_MULTITHREADING
-        return HardwareModule::Get().GetClockRegistry().ReadTimeNsUnsafe();
-    }
+    NODISCARD static time_t GetSysLiveTimeNs();
 
     void SyncWithHardware();
 
@@ -58,4 +53,4 @@ class SystemTime
 };
 }  // namespace timing
 
-#endif  // ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
