@@ -26,7 +26,19 @@ struct ClockRegistryEntry : data_structures::RegistryEntry {
 };
 
 static constexpr size_t kMaxClocks = 8;
-using ClockRegistry                = data_structures::Registry<ClockRegistryEntry, kMaxClocks>;
+class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxClocks>
+{
+    public:
+    /* Not safe for concurrent access */
+    NODISCARD FORCE_INLINE_F u64 ReadTimeNsUnsafe()
+    {
+        TODO_WHEN_TIMER_INFRA_DONE
+        // TODO: Improve calculation robustness on overflows
+
+        const u64 timer_val = GetActive().read(&GetActive());
+        return (timer_val * GetActive().clock_numerator) / GetActive().clock_denominator;
+    }
+};
 
 }  // namespace hardware
 
