@@ -5,7 +5,11 @@
 // Clock callbacks
 // ------------------------------
 
-static u64 ReadCb(hardware::ClockRegistryEntry *) { return tsc::Read(); }
+static u64 ReadCb(hardware::ClockRegistryEntry *)
+{
+    const u64 tsc_value = tsc::Read();
+    return tsc_value;
+}
 
 // ------------------------------
 // Private functions

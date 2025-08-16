@@ -17,9 +17,9 @@ alkos_register_runtime_environment(
     QEMU_COMMAND
         "qemu-system-x86_64"
     QEMU_NORMAL_FLAGS
-        "-serial stdio -enable-kvm -cpu max,+invtsc -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1"
+        "-serial stdio -enable-kvm -cpu max -display default,show-cursor=on -m 4G -smp sockets=1,cores=4,threads=1"
     QEMU_TEST_FLAGS
-        "-serial stdio -enable-kvm -cpu max,+invtsc -display none -m 4G -smp sockets=1,cores=4,threads=1"
+        "-serial stdio -enable-kvm -cpu max -display none -m 4G -smp sockets=1,cores=4,threads=1"
     MODULES
         alkos.loader64
         alkos.kernel

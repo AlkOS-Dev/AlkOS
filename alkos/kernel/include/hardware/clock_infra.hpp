@@ -32,11 +32,14 @@ class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxC
     /* Not safe for concurrent access */
     NODISCARD FORCE_INLINE_F u64 ReadTimeNsUnsafe()
     {
-        TODO_WHEN_TIMER_INFRA_DONE
-        // TODO: Improve calculation robustness on overflows
-
         const u64 timer_val = GetActive().read(&GetActive());
-        return (timer_val * GetActive().clock_numerator) / GetActive().clock_denominator;
+        TRACE_DEBUG("Timer value read: %zu", timer_val);
+
+        const __uint128_t intermediate_value =
+            static_cast<__uint128_t>(timer_val) * GetActive().clock_numerator;
+        const u64 time_ns = static_cast<u64>(intermediate_value / GetActive().clock_denominator);
+
+        return time_ns;
     }
 };
 
