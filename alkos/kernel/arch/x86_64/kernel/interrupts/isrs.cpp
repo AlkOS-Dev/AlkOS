@@ -1,3 +1,4 @@
+#include "autogen/feature_flags.h"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
@@ -27,7 +28,7 @@ void isr_32([[maybe_unused]] void *const stack_frame)
 {
     // TODO: Temporary code
     static u64 counter = 0;
-    if (counter++ % 33 == 0) {
+    if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {
         static constexpr size_t kBuffSize = 256;
         char buff[kBuffSize]{};
 

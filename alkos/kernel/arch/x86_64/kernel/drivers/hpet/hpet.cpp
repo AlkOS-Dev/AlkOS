@@ -121,8 +121,8 @@ Hpet::Hpet(acpi_hpet *table)
 
     /* According to spec for intervals > 1ms, minimum requirement for clock drift is 0.05% */
     hpet_entry.ns_uncertainty_margin_per_sec = kNanosInSecond / 2000;  // 0.05% of 1 seconds
-    hpet_entry.clock_numerator               = kFemtoSecondsPerSecond;
-    hpet_entry.clock_denominator             = clock_period_;
+    hpet_entry.clock_numerator               = clock_period_;
+    hpet_entry.clock_denominator             = kFemtoSecondsPerSecond / kNanosInSecond;
 
     /* Callbacks */
     hpet_entry.read           = ReadCb;

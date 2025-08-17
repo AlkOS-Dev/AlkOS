@@ -34,6 +34,10 @@ class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxC
     {
         const u64 timer_val = GetActive().read(&GetActive());
         TRACE_DEBUG("Timer value read: %zu", timer_val);
+        TRACE_DEBUG(
+            "Numerator: %zu, Denominator: %zu", GetActive().clock_numerator,
+            GetActive().clock_denominator
+        );
 
         const __uint128_t intermediate_value =
             static_cast<__uint128_t>(timer_val) * GetActive().clock_numerator;
