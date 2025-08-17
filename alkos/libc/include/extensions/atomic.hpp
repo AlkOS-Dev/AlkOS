@@ -7,14 +7,17 @@
 #include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
 
+#define __DEFINE_VOLATILE_PAIR(declaration, body) \
+    declaration noexcept body declaration volatile noexcept body
+
 namespace std
 {
 
 // ------------------------------
-// memory_order
+// std::memory_order
 // ------------------------------
 
-enum class memory_order : i32 {
+enum class memory_order : int {
     relaxed = __ATOMIC_RELAXED,
     consume = __ATOMIC_CONSUME,
     acquire = __ATOMIC_ACQUIRE,
@@ -31,17 +34,23 @@ inline constexpr memory_order memory_order_acq_rel = memory_order::acq_rel;
 inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
 
 // ------------------------------
-// atomic
+// std::atomic
 // ------------------------------
+
+TODO_LIBCPP_COMPLIANCE
+/**
+ * TODO: Missing implementations:
+ * - wait
+ * - notify_one
+ * - notify_all
+ */
+
 template <typename T>
     requires std::is_trivially_copyable_v<T> && std::is_copy_constructible_v<T> &&
              std::is_move_constructible_v<T> && std::is_copy_assignable_v<T> &&
              std::is_move_assignable_v<T> && std::is_same_v<T, std::remove_cv_t<T>>
 struct atomic : template_lib::NoCopy {
-    using value_type                          = T;
-    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
-
-    value_type value_;
+    using value_type = T;
 
     // ------------------------------
     // Struct creation
@@ -59,40 +68,156 @@ struct atomic : template_lib::NoCopy {
     // operators
     // ------------------------------
 
-    T operator=(T desired) noexcept
-    {
+    __DEFINE_VOLATILE_PAIR(T operator=(T desired), {
         store(desired);
         return desired;
-    }
-    T operator=(T desired) volatile noexcept
-    {
-        store(desired);
-        return desired;
-    }
-
-    // operator T() const noexcept {
-    //     return load();
-    // }
-    // operator T() const volatile noexcept {
-    //     return load();
-    // }
+    })
 
     // ------------------------------
-    // Methods
+    // Store
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F bool is_lock_free() const noexcept
-    {
+    __DEFINE_VOLATILE_PAIR(
+        FORCE_INLINE_F void store(T desired, memory_order order = memory_order_seq_cst), {
+            ASSERT_FALSE(
+                order == memory_order_consume || order == memory_order_acquire ||
+                    order == memory_order_acq_rel,
+                "Undefined behavior"
+            );
+            __atomic_store_n(&value_, desired, static_cast<int>(order));
+        }
+    )
+
+    // ------------------------------
+    // Load
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T load(memory_order order = memory_order_seq_cst) const, {
+            ASSERT_FALSE(
+                order == memory_order_release || order == memory_order_acq_rel, "Undefined behavior"
+            );
+            return __atomic_load_n(&value_, static_cast<int>(order));
+        }
+    )
+
+    // ------------------------------
+    // Conversion operators
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(operator T() const, { return load(); })
+
+    // ------------------------------
+    // Exchange
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T exchange(T desired, memory_order order = memory_order_seq_cst), {
+            ASSERT_FALSE(
+                order == memory_order_consume || order == memory_order_acquire ||
+                    order == memory_order_acq_rel,
+                "Undefined behavior"
+            );
+            return __atomic_exchange_n(&value_, desired, static_cast<int>(order));
+        }
+    )
+
+    // ------------------------------
+    // Compare and exchange
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
+            T& expected, T desired, memory_order success_order = memory_order_seq_cst,
+            memory_order failure_order = memory_order_seq_cst
+        ),
+        {
+            ASSERT_FALSE(
+                failure_order == memory_order_release || failure_order == memory_order_acq_rel,
+                "Undefined behavior"
+            );
+            return __atomic_compare_exchange_n(
+                &value_, &expected, desired, true, static_cast<int>(success_order),
+                static_cast<int>(failure_order)
+            );
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
+            T& expected, T desired, memory_order order = memory_order_seq_cst
+        ),
+        {
+            int success_order = static_cast<int>(order);
+            int failure_order;
+            if (order == memory_order_acq_rel) {
+                failure_order = static_cast<int>(memory_order_acquire);
+            } else if (order == memory_order_release) {
+                failure_order = static_cast<int>(memory_order_relaxed);
+            } else {
+                failure_order = static_cast<int>(order);
+            }
+
+            return __atomic_compare_exchange_n(
+                &value_, &expected, desired, true, success_order, failure_order
+            );
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
+            T& expected, T desired, memory_order success_order = memory_order_seq_cst,
+            memory_order failure_order = memory_order_seq_cst
+        ),
+        {
+            ASSERT_FALSE(
+                failure_order == memory_order_release || failure_order == memory_order_acq_rel,
+                "Undefined behavior"
+            );
+            return __atomic_compare_exchange_n(
+                &value_, &expected, desired, false, static_cast<int>(success_order),
+                static_cast<int>(failure_order)
+            );
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
+            T& expected, T desired, memory_order order = memory_order_seq_cst
+        ),
+        {
+            int success_order = static_cast<int>(order);
+            int failure_order;
+            if (order == memory_order_acq_rel) {
+                failure_order = static_cast<int>(memory_order_acquire);
+            } else if (order == memory_order_release) {
+                failure_order = static_cast<int>(memory_order_relaxed);
+            } else {
+                failure_order = static_cast<int>(order);
+            }
+
+            return __atomic_compare_exchange_n(
+                &value_, &expected, desired, false, success_order, failure_order
+            );
+        }
+    )
+
+    // ------------------------------
+    // Constants
+    // ------------------------------
+
+    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
+
+    __DEFINE_VOLATILE_PAIR(NODISCARD FORCE_INLINE_F bool is_lock_free() const, {
         return __atomic_is_lock_free(sizeof(value_type), &value_);
-    }
-    NODISCARD FORCE_INLINE_F bool is_lock_free() const volatile noexcept
-    {
-        return __atomic_is_lock_free(sizeof(value_type), &value_);
-    }
+    })
+
+    private:
+    value_type value_;
 };
 
 // ------------------------------
-// aliases
+// Aliases
 // ------------------------------
 
 using atomic_bool           = atomic<bool>;
@@ -143,39 +268,52 @@ using atomic_intmax_t       = atomic<intmax_t>;
 using atomic_uintmax_t      = atomic<uintmax_t>;
 
 // ------------------------------
-// atomic_flag
+// std::atomic_flag
 // ------------------------------
 
-class atomic_flag
-{
-    bool flag_;
+TODO_LIBCPP_COMPLIANCE
+/**
+ * TODO: Missing implementations:
+ * - wait
+ * - notify_one
+ * - notify_all
+ */
 
-    constexpr atomic_flag() noexcept : flag_(false) {}
+class atomic_flag : public template_lib::NoCopy
+{
+    public:
+    constexpr atomic_flag() noexcept
+    {
+        __atomic_clear(&flag_, static_cast<int>(memory_order_relaxed));
+    }
 
     atomic_flag& operator=(const atomic_flag&) volatile = delete;
 
-    constexpr bool test_and_set(memory_order order = memory_order_seq_cst) noexcept
-    {
-        return __atomic_test_and_set(&flag_, static_cast<i32>(order));
-    }
-
-    void clear(memory_order order = memory_order_seq_cst) noexcept
-    {
+    __DEFINE_VOLATILE_PAIR(FORCE_INLINE_F void clear(memory_order order = memory_order_seq_cst), {
         ASSERT_FALSE(
             order == memory_order_consume || order == memory_order_acquire ||
                 order == memory_order_acq_rel,
             "Undefined behavior"
         );
-        __atomic_clear(&flag_, static_cast<i32>(order));
-    }
+        __atomic_clear(&flag_, static_cast<int>(order));
+    })
 
-    bool test(memory_order order = memory_order_seq_cst) const noexcept
-    {
-        ASSERT_FALSE(
-            order == memory_order_release || order == memory_order_acq_rel, "Undefined behavior"
-        );
-        return __atomic_load_n(&flag_, static_cast<i32>(order));
-    }
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool test_and_set(memory_order order = memory_order_seq_cst),
+        { return __atomic_test_and_set(&flag_, static_cast<int>(order)); }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F bool test(memory_order order = memory_order_seq_cst) const, {
+            ASSERT_FALSE(
+                order == memory_order_release || order == memory_order_acq_rel, "Undefined behavior"
+            );
+            return __atomic_load_n(&flag_, static_cast<int>(order));
+        }
+    )
+
+    private:
+    bool flag_;
 };
 
 }  // namespace std
