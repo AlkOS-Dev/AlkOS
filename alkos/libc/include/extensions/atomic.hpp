@@ -34,35 +34,30 @@ inline constexpr memory_order memory_order_acq_rel = memory_order::acq_rel;
 inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
 
 // ------------------------------
-// std::atomic
+// Internal implementation
 // ------------------------------
 
-TODO_LIBCPP_COMPLIANCE
-/**
- * TODO: Missing implementations:
- * - wait
- * - notify_one
- * - notify_all
- */
+namespace internal
+{
 
 template <typename T>
     requires std::is_trivially_copyable_v<T> && std::is_copy_constructible_v<T> &&
              std::is_move_constructible_v<T> && std::is_copy_assignable_v<T> &&
              std::is_move_assignable_v<T> && std::is_same_v<T, std::remove_cv_t<T>>
-struct atomic : template_lib::NoCopy {
+struct AtomicBase : template_lib::NoCopy {
     using value_type = T;
 
     // ------------------------------
     // Struct creation
     // ------------------------------
 
-    constexpr atomic() noexcept(std::is_nothrow_default_constructible_v<T>)
+    constexpr AtomicBase() noexcept(std::is_nothrow_default_constructible_v<T>)
         requires std::is_default_constructible_v<T>
         : value_()
     {
     }
 
-    constexpr atomic(T desired) noexcept : value_(desired) {};
+    constexpr AtomicBase(T desired) noexcept : value_(desired) {};
 
     // ------------------------------
     // operators
@@ -212,8 +207,101 @@ struct atomic : template_lib::NoCopy {
         return __atomic_is_lock_free(sizeof(value_type), &value_);
     })
 
-    private:
+    protected:
     value_type value_;
+};
+
+}  // namespace internal
+
+// ------------------------------
+// std::atomic
+// ------------------------------
+
+template <typename T>
+struct atomic : public internal::AtomicBase<T> {
+    private:
+    using base_type = internal::AtomicBase<T>;
+
+    public:
+    using value_type = typename base_type::value_type;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    constexpr atomic() noexcept(std::is_nothrow_default_constructible_v<T>)
+        requires std::is_default_constructible_v<T>
+        : base_type()
+    {
+    }
+
+    constexpr atomic(T desired) noexcept : base_type(desired) {};
+
+    // ------------------------------
+    // Operators
+    // ------------------------------
+
+    using base_type::operator value_type;
+    using base_type::operator=;
+};
+
+// ------------------------------
+// std::atomic<T*>
+// ------------------------------
+
+template <typename T>
+struct atomic<T*> : public internal::AtomicBase<T*> {
+    private:
+    using base_type = internal::AtomicBase<T*>;
+
+    public:
+    using value_type      = typename base_type::value_type;
+    using difference_type = ptrdiff_t;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    constexpr atomic() noexcept = default;
+    constexpr atomic(T* desired) noexcept : base_type(desired) {}
+
+    // ------------------------------
+    // Pointer arithmetic operations
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T* fetch_add(
+            ptrdiff_t arg, memory_order order = memory_order_seq_cst
+        ),
+        {
+            return static_cast<T*>(
+                __atomic_fetch_add(&this->value_, arg * sizeof(T), static_cast<int>(order))
+            );
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T* fetch_sub(
+            ptrdiff_t arg, memory_order order = memory_order_seq_cst
+        ),
+        {
+            return static_cast<T*>(
+                __atomic_fetch_sub(&this->value_, arg * sizeof(T), static_cast<int>(order))
+            );
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(T* operator++(int), { return fetch_add(1); })
+
+    __DEFINE_VOLATILE_PAIR(T* operator--(int), { return fetch_sub(1); })
+
+    __DEFINE_VOLATILE_PAIR(T* operator++(), { return fetch_add(1) + 1; })
+
+    __DEFINE_VOLATILE_PAIR(T* operator--(), { return fetch_sub(1) - 1; })
+
+    __DEFINE_VOLATILE_PAIR(T* operator+=(ptrdiff_t arg), { return fetch_add(arg) + arg; })
+
+    __DEFINE_VOLATILE_PAIR(T* operator-=(ptrdiff_t arg), { return fetch_sub(arg) - arg; })
 };
 
 // ------------------------------
