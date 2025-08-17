@@ -13,13 +13,13 @@
 
 void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zone)
 {
-    assert(time != nullptr || time_zone != nullptr);
+    ASSERT_NOT_NULL(time);
+    ASSERT_NOT_NULL(time_zone);
 
     if (!TimingModule::IsInited()) {
         time->seconds   = 0;
         time->remainder = 0;
         return;
-        ;
     }
 
     if (time_zone != nullptr) {
