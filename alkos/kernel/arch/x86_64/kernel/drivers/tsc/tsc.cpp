@@ -15,7 +15,7 @@ static u64 ReadCb(hardware::ClockRegistryEntry *)
 // Private functions
 // ------------------------------
 
-static void AlternativeTscCheck(hardware::ClockRegistryEntry &entry)
+static void AlternativeTscCheck(hardware::ClockRegistryEntry &)
 {
     FAIL_ALWAYS("Not implemented yet: Alternative TSC check");
 }
@@ -55,7 +55,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
 void tsc::Initialize()
 {
     if (!IsAvailable()) {
-        KernelTraceWarning("TSC is not available. Fallback to old technology...");
+        KernelTraceInfo("TSC is not available. Fallback to old technology...");
         return;
     }
 
@@ -65,7 +65,8 @@ void tsc::Initialize()
     TRACE_DEBUG("Detected TSC, current counter: %zu", Read());
 
     if (!IsStable()) {
-        KernelTraceWarning("TSC is not stable. Fallback to old technology...");
+        KernelTraceInfo("TSC is not stable. Fallback to old technology...");
+        return;
     }
 
     // Clock information
