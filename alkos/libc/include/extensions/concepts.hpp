@@ -14,6 +14,12 @@ concept convertible_to =
 template <class T, class U>
 concept same_as = std::is_same_v<T, U> && std::is_same_v<U, T>;
 
+template <class T>
+concept integral = std::is_integral_v<T>;
+
+template <class T>
+concept floating_point = std::is_floating_point_v<T>;
+
 }  // namespace std
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_

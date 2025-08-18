@@ -40,6 +40,14 @@ inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
 namespace internal
 {
 
+TODO_LIBCPP_COMPLIANCE
+/**
+ * TODO: Missing implementations:
+ * - wait
+ * - notify_one
+ * - notify_all
+ */
+
 template <typename T>
     requires std::is_trivially_copyable_v<T> && std::is_copy_constructible_v<T> &&
              std::is_move_constructible_v<T> && std::is_copy_assignable_v<T> &&
@@ -305,6 +313,176 @@ struct atomic<T*> : public internal::AtomicBase<T*> {
 };
 
 // ------------------------------
+// Specializations for integral types
+// ------------------------------
+
+template <integral T>
+    requires(!std::is_same_v<std::remove_cv_t<T>, bool>)
+struct atomic<T> : public internal::AtomicBase<T> {
+    private:
+    using base_type = internal::AtomicBase<T>;
+
+    public:
+    using value_type      = typename base_type::value_type;
+    using difference_type = value_type;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    constexpr atomic() noexcept(std::is_nothrow_default_constructible_v<T>)
+        requires std::is_default_constructible_v<T>
+        : base_type()
+    {
+    }
+
+    constexpr atomic(T desired) noexcept : base_type(desired) {}
+
+    // ------------------------------
+    // Arithmetic operations
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_add(T arg, memory_order order = memory_order_seq_cst),
+        { return __atomic_fetch_add(&this->value_, arg, static_cast<int>(order)); }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_sub(T arg, memory_order order = memory_order_seq_cst),
+        { return __atomic_fetch_sub(&this->value_, arg, static_cast<int>(order)); }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_and(T arg, memory_order order = memory_order_seq_cst),
+        { return __atomic_fetch_and(&this->value_, arg, static_cast<int>(order)); }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_or(T arg, memory_order order = memory_order_seq_cst),
+        { return __atomic_fetch_or(&this->value_, arg, static_cast<int>(order)); }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_xor(T arg, memory_order order = memory_order_seq_cst),
+        { return __atomic_fetch_xor(&this->value_, arg, static_cast<int>(order)); }
+    )
+
+    // ------------------------------
+    // Compound assignment operators
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(T operator+=(T arg), {
+        return __atomic_add_fetch(&this->value_, arg, static_cast<int>(memory_order_seq_cst));
+    })
+
+    __DEFINE_VOLATILE_PAIR(T operator-=(T arg), {
+        return __atomic_sub_fetch(&this->value_, arg, static_cast<int>(memory_order_seq_cst));
+    })
+
+    __DEFINE_VOLATILE_PAIR(T operator&=(T arg), {
+        return __atomic_and_fetch(&this->value_, arg, static_cast<int>(memory_order_seq_cst));
+    })
+
+    __DEFINE_VOLATILE_PAIR(T operator|=(T arg), {
+        return __atomic_or_fetch(&this->value_, arg, static_cast<int>(memory_order_seq_cst));
+    })
+
+    __DEFINE_VOLATILE_PAIR(T operator^=(T arg), {
+        return __atomic_xor_fetch(&this->value_, arg, static_cast<int>(memory_order_seq_cst));
+    })
+
+    // ------------------------------
+    // Increment/decrement operators
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(T operator++(int), { return fetch_add(1); })
+
+    __DEFINE_VOLATILE_PAIR(T operator--(int), { return fetch_sub(1); })
+
+    __DEFINE_VOLATILE_PAIR(T operator++(), {
+        return __atomic_add_fetch(&this->value_, 1, static_cast<int>(memory_order_seq_cst));
+    })
+
+    __DEFINE_VOLATILE_PAIR(T operator--(), {
+        return __atomic_sub_fetch(&this->value_, 1, static_cast<int>(memory_order_seq_cst));
+    })
+
+    // ------------------------------
+    // Operators
+    // ------------------------------
+
+    using base_type::operator value_type;
+    using base_type::operator=;
+};
+
+// ------------------------------
+// Specializations for floating-point types
+// ------------------------------
+
+template <floating_point T>
+struct atomic<T> : public internal::AtomicBase<T> {
+    private:
+    using base_type = internal::AtomicBase<T>;
+
+    public:
+    using value_type      = typename base_type::value_type;
+    using difference_type = value_type;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    constexpr atomic() noexcept(std::is_nothrow_default_constructible_v<T>)
+        requires std::is_default_constructible_v<T>
+        : base_type()
+    {
+    }
+
+    constexpr atomic(T desired) noexcept : base_type(desired) {}
+
+    // ------------------------------
+    // Floating-point arithmetic operations
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_add(T arg, memory_order order = memory_order_seq_cst), {
+            T expected = this->load(memory_order_relaxed);
+            T desired;
+            do {
+                desired = expected + arg;
+            } while (!this->compare_exchange_weak(expected, desired, order, memory_order_relaxed));
+            return expected;
+        }
+    )
+
+    __DEFINE_VOLATILE_PAIR(
+        NODISCARD FORCE_INLINE_F T fetch_sub(T arg, memory_order order = memory_order_seq_cst), {
+            T expected = this->load(memory_order_relaxed);
+            T desired;
+            do {
+                desired = expected - arg;
+            } while (!this->compare_exchange_weak(expected, desired, order, memory_order_relaxed));
+            return expected;
+        }
+    )
+
+    // ------------------------------
+    // Compound assignment operators
+    // ------------------------------
+
+    __DEFINE_VOLATILE_PAIR(T operator+=(T arg), { return fetch_add(arg) + arg; })
+
+    __DEFINE_VOLATILE_PAIR(T operator-=(T arg), { return fetch_sub(arg) - arg; })
+
+    // ------------------------------
+    // Operators
+    // ------------------------------
+
+    using base_type::operator value_type;
+    using base_type::operator=;
+};
+
+// ------------------------------
 // Aliases
 // ------------------------------
 
@@ -370,12 +548,17 @@ TODO_LIBCPP_COMPLIANCE
 class atomic_flag : public template_lib::NoCopy
 {
     public:
-    constexpr atomic_flag() noexcept
-    {
-        __atomic_clear(&flag_, static_cast<int>(memory_order_relaxed));
-    }
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    constexpr atomic_flag() noexcept = default;
 
     atomic_flag& operator=(const atomic_flag&) volatile = delete;
+
+    // ------------------------------
+    // Methods
+    // ------------------------------
 
     __DEFINE_VOLATILE_PAIR(FORCE_INLINE_F void clear(memory_order order = memory_order_seq_cst), {
         ASSERT_FALSE(
@@ -400,8 +583,12 @@ class atomic_flag : public template_lib::NoCopy
         }
     )
 
+    // ------------------------------
+    // Private members
+    // ------------------------------
+
     private:
-    bool flag_;
+    byte flag_{};
 };
 
 }  // namespace std
