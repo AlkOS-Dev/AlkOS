@@ -14,7 +14,7 @@ namespace std
 {
 
 // ------------------------------
-// std::memory_order
+// Memory synchronization ordering
 // ------------------------------
 
 enum class memory_order : int {
@@ -32,6 +32,25 @@ inline constexpr memory_order memory_order_acquire = memory_order::acquire;
 inline constexpr memory_order memory_order_release = memory_order::release;
 inline constexpr memory_order memory_order_acq_rel = memory_order::acq_rel;
 inline constexpr memory_order memory_order_seq_cst = memory_order::seq_cst;
+
+FORCE_INLINE_F void atomic_thread_fence(memory_order m)
+{
+    __atomic_thread_fence(static_cast<int>(m));
+}
+
+FORCE_INLINE_F void atomic_signal_fence(memory_order m)
+{
+    __atomic_signal_fence(static_cast<int>(m));
+}
+
+template <typename T>
+inline T kill_dependency(T value) noexcept
+{
+    // This function is used to eliminate compiler optimizations
+    // that might remove dependencies between memory accesses.
+    T ret(value);
+    return ret;
+}
 
 // ------------------------------
 // Internal implementation
@@ -317,7 +336,7 @@ struct atomic<T*> : public internal::AtomicBase<T*> {
 // ------------------------------
 
 template <integral T>
-    requires(!std::is_same_v<std::remove_cv_t<T>, bool>)
+    requires(!std::is_same_v<bool, std::remove_cv_t<T>>)
 struct atomic<T> : public internal::AtomicBase<T> {
     private:
     using base_type = internal::AtomicBase<T>;
@@ -483,7 +502,7 @@ struct atomic<T> : public internal::AtomicBase<T> {
 };
 
 // ------------------------------
-// Aliases
+// Type aliases
 // ------------------------------
 
 using atomic_bool           = atomic<bool>;
@@ -579,7 +598,8 @@ class atomic_flag : public template_lib::NoCopy
             ASSERT_FALSE(
                 order == memory_order_release || order == memory_order_acq_rel, "Undefined behavior"
             );
-            return __atomic_load_n(&flag_, static_cast<int>(order));
+            return __atomic_load_n(&flag_, static_cast<int>(order)) ==
+                   __GCC_ATOMIC_TEST_AND_SET_TRUEVAL;
         }
     )
 
@@ -590,6 +610,326 @@ class atomic_flag : public template_lib::NoCopy
     private:
     byte flag_{};
 };
+
+// ------------------------------
+// Operations on atomic types
+// ------------------------------
+
+// atomic_is_lock_free
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_is_lock_free(const atomic<T>* obj) noexcept
+{
+    return obj->is_lock_free();
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_is_lock_free(const volatile atomic<T>* obj) noexcept
+{
+    return obj->is_lock_free();
+}
+
+// atomic_store / atomic_store_explicit
+template <typename T>
+FORCE_INLINE_F void atomic_store(atomic<T>* obj, T desired) noexcept
+{
+    obj->store(desired);
+}
+
+template <typename T>
+FORCE_INLINE_F void atomic_store(volatile atomic<T>* obj, T desired) noexcept
+{
+    obj->store(desired);
+}
+
+template <typename T>
+FORCE_INLINE_F void atomic_store_explicit(atomic<T>* obj, T desired, memory_order order) noexcept
+{
+    obj->store(desired, order);
+}
+
+template <typename T>
+FORCE_INLINE_F void atomic_store_explicit(
+    volatile atomic<T>* obj, T desired, memory_order order
+) noexcept
+{
+    obj->store(desired, order);
+}
+
+// atomic_load / atomic_load_explicit
+template <typename T>
+NODISCARD FORCE_INLINE_F T atomic_load(const atomic<T>* obj) noexcept
+{
+    return obj->load();
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T atomic_load(const volatile atomic<T>* obj) noexcept
+{
+    return obj->load();
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T atomic_load_explicit(const atomic<T>* obj, memory_order order) noexcept
+{
+    return obj->load(order);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T
+atomic_load_explicit(const volatile atomic<T>* obj, memory_order order) noexcept
+{
+    return obj->load(order);
+}
+
+// atomic_exchange / atomic_exchange_explicit
+template <typename T>
+NODISCARD FORCE_INLINE_F T atomic_exchange(atomic<T>* obj, T desired) noexcept
+{
+    return obj->exchange(desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T atomic_exchange(volatile atomic<T>* obj, T desired) noexcept
+{
+    return obj->exchange(desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T
+atomic_exchange_explicit(atomic<T>* obj, T desired, memory_order order) noexcept
+{
+    return obj->exchange(desired, order);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F T
+atomic_exchange_explicit(volatile atomic<T>* obj, T desired, memory_order order) noexcept
+{
+    return obj->exchange(desired, order);
+}
+
+// atomic_compare_exchange_weak / atomic_compare_exchange_weak_explicit
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak(
+    atomic<T>* obj, T* expected, T desired
+) noexcept
+{
+    return obj->compare_exchange_weak(*expected, desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak(
+    volatile atomic<T>* obj, T* expected, T desired
+) noexcept
+{
+    return obj->compare_exchange_weak(*expected, desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak_explicit(
+    atomic<T>* obj, T* expected, T desired, memory_order success, memory_order failure
+) noexcept
+{
+    return obj->compare_exchange_weak(*expected, desired, success, failure);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak_explicit(
+    volatile atomic<T>* obj, T* expected, T desired, memory_order success, memory_order failure
+) noexcept
+{
+    return obj->compare_exchange_weak(*expected, desired, success, failure);
+}
+
+// atomic_compare_exchange_strong / atomic_compare_exchange_strong_explicit
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong(
+    atomic<T>* obj, T* expected, T desired
+) noexcept
+{
+    return obj->compare_exchange_strong(*expected, desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong(
+    volatile atomic<T>* obj, T* expected, T desired
+) noexcept
+{
+    return obj->compare_exchange_strong(*expected, desired);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong_explicit(
+    atomic<T>* obj, T* expected, T desired, memory_order success, memory_order failure
+) noexcept
+{
+    return obj->compare_exchange_strong(*expected, desired, success, failure);
+}
+
+template <typename T>
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong_explicit(
+    volatile atomic<T>* obj, T* expected, T desired, memory_order success, memory_order failure
+) noexcept
+{
+    return obj->compare_exchange_strong(*expected, desired, success, failure);
+}
+
+// atomic_fetch_add / atomic_fetch_add_explicit
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_add(
+    atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg
+) noexcept
+{
+    return obj->fetch_add(arg);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_add(
+    volatile atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg
+) noexcept
+{
+    return obj->fetch_add(arg);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_add_explicit(
+    atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg, memory_order order
+) noexcept
+{
+    return obj->fetch_add(arg, order);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_add_explicit(
+    volatile atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg,
+    memory_order order
+) noexcept
+{
+    return obj->fetch_add(arg, order);
+}
+
+// atomic_fetch_sub / atomic_fetch_sub_explicit
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_sub(
+    atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg
+) noexcept
+{
+    return obj->fetch_sub(arg);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_sub(
+    volatile atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg
+) noexcept
+{
+    return obj->fetch_sub(arg);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_sub_explicit(
+    atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg, memory_order order
+) noexcept
+{
+    return obj->fetch_sub(arg, order);
+}
+
+template <typename T>
+    requires(integral<T> || std::is_pointer_v<T>)
+NODISCARD FORCE_INLINE_F T atomic_fetch_sub_explicit(
+    volatile atomic<T>* obj, std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, T> arg,
+    memory_order order
+) noexcept
+{
+    return obj->fetch_sub(arg, order);
+}
+
+// atomic_fetch_and / atomic_fetch_and_explicit
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_and(atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_and(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_and(volatile atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_and(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_and_explicit(atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_and(arg, order);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_and_explicit(volatile atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_and(arg, order);
+}
+
+// atomic_fetch_or / atomic_fetch_or_explicit
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_or(atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_or(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_or(volatile atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_or(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_or_explicit(atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_or(arg, order);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_or_explicit(volatile atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_or(arg, order);
+}
+
+// atomic_fetch_xor / atomic_fetch_xor_explicit
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_xor(atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_xor(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T atomic_fetch_xor(volatile atomic<T>* obj, T arg) noexcept
+{
+    return obj->fetch_xor(arg);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_xor_explicit(atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_xor(arg, order);
+}
+
+template <integral T>
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_xor_explicit(volatile atomic<T>* obj, T arg, memory_order order) noexcept
+{
+    return obj->fetch_xor(arg, order);
+}
 
 }  // namespace std
 
