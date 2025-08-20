@@ -214,14 +214,13 @@ inline constexpr size_t IntegralAlignment = sizeof(T) > alignof(T) ? sizeof(T) :
 
 template <typename T>
     requires std::is_pointer_v<T>
-using PointerBase = AtomicBase<T, __alignof__(T)>;
+using PointerBase = AtomicBase<T, alignof(T)>;
 
-template <integral T>
-    requires(!std::is_same_v<bool, std::remove_cv_t<T>>)
+template <typename T>
 using IntegralBase = AtomicBase<T, IntegralAlignment<T>>;
 
-template <floating_point T>
-using FloatingPointBase = AtomicBase<T, __alignof__(T)>;
+template <typename T>
+using FloatingPointBase = AtomicBase<T, alignof(T)>;
 
 }  // namespace internal
 
@@ -232,7 +231,7 @@ using FloatingPointBase = AtomicBase<T, __alignof__(T)>;
 // ------------------------------
 
 template <typename T>
-struct atomic : public internal::AtomicBase<T, alignof(T)> {
+struct atomic : internal::AtomicBase<T, alignof(T)> {
     private:
     using base_type = internal::AtomicBase<T, alignof(T)>;
 
@@ -249,13 +248,8 @@ struct atomic : public internal::AtomicBase<T, alignof(T)> {
     {
     }
 
-    constexpr atomic(T desired) noexcept : base_type(desired) {};
+    constexpr atomic(T desired) noexcept : base_type(desired) {}
 
-    // ------------------------------
-    // Operators
-    // ------------------------------
-
-    using base_type::operator value_type;
     using base_type::operator=;
 };
 
@@ -264,7 +258,7 @@ struct atomic : public internal::AtomicBase<T, alignof(T)> {
 // ------------------------------
 
 template <typename T>
-struct atomic<T*> : public internal::PointerBase<T*> {
+struct atomic<T*> : internal::PointerBase<T*> {
     private:
     using base_type = internal::PointerBase<T*>;
 
@@ -283,6 +277,8 @@ struct atomic<T*> : public internal::PointerBase<T*> {
     }
 
     constexpr atomic(T* desired) noexcept : base_type(desired) {}
+
+    using base_type::operator=;
 
     // ------------------------------
     // Pointer arithmetic operations
@@ -314,36 +310,33 @@ struct atomic<T*> : public internal::PointerBase<T*> {
 
     __DEFINE_VOLATILE_PAIR(T* operator--(int), { return fetch_sub(1); })
 
-    __DEFINE_VOLATILE_PAIR(T* operator++(), {
-        return __atomic_add_fetch(
-            &value_, GetByteOffset_(1), static_cast<int>(memory_order_seq_cst)
-        );
-    })
+    __DEFINE_VOLATILE_PAIR(T* operator++(), { return AddFetch_(1); })
 
-    __DEFINE_VOLATILE_PAIR(T* operator--(), {
-        return __atomic_sub_fetch(
-            &value_, GetByteOffset_(1), static_cast<int>(memory_order_seq_cst)
-        );
-    })
+    __DEFINE_VOLATILE_PAIR(T* operator--(), { return SubFetch_(1); })
 
-    __DEFINE_VOLATILE_PAIR(T* operator+=(difference_type arg), {
-        return __atomic_add_fetch(
-            &value_, GetByteOffset_(arg), static_cast<int>(memory_order_seq_cst)
-        );
-    })
+    __DEFINE_VOLATILE_PAIR(T* operator+=(difference_type arg), { return AddFetch_(arg); })
 
-    __DEFINE_VOLATILE_PAIR(T* operator-=(difference_type arg), {
-        return __atomic_sub_fetch(
-            &value_, GetByteOffset_(arg), static_cast<int>(memory_order_seq_cst)
-        );
-    })
+    __DEFINE_VOLATILE_PAIR(T* operator-=(difference_type arg), { return SubFetch_(arg); })
 
     static constexpr bool is_always_lock_free = __GCC_ATOMIC_POINTER_LOCK_FREE == 2;
 
     private:
     static constexpr difference_type GetByteOffset_(difference_type arg) { return arg * sizeof(T); }
 
-    private:
+    T* AddFetch_(difference_type arg)
+    {
+        return static_cast<T*>(
+            __atomic_add_fetch(&value_, GetByteOffset_(arg), static_cast<int>(memory_order_seq_cst))
+        );
+    }
+
+    T* SubFetch_(difference_type arg)
+    {
+        return static_cast<T*>(
+            __atomic_sub_fetch(&value_, GetByteOffset_(arg), static_cast<int>(memory_order_seq_cst))
+        );
+    }
+
     using base_type::value_;
 };
 
@@ -352,7 +345,8 @@ struct atomic<T*> : public internal::PointerBase<T*> {
 // ------------------------------
 
 template <integral T>
-struct atomic<T> : public internal::IntegralBase<T> {
+    requires(!std::is_same_v<bool, std::remove_cv_t<T>>)
+struct atomic<T> : internal::IntegralBase<T> {
     private:
     using base_type = internal::IntegralBase<T>;
 
@@ -371,6 +365,8 @@ struct atomic<T> : public internal::IntegralBase<T> {
     }
 
     constexpr atomic(T desired) noexcept : base_type(desired) {}
+
+    using base_type::operator=;
 
     // ------------------------------
     // Arithmetic operations
@@ -405,25 +401,15 @@ struct atomic<T> : public internal::IntegralBase<T> {
     // Compound assignment operators
     // ------------------------------
 
-    __DEFINE_VOLATILE_PAIR(T operator+=(T arg), {
-        return __atomic_add_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator+=(T arg), { return AddFetch_(arg); })
 
-    __DEFINE_VOLATILE_PAIR(T operator-=(T arg), {
-        return __atomic_sub_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator-=(T arg), { return SubFetch_(arg); })
 
-    __DEFINE_VOLATILE_PAIR(T operator&=(T arg), {
-        return __atomic_and_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator&=(T arg), { return AndFetch_(arg); })
 
-    __DEFINE_VOLATILE_PAIR(T operator|=(T arg), {
-        return __atomic_or_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator|=(T arg), { return OrFetch_(arg); })
 
-    __DEFINE_VOLATILE_PAIR(T operator^=(T arg), {
-        return __atomic_xor_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator^=(T arg), { return XorFetch_(arg); })
 
     // ------------------------------
     // Increment/decrement operators
@@ -433,22 +419,36 @@ struct atomic<T> : public internal::IntegralBase<T> {
 
     __DEFINE_VOLATILE_PAIR(T operator--(int), { return fetch_sub(1); })
 
-    __DEFINE_VOLATILE_PAIR(T operator++(), {
-        return __atomic_add_fetch(&value_, 1, static_cast<int>(memory_order_seq_cst));
-    })
+    __DEFINE_VOLATILE_PAIR(T operator++(), { return AddFetch_(1); })
 
-    __DEFINE_VOLATILE_PAIR(T operator--(), {
-        return __atomic_sub_fetch(&value_, 1, static_cast<int>(memory_order_seq_cst));
-    })
-
-    // ------------------------------
-    // Operators
-    // ------------------------------
-
-    using base_type::operator value_type;
-    using base_type::operator=;
+    __DEFINE_VOLATILE_PAIR(T operator--(), { return SubFetch_(1); })
 
     private:
+    T AddFetch_(T arg)
+    {
+        return __atomic_add_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
+    }
+
+    T SubFetch_(T arg)
+    {
+        return __atomic_sub_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
+    }
+
+    T AndFetch_(T arg)
+    {
+        return __atomic_and_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
+    }
+
+    T OrFetch_(T arg)
+    {
+        return __atomic_or_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
+    }
+
+    T XorFetch_(T arg)
+    {
+        return __atomic_xor_fetch(&value_, arg, static_cast<int>(memory_order_seq_cst));
+    }
+
     using base_type::value_;
 };
 
@@ -457,7 +457,7 @@ struct atomic<T> : public internal::IntegralBase<T> {
 // ------------------------------
 
 template <floating_point T>
-struct atomic<T> : public internal::FloatingPointBase<T> {
+struct atomic<T> : internal::FloatingPointBase<T> {
     private:
     using base_type = internal::FloatingPointBase<T>;
 
@@ -476,6 +476,8 @@ struct atomic<T> : public internal::FloatingPointBase<T> {
     }
 
     constexpr atomic(T desired) noexcept : base_type(desired) {}
+
+    using base_type::operator=;
 
     // ------------------------------
     // Floating-point arithmetic operations
@@ -510,13 +512,6 @@ struct atomic<T> : public internal::FloatingPointBase<T> {
     __DEFINE_VOLATILE_PAIR(T operator+=(T arg), { return fetch_add(arg) + arg; })
 
     __DEFINE_VOLATILE_PAIR(T operator-=(T arg), { return fetch_sub(arg) - arg; })
-
-    // ------------------------------
-    // Operators
-    // ------------------------------
-
-    using base_type::operator value_type;
-    using base_type::operator=;
 };
 
 // ------------------------------
