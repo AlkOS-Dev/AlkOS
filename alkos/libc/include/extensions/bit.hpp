@@ -185,4 +185,11 @@ FAST_CALL constexpr bool AreBitsEnabled(const NumT num, const NumT mask)
     return (num & mask) == mask;
 }
 
+template <typename NumT>
+    requires std::is_unsigned_v<NumT>
+FAST_CALL constexpr bool IsPowerOfTwo(const NumT num)
+{
+    return num && !(num & (num - 1));
+}
+
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
