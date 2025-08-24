@@ -1,6 +1,9 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 
+namespace std
+{
+
 // ------------------------------
 // std::addressof
 // ------------------------------
@@ -13,5 +16,7 @@ T* addressof(T& arg) noexcept
 
 template <class T>
 const T* addressof(const T&&) = delete;
+
+}  // namespace std
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
