@@ -71,8 +71,7 @@ template <typename T>
 concept AtomicIntegral = integral<T> && !std::is_same_v<bool, std::remove_cv_t<T>>;
 
 template <typename T>
-inline constexpr bool IsAtomicObject =
-    (!integral<T> && !floating_point<T> && !std::is_pointer_v<T>);
+inline constexpr bool IsAtomicObject = !integral<T> && !floating_point<T> && !std::is_pointer_v<T>;
 
 template <typename T>
 concept IsFetchAddSupported = requires(T* obj, T val) { __atomic_fetch_add(obj, val, 0); };
@@ -110,6 +109,10 @@ struct AtomicImpl {
     // Store operations
     FORCE_INLINE_F static void store(T* obj, value_type desired, memory_order order) noexcept
     {
+        ASSERT_NEQ(order, memory_order_consume);
+        ASSERT_NEQ(order, memory_order_acquire);
+        ASSERT_NEQ(order, memory_order_acq_rel);
+
         if constexpr (IsAtomicObject<T>) {
             __atomic_store(obj, ClearPadding(desired), static_cast<int>(order));
         } else {
@@ -120,6 +123,9 @@ struct AtomicImpl {
     // Load operations
     NODISCARD FORCE_INLINE_F static value_type load(const T* obj, memory_order order) noexcept
     {
+        ASSERT_NEQ(order, memory_order_release);
+        ASSERT_NEQ(order, memory_order_acq_rel);
+
         if constexpr (IsAtomicObject<T>) {
             alignas(T) byte buffer[sizeof(T)];
             auto* ptr = reinterpret_cast<value_type*>(buffer);
@@ -135,6 +141,10 @@ struct AtomicImpl {
         T* obj, value_type desired, memory_order order
     ) noexcept
     {
+        ASSERT_NEQ(order, memory_order_consume);
+        ASSERT_NEQ(order, memory_order_acquire);
+        ASSERT_NEQ(order, memory_order_acq_rel);
+
         if constexpr (IsAtomicObject<T>) {
             alignas(T) byte buffer[sizeof(T)];
             auto* ptr = reinterpret_cast<value_type*>(buffer);
@@ -146,24 +156,24 @@ struct AtomicImpl {
     }
 
     // Compare exchange operations
-    template <bool AtomicRef>
+    template <bool kAtomicRef = false>
     NODISCARD FORCE_INLINE_F static bool compare_exchange_weak(
         T* obj, value_type& expected, value_type& desired, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
-        return compare_exchange<AtomicRef>(
+        return compare_exchange_<kAtomicRef>(
             obj, expected, desired, true, success_order, failure_order
         );
     }
 
-    template <bool AtomicRef>
+    template <bool kAtomicRef = false>
     NODISCARD FORCE_INLINE_F static bool compare_exchange_strong(
         T* obj, value_type& expected, value_type& desired, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
-        return compare_exchange<AtomicRef>(
+        return compare_exchange_<kAtomicRef>(
             obj, expected, desired, false, success_order, failure_order
         );
     }
@@ -180,7 +190,7 @@ struct AtomicImpl {
             value_type desired;
             do {
                 desired = expected + arg;
-            } while (!compare_exchange(obj, &expected, desired, true, order, memory_order_relaxed));
+            } while (!compare_exchange_weak(obj, &expected, desired, order, memory_order_relaxed));
             return expected;
         }
     }
@@ -196,7 +206,7 @@ struct AtomicImpl {
             value_type desired;
             do {
                 desired = expected - arg;
-            } while (!compare_exchange(obj, &expected, desired, true, order, memory_order_relaxed));
+            } while (!compare_exchange_weak(obj, &expected, desired, order, memory_order_relaxed));
             return expected;
         }
     }
@@ -277,24 +287,81 @@ struct AtomicImpl {
     }
 
     private:
-    template <bool AtomicRef>
-    NODISCARD FORCE_INLINE_F static bool compare_exchange(
+    template <bool kAtomicRef>
+    NODISCARD FORCE_INLINE_F static bool compare_exchange_(
         T& obj, value_type& expected, value_type& desired, bool weak, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
-        T* ptr = std::addressof(obj);
+        ASSERT_NEQ(failure_order, memory_order_release);
+        ASSERT_NEQ(failure_order, memory_order_acq_rel);
 
-        if constexpr (IsAtomicObject<T>) {
-            return __atomic_compare_exchange(
-                obj, expected, &desired, weak, static_cast<int>(success_order),
+        if constexpr (!IsAtomicObject<T>) {
+            return __atomic_compare_exchange_n(
+                &obj, &expected, desired, weak, static_cast<int>(success_order),
                 static_cast<int>(failure_order)
             );
         } else {
-            return __atomic_compare_exchange_n(
-                obj, expected, desired, weak, static_cast<int>(success_order),
-                static_cast<int>(failure_order)
-            );
+            T* ptr = std::addressof(obj);
+
+            if constexpr (!HasPadding<value_type>) {
+                return __atomic_compare_exchange(
+                    ptr, std::addressof(expected), std::addressof(desired), weak, success_order,
+                    failure_order
+                );
+            } else {
+                // Only allowed to copy on failure
+                value_type expected_copy = expected;
+                // Clear padding so that comparison is done on value representation
+                value_type* expected_ptr = ClearPadding(expected_copy);
+
+                // Clear padding in case of success
+                value_type* desired_ptr = ClearPadding(desired);
+
+                if constexpr (!kAtomicRef) {
+                    if (__atomic_compare_exchange(
+                            ptr, expected_ptr, desired_ptr, weak, static_cast<int>(success_order),
+                            static_cast<int>(failure_order)
+                        )) {
+                        return true;
+                    }
+
+                    memcpy(std::addressof(expected), expected_ptr, sizeof(value_type));
+                    return false;
+                } else {
+                    size_t i = 0;
+                    while (true) {
+                        value_type original = expected_copy;
+
+                        if (__atomic_compare_exchange(
+                                ptr, expected_ptr, desired_ptr, weak,
+                                static_cast<int>(success_order), static_cast<int>(failure_order)
+                            )) {
+                            return true;
+                        }
+
+                        value_type current = expected_copy;
+
+                        // Compare value representations
+                        if (memcmp(
+                                ClearPadding(original), ClearPadding(desired), sizeof(value_type)
+                            )) {
+                            // True failure - the value changed to something else
+                            memcpy(std::addressof(expected), expected_ptr, sizeof(value_type));
+                            return false;
+                        }
+
+                        // First CAE fails because the actual value has non-zero padding.
+                        // Second CAE fails because another thread stored the same value,
+                        // but now with padding cleared. Third CAE succeeds.
+                        // We will never need to loop a fourth time, because any value
+                        // written by another thread (whether via store, exchange or
+                        // compare_exchange) will have had its padding cleared.
+                        ++i;
+                        ASSERT_LT(i, 3, "Loop shouldn't iterate more than 3 times");
+                    }
+                }
+            }
         }
     }
 };
@@ -344,13 +411,8 @@ struct AtomicBase : template_lib::NoCopy {
     // ------------------------------
 
     __DEFINE_VOLATILE_PAIR(
-        FORCE_INLINE_F void store(T desired, memory_order order = memory_order_seq_cst), {
-            ASSERT_NEQ(order, memory_order_consume);
-            ASSERT_NEQ(order, memory_order_acquire);
-            ASSERT_NEQ(order, memory_order_acq_rel);
-
-            internal::AtomicImpl<T>::store(&value_, desired, order);
-        }
+        FORCE_INLINE_F void store(T desired, memory_order order = memory_order_seq_cst),
+        { internal::AtomicImpl<T>::store(&value_, desired, order); }
     )
 
     // ------------------------------
@@ -358,12 +420,8 @@ struct AtomicBase : template_lib::NoCopy {
     // ------------------------------
 
     __DEFINE_VOLATILE_PAIR(
-        NODISCARD FORCE_INLINE_F T load(memory_order order = memory_order_seq_cst) const, {
-            ASSERT_NEQ(order, memory_order_release);
-            ASSERT_NEQ(order, memory_order_acq_rel);
-
-            return internal::AtomicImpl<T>::load(&value_, order);
-        }
+        NODISCARD FORCE_INLINE_F T load(memory_order order = memory_order_seq_cst) const,
+        { return internal::AtomicImpl<T>::load(&value_, order); }
     )
 
     // ------------------------------
@@ -377,13 +435,8 @@ struct AtomicBase : template_lib::NoCopy {
     // ------------------------------
 
     __DEFINE_VOLATILE_PAIR(
-        NODISCARD FORCE_INLINE_F T exchange(T desired, memory_order order = memory_order_seq_cst), {
-            ASSERT_NEQ(order, memory_order_consume);
-            ASSERT_NEQ(order, memory_order_acquire);
-            ASSERT_NEQ(order, memory_order_acq_rel);
-
-            return internal::AtomicImpl<T>::exchange(&value_, desired, order);
-        }
+        NODISCARD FORCE_INLINE_F T exchange(T desired, memory_order order = memory_order_seq_cst),
+        { return internal::AtomicImpl<T>::exchange(&value_, desired, order); }
     )
 
     // ------------------------------
@@ -396,11 +449,8 @@ struct AtomicBase : template_lib::NoCopy {
             memory_order failure_order = memory_order_seq_cst
         ),
         {
-            ASSERT_NEQ(failure_order, memory_order_release);
-            ASSERT_NEQ(failure_order, memory_order_acq_rel);
-
-            return internal::AtomicImpl<T>::compare_exchange(
-                &value_, &expected, desired, true, success_order, failure_order
+            return AtomicImpl<T>::compare_exchange_weak(
+                &value_, &expected, desired, success_order, failure_order
             );
         }
     )
@@ -418,11 +468,8 @@ struct AtomicBase : template_lib::NoCopy {
             memory_order failure_order = memory_order_seq_cst
         ),
         {
-            ASSERT_NEQ(failure_order, memory_order_release);
-            ASSERT_NEQ(failure_order, memory_order_acq_rel);
-
-            return internal::AtomicImpl<T>::compare_exchange(
-                &value_, &expected, desired, false, success_order, failure_order
+            return AtomicImpl<T>::compare_exchange_strong(
+                &value_, &expected, desired, success_order, failure_order
             );
         }
     )
@@ -481,6 +528,14 @@ struct AtomicRefBase {
     public:
     using value_type = std::remove_cv_t<T>;
 
+    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
+
+    static_assert(is_always_lock_free || !std::is_volatile_v<T>, "The program is ill-formed");
+
+    static constexpr size_t required_alignment = MinAlignment_ > alignof(value_type)
+                                                     ? MinAlignment_
+                                                     : alignof(value_type);
+
     // ------------------------------
     // Struct creation
     // ------------------------------
@@ -508,13 +563,97 @@ struct AtomicRefBase {
 
     AtomicRefBase& operator=(const AtomicRefBase&) = delete;
 
-    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
+    // ------------------------------
+    // Conversion
+    // ------------------------------
 
-    static constexpr size_t required_alignment = MinAlignment_ > alignof(value_type)
-                                                     ? MinAlignment_
-                                                     : alignof(value_type);
+    operator value_type() const noexcept { return load(); }
 
-    static_assert(is_always_lock_free || !std::is_volatile_v<T>, "The program is ill-formed");
+    // ------------------------------
+    // Atomic operations
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F bool is_lock_free() const noexcept
+    {
+        return AtomicImpl<T>::template is_lock_free<sizeof(T), required_alignment>();
+    }
+
+    FORCE_INLINE_F void store(
+        value_type desired, memory_order order = memory_order_seq_cst
+    ) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        AtomicImpl<T>::template compare_exchange<true>(ptr_, desired, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    load(memory_order order = memory_order_seq_cst) const noexcept
+    {
+        return AtomicImpl<T>::load(ptr_, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    exchange(value_type desired, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return AtomicImpl<T>::exchange(ptr_, desired, order);
+    }
+
+    NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
+        value_type& expected, value_type desired, memory_order success_order = memory_order_seq_cst,
+        memory_order failure_order = memory_order_seq_cst
+    ) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return AtomicImpl<T>::template compare_exchange_weak<true>(
+            ptr_, expected, desired, success_order, failure_order
+        );
+    }
+
+    NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
+        value_type& expected, value_type desired, memory_order order = memory_order_seq_cst
+    ) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return compare_exchange_weak(expected, desired, order, GetFailureOrder_(order));
+    }
+
+    NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
+        value_type& expected, value_type desired, memory_order success_order = memory_order_seq_cst,
+        memory_order failure_order = memory_order_seq_cst
+    ) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return AtomicImpl<T>::template compare_exchange_strong<true>(
+            ptr_, expected, desired, success_order, failure_order
+        );
+    }
+
+    NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
+        value_type& expected, value_type desired, memory_order order = memory_order_seq_cst
+    ) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return compare_exchange_strong(expected, desired, order, GetFailureOrder_(order));
+    }
+
+    NODISCARD FORCE_INLINE_F T* address() const noexcept { return ptr_; }
+
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    private:
+    static constexpr memory_order GetFailureOrder_(memory_order order) noexcept
+    {
+        return order == memory_order_acq_rel   ? memory_order_acquire
+               : order == memory_order_release ? memory_order_relaxed
+                                               : order;
+    }
+
+    // ------------------------------
+    // Private members
+    // ------------------------------
 
     private:
     T* ptr_;
