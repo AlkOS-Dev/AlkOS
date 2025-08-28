@@ -99,21 +99,22 @@ FORCE_INLINE_F constexpr T* ClearPadding(T& obj) noexcept
 // internal::AtomicBuiltin
 // ------------------------------
 
-template <typename T>
+template <typename T, bool kAtomicRef = false>
 struct AtomicImpl {
     private:
-    using value_type      = std::remove_volatile_t<T>;
+    using value_type      = std::conditional_t<kAtomicRef, std::remove_volatile_t<T>, T>;
     using difference_type = std::conditional_t<std::is_pointer_v<T>, ptrdiff_t, value_type>;
 
     public:
     // Store operations
-    FORCE_INLINE_F static void store(T* obj, value_type desired, memory_order order) noexcept
+    template <typename U>
+    FORCE_INLINE_F static void store(U* obj, value_type desired, memory_order order) noexcept
     {
         ASSERT_NEQ(order, memory_order_consume);
         ASSERT_NEQ(order, memory_order_acquire);
         ASSERT_NEQ(order, memory_order_acq_rel);
 
-        if constexpr (IsAtomicObject<T>) {
+        if constexpr (IsAtomicObject<T> || floating_point<T>) {
             __atomic_store(obj, ClearPadding(desired), static_cast<int>(order));
         } else {
             __atomic_store_n(obj, desired, static_cast<int>(order));
@@ -121,12 +122,13 @@ struct AtomicImpl {
     }
 
     // Load operations
-    NODISCARD FORCE_INLINE_F static value_type load(const T* obj, memory_order order) noexcept
+    template <typename U>
+    NODISCARD FORCE_INLINE_F static value_type load(const U* obj, memory_order order) noexcept
     {
         ASSERT_NEQ(order, memory_order_release);
         ASSERT_NEQ(order, memory_order_acq_rel);
 
-        if constexpr (IsAtomicObject<T>) {
+        if constexpr (IsAtomicObject<T> || floating_point<T>) {
             alignas(T) byte buffer[sizeof(T)];
             auto* ptr = reinterpret_cast<value_type*>(buffer);
             __atomic_load(obj, ptr, static_cast<int>(order));
@@ -137,15 +139,12 @@ struct AtomicImpl {
     }
 
     // Exchange operations
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type exchange(
-        T* obj, value_type desired, memory_order order
+        U* obj, value_type desired, memory_order order
     ) noexcept
     {
-        ASSERT_NEQ(order, memory_order_consume);
-        ASSERT_NEQ(order, memory_order_acquire);
-        ASSERT_NEQ(order, memory_order_acq_rel);
-
-        if constexpr (IsAtomicObject<T>) {
+        if constexpr (IsAtomicObject<T> || floating_point<T>) {
             alignas(T) byte buffer[sizeof(T)];
             auto* ptr = reinterpret_cast<value_type*>(buffer);
             __atomic_exchange(obj, ClearPadding(desired), ptr, static_cast<int>(order));
@@ -156,31 +155,28 @@ struct AtomicImpl {
     }
 
     // Compare exchange operations
-    template <bool kAtomicRef = false>
+    template <typename U>
     NODISCARD FORCE_INLINE_F static bool compare_exchange_weak(
-        T* obj, value_type& expected, value_type& desired, memory_order success_order,
+        U* obj, value_type& expected, value_type& desired, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
-        return compare_exchange_<kAtomicRef>(
-            obj, expected, desired, true, success_order, failure_order
-        );
+        return compare_exchange_(*obj, expected, desired, true, success_order, failure_order);
     }
 
-    template <bool kAtomicRef = false>
+    template <typename U>
     NODISCARD FORCE_INLINE_F static bool compare_exchange_strong(
-        T* obj, value_type& expected, value_type& desired, memory_order success_order,
+        U* obj, value_type& expected, value_type& desired, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
-        return compare_exchange_<kAtomicRef>(
-            obj, expected, desired, false, success_order, failure_order
-        );
+        return compare_exchange_(*obj, expected, desired, false, success_order, failure_order);
     }
 
     // Arithmetic operations
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type fetch_add(
-        T* obj, difference_type arg, memory_order order
+        U* obj, difference_type arg, memory_order order
     ) noexcept
     {
         if constexpr (IsFetchAddSupported<T>) {
@@ -190,13 +186,14 @@ struct AtomicImpl {
             value_type desired;
             do {
                 desired = expected + arg;
-            } while (!compare_exchange_weak(obj, &expected, desired, order, memory_order_relaxed));
+            } while (!compare_exchange_weak(obj, expected, desired, order, memory_order_relaxed));
             return expected;
         }
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type fetch_sub(
-        T* obj, difference_type arg, memory_order order
+        U* obj, difference_type arg, memory_order order
     ) noexcept
     {
         if constexpr (IsFetchSubSupported<T>) {
@@ -206,63 +203,71 @@ struct AtomicImpl {
             value_type desired;
             do {
                 desired = expected - arg;
-            } while (!compare_exchange_weak(obj, &expected, desired, order, memory_order_relaxed));
+            } while (!compare_exchange_weak(obj, expected, desired, order, memory_order_relaxed));
             return expected;
         }
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type add_fetch(
-        T* obj, difference_type arg, memory_order order
+        U* obj, difference_type arg, memory_order order
     ) noexcept
     {
         return __atomic_add_fetch(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type sub_fetch(
-        T* obj, difference_type arg, memory_order order
+        U* obj, difference_type arg, memory_order order
     ) noexcept
     {
         return __atomic_sub_fetch(obj, arg, static_cast<int>(order));
     }
 
     // Bitwise operations
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type fetch_and(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_fetch_and(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type fetch_or(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_fetch_or(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type fetch_xor(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_fetch_xor(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type and_fetch(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_and_fetch(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type or_fetch(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_or_fetch(obj, arg, static_cast<int>(order));
     }
 
+    template <typename U>
     NODISCARD FORCE_INLINE_F static value_type xor_fetch(
-        T* obj, value_type arg, memory_order order
+        U* obj, value_type arg, memory_order order
     ) noexcept
     {
         return __atomic_xor_fetch(obj, arg, static_cast<int>(order));
@@ -276,27 +281,29 @@ struct AtomicImpl {
     }
 
     // Flag operations
-    NODISCARD FORCE_INLINE_F static bool test_and_set(T* obj, memory_order order) noexcept
+    template <typename U>
+    NODISCARD FORCE_INLINE_F static bool test_and_set(U* obj, memory_order order) noexcept
     {
         return __atomic_test_and_set(obj, static_cast<int>(order));
     }
 
-    FORCE_INLINE_F static void clear(T* obj, memory_order order) noexcept
+    template <typename U>
+    FORCE_INLINE_F static void clear(U* obj, memory_order order) noexcept
     {
         __atomic_clear(obj, static_cast<int>(order));
     }
 
     private:
-    template <bool kAtomicRef>
+    template <typename U>
     NODISCARD FORCE_INLINE_F static bool compare_exchange_(
-        T& obj, value_type& expected, value_type& desired, bool weak, memory_order success_order,
+        U& obj, value_type& expected, value_type& desired, bool weak, memory_order success_order,
         memory_order failure_order
     ) noexcept
     {
         ASSERT_NEQ(failure_order, memory_order_release);
         ASSERT_NEQ(failure_order, memory_order_acq_rel);
 
-        if constexpr (!IsAtomicObject<T>) {
+        if constexpr (!IsAtomicObject<T> && !floating_point<T>) {
             return __atomic_compare_exchange_n(
                 &obj, &expected, desired, weak, static_cast<int>(success_order),
                 static_cast<int>(failure_order)
@@ -306,8 +313,8 @@ struct AtomicImpl {
 
             if constexpr (!HasPadding<value_type>) {
                 return __atomic_compare_exchange(
-                    ptr, std::addressof(expected), std::addressof(desired), weak, success_order,
-                    failure_order
+                    ptr, std::addressof(expected), std::addressof(desired), weak,
+                    static_cast<int>(success_order), static_cast<int>(failure_order)
                 );
             } else {
                 // Only allowed to copy on failure
@@ -445,12 +452,11 @@ struct AtomicBase : template_lib::NoCopy {
 
     __DEFINE_VOLATILE_PAIR(
         NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
-            T& expected, T desired, memory_order success_order = memory_order_seq_cst,
-            memory_order failure_order = memory_order_seq_cst
+            T& expected, T desired, memory_order success_order, memory_order failure_order
         ),
         {
             return AtomicImpl<T>::compare_exchange_weak(
-                &value_, &expected, desired, success_order, failure_order
+                &value_, expected, desired, success_order, failure_order
             );
         }
     )
@@ -464,12 +470,11 @@ struct AtomicBase : template_lib::NoCopy {
 
     __DEFINE_VOLATILE_PAIR(
         NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
-            T& expected, T desired, memory_order success_order = memory_order_seq_cst,
-            memory_order failure_order = memory_order_seq_cst
+            T& expected, T desired, memory_order success_order, memory_order failure_order
         ),
         {
             return AtomicImpl<T>::compare_exchange_strong(
-                &value_, &expected, desired, success_order, failure_order
+                &value_, expected, desired, success_order, failure_order
             );
         }
     )
@@ -485,7 +490,8 @@ struct AtomicBase : template_lib::NoCopy {
     // Constants
     // ------------------------------
 
-    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
+    static constexpr bool is_always_lock_free =
+        __atomic_always_lock_free(sizeof(value_type), nullptr);
 
     __DEFINE_VOLATILE_PAIR(NODISCARD FORCE_INLINE_F bool is_lock_free() const, {
         return internal::AtomicImpl<T>::template is_lock_free<sizeof(T), Alignment>();
@@ -517,6 +523,14 @@ using FloatingPointBase = AtomicBase<T, alignof(T)>;
 // internal::AtomicRefBase<T>
 // ------------------------------
 
+TODO_LIBCPP_COMPLIANCE
+/**
+ * TODO: Missing implementations:
+ * - wait
+ * - notify_one
+ * - notify_all
+ */
+
 template <typename T>
     requires std::is_copy_constructible_v<T> && std::is_trivially_copyable_v<T>
 struct AtomicRefBase {
@@ -528,7 +542,8 @@ struct AtomicRefBase {
     public:
     using value_type = std::remove_cv_t<T>;
 
-    static constexpr bool is_always_lock_free = __atomic_always_lock_free(sizeof(value_type), 0);
+    static constexpr bool is_always_lock_free =
+        __atomic_always_lock_free(sizeof(value_type), nullptr);
 
     static_assert(is_always_lock_free || !std::is_volatile_v<T>, "The program is ill-formed");
 
@@ -539,6 +554,9 @@ struct AtomicRefBase {
     // ------------------------------
     // Struct creation
     // ------------------------------
+
+    AtomicRefBase()                                = delete;
+    AtomicRefBase& operator=(const AtomicRefBase&) = delete;
 
     explicit AtomicRefBase(T& obj) : ptr_(std::addressof(obj))
     {
@@ -561,8 +579,6 @@ struct AtomicRefBase {
         return desired;
     }
 
-    AtomicRefBase& operator=(const AtomicRefBase&) = delete;
-
     // ------------------------------
     // Conversion
     // ------------------------------
@@ -575,7 +591,7 @@ struct AtomicRefBase {
 
     NODISCARD FORCE_INLINE_F bool is_lock_free() const noexcept
     {
-        return AtomicImpl<T>::template is_lock_free<sizeof(T), required_alignment>();
+        return AtomicImpl<T, true>::template is_lock_free<sizeof(T), required_alignment>();
     }
 
     FORCE_INLINE_F void store(
@@ -583,29 +599,29 @@ struct AtomicRefBase {
     ) const noexcept
         requires(!std::is_const_v<T>)
     {
-        AtomicImpl<T>::template compare_exchange<true>(ptr_, desired, order);
+        AtomicImpl<T, true>::store(ptr_, desired, order);
     }
 
     NODISCARD FORCE_INLINE_F value_type
     load(memory_order order = memory_order_seq_cst) const noexcept
     {
-        return AtomicImpl<T>::load(ptr_, order);
+        return AtomicImpl<T, true>::load(ptr_, order);
     }
 
     NODISCARD FORCE_INLINE_F value_type
     exchange(value_type desired, memory_order order = memory_order_seq_cst) const noexcept
         requires(!std::is_const_v<T>)
     {
-        return AtomicImpl<T>::exchange(ptr_, desired, order);
+        return AtomicImpl<T, true>::exchange(ptr_, desired, order);
     }
 
     NODISCARD FORCE_INLINE_F bool compare_exchange_weak(
-        value_type& expected, value_type desired, memory_order success_order = memory_order_seq_cst,
-        memory_order failure_order = memory_order_seq_cst
+        value_type& expected, value_type desired, memory_order success_order,
+        memory_order failure_order
     ) const noexcept
         requires(!std::is_const_v<T>)
     {
-        return AtomicImpl<T>::template compare_exchange_weak<true>(
+        return AtomicImpl<T, true>::compare_exchange_weak(
             ptr_, expected, desired, success_order, failure_order
         );
     }
@@ -619,12 +635,12 @@ struct AtomicRefBase {
     }
 
     NODISCARD FORCE_INLINE_F bool compare_exchange_strong(
-        value_type& expected, value_type desired, memory_order success_order = memory_order_seq_cst,
-        memory_order failure_order = memory_order_seq_cst
+        value_type& expected, value_type desired, memory_order success_order,
+        memory_order failure_order
     ) const noexcept
         requires(!std::is_const_v<T>)
     {
-        return AtomicImpl<T>::template compare_exchange_strong<true>(
+        return AtomicImpl<T, true>::compare_exchange_strong(
             ptr_, expected, desired, success_order, failure_order
         );
     }
@@ -655,7 +671,7 @@ struct AtomicRefBase {
     // Private members
     // ------------------------------
 
-    private:
+    protected:
     T* ptr_;
 };
 
@@ -673,7 +689,7 @@ struct atomic : internal::AtomicBase<T, alignof(T)> {
     using base_type = internal::AtomicBase<T, alignof(T)>;
 
     public:
-    using value_type = typename base_type::value_type;
+    using value_type = base_type::value_type;
 
     // ------------------------------
     // Struct creation
@@ -700,7 +716,7 @@ struct atomic<T*> : internal::PointerBase<T*> {
     using base_type = internal::PointerBase<T*>;
 
     public:
-    using value_type      = typename base_type::value_type;
+    using value_type      = base_type::value_type;
     using difference_type = ptrdiff_t;
 
     // ------------------------------
@@ -787,7 +803,7 @@ struct atomic<T> : internal::IntegralBase<T> {
     using base_type = internal::IntegralBase<T>;
 
     public:
-    using value_type      = typename base_type::value_type;
+    using value_type      = base_type::value_type;
     using difference_type = value_type;
 
     // ------------------------------
@@ -904,7 +920,7 @@ struct atomic<T> : internal::FloatingPointBase<T> {
     using base_type = internal::FloatingPointBase<T>;
 
     public:
-    using value_type      = typename base_type::value_type;
+    using value_type      = base_type::value_type;
     using difference_type = value_type;
 
     // ------------------------------
@@ -1020,13 +1036,15 @@ NODISCARD FORCE_INLINE_F bool atomic_is_lock_free(T* obj) noexcept
 
 // atomic_store / atomic_store_explicit
 template <internal::IsAtomic T>
-FORCE_INLINE_F void atomic_store(T* obj, T desired) noexcept
+FORCE_INLINE_F void atomic_store(T* obj, typename T::value_type desired) noexcept
 {
     obj->store(desired);
 }
 
 template <internal::IsAtomic T>
-FORCE_INLINE_F void atomic_store_explicit(T* obj, T desired, memory_order order) noexcept
+FORCE_INLINE_F void atomic_store_explicit(
+    T* obj, typename T::value_type desired, memory_order order
+) noexcept
 {
     obj->store(desired, order);
 }
@@ -1046,27 +1064,31 @@ NODISCARD FORCE_INLINE_F T atomic_load_explicit(T* obj, memory_order order) noex
 
 // atomic_exchange / atomic_exchange_explicit
 template <internal::IsAtomic T>
-NODISCARD FORCE_INLINE_F T atomic_exchange(T* obj, T desired) noexcept
+NODISCARD FORCE_INLINE_F T atomic_exchange(T* obj, typename T::value_type desired) noexcept
 {
     return obj->exchange(desired);
 }
 
 template <internal::IsAtomic T>
-NODISCARD FORCE_INLINE_F T atomic_exchange_explicit(T* obj, T desired, memory_order order) noexcept
+NODISCARD FORCE_INLINE_F T
+atomic_exchange_explicit(T* obj, typename T::value_type desired, memory_order order) noexcept
 {
     return obj->exchange(desired, order);
 }
 
 // atomic_compare_exchange_weak / atomic_compare_exchange_weak_explicit
 template <internal::IsAtomic T>
-NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak(T* obj, T* expected, T desired) noexcept
+NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak(
+    T* obj, typename T::value_type* expected, typename T::value_type desired
+) noexcept
 {
     return obj->compare_exchange_weak(*expected, desired);
 }
 
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak_explicit(
-    T* obj, T* expected, T desired, memory_order success, memory_order failure
+    T* obj, typename T::value_type* expected, typename T::value_type desired, memory_order success,
+    memory_order failure
 ) noexcept
 {
     return obj->compare_exchange_weak(*expected, desired, success, failure);
@@ -1075,7 +1097,7 @@ NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak_explicit(
 // atomic_compare_exchange_strong / atomic_compare_exchange_strong_explicit
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong(
-    T* obj, T* expected, T desired
+    T* obj, typename T::value_type* expected, typename T::value_type desired
 ) noexcept
 {
     return obj->compare_exchange_strong(*expected, desired);
@@ -1083,7 +1105,8 @@ NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong(
 
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong_explicit(
-    T* obj, T* expected, T desired, memory_order success, memory_order failure
+    T* obj, typename T::value_type* expected, typename T::value_type desired, memory_order success,
+    memory_order failure
 ) noexcept
 {
     return obj->compare_exchange_strong(*expected, desired, success, failure);
@@ -1091,84 +1114,92 @@ NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong_explicit(
 
 // atomic_fetch_add / atomic_fetch_add_explicit
 template <internal::IsAtomic T>
-    requires(internal::AtomicIntegral<T> || floating_point<T> || std::is_pointer_v<T>)
-NODISCARD FORCE_INLINE_F T
-atomic_fetch_add(T* obj, typename atomic<T>::difference_type arg) noexcept
+    requires(
+        internal::AtomicIntegral<typename T::value_type> ||
+        floating_point<typename T::value_type> || std::is_pointer_v<typename T::value_type>
+    )
+NODISCARD FORCE_INLINE_F T atomic_fetch_add(T* obj, typename T::difference_type arg) noexcept
 {
     return obj->fetch_add(arg);
 }
 
 template <internal::IsAtomic T>
-    requires(internal::AtomicIntegral<T> || floating_point<T> || std::is_pointer_v<T>)
-NODISCARD FORCE_INLINE_F T atomic_fetch_add_explicit(
-    T* obj, typename atomic<T>::difference_type arg, memory_order order
-) noexcept
+    requires(
+        internal::AtomicIntegral<typename T::value_type> ||
+        floating_point<typename T::value_type> || std::is_pointer_v<typename T::value_type>
+    )
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_add_explicit(T* obj, typename T::difference_type arg, memory_order order) noexcept
 {
     return obj->fetch_add(arg, order);
 }
 
 // atomic_fetch_sub / atomic_fetch_sub_explicit
 template <internal::IsAtomic T>
-    requires(internal::AtomicIntegral<T> || floating_point<T> || std::is_pointer_v<T>)
-NODISCARD FORCE_INLINE_F T
-atomic_fetch_sub(T* obj, typename atomic<T>::difference_type arg) noexcept
+    requires(
+        internal::AtomicIntegral<typename T::value_type> ||
+        floating_point<typename T::value_type> || std::is_pointer_v<typename T::value_type>
+    )
+NODISCARD FORCE_INLINE_F T atomic_fetch_sub(T* obj, typename T::difference_type arg) noexcept
 {
     return obj->fetch_sub(arg);
 }
 
 template <internal::IsAtomic T>
-    requires(internal::AtomicIntegral<T> || floating_point<T> || std::is_pointer_v<T>)
-NODISCARD FORCE_INLINE_F T atomic_fetch_sub_explicit(
-    T* obj, typename atomic<T>::difference_type arg, memory_order order
-) noexcept
+    requires(
+        internal::AtomicIntegral<typename T::value_type> ||
+        floating_point<typename T::value_type> || std::is_pointer_v<typename T::value_type>
+    )
+NODISCARD FORCE_INLINE_F T
+atomic_fetch_sub_explicit(T* obj, typename T::difference_type arg, memory_order order) noexcept
 {
     return obj->fetch_sub(arg, order);
 }
 
 // atomic_fetch_and / atomic_fetch_and_explicit
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
-NODISCARD FORCE_INLINE_F T atomic_fetch_and(T* obj, typename atomic<T>::value_type arg) noexcept
+    requires internal::AtomicIntegral<typename T::value_type>
+NODISCARD FORCE_INLINE_F T atomic_fetch_and(T* obj, typename T::value_type arg) noexcept
 {
     return obj->fetch_and(arg);
 }
 
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
+    requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T
-atomic_fetch_and_explicit(T* obj, typename atomic<T>::value_type arg, memory_order order) noexcept
+atomic_fetch_and_explicit(T* obj, typename T::value_type arg, memory_order order) noexcept
 {
     return obj->fetch_and(arg, order);
 }
 
 // atomic_fetch_or / atomic_fetch_or_explicit
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
-NODISCARD FORCE_INLINE_F T atomic_fetch_or(T* obj, typename atomic<T>::value_type arg) noexcept
+    requires internal::AtomicIntegral<typename T::value_type>
+NODISCARD FORCE_INLINE_F T atomic_fetch_or(T* obj, typename T::value_type arg) noexcept
 {
     return obj->fetch_or(arg);
 }
 
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
+    requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T
-atomic_fetch_or_explicit(T* obj, typename atomic<T>::value_type arg, memory_order order) noexcept
+atomic_fetch_or_explicit(T* obj, typename T::value_type arg, memory_order order) noexcept
 {
     return obj->fetch_or(arg, order);
 }
 
 // atomic_fetch_xor / atomic_fetch_xor_explicit
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
-NODISCARD FORCE_INLINE_F T atomic_fetch_xor(T* obj, typename atomic<T>::value_type arg) noexcept
+    requires internal::AtomicIntegral<typename T::value_type>
+NODISCARD FORCE_INLINE_F T atomic_fetch_xor(T* obj, typename T::value_type arg) noexcept
 {
     return obj->fetch_xor(arg);
 }
 
 template <internal::IsAtomic T>
-    requires internal::AtomicIntegral<T>
+    requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T
-atomic_fetch_xor_explicit(T* obj, typename atomic<T>::value_type arg, memory_order order) noexcept
+atomic_fetch_xor_explicit(T* obj, typename T::value_type arg, memory_order order) noexcept
 {
     return obj->fetch_xor(arg, order);
 }
@@ -1243,98 +1274,319 @@ class atomic_flag : public template_lib::NoCopy
     byte flag_{};
 };
 
-// // ------------------------------
-// // std::atomic_ref
-// // ------------------------------
-//
-// template <typename T>
-// struct atomic_ref : internal::AtomicRefBase<T>
-// {
-// };
-//
-// // ------------------------------
-// // std::atomic_ref<integral>
-// // ------------------------------
-//
-// template <internal::AtomicIntegral T>
-// struct atomic_ref<T> {
-//     private:
-//     using base_type = internal::AtomicBase<T, alignof(T)>;
-//
-//     public:
-//     using value_type      = typename base_type::value_type;
-//     using difference_type = value_type;
-//
-//     // ------------------------------
-//     // Struct creation
-//     // ------------------------------
-//
-//     constexpr atomic_ref(T& ref) noexcept : base_type(ref) {}
-//
-//     using base_type::operator=;
-//
-//     // ------------------------------
-//     // Conversion operators
-//     // ------------------------------
-//
-//     __DEFINE_VOLATILE_PAIR(operator T&(), { return this->value_; })
-// };
-//
-// // ------------------------------
-// // std::atomic_ref<floating_point>
-// // ------------------------------
-//
-// template <floating_point T>
-// struct atomic_ref<T> {
-//     private:
-//     using base_type = internal::AtomicBase<T, alignof(T)>;
-//
-//     public:
-//     using value_type      = typename base_type::value_type;
-//     using difference_type = value_type;
-//
-//     // ------------------------------
-//     // Struct creation
-//     // ------------------------------
-//
-//     constexpr atomic_ref(T& ref) noexcept : base_type(ref) {}
-//
-//     using base_type::operator=;
-//
-//     // ------------------------------
-//     // Conversion operators
-//     // ------------------------------
-//
-//     __DEFINE_VOLATILE_PAIR(operator T&(), { return this->value_; })
-// };
-//
-// // ------------------------------
-// // std::atomic_ref<T*>
-// // ------------------------------
-//
-// template <typename T>
-// struct atomic_ref<T*> {
-//     private:
-//     using base_type = internal::PointerBase<T>;
-//
-//     public:
-//     using value_type      = typename base_type::value_type;
-//     using difference_type = ptrdiff_t;
-//
-//     // ------------------------------
-//     // Struct creation
-//     // ------------------------------
-//
-//     constexpr atomic_ref(T*& ref) noexcept : base_type(ref) {}
-//
-//     using base_type::operator=;
-//
-//     // ------------------------------
-//     // Conversion operators
-//     // ------------------------------
-//
-//     __DEFINE_VOLATILE_PAIR(operator T*&(), { return this->value_; })
-// };
+// ------------------------------
+// std::atomic_ref
+// ------------------------------
+
+template <typename T>
+struct atomic_ref : internal::AtomicRefBase<T> {
+    private:
+    using base_type = internal::AtomicRefBase<T>;
+
+    public:
+    using value_type = base_type::value_type;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    explicit atomic_ref(T& ref) noexcept : base_type(ref) {}
+    atomic_ref(const atomic_ref& ref) noexcept : base_type(ref) {}
+
+    using base_type::operator=;
+};
+
+// ------------------------------
+// std::atomic_ref<integral>
+// ------------------------------
+
+template <internal::AtomicIntegral T>
+struct atomic_ref<T> : internal::AtomicRefBase<T> {
+    private:
+    using base_type = internal::AtomicRefBase<T>;
+
+    public:
+    using value_type      = base_type::value_type;
+    using difference_type = value_type;
+
+    static constexpr size_t required_alignment = internal::IntegralAlignment<T>;
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    explicit atomic_ref(T& ref) noexcept : base_type(ref) {}
+    atomic_ref(const atomic_ref& ref) noexcept : base_type(ref) {}
+
+    using base_type::operator=;
+
+    // ------------------------------
+    // Arithmetic operations
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_add(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_add(ptr_, arg, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_sub(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_sub(ptr_, arg, order);
+    }
+
+    // ------------------------------
+    // Bitwise operations
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_and(value_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_and(ptr_, arg, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_or(value_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_or(ptr_, arg, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_xor(value_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_xor(ptr_, arg, order);
+    }
+
+    // ------------------------------
+    // Compound assignment operators
+    // ------------------------------
+
+    value_type operator+=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::add_fetch(ptr_, arg, memory_order_seq_cst);
+    }
+
+    value_type operator-=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::sub_fetch(ptr_, arg, memory_order_seq_cst);
+    }
+
+    value_type operator&=(value_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::and_fetch(ptr_, arg, memory_order_seq_cst);
+    }
+
+    value_type operator|=(value_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::or_fetch(ptr_, arg, memory_order_seq_cst);
+    }
+
+    value_type operator^=(value_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::xor_fetch(ptr_, arg, memory_order_seq_cst);
+    }
+
+    // ------------------------------
+    // Increment/decrement operators
+    // ------------------------------
+
+    value_type operator++(int) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return fetch_add(1);
+    }
+
+    value_type operator--(int) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return fetch_sub(1);
+    }
+
+    value_type operator++() const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::add_fetch(ptr_, 1, memory_order_seq_cst);
+    }
+
+    value_type operator--() const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::sub_fetch(ptr_, 1, memory_order_seq_cst);
+    }
+
+    private:
+    using base_type::ptr_;
+};
+
+// ------------------------------
+// std::atomic_ref<floating_point>
+// ------------------------------
+
+template <floating_point T>
+struct atomic_ref<T> : internal::AtomicRefBase<T> {
+    private:
+    using base_type = internal::AtomicRefBase<T>;
+
+    public:
+    using value_type      = base_type::value_type;
+    using difference_type = value_type;
+
+    static constexpr size_t required_alignment = alignof(T);
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    explicit atomic_ref(T& ref) noexcept : base_type(ref) {}
+    atomic_ref(const atomic_ref& ref) noexcept : base_type(ref) {}
+
+    using base_type::operator=;
+
+    // ------------------------------
+    // Floating-point arithmetic operations
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_add(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_add(ptr_, arg, order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_sub(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return internal::AtomicImpl<T, true>::fetch_sub(ptr_, arg, order);
+    }
+
+    // ------------------------------
+    // Compound assignment operators
+    // ------------------------------
+
+    value_type operator+=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return fetch_add(arg) + arg;
+    }
+
+    value_type operator-=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T>)
+    {
+        return fetch_sub(arg) - arg;
+    }
+
+    private:
+    using base_type::ptr_;
+};
+
+// ------------------------------
+// std::atomic_ref<T*>
+// ------------------------------
+
+template <typename T>
+struct atomic_ref<T*> : internal::AtomicRefBase<T*> {
+    private:
+    using base_type = internal::AtomicRefBase<T*>;
+
+    public:
+    using value_type      = base_type::value_type;
+    using difference_type = ptrdiff_t;
+
+    static constexpr bool is_always_lock_free  = __GCC_ATOMIC_POINTER_LOCK_FREE == 2;
+    static constexpr size_t required_alignment = alignof(T*);
+
+    // ------------------------------
+    // Struct creation
+    // ------------------------------
+
+    explicit atomic_ref(T*& ref) noexcept : base_type(ref) {}
+    atomic_ref(const atomic_ref& ref) noexcept : base_type(ref) {}
+
+    using base_type::operator=;
+
+    // ------------------------------
+    // Pointer arithmetic operations
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_add(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::fetch_add(ptr_, GetByteOffset_(arg), order);
+    }
+
+    NODISCARD FORCE_INLINE_F value_type
+    fetch_sub(difference_type arg, memory_order order = memory_order_seq_cst) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::fetch_sub(ptr_, GetByteOffset_(arg), order);
+    }
+
+    // ------------------------------
+    // Compound assignment operators
+    // ------------------------------
+
+    value_type operator+=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::add_fetch(
+            ptr_, GetByteOffset_(arg), memory_order_seq_cst
+        );
+    }
+
+    value_type operator-=(difference_type arg) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::sub_fetch(
+            ptr_, GetByteOffset_(arg), memory_order_seq_cst
+        );
+    }
+
+    // ------------------------------
+    // Increment/decrement operators
+    // ------------------------------
+
+    value_type operator++(int) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return fetch_add(1);
+    }
+
+    value_type operator--(int) const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return fetch_sub(1);
+    }
+
+    value_type operator++() const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::add_fetch(ptr_, sizeof(T), memory_order_seq_cst);
+    }
+
+    value_type operator--() const noexcept
+        requires(!std::is_const_v<T*>)
+    {
+        return internal::AtomicImpl<T*, true>::sub_fetch(ptr_, sizeof(T), memory_order_seq_cst);
+    }
+
+    private:
+    static constexpr difference_type GetByteOffset_(difference_type arg) { return arg * sizeof(T); }
+
+    using base_type::ptr_;
+};
 
 }  // namespace std
 
