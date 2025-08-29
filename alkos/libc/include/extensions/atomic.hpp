@@ -494,7 +494,7 @@ struct AtomicBase : template_lib::NoCopy {
         __atomic_always_lock_free(sizeof(value_type), nullptr);
 
     TODO_LIBATOMIC
-    static_assert(is_always_lock_free "Only lock-free atomics are supported");
+    static_assert(is_always_lock_free, "Only lock-free atomics are supported");
 
     __DEFINE_VOLATILE_PAIR(NODISCARD FORCE_INLINE_F bool is_lock_free() const, {
         return internal::AtomicImpl<T>::template is_lock_free<sizeof(T), Alignment>();
@@ -551,7 +551,7 @@ struct AtomicRefBase {
     static_assert(is_always_lock_free || !std::is_volatile_v<T>, "The program is ill-formed");
 
     TODO_LIBATOMIC
-    static_assert(is_always_lock_free "Only lock-free atomics are supported");
+    static_assert(is_always_lock_free, "Only lock-free atomics are supported");
 
     static constexpr size_t required_alignment = MinAlignment_ > alignof(value_type)
                                                      ? MinAlignment_
