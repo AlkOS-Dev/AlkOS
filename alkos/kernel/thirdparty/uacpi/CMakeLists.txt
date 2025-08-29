@@ -39,7 +39,7 @@ target_link_libraries(uacpi PRIVATE libk)
 ######################### Setting Custom Properties ##########################
 
 target_link_libraries(uacpi PRIVATE
-        target.properties
+        alkos.target.properties.interface
 )
 
 ################################ Export itself #################################

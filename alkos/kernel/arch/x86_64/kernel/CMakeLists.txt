@@ -50,7 +50,7 @@ add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 ############################### Link Libraries ###############################
 
 target_link_libraries(alkos.kernel.deps INTERFACE
-        target.properties
+        alkos.target.properties.interface
         arch.common.all.64
         arch.common.kernel-loader.64
 )

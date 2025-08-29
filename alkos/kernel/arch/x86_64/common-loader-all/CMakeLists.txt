@@ -13,17 +13,16 @@ alkos_target_sources(arch.common.all.32)
 ############################# Linking libraries ##############################
 
 target_link_libraries(arch.common.all.64 PRIVATE
-        target.properties
-        libk
-        alkos.kernel.headers
-        AutoGenLib
+        alkos.target.properties.interface
+        alkos.autogen.interface
+        c.core
 )
 
 target_link_libraries(arch.common.all.32 PRIVATE
-        target.properties.32
-        libk.32
+        alkos.target.properties.interface.32
         alkos.kernel.headers
-        AutoGenLib
+        alkos.autogen.interface
+        c.core.32
 )
 
 ############################### Applying Flags ###############################

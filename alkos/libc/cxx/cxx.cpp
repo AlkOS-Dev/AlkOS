@@ -2,11 +2,8 @@
 #include <stddef.h>
 
 /* internal include */
-#include <defines.h>
-
-#ifdef __ALKOS_LIBK__
-#include <panic.hpp>
-#endif
+#include "platform.h"
+#include "defines.h"
 
 // -------------------------------------------
 // Static initializer expected functions
@@ -29,15 +26,7 @@ extern "C" void __cxa_guard_release(__guard *) { /* TODO */ }
 
 extern "C" void __cxa_guard_abort(__guard *)
 {
-#if __STDC_HOSTED__
-
-    /* TODO */
-
-#else
-
-    arch::KernelPanic("Failed to initialize static object");
-
-#endif
+    __platform_panic("Failed to initialize static object");
 }
 
 extern "C" void __cxa_atexit(void) {}

@@ -1,10 +1,6 @@
 #ifndef ALKOS_LIBC_INCLUDE_DEFINES_H_
 #define ALKOS_LIBC_INCLUDE_DEFINES_H_
 
-#if !defined(__ALKOS_LIBK__) && !__STDC_HOSTED__
-#error "Missing environment definition"
-#endif
-
 // ------------------------------
 // C++ defines
 // ------------------------------

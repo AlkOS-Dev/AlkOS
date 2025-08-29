@@ -82,14 +82,14 @@ add_subdirectory(thirdparty)
 
 target_link_libraries(alkos.kernel.deps INTERFACE
     alkos.kernel.thirdparty
-    libk
-    AutoGenLib
+    alkos.autogen.interface
+    c.core
 )
 
 ################################ Linking Kernel ################################
 
 target_link_libraries(alkos.kernel PRIVATE
-    target.properties
+    alkos.target.properties.interface
     alkos.kernel.config
     alkos.kernel.headers
     alkos.kernel.deps

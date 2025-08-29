@@ -4,11 +4,7 @@ message(STATUS "Configuring x86_64 64-bit loader")
 
 add_executable(alkos.loader64 "")
 
-############################### Adding Sources ###############################
-
 alkos_target_sources(alkos.loader64)
-
-############################### Adding Headers ###############################
 
 target_include_directories(alkos.loader64 PRIVATE
         .
@@ -24,11 +20,10 @@ target_link_options(alkos.loader64 PRIVATE
 ############################### Link Libraries ###############################
 
 target_link_libraries(alkos.loader64 PRIVATE
-        target.properties
-        libk
+        alkos.target.properties.interface
         arch.common.all.64
         arch.common.kernel-loader.64
-        alkos.kernel.headers
-        AutoGenLib
+        alkos.autogen.interface
+        c.core
         gcc
 )
