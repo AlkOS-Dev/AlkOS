@@ -1,5 +1,5 @@
 // This file provides the loader's implementation of the libc platform ABI.
-#include <internal/platform.h>
+#include <platform.h>
 
 #include <autogen/feature_flags.h> 
 #include <assert.h>

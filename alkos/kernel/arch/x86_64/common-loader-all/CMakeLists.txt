@@ -14,6 +14,7 @@ alkos_target_sources(arch.common.all.32)
 
 target_link_libraries(arch.common.all.64 PRIVATE
         alkos.target.properties.interface
+        alkos.kernel.headers
         alkos.autogen.interface
         c.core
 )

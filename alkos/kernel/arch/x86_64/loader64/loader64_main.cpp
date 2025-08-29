@@ -1,4 +1,3 @@
-#include "multiboot2/multiboot_info.hpp"
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
@@ -15,6 +14,7 @@
 #include "elf64.hpp"
 #include "loader_memory_manager/loader_memory_manager.hpp"
 #include "multiboot2/multiboot2.h"
+#include "multiboot2/multiboot_info.hpp"
 #include "terminal.hpp"
 
 #include <extensions/debug.hpp>

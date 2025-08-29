@@ -1,5 +1,5 @@
 /// This file provides the kernel's implementation of the libc platform ABI.
-#include <abi/platform.h> 
+#include <platform.h> 
 #include <assert.h>
 
 #include "modules/timing.hpp"
@@ -15,7 +15,7 @@ void __platform_get_clock_value(ClockType type, TimeVal* time, Timezone* time_zo
     assert(time != nullptr || time_zone != nullptr);
 
     if (time_zone != nullptr) {
-        GetTimezoneSysCall(time_zone);
+        __platform_get_timezone(time_zone);
     }
 
     if (time != nullptr) {

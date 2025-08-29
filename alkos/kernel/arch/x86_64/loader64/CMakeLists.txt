@@ -21,6 +21,7 @@ target_link_options(alkos.loader64 PRIVATE
 
 target_link_libraries(alkos.loader64 PRIVATE
         alkos.target.properties.interface
+        alkos.kernel.headers
         arch.common.all.64
         arch.common.kernel-loader.64
         alkos.autogen.interface

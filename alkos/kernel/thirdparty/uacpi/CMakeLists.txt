@@ -34,7 +34,7 @@ target_include_directories(uacpi PRIVATE .)
 
 ############################# Linking libraries ##############################
 
-target_link_libraries(uacpi PRIVATE libk)
+target_link_libraries(uacpi PRIVATE c.core)
 
 ######################### Setting Custom Properties ##########################
 
