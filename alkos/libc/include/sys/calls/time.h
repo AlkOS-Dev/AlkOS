@@ -1,8 +1,9 @@
 #ifndef ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
 #define ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
 
-#include <defines.h>
-#include <sys/time.h>
+#include "platform.h"
+#include "defines.h"
+#include "sys/time.h"
 
 // ------------------------------
 // System calls
@@ -10,11 +11,17 @@
 
 BEGIN_DECL_C
 
-void GetClockValueSysCall(ClockType type, TimeVal* time, Timezone* time_zone);
+inline void GetClockValueSysCall(ClockType type, TimeVal* time, Timezone* time_zone) {
+    __platform_get_clock_value(type, time, time_zone);
+}
 
-void GetTimezoneSysCall(Timezone* time_zone);
+inline void GetTimezoneSysCall(Timezone* time_zone) {
+    __platform_get_timezone(time_zone);
+}
 
-u64 GetClockTicksInSecondSysCall(ClockType type);
+inline u64 GetClockTicksInSecondSysCall(ClockType type) {
+    return __platform_get_clock_ticks_in_second(type);
+}
 
 END_DECL_C
 

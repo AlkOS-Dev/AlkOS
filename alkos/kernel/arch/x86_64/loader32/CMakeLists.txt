@@ -13,6 +13,7 @@ target_include_directories(alkos.loader32 PRIVATE .)
 
 target_link_libraries(alkos.loader32 PRIVATE
         alkos.target.properties.interface.32
+        alkos.kernel.headers
         arch.common.all.32
         alkos.autogen.interface
         c.core.32

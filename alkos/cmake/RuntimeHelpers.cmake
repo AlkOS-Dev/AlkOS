@@ -87,7 +87,7 @@ function(alkos_register_runtime_environment)
 
     add_custom_target(iso-${ARG_ARCH_NAME}
         COMMAND ${MAKE_ISO_SCRIPT_PATH} -v
-        DEPENDS ${ARG_BOOTABLE_EXECUTABLE} ${ARG_MODULES} libk
+        DEPENDS ${ARG_BOOTABLE_EXECUTABLE} ${ARG_MODULES} 
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Building ISO for ${ARG_ARCH_NAME}"
     )
