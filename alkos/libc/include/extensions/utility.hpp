@@ -90,16 +90,6 @@ TODO_LIBCPP_COMPLIANCE
 }
 
 // ------------------------------
-// std::addressof
-// ------------------------------
-
-template <typename T>
-NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
-{
-    return __builtin_addressof(arg);
-}
-
-// ------------------------------
 // std::monostate
 // ------------------------------
 

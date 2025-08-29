@@ -1,6 +1,8 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 
+#include <extensions/type_traits.hpp>
+
 namespace std
 {
 
@@ -8,8 +10,8 @@ namespace std
 // std::addressof
 // ------------------------------
 
-template <class T>
-T* addressof(T& arg) noexcept
+template <typename T>
+NODISCARD FORCE_INLINE_F constexpr T* addressof(T& arg) noexcept
 {
     return __builtin_addressof(arg);
 }
@@ -24,7 +26,7 @@ const T* addressof(const T&&) = delete;
 template <class T>
 constexpr T* to_address(T* p) noexcept
 {
-    static_assert(!std::is_function_v<T>);
+    static_assert(!is_function_v<T>);
     return p;
 }
 
@@ -32,7 +34,7 @@ template <class T>
 constexpr auto to_address(const T& p) noexcept
 {
     TODO_LIBCPP_COMPLIANCE
-    return std::to_address(p.operator->());
+    return to_address(p.operator->());
 }
 
 }  // namespace std

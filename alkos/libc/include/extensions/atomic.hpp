@@ -80,8 +80,8 @@ template <typename T>
 concept IsFetchSubSupported = requires(T* obj, T val) { __atomic_fetch_sub(obj, val, 0); };
 
 template <typename T>
-inline constexpr bool HasPadding =
-    !std::has_unique_object_representations_v<T> && !std::is_floating_point_v<T>;
+inline constexpr bool HasPadding = !has_unique_object_representations_v<T> &&
+                                   !(floating_point<T> && !is_same_v<remove_cv_t<T>, long double>);
 
 template <typename T>
 FORCE_INLINE_F constexpr T* ClearPadding(T& obj) noexcept
@@ -89,7 +89,7 @@ FORCE_INLINE_F constexpr T* ClearPadding(T& obj) noexcept
     auto* ptr = std::addressof(obj);
 
     if constexpr (HasPadding<T>) {
-        return __builtin_clear_padding(ptr);
+        __builtin_clear_padding(ptr);
     }
 
     return ptr;
@@ -351,9 +351,9 @@ struct AtomicImpl {
 
                         // Compare value representations
                         if (memcmp(
-                                ClearPadding(original), ClearPadding(desired), sizeof(value_type)
+                                ClearPadding(original), ClearPadding(current), sizeof(value_type)
                             )) {
-                            // True failure - the value changed to something else
+                            // True failure - the value changed
                             memcpy(std::addressof(expected), expected_ptr, sizeof(value_type));
                             return false;
                         }
@@ -402,7 +402,7 @@ struct AtomicBase : template_lib::NoCopy {
     {
     }
 
-    constexpr AtomicBase(T desired) noexcept : value_(desired) {};
+    constexpr AtomicBase(T desired) noexcept { value_ = *ClearPadding(desired); };
 
     // ------------------------------
     // operators
@@ -493,6 +493,9 @@ struct AtomicBase : template_lib::NoCopy {
     static constexpr bool is_always_lock_free =
         __atomic_always_lock_free(sizeof(value_type), nullptr);
 
+    TODO_LIBATOMIC
+    static_assert(is_always_lock_free "Only lock-free atomics are supported");
+
     __DEFINE_VOLATILE_PAIR(NODISCARD FORCE_INLINE_F bool is_lock_free() const, {
         return internal::AtomicImpl<T>::template is_lock_free<sizeof(T), Alignment>();
     })
@@ -546,6 +549,9 @@ struct AtomicRefBase {
         __atomic_always_lock_free(sizeof(value_type), nullptr);
 
     static_assert(is_always_lock_free || !std::is_volatile_v<T>, "The program is ill-formed");
+
+    TODO_LIBATOMIC
+    static_assert(is_always_lock_free "Only lock-free atomics are supported");
 
     static constexpr size_t required_alignment = MinAlignment_ > alignof(value_type)
                                                      ? MinAlignment_
@@ -969,30 +975,32 @@ struct atomic<T> : internal::FloatingPointBase<T> {
 // Type aliases
 // ------------------------------
 
-using atomic_bool           = atomic<bool>;
-using atomic_char           = atomic<char>;
-using atomic_schar          = atomic<signed char>;
-using atomic_uchar          = atomic<unsigned char>;
-using atomic_short          = atomic<short>;
-using atomic_ushort         = atomic<unsigned short>;
-using atomic_int            = atomic<int>;
-using atomic_uint           = atomic<unsigned int>;
-using atomic_long           = atomic<long>;
-using atomic_ulong          = atomic<unsigned long>;
-using atomic_llong          = atomic<long long>;
-using atomic_ullong         = atomic<unsigned long long>;
-using atomic_char8_t        = atomic<char8_t>;
-using atomic_char16_t       = atomic<char16_t>;
-using atomic_char32_t       = atomic<char32_t>;
-using atomic_wchar_t        = atomic<wchar_t>;
-using atomic_int8_t         = atomic<int8_t>;
-using atomic_uint8_t        = atomic<uint8_t>;
-using atomic_int16_t        = atomic<int16_t>;
-using atomic_uint16_t       = atomic<uint16_t>;
-using atomic_int32_t        = atomic<int32_t>;
-using atomic_uint32_t       = atomic<uint32_t>;
-using atomic_int64_t        = atomic<int64_t>;
-using atomic_uint64_t       = atomic<uint64_t>;
+using atomic_bool     = atomic<bool>;
+using atomic_char     = atomic<char>;
+using atomic_schar    = atomic<signed char>;
+using atomic_uchar    = atomic<unsigned char>;
+using atomic_short    = atomic<short>;
+using atomic_ushort   = atomic<unsigned short>;
+using atomic_int      = atomic<int>;
+using atomic_uint     = atomic<unsigned int>;
+using atomic_long     = atomic<long>;
+using atomic_ulong    = atomic<unsigned long>;
+using atomic_llong    = atomic<long long>;
+using atomic_ullong   = atomic<unsigned long long>;
+using atomic_char8_t  = atomic<char8_t>;
+using atomic_char16_t = atomic<char16_t>;
+using atomic_char32_t = atomic<char32_t>;
+using atomic_wchar_t  = atomic<wchar_t>;
+
+using atomic_int8_t   = atomic<int8_t>;
+using atomic_uint8_t  = atomic<uint8_t>;
+using atomic_int16_t  = atomic<int16_t>;
+using atomic_uint16_t = atomic<uint16_t>;
+using atomic_int32_t  = atomic<int32_t>;
+using atomic_uint32_t = atomic<uint32_t>;
+using atomic_int64_t  = atomic<int64_t>;
+using atomic_uint64_t = atomic<uint64_t>;
+
 using atomic_int_least8_t   = atomic<int_least8_t>;
 using atomic_uint_least8_t  = atomic<uint_least8_t>;
 using atomic_int_least16_t  = atomic<int_least16_t>;
@@ -1001,23 +1009,25 @@ using atomic_int_least32_t  = atomic<int_least32_t>;
 using atomic_uint_least32_t = atomic<uint_least32_t>;
 using atomic_int_least64_t  = atomic<int_least64_t>;
 using atomic_uint_least64_t = atomic<uint_least64_t>;
-using atomic_int_fast8_t    = atomic<int_fast8_t>;
-using atomic_uint_fast8_t   = atomic<uint_fast8_t>;
-using atomic_int_fast16_t   = atomic<int_fast16_t>;
-using atomic_uint_fast16_t  = atomic<uint_fast16_t>;
-using atomic_int_fast32_t   = atomic<int_fast32_t>;
-using atomic_uint_fast32_t  = atomic<uint_fast32_t>;
-using atomic_int_fast64_t   = atomic<int_fast64_t>;
-using atomic_uint_fast64_t  = atomic<uint_fast64_t>;
-using atomic_intptr_t       = atomic<intptr_t>;
-using atomic_uintptr_t      = atomic<uintptr_t>;
-using atomic_size_t         = atomic<size_t>;
-using atomic_ptrdiff_t      = atomic<ptrdiff_t>;
-using atomic_intmax_t       = atomic<intmax_t>;
-using atomic_uintmax_t      = atomic<uintmax_t>;
+
+using atomic_int_fast8_t   = atomic<int_fast8_t>;
+using atomic_uint_fast8_t  = atomic<uint_fast8_t>;
+using atomic_int_fast16_t  = atomic<int_fast16_t>;
+using atomic_uint_fast16_t = atomic<uint_fast16_t>;
+using atomic_int_fast32_t  = atomic<int_fast32_t>;
+using atomic_uint_fast32_t = atomic<uint_fast32_t>;
+using atomic_int_fast64_t  = atomic<int_fast64_t>;
+using atomic_uint_fast64_t = atomic<uint_fast64_t>;
+
+using atomic_intptr_t  = atomic<intptr_t>;
+using atomic_uintptr_t = atomic<uintptr_t>;
+using atomic_size_t    = atomic<size_t>;
+using atomic_ptrdiff_t = atomic<ptrdiff_t>;
+using atomic_intmax_t  = atomic<intmax_t>;
+using atomic_uintmax_t = atomic<uintmax_t>;
 
 // ------------------------------
-// Operations on atomic types
+// Non-member functions
 // ------------------------------
 
 namespace internal
@@ -1027,14 +1037,12 @@ concept IsAtomic = std::is_same_v<std::remove_cv_t<T>, std::atomic<typename T::v
                    std::is_convertible_v<T*, type_traits_ext::conditional_const_t<kConst, T>*>;
 }
 
-// atomic_is_lock_free
 template <internal::IsAtomic<true> T>
 NODISCARD FORCE_INLINE_F bool atomic_is_lock_free(T* obj) noexcept
 {
     return obj->is_lock_free();
 }
 
-// atomic_store / atomic_store_explicit
 template <internal::IsAtomic T>
 FORCE_INLINE_F void atomic_store(T* obj, typename T::value_type desired) noexcept
 {
@@ -1049,7 +1057,6 @@ FORCE_INLINE_F void atomic_store_explicit(
     obj->store(desired, order);
 }
 
-// atomic_load / atomic_load_explicit
 template <internal::IsAtomic<true> T>
 NODISCARD FORCE_INLINE_F T atomic_load(T* obj) noexcept
 {
@@ -1062,7 +1069,6 @@ NODISCARD FORCE_INLINE_F T atomic_load_explicit(T* obj, memory_order order) noex
     return obj->load(order);
 }
 
-// atomic_exchange / atomic_exchange_explicit
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F T atomic_exchange(T* obj, typename T::value_type desired) noexcept
 {
@@ -1076,7 +1082,6 @@ atomic_exchange_explicit(T* obj, typename T::value_type desired, memory_order or
     return obj->exchange(desired, order);
 }
 
-// atomic_compare_exchange_weak / atomic_compare_exchange_weak_explicit
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak(
     T* obj, typename T::value_type* expected, typename T::value_type desired
@@ -1094,7 +1099,6 @@ NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_weak_explicit(
     return obj->compare_exchange_weak(*expected, desired, success, failure);
 }
 
-// atomic_compare_exchange_strong / atomic_compare_exchange_strong_explicit
 template <internal::IsAtomic T>
 NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong(
     T* obj, typename T::value_type* expected, typename T::value_type desired
@@ -1112,7 +1116,6 @@ NODISCARD FORCE_INLINE_F bool atomic_compare_exchange_strong_explicit(
     return obj->compare_exchange_strong(*expected, desired, success, failure);
 }
 
-// atomic_fetch_add / atomic_fetch_add_explicit
 template <internal::IsAtomic T>
     requires(
         internal::AtomicIntegral<typename T::value_type> ||
@@ -1134,7 +1137,6 @@ atomic_fetch_add_explicit(T* obj, typename T::difference_type arg, memory_order 
     return obj->fetch_add(arg, order);
 }
 
-// atomic_fetch_sub / atomic_fetch_sub_explicit
 template <internal::IsAtomic T>
     requires(
         internal::AtomicIntegral<typename T::value_type> ||
@@ -1156,7 +1158,6 @@ atomic_fetch_sub_explicit(T* obj, typename T::difference_type arg, memory_order 
     return obj->fetch_sub(arg, order);
 }
 
-// atomic_fetch_and / atomic_fetch_and_explicit
 template <internal::IsAtomic T>
     requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T atomic_fetch_and(T* obj, typename T::value_type arg) noexcept
@@ -1172,7 +1173,6 @@ atomic_fetch_and_explicit(T* obj, typename T::value_type arg, memory_order order
     return obj->fetch_and(arg, order);
 }
 
-// atomic_fetch_or / atomic_fetch_or_explicit
 template <internal::IsAtomic T>
     requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T atomic_fetch_or(T* obj, typename T::value_type arg) noexcept
@@ -1188,7 +1188,6 @@ atomic_fetch_or_explicit(T* obj, typename T::value_type arg, memory_order order)
     return obj->fetch_or(arg, order);
 }
 
-// atomic_fetch_xor / atomic_fetch_xor_explicit
 template <internal::IsAtomic T>
     requires internal::AtomicIntegral<typename T::value_type>
 NODISCARD FORCE_INLINE_F T atomic_fetch_xor(T* obj, typename T::value_type arg) noexcept

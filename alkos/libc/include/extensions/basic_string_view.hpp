@@ -5,6 +5,7 @@
 #include <extensions/array.hpp>
 #include <extensions/char_traits.hpp>
 #include <extensions/concepts.hpp>
+#include <extensions/memory.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/utility.hpp>
 #include <todo.hpp>
