@@ -1,5 +1,5 @@
 #include <terminal.hpp>
-#include "drivers/serial_port_qemu/serial_qemu.hpp"
+#include "drivers/serial/qemu.hpp"
 
 void TerminalInit()
 {

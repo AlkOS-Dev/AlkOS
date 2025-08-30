@@ -7,7 +7,7 @@
 #include <terminal.hpp>
 
 #include <todo.hpp>
-#include "drivers/serial_port_qemu/serial_qemu.hpp"
+#include "drivers/serial/qemu.hpp"
 #include "drivers/vga/vga.hpp"
 
 extern "C" {
