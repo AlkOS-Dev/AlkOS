@@ -54,7 +54,7 @@ add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 
 alkos_register_runtime_environment(
     ARCH_NAME           x86_64
-    BOOTABLE_EXECUTABLE alkos.loader32
+    BOOTABLE_EXECUTABLE alkos.boot.loader.32
     QEMU_COMMAND
         "qemu-system-x86_64"
     QEMU_NORMAL_FLAGS
@@ -62,7 +62,7 @@ alkos_register_runtime_environment(
     QEMU_TEST_FLAGS
         "-serial stdio -enable-kvm -cpu max,+invtsc -display none -m 4G -smp sockets=1,cores=4,threads=1"
     MODULES
-        alkos.loader64
+        alkos.boot.loader.64
         alkos.kernel
     MODULE_COMMANDS
         "loader64"
