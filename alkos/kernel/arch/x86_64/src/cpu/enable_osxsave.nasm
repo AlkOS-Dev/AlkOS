@@ -1,6 +1,6 @@
     bits 64
 
-    %include "panic.nasm"
+    %include "startup/panic.nasm"
 
     ; Intel manual page 814 Vol 2A CPUID - CPU Identification
     ; cpuid flags

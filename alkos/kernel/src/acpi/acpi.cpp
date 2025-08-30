@@ -1,11 +1,11 @@
 #include <acpi/acpi.hpp>
 
-/* Internal includes */
-#include <multiboot2/multiboot2.h>
-#include <arch_utils.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <multiboot2/multiboot_info.hpp>
+
+// TODO
+#include <include/multiboot2/multiboot2.h>
+#include <include/multiboot2/multiboot_info.hpp>
 
 /* External includes */
 #include <uacpi/event.h>

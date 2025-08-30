@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_VGA_VGA_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_VGA_VGA_HPP_
 
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
 
 /**
  * @file vga.hpp

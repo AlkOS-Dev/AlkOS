@@ -5,8 +5,8 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
-#include "acpi/acpi.hpp"
-#include "memory_io.hpp"
+#include <acpi/acpi.hpp>
+#include "include/memory_io.hpp"
 
 /**
  * @file io_apic.hpp

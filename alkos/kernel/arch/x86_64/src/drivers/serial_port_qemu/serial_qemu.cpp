@@ -4,10 +4,10 @@
  */
 
 /* internal includes */
+#include "drivers/serial_port_qemu/serial_qemu.hpp"
 #include <assert.h>
-#include <drivers/serial_port_qemu/serial_qemu.hpp>
 #include <extensions/debug.hpp>
-#include <io.hpp>
+#include "include/io.hpp"
 
 // ------------------------------
 // Port and Register Definitions

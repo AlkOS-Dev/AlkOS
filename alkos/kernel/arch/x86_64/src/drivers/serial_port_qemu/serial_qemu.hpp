@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_SERIAL_PORT_QEMU_SERIAL_QEMU_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_DRIVERS_SERIAL_PORT_QEMU_SERIAL_QEMU_HPP_
 
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
 
 /**
  * @file serial_qemu.hpp

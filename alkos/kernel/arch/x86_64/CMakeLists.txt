@@ -25,7 +25,7 @@ target_include_directories(alkos.kernel PUBLIC
 
 ################################ Linker Flags ################################
 
-set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/src/linker.ld")
+set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/build/kernel.ld")
 target_link_options(alkos.kernel PRIVATE
         -T ${LINKER_SCRIPT}
 )

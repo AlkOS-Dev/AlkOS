@@ -1,5 +1,5 @@
-#include <arch_utils.hpp>
 #include <test_module/test.hpp>
+#include "cpu/utils.hpp"
 
 /**
  * Simply prints the default exception message.

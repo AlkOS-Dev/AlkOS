@@ -1,8 +1,8 @@
 #include "interrupts/idt.hpp"
-#include "arch_utils.hpp"
-#include "extensions/defines.hpp"
-#include "interrupts.hpp"
-#include "panic.hpp"
+#include <extensions/defines.hpp>
+#include <panic.hpp>
+#include "cpu/utils.hpp"
+#include "hal/interrupts.hpp"
 
 #include <assert.h>
 #include <extensions/bit.hpp>

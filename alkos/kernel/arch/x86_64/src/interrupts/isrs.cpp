@@ -1,7 +1,7 @@
+#include <modules/hardware.hpp>
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
 #include "interrupts/idt.hpp"
-#include "modules/hardware.hpp"
 
 #include <extensions/debug.hpp>
 

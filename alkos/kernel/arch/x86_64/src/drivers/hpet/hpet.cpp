@@ -1,5 +1,5 @@
 #include "drivers/hpet/hpet.hpp"
-#include "arch_utils.hpp"
+#include "cpu/utils.hpp"
 
 Hpet::Hpet(acpi_hpet *table)
 {

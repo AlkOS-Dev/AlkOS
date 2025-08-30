@@ -1,7 +1,7 @@
 #include "drivers/apic/local_apic.hpp"
-#include "acpi/acpi.hpp"
+#include <acpi/acpi.hpp>
+#include <modules/hardware.hpp>
 #include "drivers/pic8259/pic8259.hpp"
-#include "modules/hardware.hpp"
 
 #include <assert.h>
 #include <extensions/debug.hpp>

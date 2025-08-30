@@ -8,7 +8,7 @@
 #include <extensions/types.hpp>
 #include <todo.hpp>
 #include "cpu/msrs.hpp"
-#include "memory_io.hpp"
+#include "include/memory_io.hpp"
 
 /**
  * TODO: SUPPORT 2x APIC

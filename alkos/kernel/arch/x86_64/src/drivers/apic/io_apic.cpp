@@ -3,8 +3,8 @@
 
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
-#include <interrupts/idt.hpp>
 #include <todo.hpp>
+#include "interrupts/idt.hpp"
 
 // ------------------------------
 // static functions

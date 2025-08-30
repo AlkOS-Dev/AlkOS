@@ -45,7 +45,7 @@ add_executable(alkos.kernel ${KERNEL_SOURCES})
 target_include_directories(alkos.kernel PUBLIC
     include
     test
-    abi
+    hal
 )
 
 ########################## Configure for given Arch ##########################
