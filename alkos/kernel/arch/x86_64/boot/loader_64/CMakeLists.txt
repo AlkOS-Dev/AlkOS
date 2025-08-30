@@ -12,9 +12,9 @@ target_include_directories(alkos.boot.loader.64 PRIVATE
 
 ################################ Linker Flags ################################
 
-set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld")
+set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/build/linker.ld")
 target_link_options(alkos.boot.loader.64 PRIVATE
-        -T ${LINKER_SCRIPT}     # Linker script
+        -T ${LINKER_SCRIPT}     
 )
 
 ############################### Link Libraries ###############################

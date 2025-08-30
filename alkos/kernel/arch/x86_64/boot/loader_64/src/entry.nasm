@@ -8,10 +8,10 @@
 
           extern MainLoader64
 
-          global loader64
+          global Entry
           section .text
           bits 64
-loader64:
+Entry:
           mov esp, stack_top
           mov ebp, esp
 
@@ -32,6 +32,6 @@ loader64:
 
           ; Infinite loop
           cli
-os_hang:
+OsHang:
           hlt
-          jmp os_hang
+          jmp OsHang
