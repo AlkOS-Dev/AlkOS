@@ -6,7 +6,7 @@
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 
-#include "loader_memory_manager/loader_memory_manager.hpp"
+#include "mem/memory_manager.hpp"
 #include "multiboot2/memory_map.hpp"
 
 template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>

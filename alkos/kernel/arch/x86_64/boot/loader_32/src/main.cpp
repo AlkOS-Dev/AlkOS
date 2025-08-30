@@ -3,16 +3,20 @@
 #include <extensions/internal/formats.hpp>
 #include <extensions/new.hpp>
 
-#include "arch_utils.hpp"
-#include "definitions/loader32_data.hpp"
-#include "elf64.hpp"
-#include "loader_memory_manager/loader_memory_manager.hpp"
-#include "terminal.hpp"
-#include "panic.hpp"
+#include "cpu/utils.hpp"
+
+#include "abi/loader32_data.hpp"
+
+#include "elf/elf64.hpp"
+
+#include "mem/memory_manager.hpp"
+
+#include "sys/terminal.hpp"
+#include "sys/panic.hpp"
 
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
-#include "multiboot2/multiboot_info.hpp"
+#include "multiboot2/info.hpp"
 
 // External functions defined in assembly
 extern "C" int CheckCpuId();

@@ -1,12 +1,12 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
+#ifndef ALKOS_BOOT_LIB_CPU_UTILS_HPP_
+#define ALKOS_BOOT_LIB_CPU_UTILS_HPP_
 
 #include <extensions/defines.hpp>
 #include <io.hpp>
 #include "extensions/types.hpp"
 
 /**
- * @file arch_utils.hpp
+ * @file cpu/utils.hpp
  * @brief x86_64 architecture-specific utility functions and CPU state management
  *
  * Provides low-level CPU control functions and CPU state inspection capabilities
@@ -118,4 +118,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
+#endif  // ALKOS_BOOT_LIB_CPU_UTILS_HPP_

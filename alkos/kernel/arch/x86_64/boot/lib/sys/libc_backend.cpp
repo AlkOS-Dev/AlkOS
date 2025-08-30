@@ -3,7 +3,7 @@
 
 #include <autogen/feature_flags.h> 
 #include <assert.h>
-#include <arch_utils.hpp> 
+#include <cpu/utils.hpp> 
 #include <drivers/serial/qemu.hpp>
 
 void __platform_panic(const char* msg)

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_PANIC_HPP_
-#define ALKOS_KERNEL_ABI_PANIC_HPP_
+#ifndef ALKOS_KERNEL_ABI_sys/panic.hpp_
+#define ALKOS_KERNEL_ABI_sys/panic.hpp_
 
 #include <stdio.h>
 
@@ -27,4 +27,4 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
     arch::KernelPanic(buffer);
 }
 
-#endif  // ALKOS_KERNEL_ABI_PANIC_HPP_
+#endif  // ALKOS_KERNEL_ABI_sys/panic.hpp_

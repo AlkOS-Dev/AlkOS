@@ -6,19 +6,24 @@
 #error "AlkOS needs to be compiled with a x86_64-elf compiler"
 #endif
 
-/* internal includes */
-#include "arch_utils.hpp"
-#include "constants.hpp"
-#include "definitions/loader32_data.hpp"
-#include "definitions/loader64_data.hpp"
-#include "elf64.hpp"
-#include "loader_memory_manager/loader_memory_manager.hpp"
-#include "multiboot2/multiboot2.h"
-#include "multiboot2/multiboot_info.hpp"
-#include "terminal.hpp"
-#include "panic.hpp"
 
 #include <extensions/debug.hpp>
+
+#include "cpu/utils.hpp"
+
+#include "abi/loader32_data.hpp"
+#include "abi/loader64_data.hpp"
+
+#include "elf/elf64.hpp"
+
+#include "mem/memory_manager.hpp"
+
+#include "sys/constants.hpp"
+#include "sys/terminal.hpp"
+#include "sys/panic.hpp"
+
+#include "multiboot2/multiboot2.h"
+#include "multiboot2/info.hpp"
 
 using namespace loader64;
 using namespace Multiboot;
