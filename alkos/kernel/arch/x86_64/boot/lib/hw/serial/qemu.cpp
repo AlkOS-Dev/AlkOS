@@ -3,11 +3,11 @@
  * For detailed implementation reference, see: https://wiki.osdev.org/Serial_Ports
  */
 
-/* internal includes */
-#include "hw/serial/qemu.hpp"
 #include <assert.h>
 #include <extensions/debug.hpp>
+
 #include "hw/io.hpp"
+#include "hw/serial/qemu.hpp"
 
 // ------------------------------
 // Port and Register Definitions

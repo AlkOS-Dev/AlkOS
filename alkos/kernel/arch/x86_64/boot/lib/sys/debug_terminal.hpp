@@ -1,10 +1,10 @@
 #ifndef ALKOS_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
 #define ALKOS_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
 
-/* internal includes */
 #include <assert.h>
 #include <autogen/feature_flags.h>
 #include <extensions/defines.hpp>
+
 #include "hw/serial/qemu.hpp"
 
 WRAP_CALL void DebugTerminalWrite(const char *const buffer)

@@ -1,13 +1,12 @@
 #ifndef ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
 #define ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
 
-/* internal includes */
 #include <autogen/feature_flags.h>
 #include <extensions/defines.hpp>
 
-#include <todo.hpp>
 #include "hw/serial/qemu.hpp"
 #include "hw/vga.hpp"
+#include "todo.hpp"
 
 extern "C" {
 /**

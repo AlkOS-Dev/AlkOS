@@ -1,9 +1,10 @@
 #include <string.h>
-#include <elf/elf64.hpp>
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
+
+#include "elf/elf64.hpp"
 
 namespace elf
 {

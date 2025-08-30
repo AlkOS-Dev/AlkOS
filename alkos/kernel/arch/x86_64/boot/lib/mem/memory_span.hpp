@@ -1,7 +1,8 @@
 #ifndef ALKOS_BOOT_LIB_MEM_MEMORY_SPAN_HPP_
 #define ALKOS_BOOT_LIB_MEM_MEMORY_SPAN_HPP_
 
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
+
 class MemorySpan
 {
     public:

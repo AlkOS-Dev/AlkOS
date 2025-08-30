@@ -1,9 +1,10 @@
 #ifndef ALKOS_BOOT_LIB_MEM_MEMORY_MANAGER_HPP_
 #define ALKOS_BOOT_LIB_MEM_MEMORY_MANAGER_HPP_
 
+#include <extensions/concepts.hpp>
 #include <extensions/defines.hpp>
-#include "extensions/concepts.hpp"
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
+
 #include "multiboot2/multiboot2.h"
 
 /**

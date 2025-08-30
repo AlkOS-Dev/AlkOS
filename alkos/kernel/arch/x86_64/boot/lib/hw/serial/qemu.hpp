@@ -1,7 +1,7 @@
 #ifndef ALKOS_BOOT_LIB_HW_SERIAL_QEMU_HPP_
 #define ALKOS_BOOT_LIB_HW_SERIAL_QEMU_HPP_
 
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
 
 /**
  * @file serial_qemu.hpp

@@ -1,7 +1,6 @@
-/* internal includes */
-#include <cpu/utils.hpp>
-#include <sys/panic.hpp>
-#include <sys/terminal.hpp>
+#include "sys/panic.hpp"
+#include "cpu/utils.hpp"
+#include "sys/terminal.hpp"
 
 extern "C" void NO_RET KernelPanic(const char *msg)
 {
