@@ -3,21 +3,6 @@ message(STATUS "Configuring kernel...")
 # This target acts as a central hub for configuration data that 
 # need to be shared across the kernel and its components.
 add_library(alkos.kernel.config INTERFACE)
-add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
-#------------------------------------------------------------------------------#
-#                           Notes: alkos.kernel.deps                           #
-#------------------------------------------------------------------------------#
-# Note: Caveat - linking objects to this target also requires
-# using target_sources $<TARGET_OBJECTS:{some lib name}> syntax because
-# interface libraries are only carriers for headers and properties
-#
-#------------------------------------------------------------------------------#
-# Note: This target is used to ensure proper linking order 
-# Idea was that this is the linking "api" of the kernel
-# So that arch etc, doesn't have to care about the linking order
-# This is current unused in the intended way, but may be useful in the future
-#
-#------------------------------------------------------------------------------#
 
 ############################### Error Checking ###############################
 
@@ -75,18 +60,14 @@ add_subdirectory(arch/${ARCH})
 
 add_subdirectory(thirdparty)
 
-target_link_libraries(alkos.kernel.deps INTERFACE
-    alkos.kernel.thirdparty
-    alkos.autogen.interface
-    c.core
-)
-
 ################################ Linking Kernel ################################
 
 target_link_libraries(alkos.kernel PRIVATE
     alkos.target.properties.interface
     alkos.kernel.config
-    alkos.kernel.deps
+    alkos.kernel.thirdparty
+    alkos.autogen.interface
+    c.core
 )
 
 ############## Linker Configuration for CXX Global Constructors ##############
