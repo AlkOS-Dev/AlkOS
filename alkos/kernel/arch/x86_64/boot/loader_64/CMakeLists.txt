@@ -22,7 +22,7 @@ target_link_options(alkos.boot.loader.64 PRIVATE
 target_link_libraries(alkos.boot.loader.64 PRIVATE
         alkos.target.properties.interface
         alkos.autogen.interface
-        boot.lib.interface
+        alkos.boot.lib.interface
         c.core
         gcc
 )

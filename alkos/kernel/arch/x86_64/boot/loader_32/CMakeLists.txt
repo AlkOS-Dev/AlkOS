@@ -18,7 +18,7 @@ target_include_directories(alkos.boot.loader.32 PRIVATE .)
 target_link_libraries(alkos.boot.loader.32 PRIVATE
         alkos.target.properties.interface.32
         alkos.autogen.interface
-        boot.lib.interface
+        alkos.boot.lib.interface
         c.core.32
 )
 
