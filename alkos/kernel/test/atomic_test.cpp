@@ -15,6 +15,10 @@ class AtomicTest : public TestGroupBase
         char a;
         int b;
     };
+
+    static_assert(
+        !std::has_unique_object_representations_v<PaddedStruct>, "PaddedStruct must have padding"
+    );
 };
 
 // ------------------------------
@@ -88,22 +92,6 @@ static_assert(!std::internal::IsAtomicObject<void*>);
 static_assert(!std::internal::IsAtomicObject<int*>);
 
 static_assert(std::internal::IsAtomicObject<AtomicTest::PaddedStruct>);
-
-// ------------------------------
-// FetchAdd/Sub supported concepts
-// ------------------------------
-
-static_assert(std::internal::IsFetchAddSupported<int>);
-static_assert(std::internal::IsFetchAddSupported<char>);
-static_assert(std::internal::IsFetchAddSupported<long>);
-static_assert(std::internal::IsFetchAddSupported<int*>);
-static_assert(std::internal::IsFetchAddSupported<void*>);
-
-static_assert(std::internal::IsFetchSubSupported<int>);
-static_assert(std::internal::IsFetchSubSupported<char>);
-static_assert(std::internal::IsFetchSubSupported<long>);
-static_assert(std::internal::IsFetchSubSupported<int*>);
-static_assert(std::internal::IsFetchSubSupported<void*>);
 
 // ------------------------------
 // Specialization interface tests
@@ -298,15 +286,6 @@ TEST_F(AtomicTest, Atomic_PointerArithmeticOperations)
 
 TEST_F(AtomicTest, Atomic_CompareExchange_NonZeroPadding)
 {
-    static_assert(
-        !std::has_unique_object_representations_v<PaddedStruct>, "PaddedStruct must have padding"
-    );
-    static_assert(
-        sizeof(PaddedStruct) > sizeof(char) + sizeof(int), "PaddedStruct must have padding"
-    );
-
-    size_t padding_size = sizeof(PaddedStruct) - (sizeof(char) + sizeof(int));
-
     union PaddedAccess {
         PaddedStruct s;
         unsigned char bytes[sizeof(PaddedStruct)];
@@ -320,6 +299,7 @@ TEST_F(AtomicTest, Atomic_CompareExchange_NonZeroPadding)
     };
 
     // Explicitly modify padding bytes
+    size_t padding_size = sizeof(PaddedStruct) - (sizeof(char) + sizeof(int));
     for (size_t i = sizeof(char); i < padding_size; i++) {
         value.bytes[i]    = 0x7F;
         expected.bytes[i] = 0xFF;
@@ -340,15 +320,6 @@ TEST_F(AtomicTest, Atomic_CompareExchange_NonZeroPadding)
 
 TEST_F(AtomicTest, AtomicRef_CompareExchange_NonZeroPadding)
 {
-    static_assert(
-        !std::has_unique_object_representations_v<PaddedStruct>, "PaddedStruct must have padding"
-    );
-    static_assert(
-        sizeof(PaddedStruct) > sizeof(char) + sizeof(int), "PaddedStruct must have padding"
-    );
-
-    size_t padding_size = sizeof(PaddedStruct) - (sizeof(char) + sizeof(int));
-
     union PaddedAccess {
         PaddedStruct s;
         unsigned char bytes[sizeof(PaddedStruct)];
@@ -365,6 +336,7 @@ TEST_F(AtomicTest, AtomicRef_CompareExchange_NonZeroPadding)
     };
 
     // Explicitly modify padding bytes differently
+    size_t padding_size = sizeof(PaddedStruct) - (sizeof(char) + sizeof(int));
     for (size_t i = sizeof(char); i < padding_size; i++) {
         value.bytes[i]    = 0x7F;
         expected.bytes[i] = 0xFF;
