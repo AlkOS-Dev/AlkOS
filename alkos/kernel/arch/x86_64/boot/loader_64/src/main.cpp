@@ -16,12 +16,13 @@
 
 #include "mem/memory_manager.hpp"
 
-#include "sys/constants.hpp"
 #include "sys/panic.hpp"
 #include "sys/terminal.hpp"
 
 #include "multiboot2/info.hpp"
 #include "multiboot2/multiboot2.h"
+
+#include "settings.hpp"
 
 using namespace Multiboot;
 
@@ -92,13 +93,13 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     TRACE_SUCCESS("ELF bounds obtained!");
 
     TRACE_INFO(
-        "Mapping kernel module to upper memory starting at 0x%llX", arch::kKernelVirtualAddressStart
+        "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStart
     );
     MultibootInfo multiboot_info{transition_data->multiboot_info_addr};
     auto* mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
     loader_memory_manager
         ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, arch::kKernelVirtualAddressStart, elf_effective_size, 0
+            mmap_tag, kKernelVirtualAddressStart, elf_effective_size, 0
         );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
