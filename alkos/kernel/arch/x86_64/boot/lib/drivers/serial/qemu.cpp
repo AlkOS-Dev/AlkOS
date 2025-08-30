@@ -5,7 +5,7 @@
 
 /* internal includes */
 #include <assert.h>
-#include <drivers/serial_port_qemu/serial_qemu.hpp>
+#include <drivers/serial/qemu.hpp>
 #include <extensions/debug.hpp>
 #include <io.hpp>
 

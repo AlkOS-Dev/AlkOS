@@ -1,4 +1,4 @@
-#include <drivers/serial_port_qemu/serial_qemu.hpp>
+#include <drivers/serial/qemu.hpp>
 #include <terminal.hpp>
 
 void TerminalInit()

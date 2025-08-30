@@ -5,7 +5,7 @@
 #include <autogen/feature_flags.h>
 #include <extensions/defines.hpp>
 
-#include <drivers/serial_port_qemu/serial_qemu.hpp>
+#include <drivers/serial/qemu.hpp>
 #include <drivers/vga/vga.hpp>
 #include <todo.hpp>
 
