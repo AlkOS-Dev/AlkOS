@@ -3,7 +3,6 @@ message(STATUS "Configuring kernel...")
 # This target acts as a central hub for configuration data that 
 # need to be shared across the kernel and its components.
 add_library(alkos.kernel.config INTERFACE)
-add_library(alkos.kernel.headers INTERFACE)  # Kernel headers for exporting
 add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
 #------------------------------------------------------------------------------#
 #                           Notes: alkos.kernel.deps                           #
@@ -29,14 +28,13 @@ alkos_ensure_defined(
 ############################ Compile Definitions #############################
 
 add_compile_definitions(__ALKOS_KERNEL__=1)
-add_compile_definitions(__ALKOS_LIBK__=1) # For LIBK headers
 
 ########################### Setting Sysroot Boot #############################
 
 file(MAKE_DIRECTORY ${SYSROOT}/boot)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SYSROOT}/boot)
 
-############################### Adding Sources ###############################
+#################################### Exec ####################################
 
 # NOTE: kernel should not include any architecture specific code
 # including assembly
@@ -55,14 +53,11 @@ if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
     list(APPEND KERNEL_SOURCES ${KERNEL_TEST_SOURCES})
 endif ()
 
-
-#################################### Exec ####################################
-
 add_executable(alkos.kernel ${KERNEL_SOURCES})
 
 ############################### Adding Headers ###############################
 
-target_include_directories(alkos.kernel.headers INTERFACE
+target_include_directories(alkos.kernel PUBLIC
     include
     test
     abi
@@ -91,7 +86,6 @@ target_link_libraries(alkos.kernel.deps INTERFACE
 target_link_libraries(alkos.kernel PRIVATE
     alkos.target.properties.interface
     alkos.kernel.config
-    alkos.kernel.headers
     alkos.kernel.deps
 )
 

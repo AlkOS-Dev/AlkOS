@@ -3,7 +3,6 @@
 /* Internal includes */
 #include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
 #include <multiboot2/multiboot_info.hpp>
@@ -11,8 +10,6 @@
 /* External includes */
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
-
-extern loader64::LoaderData* kLoaderData;
 
 static Multiboot::TagNewAcpi* FindAcpiTag(u64 multiboot_info_addr)
 {
@@ -34,25 +31,26 @@ static Multiboot::TagNewAcpi* FindAcpiTag(u64 multiboot_info_addr)
 }
 int ACPI::ACPIController::Init()
 {
-    TRACE_INFO("ACPI initialization...");
+    // TODO
+    // TRACE_INFO("ACPI initialization...");
 
-    TRACE_INFO("Finding RSDP...");
-    auto* acpi_tag = FindAcpiTag(kLoaderData->multiboot_info_addr);
-    R_ASSERT_NOT_NULL(
-        acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
-    );
+    // TRACE_INFO("Finding RSDP...");
+    // auto* acpi_tag = FindAcpiTag(kLoaderData->multiboot_info_addr);
+    // R_ASSERT_NOT_NULL(
+    //     acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
+    // );
 
-    TRACE_SUCCESS(
-        "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
-        FormatMetricUint(acpi_tag->size)
-    );
+    // TRACE_SUCCESS(
+    //     "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
+    //     FormatMetricUint(acpi_tag->size)
+    // );
 
-    RsdpAddress_ = reinterpret_cast<void*>(acpi_tag->rsdp);
-    TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), RsdpAddress_);
+    // RsdpAddress_ = reinterpret_cast<void*>(acpi_tag->rsdp);
+    // TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), RsdpAddress_);
 
-    /* Load all tables, bring the event subsystem online, and enter ACPI mode */
-    uacpi_status ret = uacpi_initialize(0);
-    R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
+    // /* Load all tables, bring the event subsystem online, and enter ACPI mode */
+    // uacpi_status ret = uacpi_initialize(0);
+    // R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
 
     // /* Load the AML namespace */
     // ret = uacpi_namespace_load();
