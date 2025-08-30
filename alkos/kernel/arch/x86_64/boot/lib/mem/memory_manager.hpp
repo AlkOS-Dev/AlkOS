@@ -397,6 +397,6 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
 };
 
-#include "loader_memory_manager.tpp"
+#include "memory_manager.tpp"
 
 #endif  // ALKOS_BOOT_LIB_MEM_MEMORY_MANAGER_HPP_

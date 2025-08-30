@@ -2,7 +2,7 @@
 #define ALKOS_BOOT_LIB_CPU_UTILS_HPP_
 
 #include <extensions/defines.hpp>
-#include <io.hpp>
+#include "hw/io.hpp"
 #include "extensions/types.hpp"
 
 /**

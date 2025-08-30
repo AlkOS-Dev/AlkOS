@@ -4,7 +4,7 @@
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/types.hpp>
-#include <io.hpp>
+#include "hw/io.hpp"
 
 namespace pci
 {

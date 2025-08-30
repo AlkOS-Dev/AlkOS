@@ -11,8 +11,7 @@
 
 #include "cpu/utils.hpp"
 
-#include "abi/loader32_data.hpp"
-#include "abi/loader64_data.hpp"
+#include "abi/transition_data.hpp"
 
 #include "elf/elf64.hpp"
 
@@ -25,25 +24,24 @@
 #include "multiboot2/multiboot2.h"
 #include "multiboot2/info.hpp"
 
-using namespace loader64;
 using namespace Multiboot;
 
 /* external init procedures */
-extern "C" void EnterKernel(u64 kernel_entry_addr, LoaderData* loader_data_kernel);
+extern "C" void EnterKernel(u64 kernel_entry_addr, KernelInitialParams* kernel_inital_params);
 extern const char loader_64_start[];
 extern const char loader_64_end[];
 extern byte kLoaderPreAllocatedMemory[];
 
-LoaderData loader_data;
+KernelInitialParams kernel_inital_params;
 
-static bool ValidateLoaderData(loader32::LoaderData* loader_data_32_64)
+static bool ValidateTransitionData(TransitionData* transition_data)
 {
-    TRACE_INFO("Checking for LoaderData...");
-    if (loader_data_32_64 == nullptr) {
-        TRACE_ERROR("LoaderData check failed!");
+    TRACE_INFO("Checking for TransitionData...");
+    if (transition_data == nullptr) {
+        TRACE_ERROR("TransitionData check failed!");
         return false;
     }
-    TRACE_SUCCESS("LoaderData found passed!");
+    TRACE_SUCCESS("TransitionData found passed!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
@@ -67,26 +65,26 @@ static Multiboot::TagModule* FindKernelModule(MultibootInfo multiboot_info)
     return kernel_module;
 }
 
-extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
+extern "C" void MainLoader64(TransitionData* transition_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
     arch::TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
-    if (!ValidateLoaderData(loader_data_32_64)) {
-        arch::KernelPanic("LoaderData check failed!");
+    if (!ValidateTransitionData(transition_data)) {
+        arch::KernelPanic("TransitionData check failed!");
     }
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
     auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(loader_data_32_64->loader_memory_manager_addr);
+        reinterpret_cast<LoaderMemoryManager*>(transition_data->loader_memory_manager_addr);
     loader_memory_manager->MarkMemoryAreaNotFree(
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
 
-    auto* kernel_module = FindKernelModule(loader_data_32_64->multiboot_info_addr);
+    auto* kernel_module = FindKernelModule(transition_data->multiboot_info_addr);
 
     TRACE_INFO("Getting ELF bounds...");
     auto [elf_lower_bound, elf_upper_bound] =
@@ -97,7 +95,7 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
     TRACE_INFO(
         "Mapping kernel module to upper memory starting at 0x%llX", arch::kKernelVirtualAddressStart
     );
-    MultibootInfo multiboot_info{loader_data_32_64->multiboot_info_addr};
+    MultibootInfo multiboot_info{transition_data->multiboot_info_addr};
     auto* mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
     loader_memory_manager
         ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
@@ -123,12 +121,12 @@ extern "C" void MainLoader64(loader32::LoaderData* loader_data_32_64)
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
 
-    loader_data.kernel_start_addr           = elf_lower_bound;
-    loader_data.kernel_end_addr             = elf_upper_bound;
-    loader_data.loader_memory_manager_addr  = loader_data_32_64->loader_memory_manager_addr;
-    loader_data.multiboot_info_addr         = loader_data_32_64->multiboot_info_addr;
-    loader_data.multiboot_header_start_addr = loader_data_32_64->multiboot_header_start_addr;
-    loader_data.multiboot_header_end_addr   = loader_data_32_64->multiboot_header_end_addr;
+    kernel_inital_params.kernel_start_addr           = elf_lower_bound;
+    kernel_inital_params.kernel_end_addr             = elf_upper_bound;
+    kernel_inital_params.loader_memory_manager_addr  = transition_data->loader_memory_manager_addr;
+    kernel_inital_params.multiboot_info_addr         = transition_data->multiboot_info_addr;
+    kernel_inital_params.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
+    kernel_inital_params.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
 
-    EnterKernel(kernel_entry_point, &loader_data);
+    EnterKernel(kernel_entry_point, &kernel_inital_params);
 }

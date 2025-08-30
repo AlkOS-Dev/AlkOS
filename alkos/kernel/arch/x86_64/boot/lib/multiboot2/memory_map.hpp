@@ -3,7 +3,7 @@
 
 #include "extensions/bit.hpp"
 #include "extensions/types.hpp"
-#include "models/memory_span.hpp"
+#include "mem/memory_span.hpp"
 #include "multiboot2/multiboot2.h"
 
 namespace Multiboot

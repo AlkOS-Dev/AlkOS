@@ -5,7 +5,7 @@
 #include <extensions/concepts.hpp>
 #include <extensions/types.hpp>
 
-#include "models/memory_span.hpp"
+#include "mem/memory_span.hpp"
 #include "multiboot2/multiboot2.h"
 #include "multiboot2/tag_metadata.hpp"
 #include "todo.hpp"

@@ -1,6 +1,6 @@
 /* internal includes */
 #include <string.h>
-#include <drivers/vga/vga.hpp>
+#include "hw/vga.hpp"
 #include <extensions/defines.hpp>
 #include "extensions/types.hpp"
 

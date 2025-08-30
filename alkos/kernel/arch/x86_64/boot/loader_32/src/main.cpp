@@ -5,7 +5,7 @@
 
 #include "cpu/utils.hpp"
 
-#include "abi/loader32_data.hpp"
+#include "abi/transition_data.hpp"
 
 #include "elf/elf64.hpp"
 
@@ -41,7 +41,7 @@ extern byte kLoaderPreAllocatedMemory[];
 using namespace Multiboot;
 
 // Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
-loader32::LoaderData loader_data;
+TransitionData loader_data;
 
 static void MultibootCheck(u32 boot_loader_magic)
 {

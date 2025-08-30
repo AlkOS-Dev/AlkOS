@@ -5,8 +5,8 @@
 #include <autogen/feature_flags.h>
 #include <extensions/defines.hpp>
 
-#include <drivers/serial/qemu.hpp>
-#include <drivers/vga/vga.hpp>
+#include "hw/serial/qemu.hpp"
+#include "hw/vga.hpp"
 #include <todo.hpp>
 
 extern "C" {

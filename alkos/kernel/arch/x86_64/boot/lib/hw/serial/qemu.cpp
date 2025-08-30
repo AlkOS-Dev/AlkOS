@@ -5,9 +5,9 @@
 
 /* internal includes */
 #include <assert.h>
-#include <drivers/serial/qemu.hpp>
+#include "hw/serial/qemu.hpp"
 #include <extensions/debug.hpp>
-#include <io.hpp>
+#include "hw/io.hpp"
 
 // ------------------------------
 // Port and Register Definitions
