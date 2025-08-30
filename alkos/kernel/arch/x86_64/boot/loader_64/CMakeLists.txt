@@ -1,4 +1,4 @@
-message(STATUS "Configuring x86_64 64-bit loader")
+message(STATUS "      -> Configuring 64-bit bootloader")
 
 #################################### Exec ####################################
 

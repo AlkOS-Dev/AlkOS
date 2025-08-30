@@ -1,4 +1,4 @@
-message(STATUS "Configuring for x86_64")
+message(STATUS "  -> Configuring for x86_64")
 
 ################################# Add Modules ##################################
 

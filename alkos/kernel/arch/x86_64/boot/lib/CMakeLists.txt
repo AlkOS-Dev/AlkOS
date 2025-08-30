@@ -1,3 +1,5 @@
+message(STATUS "      -> Configuring bootloader library")
+
 add_library(alkos.boot.lib.interface INTERFACE)
 
 alkos_find_sources(BOOT_LIB_SOURCES

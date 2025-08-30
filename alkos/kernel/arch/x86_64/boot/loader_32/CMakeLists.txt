@@ -1,4 +1,4 @@
-message(STATUS "Configuring 32-bit bootloader")
+message(STATUS "      -> Configuring 32-bit bootloader")
 
 #################################### Exec ####################################
 

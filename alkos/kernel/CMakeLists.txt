@@ -101,11 +101,11 @@ alkos_ensure_defined(
     MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
 )
 
-message(STATUS "Found CRT Objects:")
-message(STATUS "  crti: ${CRTI_OBJ_PATH}")
-message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
-message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
-message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
+message(STATUS "  [INFO] Found CRT Objects:")
+message(STATUS "    crti:     ${CRTI_OBJ_PATH}")
+message(STATUS "    crtbegin: ${CRTBEGIN_OBJ_PATH}")
+message(STATUS "    crtend:   ${CRTEND_OBJ_PATH}")
+message(STATUS "    crtn:     ${CRTN_OBJ_PATH}")
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn

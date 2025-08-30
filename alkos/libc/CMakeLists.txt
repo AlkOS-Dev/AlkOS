@@ -1,3 +1,5 @@
+message(STATUS "Configuring LibC...")
+
 ############################### Configuring files ###############################
 
 alkos_find_sources(LIB_SOURCES)
