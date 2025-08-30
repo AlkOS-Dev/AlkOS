@@ -1,7 +1,7 @@
 message(STATUS "Configuring kernel...")
 
-# This target acts as a central hub for configuration data that 
-# need to be shared across the kernel and its components.
+# TODO: This currently works as interface to attach crti and crtn object files
+# And should probably be kept that way and renamed
 add_library(alkos.kernel.config INTERFACE)
 
 ############################### Error Checking ###############################
@@ -106,10 +106,6 @@ message(STATUS "  crti: ${CRTI_OBJ_PATH}")
 message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
 message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
 message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
-
-# TODO:
-# The below code could technically be replaced with target_link_libraries()
-# It didn't preserve the order of the objects and libraries, so giving up for now.
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn
