@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_sys/terminal.hpp_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_sys/terminal.hpp_
+#ifndef ALKOS_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
+#define ALKOS_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
 
 /* internal includes */
 #include <assert.h>
@@ -23,4 +23,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
     return QemuTerminalReadLine(buffer, buffer_size);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_sys/terminal.hpp_
+#endif  // ALKOS_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_

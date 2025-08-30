@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_sys/terminal.hpp_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_sys/terminal.hpp_
+#ifndef ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
+#define ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
 
 /* internal includes */
 #include <autogen/feature_flags.h>
@@ -119,4 +119,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
 }
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_sys/terminal.hpp_
+#endif  // ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
