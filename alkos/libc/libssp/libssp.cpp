@@ -25,11 +25,6 @@ volatile uintptr_t __stack_chk_guard = kStackChkGuard;
 // libssp implementation
 // ------------------------------
 
-void __stack_chk_init()
-{
-}
+void __stack_chk_init() {}
 
-extern "C" NO_RET void __stack_chk_fail()
-{
-    __platform_panic("Stack smashing detected");
-}
+extern "C" NO_RET void __stack_chk_fail() { __platform_panic("Stack smashing detected"); }

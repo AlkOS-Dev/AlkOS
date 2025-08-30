@@ -1,5 +1,5 @@
-#include "hw/serial/qemu.hpp">
 #include <sys/terminal.hpp>
+#include "hw/serial/qemu.hpp">
 
 void TerminalInit()
 {

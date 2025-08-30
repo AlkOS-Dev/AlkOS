@@ -4,8 +4,8 @@
 /* internal includes */
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include "hw/serial/qemu.hpp"
 #include <extensions/defines.hpp>
+#include "hw/serial/qemu.hpp"
 
 WRAP_CALL void DebugTerminalWrite(const char *const buffer)
 {

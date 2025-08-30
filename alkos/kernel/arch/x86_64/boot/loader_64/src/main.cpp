@@ -6,7 +6,6 @@
 #error "AlkOS needs to be compiled with a x86_64-elf compiler"
 #endif
 
-
 #include <extensions/debug.hpp>
 
 #include "cpu/utils.hpp"
@@ -18,11 +17,11 @@
 #include "mem/memory_manager.hpp"
 
 #include "sys/constants.hpp"
-#include "sys/terminal.hpp"
 #include "sys/panic.hpp"
+#include "sys/terminal.hpp"
 
-#include "multiboot2/multiboot2.h"
 #include "multiboot2/info.hpp"
+#include "multiboot2/multiboot2.h"
 
 using namespace Multiboot;
 
