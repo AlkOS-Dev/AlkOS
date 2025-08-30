@@ -28,8 +28,8 @@ extern "C" void EnterElf64(
 extern const char multiboot_header_start[];
 extern const char multiboot_header_end[];
 
-extern const char loader32_start[];
-extern const char loader32_end[];
+extern const char loader_32_start[];
+extern const char loader_32_end[];
 
 // Pre-allocated memory for the loader memory manager
 extern byte kLoaderPreAllocatedMemory[];
@@ -175,8 +175,8 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
     MemoryMap memory_map{mmap_tag};
     InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
     loader_memory_manager->MarkMemoryAreaNotFree(
-        static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
-        static_cast<u64>(reinterpret_cast<u32>(loader32_end))
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
     loader_memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
@@ -209,8 +209,8 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
     TRACE_INFO("Jumping to 64-bit loader...");
 
     loader_memory_manager->AddFreeMemoryRegion(
-        static_cast<u64>(reinterpret_cast<u32>(loader32_start)),
-        static_cast<u64>(reinterpret_cast<u32>(loader32_end))
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
 
     EnterElf64(

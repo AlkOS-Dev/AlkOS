@@ -5,7 +5,7 @@ SECTIONS
 {
           . = 100m;
 
-	PROVIDE(loader64_start = .);
+	PROVIDE(loader_64_start = .);
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
@@ -31,5 +31,5 @@ SECTIONS
 		*(.bss)
 	}
 
-	PROVIDE(loader64_end = .);
+	PROVIDE(loader_64_end = .);
 }

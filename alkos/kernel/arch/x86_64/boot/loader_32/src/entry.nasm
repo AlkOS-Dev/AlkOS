@@ -20,8 +20,8 @@
           ; undefined behavior.
 
           section   .text
-          global    loader32
-loader32:
+          global    Entry
+Entry:
 
           mov esp, stack_top
           mov ebp, esp
