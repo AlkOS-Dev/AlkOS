@@ -5,13 +5,12 @@
 #include <autogen/feature_flags.h>
 #include "cpu/utils.hpp"
 #include "hw/serial/qemu.hpp"
+#include "panic.hpp"
 
 void __platform_panic(const char* msg)
 {
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
-        QemuTerminalWriteString("[LOADER LIBC PANIC]: ");
-        QemuTerminalWriteString(msg);
-        QemuTerminalWriteString("\n");
+        KernelPanic(msg);
     }
 
     OsHang();
@@ -53,7 +52,5 @@ void __platform_debug_write(const char* buffer)
 
 size_t __platform_debug_read_line(char* buffer, size_t buffer_size)
 {
-    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
-        return QemuTerminalReadLine(buffer, buffer_size);
-    }
+    /* Not implemented in loader */
 }

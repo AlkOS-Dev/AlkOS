@@ -11,11 +11,6 @@
  */
 extern "C" NO_RET void KernelPanic(const char *msg);
 
-namespace arch
-{
-WRAP_CALL NO_RET void KernelPanic(const char *msg) { ::KernelPanic(msg); }
-}  // namespace arch
-
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 {
@@ -24,7 +19,7 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 
     snprintf(buffer, kKernelPanicPrintBuffSize, fmt, args...);
 
-    arch::KernelPanic(buffer);
+    KernelPanic(buffer);
 }
 
 #endif  // ALKOS_BOOT_LIB_SYS_PANIC_HPP_
