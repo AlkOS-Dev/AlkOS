@@ -11,17 +11,20 @@ class expected;
 template <class E>
 class unexpected;
 
-template <class E>
-class bad_expected_access;
-
 struct unexpect_t {
     explicit unexpect_t() = default;
 };
 inline constexpr unexpect_t unexpect{};
 
+//------------------------------------------------------------------------------//
+// Class : Unexpected
+//------------------------------------------------------------------------------//
+
 template <class E>
 class unexpected
 {
+    // TODO : Static checks if E type is valid (not an array, not cv-qualified etc)
+
     //------------------------------------------------------------------------------//
     // Construction
     //------------------------------------------------------------------------------//
@@ -109,5 +112,13 @@ class unexpected
     private:
     E error_;
 };
+
+template <typename E>
+unexpected(E) -> unexpected<E>;
+
+//------------------------------------------------------------------------------//
+// Class : Expected
+//------------------------------------------------------------------------------//
+// TODO
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
