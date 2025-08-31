@@ -90,6 +90,22 @@ class unexpected
         std::swap(error_, other.error_);
     }
 
+    friend constexpr void swap(unexpected& x, unexpected& y) noexcept(noexcept(x.swap(y)))
+        requires std::is_swappable_v<E>
+    {
+        x.swap(y);
+    }
+
+    //------------------------------------------------------------------------------//
+    // Comparasion
+    //------------------------------------------------------------------------------//
+
+    template <class OtherE>
+    NODISCARD friend constexpr bool operator==(const unexpected& x, const unexpected<OtherE>& y)
+    {
+        return x.error() == y.error();
+    }
+
     private:
     E error_;
 };
