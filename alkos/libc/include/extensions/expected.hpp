@@ -39,8 +39,8 @@ class unexpected
     // a value of type E from std::forward<Err>(e)
     template <class Err = E>
         requires(!std::is_same_v<std::remove_cvref_t<Err>, unexpected>) &&
-                (!std::is_same_v<std::remove_cvref_t<Err>, std::in_place_t>) &&
-                std::is_constructible_v<E, Err>
+                !std::is_same_v<std::remove_cvref_t<Err>, std::in_place_t> &&
+                std::is_constructible_v<E, Err>)
     constexpr explicit unexpected(Err&& e) noexcept(std::is_nothrow_constructible_v<E, Err>)
     {
         error_(std::forward<Err>(e));
@@ -88,13 +88,14 @@ class unexpected
     // Swap
     //------------------------------------------------------------------------------//
 
-    constexpr void swap(unexpected& other) noexcept(std::is_nothrow_swappable_v<E>);
-    requires std::is_swappable_v<E> {
+    constexpr void swap(unexpected& other) noexcept(std::is_nothrow_swappable_v<E>)
+        requires(std::is_swappable_v<E>)
+    {
         std::swap(error_, other.error_);
     }
 
     friend constexpr void swap(unexpected& x, unexpected& y) noexcept(noexcept(x.swap(y)))
-        requires std::is_swappable_v<E>
+        requires(std::is_swappable_v<E>)
     {
         x.swap(y);
     }
