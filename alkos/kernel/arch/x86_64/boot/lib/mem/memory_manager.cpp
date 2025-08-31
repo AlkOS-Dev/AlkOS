@@ -7,11 +7,11 @@
 
 // Note: The alignment here is a strict requirement for the PML tables and if the
 // initial object is not aligned, the PML tables will not be aligned either.
-alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(LoaderMemoryManager)];
+alignas(4096) byte kLoaderPreAllocatedMemory[sizeof(MemoryManager)];
 
-LoaderMemoryManager::LoaderMemoryManager()
+MemoryManager::MemoryManager()
 {
-    TRACE_INFO("LoaderMemoryManager::LoaderMemoryManager()");
+    TRACE_INFO("MemoryManager::MemoryManager()");
 
     num_pml_tables_stored_ = 1;  ///< The first PML table is the PML4 table
     memset(descending_sorted_mmap_entries, 0, sizeof(descending_sorted_mmap_entries));
@@ -25,8 +25,8 @@ LoaderMemoryManager::LoaderMemoryManager()
         }
     }
 }
-LoaderMemoryManager::PML4_t *LoaderMemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
-void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
+MemoryManager::PML4_t *MemoryManager::GetPml4Table() { return &buffer_[kPml4Index]; }
+void MemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
 {
     R_ASSERT_LT(num_free_memory_regions_, kMaxMemoryMapEntries);
     FreeMemoryRegion_t &mmap_entry_ref = descending_sorted_mmap_entries[num_free_memory_regions_++];
@@ -48,7 +48,7 @@ void LoaderMemoryManager::AddFreeMemoryRegion(u64 start_addr, u64 end_addr)
         i--;
     }
 }
-void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
+void MemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
 {
     bool found_intersection = true;
     while (found_intersection) {
@@ -113,7 +113,7 @@ void LoaderMemoryManager::MarkMemoryAreaNotFree(u64 start_addr, u64 end_addr)
         }
     }
 }
-void LoaderMemoryManager::DumpMemoryMap()
+void MemoryManager::DumpMemoryMap()
 {
     TRACE_INFO("Memory map dump:");
     for (u32 i = 0; i < num_free_memory_regions_; i++) {
@@ -124,7 +124,7 @@ void LoaderMemoryManager::DumpMemoryMap()
     }
     TRACE_SUCCESS("Memory map dump complete!");
 }
-void LoaderMemoryManager::DumpPmlTables()
+void MemoryManager::DumpPmlTables()
 {
     TRACE_INFO("PML tables dump:");
     PML4_t *pml4_table = GetPml4Table();

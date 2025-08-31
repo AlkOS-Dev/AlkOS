@@ -35,12 +35,12 @@ concept FreeRegionProvider = requires(Provider provider) {
 };
 
 /**
- * @brief LoaderMemoryManager manages the mapping of virtual to physical memory.
+ * @brief MemoryManager manages the mapping of virtual to physical memory.
  *
  * It handles the creation and storage of paging tables (PML) and provides
  * functions to map virtual ranges, walk free memory regions, and dump debug
  */
-class LoaderMemoryManager
+class MemoryManager
 {
     private:
     //------------------------------------------------------------------------------
@@ -294,11 +294,11 @@ class LoaderMemoryManager
     //------------------------------------------------------------------------------//
 
     /**
-     * @brief Constructs the LoaderMemoryManager.
+     * @brief Constructs the MemoryManager.
      *
      * Initializes the internal PML tables and clears the free memory regions.
      */
-    LoaderMemoryManager();
+    MemoryManager();
 
     //------------------------------------------------------------------------------//
     // Public Methods

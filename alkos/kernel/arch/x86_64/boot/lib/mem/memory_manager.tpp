@@ -9,8 +9,8 @@
 #include "mem/memory_manager.hpp"
 #include "multiboot2/memory_map.hpp"
 
-template <FreeRegionProvider Provider, LoaderMemoryManager::WalkDirection direction>
-void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
+template <FreeRegionProvider Provider, MemoryManager::WalkDirection direction>
+void MemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     Provider provider, u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
@@ -64,8 +64,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingFreeRegionProvider(
     }
 }
 
-template <LoaderMemoryManager::WalkDirection direction>
-void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
+template <MemoryManager::WalkDirection direction>
+void MemoryManager::MapVirtualRangeUsingInternalMemoryMap(
     u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
@@ -77,8 +77,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingInternalMemoryMap(
     );
 }
 
-template <LoaderMemoryManager::WalkDirection direction>
-void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
+template <MemoryManager::WalkDirection direction>
+void MemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     Multiboot::TagMmap *mmap_tag, u64 virtual_address, u64 size_bytes, u64 flags
 )
 {
@@ -88,7 +88,7 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     uintptr_t descending_sorted_address_buffer[kMaxMemoryMapEntries];
     u64 address_count = 0;
     // TODO: This looks wacky since we pass the Tag and construct the MemoryMap from it, not just
-    // passing the MemoryMap directly. This should be changed when the loader_memory_manager is
+    // passing the MemoryMap directly. This should be changed when the memory_manager is
     // updated to be more sensible.
     MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry &entry) {
         if (entry.type != MmapEntry::kMemoryAvailable) {
@@ -130,10 +130,8 @@ void LoaderMemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     );
 }
 
-template <LoaderMemoryManager::PageSize page_size>
-void LoaderMemoryManager::MapVirtualMemoryToPhysical(
-    u64 virtual_address, u64 physical_address, u64 flags
-)
+template <MemoryManager::PageSize page_size>
+void MemoryManager::MapVirtualMemoryToPhysical(u64 virtual_address, u64 physical_address, u64 flags)
 {
     static constexpr u32 kIndexMask = 0x1FF;
     static constexpr i32 kPageShift = (page_size == PageSize::Page4k)   ? 12
@@ -219,8 +217,8 @@ void LoaderMemoryManager::MapVirtualMemoryToPhysical(
     u64 *entry                    = reinterpret_cast<u64 *>(&p1_entry[pml1_index]);
     *entry |= flags;
 }
-template <LoaderMemoryManager::WalkDirection direction, FreeMemoryRegionCallback Callback>
-void LoaderMemoryManager::WalkFreeMemoryRegions(Callback callback)
+template <MemoryManager::WalkDirection direction, FreeMemoryRegionCallback Callback>
+void MemoryManager::WalkFreeMemoryRegions(Callback callback)
 {
     TRACE_INFO("Walking free memory regions...");
     switch (direction) {
@@ -239,8 +237,8 @@ void LoaderMemoryManager::WalkFreeMemoryRegions(Callback callback)
     }
     TRACE_INFO("Free memory regions walk complete!");
 }
-template <LoaderMemoryManager::WalkDirection direction>
-void LoaderMemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, u64 size_bytes)
+template <MemoryManager::WalkDirection direction>
+void MemoryManager::UsePartOfFreeMemoryRegion(FreeMemoryRegion_t &region, u64 size_bytes)
 {
     ASSERT_GE(region.length, size_bytes);
 

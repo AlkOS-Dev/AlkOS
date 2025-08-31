@@ -71,33 +71,30 @@ static void HardwareChecks()
     TRACE_SUCCESS("Long mode check passed!");
 }
 
-static void IdentityMap(LoaderMemoryManager* loader_memory_manager)
+static void IdentityMap(MemoryManager* memory_manager)
 {
     TRACE_INFO("Identity mapping first 512 GiB of memory...");
 
     static constexpr u32 k1GiB = 1 << 30;
     for (u32 i = 0; i < 512; i++) {
         u64 addr_64bit = static_cast<u64>(i) * k1GiB;
-        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page1G>(
-            addr_64bit, addr_64bit,
-            LoaderMemoryManager::kPresentBit | LoaderMemoryManager::kWriteBit
+        memory_manager->MapVirtualMemoryToPhysical<MemoryManager::PageSize::Page1G>(
+            addr_64bit, addr_64bit, MemoryManager::kPresentBit | MemoryManager::kWriteBit
         );
     }
 
     TRACE_SUCCESS("Identity mapping complete!");
 }
 
-// TODO: Should just be a method of LoaderMemoryManager
+// TODO: Should just be a method of MemoryManager
 static void InitializeMemoryManagerWithFreeMemoryRegions(
-    LoaderMemoryManager* loader_memory_manager, Multiboot::MemoryMap memory_map
+    MemoryManager* memory_manager, Multiboot::MemoryMap memory_map
 )
 {
     TRACE_INFO("Adding available memory regions to memory manager...");
     memory_map.WalkEntries([&](Multiboot::MmapEntry& mmap_entry) FORCE_INLINE_L {
         if (mmap_entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
-            loader_memory_manager->AddFreeMemoryRegion(
-                mmap_entry.addr, mmap_entry.addr + mmap_entry.len
-            );
+            memory_manager->AddFreeMemoryRegion(mmap_entry.addr, mmap_entry.addr + mmap_entry.len);
             TRACE_INFO(
                 "Memory region: 0x%llX-0x%llX, length: %sB - Added to memory manager",
                 mmap_entry.addr, mmap_entry.addr + mmap_entry.len, FormatMetricUint(mmap_entry.len)
@@ -105,8 +102,7 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
         }
     });
     TRACE_INFO(
-        "Total available memory: %s",
-        FormatMetricUint(loader_memory_manager->GetAvailableMemoryBytes())
+        "Total available memory: %s", FormatMetricUint(memory_manager->GetAvailableMemoryBytes())
     );
 }
 
@@ -154,16 +150,16 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
     ///////////////////////////// Enabling Hardware //////////////////////////////
     TRACE_INFO("Enabling hardware features...");
     BlockHardwareInterrupts();
-    auto* loader_memory_manager = new (kLoaderPreAllocatedMemory) LoaderMemoryManager();
+    auto* memory_manager = new (kLoaderPreAllocatedMemory) MemoryManager();
     TRACE_SUCCESS("Loader memory manager created!");
-    IdentityMap(loader_memory_manager);
+    IdentityMap(memory_manager);
 
     TRACE_INFO("Enabling long mode...");
     EnableLongMode();
     TRACE_SUCCESS("Long mode enabled!");
 
     TRACE_INFO("Enabling paging...");
-    EnablePaging(reinterpret_cast<void*>(loader_memory_manager->GetPml4Table()));
+    EnablePaging(reinterpret_cast<void*>(memory_manager->GetPml4Table()));
     TRACE_SUCCESS("Paging enabled!");
 
     TRACE_INFO("Finished hardware features setup for 32-bit mode.");
@@ -177,20 +173,18 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
         KernelPanic("Memory map tag not found in multiboot info!");
     }
     MemoryMap memory_map{mmap_tag};
-    InitializeMemoryManagerWithFreeMemoryRegions(loader_memory_manager, mmap_tag);
-    loader_memory_manager->MarkMemoryAreaNotFree(
+    InitializeMemoryManagerWithFreeMemoryRegions(memory_manager, mmap_tag);
+    memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
-    loader_memory_manager->MarkMemoryAreaNotFree(
+    memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end))
     );
-    loader_memory_manager->MarkMemoryAreaNotFree(
+    memory_manager->MarkMemoryAreaNotFree(
         static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory)),
-        static_cast<u64>(
-            reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(LoaderMemoryManager)
-        )
+        static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(MemoryManager))
     );
 
     //////////////////////////// Loading Loader64 Module //////////////////////////
@@ -204,7 +198,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
     loader_data.multiboot_header_end_addr =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
-    loader_data.loader_memory_manager_addr = reinterpret_cast<u64>(loader_memory_manager);
+    loader_data.memory_manager_addr = reinterpret_cast<u64>(memory_manager);
 
     //////////////////////////// Printing LoaderData Info /////////////////////////
     TODO_WHEN_DEBUGGING_FRAMEWORK
@@ -212,7 +206,7 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
     //////////////////////////// Jumping to 64-bit /////////////////////////
     TRACE_INFO("Jumping to 64-bit loader...");
 
-    loader_memory_manager->AddFreeMemoryRegion(
+    memory_manager->AddFreeMemoryRegion(
         static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );

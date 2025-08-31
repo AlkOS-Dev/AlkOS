@@ -78,9 +78,8 @@ extern "C" void MainLoader64(TransitionData* transition_data)
 
     TRACE_INFO("Jumping to 64-bit kernel...");
 
-    auto* loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager*>(transition_data->loader_memory_manager_addr);
-    loader_memory_manager->MarkMemoryAreaNotFree(
+    auto* memory_manager = reinterpret_cast<MemoryManager*>(transition_data->memory_manager_addr);
+    memory_manager->MarkMemoryAreaNotFree(
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
 
@@ -97,14 +96,13 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     );
     MultibootInfo multiboot_info{transition_data->multiboot_info_addr};
     auto* mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
-    loader_memory_manager
-        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, kKernelVirtualAddressStart, elf_effective_size, 0
-        );
+    memory_manager->MapVirtualRangeUsingExternalMemoryMap<MemoryManager::WalkDirection::Descending>(
+        mmap_tag, kKernelVirtualAddressStart, elf_effective_size, 0
+    );
     TRACE_SUCCESS("Kernel module mapped to upper memory!");
 
     TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    loader_memory_manager->DumpPmlTables();
+    //    memory_manager->DumpPmlTables();
 
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
 
@@ -117,13 +115,13 @@ extern "C" void MainLoader64(TransitionData* transition_data)
 
     TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", kernel_entry_point);
 
-    loader_memory_manager->AddFreeMemoryRegion(
+    memory_manager->AddFreeMemoryRegion(
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
 
     kernel_inital_params.kernel_start_addr           = elf_lower_bound;
     kernel_inital_params.kernel_end_addr             = elf_upper_bound;
-    kernel_inital_params.loader_memory_manager_addr  = transition_data->loader_memory_manager_addr;
+    kernel_inital_params.memory_manager_addr         = transition_data->memory_manager_addr;
     kernel_inital_params.multiboot_info_addr         = transition_data->multiboot_info_addr;
     kernel_inital_params.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
     kernel_inital_params.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
