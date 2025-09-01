@@ -63,13 +63,11 @@ struct ProgramHeaderEntry {
     static constexpr u32 kLoadableSegmentType = 1;
 } PACK;
 
-Expected<u64, Error> Load(
-    const byte* elf_start_virtual_address, u64 destination_begin_virtual_address
-);
+Expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr);
 
-Expected<void, Error> IsValid(const byte* elf_start);
+Expected<void, Error> IsValid(const byte* elf_ptr);
 
-Expected<Tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_start);
+Expected<Tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr);
 
 }  // namespace Elf64
 
