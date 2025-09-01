@@ -7,6 +7,8 @@
 #endif
 
 #include <extensions/debug.hpp>
+#include <extensions/expected.hpp>
+#include "extensions/style_aliases.hpp"
 
 #include "cpu/utils.hpp"
 
@@ -37,39 +39,28 @@ KernelInitialParams kernel_inital_params;
 
 static bool ValidateTransitionData(TransitionData* transition_data)
 {
-    TRACE_INFO("Checking for TransitionData...");
     if (transition_data == nullptr) {
-        TRACE_ERROR("TransitionData check failed!");
         return false;
     }
-    TRACE_SUCCESS("TransitionData found passed!");
-
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-
     return true;
 }
 
 static Multiboot::TagModule* FindKernelModule(MultibootInfo multiboot_info)
 {
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-
-    TRACE_INFO("Finding kernel module in multiboot tags...");
-    auto* kernel_module =
+    auto kernel_module_res =
         multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "kernel") == 0;
         });
-    if (kernel_module == nullptr) {
+
+    if (!kernel_module_res) {
         KernelPanic("Kernel module not found in multiboot tags!");
     }
-    TRACE_SUCCESS("Found kernel module in multiboot tags!");
 
-    return kernel_module;
+    return kernel_module_res.value();
 }
 
 extern "C" void MainLoader64(TransitionData* transition_data)
 {
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-
     TerminalInit();
     TRACE_INFO("In 64 bit mode");
 
@@ -77,52 +68,45 @@ extern "C" void MainLoader64(TransitionData* transition_data)
         KernelPanic("TransitionData check failed!");
     }
 
-    TRACE_INFO("Jumping to 64-bit kernel...");
-
-    auto* memory_manager = reinterpret_cast<MemoryManager*>(transition_data->memory_manager_addr);
-    memory_manager->MarkMemoryAreaNotFree(
-        reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
-    );
-
+    TRACE_DEBUG("Finding the kernel module...");
     auto* kernel_module = FindKernelModule(transition_data->multiboot_info_addr);
 
-    TRACE_INFO("Getting ELF bounds...");
+    TRACE_DEBUG("Calculating kernel size...");
     auto bounds_res = Elf64::GetProgramBounds(reinterpret_cast<byte*>(kernel_module->mod_start));
     if (!bounds_res) {
         KernelPanic("Failed to get ELF bounds!");
     }
     auto [elf_lower_bound, elf_upper_bound] = bounds_res.value();
     u64 elf_effective_size                  = elf_upper_bound - elf_lower_bound;
-    TRACE_SUCCESS("ELF bounds obtained!");
 
-    TRACE_INFO(
-        "Mapping kernel module to upper memory starting at 0x%llX", kKernelVirtualAddressStart
-    );
+    TRACE_DEBUG("Finding the memory map...");
     MultibootInfo multiboot_info{transition_data->multiboot_info_addr};
-    auto* mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
-    memory_manager->MapVirtualRangeUsingExternalMemoryMap<MemoryManager::WalkDirection::Descending>(
-        mmap_tag, kKernelVirtualAddressStart, elf_effective_size, 0
+    auto mmap_tag_res = multiboot_info.FindTag<Multiboot::TagMmap>();
+    if (!mmap_tag_res) {
+        KernelPanic("Error finding memory map tag in multiboot tags!");
+    }
+
+    TRACE_DEBUG("Mapping the kernel module...");
+    auto* memory_manager = reinterpret_cast<MemoryManager*>(transition_data->memory_manager_addr);
+    memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
-    TRACE_SUCCESS("Kernel module mapped to upper memory!");
+    memory_manager->MapVirtualRangeUsingExternalMemoryMap<MemoryManager::WalkDirection::Descending>(
+        mmap_tag_res.value(), kKernelVirtualAddressStart, elf_effective_size, 0
+    );
 
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-    //    memory_manager->DumpPmlTables();
-
+    TRACE_DEBUG("Loading the kernel module...");
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
-
-    TRACE_INFO("Loading module...");
-    auto k_entry_res = Elf64::Load(kernel_module_start_addr, 0);
+    auto k_entry_res               = Elf64::Load(kernel_module_start_addr, 0);
     if (!k_entry_res) {
         KernelPanic("Failed to load kernel module!");
     }
-    TRACE_SUCCESS("Module loaded!");
-
-    TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", k_entry_res.value());
 
     memory_manager->AddFreeMemoryRegion(
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
     );
 
+    TRACE_INFO("Jumping to kernel");
     kernel_inital_params.kernel_start_addr           = elf_lower_bound;
     kernel_inital_params.kernel_end_addr             = elf_upper_bound;
     kernel_inital_params.memory_manager_addr         = transition_data->memory_manager_addr;

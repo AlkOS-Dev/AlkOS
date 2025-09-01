@@ -1,9 +1,11 @@
 #ifndef ALKOS_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
 #define ALKOS_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
 
-#include "extensions/bit.hpp"
-#include "extensions/types.hpp"
-#include "mem/memory_span.hpp"
+#include <extensions/bit.hpp>
+#include <extensions/expected.hpp>
+#include <extensions/types.hpp>
+#include "extensions/style_aliases.hpp"
+
 #include "multiboot2/multiboot2.h"
 
 namespace Multiboot
