@@ -12,7 +12,8 @@
 
 #include "abi/transition_data.hpp"
 
-#include "elf/elf64.hpp"
+#include "elf/elf_64.hpp"
+#include "elf/error.hpp"
 
 #include "mem/memory_manager.hpp"
 
@@ -86,9 +87,12 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     auto* kernel_module = FindKernelModule(transition_data->multiboot_info_addr);
 
     TRACE_INFO("Getting ELF bounds...");
-    auto [elf_lower_bound, elf_upper_bound] =
-        elf::GetElf64ProgramBounds(reinterpret_cast<byte*>(kernel_module->mod_start));
-    u64 elf_effective_size = elf_upper_bound - elf_lower_bound;
+    auto bounds_res = Elf64::GetProgramBounds(reinterpret_cast<byte*>(kernel_module->mod_start));
+    if (!bounds_res) {
+        KernelPanic("Failed to get ELF bounds!");
+    }
+    auto [elf_lower_bound, elf_upper_bound] = bounds_res.value();
+    u64 elf_effective_size                  = elf_upper_bound - elf_lower_bound;
     TRACE_SUCCESS("ELF bounds obtained!");
 
     TRACE_INFO(
@@ -107,13 +111,13 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     byte* kernel_module_start_addr = reinterpret_cast<byte*>(kernel_module->mod_start);
 
     TRACE_INFO("Loading module...");
-    u64 kernel_entry_point = elf::LoadElf64(kernel_module_start_addr, 0);
-    if (kernel_entry_point == 0) {
+    auto k_entry_res = Elf64::Load(kernel_module_start_addr, 0);
+    if (!k_entry_res) {
         KernelPanic("Failed to load kernel module!");
     }
     TRACE_SUCCESS("Module loaded!");
 
-    TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", kernel_entry_point);
+    TRACE_INFO("Jumping to 64-bit kernel at 0x%llX", k_entry_res.value());
 
     memory_manager->AddFreeMemoryRegion(
         reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
@@ -126,5 +130,5 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     kernel_inital_params.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
     kernel_inital_params.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
 
-    EnterKernel(kernel_entry_point, &kernel_inital_params);
+    EnterKernel(k_entry_res.value(), &kernel_inital_params);
 }

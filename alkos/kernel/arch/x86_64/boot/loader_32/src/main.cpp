@@ -2,12 +2,14 @@
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/new.hpp>
+#include "extensions/style_aliases.hpp"
 
 #include "cpu/utils.hpp"
 
 #include "abi/transition_data.hpp"
 
-#include "elf/elf64.hpp"
+#include "elf/elf_64.hpp"
+#include "elf/error.hpp"
 
 #include "mem/memory_manager.hpp"
 
@@ -108,7 +110,6 @@ static void InitializeMemoryManagerWithFreeMemoryRegions(
 
 static Multiboot::TagModule* GetLoader64Module(MultibootInfo& multiboot_info)
 {
-    TRACE_INFO("Searching for loader64 module...");
     auto* loader64_module =
         multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
             return strcmp(tag->cmdline, "loader64") == 0;
@@ -116,7 +117,6 @@ static Multiboot::TagModule* GetLoader64Module(MultibootInfo& multiboot_info)
     if (loader64_module == nullptr) {
         KernelPanic("loader64 module not found in multiboot tags!");
     }
-    TRACE_SUCCESS("Found loader64 module in multiboot tags!");
 
     return loader64_module;
 }
@@ -125,14 +125,12 @@ static u64 LoadLoader64Module(Multiboot::TagModule* loader64_module)
 {
     byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
 
-    TRACE_INFO("Loading module...");
-    u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);
-    if (kernel_entry_point == 0) {
+    auto k_entry_res = Elf64::Load(loader_module_start_addr, 0);
+    if (!k_entry_res) {
         KernelPanic("Failed to load kernel module!");
     }
-    TRACE_SUCCESS("Module loaded!");
 
-    return kernel_entry_point;
+    return k_entry_res.value();
 }
 
 extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
@@ -199,9 +197,6 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
     loader_data.multiboot_header_end_addr =
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
     loader_data.memory_manager_addr = reinterpret_cast<u64>(memory_manager);
-
-    //////////////////////////// Printing LoaderData Info /////////////////////////
-    TODO_WHEN_DEBUGGING_FRAMEWORK
 
     //////////////////////////// Jumping to 64-bit /////////////////////////
     TRACE_INFO("Jumping to 64-bit loader...");
