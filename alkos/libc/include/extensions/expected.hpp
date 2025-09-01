@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
 
 #include "assert.h"
+#include "concepts.hpp"
 #include "defines.hpp"
 #include "functional.hpp"
 #include "initializer_list.hpp"
@@ -1335,30 +1336,6 @@ class expected<void, E>
     };
     bool has_value_;
 };
-
-}  // namespace std
-
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
-rror_;
-}
-;
-bool has_value_;
-}
-;
-
-}  // namespace std
-
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -  //
-                                                                                                               // Data Members
-                                                                                                               //------------------------------------------------------------------------------//
-                                                                                                            union {
-    // No value member for void specialization
-    E error_;
-};
-bool has_value_;
-}
-;
 
 }  // namespace std
 
