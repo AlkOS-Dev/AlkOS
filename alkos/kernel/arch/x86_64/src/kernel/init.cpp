@@ -9,6 +9,7 @@
 /* internal includes */
 #include <cpuid.h>
 #include <extensions/debug.hpp>
+#include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
 #include <modules/hardware.hpp>
 #include <terminal.hpp>
@@ -63,6 +64,53 @@ extern "C" void PreKernelInit(void* loader_data)
 
     // HardwareModule::Init();
     // HardwareModule::Get().GetInterrupts().FirstStageInit();
+
+    // ========================================================================
+    // TEMPORARY TESTS FOR STD::EXPECTED
+    // ========================================================================
+    TRACE_INFO("--- Running std::expected tests ---");
+    {
+        // 1. Default construction (void value)
+        std::expected<void, int> e1;
+        ASSERT_TRUE(e1.has_value());
+
+        // 2. Value construction
+        std::expected<int, const char*> e2(42);
+        ASSERT_TRUE(e2.has_value());
+        ASSERT_EQ(*e2, 42);
+
+        // 3. Error construction
+        std::expected<int, const char*> e3(std::unexpect, "File not found");
+        ASSERT_FALSE(e3.has_value());
+        ASSERT_STREQ(e3.error(), "File not found");
+
+        // 4. In-place construction
+        struct Complex {
+            int a;
+            float b;
+            Complex(int a, float b) : a(a), b(b) {}
+        };
+        std::expected<Complex, int> e4(std::in_place, 10, 3.14f);
+        ASSERT_TRUE(e4.has_value());
+        ASSERT_EQ(e4->a, 10);
+
+        // 5. Emplace
+        e4.emplace(20, 6.28f);
+        ASSERT_TRUE(e4.has_value());
+        ASSERT_EQ(e4->a, 20);
+
+        // 6. Assignment
+        e4 = std::unexpected(500);
+        ASSERT_FALSE(e4.has_value());
+        ASSERT_EQ(e4.error(), 500);
+
+        e4 = Complex(30, 9.42f);
+        ASSERT_TRUE(e4.has_value());
+        ASSERT_EQ(e4->a, 30);
+    }
+    TRACE_SUCCESS("--- std::expected tests passed! ---");
+    // ========================================================================
+
     TRACE_INFO("KERNEL END");
     OsHangNoInterrupts();
 

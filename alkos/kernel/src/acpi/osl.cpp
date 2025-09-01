@@ -123,7 +123,7 @@ void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 
 void *uacpi_kernel_alloc(uacpi_size size)
 {
-    // TODO_WHEN_VMEM_WORKS
+    TODO_WHEN_VMEM_WORKS
     // // auto loader_memory_manager =
     // //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
     // // // TODO(F1r3d3v): Memory layout need to be established
@@ -145,6 +145,7 @@ void *uacpi_kernel_alloc(uacpi_size size)
     // }
 
     // return reinterpret_cast<void *>(vaddr);
+    return nullptr;
 }
 
 void uacpi_kernel_free(void *mem)

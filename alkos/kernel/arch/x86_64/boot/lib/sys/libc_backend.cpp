@@ -53,4 +53,5 @@ void __platform_debug_write(const char* buffer)
 size_t __platform_debug_read_line(char* buffer, size_t buffer_size)
 {
     /* Not implemented in loader */
+    return 0;
 }
