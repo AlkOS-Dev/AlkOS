@@ -5,6 +5,10 @@
 #include <extensions/utility.hpp>
 #include <test_module/test.hpp>
 
+// Note: Some of these tests may fail in Release mode, as optimizations may make
+// optimize away some lifecycle tracking. The expected number of constructions and
+// destructions can (should) therefore be lower than in Debug mode.
+
 //------------------------------------------------------------------------------
 // Helper types for testing
 //------------------------------------------------------------------------------
@@ -24,7 +28,7 @@ struct MoveOnlyType {
     }
 };
 
-// A type to track constructions and destructions, now fully featured.
+// A type to track constructions and destructions
 struct LifecycleTracker {
     static int constructions;
     static int destructions;
