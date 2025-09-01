@@ -42,7 +42,7 @@ class MultibootInfo
     // Class Creation and Destruction
     //------------------------------------------------------------------------------//
 
-    MultibootInfo(u64 multiboot_info_addr) : multiboot_info_addr_{multiboot_info_addr} {}
+    MultibootInfo(const u64 multiboot_info_addr) : multiboot_info_addr_{multiboot_info_addr} {}
 
     //------------------------------------------------------------------------------//
     // Public Methods
