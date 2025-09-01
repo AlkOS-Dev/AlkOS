@@ -1354,10 +1354,12 @@ void swap(CustomSwapType &a, CustomSwapType &b) noexcept
 
 TEST_F(TypeTraitsTest, Swap_WhenCustomSwapExists_UsesCustomSwapViaAdl)
 {
+    using std::swap;  // Bring std::swap into scope as a fallback
+
     N::CustomSwapType a{10};
     N::CustomSwapType b{20};
 
-    std::swap(a, b);
+    swap(a, b);  // Unqualified call enables ADL to find N::swap
 
     EXPECT_EQ(20, a.value);
     EXPECT_EQ(10, b.value);
