@@ -1,5 +1,3 @@
-// alkos/libc/include/extensions/expected.hpp
-
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
 

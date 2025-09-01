@@ -1370,11 +1370,9 @@ class MoveOnlyType
     public:
     explicit MoveOnlyType(int val) : value_(val) {}
 
-    // Delete the copy constructor and copy assignment operator
     MoveOnlyType(const MoveOnlyType &)            = delete;
     MoveOnlyType &operator=(const MoveOnlyType &) = delete;
 
-    // Default the move constructor and move assignment operator
     MoveOnlyType(MoveOnlyType &&other) noexcept            = default;
     MoveOnlyType &operator=(MoveOnlyType &&other) noexcept = default;
 
