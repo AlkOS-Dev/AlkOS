@@ -1,3 +1,5 @@
+// alkos/libc/include/extensions/expected.hpp
+
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
 
@@ -421,9 +423,7 @@ class expected
         if (has_value()) {
             value_ = std::forward<U>(v);
         } else {
-            std::destroy_at(&error_);
-            std::construct_at(&value_, std::forward<U>(v));
-            has_value_ = true;
+            this->emplace(std::forward<U>(v));
         }
         return *this;
     }
