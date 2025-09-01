@@ -3,18 +3,18 @@
 #include <extensions/utility.hpp>
 #include <test_module/test.hpp>
 
-// ------------------------------
+//------------------------------------------------------------------------------
 // Helper types for testing
-// ------------------------------
+//------------------------------------------------------------------------------
 
 // A simple move-only type for testing move semantics.
 struct MoveOnlyType {
     int value;
     explicit MoveOnlyType(int v) : value(v) {}
-    MoveOnlyType(const MoveOnlyType&)            = delete;
-    MoveOnlyType& operator=(const MoveOnlyType&) = delete;
-    MoveOnlyType(MoveOnlyType&& other) noexcept : value(other.value) { other.value = -1; }
-    MoveOnlyType& operator=(MoveOnlyType&& other) noexcept
+    MoveOnlyType(const MoveOnlyType &)            = delete;
+    MoveOnlyType &operator=(const MoveOnlyType &) = delete;
+    MoveOnlyType(MoveOnlyType &&other) noexcept : value(other.value) { other.value = -1; }
+    MoveOnlyType &operator=(MoveOnlyType &&other) noexcept
     {
         value       = other.value;
         other.value = -1;
@@ -22,18 +22,32 @@ struct MoveOnlyType {
     }
 };
 
-// A type to track constructions and destructions.
+// A type to track constructions and destructions, now fully featured.
 struct LifecycleTracker {
     static int constructions;
     static int destructions;
     int value;
 
-    explicit LifecycleTracker(int v = 0) : value(v) { constructions++; }
-    LifecycleTracker(const LifecycleTracker& other) : value(other.value) { constructions++; }
-    LifecycleTracker(LifecycleTracker&& other) noexcept : value(other.value)
+    explicit LifecycleTracker(int v = 0) noexcept : value(v) { constructions++; }
+    LifecycleTracker(const LifecycleTracker &other) noexcept : value(other.value)
+    {
+        constructions++;
+    }
+    LifecycleTracker(LifecycleTracker &&other) noexcept : value(other.value)
     {
         constructions++;
         other.value = -1;
+    }
+    LifecycleTracker &operator=(const LifecycleTracker &other) noexcept
+    {
+        value = other.value;
+        return *this;
+    }
+    LifecycleTracker &operator=(LifecycleTracker &&other) noexcept
+    {
+        value       = other.value;
+        other.value = -1;
+        return *this;
     }
     ~LifecycleTracker() { destructions++; }
     static void Reset()
@@ -41,16 +55,20 @@ struct LifecycleTracker {
         constructions = 0;
         destructions  = 0;
     }
+    void swap(LifecycleTracker &other) noexcept { std::swap(value, other.value); }
+    bool operator==(const LifecycleTracker &other) const { return value == other.value; }
 };
 int LifecycleTracker::constructions = 0;
 int LifecycleTracker::destructions  = 0;
+
+void swap(LifecycleTracker &a, LifecycleTracker &b) noexcept { a.swap(b); }
 
 // A type for testing in-place construction with multiple arguments.
 struct MultiArgType {
     int x;
     double y;
     MultiArgType(int x, double y) : x(x), y(y) {}
-    bool operator==(const MultiArgType& other) const { return x == other.x && y == other.y; }
+    bool operator==(const MultiArgType &other) const { return x == other.x && y == other.y; }
 };
 
 // A type for testing construction with an initializer_list.
@@ -68,6 +86,8 @@ struct InitListType {
 class ExpectedTest : public TestGroupBase
 {
 };
+
+#define SUCCEED() EXPECT_TRUE(true)
 
 //------------------------------------------------------------------------------
 // std::unexpected<E> Tests
@@ -144,9 +164,9 @@ TEST_F(ExpectedTest, MoveAssignment_GivenRValueUnexpected_MovesError)
 TEST_F(ExpectedTest, ErrorConstLValue_GivenConstUnexpected_ReturnsConstLValueRefToError)
 {
     const std::unexpected<int> unex(70);
-    const int& err = unex.error();
+    const int &err = unex.error();
     EXPECT_EQ(70, err);
-    static_assert(std::is_same_v<decltype(unex.error()), const int&>);
+    static_assert(std::is_same_v<decltype(unex.error()), const int &>);
 }
 
 TEST_F(ExpectedTest, ErrorLValue_GivenUnexpected_ReturnsLValueRefToError)
@@ -154,15 +174,15 @@ TEST_F(ExpectedTest, ErrorLValue_GivenUnexpected_ReturnsLValueRefToError)
     std::unexpected<int> unex(80);
     unex.error() = 81;
     EXPECT_EQ(81, unex.error());
-    static_assert(std::is_same_v<decltype(unex.error()), int&>);
+    static_assert(std::is_same_v<decltype(unex.error()), int &>);
 }
 
 TEST_F(ExpectedTest, ErrorConstRValue_GivenConstRValueUnexpected_ReturnsConstRValueRefToError)
 {
     const std::unexpected<int> unex(90);
-    const int&& err = std::move(unex).error();
+    const int &&err = std::move(unex).error();
     EXPECT_EQ(90, err);
-    static_assert(std::is_same_v<decltype(std::move(unex).error()), const int&&>);
+    static_assert(std::is_same_v<decltype(std::move(unex).error()), const int &&>);
 }
 
 TEST_F(ExpectedTest, ErrorRValue_GivenRValueUnexpected_ReturnsRValueRefToError)
@@ -171,22 +191,22 @@ TEST_F(ExpectedTest, ErrorRValue_GivenRValueUnexpected_ReturnsRValueRefToError)
     MoveOnlyType moved_err = std::move(unex).error();
     EXPECT_EQ(100, moved_err.value);
     EXPECT_EQ(-1, unex.error().value);
-    static_assert(std::is_same_v<decltype(std::move(unex).error()), MoveOnlyType&&>);
+    static_assert(std::is_same_v<decltype(std::move(unex).error()), MoveOnlyType &&>);
 }
 
 // Swap
 
 TEST_F(ExpectedTest, Swap_GivenTwoUnexpecteds_SwapsTheirErrors)
 {
-    std::unexpected<int> u1(110);
-    std::unexpected<int> u2(120);
+    std::unexpected<LifecycleTracker> u1(LifecycleTracker(110));
+    std::unexpected<LifecycleTracker> u2(LifecycleTracker(120));
     u1.swap(u2);
-    EXPECT_EQ(120, u1.error());
-    EXPECT_EQ(110, u2.error());
+    EXPECT_EQ(120, u1.error().value);
+    EXPECT_EQ(110, u2.error().value);
 
     swap(u1, u2);  // Test free function
-    EXPECT_EQ(110, u1.error());
-    EXPECT_EQ(120, u2.error());
+    EXPECT_EQ(110, u1.error().value);
+    EXPECT_EQ(120, u2.error().value);
 }
 
 // Comparison
@@ -229,18 +249,18 @@ TEST_F(ExpectedTest, DefaultConstructor_GivenDefaultConstructibleValueType_Const
 
 TEST_F(ExpectedTest, CopyConstructor_GivenValuedExpected_CopiesValue)
 {
-    const std::expected<int, int> original(10);
-    const std::expected<int, int> copy(original);
+    const std::expected<LifecycleTracker, int> original(LifecycleTracker(10));
+    const std::expected<LifecycleTracker, int> copy(original);
     EXPECT_TRUE(copy.has_value());
-    EXPECT_EQ(10, *copy);
+    EXPECT_EQ(10, copy->value);
 }
 
 TEST_F(ExpectedTest, CopyConstructor_GivenUnexpectedExpected_CopiesError)
 {
-    const std::expected<int, int> original(std::unexpect, 20);
-    const std::expected<int, int> copy(original);
+    const std::expected<int, LifecycleTracker> original(std::unexpect, LifecycleTracker(20));
+    const std::expected<int, LifecycleTracker> copy(original);
     EXPECT_FALSE(copy.has_value());
-    EXPECT_EQ(20, copy.error());
+    EXPECT_EQ(20, copy.error().value);
 }
 
 TEST_F(ExpectedTest, MoveConstructor_GivenValuedExpected_MovesValue)
@@ -364,15 +384,15 @@ TEST_F(ExpectedTest, Destructor_WhenHasErrorWithNontrivialDestructor_CallsErrorD
     EXPECT_EQ(1, LifecycleTracker::destructions);
 }
 
-// Assignment
+//  Assignment
 
 TEST_F(ExpectedTest, CopyAssignment_FromValueToValue_AssignsValue)
 {
-    std::expected<int, int> ex1(10);
-    std::expected<int, int> ex2(20);
+    std::expected<LifecycleTracker, int> ex1(LifecycleTracker(10));
+    std::expected<LifecycleTracker, int> ex2(LifecycleTracker(20));
     ex1 = ex2;
     EXPECT_TRUE(ex1.has_value());
-    EXPECT_EQ(20, *ex1);
+    EXPECT_EQ(20, ex1->value);
 }
 
 TEST_F(ExpectedTest, CopyAssignment_FromErrorToValue_DestroysValueAndConstructsError)
@@ -405,11 +425,11 @@ TEST_F(ExpectedTest, CopyAssignment_FromValueToError_DestroysErrorAndConstructsV
 
 TEST_F(ExpectedTest, CopyAssignment_FromErrorToError_AssignsError)
 {
-    std::expected<int, int> ex1(std::unexpect, 10);
-    std::expected<int, int> ex2(std::unexpect, 20);
+    std::expected<int, LifecycleTracker> ex1(std::unexpect, LifecycleTracker(10));
+    std::expected<int, LifecycleTracker> ex2(std::unexpect, LifecycleTracker(20));
     ex1 = ex2;
     EXPECT_FALSE(ex1.has_value());
-    EXPECT_EQ(20, ex1.error());
+    EXPECT_EQ(20, ex1.error().value);
 }
 
 TEST_F(ExpectedTest, MoveAssignment_FromValueToValue_MovesValue)
@@ -460,10 +480,10 @@ TEST_F(ExpectedTest, MoveAssignment_FromErrorToError_MovesError)
 
 TEST_F(ExpectedTest, ValueAssignment_ToValuedExpected_AssignsValue)
 {
-    std::expected<int, int> ex(10);
-    ex = 100;
+    std::expected<LifecycleTracker, int> ex(LifecycleTracker(10));
+    ex = LifecycleTracker(100);
     EXPECT_TRUE(ex.has_value());
-    EXPECT_EQ(100, *ex);
+    EXPECT_EQ(100, ex->value);
 }
 
 TEST_F(ExpectedTest, ValueAssignment_ToUnexpectedExpected_DestroysErrorAndConstructsValue)
@@ -486,16 +506,16 @@ TEST_F(ExpectedTest, UnexpectedAssignment_ToValuedExpected_DestroysValueAndConst
     ex = std::unexpected(LifecycleTracker(100));
     EXPECT_FALSE(ex.has_value());
     EXPECT_EQ(100, ex.error().value);
-    EXPECT_EQ(1, LifecycleTracker::constructions);  // new error constructed
+    EXPECT_EQ(2, LifecycleTracker::constructions);  // tmp unexpected + new error
     EXPECT_EQ(1, LifecycleTracker::destructions);   // old value destroyed
 }
 
 TEST_F(ExpectedTest, UnexpectedAssignment_ToUnexpectedExpected_AssignsError)
 {
-    std::expected<int, int> ex(std::unexpect, 10);
-    ex = std::unexpected(100);
+    std::expected<int, LifecycleTracker> ex(std::unexpect, LifecycleTracker(10));
+    ex = std::unexpected(LifecycleTracker(100));
     EXPECT_FALSE(ex.has_value());
-    EXPECT_EQ(100, ex.error());
+    EXPECT_EQ(100, ex.error().value);
 }
 
 // Modifiers
@@ -530,31 +550,31 @@ TEST_F(ExpectedTest, Emplace_OnUnexpectedExpected_DestroysErrorAndConstructsNewV
 
 TEST_F(ExpectedTest, Swap_WhenBothHaveValues_SwapsValues)
 {
-    std::expected<int, int> ex1(10);
-    std::expected<int, int> ex2(20);
+    std::expected<LifecycleTracker, int> ex1(LifecycleTracker(10));
+    std::expected<LifecycleTracker, int> ex2(LifecycleTracker(20));
     ex1.swap(ex2);
-    EXPECT_EQ(20, *ex1);
-    EXPECT_EQ(10, *ex2);
+    EXPECT_EQ(20, ex1->value);
+    EXPECT_EQ(10, ex2->value);
 }
 
 TEST_F(ExpectedTest, Swap_WhenBothHaveErrors_SwapsErrors)
 {
-    std::expected<int, int> ex1(std::unexpect, 10);
-    std::expected<int, int> ex2(std::unexpect, 20);
+    std::expected<int, LifecycleTracker> ex1(std::unexpect, LifecycleTracker(10));
+    std::expected<int, LifecycleTracker> ex2(std::unexpect, LifecycleTracker(20));
     ex1.swap(ex2);
-    EXPECT_EQ(20, ex1.error());
-    EXPECT_EQ(10, ex2.error());
+    EXPECT_EQ(20, ex1.error().value);
+    EXPECT_EQ(10, ex2.error().value);
 }
 
 TEST_F(ExpectedTest, Swap_WhenOneHasValueOneHasError_SwapsStatesAndContents)
 {
-    std::expected<int, int> ex1(10);
-    std::expected<int, int> ex2(std::unexpect, 20);
+    std::expected<LifecycleTracker, LifecycleTracker> ex1(LifecycleTracker(10));
+    std::expected<LifecycleTracker, LifecycleTracker> ex2(std::unexpect, LifecycleTracker(20));
     ex1.swap(ex2);
     EXPECT_FALSE(ex1.has_value());
-    EXPECT_EQ(20, ex1.error());
+    EXPECT_EQ(20, ex1.error().value);
     EXPECT_TRUE(ex2.has_value());
-    EXPECT_EQ(10, *ex2);
+    EXPECT_EQ(10, ex2->value);
 }
 
 // Observers
@@ -565,10 +585,10 @@ TEST_F(ExpectedTest, ArrowOperator_WhenHasValue_ReturnsPointerToValue)
     EXPECT_EQ(1, ex->x);
 }
 
-FAIL_TEST(ExpectedTest, ArrowOperator_WhenHasError_Asserts)
+FAIL_TEST_F(ExpectedTest, ArrowOperator_WhenHasError_Asserts)
 {
     std::expected<int, int> ex(std::unexpect, 10);
-    MAYBE_UNUSED volatile int val = ex->real;
+    MAYBE_UNUSED volatile auto val = ex.operator->();
 }
 
 TEST_F(ExpectedTest, DereferenceOperator_WhenHasValue_ReturnsReferenceToValue)
@@ -579,7 +599,7 @@ TEST_F(ExpectedTest, DereferenceOperator_WhenHasValue_ReturnsReferenceToValue)
     EXPECT_EQ(20, *ex);
 }
 
-FAIL_TEST(ExpectedTest, DereferenceOperator_WhenHasError_Asserts)
+FAIL_TEST_F(ExpectedTest, DereferenceOperator_WhenHasError_Asserts)
 {
     std::expected<int, int> ex(std::unexpect, 10);
     MAYBE_UNUSED volatile int val = *ex;
@@ -601,11 +621,11 @@ TEST_F(ExpectedTest, HasValue_WhenHasError_ReturnsFalse)
 
 TEST_F(ExpectedTest, Value_WhenHasValue_ReturnsReferenceToValue)
 {
-    std::expected<int, int> ex(10);
-    EXPECT_EQ(10, ex.value());
+    std::expected<LifecycleTracker, int> ex(LifecycleTracker(10));
+    EXPECT_EQ(10, ex.value().value);
 }
 
-FAIL_TEST(ExpectedTest, Value_WhenHasError_Panics)
+FAIL_TEST_F(ExpectedTest, Value_WhenHasError_Panics)
 {
     std::expected<int, int> ex(std::unexpect, 10);
     ex.value();
@@ -617,7 +637,7 @@ TEST_F(ExpectedTest, Error_WhenHasError_ReturnsReferenceToError)
     EXPECT_EQ(10, ex.error());
 }
 
-FAIL_TEST(ExpectedTest, Error_WhenHasValue_Asserts)
+FAIL_TEST_F(ExpectedTest, Error_WhenHasValue_Asserts)
 {
     std::expected<int, int> ex(10);
     ex.error();
@@ -647,7 +667,7 @@ TEST_F(ExpectedTest, ErrorOr_WhenHasError_ReturnsError)
     EXPECT_EQ(10, ex.error_or(100));
 }
 
-// Monadic Operations
+//  Monadic Operations
 
 auto int_to_double_expected(int x) { return std::expected<double, int>(x * 2.0); }
 auto int_to_error_expected(int) { return std::expected<double, int>(std::unexpect, 99); }
@@ -856,7 +876,7 @@ TEST_F(ExpectedTest, VoidValue_WhenHasValue_DoesNothing)
     SUCCEED();
 }
 
-FAIL_TEST(ExpectedTest, VoidValue_WhenHasError_Panics)
+FAIL_TEST_F(ExpectedTest, VoidValue_WhenHasError_Panics)
 {
     std::expected<void, int> ex(std::unexpect, 10);
     ex.value();

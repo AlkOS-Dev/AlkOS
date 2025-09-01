@@ -1314,3 +1314,64 @@ TEST_F(TypeTraitsTest, IsConstantEvaluated)
     };
     EXPECT_FALSE(test_runtime());
 }
+
+TEST_F(TypeTraitsTest, Swap_WhenGivenTwoValues_ExchangesTheirContents)
+{
+    int a = 10;
+    int b = 20;
+    std::swap(a, b);
+    EXPECT_EQ(20, a);
+    EXPECT_EQ(10, b);
+}
+
+TEST_F(TypeTraitsTest, Swap_WhenGivenTwoArrays_ExchangesTheirContentsElementWise)
+{
+    int arr1[] = {1, 2, 3};
+    int arr2[] = {4, 5, 6};
+    std::swap(arr1, arr2);
+    EXPECT_EQ(4, arr1[0]);
+    EXPECT_EQ(5, arr1[1]);
+    EXPECT_EQ(6, arr1[2]);
+    EXPECT_EQ(1, arr2[0]);
+    EXPECT_EQ(2, arr2[1]);
+    EXPECT_EQ(3, arr2[2]);
+}
+
+namespace N
+{
+struct CustomSwapType {
+    int value;
+    bool swapped = false;
+};
+
+void swap(CustomSwapType &a, CustomSwapType &b) noexcept
+{
+    std::swap(a.value, b.value);
+    a.swapped = true;
+    b.swapped = true;
+}
+}  // namespace N
+
+TEST_F(TypeTraitsTest, Swap_WhenCustomSwapExists_UsesCustomSwapViaAdl)
+{
+    N::CustomSwapType a{10};
+    N::CustomSwapType b{20};
+
+    std::swap(a, b);
+
+    EXPECT_EQ(20, a.value);
+    EXPECT_EQ(10, b.value);
+    EXPECT_TRUE(a.swapped);
+    EXPECT_TRUE(b.swapped);
+}
+
+TEST_F(TypeTraitsTest, Swap_WithMoveOnlyType_MovesValues)
+{
+    MoveOnlyType a(100);
+    MoveOnlyType b(200);
+
+    std::swap(a, b);
+
+    EXPECT_EQ(200, a.getValue());
+    EXPECT_EQ(100, b.getValue());
+}

@@ -154,6 +154,11 @@ template <class T>
 constexpr bool is_unexpected_v = false;
 template <class E>
 constexpr bool is_unexpected_v<unexpected<E>> = true;
+
+template <class T>
+constexpr bool is_expected_v = false;
+template <class T, class E>
+constexpr bool is_expected_v<expected<T, E>> = true;
 }  // namespace detail
 
 template <class T, class E>
@@ -812,7 +817,7 @@ class expected
     }
 
     template <typename T2>
-        requires requires(const T& t, const T2& v) {
+        requires(!detail::is_expected_v<remove_cvref_t<T2>>) && requires(const T& t, const T2& v) {
             { t == v } -> std::convertible_to<bool>;
         }
     friend constexpr bool operator==(const expected<T, E>& x, const T2& v)
