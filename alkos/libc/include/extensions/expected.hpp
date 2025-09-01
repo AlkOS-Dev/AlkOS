@@ -560,6 +560,10 @@ class expected
 
     constexpr T& value() &
     {
+        static_assert(
+            is_copy_constructible_v<E>,
+            "std::expected::value() requires the error type E to be copy-constructible."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -567,6 +571,10 @@ class expected
     }
     constexpr const T& value() const&
     {
+        static_assert(
+            is_copy_constructible_v<E>,
+            "std::expected::value() requires the error type E to be copy-constructible."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -574,6 +582,11 @@ class expected
     }
     constexpr T&& value() &&
     {
+        static_assert(
+            is_copy_constructible_v<E> && is_constructible_v<E, E&&>,
+            "std::expected::value() requires the error type E to be copy-constructible and "
+            "move-constructible."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -581,6 +594,11 @@ class expected
     }
     constexpr const T&& value() const&&
     {
+        static_assert(
+            is_copy_constructible_v<E> && is_constructible_v<E, const E&&>,
+            "std::expected::value() requires the error type E to be copy-constructible and "
+            "move-constructible from const."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -781,6 +799,10 @@ class expected
     // Comparison Operators
     //------------------------------------------------------------------------------//
     template <typename T2, typename E2>
+        requires requires(const T& t, const T2& t2, const E& e, const E2& e2) {
+            { t == t2 } -> std::convertible_to<bool>;
+            { e == e2 } -> std::convertible_to<bool>;
+        }
     friend constexpr bool operator==(const expected<T, E>& x, const expected<T2, E2>& y)
     {
         if (x.has_value() != y.has_value())
@@ -789,12 +811,18 @@ class expected
     }
 
     template <typename T2>
+        requires requires(const T& t, const T2& v) {
+            { t == v } -> std::convertible_to<bool>;
+        }
     friend constexpr bool operator==(const expected<T, E>& x, const T2& v)
     {
         return x.has_value() && (*x == v);
     }
 
     template <typename E2>
+        requires requires(const E& e1, const E2& e2) {
+            { e1 == e2 } -> std::convertible_to<bool>;
+        }
     friend constexpr bool operator==(const expected<T, E>& x, const unexpected<E2>& e)
     {
         return !x.has_value() && (x.error() == e.error());
@@ -1070,6 +1098,10 @@ class expected<void, E>
 
     constexpr void value() const&
     {
+        static_assert(
+            is_copy_constructible_v<E>,
+            "std::expected::value() requires the error type E to be copy-constructible."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -1077,6 +1109,11 @@ class expected<void, E>
 
     constexpr void value() &&
     {
+        static_assert(
+            is_copy_constructible_v<E> && is_move_constructible_v<E>,
+            "std::expected::value() requires the error type E to be copy-constructible and "
+            "move-constructible."
+        );
         if (!has_value()) {
             BAD_EXPECTED_ACCESS("bad access to std::expected without expected value");
         }
@@ -1269,6 +1306,9 @@ class expected<void, E>
     // Comparison Operators
     //------------------------------------------------------------------------------//
     template <class E2>
+        requires requires(const E& e1, const E2& e2) {
+            { e1 == e2 } -> std::convertible_to<bool>;
+        }
     friend constexpr bool operator==(const expected<void, E>& x, const expected<void, E2>& y)
     {
         if (x.has_value() != y.has_value())
@@ -1277,6 +1317,9 @@ class expected<void, E>
     }
 
     template <class E2>
+        requires requires(const E& e1, const E2& e2) {
+            { e1 == e2 } -> std::convertible_to<bool>;
+        }
     friend constexpr bool operator==(const expected<void, E>& x, const unexpected<E2>& e)
     {
         return !x.has_value() && (x.error() == e.error());
@@ -1292,6 +1335,30 @@ class expected<void, E>
     };
     bool has_value_;
 };
+
+}  // namespace std
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
+rror_;
+}
+;
+bool has_value_;
+}
+;
+
+}  // namespace std
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_EXPECTED_HPP_
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -  //
+                                                                                                               // Data Members
+                                                                                                               //------------------------------------------------------------------------------//
+                                                                                                            union {
+    // No value member for void specialization
+    E error_;
+};
+bool has_value_;
+}
+;
 
 }  // namespace std
 
