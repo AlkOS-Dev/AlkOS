@@ -1,17 +1,8 @@
-name: Reusable - Build Environment Image
-
-on:
-  workflow_call:
-    outputs:
-      image_name:
-        description: "The full name/tag of the docker image to use."
-        value: ${{ jobs.build-image.outputs.image_name }}
-
 jobs:
   build-image:
     runs-on: ubuntu-latest
     outputs:
-      image_name: ghcr.io/${{ github.repository }}:${{ steps.get_branch.outputs.name }}
+      image_name: ${{ steps.lowercase_repo.outputs.name }}:${{ steps.get_branch.outputs.name }}
     permissions:
       contents: read
       packages: write
@@ -23,9 +14,13 @@ jobs:
       - name: Sanitize branch name for Docker tag
         id: get_branch
         run: |
-          # Converts 'feature/my-cool-branch' to 'feature-my-cool-branch'
           echo "name=${GITHUB_REF_NAME//\//-}" >> $GITHUB_OUTPUT
       
+      - name: Convert repository name to lowercase
+        id: lowercase_repo
+        run: |
+          echo "name=ghcr.io/${{ github.repository,, }}" >> $GITHUB_OUTPUT
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -43,8 +38,8 @@ jobs:
           file: ./.github/.dev.Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.get_branch.outputs.name }}
-            ghcr.io/${{ github.repository }}:latest
+            ${{ steps.lowercase_repo.outputs.name }}:${{ steps.get_branch.outputs.name }}
+            ${{ steps.lowercase_repo.outputs.name }}:latest
           labels: "org.opencontainers.image.source=${{ github.repositoryUrl }}"
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:${{ steps.get_branch.outputs.name }}
+          cache-from: type=registry,ref=${{ steps.lowercase_repo.outputs.name }}:${{ steps.get_branch.outputs.name }}
           cache-to: type=gha,mode=max
