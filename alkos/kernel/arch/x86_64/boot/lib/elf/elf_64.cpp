@@ -3,7 +3,6 @@
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include "extensions/style_aliases.hpp"
 
 #include "elf/elf_64.hpp"
 #include "elf/error.hpp"
@@ -11,10 +10,10 @@
 namespace Elf64
 {
 
-Expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
+std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
 {
     if (!IsValid(elf_ptr)) {
-        return Unexpected(Error::InvalidElf);
+        return std::unexpected(Error::InvalidElf);
     }
 
     const auto* header               = reinterpret_cast<const Header*>(elf_ptr);
@@ -71,7 +70,7 @@ Expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
     }
 
     if (header->entry_point_virtual_address == 0) {
-        return Unexpected(Error::NullEntryPoint);
+        return std::unexpected(Error::NullEntryPoint);
     }
 
     const u64 adjusted_entry_point =
@@ -80,13 +79,13 @@ Expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
     return adjusted_entry_point;
 }
 
-Expected<Tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
+std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
 {
     u64 start_addr = static_cast<u64>(kFullMask<u64>);
     u64 end_addr   = reinterpret_cast<u64>(nullptr);
 
     if (!IsValid(elf_ptr)) {
-        return Unexpected(Error::InvalidElf);
+        return std::unexpected(Error::InvalidElf);
     }
 
     const auto* header               = reinterpret_cast<const Header*>(elf_ptr);
@@ -109,20 +108,20 @@ Expected<Tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
     return std::make_tuple(start_addr, end_addr);
 }
 
-Expected<void, Error> IsValid(const byte* elf_ptr)
+std::expected<void, Error> IsValid(const byte* elf_ptr)
 {
     if (elf_ptr == nullptr) {
-        return Unexpected(Error::InvalidElf);
+        return std::unexpected(Error::InvalidElf);
     }
 
     const auto* elf_header = reinterpret_cast<const Header*>(elf_ptr);
 
     if (memcmp(elf_header->identifier, Header::kMagic, sizeof(Header::kMagic)) != 0) {
-        return Unexpected(Error::InvalidElf);
+        return std::unexpected(Error::InvalidElf);
     }
 
     if (elf_header->machine_architecture != Header::kSupportedMachine) {
-        return Unexpected(Error::UnsupportedMachine);
+        return std::unexpected(Error::UnsupportedMachine);
     }
 
     return {};

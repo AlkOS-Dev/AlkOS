@@ -6,7 +6,6 @@
 #include <extensions/defines.hpp>
 #include <extensions/expected.hpp>
 #include <extensions/types.hpp>
-#include "extensions/style_aliases.hpp"
 
 #include "multiboot2/error.hpp"
 #include "multiboot2/multiboot2.h"
@@ -62,7 +61,7 @@ class MultibootInfo
     }
 
     template <TagT Tag, typename Filter>
-    Expected<Tag*, Error> FindTag(Filter filter)
+    std::expected<Tag*, Error> FindTag(Filter filter)
     {
         const u32 kType = TagMetadata<Tag>::kValue;
         static_assert(kType != kInvalidTagNumber);
@@ -79,11 +78,11 @@ class MultibootInfo
                 }
             }
         }
-        return Unexpected(Error::TagNotFound);
+        return std::unexpected(Error::TagNotFound);
     }
 
     template <TagT Tag>
-    Expected<Tag*, Error> FindTag()
+    std::expected<Tag*, Error> FindTag()
     {
         return FindTag<Tag>([](const Tag*) {
             return true;

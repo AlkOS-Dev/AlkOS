@@ -6,7 +6,6 @@
 #include <extensions/expected.hpp>
 #include <extensions/tuple.hpp>
 #include <extensions/types.hpp>
-#include "extensions/style_aliases.hpp"
 
 #include "elf/error.hpp"
 
@@ -63,11 +62,11 @@ struct ProgramHeaderEntry {
     static constexpr u32 kLoadableSegmentType = 1;
 } PACK;
 
-Expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr);
+std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr);
 
-Expected<void, Error> IsValid(const byte* elf_ptr);
+std::expected<void, Error> IsValid(const byte* elf_ptr);
 
-Expected<Tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr);
+std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr);
 
 }  // namespace Elf64
 

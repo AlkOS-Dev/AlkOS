@@ -4,7 +4,6 @@
 #include <extensions/bit.hpp>
 #include <extensions/expected.hpp>
 #include <extensions/types.hpp>
-#include "extensions/style_aliases.hpp"
 
 #include "multiboot2/multiboot2.h"
 

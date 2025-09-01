@@ -10,7 +10,6 @@
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/new.hpp>
-#include "extensions/style_aliases.hpp"
 
 #include "abi/transition_data.hpp"
 #include "cpu/utils.hpp"
