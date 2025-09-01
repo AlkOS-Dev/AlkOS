@@ -1,3 +1,12 @@
+name: Reusable - Build Environment Image
+
+on:
+  workflow_call:
+    outputs:
+      image_name:
+        description: "The full name/tag of the docker image to use."
+        value: ${{ jobs.build-image.outputs.image_name }}
+
 jobs:
   build-image:
     runs-on: ubuntu-latest
@@ -19,7 +28,8 @@ jobs:
       - name: Convert repository name to lowercase
         id: lowercase_repo
         run: |
-          echo "name=ghcr.io/${{ github.repository,, }}" >> $GITHUB_OUTPUT
+          LOWERCASE_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          echo "name=ghcr.io/$LOWERCASE_REPO" >> $GITHUB_OUTPUT
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
