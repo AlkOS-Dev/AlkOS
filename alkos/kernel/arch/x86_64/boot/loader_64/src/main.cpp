@@ -61,11 +61,13 @@ static KernelModuleInfo AnalyzeKernelModule(MultibootInfo& multiboot_info)
     TRACE_DEBUG("Locating and analyzing kernel module...");
 
     auto kernel_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
-        return strcmp(tag->cmdline, "kernel") == 0;
+        return strcmp(tag->cmdline, kKernelModuleCmdline) == 0;
     });
 
     if (!kernel_module_res) {
-        KernelPanic("Could not find the 'kernel' module in multiboot tags!");
+        KernelPanicFormat(
+            "Could not find the '%s' module in multiboot tags!", kKernelModuleCmdline
+        );
     }
     const TagModule* kernel_tag = kernel_module_res.value();
 

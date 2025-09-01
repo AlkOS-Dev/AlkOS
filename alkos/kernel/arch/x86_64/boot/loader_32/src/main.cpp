@@ -19,6 +19,7 @@
 #include "multiboot2/info.hpp"
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
+#include "settings.hpp"
 #include "sys/panic.hpp"
 #include "sys/terminal.hpp"
 
@@ -53,9 +54,6 @@ static TransitionData loader_data;
 // High-Level Boot Steps
 //==============================================================================
 
-/**
- * @brief Initializes terminal and verifies the boot environment and hardware.
- */
 static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
 {
     TerminalInit();
@@ -76,13 +74,6 @@ static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
     BlockHardwareInterrupts();
 }
 
-/**
- * @brief Sets up the complete memory manager for the loader.
- * This includes identity mapping, processing the Multiboot memory map,
- * and reserving memory used by the loader itself.
- * @param multiboot_info A reference to the MultibootInfo object.
- * @return An initialized MemoryManager instance.
- */
 static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
 {
     TRACE_DEBUG("Setting up memory management...");
@@ -123,9 +114,6 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
     return memory_manager;
 }
 
-/**
- * @brief Enables critical 64-bit CPU features: Long Mode and Paging.
- */
 static void EnableCpuFeatures(MemoryManager* memory_manager)
 {
     TRACE_INFO("Enabling long mode and paging...");
@@ -133,20 +121,17 @@ static void EnableCpuFeatures(MemoryManager* memory_manager)
     EnablePaging(reinterpret_cast<void*>(memory_manager->GetPml4Table()));
 }
 
-/**
- * @brief Finds and loads the 64-bit loader module ('loader64') into memory.
- * @param multiboot_info A reference to the MultibootInfo object.
- * @return The 64-bit entry point address of the loaded module.
- */
 static u64 LoadNextStageModule(MultibootInfo& multiboot_info)
 {
-    TRACE_DEBUG("Loading next stage module (loader64)...");
+    TRACE_DEBUG("Loading next stage module: '%s' ...", kLoader64ModuleCmdline);
     auto loader64_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
-        return strcmp(tag->cmdline, "loader64") == 0;
+        return strcmp(tag->cmdline, kLoader64ModuleCmdline) == 0;
     });
 
     if (!loader64_module_res) {
-        KernelPanic("Could not find the 'loader64' module tag!");
+        KernelPanicFormat(
+            "Coud not find the '%s' module in multiboot tags!", kLoader64ModuleCmdline
+        );
     }
 
     byte* module_start_addr = reinterpret_cast<byte*>(loader64_module_res.value()->mod_start);
@@ -157,11 +142,7 @@ static u64 LoadNextStageModule(MultibootInfo& multiboot_info)
     return entry_point_res.value();
 }
 
-/**
- * @brief Prepares the final data structure and jumps to the 64-bit loader.
- *        This function does not return.
- */
-[[noreturn]] static void TransitionTo64BitMode(
+NO_RET static void TransitionTo64BitMode(
     u64 entry_point, MemoryManager* memory_manager, u32 multiboot_info_addr_32
 )
 {
