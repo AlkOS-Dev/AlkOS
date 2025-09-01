@@ -1,9 +1,8 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 
-#include <todo.h>
-#include <extensions/type_traits.hpp>
-#include <type_traits>
+#include "extensions/type_traits.hpp"
+#include "todo.h"
 
 namespace std
 {
@@ -30,10 +29,10 @@ constexpr auto to_address(const T& p) noexcept
 // std::addressof
 // ------------------------------
 
-template <class T>
-NODISCARD constexpr T* addressof(T& r) noexcept
+template <typename T>
+NODISCARD FORCE_INLINE_F constexpr T* addressof(T& arg) noexcept
 {
-    return __builtin_addressof(r);
+    return __builtin_addressof(arg);
 }
 
 // ------------------------------
