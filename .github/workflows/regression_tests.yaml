@@ -1,23 +1,26 @@
 name: Regression Tests
-
 on: [push, workflow_dispatch]
 
 jobs:
-  Tests:
+  build_environment:
+    name: Build Environment Image
+    uses: ./.github/workflows/build_image.yaml
+
+  run_regression_tests:
+    name: Run Regression Tests
+    needs: build_environment 
     runs-on: ubuntu-latest
+    container:
+      # Use the specific image built for this commit
+      image: ${{ needs.build_environment.outputs.image_name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare environment for x86_64
-        uses: ./.github/actions/prepare_env
-        with:
-          arch: x86_64
-
       - name: Run debug regression tests
         id: debug_tests
-        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash" x86_64 --run
+        run: "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash" x86_64 --run
         continue-on-error: true
 
       - name: Display debug logs on failure
@@ -42,7 +45,7 @@ jobs:
 
       - name: Run release regression tests
         id: release_tests
-        run: sudo "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64 --run
+        run: "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64 --run
         if: always()
         continue-on-error: true
 
