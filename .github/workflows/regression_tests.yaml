@@ -7,6 +7,9 @@ jobs:
   build_environment:
     name: Build Environment Image
     uses: ./.github/workflows/build_image.yaml
+    permissions:
+      contents: read
+      packages: write # Required to push to GitHub Container Registry (GHCR)
 
   run_regression_tests:
     name: Run Regression Tests
@@ -14,9 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ${{ needs.build_environment.outputs.image_name }}
-    permissions:
-      contents: read
-      packages: write # Required to push to GitHub Container Registry (GHCR)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
