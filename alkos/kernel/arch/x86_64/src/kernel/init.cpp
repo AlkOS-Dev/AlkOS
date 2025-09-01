@@ -62,11 +62,8 @@ extern "C" void PreKernelInit(void* loader_data)
     EnableAVX();
     TRACE_SUCCESS("AVX setup complete!");
 
-    // HardwareModule::Init();
-    // HardwareModule::Get().GetInterrupts().FirstStageInit();
-
-    TRACE_INFO("KERNEL END");
-    OsHangNoInterrupts();
+    HardwareModule::Init();
+    HardwareModule::Get().GetInterrupts().FirstStageInit();
 
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
