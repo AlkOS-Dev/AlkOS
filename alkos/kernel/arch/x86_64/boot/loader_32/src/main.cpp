@@ -1,3 +1,11 @@
+#if defined(__linux__)
+#error "You are not using a cross-compiler, you will most certainly run into trouble"
+#endif
+
+#if !defined(__i386__)
+#error "loader_32 needs to be compiled with a i386-elf compiler"
+#endif
+
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
