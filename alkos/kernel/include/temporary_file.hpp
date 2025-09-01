@@ -1,0 +1,6 @@
+#ifndef ALKOST_TEMPORARY_FILE_HPP_
+#define ALKOST_TEMPORARY_FILE_HPP_
+
+static const char* TEMPORARY_FILE_HPP_REVISION = "$Revision: 92 $";
+
+#endif  // ALKOST_TEMPORARY_FILE_HPP_
