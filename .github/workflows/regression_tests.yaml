@@ -1,5 +1,7 @@
 name: Regression Tests
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
   build_environment:
@@ -8,19 +10,19 @@ jobs:
 
   run_regression_tests:
     name: Run Regression Tests
-    needs: build_environment 
+    needs: build_environment # This job waits for the image to be ready
     runs-on: ubuntu-latest
     container:
-      # Use the specific image built for this commit
       image: ${{ needs.build_environment.outputs.image_name }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run debug regression tests
         id: debug_tests
-        run: "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash" x86_64 --run
+        run: >
+          "$GITHUB_WORKSPACE/scripts/tests/regression/debug_regression.bash"
+          x86_64 --run
         continue-on-error: true
 
       - name: Display debug logs on failure
@@ -45,7 +47,9 @@ jobs:
 
       - name: Run release regression tests
         id: release_tests
-        run: "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash" x86_64 --run
+        run: >
+          "$GITHUB_WORKSPACE/scripts/tests/regression/release_regression.bash"
+          x86_64 --run
         if: always()
         continue-on-error: true
 
@@ -70,5 +74,7 @@ jobs:
           retention-days: 7
 
       - name: Fail workflow if any tests failed
-        if: steps.debug_tests.outcome != 'success' || steps.release_tests.outcome != 'success'
+        if: >
+          steps.debug_tests.outcome != 'success' ||
+          steps.release_tests.outcome != 'success'
         run: exit 1
