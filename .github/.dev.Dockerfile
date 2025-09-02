@@ -4,12 +4,11 @@ FROM ubuntu:22.04
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies and clean up in a single layer to reduce image size
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bison \
     flex \
-    libgmp-dev \
+    libgmp3-dev \
     libmpc-dev \
     libmpfr-dev \
     texinfo \
@@ -21,13 +20,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     wget \
     curl \
-    cmake \
-    yq \
-    xorriso \
-    grub2-common \
-    clang-format \
-    libisoburn-dev \
     && rm -rf /var/lib/apt/lists/*
+
+COPY scripts/env/ubuntu_packages.txt /tmp/ubuntu_packages.txt
+RUN apt-get update && \
+    xargs -a /tmp/ubuntu_packages.txt apt-get install -y --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory and copy the entire project context into the image
 WORKDIR /app
