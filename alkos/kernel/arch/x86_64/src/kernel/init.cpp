@@ -25,7 +25,6 @@
 extern "C" void EnableOSXSave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
-extern "C" void EnterKernel(u64 kernel_entry_addr);
 
 static int GetCpuModel()
 {
