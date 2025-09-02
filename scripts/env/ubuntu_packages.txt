@@ -1,7 +1,6 @@
 qemu-system
 nasm
 libisoburn-dev
-libisoburn1t64
 mtools
 build-essential
 libgmp-dev

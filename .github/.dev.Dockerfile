@@ -1,5 +1,5 @@
 # Start from a stable Ubuntu base image
-FROM ubuntu:22.04
+FROM ubuntu:24.10
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
