@@ -15,7 +15,6 @@ struct alignas(64) KernelInitialParams {
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;
     u64 multiboot_header_end_addr;
-    u64 memory_manager_addr;
     u64 kernel_start_addr;
     u64 kernel_end_addr;
 };
