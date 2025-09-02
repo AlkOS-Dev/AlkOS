@@ -4,6 +4,8 @@ FROM ubuntu:22.04
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt update
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bison \
