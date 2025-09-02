@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bison \
     flex \
-    libgmp3-dev \
+    libgmp-dev \
     libmpc-dev \
     libmpfr-dev \
     texinfo \
@@ -24,10 +24,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     yq \
     xorriso \
-    grub2 \
+    grub2-common \
     clang-format \
     libisoburn-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory and copy the entire project context into the image.
 # This ensures all scripts and source files are available during the image build.
