@@ -44,3 +44,5 @@ RUN /app/scripts/config/configure.bash "x86_64" debug -p test_mode -v
 
 # Set the final working directory
 WORKDIR /github/workspace
+
+# TODO: cant find crti crtn
