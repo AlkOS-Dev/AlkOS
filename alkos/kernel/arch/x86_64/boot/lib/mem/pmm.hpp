@@ -19,7 +19,8 @@ class PhysicalMemoryManager
 {
     // TODO
     // Should add overflow checked arithmetic to libc and use it here
-    //
+    // TODO
+    // Move implementation to .cpp
     static constexpr u64 kPageSize = 1 << 12;
 
     enum {
