@@ -35,9 +35,11 @@ class PhysicalMemoryManager
         ASSERT_TRUE(!bitmap_view_initialized_, "PMM already initialized");
 
         // Calc size
+        TRACE_DEBUG("Calculating bitmap size...");
         const auto [bitmap_size, total_pages] = CalcBitmapSize(mem_map);
 
         // Find location
+        TRACE_DEBUG("Finding bitmap location...");
         const auto bitmap_addr_res = FindBitmapLocation(mem_map, bitmap_size, lowest_safe_addr);
         if (!bitmap_addr_res) {
             return std::unexpected(bitmap_addr_res.error());
@@ -45,12 +47,15 @@ class PhysicalMemoryManager
         const u64 bitmap_addr = bitmap_addr_res.value();
 
         // Initialize bitmap
+        TRACE_DEBUG("Initializing bitmap view...");
         InitBitmapView(bitmap_addr, bitmap_size);
 
         // Free available memory
+        TRACE_DEBUG("Initializing free memory...");
         InitFreeMemory(mem_map);
 
         // Reserve itself
+        TRACE_DEBUG("Reserving bitmap memory...");
         Reserve(PhysicalPtr<void>{bitmap_addr}, bitmap_size);
 
         return {};
@@ -58,7 +63,9 @@ class PhysicalMemoryManager
 
     void Reserve(PhysicalPtr<void> addr, u64 size)
     {
-        for (u64 i = 0; i < AlignUp(size, kPageSize); i += kPageSize) {
+        const u64 start_addr = AlignDown(addr.Value(), kPageSize);
+        const u64 end_addr   = AlignUp(addr.Value() + size, kPageSize);
+        for (u64 i = 0; i < end_addr - start_addr; i += kPageSize) {
             Reserve(PhysicalPtr<void>{addr.Value() + i});
         }
     }
@@ -72,7 +79,9 @@ class PhysicalMemoryManager
 
     void Free(PhysicalPtr<void> addr, u64 size)
     {
-        for (u64 i = 0; i < AlignUp(size, kPageSize); i += kPageSize) {
+        const u64 start_addr = AlignDown(addr.Value(), kPageSize);
+        const u64 end_addr   = AlignUp(addr.Value() + size, kPageSize);
+        for (u64 i = 0; i < end_addr - start_addr; i += kPageSize) {
             Free(PhysicalPtr<void>{addr.Value() + i});
         }
     }
@@ -88,7 +97,7 @@ class PhysicalMemoryManager
 
     std::expected<PhysicalPtr<void>, MemError> Alloc()
     {
-        auto res = FindNextFreePage();
+        auto res = IterateToNextFreePage();
         if (!res) {
             return std::unexpected{res.error()};
         }
@@ -105,17 +114,22 @@ class PhysicalMemoryManager
 
     FORCE_INLINE_F size_t PageIndex(PhysicalPtr<void> addr) { return addr.Value() / kPageSize; }
 
-    FORCE_INLINE_F std::expected<void, MemError> FindNextFreePage()
+    FORCE_INLINE_F std::expected<void, MemError> IterateToNextFreePage()
     {
         const size_t total_pages = bitmap_view_->Size();
-        for (size_t i = 0; i < total_pages; i++) {
-            // Reverse iteration to alloc higher addresses first
-            const size_t idx = (iteration_index_ - i) % total_pages;
-            if (!bitmap_view_->Get(idx)) {
-                iteration_index_ = idx;
-                return {};
+        size_t original_index    = iteration_index_;
+
+        do {
+            if (iteration_index_ == 0) {
+                iteration_index_ = total_pages - 1;
+            } else {
+                --iteration_index_;
             }
-        }
+
+            if (!bitmap_view_->Get(iteration_index_)) {
+                return {};  // Found a free page
+            }
+        } while (iteration_index_ != original_index);
 
         return std::unexpected{MemError::OutOfMemory};
     }
@@ -148,8 +162,18 @@ class PhysicalMemoryManager
     {
         using namespace Multiboot;
 
+        constexpr u64 kMax32BitAddress = 0xFFFFFFFF;
+
         std::optional<u64> bitmap_addr{};
         for (MmapEntry& entry : mem_map) {
+            if (entry.type != MmapEntry::kMemoryAvailable) {
+                continue;
+            }
+
+            if (entry.len < bitmap_size) {
+                continue;
+            }
+
             // Calculate the maximum possible start address for the bitmap within this entry
             // ensuring it respects page alignment and fits within the entry.
             u64 potential_bitmap_start = AlignDown(entry.addr + entry.len - bitmap_size, kPageSize);
@@ -160,6 +184,11 @@ class PhysicalMemoryManager
             }
 
             if (potential_bitmap_start < lowest_safe_addr) {
+                continue;
+            }
+
+            // Ensure the entire bitmap is within the 32-bit address range
+            if (potential_bitmap_start + bitmap_size > kMax32BitAddress) {
                 continue;
             }
 
@@ -175,9 +204,14 @@ class PhysicalMemoryManager
 
     void InitBitmapView(const u64 addr, const u64 size)
     {
+        TRACE_DEBUG("Bitmap located at: %#018llx, size: %llu bytes", addr, size);
         bitmap_view_ = new (bitmap_view_storage_) BitMapView{reinterpret_cast<void*>(addr), size};
         bitmap_view_->SetAll(BitMapReserved);
         bitmap_view_initialized_ = true;
+
+        for (size_t i = 0; i < bitmap_view_->Size(); ++i) {
+            ASSERT_TRUE(bitmap_view_->Get(i), "Bitmap not initialized correctly");
+        }
     }
 
     void InitFreeMemory(Multiboot::MemoryMap& mem_map)
@@ -186,8 +220,8 @@ class PhysicalMemoryManager
 
         for (MmapEntry& entry : mem_map) {
             if (entry.type == MmapEntry::kMemoryAvailable) {
-                u64 start_addr = entry.addr;
-                u64 end_addr   = entry.addr + entry.len;
+                u64 start_addr = AlignUp<u64>(entry.addr, kPageSize);
+                u64 end_addr   = AlignDown<u64>(entry.addr + entry.len, kPageSize);
 
                 Free(PhysicalPtr<void>{start_addr}, end_addr - start_addr);
             }
