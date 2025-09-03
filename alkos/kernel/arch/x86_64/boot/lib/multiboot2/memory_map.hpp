@@ -74,6 +74,9 @@ class MemoryMap
     // Public Methods
     //------------------------------------------------------------------------------//
 
+    // TODO: Iterator lacks methods for const objects
+    // and crashes if you iterate over real objects and not references
+
     Iterator begin()
     {
         return Iterator{
