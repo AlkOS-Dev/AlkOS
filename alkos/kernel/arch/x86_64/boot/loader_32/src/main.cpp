@@ -16,6 +16,7 @@
 #include "elf/elf_64.hpp"
 #include "elf/error.hpp"
 #include "mem/memory_manager.hpp"
+#include "mem/pmm.hpp"
 #include "multiboot2/info.hpp"
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
