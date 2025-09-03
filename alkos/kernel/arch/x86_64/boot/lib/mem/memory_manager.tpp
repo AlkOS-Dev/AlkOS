@@ -90,9 +90,9 @@ void MemoryManager::MapVirtualRangeUsingExternalMemoryMap(
     // TODO: This looks wacky since we pass the Tag and construct the MemoryMap from it, not just
     // passing the MemoryMap directly. This should be changed when the memory_manager is
     // updated to be more sensible.
-    MemoryMap{mmap_tag}.WalkEntries([&](MmapEntry &entry) {
+    for (MmapEntry &entry : MemoryMap{mmap_tag}) {
         if (entry.type != MmapEntry::kMemoryAvailable) {
-            return;
+            continue;
         }
         descending_sorted_address_buffer[address_count++] = reinterpret_cast<uintptr_t>(&entry);
         u64 i                                             = address_count - 1;
@@ -103,7 +103,8 @@ void MemoryManager::MapVirtualRangeUsingExternalMemoryMap(
             descending_sorted_address_buffer[i]     = tmp;
             i--;
         }
-    });
+    }
+
     const auto external_provider = [&](auto callback) {
         if constexpr (direction == WalkDirection::Descending) {
             for (u64 i = 0; i < address_count; i++) {

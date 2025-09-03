@@ -93,11 +93,11 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
     if (!mmap_tag_res) {
         KernelPanic("Error finding memory map tag in multiboot info!");
     }
-    MemoryMap(mmap_tag_res.value()).WalkEntries([&](MmapEntry& entry) {
+    for (MmapEntry& entry : MemoryMap(mmap_tag_res.value())) {
         if (entry.type == MmapEntry::kMemoryAvailable) {
             memory_manager->AddFreeMemoryRegion(entry.addr, entry.addr + entry.len);
         }
-    });
+    }
 
     // Reserve memory currently in use by this loader
     memory_manager->MarkMemoryAreaNotFree(
