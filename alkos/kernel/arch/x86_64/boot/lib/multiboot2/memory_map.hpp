@@ -61,7 +61,7 @@ class MemoryMap
 
         private:
         MmapEntry* current_entry_;
-        u32 entries_size_;
+        uintptr_t entries_size_;
     };
 
     //------------------------------------------------------------------------------//
@@ -88,20 +88,6 @@ class MemoryMap
             reinterpret_cast<uintptr_t>(mmap_tag_ptr_) + mmap_tag_ptr_->size
         );
         return Iterator{end_ptr, static_cast<uintptr_t>(mmap_tag_ptr_->entry_size)};
-    }
-
-    template <MmapEntryCallback Callback>
-    void WalkEntries(Callback callback)
-    {
-        for (auto* mmap_entry = reinterpret_cast<MmapEntry*>(mmap_tag_ptr_->entries);
-             reinterpret_cast<uintptr_t>(mmap_entry) <
-             reinterpret_cast<uintptr_t>(mmap_tag_ptr_) + mmap_tag_ptr_->size;
-             mmap_entry = reinterpret_cast<MmapEntry*>(
-                 reinterpret_cast<uintptr_t>(mmap_entry) + mmap_tag_ptr_->entry_size
-             )) {
-            auto& entry_ref = *mmap_entry;
-            callback(entry_ref);
-        }
     }
 
     private:
