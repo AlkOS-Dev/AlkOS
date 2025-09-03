@@ -162,7 +162,7 @@ class PhysicalMemoryManager
     {
         using namespace Multiboot;
 
-        constexpr u64 kMax32BitAddress = 0xFFFFFFFF;
+        constexpr u64 kMax32BitAddress = 0xFFFFFFFF; // TODO kBitMask<32>
 
         std::optional<u64> bitmap_addr{};
         for (MmapEntry& entry : mem_map) {
