@@ -6,6 +6,7 @@
 #error "loader_32 needs to be compiled with a i386-elf compiler"
 #endif
 
+#include <extensions/algorithm.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
@@ -50,6 +51,7 @@ extern byte kLoaderPreAllocatedMemory[];
 //==============================================================================
 
 static TransitionData loader_data;
+alignas(64) byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 
 //==============================================================================
 // High-Level Boot Steps
@@ -78,6 +80,7 @@ static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
 static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
 {
     TRACE_DEBUG("Setting up memory management...");
+
     auto* memory_manager = new (kLoaderPreAllocatedMemory) MemoryManager();
 
     // Identity map the first 512 GiB of memory
@@ -98,6 +101,16 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
         if (entry.type == MmapEntry::kMemoryAvailable) {
             memory_manager->AddFreeMemoryRegion(entry.addr, entry.addr + entry.len);
         }
+    }
+    u64 lowest_safe_addr = std::max(
+        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end)),
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
+    );
+    auto* pmm = new (kPmmPreAllocatedMemory) PhysicalMemoryManager();
+
+    auto pmm_init_res = pmm->Init(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
+    if (!pmm_init_res) {
+        KernelPanic("Physical memory manager initialization failed!");
     }
 
     // Reserve memory currently in use by this loader
