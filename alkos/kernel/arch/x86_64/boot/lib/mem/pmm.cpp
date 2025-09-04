@@ -23,11 +23,9 @@ std::expected<void, MemError> PhysicalMemoryManager::Init(
     TRACE_DEBUG("Initializing Physical Memory Manager...");
     ASSERT_TRUE(!bitmap_view_initialized_, "PMM already initialized");
 
-    // Calc size
     TRACE_DEBUG("Calculating bitmap size...");
     const auto [bitmap_size, total_pages] = CalcBitmapSize(mem_map);
 
-    // Find location
     TRACE_DEBUG("Finding bitmap location...");
     const auto bitmap_addr_res = FindBitmapLocation(mem_map, bitmap_size, lowest_safe_addr);
     if (!bitmap_addr_res) {
@@ -35,15 +33,15 @@ std::expected<void, MemError> PhysicalMemoryManager::Init(
     }
     const u64 bitmap_addr = bitmap_addr_res.value();
 
-    // Initialize bitmap
     TRACE_DEBUG("Initializing bitmap view...");
     InitBitmapView(bitmap_addr, bitmap_size);
 
-    // Free available memory
     TRACE_DEBUG("Initializing free memory...");
     InitFreeMemory(mem_map);
 
-    // Reserve itself
+    TRACE_DEBUG("Initializing iteration indices...");
+    InitializeIterationIndices(mem_map);
+
     TRACE_DEBUG("Reserving bitmap memory...");
     Reserve(PhysicalPtr<void>{bitmap_addr}, bitmap_size);
 
@@ -94,6 +92,20 @@ std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::Alloc()
     return PhysicalPtr<void>{iteration_index_ * kPageSize};
 }
 
+std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::Alloc32()
+{
+    auto res = IterateToNextFreePage32();
+    if (!res) {
+        return std::unexpected{res.error()};
+    }
+
+    ASSERT_TRUE(!bitmap_view_->Get(iteration_index_32_), "Allocating already allocated page");
+    bitmap_view_->SetTrue(iteration_index_32_);
+
+    ASSERT_LT(iteration_index_32_ * kPageSize, kBitMask32);
+    return PhysicalPtr<void>{iteration_index_32_ * kPageSize};
+}
+
 std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage()
 {
     const size_t total_pages = bitmap_view_->Size();
@@ -110,6 +122,27 @@ std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage()
             return {};  // Found a free page
         }
     } while (iteration_index_ != original_index);
+
+    return std::unexpected{MemError::OutOfMemory};
+}
+
+std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage32()
+{
+    const size_t total_pages           = bitmap_view_->Size();
+    const size_t max_32_bit_page_index = PageIndex(PhysicalPtr<void>{kBitMask32});
+
+    size_t original_index = iteration_index_32_;
+    do {
+        if (iteration_index_32_ == 0) {
+            iteration_index_32_ = std::min(total_pages, max_32_bit_page_index) - 1;
+        } else {
+            --iteration_index_32_;
+        }
+
+        if (!bitmap_view_->Get(iteration_index_32_)) {
+            return {};  // Found a free page
+        }
+    } while (iteration_index_32_ != original_index);
 
     return std::unexpected{MemError::OutOfMemory};
 }
@@ -202,4 +235,33 @@ void PhysicalMemoryManager::InitFreeMemory(Multiboot::MemoryMap& mem_map)
             Free(PhysicalPtr<void>{start_addr}, end_addr - start_addr);
         }
     }
+}
+
+void PhysicalMemoryManager::InitializeIterationIndices(Multiboot::MemoryMap& mem_map)
+{
+    using namespace Multiboot;
+
+    u64 max_free_addr        = 0;
+    u64 max_32_bit_free_addr = 0;
+
+    for (MmapEntry& entry : mem_map) {
+        if (entry.type != MmapEntry::kMemoryAvailable) {
+            continue;
+        }
+
+        const u64 al_entry_start = AlignUp(entry.addr, kPageSize);
+        const u64 al_entry_end   = AlignDown(entry.addr + entry.len, kPageSize);
+
+        // 64 bit
+        max_free_addr = std::max(max_free_addr, al_entry_end);
+
+        // 32 bit
+        if (al_entry_start <= kBitMask32) {
+            max_32_bit_free_addr = std::max(max_32_bit_free_addr, al_entry_end);
+            max_32_bit_free_addr = std::min(max_32_bit_free_addr, kBitMask32);
+        }
+    }
+
+    iteration_index_    = PageIndex(PhysicalPtr<void>{max_free_addr});
+    iteration_index_32_ = PageIndex(PhysicalPtr<void>{max_32_bit_free_addr});
 }

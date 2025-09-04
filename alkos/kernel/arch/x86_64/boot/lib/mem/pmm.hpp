@@ -43,6 +43,7 @@ class PhysicalMemoryManager
     // TODO: Alloc page below 4GiB
 
     std::expected<PhysicalPtr<void>, MemError> Alloc();
+    std::expected<PhysicalPtr<void>, MemError> Alloc32();
 
     private:
     //==============================================================================
@@ -52,6 +53,7 @@ class PhysicalMemoryManager
     FORCE_INLINE_F size_t PageIndex(PhysicalPtr<void> addr) { return addr.Value() / kPageSize; }
 
     std::expected<void, MemError> IterateToNextFreePage();
+    std::expected<void, MemError> IterateToNextFreePage32();
 
     // Init Helpers
 
@@ -64,6 +66,8 @@ class PhysicalMemoryManager
     void InitBitmapView(const u64 addr, const u64 size);
 
     void InitFreeMemory(Multiboot::MemoryMap& mem_map);
+
+    void InitializeIterationIndices(Multiboot::MemoryMap& mem_map);
 
     //==============================================================================
     // Private fields
