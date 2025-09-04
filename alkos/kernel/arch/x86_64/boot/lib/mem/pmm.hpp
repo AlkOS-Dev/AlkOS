@@ -1,6 +1,7 @@
 #ifndef ALKOS_BOOT_LIB_MEM_PMM_HPP_
 #define ALKOS_BOOT_LIB_MEM_PMM_HPP_
 
+#include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/bit_array.hpp>
 #include <extensions/expected.hpp>
@@ -94,6 +95,7 @@ class PhysicalMemoryManager
     }
 
     // TODO: Alloc contiguous memory
+    // TODO: Alloc page below 4GiB
 
     std::expected<PhysicalPtr<void>, MemError> Alloc()
     {

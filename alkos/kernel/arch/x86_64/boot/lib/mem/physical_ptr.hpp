@@ -15,15 +15,21 @@ class PhysicalPtr
     PhysicalPtr() : address_{0} {}
     explicit PhysicalPtr(u64 address) : address_{address} {}
 
+    template <class OtherT>
+    explicit PhysicalPtr(const PhysicalPtr<OtherT>& other) : address_(other.Value())
+    {
+    }
+
     //==============================================================================
     // Operators
     //==============================================================================
 
     // Enabling pointer-like behavior
 
-    T& operator*() const { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+    T& operator*() { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+    const T& operator*() const { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
 
-    std::add_lvalue_reference_t<T> operator->() const
+    const std::add_lvalue_reference_t<T> operator->() const
     {
         return reinterpret_cast<T*>(static_cast<uptr>(address_));
     }

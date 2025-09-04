@@ -53,6 +53,7 @@ extern byte kLoaderPreAllocatedMemory[];
 
 static TransitionData loader_data;
 alignas(64) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+alignas(64) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
 //==============================================================================
 // High-Level Boot Steps
@@ -107,12 +108,18 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end)),
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
-    auto* pmm = new (kPmmPreAllocatedMemory) PhysicalMemoryManager();
+    auto* pmm_ptr = new (kPmmPreAllocatedMemory) PhysicalMemoryManager();
+    auto& pmm     = *pmm_ptr;
 
-    auto pmm_init_res = pmm->Init(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
+    auto pmm_init_res = pmm.Init(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
     if (!pmm_init_res) {
         KernelPanic("Physical memory manager initialization failed!");
     }
+
+    auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
+    auto& vmm     = *vmm_ptr;
+
+    vmm.Map(0, 0);
 
     // Reserve memory currently in use by this loader
     memory_manager->MarkMemoryAreaNotFree(
