@@ -1,6 +1,8 @@
 #ifndef ALKOS_BOOT_LIB_MEM_VMM_HPP_
 #define ALKOS_BOOT_LIB_MEM_VMM_HPP_
 
+#include <extensions/memory.hpp>
+
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"
 #include "mem/pmm.hpp"
@@ -21,6 +23,8 @@ class VirtualMemoryManager
     //==============================================================================
 
     void Map(u64 virt_addr, u64 phys_addr, u64 flags = kNoFlags);
+
+    PageMapTable<4>* GetPml4Table() { return std::addressof(pml4_); }
 
     private:
     //==============================================================================

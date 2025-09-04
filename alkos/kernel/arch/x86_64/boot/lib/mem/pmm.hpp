@@ -20,7 +20,7 @@ class PhysicalMemoryManager
 {
     // TODO
     // Should add overflow checked arithmetic to libc and use it here
-    //
+
     static constexpr u64 kPageSize = 1 << 12;
 
     enum {
@@ -164,8 +164,6 @@ class PhysicalMemoryManager
     {
         using namespace Multiboot;
 
-        constexpr u64 kMax32BitAddress = 0xFFFFFFFF;
-
         std::optional<u64> bitmap_addr{};
         for (MmapEntry& entry : mem_map) {
             if (entry.type != MmapEntry::kMemoryAvailable) {
@@ -190,7 +188,7 @@ class PhysicalMemoryManager
             }
 
             // Ensure the entire bitmap is within the 32-bit address range
-            if (potential_bitmap_start + bitmap_size > kMax32BitAddress) {
+            if (potential_bitmap_start + bitmap_size > kBitMask32) {
                 continue;
             }
 
@@ -239,6 +237,7 @@ class PhysicalMemoryManager
     bool bitmap_view_initialized_{false};
 
     size_t iteration_index_{0};
+    size_t iteration_index_32_{0};  // Used for 32-bit allocations
 };
 
 #endif  // ALKOS_BOOT_LIB_MEM_PMM_HPP_
