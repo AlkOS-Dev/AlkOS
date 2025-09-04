@@ -4,7 +4,7 @@
 
           ; GDT64
           extern GDT64.Pointer
-          extern GDT64.Data
+          extern GDT64_DATA_SELECTOR ; Use the new symbol
 
           extern MainLoader64
 
@@ -12,16 +12,19 @@
           section .text
           bits 64
 Entry:
-          jmp OsHang ; Temporary hang
-
-          mov esp, stack_top
-          mov ebp, esp
+          ; Set up the stack using a RIP-relative address
+          lea rsp, [rel stack_top]
+          mov rbp, rsp
 
           mov r10, 0
           mov r10d, edi ; Edi is a 32 bit LoaderData pointer filled by the loader
 
-          lgdt [GDT64.Pointer]
-          mov ax, GDT64.Data
+          ; Load the GDT pointer using a RIP-relative address
+          lea rax, [rel GDT64.Pointer]
+          lgdt [rax]
+
+          ; Load the data segment selector using a RIP-relative memory load
+          mov ax, [rel GDT64_DATA_SELECTOR]
           mov ss, ax
           mov ds, ax
           mov es, ax

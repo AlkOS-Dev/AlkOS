@@ -54,6 +54,7 @@ static void InitializeLoaderEnvironment(const TransitionData* transition_data)
     if (transition_data == nullptr) {
         KernelPanic("TransitionData validation failed: data is null!");
     }
+    TRACE_INFO("TMP - END OF LOADER TILL MEMORY MANAGER REWORK");
     OsHangNoInterrupts();
 }
 

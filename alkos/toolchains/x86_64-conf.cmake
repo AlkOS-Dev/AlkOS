@@ -48,21 +48,39 @@ endif ()
 #                                    64 bit                                    #
 #------------------------------------------------------------------------------#
 
-target_compile_options(alkos.target.properties.interface INTERFACE
-    "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
+########################### Base Interface (Parent) ############################
+
+add_library(alkos.target.properties.base.interface INTERFACE)
+target_compile_options(alkos.target.properties.base.interface INTERFACE
     "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
-    "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
     "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
     "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf64>"
 )
-target_compile_definitions(alkos.target.properties.interface INTERFACE
+target_compile_definitions(alkos.target.properties.base.interface INTERFACE
     "__x86_64__=1"
 )
-target_link_options(alkos.target.properties.interface INTERFACE
+
+target_link_options(alkos.target.properties.base.interface INTERFACE
     -nostdlib
     -z max-page-size=0x1000
-    -n
     -lgcc
+)
+
+##################################### PIC ######################################
+
+add_library(alkos.target.properties.pic.interface INTERFACE)
+target_link_libraries(alkos.target.properties.pic.interface INTERFACE 
+    alkos.target.properties.base.interface)
+set_target_properties(alkos.target.properties.pic.interface PROPERTIES 
+    POSITION_INDEPENDENT_CODE ON)
+
+#################################### Normal ####################################
+
+target_link_libraries(alkos.target.properties.interface INTERFACE 
+    alkos.target.properties.base.interface)
+target_compile_options(alkos.target.properties.interface INTERFACE
+    "$<$<COMPILE_LANGUAGE:CXX>:-mcmodel=kernel>"
+    "$<$<COMPILE_LANGUAGE:C>:-mcmodel=kernel>"
 )
 
 #------------------------------------------------------------------------------#
@@ -71,6 +89,8 @@ target_link_options(alkos.target.properties.interface INTERFACE
 
 add_library(alkos.target.properties.interface.32 INTERFACE)
 target_compile_options(alkos.target.properties.interface.32 INTERFACE
+    "$<$<COMPILE_LANGUAGE:CXX>:-mno-red-zone>"
+    "$<$<COMPILE_LANGUAGE:C>:-mno-red-zone>"
     "$<$<COMPILE_LANGUAGE:CXX>:-m32>"
     "$<$<COMPILE_LANGUAGE:C>:-m32>"
     "$<$<COMPILE_LANGUAGE:ASM_NASM>:-f elf32>"
@@ -81,6 +101,5 @@ target_compile_definitions(alkos.target.properties.interface.32 INTERFACE
 target_link_options(alkos.target.properties.interface.32 INTERFACE
     -nostdlib
     -z max-page-size=0x1000
-    -n
     -lgcc
 )

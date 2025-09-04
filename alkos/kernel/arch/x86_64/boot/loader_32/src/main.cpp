@@ -15,6 +15,7 @@
 #include "abi/transition_data.hpp"
 #include "cpu/utils.hpp"
 #include "elf/elf_64.hpp"
+#include "elf/elf_dynamic.hpp"
 #include "elf/error.hpp"
 #include "mem/memory_manager.hpp"
 #include "mem/pmm.hpp"
@@ -189,6 +190,77 @@ static void EnableCpuFeatures(MemoryManagers mem_managers)
     EnablePaging(pml4_phys_ptr.ValuePtr());
 }
 
+// TODO: This was a POC implementation. Clean up.
+static void RelocateNextStageModule(byte* elf_data, u64 load_base_addr)
+{
+    const auto* header               = reinterpret_cast<const Elf64::Header*>(elf_data);
+    const auto* program_header_table = reinterpret_cast<const Elf64::ProgramHeaderEntry*>(
+        elf_data + header->program_header_table_file_offset
+    );
+
+    const Elf64::ProgramHeaderEntry* dynamic_header = nullptr;
+    for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
+        if (program_header_table[i].type == 2 /* PT_DYNAMIC */) {
+            dynamic_header = &program_header_table[i];
+            break;
+        }
+    }
+
+    if (!dynamic_header) {
+        KernelPanic("Could not find PT_DYNAMIC header in next stage module!");
+    }
+
+    Elf64::Dyn* dynamic_section = reinterpret_cast<Elf64::Dyn*>(elf_data + dynamic_header->offset);
+
+    u64 rela_addr     = 0;
+    u64 rela_size     = 0;
+    u64 rela_ent_size = 0;
+
+    for (int i = 0; dynamic_section[i].d_tag != Elf64::DT_NULL; ++i) {
+        switch (dynamic_section[i].d_tag) {
+            case Elf64::DT_RELA:
+                rela_addr = dynamic_section[i].d_un.d_ptr;
+                break;
+            case Elf64::DT_RELASZ:
+                rela_size = dynamic_section[i].d_un.d_val;
+                break;
+            case Elf64::DT_RELAENT:
+                rela_ent_size = dynamic_section[i].d_un.d_val;
+                break;
+        }
+    }
+
+    // The addresses in the dynamic section are virtual addresses. We need to find
+    // which segment they belong to in order to find their file offset.
+    u64 rela_file_offset = 0;
+    for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
+        const auto& ph = program_header_table[i];
+        if (ph.type == 1 /* PT_LOAD */ && rela_addr >= ph.virtual_address &&
+            rela_addr < ph.virtual_address + ph.size_in_file_bytes) {
+            rela_file_offset = rela_addr - ph.virtual_address + ph.offset;
+            break;
+        }
+    }
+
+    if (rela_file_offset == 0 || rela_size == 0) {
+        KernelPanic("Could not find relocation table in next stage module!");
+    }
+
+    auto* rela_table    = reinterpret_cast<Elf64::Rela*>(elf_data + rela_file_offset);
+    u64 num_relocations = rela_size / rela_ent_size;
+
+    for (u64 i = 0; i < num_relocations; ++i) {
+        auto& reloc = rela_table[i];
+        // We only support R_X86_64_RELATIVE for now, which is sufficient for a PIE
+        if ((reloc.r_info & 0xFFFFFFFF) == Elf64::R_X86_64_RELATIVE) {
+            // The location to patch is at `load_base_addr + r_offset`
+            u64* patch_addr = reinterpret_cast<u64*>(load_base_addr + reloc.r_offset);
+            // The new value is `load_base_addr + r_addend`
+            *patch_addr = load_base_addr + reloc.r_addend;
+        }
+    }
+}
+
 static u64 LoadNextStageModule(MultibootInfo& multiboot_info, MemoryManagers mem_managers)
 {
     auto& pmm = mem_managers.pmm;
@@ -218,6 +290,9 @@ static u64 LoadNextStageModule(MultibootInfo& multiboot_info, MemoryManagers mem
     TRACE_DEBUG("Loading the next stage module as ELF64...");
     auto entry_point_res = Elf64::Load(elf.ValuePtr(), module_dest.Value());
     ASSERT_TRUE(entry_point_res, "Failed to load the next stage module as ELF64");
+
+    TRACE_DEBUG("Relocating the next stage module...");
+    RelocateNextStageModule(elf.ValuePtr(), module_dest.Value());
 
     return entry_point_res.value();
 }
