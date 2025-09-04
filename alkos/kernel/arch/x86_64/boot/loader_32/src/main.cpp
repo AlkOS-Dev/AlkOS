@@ -324,7 +324,6 @@ NO_RET static void TransitionTo64BitMode(
 
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
 
-    TRACE_INFO("TEMP - Expect to Hang Here");
     EnterElf64(entry_high, entry_low, &transition_data);
 
     // This code should be unreachable
