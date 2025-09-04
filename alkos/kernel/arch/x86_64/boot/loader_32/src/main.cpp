@@ -18,6 +18,7 @@
 #include "elf/error.hpp"
 #include "mem/memory_manager.hpp"
 #include "mem/pmm.hpp"
+#include "mem/vmm.hpp"
 #include "multiboot2/info.hpp"
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
@@ -51,7 +52,7 @@ extern byte kLoaderPreAllocatedMemory[];
 //==============================================================================
 
 static TransitionData loader_data;
-alignas(64) byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+alignas(64) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 
 //==============================================================================
 // High-Level Boot Steps
