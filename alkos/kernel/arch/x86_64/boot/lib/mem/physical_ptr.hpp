@@ -54,6 +54,8 @@ class PhysicalPtr
 
     bool IsNull() const { return address_ == 0; }
 
+    T* ValuePtr() { return reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+
     private:
     u64 address_{};
 };
@@ -92,6 +94,8 @@ class PhysicalPtr<void>
     u64 Value() const { return address_; }
 
     bool IsNull() const { return address_ == 0; }
+
+    void* ValuePtr() { return reinterpret_cast<void*>(static_cast<uptr>(address_)); }
 
     private:
     u64 address_{};
