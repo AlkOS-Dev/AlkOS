@@ -99,6 +99,8 @@ class PhysicalPtr<void>
 
     private:
     u64 address_{};
-};
+} PACK;
+
+static_assert(sizeof(PhysicalPtr<void>) == sizeof(u64));  // Ensure no padding
 
 #endif  // ALKOS_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_

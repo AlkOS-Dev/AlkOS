@@ -31,22 +31,25 @@ class VirtualMemoryManager
         PageMapEntry<4>& pme_4 = pm_table_4[PmeIdx<4>(virt_addr)];
         if (!pme_4.present) {
             auto& new_table = AllocNextLevelTable<4, AllocFunc>();
-            InsertFrame<4>(pme_4, new_table, kDefaultFlags);
+            pme_4.SetNextLevelTable(new_table, kDefaultFlags);
         }
-        PageMapEntry<3>& pme_3 = GetNextLevelEntry<4>(pme_4);
+
+        PageMapEntry<3>& pme_3 = pme_4.GetNextLevelTable()[PmeIdx<3>(virt_addr)];
         if (!pme_3.present) {
             auto& new_table = AllocNextLevelTable<3, AllocFunc>();
-            InsertFrame<3>(pme_3, new_table, kDefaultFlags);
+            pme_3.SetNextLevelTable(new_table, kDefaultFlags);
         }
-        PageMapEntry<2>& pme_2 = GetNextLevelEntry<3>(pme_3);
+
+        PageMapEntry<2>& pme_2 = pme_3.GetNextLevelTable()[PmeIdx<2>(virt_addr)];
         if (!pme_2.present) {
             auto& new_table = AllocNextLevelTable<2, AllocFunc>();
-            InsertFrame<2>(pme_2, new_table, kDefaultFlags);
+            pme_2.SetNextLevelTable(new_table, kDefaultFlags);
         }
-        PageMapEntry<1>& pme_1 = GetNextLevelEntry<2>(pme_2);
+
+        PageMapEntry<1>& pme_1 = pme_2.GetNextLevelTable()[PmeIdx<1>(virt_addr)];
 
         ASSERT_FALSE(pme_1.present);
-        // InsertFrame<1>(pme_1, PhysicalPtr<void>{phys_addr}, flags);
+        pme_1.SetFrameAddress(PhysicalPtr<void>{phys_addr}, flags | kDefaultFlags);
     }
 
     PageMapTable<4>* GetPml4Table() { return std::addressof(pm_table_4); }
@@ -55,29 +58,6 @@ class VirtualMemoryManager
     //==============================================================================
     // Private Fields
     //==============================================================================
-
-    template <size_t kLevel>
-    FORCE_INLINE_F PageMapEntry<kLevel - 1>& GetNextLevelEntry(PageMapEntry<kLevel>& entry)
-    {
-        return *PhysicalPtr<PageMapEntry<kLevel - 1>>{static_cast<u64>(entry.frame) << 12};
-    }
-
-    template <size_t kLevel>
-    FORCE_INLINE_F void InsertFrame(
-        PageMapEntry<kLevel>& entry, PageMapEntry<kLevel - 1>& next_level_entry, u64 flags
-    )
-    {
-        entry.frame        = reinterpret_cast<u64>(std::addressof(next_level_entry)) >> 12;
-        auto* entry_as_u64 = reinterpret_cast<u64*>(&entry);
-        *entry_as_u64 |= flags;
-    }
-
-    FORCE_INLINE_F void InsertFrame(PageMapEntry<1>& entry, PhysicalPtr<void> frame, u64 flags)
-    {
-        entry.frame        = frame.Value() >> 12;
-        auto* entry_as_u64 = reinterpret_cast<u64*>(&entry);
-        *entry_as_u64 |= flags;
-    }
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
     FORCE_INLINE_F PageMapTable<kLevel - 1>& AllocNextLevelTable()
@@ -90,14 +70,6 @@ class VirtualMemoryManager
 
         PhysicalPtr<PageMapTable<kLevel - 1>> pml_ptr(free_page);
         return *pml_ptr;
-    }
-
-    template <size_t kLevel>
-    FORCE_INLINE_F void SetDefaultFlags(PageMapEntry<kLevel>& entry)
-    {
-        entry.present         = 1;
-        entry.writable        = 1;
-        entry.user_accessible = 1;
     }
 
     template <size_t kLevel>
