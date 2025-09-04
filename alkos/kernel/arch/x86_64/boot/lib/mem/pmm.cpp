@@ -106,6 +106,129 @@ std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::Alloc32()
     return PhysicalPtr<void>{iteration_index_32_ * kPageSize};
 }
 
+std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::AllocContiguous(u64 size)
+{
+    if (size == 0) {
+        return std::unexpected{MemError::InvalidArgument};
+    }
+
+    // Convert size in bytes to the number of pages needed, rounding up.
+    const u64 num_pages = (size + kPageSize - 1) / kPageSize;
+
+    const size_t total_pages = bitmap_view_->Size();
+    if (num_pages > total_pages) {
+        return std::unexpected{MemError::OutOfMemory};
+    }
+
+    // Use a starting hint for our search. If the hint is 0, we'll start from the very top.
+    size_t start_pos_hint = iteration_index_ == 0 ? total_pages : iteration_index_;
+
+    // Perform one full, circular scan of the bitmap, searching from top to bottom.
+    for (size_t i = 0; i < total_pages; ++i) {
+        // Calculate the candidate for the *start* of the block.
+        const size_t block_start_index = (start_pos_hint + total_pages - 1 - i) % total_pages;
+
+        // A physically contiguous block cannot wrap around the end of physical memory.
+        if (block_start_index + num_pages > total_pages) {
+            // This block would wrap. We can skip all potential start indices in this
+            // high-memory area that are too high to fit the block.
+            size_t jump = block_start_index - (total_pages - num_pages);
+            i += jump;
+            continue;
+        }
+
+        // Check if all pages in the candidate block are free.
+        bool block_is_free = true;
+        for (size_t j = 0; j < num_pages; ++j) {
+            if (bitmap_view_->Get(block_start_index + j)) {
+                block_is_free = false;
+                // Optimization: The block failed. Jump the outer search loop past
+                // all other starting points that would also include this busy page.
+                i += j;
+                break;
+            }
+        }
+
+        if (block_is_free) {
+            // Found a valid block. Allocate it.
+            for (size_t j = 0; j < num_pages; ++j) {
+                bitmap_view_->SetTrue(block_start_index + j);
+            }
+
+            // The next single-page allocation should start searching down from the
+            // beginning of the block we just allocated.
+            iteration_index_ = block_start_index;
+
+            return PhysicalPtr<void>{block_start_index * kPageSize};
+        }
+    }
+
+    return std::unexpected{MemError::OutOfMemory};
+}
+
+std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::AllocContiguous32(u64 size)
+{
+    if (size == 0) {
+        return std::unexpected{MemError::InvalidArgument};
+    }
+
+    // Convert size in bytes to the number of pages needed, rounding up.
+    const u64 num_pages = (size + kPageSize - 1) / kPageSize;
+
+    const size_t total_pages = bitmap_view_->Size();
+    // The exclusive upper bound for page indices in the 32-bit address space.
+    const size_t max_page_index_32bit = (1ULL << 32) / kPageSize;
+    const size_t search_limit         = std::min(total_pages, max_page_index_32bit);
+
+    if (num_pages > search_limit) {
+        return std::unexpected{MemError::OutOfMemory};
+    }
+
+    size_t start_pos_hint = iteration_index_32_;
+    if (start_pos_hint >= search_limit || start_pos_hint == 0) {
+        start_pos_hint = search_limit;
+    }
+
+    // Perform one full, circular scan of the 32-bit memory region.
+    for (size_t i = 0; i < search_limit; ++i) {
+        // Calculate the candidate for the *start* of the block, searching high-to-low.
+        const size_t block_start_index = (start_pos_hint + search_limit - 1 - i) % search_limit;
+
+        // The block must be physically contiguous and stay within the 32-bit limit.
+        if (block_start_index + num_pages > search_limit) {
+            // This block would exceed the 32-bit limit. Skip ahead.
+            size_t jump = block_start_index - (search_limit - num_pages);
+            i += jump;
+            continue;
+        }
+
+        // Check if all pages in the candidate block are free.
+        bool block_is_free = true;
+        for (size_t j = 0; j < num_pages; ++j) {
+            if (bitmap_view_->Get(block_start_index + j)) {
+                block_is_free = false;
+                // Optimization: Jump the outer loop counter.
+                i += j;
+                break;
+            }
+        }
+
+        if (block_is_free) {
+            // Found a valid block. Allocate it.
+            for (size_t j = 0; j < num_pages; ++j) {
+                bitmap_view_->SetTrue(block_start_index + j);
+            }
+
+            // Update hint for the next search to start downwards from the beginning of this block.
+            iteration_index_32_ = block_start_index;
+
+            ASSERT_LT(block_start_index * kPageSize, (1ULL << 32));
+            return PhysicalPtr<void>{block_start_index * kPageSize};
+        }
+    }
+
+    return std::unexpected{MemError::OutOfMemory};
+}
 std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage()
 {
     const size_t total_pages = bitmap_view_->Size();

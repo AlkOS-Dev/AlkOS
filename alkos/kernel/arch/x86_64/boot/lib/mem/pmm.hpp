@@ -39,11 +39,10 @@ class PhysicalMemoryManager
 
     void Free(PhysicalPtr<void> addr);
 
-    // TODO: Alloc contiguous memory
-    // TODO: Alloc page below 4GiB
-
     std::expected<PhysicalPtr<void>, MemError> Alloc();
     std::expected<PhysicalPtr<void>, MemError> Alloc32();
+    std::expected<PhysicalPtr<void>, MemError> AllocContiguous(u64 size);
+    std::expected<PhysicalPtr<void>, MemError> AllocContiguous32(u64 size);
 
     private:
     //==============================================================================

@@ -1,6 +1,7 @@
 #ifndef ALKOS_BOOT_LIB_MEM_PAGE_MAP_HPP_
 #define ALKOS_BOOT_LIB_MEM_PAGE_MAP_HPP_
 
+#include <extensions/bit.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
@@ -22,6 +23,8 @@
 //------------------------------------------------------------------------------
 // This is a list of flags that can be set in the page table entries.
 //------------------------------------------------------------------------------
+
+// TODO: Properly document these flags
 
 static constexpr u64 kPresentBit             = 1;        ///< Present bit
 static constexpr u64 kWriteBit               = 1 << 1;   ///< Write bit
@@ -46,6 +49,23 @@ struct PageMapEntry;
 
 template <u16 kLevel>
 using PageMapTable = PageMapEntry<kLevel>[512];
+
+enum class PageSizeTag { k4Kb, k2Mb, k1Gb };
+
+template <PageSizeTag size>
+u64 PageSize()
+{
+    switch (size) {
+        case PageSizeTag::k4Kb:
+            return 1ULL << 12;
+        case PageSizeTag::k2Mb:
+            return 1ULL << 21;
+        case PageSizeTag::k1Gb:
+            return 1ULL << 30;
+        default:
+            return 0;
+    }
+}
 
 //------------------------------------------------------------------------------
 // Level 4
@@ -72,15 +92,15 @@ struct PageMapEntry<4> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PageMapTable<3>& GetNextLevelTable() const
+    NODISCARD PhysicalPtr<PageMapTable<3>> GetNextLevelTable() const
     {
-        return *PhysicalPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
+        return PhysicalPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
     }
 
     void SetNextLevelTable(PhysicalPtr<PageMapTable<3>> table_addr, u64 flags)
     {
         frame = table_addr.Value() >> 12;
-        *reinterpret_cast<u64*>(this) |= flags;
+        *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
 
@@ -110,15 +130,15 @@ struct PageMapEntry<3> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PageMapTable<2>& GetNextLevelTable() const
+    NODISCARD PhysicalPtr<PageMapTable<2>> GetNextLevelTable() const
     {
-        return *PhysicalPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
+        return PhysicalPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
     }
 
     void SetNextLevelTable(PhysicalPtr<PageMapTable<2>> table_addr, u64 flags)
     {
         frame = table_addr.Value() >> 12;
-        *reinterpret_cast<u64*>(this) |= flags;
+        *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
 
@@ -155,7 +175,7 @@ struct PageMapEntry<3, kHugePage> {
     void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
     {
         frame = page_addr.Value() >> 30;
-        *reinterpret_cast<u64*>(this) |= flags | kHugePageBit;
+        *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
 
@@ -184,15 +204,15 @@ struct PageMapEntry<2> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PageMapTable<1>& GetNextLevelTable() const
+    NODISCARD PhysicalPtr<PageMapTable<1>> GetNextLevelTable() const
     {
-        return *PhysicalPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
+        return PhysicalPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
     }
 
     void SetNextLevelTable(PhysicalPtr<PageMapTable<1>> table_addr, u64 flags)
     {
         frame = table_addr.Value() >> 12;
-        *reinterpret_cast<u64*>(this) |= flags;
+        *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
 
@@ -229,7 +249,7 @@ struct PageMapEntry<2, kHugePage> {
     void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
     {
         frame = page_addr.Value() >> 21;
-        *reinterpret_cast<u64*>(this) |= flags | kHugePageBit;
+        *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
 
@@ -268,7 +288,7 @@ struct PageMapEntry<1> {
     void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
     {
         frame = page_addr.Value() >> 12;
-        *reinterpret_cast<u64*>(this) |= flags;
+        *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
 

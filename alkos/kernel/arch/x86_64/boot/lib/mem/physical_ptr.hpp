@@ -13,6 +13,8 @@ class PhysicalPtr
     //==============================================================================
 
     PhysicalPtr() : address_{0} {}
+    explicit PhysicalPtr(T* ptr) : address_{static_cast<u64>(reinterpret_cast<uptr>(ptr))} {}
+    explicit PhysicalPtr(u32 address) : address_{static_cast<u64>(address)} {}
     explicit PhysicalPtr(u64 address) : address_{address} {}
 
     template <class OtherT>
@@ -69,7 +71,14 @@ class PhysicalPtr<void>
     //==============================================================================
 
     PhysicalPtr() : address_{0} {}
+    explicit PhysicalPtr(void* ptr) : address_{static_cast<u64>(reinterpret_cast<uptr>(ptr))} {}
+    explicit PhysicalPtr(u32 address) : address_{static_cast<u64>(address)} {}
     explicit PhysicalPtr(u64 address) : address_{address} {}
+
+    template <class OtherT>
+    explicit PhysicalPtr(const PhysicalPtr<OtherT>& other) : address_(other.Value())
+    {
+    }
 
     //==============================================================================
     // Operators

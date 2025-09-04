@@ -55,6 +55,11 @@ static TransitionData transition_data;
 alignas(64) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 alignas(64) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
+struct MemoryManagers {
+    PhysicalMemoryManager& pmm;
+    VirtualMemoryManager& vmm;
+};
+
 //==============================================================================
 // High-Level Boot Steps
 //==============================================================================
@@ -79,34 +84,19 @@ static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
     BlockHardwareInterrupts();
 }
 
-static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
+MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
 {
     TRACE_DEBUG("Setting up memory management...");
-
-    auto* memory_manager = new (kLoaderPreAllocatedMemory) MemoryManager();
-
-    // Identity map the first 512 GiB of memory
-    static constexpr u64 k1GiB = 1ULL << 30;
-    for (u32 i = 0; i < 512; i++) {
-        u64 addr = static_cast<u64>(i) * k1GiB;
-        memory_manager->MapVirtualMemoryToPhysical<MemoryManager::PageSize::Page1G>(
-            addr, addr, MemoryManager::kPresentBit | MemoryManager::kWriteBit
-        );
-    }
 
     // Add available memory regions from the Multiboot map
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
     R_ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
 
-    for (MmapEntry& entry : MemoryMap(mmap_tag_res.value())) {
-        if (entry.type == MmapEntry::kMemoryAvailable) {
-            memory_manager->AddFreeMemoryRegion(entry.addr, entry.addr + entry.len);
-        }
-    }
     u64 lowest_safe_addr = std::max(
         static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end)),
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
+
     auto* pmm_ptr = new (kPmmPreAllocatedMemory) PhysicalMemoryManager();
     auto& pmm     = *pmm_ptr;
 
@@ -116,66 +106,141 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
     auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
     auto& vmm     = *vmm_ptr;
 
-    // vmm.Map(0, 0);
-
-    // Reserve memory currently in use by this loader
-    memory_manager->MarkMemoryAreaNotFree(
-        reinterpret_cast<u64>(loader_32_start), reinterpret_cast<u64>(loader_32_end)
-    );
-    memory_manager->MarkMemoryAreaNotFree(
-        reinterpret_cast<u64>(multiboot_header_start), reinterpret_cast<u64>(multiboot_header_end)
-    );
-    memory_manager->MarkMemoryAreaNotFree(
-        reinterpret_cast<u64>(kLoaderPreAllocatedMemory),
-        reinterpret_cast<u64>(kLoaderPreAllocatedMemory) + sizeof(MemoryManager)
+    pmm.Reserve(
+        PhysicalPtr<void>(
+            reinterpret_cast<u32>(AlignDown(loader_32_start, PageSize<PageSizeTag::k4Kb>()))
+        ),
+        AlignUp(
+            static_cast<u64>(reinterpret_cast<u32>(loader_32_end)) -
+                reinterpret_cast<u32>(loader_32_start),
+            PageSize<PageSizeTag::k4Kb>()
+        )
     );
 
-    return memory_manager;
+    pmm.Reserve(
+        PhysicalPtr<void>(
+            reinterpret_cast<u32>(AlignDown(multiboot_header_start, PageSize<PageSizeTag::k4Kb>()))
+        ),
+        AlignUp(
+            static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end)) -
+                reinterpret_cast<u32>(multiboot_header_start),
+            PageSize<PageSizeTag::k4Kb>()
+        )
+    );
+
+    // Identity map the first 512 GiB of memory
+    TRACE_DEBUG("Identity mapping the first 512 GiB of memory...");
+    vmm.Map<&PhysicalMemoryManager::Alloc32, PageSizeTag::k1Gb>(
+        0, 0, 10 * PageSize<PageSizeTag::k1Gb>(), kPresentBit | kWriteBit | kGlobalBit
+    );
+
+    vmm.GetPml4Table().ValuePtr();
+
+    // TODO: Dump the page tables for debugging
+    for (u64 i = 0; i < 512; i++) {
+        auto& pml4e = (*vmm.GetPml4Table())[i];
+        if (pml4e.IsPresent()) {
+            TRACE_DEBUG("PML4E[%03llu]: %016llX", i, *reinterpret_cast<u64*>(&pml4e));
+            auto pdpt = pml4e.GetNextLevelTable();
+            for (u64 j = 0; j < 512; j++) {
+                auto& pdpte = (*pdpt)[j];
+                if (pdpte.IsPresent()) {
+                    TRACE_DEBUG("  PDPTE[%03llu]: %016llX", j, *reinterpret_cast<u64*>(&pdpte));
+                    if (pdpte.page_size) {
+                        continue;
+                    }
+                    auto pd = pdpte.GetNextLevelTable();
+                    for (u64 k = 0; k < 512; k++) {
+                        auto& pde = (*pd)[k];
+                        if (pde.IsPresent()) {
+                            TRACE_DEBUG(
+                                "    PDE[%03llu]: %016llX", k, *reinterpret_cast<u64*>(&pde)
+                            );
+                            if (pde.page_size) {
+                                continue;
+                            }
+                            auto pt = pde.GetNextLevelTable();
+                            for (u64 l = 0; l < 512; l++) {
+                                auto& pte = (*pt)[l];
+                                if (pte.IsPresent()) {
+                                    TRACE_DEBUG(
+                                        "      PTE[%03llu]: %016llX", l,
+                                        *reinterpret_cast<u64*>(&pte)
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return {pmm, vmm};
 }
 
-static void EnableCpuFeatures(MemoryManager* memory_manager)
+static void EnableCpuFeatures(MemoryManagers mem_managers)
 {
+    auto& vmm = mem_managers.vmm;
+    PhysicalPtr<void> pml4_phys_ptr(vmm.GetPml4Table());
+
     TRACE_INFO("Enabling long mode and paging...");
     EnableLongMode();
-    EnablePaging(reinterpret_cast<void*>(memory_manager->GetPml4Table()));
+    EnablePaging(pml4_phys_ptr.ValuePtr());
 }
 
-static u64 LoadNextStageModule(MultibootInfo& multiboot_info)
+static u64 LoadNextStageModule(MultibootInfo& multiboot_info, MemoryManagers mem_managers)
 {
+    auto& pmm = mem_managers.pmm;
+    auto& vmm = mem_managers.vmm;
+
     TRACE_DEBUG("Loading next stage module: '%s' ...", kLoader64ModuleCmdline);
-    auto loader64_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
+
+    TRACE_DEBUG("Searching for next stage module tag in multiboot info...");
+    auto next_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
         return strcmp(tag->cmdline, kLoader64ModuleCmdline) == 0;
     });
+    ASSERT_TRUE(next_module_res, "Failed to find the next stage module tag in multiboot info");
+    auto next_module_tag = *next_module_res;
 
-    if (!loader64_module_res) {
-        KernelPanicFormat(
-            "Coud not find the '%s' module in multiboot tags!", kLoader64ModuleCmdline
-        );
-    }
+    TRACE_DEBUG("Validating the next stage module as ELF64...");
+    auto elf = PhysicalPtr<byte>(next_module_tag->mod_start);
+    u64 virt_start, virt_end;
+    auto elf_bounds_res = Elf64::GetProgramBounds(elf.ValuePtr(), virt_start, virt_end);
+    ASSERT_TRUE(elf_bounds_res, "Failed to get ELF64 program bounds");
 
-    byte* module_start_addr = reinterpret_cast<byte*>(loader64_module_res.value()->mod_start);
-    auto entry_point_res    = Elf64::Load(module_start_addr, 0);
-    if (!entry_point_res) {
-        KernelPanic("Failed to load the next stage module!");
-    }
+    TRACE_DEBUG("Allocating memory for the next stage module...");
+    u64 module_size      = virt_end - virt_start;
+    auto module_dest_res = pmm.AllocContiguous32(module_size);
+    ASSERT_TRUE(module_dest_res, "Failed to allocate memory for the next stage module");
+    auto module_dest = PhysicalPtr<byte>(*module_dest_res);
+
+    TRACE_DEBUG("Loading the next stage module as ELF64...");
+    auto entry_point_res = Elf64::Load(elf.ValuePtr(), module_dest.Value());
+    ASSERT_TRUE(entry_point_res, "Failed to load the next stage module as ELF64");
+
     return entry_point_res.value();
 }
 
 NO_RET static void TransitionTo64BitMode(
-    u64 entry_point, MemoryManager* memory_manager, u32 multiboot_info_addr_32
+    u64 entry_point, MemoryManagers mem_managers, u32 multiboot_info_addr_32
 )
 {
+    auto& pmm = mem_managers.pmm;
+    auto& vmm = mem_managers.vmm;
     TRACE_INFO("Preparing to transition to 64-bit mode...");
 
     // Prepare the data to be passed to the 64-bit stage
     transition_data.multiboot_info_addr         = multiboot_info_addr_32;
     transition_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
     transition_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
-    transition_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
+    // transition_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
 
     // Free the memory used by this 32-bit loader before jumping
-    memory_manager->AddFreeMemoryRegion(
-        reinterpret_cast<u64>(loader_32_start), reinterpret_cast<u64>(loader_32_end)
+    pmm.Free(
+        PhysicalPtr<void>(reinterpret_cast<u32>(loader_32_start)),
+        static_cast<u64>(reinterpret_cast<u32>(loader_32_end)) -
+            reinterpret_cast<u32>(loader_32_start)
     );
 
     // Split the 64-bit address for the 32-bit extern function
@@ -183,6 +248,8 @@ NO_RET static void TransitionTo64BitMode(
     void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
 
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
+
+    TRACE_INFO("TEMP - Expect to Hang Here");
     EnterElf64(entry_high, entry_low, &transition_data);
 
     // This code should be unreachable
@@ -199,11 +266,11 @@ extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr_32)
 
     MultibootInfo multiboot_info(multiboot_info_addr_32);
 
-    MemoryManager* memory_manager = SetupMemoryManagement(multiboot_info);
+    MemoryManagers mem_managers = SetupMemoryManagement(multiboot_info);
 
-    EnableCpuFeatures(memory_manager);
+    EnableCpuFeatures(mem_managers);
 
-    u64 next_stage_entry_point = LoadNextStageModule(multiboot_info);
+    u64 next_stage_entry_point = LoadNextStageModule(multiboot_info, mem_managers);
 
-    TransitionTo64BitMode(next_stage_entry_point, memory_manager, multiboot_info_addr_32);
+    TransitionTo64BitMode(next_stage_entry_point, mem_managers, multiboot_info_addr_32);
 }

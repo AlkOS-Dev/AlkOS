@@ -5,11 +5,14 @@
 
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"
+#include "mem/physical_ptr.hpp"
 #include "mem/pmm.hpp"
 
 class VirtualMemoryManager
 {
     static constexpr u64 kNoFlags = 0;
+    struct MapOnePageTag {
+    };
 
     public:
     //==============================================================================
@@ -22,37 +25,84 @@ class VirtualMemoryManager
     // Public Methods
     //==============================================================================
 
-    template <decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
-    void Map(u64 virt_addr, u64 phys_addr, u64 flags = kNoFlags)
+    template <
+        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc,
+        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb>
+    void Map(const u64 virt_addr, const u64 phys_addr, const u64 size, const u64 flags = kNoFlags)
     {
-        static constexpr u32 kIndexMask    = kBitMaskRight<u32, 9>;
+        const u64 stride = (kPageSizeTag == PageSizeTag::k1Gb)   ? PageSize<PageSizeTag::k1Gb>()
+                           : (kPageSizeTag == PageSizeTag::k2Mb) ? PageSize<PageSizeTag::k2Mb>()
+                                                                 : PageSize<PageSizeTag::k4Kb>();
+
+        for (u64 offset = 0; offset < AlignUp(size, stride); offset += stride) {
+            Map<AllocFunc, kPageSizeTag>(
+                MapOnePageTag{}, virt_addr + offset, phys_addr + offset, flags
+            );
+        }
+    }
+
+    template <
+        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc,
+        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb>
+    void Map(MapOnePageTag, const u64 virt_addr, const u64 phys_addr, const u64 flags = kNoFlags)
+    {
         static constexpr u64 kDefaultFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
 
+        // !!!
+        // Note: Has to be understood that this whole function
+        // works only because of the identity mapping
+        // !!!
+
+        PageMapTable<4>& pm_table_4 = *pm_table_4_;
+
         PageMapEntry<4>& pme_4 = pm_table_4[PmeIdx<4>(virt_addr)];
-        if (!pme_4.present) {
-            auto& new_table = AllocNextLevelTable<4, AllocFunc>();
-            pme_4.SetNextLevelTable(new_table, kDefaultFlags);
+        EnsurePMEntryPresent<4, AllocFunc>(pme_4);
+
+        if constexpr (kPageSizeTag == PageSizeTag::k1Gb) {
+            ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 30>) == 0, "1GB pages must be 1GB-aligned");
+            ASSERT_TRUE((phys_addr & kBitMaskRight<u64, 30>) == 0, "1GB pages must be 1GB-aligned");
+
+            PageMapEntry<3>& pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
+            PageMapEntry<3, kHugePage>& pme_3_1gb =
+                reinterpret_cast<PageMapEntry<3, kHugePage>&>(pme_3);
+            ASSERT_FALSE(pme_3.present);
+
+            pme_3_1gb.SetFrameAddress(
+                PhysicalPtr<void>{phys_addr}, flags | kDefaultFlags | kHugePageBit
+            );
+            return;
         }
 
-        PageMapEntry<3>& pme_3 = pme_4.GetNextLevelTable()[PmeIdx<3>(virt_addr)];
-        if (!pme_3.present) {
-            auto& new_table = AllocNextLevelTable<3, AllocFunc>();
-            pme_3.SetNextLevelTable(new_table, kDefaultFlags);
+        PageMapEntry<3>& pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
+        EnsurePMEntryPresent<3, AllocFunc>(pme_3);
+
+        if constexpr (kPageSizeTag == PageSizeTag::k2Mb) {
+            ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 21>) == 0, "2MB pages must be 2MB-aligned");
+            ASSERT_TRUE((phys_addr & kBitMaskRight<u64, 21>) == 0, "2MB pages must be 2MB-aligned");
+
+            PageMapEntry<2>& pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
+            PageMapEntry<2, kHugePage>& pme_2_2mb =
+                reinterpret_cast<PageMapEntry<2, kHugePage>&>(pme_2);
+            ASSERT_FALSE(pme_2.present);
+
+            pme_2_2mb.SetFrameAddress(
+                PhysicalPtr<void>{phys_addr}, flags | kDefaultFlags | kHugePageBit
+            );
+            return;
         }
 
-        PageMapEntry<2>& pme_2 = pme_3.GetNextLevelTable()[PmeIdx<2>(virt_addr)];
-        if (!pme_2.present) {
-            auto& new_table = AllocNextLevelTable<2, AllocFunc>();
-            pme_2.SetNextLevelTable(new_table, kDefaultFlags);
-        }
+        PageMapEntry<2>& pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
+        EnsurePMEntryPresent<2, AllocFunc>(pme_2);
 
-        PageMapEntry<1>& pme_1 = pme_2.GetNextLevelTable()[PmeIdx<1>(virt_addr)];
+        PageMapEntry<1>& pme_1 = (*pme_2.GetNextLevelTable())[PmeIdx<1>(virt_addr)];
 
         ASSERT_FALSE(pme_1.present);
+        ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 12>) == 0, "4KB pages must be 4KB-aligned");
+
         pme_1.SetFrameAddress(PhysicalPtr<void>{phys_addr}, flags | kDefaultFlags);
     }
 
-    PageMapTable<4>* GetPml4Table() { return std::addressof(pm_table_4); }
+    PhysicalPtr<PageMapTable<4>> GetPml4Table() { return pm_table_4_; }
 
     private:
     //==============================================================================
@@ -60,7 +110,16 @@ class VirtualMemoryManager
     //==============================================================================
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
-    FORCE_INLINE_F PageMapTable<kLevel - 1>& AllocNextLevelTable()
+    FORCE_INLINE_F void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme)
+    {
+        if (!pme.present) {
+            auto new_table_ptr = AllocNextLevelTable<kLevel, AllocFunc>();
+            pme.SetNextLevelTable(new_table_ptr, kPresentBit | kWriteBit | kUserAccessibleBit);
+        }
+    }
+
+    template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
+    FORCE_INLINE_F PhysicalPtr<PageMapTable<kLevel - 1>> AllocNextLevelTable()
     {
         auto free_page_res = (pmm_.*AllocFunc)();
         R_ASSERT_TRUE(free_page_res.has_value(), "Allocation function returned unexpected error");
@@ -69,7 +128,7 @@ class VirtualMemoryManager
         memset(free_page.ValuePtr(), 0, sizeof(PageMapTable<kLevel - 1>));
 
         PhysicalPtr<PageMapTable<kLevel - 1>> pml_ptr(free_page);
-        return *pml_ptr;
+        return pml_ptr;
     }
 
     template <size_t kLevel>
@@ -82,7 +141,7 @@ class VirtualMemoryManager
     }
 
     PhysicalMemoryManager& pmm_;
-    PageMapTable<4>& pm_table_4;
+    PhysicalPtr<PageMapTable<4>> pm_table_4_;
 };
 
 #endif  // ALKOS_BOOT_LIB_MEM_VMM_HPP_
