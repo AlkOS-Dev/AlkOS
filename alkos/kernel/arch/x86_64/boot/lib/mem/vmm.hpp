@@ -31,8 +31,8 @@ class VirtualMemoryManager
     // Private Fields
     //==============================================================================
 
-    PageMapTable<4>& pml4_;
     PhysicalMemoryManager& pmm_;
+    PageMapTable<4>& pml4_;
 };
 
 #endif  // ALKOS_BOOT_LIB_MEM_VMM_HPP_

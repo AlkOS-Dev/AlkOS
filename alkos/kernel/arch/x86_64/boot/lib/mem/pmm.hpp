@@ -51,25 +51,7 @@ class PhysicalMemoryManager
 
     FORCE_INLINE_F size_t PageIndex(PhysicalPtr<void> addr) { return addr.Value() / kPageSize; }
 
-    FORCE_INLINE_F std::expected<void, MemError> IterateToNextFreePage()
-    {
-        const size_t total_pages = bitmap_view_->Size();
-        size_t original_index    = iteration_index_;
-
-        do {
-            if (iteration_index_ == 0) {
-                iteration_index_ = total_pages - 1;
-            } else {
-                --iteration_index_;
-            }
-
-            if (!bitmap_view_->Get(iteration_index_)) {
-                return {};  // Found a free page
-            }
-        } while (iteration_index_ != original_index);
-
-        return std::unexpected{MemError::OutOfMemory};
-    }
+    std::expected<void, MemError> IterateToNextFreePage();
 
     // Init Helpers
 

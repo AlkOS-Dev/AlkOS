@@ -94,6 +94,26 @@ std::expected<PhysicalPtr<void>, MemError> PhysicalMemoryManager::Alloc()
     return PhysicalPtr<void>{iteration_index_ * kPageSize};
 }
 
+std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage()
+{
+    const size_t total_pages = bitmap_view_->Size();
+    size_t original_index    = iteration_index_;
+
+    do {
+        if (iteration_index_ == 0) {
+            iteration_index_ = total_pages - 1;
+        } else {
+            --iteration_index_;
+        }
+
+        if (!bitmap_view_->Get(iteration_index_)) {
+            return {};  // Found a free page
+        }
+    } while (iteration_index_ != original_index);
+
+    return std::unexpected{MemError::OutOfMemory};
+}
+
 std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap& mem_map)
 {
     using namespace Multiboot;
