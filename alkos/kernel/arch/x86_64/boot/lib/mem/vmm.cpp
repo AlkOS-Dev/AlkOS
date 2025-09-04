@@ -32,10 +32,11 @@ VirtualMemoryManager::VirtualMemoryManager(PhysicalMemoryManager& pmm)
 void VirtualMemoryManager::Map(u64 virt_addr, u64 phys_addr, u64 flags)
 {
     static constexpr u32 kIndexMask = kBitMaskRight<u32, 9>;
-    const u32 pme_4_idx             = (virt_addr >> 39) & kIndexMask;
-    const u32 pme_3_idx             = (virt_addr >> 30) & kIndexMask;
-    const u32 pme_2_idx             = (virt_addr >> 21) & kIndexMask;
-    const u32 pme_1_idx             = (virt_addr >> 12) & kIndexMask;
+    // TODO: Replace with func
+    const u32 pme_4_idx = (virt_addr >> 39) & kIndexMask;
+    const u32 pme_3_idx = (virt_addr >> 30) & kIndexMask;
+    const u32 pme_2_idx = (virt_addr >> 21) & kIndexMask;
+    const u32 pme_1_idx = (virt_addr >> 12) & kIndexMask;
 
     // Ensure PML4 entry points to the correct PDPT
     auto& pml4_entry = pml4_[pme_4_idx];

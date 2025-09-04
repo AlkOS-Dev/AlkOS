@@ -38,7 +38,7 @@ extern "C" void EnablePaging(void* pml4_table_address);
 extern "C" void EnableLongMode();
 extern "C" void EnterElf64(
     void* higher_32_bits_of_entry_address, void* lower_32_bits_of_entry_address,
-    void* loader_data_address
+    void* transition_data_address
 );
 
 extern const char multiboot_header_start[];
@@ -51,7 +51,7 @@ extern byte kLoaderPreAllocatedMemory[];
 // Global Data
 //==============================================================================
 
-static TransitionData loader_data;
+static TransitionData transition_data;
 alignas(64) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 alignas(64) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
@@ -171,10 +171,10 @@ NO_RET static void TransitionTo64BitMode(
     TRACE_INFO("Preparing to transition to 64-bit mode...");
 
     // Prepare the data to be passed to the 64-bit stage
-    loader_data.multiboot_info_addr         = multiboot_info_addr_32;
-    loader_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
-    loader_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
-    loader_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
+    transition_data.multiboot_info_addr         = multiboot_info_addr_32;
+    transition_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
+    transition_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
+    transition_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
 
     // Free the memory used by this 32-bit loader before jumping
     memory_manager->AddFreeMemoryRegion(
@@ -186,7 +186,7 @@ NO_RET static void TransitionTo64BitMode(
     void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
 
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
-    EnterElf64(entry_high, entry_low, &loader_data);
+    EnterElf64(entry_high, entry_low, &transition_data);
 
     // This code should be unreachable
     KernelPanic("EnterElf64 should not return!");
