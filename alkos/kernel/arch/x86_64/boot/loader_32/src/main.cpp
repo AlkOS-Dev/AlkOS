@@ -96,9 +96,8 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
 
     // Add available memory regions from the Multiboot map
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
-    if (!mmap_tag_res) {
-        KernelPanic("Error finding memory map tag in multiboot info!");
-    }
+    R_ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
+
     for (MmapEntry& entry : MemoryMap(mmap_tag_res.value())) {
         if (entry.type == MmapEntry::kMemoryAvailable) {
             memory_manager->AddFreeMemoryRegion(entry.addr, entry.addr + entry.len);
@@ -112,14 +111,12 @@ static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
     auto& pmm     = *pmm_ptr;
 
     auto pmm_init_res = pmm.Init(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
-    if (!pmm_init_res) {
-        KernelPanic("Physical memory manager initialization failed!");
-    }
+    R_ASSERT_TRUE(pmm_init_res, "Physical memory manager initialization failed");
 
     auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
     auto& vmm     = *vmm_ptr;
 
-    vmm.Map(0, 0);
+    // vmm.Map(0, 0);
 
     // Reserve memory currently in use by this loader
     memory_manager->MarkMemoryAreaNotFree(
