@@ -52,9 +52,13 @@ extern byte kLoaderPreAllocatedMemory[];
 // Global Data
 //==============================================================================
 
-static TransitionData transition_data;
-alignas(64) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
-alignas(64) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
+alignas(64) static TransitionData transition_data;
+alignas(
+    PageSize<PageSizeTag::k4Kb>()
+) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+alignas(
+    PageSize<PageSizeTag::k4Kb>()
+) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
 struct MemoryManagers {
     PhysicalMemoryManager& pmm;
@@ -98,12 +102,14 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
 
-    auto* pmm_ptr = new (kPmmPreAllocatedMemory) PhysicalMemoryManager();
+    auto pmm_res = PhysicalMemoryManager::Create(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
+    R_ASSERT_TRUE(pmm_res, "Physical memory manager creation failed");
+
+    TRACE_DEBUG("Creating Physical Memory Manager...");
+    auto* pmm_ptr = new (kPmmPreAllocatedMemory) PhysicalMemoryManager(std::move(*pmm_res));
     auto& pmm     = *pmm_ptr;
 
-    auto pmm_init_res = pmm.Init(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
-    R_ASSERT_TRUE(pmm_init_res, "Physical memory manager initialization failed");
-
+    TRACE_DEBUG("Creating Virtual Memory Manager...");
     auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
     auto& vmm     = *vmm_ptr;
 
@@ -129,8 +135,7 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
         )
     );
 
-    // Identity map the first 512 GiB of memory
-    TRACE_DEBUG("Identity mapping the first 512 GiB of memory...");
+    TRACE_DEBUG("Identity mapping memory...");
     vmm.Map<&PhysicalMemoryManager::Alloc32, PageSizeTag::k1Gb>(
         0, 0, 10 * PageSize<PageSizeTag::k1Gb>(), kPresentBit | kWriteBit | kGlobalBit
     );
@@ -303,13 +308,26 @@ NO_RET static void TransitionTo64BitMode(
 {
     auto& pmm = mem_managers.pmm;
     auto& vmm = mem_managers.vmm;
+
     TRACE_INFO("Preparing to transition to 64-bit mode...");
 
     // Prepare the data to be passed to the 64-bit stage
     transition_data.multiboot_info_addr         = multiboot_info_addr_32;
     transition_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
     transition_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
-    // transition_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
+    transition_data.pmm_addr                    = static_cast<u64>(reinterpret_cast<u64>(&pmm));
+    transition_data.vmm_addr                    = static_cast<u64>(reinterpret_cast<u32>(&vmm));
+    TRACE(
+        "Transition Data:\n"
+        "  multiboot_info_addr:         0x%llX\n"
+        "  multiboot_header_start_addr: 0x%llX\n"
+        "  multiboot_header_end_addr:   0x%llX\n"
+        "  pmm_addr:                    0x%llX\n"
+        "  vmm_addr:                    0x%llX\n",
+        transition_data.multiboot_info_addr, transition_data.multiboot_header_start_addr,
+        transition_data.multiboot_header_end_addr, transition_data.pmm_addr,
+        transition_data.vmm_addr
+    );
 
     // Free the memory used by this 32-bit loader before jumping
     pmm.Free(

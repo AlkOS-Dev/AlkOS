@@ -26,6 +26,8 @@ Entry:
           mov esp, stack_top
           mov ebp, esp
 
+          and esp, 0xFFFFFFF0  ; Align the stack to 16 bytes
+
           push ebx ; Multiboot info
           push eax ; Magic number
           call MainLoader32 ; Delegate the work to CXX code

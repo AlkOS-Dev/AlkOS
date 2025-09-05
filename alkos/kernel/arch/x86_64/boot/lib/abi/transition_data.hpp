@@ -8,7 +8,8 @@ struct alignas(64) TransitionData {
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;
     u64 multiboot_header_end_addr;
-    u64 memory_manager_addr;
+    u64 pmm_addr;
+    u64 vmm_addr;
 };
 
 struct alignas(64) KernelInitialParams {

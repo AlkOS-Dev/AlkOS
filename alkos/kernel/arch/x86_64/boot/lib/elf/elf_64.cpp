@@ -10,6 +10,9 @@
 namespace Elf64
 {
 
+// TODO
+// nullptr would mean "load at base", but we use 0 for u64 since it's
+// 32/64 agnostic. Some way must exist to implement this cleanly
 std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
 {
     if (!IsValid(elf_ptr)) {

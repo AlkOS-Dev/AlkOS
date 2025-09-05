@@ -99,7 +99,6 @@ class BitMapView final : public BitArrayBase<BitMapView>
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return num_bits_; }
 
-    protected:
     NODISCARD FORCE_INLINE_F StorageT* Storage() { return storage_ptr_; }
     NODISCARD FORCE_INLINE_F const StorageT* Storage() const { return storage_ptr_; }
 
