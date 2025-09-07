@@ -129,3 +129,123 @@ strip_quotes() {
     local input="$1"
     echo "$input" | sed 's/^"\(.*\)"$/\1/' | sed "s/^'\(.*\)'$/\1/"
 }
+
+convert_to_bytes() {
+    assert_argument_provided "$1"
+
+    local size="$1"
+    local size_bytes
+
+    case ${size: -1} in
+        K|k) size_bytes=$((${size%?} * 1024)) ;;
+        M|m) size_bytes=$((${size%?} * 1024 * 1024)) ;;
+        G|g) size_bytes=$((${size%?} * 1024 * 1024 * 1024)) ;;
+        *) size_bytes="$size" ;;
+    esac
+
+    echo "${size_bytes}"
+}
+
+convert_to_kb() {
+    assert_argument_provided "$1"
+
+    local size="$1"
+    local size_kb
+
+    case ${size: -1} in
+        K|k) size_kb="${size%?}" ;;
+        M|m) size_kb=$((${size%?} * 1024)) ;;
+        G|g) size_kb=$((${size%?} * 1024 * 1024)) ;;
+        *) size_kb="$size" ;;
+    esac
+
+    echo "${size_kb}"
+}
+
+convert_to_mb() {
+    assert_argument_provided "$1"
+
+    local size="$1"
+    local size_mb
+
+    case ${size: -1} in
+        K|k) size_mb=$((${size%?} / 1024)) ;;
+        M|m) size_mb="${size%?}" ;;
+        G|g) size_mb=$((${size%?} * 1024)) ;;
+        *) size_mb=$((${size} / 1024)) ;;
+    esac
+
+    echo "${size_mb}"
+}
+
+convert_to_gb() {
+    assert_argument_provided "$1"
+
+    local size="$1"
+    local size_gb
+
+    case ${size: -1} in
+        K|k) size_gb=$((${size%?} / 1024 / 1024)) ;;
+        M|m) size_gb=$((${size%?} / 1024)) ;;
+        G|g) size_gb="${size%?}" ;;
+        *) size_gb=$((${size} / 1024 / 1024)) ;;
+    esac
+
+    echo "${size_gb}"
+}
+
+require_root_privileges() {
+    if [ "$EUID" -ne 0 ]; then
+        dump_error "This operation requires root privileges. Please run as root or use sudo."
+    fi
+}
+
+# https://unix.stackexchange.com/a/438712
+run_with_sudo() {
+    assert_argument_provided "$1"
+    local arg="$1"
+    if [ $(type -t $arg) = function ]
+    then
+        shift && command sudo bash -c "
+            source '${HELPERS_SCRIPT_DIR}/helpers.bash'
+            $(declare -f $arg)
+            $arg $*
+        "
+    elif [ $(type -t $arg) = alias ]
+    then
+            alias sudo='\sudo '
+            eval "sudo $@"
+    else
+            command sudo "$@"
+    fi
+}
+
+prompt_to_execute() {
+  local root_required="$1"
+  shift
+
+  local func_name="$1"
+  shift
+  pretty_info "The following function will be executed: ${func_name} $*"
+  if [ "$(type -t $func_name)" = function ]; then
+      pretty_info "Function content:"
+      declare -f "$func_name"
+  fi
+  if [ "$root_required" = true ]; then
+      pretty_warn "This function requires root privileges."
+  fi
+
+  read -r -p "Do you want to proceed? (y/N): " choice
+  case "$choice" in
+      y|Y)
+          if [ "$root_required" = true ]; then
+              run_with_sudo "$func_name" "$@"
+          else
+              "$func_name" "$@"
+          fi
+          ;;
+      '') ;&
+      n|N) pretty_info "Operation cancelled."; exit 1 ;;
+      *) pretty_error "Invalid input. Operation cancelled."; exit 1 ;;
+  esac
+}
