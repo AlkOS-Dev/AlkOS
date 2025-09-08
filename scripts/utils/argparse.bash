@@ -7,13 +7,45 @@ declare -A ARGPARSE_REQUIRED=()
 declare -A ARGPARSE_DEFAULTS=()
 declare -A ARGPARSE_CHOICES=()
 declare -A ARGPARSE_TYPES=()
+declare -A ARGPARSE_SEPARATORS=()
 ARGPARSE_HELP_FUNCTION=""
 ARGPARSE_SCRIPT_NAME=""
 ARGPARSE_SCRIPT_DESCRIPTION=""
 ARGPARSE_POSITIONAL_NAMES=()
+ARGPARSE_VARIADIC_NAME=""
+ARGPARSE_VARIADIC_ARGS=()
+ARGPARSE_SKIP_OPTIONS=false
 
 ARGPARSE_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${ARGPARSE_SCRIPT_DIR}/helpers.bash"
+
+# Helper function to parse option variants and determine their types
+# Usage: _parse_option_variants "option_key" "short_var" "long_var"
+# Sets the provided variable names with the short and long option variants
+_parse_option_variants() {
+    local option="$1"
+    local short_var="$2"
+    local long_var="$3"
+
+    if [[ "$option" == *"|"* ]]; then
+        # Handle short|long format
+        local short_part=$(echo "$option" | cut -d'|' -f1)
+        local long_part=$(echo "$option" | cut -d'|' -f2)
+        eval "$short_var='$short_part'"
+        eval "$long_var='$long_part'"
+    else
+        # Single option - determine if it's short or long based on length
+        if [[ ${#option} -eq 1 ]]; then
+            # Single character = short option
+            eval "$short_var='$option'"
+            eval "$long_var=''"
+        else
+            # Multiple characters = long option
+            eval "$short_var=''"
+            eval "$long_var='$option'"
+        fi
+    fi
+}
 
 # Initialize the argument parser
 # Usage: argparse_init "script_name" "description" [help_function]
@@ -31,11 +63,13 @@ argparse_init() {
     ARGPARSE_DEFAULTS=()
     ARGPARSE_CHOICES=()
     ARGPARSE_TYPES=()
+    ARGPARSE_SEPARATORS=()
     ARGPARSE_POSITIONAL_NAMES=()
 }
 
 # Add an option argument
 # Usage: argparse_add_option "short|long" "description" [required] [default] [choices] [type]
+# Possible types: string (default), flag, list, path
 argparse_add_option() {
     local option="$1"
     local description="$2"
@@ -43,6 +77,7 @@ argparse_add_option() {
     local default="$4"
     local choices="$5"
     local type="${6:-string}"
+    local separator="${7:-,}"
 
     ARGPARSE_OPTIONS["$option"]="$option"
     ARGPARSE_DESCRIPTIONS["$option"]="$description"
@@ -51,30 +86,59 @@ argparse_add_option() {
     ARGPARSE_CHOICES["$option"]="$choices"
     ARGPARSE_TYPES["$option"]="$type"
 
+    [[ "$type" == "list" ]] && ARGPARSE_SEPARATORS["$option"]="$separator"
+
     # Set default value if provided
     [[ -n "$default" ]] && ARGPARSE_VALUES["$option"]="$default"
 }
 
 # Add a positional argument
-# Usage: argparse_add_positional "name" "description" [required] [choices]
+# Usage: argparse_add_positional "name" "description" [required] [choices] [type]
+# Possible types: string (default), path
 argparse_add_positional() {
     local name="$1"
     local description="$2"
     local required="${3:-true}"
     local choices="$4"
+    local type="${5:-string}"
 
     ARGPARSE_POSITIONAL["$name"]="$name"
     ARGPARSE_DESCRIPTIONS["$name"]="$description"
     ARGPARSE_REQUIRED["$name"]="$required"
     ARGPARSE_CHOICES["$name"]="$choices"
+    ARGPARSE_TYPES["$name"]="$type"
     ARGPARSE_POSITIONAL_NAMES+=("$name")
+}
+
+# Add a variadic argument (captures all remaining arguments)
+# Usage: argparse_add_variadic "name" "description" [required]
+argparse_add_variadic() {
+    local name="$1"
+    local description="$2"
+    local required="${3:-false}"
+
+    ARGPARSE_VARIADIC_NAME="$name"
+    ARGPARSE_DESCRIPTIONS["$name"]="$description"
+    ARGPARSE_REQUIRED["$name"]="$required"
 }
 
 # Get the value of an argument
 # Usage: argparse_get "option_or_positional_name"
 argparse_get() {
     local key="$1"
-    echo "${ARGPARSE_VALUES[$key]}"
+
+    if [[ "$key" == "$ARGPARSE_VARIADIC_NAME" ]]; then
+        # For variadic arguments, return all collected values
+        echo "${ARGPARSE_VARIADIC_ARGS[@]}"
+    elif [[ "${ARGPARSE_TYPES[$key]}" == "list" ]]; then
+        # For list type, split by separator
+        local IFS="${ARGPARSE_SEPARATORS[$key]}"
+        read -ra list_values <<< "${ARGPARSE_VALUES[$key]}"
+        echo "${list_values[@]}"
+    else
+        # Return single value
+        echo "${ARGPARSE_VALUES[$key]}"
+    fi
 }
 
 # Check if an argument was provided
@@ -103,22 +167,30 @@ argparse_show_help() {
         local required="${ARGPARSE_REQUIRED[$option]}"
         local type="${ARGPARSE_TYPES[$option]}"
 
-        # Format option for usage line
-        if [[ "$option" == *"|"* ]]; then
-            # Handle short|long format
-            local short=$(echo "$option" | cut -d'|' -f1)
-            local long=$(echo "$option" | cut -d'|' -f2)
+        # Format option for usage line using helper function
+        local short long
+        _parse_option_variants "$option" short long
+
+        if [[ -n "$short" && -n "$long" ]]; then
+            # Both short and long variants
             if [[ "$type" == "flag" ]]; then
                 option_display="[--$long | -$short]"
             else
                 option_display="[-$short <${short^^}> | --$long <${long^^}>]"
             fi
-        else
-            # Single option
+        elif [[ -n "$short" ]]; then
+            # Only short variant
             if [[ "$type" == "flag" ]]; then
-                option_display="[-$option]"
+                option_display="[-$short]"
             else
-                option_display="[-$option <${option^^}>]"
+                option_display="[-$short <${short^^}>]"
+            fi
+        elif [[ -n "$long" ]]; then
+            # Only long variant
+            if [[ "$type" == "flag" ]]; then
+                option_display="[--$long]"
+            else
+                option_display="[--$long <${long^^}>]"
             fi
         fi
 
@@ -131,6 +203,16 @@ argparse_show_help() {
 
         usage_line+=" $option_display"
     done
+
+    # Add variadic argument if exists
+    if [[ -n "$ARGPARSE_VARIADIC_NAME" ]]; then
+        usage_line+=" [--]"
+        if [[ "${ARGPARSE_REQUIRED[$ARGPARSE_VARIADIC_NAME]}" == "true" ]]; then
+            usage_line+=" <${ARGPARSE_VARIADIC_NAME}...>"
+        else
+            usage_line+=" [${ARGPARSE_VARIADIC_NAME}...]"
+        fi
+    fi
 
     echo "$usage_line"
     echo ""
@@ -149,10 +231,22 @@ argparse_show_help() {
         [[ "$required" == "true" ]] && mandatory_text=" - MANDATORY"
 
         echo -e "\t<$pos_name>$mandatory_text - $desc"
-        [[ -n "$choices" ]] && echo -e "\t\tSupported: $choices"
+        [[ -n "$choices" ]] && echo -e "\tSupported: $choices"
+        echo
     done
 
-    echo ""
+    # Show variadic argument description if exists
+    if [[ -n "$ARGPARSE_VARIADIC_NAME" ]]; then
+        local desc="${ARGPARSE_DESCRIPTIONS[$ARGPARSE_VARIADIC_NAME]}"
+        local required="${ARGPARSE_REQUIRED[$ARGPARSE_VARIADIC_NAME]}"
+
+        local mandatory_text=""
+        [[ "$required" == "true" ]] && mandatory_text=" - MANDATORY"
+
+        echo -e "\t<${ARGPARSE_VARIADIC_NAME}...>$mandatory_text - $desc"
+        echo
+    fi
+
     echo "Options:"
 
     # Show options descriptions
@@ -165,25 +259,36 @@ argparse_show_help() {
 
         # Format option display for description
         local opt_display=""
-        if [[ "$option" == *"|"* ]]; then
-            local short=$(echo "$option" | cut -d'|' -f1)
-            local long=$(echo "$option" | cut -d'|' -f2)
+        local short long
+        _parse_option_variants "$option" short long
+
+        if [[ -n "$short" && -n "$long" ]]; then
+            # Both short and long variants
             if [[ "$type" == "flag" ]]; then
                 opt_display="--$long | -$short"
             else
                 opt_display="-$short <${short^^}> | --$long <${long^^}>"
             fi
-        else
+        elif [[ -n "$short" ]]; then
+            # Only short variant
             if [[ "$type" == "flag" ]]; then
-                opt_display="-$option"
+                opt_display="-$short"
             else
-                opt_display="-$option <${option^^}>"
+                opt_display="-$short <${short^^}>"
+            fi
+        elif [[ -n "$long" ]]; then
+            # Only long variant
+            if [[ "$type" == "flag" ]]; then
+                opt_display="--$long"
+            else
+                opt_display="--$long <${long^^}>"
             fi
         fi
 
         echo -e "\t\"$opt_display\" - $desc"
         [[ -n "$default" ]] && echo -e "\tDefault: $default"
         [[ -n "$choices" ]] && echo -e "\tSupported: $choices"
+        echo
     done
 
     # Call custom help function if provided
@@ -216,21 +321,31 @@ argparse_parse() {
                 argparse_show_help
                 exit 0
                 ;;
+            --)
+                ARGPARSE_SKIP_OPTIONS=true
+                shift
+                ;;
             -*)
                 local found_option=""
                 local option_key=""
 
                 # Find matching option
                 for option in "${!ARGPARSE_OPTIONS[@]}"; do
-                    local IFS='|'
-                    local option_variants=($option)
-                    for variant in "${option_variants[@]}"; do
-                        if [[ "$1" == "-$variant" || "$1" == "--$variant" ]]; then
-                            found_option="$option"
-                            option_key="$option"
-                            break 2
-                        fi
-                    done
+                    local short long
+                    _parse_option_variants "$option" short long
+
+                    local match=false
+                    if [[ -n "$short" && "$1" == "-$short" ]]; then
+                        match=true
+                    elif [[ -n "$long" && "$1" == "--$long" ]]; then
+                        match=true
+                    fi
+
+                    if [[ "$match" == true ]]; then
+                        found_option="$option"
+                        option_key="$option"
+                        break
+                    fi
                 done
 
                 if [[ -z "$found_option" ]]; then
@@ -246,7 +361,17 @@ argparse_parse() {
                     if [[ $# -lt 2 ]]; then
                         dump_error "Option $1 requires a value"
                     fi
-                    argparse_validate_choice "$option_key" "$2"
+
+                    if [[ "$option_type" == "list" ]]; then
+                        local IFS="${ARGPARSE_SEPARATORS[$option_key]}"
+                        read -r -a values_array <<< "$2"
+                        for val in "${values_array[@]}"; do
+                            argparse_validate_choice "$option_key" "$val"
+                        done
+                    else
+                        argparse_validate_choice "$option_key" "$2"
+                    fi
+
                     ARGPARSE_VALUES["$option_key"]="$2"
                     shift 2
                 fi
@@ -264,6 +389,9 @@ argparse_parse() {
                     argparse_validate_choice "$pos_name" "$1"
                     ARGPARSE_VALUES["$pos_name"]="$1"
                     ((positional_index++))
+                    shift
+                elif [[ -n "$ARGPARSE_VARIADIC_NAME" ]]; then
+                    ARGPARSE_VARIADIC_ARGS+=("$1")
                     shift
                 else
                     dump_error "Unknown argument: $1"

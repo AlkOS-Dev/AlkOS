@@ -35,16 +35,45 @@ _comp_alkos_helper() {
     #          Handle options choices           #
     # ----------------------------------------- #
     for option in "${COMP_OPTIONS[@]}"; do
-        if [[ -n "${COMP_CHOICES[$option]}" ]]; then
-            local short="${short_opts[$option]}"
-            local long="${long_opts[$option]}"
+        local short="${short_opts[$option]}"
+        local long="${long_opts[$option]}"
 
-            if [[ "$prev" == "$short" || "$prev" == "$long" ]]; then
+        if [[ "$prev" == "$short" || "$prev" == "$long" ]]; then
+            if [[ "${COMP_TYPES[$option]}" == "string" && -n "${COMP_CHOICES[$option]}" ]]; then
                 local -a choices_list=()
                 IFS='|' read -ra choices_list <<< "${COMP_CHOICES[$option]}"
 
                 # shellcheck disable=SC2207
                 COMPREPLY=( $(compgen -W "${choices_list[*]}" -- "$cur") )
+                return 0
+            elif [[ "${COMP_TYPES[$option]}" == "list" && -n "${COMP_CHOICES[$option]}" ]]; then
+                local separator="${COMP_SEPARATORS[$option]}"
+                local -a choices_list=()
+                IFS='|' read -ra choices_list <<< "${COMP_CHOICES[$option]}"
+
+                # Extract the part after the last separator for current input
+                local last_part="$cur" prefix=""
+                [[ $cur =~ $separator ]] && last_part="${cur##*$separator}"; prefix="${cur%$last_part}"
+
+                # Prevent bash from adding a space after completion if last_part is not exactly one of the choices
+                if [[ ! " ${choices_list[*]} " =~ (^|[[:space:]])$last_part($|[[:space:]]) ]]; then
+                    compopt -o nospace 2>/dev/null
+                fi
+
+                # shellcheck disable=SC2207
+                COMPREPLY=( $(
+                    if [[ -n "$alt_display" ]]; then
+                        compgen -W "${choices_list[*]}" -- "$last_part"
+                    else
+                        compgen -W "${choices_list[*]}" -- "$last_part" | sed "s|^|$prefix|"
+                    fi
+                ) )
+                return 0
+            elif [[ "${COMP_TYPES[$option]}" == "path" ]]; then
+                compopt -o filenames 2>/dev/null
+
+                # shellcheck disable=SC2207
+                COMPREPLY=( $(compgen -f -- "$cur") )
                 return 0
             fi
         fi
@@ -98,6 +127,15 @@ _comp_alkos_helper() {
 
                 # shellcheck disable=SC2207
                 COMPREPLY=( $(compgen -W "${choices_list[*]}" -- "$cur") )
+                return 0
+            fi
+
+            # Handle file path completion for path type positional arguments
+            if [[ "${COMP_TYPES[$current_pos_name]}" == "path" ]]; then
+                compopt -o filenames 2>/dev/null
+
+                # shellcheck disable=SC2207
+                COMPREPLY=( $(compgen -f -- "$cur") )
                 return 0
             fi
         fi

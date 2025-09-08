@@ -141,33 +141,50 @@ get_definitions() {
         eval "$(echo "$parse_args_def" | grep 'argparse_' | grep -v 'argparse_parse\|argparse_get')"
 
         # Generate the definitions
-        echo "            COMP_OPTIONS=("
-        for key in "${!ARGPARSE_OPTIONS[@]}"; do
-            echo "                \"$key\""
-        done
-        echo "            )"
-        echo "            COMP_DESCRIPTIONS=("
-        for key in "${!ARGPARSE_DESCRIPTIONS[@]}"; do
-            # Escape double quotes in descriptions
-            desc="${ARGPARSE_DESCRIPTIONS[$key]//\"/\\\"}"
-            echo "                [\"$key\"]=\"$desc\""
-        done
-        echo "            )"
-        echo "            COMP_CHOICES=("
-        for key in "${!ARGPARSE_CHOICES[@]}"; do
-            echo "                [\"$key\"]=\"${ARGPARSE_CHOICES[$key]}\""
-        done
-        echo "            )"
-        echo "            COMP_TYPES=("
-        for key in "${!ARGPARSE_TYPES[@]}"; do
-            echo "                [\"$key\"]=\"${ARGPARSE_TYPES[$key]}\""
-        done
-        echo "            )"
-        echo "            COMP_POSITIONAL_NAMES=("
-        for name in "${ARGPARSE_POSITIONAL_NAMES[@]}"; do
-            echo "                \"$name\""
-        done
-        echo "            )"
+        if [[ ${#ARGPARSE_OPTIONS[@]} -gt 0 ]]; then
+            echo "            COMP_OPTIONS=("
+            for key in "${!ARGPARSE_OPTIONS[@]}"; do
+                echo "                \"$key\""
+            done
+            echo "            )"
+        fi
+        if [[ ${#ARGPARSE_DESCRIPTIONS[@]} -gt 0 ]]; then
+            echo "            COMP_DESCRIPTIONS=("
+            for key in "${!ARGPARSE_DESCRIPTIONS[@]}"; do
+                # Escape double quotes in descriptions
+                desc="${ARGPARSE_DESCRIPTIONS[$key]//\"/\\\"}"
+                echo "                [\"$key\"]=\"$desc\""
+            done
+            echo "            )"
+        fi
+        if [[ ${#ARGPARSE_CHOICES[@]} -gt 0 ]]; then
+            echo "            COMP_CHOICES=("
+            for key in "${!ARGPARSE_CHOICES[@]}"; do
+                echo "                [\"$key\"]=\"${ARGPARSE_CHOICES[$key]}\""
+            done
+            echo "            )"
+        fi
+        if [[ ${#ARGPARSE_TYPES[@]} -gt 0 ]]; then
+            echo "            COMP_TYPES=("
+            for key in "${!ARGPARSE_TYPES[@]}"; do
+                echo "                [\"$key\"]=\"${ARGPARSE_TYPES[$key]}\""
+            done
+            echo "            )"
+        fi
+        if [[ ${#ARGPARSE_SEPARATORS[@]} -gt 0 ]]; then
+            echo "            COMP_SEPARATORS=("
+            for key in "${!ARGPARSE_SEPARATORS[@]}"; do
+                echo "                [\"$key\"]=\"${ARGPARSE_SEPARATORS[$key]}\""
+            done
+            echo "            )"
+        fi
+        if [[ ${#ARGPARSE_POSITIONAL_NAMES[@]} -gt 0 ]]; then
+            echo "            COMP_POSITIONAL_NAMES=("
+            for name in "${ARGPARSE_POSITIONAL_NAMES[@]}"; do
+                echo "                \"$name\""
+            done
+            echo "            )"
+        fi
     )"
 }
 
