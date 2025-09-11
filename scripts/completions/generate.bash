@@ -3,10 +3,11 @@
 readonly GENCOMP_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 readonly GENCOMP_SCRIPT_PATH="${GENCOMP_DIR}/$(basename "$0")"
 readonly GENCOMP_SCRIPTS_BASE_DIR="$(realpath "${GENCOMP_DIR}/..")"
+readonly GENCOMP_OUTPUT_DIR="${GENCOMP_DIR}/output"
 
 readonly -A GENCOMP_GENERATED_OUTPUT_PATH=(
-    [bash]="${GENCOMP_DIR}/bash_completion.generated.bash"
-    [zsh]="${GENCOMP_DIR}/zsh_completion.generated.zsh"
+    [bash]="${GENCOMP_OUTPUT_DIR}/bash_completion.generated.bash"
+    [zsh]="${GENCOMP_OUTPUT_DIR}/zsh_completion.generated.zsh"
 )
 
 readonly -A GENCOMP_TARGET_LINK_PATH=(
@@ -372,6 +373,8 @@ main() {
     local output_path="${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
 
     if [[ "$(argparse_get "r|run")" == "true" ]]; then
+        mkdir -p "$GENCOMP_OUTPUT_DIR"
+
         # Get all .bash scripts excluding certain directories
         while IFS= read -r -d '' script; do
             GENCOMP_SCRIPTS_LIST+=("$script")
