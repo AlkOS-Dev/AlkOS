@@ -12,18 +12,16 @@ _comp_alkos_helper() {
     fi
 
     # Add help option to every command
-    COMP_OPTIONS["h|help"]="h|help"
+    COMP_OPTIONS+=("h|help")
     COMP_DESCRIPTIONS["h|help"]="Show help message"
     COMP_TYPES["h|help"]="flag"
 
-    # To track when to display descriptions
-    local alt_display=1
-    if [ "${__GENERATE_COMPLETIONS_PREV_LINE:-}" != "$COMP_LINE" ] ||
-            [ "${__GENERATE_COMPLETIONS_PREV_POINT:-}" != "$COMP_POINT" ]; then
-        __GENERATE_COMPLETIONS_PREV_LINE=$COMP_LINE
-        __GENERATE_COMPLETIONS_PREV_POINT=$COMP_POINT
-        alt_display=
-    fi
+    # To track when to display descriptions, Bash sets COMP_TYPE to 9 when the user
+    # has pressed tab twice on an incomplete option. In that case, we want to display
+    # descriptions. Otherwise, we don't display them to avoid cluttering the output.
+    # Since Bash 4.x only.
+    local alt_display
+    [[ $COMP_TYPE -eq 9 ]] && alt_display= || alt_display=1
 
     local -A short_opts long_opts
     for option in "${COMP_OPTIONS[@]}"; do
@@ -156,11 +154,10 @@ _comp_alkos_helper() {
     # -----------------------------------------
     if [[ "$cur" == -* ]] && [[ "$past_separator" == false ]]; then
         local IFS=$'\n'
-        local spliter='  '
+        local spacer='  '
         local -a matches=()
 
-        # Calculate width for first column for options that match
-        local max_width=0
+        # Get matches
         for option in "${COMP_OPTIONS[@]}"; do
             local short="${short_opts[$option]}"
             local long="${long_opts[$option]}"
@@ -176,85 +173,143 @@ _comp_alkos_helper() {
             fi
 
             matches+=("$option")
-
-            local len
-            [[ $short_match == true ]] && len=${#short} || len=0
-            [[ $short_match == true && $long_match == true ]] && (( len += 2 ))
-            [[ $long_match == true ]] && (( len += ${#long}))
-            (( ${#COMP_DESCRIPTIONS[$option]} > 0 )) && (( len += ${#COMP_DESCRIPTIONS[$option]} + 4 )) # 4 for "  ()"
-            (( len > max_width )) && max_width=$len
         done
 
-        # Calculate number of columns and column width
-        local target_width=$(( COLUMNS * 6 / 10 ))
-        (( max_width > target_width )) && target_width=$max_width
-        local columns_number=$(( (target_width + ${#spliter}) / (max_width + ${#spliter}) )) # with 2 spaces padding
-        local col_width=$(( (target_width - (${#spliter} * (columns_number - 1))) / columns_number ))
+        # Sort entries alphabetically
+        matches=( $(sort <<< "${matches[*]}") )
+
+        local target_width=$(( COLUMNS * 3 / 4 ))
+        local total_matches=${#matches[@]}
+        local columns_number=1
+        local rows_per_column=$(( (total_matches + columns_number - 1) / columns_number ))
+
+        local -a column_widths=()
+        local -a sorted=()
+
+        # Find optimal number of columns
+        while true; do
+            local rows_per_column_temp=$(( (total_matches + columns_number - 1) / columns_number ))
+            local column_widths_temp=()
+            local sorted_temp=()
+            local total_width=0
+
+            # Calculate width for each column
+            for (( col = 0; col < columns_number; col++ )); do
+                local max_col_width=0
+                for (( row = 0; row < rows_per_column_temp; row++ )); do
+                    local idx=$(( col * rows_per_column_temp + row ))
+                    if [[ $idx -lt $total_matches ]]; then
+                        local entry="${matches[idx]}"
+                        sorted_temp+=("$entry")
+
+                        local entry_width=0
+                        entry_width+=${#short_opts[$entry]}
+                        if [[ -n "${long_opts[$entry]}" ]]; then
+                            # for the two spaces between short and long
+                            (( entry_width > 0 )) && (( entry_width += 2 ))
+
+                            (( entry_width += ${#long_opts[$entry]} ))
+                        fi
+                        if [[ -n "${COMP_DESCRIPTIONS[$entry]}" ]]; then
+                            # Add 4 for the "  ()"
+                            (( entry_width += 4 + ${#COMP_DESCRIPTIONS[$entry]} ))
+                        fi
+                        (( entry_width > max_col_width )) && max_col_width=$entry_width
+                    fi
+                done
+                column_widths_temp+=("$max_col_width")
+                (( total_width += max_col_width ))
+            done
+
+            # Add splitter width between columns
+            (( total_width += ${#spacer} * (columns_number - 1) ))
+
+            # Check if this configuration fits
+            if (( total_width <= target_width && max_col_width != 0 )); then
+                rows_per_column=$rows_per_column_temp
+                column_widths=("${column_widths_temp[@]}")
+                sorted=("${sorted_temp[@]}")
+
+                (( columns_number++ ))
+            else
+                unset columns_numbers_temp
+                unset column_widths_temp
+                unset sorted_temp
+
+                (( columns_number-- ))
+                break
+            fi
+        done
+
+        # Ensure we have at least 1 column
+        (( columns_number < 1 )) && columns_number=1
 
         # shellcheck disable=SC2207
         COMPREPLY=( $(
-            local -a entries=()
+            local -a to_display=()
 
-            # Loop through matches and prepare display
-            for match in "${matches[@]}"; do
-                local short="${short_opts[$match]}"
-                local long="${long_opts[$match]}"
+            # Display with description
+            for (( row = 0; row < rows_per_column; row++ )); do
+                for (( col = 0; col < columns_number; col++ )); do
+                    local idx=$(( col * rows_per_column + row ))
+                    if [[ $idx -lt $total_matches ]]; then
+                        local match="${sorted[idx]}"
 
-                # Check if cur matches short and/or long option
-                local short_match long_match
-                [[ -n "$short" && "${short:0:${#cur}}" == "$cur" ]] && short_match=true
-                [[ -n "$long" && "${long:0:${#cur}}" == "$cur" ]] && long_match=true
+                        local short="${short_opts[$match]}"
+                        local long="${long_opts[$match]}"
 
-                local display
-                if [[ $short_match == true ]] && [[ $long_match == true ]]; then
-                    display="$short  $long"
-                elif [[ $short_match == true ]]; then
-                    display="$short"
-                elif [[ $long_match == true ]]; then
-                    display="$long"
-                fi
+                        # Check if cur matches short and/or long option
+                        local short_match long_match
+                        [[ -n "$short" && "${short:0:${#cur}}" == "$cur" ]] && short_match=true
+                        [[ -n "$long" && "${long:0:${#cur}}" == "$cur" ]] && long_match=true
 
-                # Display with description when more than one completion is possible
-                if [[ -n "$alt_display" ]]; then
-                    local padding=$(( col_width - ${#display} - 2 ))
-                    if [[ -n "${COMP_DESCRIPTIONS[$match]}" ]]; then
-                        printf -v buffer "%s  %*s" "$display" "$padding" "(${COMP_DESCRIPTIONS[$match]})"
-                    else
-                        printf -v buffer "%-*s" "$col_width" "$display"
+                        local option
+                        if [[ $short_match == true ]] && [[ $long_match == true ]]; then
+                            option="$short  $long"
+                        elif [[ $short_match == true ]]; then
+                            option="$short"
+                        elif [[ $long_match == true ]]; then
+                            option="$long"
+                        fi
+
+                        if [[ -n "$alt_display" ]]; then
+                            if [[ -n "${COMP_DESCRIPTIONS[$match]}" ]]; then
+                                local padding=$(( column_widths[col] - ${#option} - 2 ))
+                                printf -v buffer "%s  %*s" "$option" "$padding" "(${COMP_DESCRIPTIONS[$match]})"
+                            else
+                                printf -v buffer "%-*s" "${column_widths[col]}" "$option"
+                            fi
+
+                            # Edge case: if user want to complete already completed option which
+                            # is not the newest one, don't display it
+                            if [[ "$cur" == "$short" || "$cur" == "$long" ]]; then
+                                continue
+                            fi
+
+                            to_display+=("$buffer")
+                        else
+                            [[ "$short_match" == true ]] && echo "$short" || echo "$long"
+                        fi
                     fi
-
-                    entries+=("$buffer")
-                else
-                    [[ "$short_match" == true ]] && echo "$short" || echo "$long"
-                fi
+                done
             done
 
             if [[ -n "$alt_display" ]]; then
-                # Sort entries
-                entries=($(sort <<< "${entries[*]}"))
-
+                # Fill the rest of the line with spaces and add spacers between columns
                 local line=""
-                for (( i = 0; i < ${#entries[@]}; i++ )); do
-                    line+="${entries[$i]}"
-                    if (( (i + 1) % columns_number == 0 )); then
+                for (( i = 0; i < ${#to_display[@]}; i++ )); do
+                    line+="${to_display[i]}"
+                    if (( (i + 1) % columns_number == 0 || i == ${#to_display[@]} - 1 )); then
                         # Fill the rest of the line with spaces
-                        local remaining=$(( COLUMNS - (col_width * columns_number + ${#spliter} * (columns_number - 1)) ))
+                        local remaining=$(( COLUMNS - ${#line} ))
                         if [[ $remaining -gt 0 ]]; then
                             line+=$(printf "%*s\n" "$remaining" "")
                         fi
 
                         echo -n "$line"
                         line=""
-                    elif (( i + 1 == ${#entries[@]} )); then
-                        # Last item, fill the rest of the line with spaces
-                        local col_idx=$(( (i + 1) % columns_number ))
-                        local remaining=$(( COLUMNS - (col_width * col_idx + ${#spliter} * (col_idx - 1)) ))
-                        line+=$(printf "%*s\n" "$remaining" "")
-
-                        echo -n "$line"
-                        line=""
                     else
-                        line+=$(printf "%s" "$spliter")
+                        line+=$(printf "%s" "$spacer")
                     fi
                 done
             fi
