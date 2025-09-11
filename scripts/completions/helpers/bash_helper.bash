@@ -6,6 +6,16 @@ _comp_alkos_helper() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
 
+    # Return no completions if cursor is after help option
+    if [[ "$prev" == "-h" || "$prev" == "--help" ]]; then
+        return 0
+    fi
+
+    # Add help option to every command
+    COMP_OPTIONS["h|help"]="h|help"
+    COMP_DESCRIPTIONS["h|help"]="Show help message"
+    COMP_TYPES["h|help"]="flag"
+
     # To track when to display descriptions
     local alt_display=1
     if [ "${__GENERATE_COMPLETIONS_PREV_LINE:-}" != "$COMP_LINE" ] ||
