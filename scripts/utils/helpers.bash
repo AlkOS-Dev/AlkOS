@@ -220,6 +220,23 @@ run_with_sudo() {
     fi
 }
 
+user_choice() {
+    assert_argument_provided "$1"
+    local prompt="$1"
+    shift
+
+    read -r -p "$prompt (y/N): " choice
+    case "$choice" in
+        y|Y)
+            "$@"
+            return 0
+            ;;
+        '') ;&
+        n|N) return 1 ;;
+        *) return 2 ;;
+    esac
+}
+
 prompt_to_execute() {
   local root_required="$1"
   shift
@@ -235,17 +252,11 @@ prompt_to_execute() {
       pretty_warn "This function requires root privileges."
   fi
 
-  read -r -p "Do you want to proceed? (y/N): " choice
-  case "$choice" in
-      y|Y)
-          if [ "$root_required" = true ]; then
-              run_with_sudo "$func_name" "$@"
-          else
-              "$func_name" "$@"
-          fi
-          ;;
-      '') ;&
-      n|N) pretty_info "Operation cancelled."; exit 1 ;;
-      *) pretty_error "Invalid input. Operation cancelled."; exit 1 ;;
-  esac
+  if [[ "$root_required" = true ]]; then
+      user_choice "Do you want to proceed with root privileges?" \
+          run_with_sudo "$func_name" "$@"
+  else
+      user_choice "Do you want to proceed?" \
+          "$func_name" "$@"
+  fi
 }
