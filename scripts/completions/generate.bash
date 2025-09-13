@@ -8,17 +8,22 @@ readonly GENCOMP_OUTPUT_DIR="${GENCOMP_DIR}/output"
 readonly -A GENCOMP_GENERATED_OUTPUT_PATH=(
     [bash]="${GENCOMP_OUTPUT_DIR}/bash_completion.generated.bash"
     [zsh]="${GENCOMP_OUTPUT_DIR}/zsh_completion.generated.zsh"
+    [fish]="${GENCOMP_OUTPUT_DIR}/fish_completion.generated.fish"
 )
 
 readonly -A GENCOMP_TARGET_LINK_PATH=(
-    [bash]="/etc/bash_completion.d/alkos.bash"
-    [zsh]="/usr/share/zsh/site-functions/_alkos"
+    [bash]="$HOME/.local/share/bash-completion/completions/alkos"
+    [zsh]="$HOME/.local/share/zsh/site-functions/_alkos"
+    [fish]="$HOME/.config/fish/completions/alkos.fish"
 )
 
-source "${GENCOMP_DIR}/../utils/argparse.bash"
-source "${GENCOMP_DIR}/../utils/helpers.bash"
+readonly -A GENCOMP_CONFIG_FILE=(
+    [bash]="$HOME/.bash_completion"
+    [zsh]="$HOME/.zshrc"
+    [fish]="$HOME/.config/fish/config.fish"
+)
 
-GENCOMP_EXCLUDED_DIRS=(
+readonly -a GENCOMP_EXCLUDED_DIRS=(
     "${GENCOMP_DIR}"
     "${GENCOMP_SCRIPTS_BASE_DIR}/actions"
     "${GENCOMP_SCRIPTS_BASE_DIR}/cicd"
@@ -26,6 +31,9 @@ GENCOMP_EXCLUDED_DIRS=(
     "${GENCOMP_SCRIPTS_BASE_DIR}/tests"
     "${GENCOMP_SCRIPTS_BASE_DIR}/utils"
 )
+
+source "${GENCOMP_DIR}/../utils/argparse.bash"
+source "${GENCOMP_DIR}/../utils/helpers.bash"
 
 GENCOMP_SCRIPTS_LIST=()
 
@@ -40,11 +48,11 @@ parse_args() {
 
 validate_args() {
     if [[ "$(argparse_get "e|enable")" == "true" && "$(argparse_get "d|disable")" == "true" ]]; then
-        dump_error "Error: --enable and --disable cannot be used together."
+        dump_error "--enable and --disable cannot be used together."
     fi
 
     if [[ "$(argparse_get "r|run")" != "true" && "$(argparse_get "e|enable")" != "true" && "$(argparse_get "d|disable")" != "true" ]]; then
-        dump_error "Error: At least one of --run, --enable, or --disable must be specified."
+        dump_error "At least one of --run, --enable, or --disable must be specified."
     fi
 }
 
@@ -53,20 +61,23 @@ add_link() {
     local target_link="$2"
     local script_name="$(basename "$script")"
 
+    pretty_info "Creating symlink..."
     if [[ -L "$target_link" ]]; then
         if [[ "$(readlink -f "$target_link")" == "$script" ]]; then
-            pretty_info "Symlink for ${script_name} already exists. Exiting."
+            pretty_info "Symlink for ${script_name} already exists"
             return
         else
             pretty_info "Symlink for ${script_name} exists but points to a different file. Updating..."
-            rm "$target_link"
+            base_runner "Failed to update symlink for ${script_name}" false \
+                rm "$target_link"
         fi
     elif [[ -e "$target_link" ]]; then
-        dump_error "A file named $(basename "$target_link") already exists and is not a symlink. Please remove it first."
+        dump_error "A file named $(basename "$target_link") already exists and is not a symlink"
     fi
 
-    ln -s "$script" "$target_link"
-    pretty_success "Created symlink for ${script_name}. Please restart your terminal to take effect."
+    base_runner "Failed to create symlink for ${script_name}" false \
+        ln -s "$script" "$target_link"
+    pretty_success "Created symlink for ${script_name}"
 }
 
 remove_link() {
@@ -74,13 +85,131 @@ remove_link() {
     local target_link="$2"
     local script_name="$(basename "$script")"
 
+    pretty_info "Removing Fish completion symlink..."
     if [[ -L "$target_link" ]]; then
-        rm "$target_link"
-        pretty_success "Removed symlink for ${script_name}."
+        base_runner "Failed to remove symlink for ${script_name}" false \
+            rm "$target_link"
+        pretty_success "Removed symlink for ${script_name}"
     elif [[ -e "$target_link" ]]; then
-        dump_error "A file named $(basename "$target_link") exists and is not a symlink. Please remove it manually."
+        dump_error "A file named $(basename "$target_link") exists and is not a symlink"
     else
-        pretty_info "No symlink for ${script_name} found. Exiting."
+        pretty_info "No symlink for ${script_name} found"
+    fi
+}
+
+get_config_line() {
+    local shell="$1"
+    case "$shell" in
+        bash)
+            echo "source \"${GENCOMP_TARGET_LINK_PATH[$shell]}\" 2>/dev/null || true"
+            ;;
+        zsh)
+            echo "fpath=(~/.local/share/zsh/site-functions \$fpath)"
+            ;;
+        fish)
+            echo "source \"${GENCOMP_TARGET_LINK_PATH[$shell]}\" 2>/dev/null || true"
+            ;;
+    esac
+}
+
+add_local_zsh_fpath() {
+    local config_file="${GENCOMP_CONFIG_FILE[zsh]}"
+    local fpath_line="fpath=(~/.local/share/zsh/site-functions \$fpath)"
+
+    pretty_info "Adding local zsh fpath..."
+
+    # Create config file if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        touch "$config_file"
+    fi
+
+    # Add fpath line if not already present
+    if ! grep -qF "$fpath_line" "$config_file"; then
+        # Prepend fpath at the beginning of the file
+        local temp_file=$(mktemp)
+        {
+            echo "# User local zsh completions"
+            echo "$fpath_line"
+            echo ""
+            cat "$config_file"
+        } > "$temp_file" && mv "$temp_file" "$config_file"
+        pretty_success "Added local zsh fpath"
+    else
+        pretty_info "Config already contains the local zsh fpath"
+    fi
+}
+
+add_completion_sourcing() {
+    local shell="$1"
+    local config_file="${GENCOMP_CONFIG_FILE[$shell]}"
+
+    # Skip if no config file is needed
+    [[ -z "$config_file" ]] && return
+
+    local config_name="$(basename "$config_file")"
+    local config_line="$(get_config_line "$shell")"
+
+    pretty_info "Adding completion sourcing to $config_name..."
+    
+    # Create config file if it doesn't exist
+    if [[ ! -f "$config_file" ]]; then
+        touch "$config_file"
+    fi
+
+    # Add sourcing line if not already present
+    if ! grep -qF "$config_line" "$config_file"; then
+        # Add newline if file is not empty and doesn't end with newline
+        if [[ -s "$config_file" && "$(tail -c2 "$config_file")" != "" ]]; then
+            echo "" >> "$config_file"
+        fi
+        {
+            echo "# AlkOS completions"
+            echo "$config_line"
+        } >> "$config_file"
+        pretty_success "Added completion sourcing to $config_name"
+    else
+        pretty_info "$config_name already contains the completion sourcing"
+    fi
+}
+
+remove_completion_sourcing() {
+    local shell="$1"
+    local config_file="${GENCOMP_CONFIG_FILE[$shell]}"
+
+    # Skip if no config file is needed
+    [[ -z "$config_file" ]] && return
+
+    local config_name="$(basename "$config_file")"
+    local config_line="$(get_config_line "$shell")"
+
+    # Check if config file exists
+    if [[ ! -f "$config_file" ]]; then
+        pretty_info "$config_name file not found"
+        return
+    fi
+
+    pretty_info "Removing completion sourcing from $config_name..."
+    
+    # Remove the completion sourcing block
+    if grep -qF "$config_line" "$config_file"; then
+        # For bash and fish, remove the comment block
+        sed -i '/# AlkOS completions/{
+                    N
+                    \#'"$config_line"'$#{
+                        :loop
+                        $!{
+                            N
+                            /^[[:blank:]]*$/{
+                                b loop
+                            }
+                            d
+                        }
+                        d
+                    }
+                }' "$config_file"
+        pretty_success "Removed completion sourcing from $config_name"
+    else
+        pretty_info "$config_name doesn't contain the completion sourcing"
     fi
 }
 
@@ -89,12 +218,55 @@ enable_completion() {
     local script="${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
     local target_link="${GENCOMP_TARGET_LINK_PATH[$shell]}"
 
-    # Check if the target directory exists
-    if [[ ! -d $(dirname "$target_link") ]]; then
-        dump_error "The directory $(dirname "$target_link") does not exist."
+    # Ensure the given shell is installed
+    if ! command -v "$shell" &> /dev/null; then
+        dump_error "The specified shell '$shell' is not installed"
     fi
 
-    prompt_to_execute true add_link "$script" "$target_link"
+    case "$shell" in
+        bash)
+            # Create bash completions directory if it doesn't exist
+            local bash_completions_dir="$(dirname "$target_link")"
+            if [[ ! -d "$bash_completions_dir" ]]; then
+                base_runner "Failed to create bash completions directory" false \
+                    mkdir -p "$bash_completions_dir"
+                pretty_info "Created directory: $bash_completions_dir"
+            fi
+
+            add_link "$script" "$target_link"
+            add_completion_sourcing "$shell"
+            ;;
+        zsh)
+            # Create zsh completions directory if it doesn't exist
+            local zsh_completions_dir="$(dirname "$target_link")"
+            if [[ ! -d "$zsh_completions_dir" ]]; then
+                base_runner "Failed to create zsh completions directory" false \
+                    mkdir -p "$zsh_completions_dir"
+                pretty_info "Created directory: $zsh_completions_dir"
+            fi
+
+            add_link "$script" "$target_link"
+
+            # Ask user to add fpath if not already present
+            user_choice "Do you want to add the local zsh fpath to your .zshrc?" add_local_zsh_fpath
+            if [[ $? -ne 0 ]]; then
+                pretty_warn "Please remember to add the local zsh fpath manually to your .zshrc:"
+                pretty_warn "$(get_config_line "$shell")"
+            fi
+            ;;
+        fish)
+            # Create Fish completions directory if it doesn't exist
+            local fish_completions_dir="$(dirname "$target_link")"
+            if [[ ! -d "$fish_completions_dir" ]]; then
+                base_runner "Failed to create Fish completions directory" false \
+                    mkdir -p "$fish_completions_dir"
+                pretty_info "Created directory: $fish_completions_dir"
+            fi
+
+            add_link "$script" "$target_link"
+            add_completion_sourcing "$shell"
+            ;;
+    esac
 }
 
 disable_completion() {
@@ -102,12 +274,24 @@ disable_completion() {
     local script="${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
     local target_link="${GENCOMP_TARGET_LINK_PATH[$shell]}"
 
-    # Check if the target directory exists
-    if [[ ! -d $(dirname "$target_link") ]]; then
-        dump_error "The directory $(dirname "$target_link") does not exist."
+    # Ensure the given shell is installed
+    if ! command -v "$shell" &> /dev/null; then
+        dump_error "The specified shell '$shell' is not installed"
     fi
 
-    prompt_to_execute true remove_link "$script" "$target_link"
+    case "$shell" in
+        bash)
+            remove_link "$script" "$target_link"
+            remove_completion_sourcing "$shell"
+            ;;
+        zsh)
+            remove_link "$script" "$target_link"
+            ;;
+        fish)
+            remove_link "$script" "$target_link"
+            remove_completion_sourcing "$shell"
+            ;;
+    esac
 }
 
 synthesize_find_command() {
@@ -242,14 +426,11 @@ generate_bash_completion() {
     echo "}"
     echo
     echo "complete -F $func_name ${script_names[0]} \\"
-    for ((i=1; i<${#script_names[@]}-1; i++)); do
+    for ((i = 1; i < ${#script_names[@]} - 1; i++)); do
         echo "                        ${script_names[i]} \\"
     done
     echo "                        ${script_names[-1]}"
   } > "$output_file"
-
-  # Set permissions to the generated script
-  chmod 644 "$output_file"
 }
 
 generate_zsh_completion() {
@@ -321,9 +502,9 @@ generate_zsh_completion() {
                 done
 
                 # Process positional arguments
-                for ((i=1; i<${#ARGPARSE_POSITIONAL_NAMES[@]}; i++)); do
-                    local pos_name="${ARGPARSE_POSITIONAL_NAMES[$i]}"
-                    local type="${ARGPARSE_TYPES[$pos_name]:-}"
+                for ((i = 1; i <= ${#ARGPARSE_POSITIONAL_NAMES[@]}; i++)); do
+                    local pos_name="${ARGPARSE_POSITIONAL_NAMES[i - 1]}"
+                    local type="${ARGPARSE_TYPES[$pos_name]}"
 
                     local choices="${ARGPARSE_CHOICES[$pos_name]}"
                     if [[ "$type" != "flag" && -n "$choices" ]]; then
@@ -349,7 +530,7 @@ generate_zsh_completion() {
         echo "    esac"
         echo "}"
         echo ""
-        echo "if [ \"\$funcstack[1]\" = \"$func_name\" ]; then"
+        echo "if [[ \"\${funcstack[1]}\" == \"$func_name\" ]]; then"
         echo "    $func_name"
         echo "else"
         echo "    compdef $func_name ${script_names[0]} \\"
@@ -359,11 +540,97 @@ generate_zsh_completion() {
         echo "                   ${script_names[-1]}"
         echo "fi"
     } > "$output_file"
-
-    # Set permissions to the generated script
-    chmod 644 "$output_file"
 }
 
+generate_fish_completion() {
+    local output_file="${GENCOMP_GENERATED_OUTPUT_PATH[fish]}"
+
+    local paths
+    read -ra paths <<< "$(filter_scripts "$@")"
+
+    local script_names=($(printf '%s\0' "${paths[@]}" | xargs -0 -n1 basename))
+
+    {
+        echo "# Fish completion for AlkOS scripts"
+        echo "# Do not try to edit this by hand!"
+        echo ""
+
+        for script in "${paths[@]}"; do
+            local script_name="$(basename "$script")"
+            echo "# Completion for $script_name"
+            echo "$(
+                # Populate script definitions
+                eval "$(get_script_argparse "$script")"
+
+                # Add help option
+                ARGPARSE_OPTIONS["h|help"]="h|help"
+                ARGPARSE_DESCRIPTIONS["h|help"]="Show help message"
+                ARGPARSE_TYPES["h|help"]="flag"
+
+                # Generate completions for each option
+                for key in "${!ARGPARSE_OPTIONS[@]}"; do
+                    local short_opt long_opt
+                    _parse_option_variants "$key" short_opt long_opt
+
+                    local description="${ARGPARSE_DESCRIPTIONS[$key]}"
+                    local choices="${ARGPARSE_CHOICES[$key]}"
+                    local type="${ARGPARSE_TYPES[$key]}"
+
+                    local completion_line="complete -c $script_name"
+
+                    # Add short option if present
+                    # Using `-o` instead of `-s` since combined short options are not supported
+                    if [[ -n "$short_opt" ]]; then
+                        completion_line="$completion_line -o $short_opt"
+                    fi
+
+                    # Add long option if exists
+                    if [[ -n "$long_opt" ]]; then
+                        completion_line="$completion_line -l $long_opt"
+                    fi
+
+                    # Add description
+                    if [[ -n "$description" ]]; then
+                        completion_line="$completion_line -d '$description'"
+                    fi
+
+                    # Add argument requirements and choices
+                    if [[ "$type" != "flag" ]]; then
+                        completion_line="$completion_line -r"
+                        if [[ -n "$choices" ]]; then
+                            completion_line="$completion_line -a '${choices//|/ }'"
+                        elif [[ "$type" == "path" ]]; then
+                            completion_line="$completion_line -F"
+                        fi
+                    fi
+
+                    echo "$completion_line"
+                done
+
+                # Generate completions for positional arguments
+                for ((i = 1; i <= ${#ARGPARSE_POSITIONAL_NAMES[@]}; i++)); do
+                    local pos_name="${ARGPARSE_POSITIONAL_NAMES[i - 1]}"
+                    local type="${ARGPARSE_TYPES[$pos_name]}"
+                    local choices="${ARGPARSE_CHOICES[$pos_name]}"
+
+                    local completion_line="complete -c $script_name"
+
+                    # Check if this is the nth argument
+                    completion_line="$completion_line -n '__fish_is_nth_token $i'"
+
+                    if [[ "$type" != "flag" && -n "$choices" ]]; then
+                        completion_line="$completion_line -a '${choices//|/ }'"
+                    elif [[ "$type" == "path" ]]; then
+                        completion_line="$completion_line -F"
+                    fi
+
+                    echo "$completion_line"
+                done
+            )"
+            echo ""
+        done
+    } > "$output_file"
+}
 
 main() {
     parse_args "$@"
@@ -373,13 +640,16 @@ main() {
     local output_path="${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
 
     if [[ "$(argparse_get "r|run")" == "true" ]]; then
-        mkdir -p "$GENCOMP_OUTPUT_DIR"
+        base_runner "Failed to create output directory" false \
+            mkdir -p "$GENCOMP_OUTPUT_DIR"
 
         # Get all .bash scripts excluding certain directories
         while IFS= read -r -d '' script; do
             GENCOMP_SCRIPTS_LIST+=("$script")
         done < <(eval "$(synthesize_find_command "${GENCOMP_SCRIPTS_BASE_DIR}" "${GENCOMP_EXCLUDED_DIRS[@]}")")
 
+        # Generate completion script
+        pretty_info "Generating ${shell} completion script..."
         case "$shell" in
             bash)
                 generate_bash_completion "${GENCOMP_SCRIPTS_LIST[@]}"
@@ -387,10 +657,14 @@ main() {
             zsh)
                 generate_zsh_completion "${GENCOMP_SCRIPTS_LIST[@]}"
                 ;;
-            *)
-                dump_error "Unsupported shell type: $shell"
+            fish)
+                generate_fish_completion "${GENCOMP_SCRIPTS_LIST[@]}"
                 ;;
         esac
+
+        # Set permissions to the generated script
+        chmod 644 "${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
+
         pretty_success "Completion script generated at: $(realpath "$output_path")"
     fi
 
