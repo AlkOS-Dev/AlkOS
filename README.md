@@ -324,6 +324,61 @@ AlkOS includes a custom testing framework inspired by Google Test. Tests are def
 
     This will format all C++ and C source files according to the project's style defined in `.clang-format` file.
 
+### 🔧 Script Autocompletion
+
+AlkOS provides shell autocompletion for all project scripts to improve developer productivity. The autocompletion system supports bash, zsh, and fish shells.
+
+#### Setting Up Autocompletion
+
+1.  **Navigate to the scripts directory:**
+
+    ```bash
+    cd AlkOS/scripts
+    ```
+
+2.  **Generate and enable completion scripts for your shell:**
+
+    For bash:
+    ```bash
+    ./completions/generate.bash bash --run --enable
+    ```
+
+    For zsh:
+    ```bash
+    ./completions/generate.bash zsh --run --enable
+    ```
+
+    For fish:
+    ```bash
+    ./completions/generate.bash fish --run --enable
+    ```
+    
+#### Disabling Autocompletion
+
+To disable autocompletion for any shell:
+
+```bash
+./completions/generate.bash <shell> --disable
+```
+
+#### Regenerating Completions
+
+If you add new scripts or modify existing ones, just regenerate the completion files:
+
+```bash
+./completions/generate.bash <shell> --run
+```
+
+#### Supported Features
+
+The autocompletion system provides:
+
+- **Command completion**: Tab completion for all available scripts
+- **Option completion**: Completion for script flags and options (e.g., `--verbose`, `-h`)
+- **Argument completion**: Context-aware completion for script arguments
+- **Choice completion**: Predefined choices for parameters (e.g., architecture types, build modes)
+- **File path completion**: Automatic file and directory completion where appropriate
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
