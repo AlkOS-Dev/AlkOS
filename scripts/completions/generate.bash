@@ -103,9 +103,6 @@ get_config_line() {
         bash)
             echo "source \"${GENCOMP_TARGET_LINK_PATH[$shell]}\" 2>/dev/null || true"
             ;;
-        zsh)
-            echo "fpath=(~/.local/share/zsh/site-functions \$fpath)"
-            ;;
         fish)
             echo "source \"${GENCOMP_TARGET_LINK_PATH[$shell]}\" 2>/dev/null || true"
             ;;
@@ -142,12 +139,10 @@ add_local_zsh_fpath() {
 add_completion_sourcing() {
     local shell="$1"
     local config_file="${GENCOMP_CONFIG_FILE[$shell]}"
-
-    # Skip if no config file is needed
-    [[ -z "$config_file" ]] && return
-
     local config_name="$(basename "$config_file")"
     local config_line="$(get_config_line "$shell")"
+
+    [[ -z "$config_file" || -z "$config_line" ]] && return
 
     pretty_info "Adding completion sourcing to $config_name..."
     
