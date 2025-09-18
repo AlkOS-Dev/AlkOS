@@ -481,17 +481,19 @@ generate_zsh_completion() {
 
                     # Add description if available
                     if [[ -n "$description" ]]; then
-                        option_spec="${option_spec}\"[${description}]"
+                        option_spec+="\"[${description}]"
                     fi
 
                     # Add choices or file completion based on type
                     if [[ "$type" != "flag" && -n "$choices" ]]; then
-                        option_spec="${option_spec}:value:(${choices//|/ })"
-                    elif [[ "$type" == "path" ]]; then
-                        option_spec="${option_spec}:filename:_files"
+                        option_spec+=":value:(${choices//|/ })"
+                    elif [[ "$type" == "file" ]]; then
+                        option_spec+=":filepath:_files"
+                    elif [[ "$type" == "directory" ]]; then
+                        option_spec+=':directory:_path_files -g \"*(/)\"'
                     fi
 
-                    option_spec="${option_spec}\""
+                    option_spec+='"'
 
                     completion_lines+=("                ${option_spec} \\")
                 done
@@ -504,8 +506,10 @@ generate_zsh_completion() {
                     local choices="${ARGPARSE_CHOICES[$pos_name]}"
                     if [[ "$type" != "flag" && -n "$choices" ]]; then
                         completion_lines+=("                '$i:$pos_name:(${choices//|/ })' \\")
-                    elif [[ "$type" == "path" ]]; then
+                    elif [[ "$type" == "file" ]]; then
                         completion_lines+=("                '$i:$pos_name:_files' \\")
+                    elif [[ "$type" == "directory" ]]; then
+                        completion_lines+=("                '$i:$pos_name:_path_files -g \"*(/)\"' \\")
                     else
                         completion_lines+=("                '$i:$pos_name:' \\")
                     fi
@@ -553,6 +557,7 @@ generate_fish_completion() {
         for script in "${paths[@]}"; do
             local script_name="$(basename "$script")"
             echo "# Completion for $script_name"
+            echo "complete -c $script_name -f"
             echo "$(
                 # Populate script definitions
                 eval "$(get_script_argparse "$script")"
@@ -594,8 +599,10 @@ generate_fish_completion() {
                         completion_line="$completion_line -r"
                         if [[ -n "$choices" ]]; then
                             completion_line="$completion_line -a '${choices//|/ }'"
-                        elif [[ "$type" == "path" ]]; then
+                        elif [[ "$type" == "file" ]]; then
                             completion_line="$completion_line -F"
+                        elif [[ "$type" == "directory" ]]; then
+                            completion_line="$completion_line -a '(__fish_complete_directories)'"
                         fi
                     fi
 
@@ -615,8 +622,10 @@ generate_fish_completion() {
 
                     if [[ "$type" != "flag" && -n "$choices" ]]; then
                         completion_line="$completion_line -a '${choices//|/ }'"
-                    elif [[ "$type" == "path" ]]; then
+                    elif [[ "$type" == "file" ]]; then
                         completion_line="$completion_line -F"
+                    elif [[ "$type" == "directory" ]]; then
+                        completion_line="$completion_line -a '(__fish_complete_directories)'"
                     fi
 
                     echo "$completion_line"

@@ -77,11 +77,15 @@ _comp_alkos_helper() {
                     fi
                 ) )
                 return 0
-            elif [[ "${COMP_TYPES[$option]}" == "path" ]]; then
+            elif [[ "${COMP_TYPES[$option]}" == "file" ]]; then
                 compopt -o filenames 2>/dev/null
-
                 # shellcheck disable=SC2207
                 COMPREPLY=( $(compgen -f -- "$cur") )
+                return 0
+            elif [[ "${COMP_TYPES[$option]}" == "directory" ]]; then
+                compopt -o filenames 2>/dev/null
+                # shellcheck disable=SC2207
+                COMPREPLY=( $(compgen -d -- "$cur") )
                 return 0
             fi
         fi
@@ -138,12 +142,15 @@ _comp_alkos_helper() {
                 return 0
             fi
 
-            # Handle file path completion for path type positional arguments
-            if [[ "${COMP_TYPES[$current_pos_name]}" == "path" ]]; then
+            if [[ "${COMP_TYPES[$current_pos_name]}" == "file" ]]; then
                 compopt -o filenames 2>/dev/null
-
                 # shellcheck disable=SC2207
                 COMPREPLY=( $(compgen -f -- "$cur") )
+                return 0
+            elif [[ "${COMP_TYPES[$current_pos_name]}" == "directory" ]]; then
+                compopt -o filenames 2>/dev/null
+                # shellcheck disable=SC2207
+                COMPREPLY=( $(compgen -d -- "$cur") )
                 return 0
             fi
         fi

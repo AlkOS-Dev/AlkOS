@@ -41,7 +41,7 @@ argparse_init() {
 
 # Add an option argument
 # Usage: argparse_add_option "short|long" "description" [required] [default] [choices] [type]
-# Possible types: string (default), flag, list, path
+# Possible types: string (default), flag, list, file, directory
 argparse_add_option() {
     local option="$1"
     local description="$2"
@@ -66,7 +66,7 @@ argparse_add_option() {
 
 # Add a positional argument
 # Usage: argparse_add_positional "name" "description" [required] [choices] [type]
-# Possible types: string (default), path
+# Possible types: string (default), file, directory
 argparse_add_positional() {
     local name="$1"
     local description="$2"
