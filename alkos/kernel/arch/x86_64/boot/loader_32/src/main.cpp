@@ -17,7 +17,6 @@
 #include "elf/elf_64.hpp"
 #include "elf/elf_dynamic.hpp"
 #include "elf/error.hpp"
-#include "mem/memory_manager.hpp"
 #include "mem/pmm.hpp"
 #include "mem/vmm.hpp"
 #include "multiboot2/info.hpp"

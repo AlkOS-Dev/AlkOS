@@ -27,20 +27,20 @@ struct DynamicEntry {
 // Full list at https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-42444.html
 namespace DynamicEntryTag
 {
-constexpr i64 kNull = 0;     ///< Marks end of dynamic section.
-constexpr i64 kNeeded = 1;   ///< Name of a needed library.
-constexpr i64 kPltRelSz = 2; ///< Size in bytes of PLT relocations.
-constexpr i64 kPltGot = 3;   ///< Address of PLT and/or GOT.
-constexpr i64 kHash = 4;     ///< Address of symbol hash table.
-constexpr i64 kStrTab = 5;   ///< Address of string table.
-constexpr i64 kSymTab = 6;   ///< Address of symbol table.
-constexpr i64 kRela = 7;     ///< Address of Rela relocation table.
-constexpr i64 kRelaSz = 8;   ///< Size in bytes of the Rela table.
-constexpr i64 kRelaEnt = 9;  ///< Size in bytes of one Rela entry.
-constexpr i64 kStrSz = 10;   ///< Size in bytes of string table.
-constexpr i64 kSymEnt = 11;  ///< Size in bytes of a symbol table entry.
-constexpr i64 kInit = 12;    ///< Address of init function.
-constexpr i64 kFini = 13;    ///< Address of termination function.
+constexpr i64 kNull     = 0;   ///< Marks end of dynamic section.
+constexpr i64 kNeeded   = 1;   ///< Name of a needed library.
+constexpr i64 kPltRelSz = 2;   ///< Size in bytes of PLT relocations.
+constexpr i64 kPltGot   = 3;   ///< Address of PLT and/or GOT.
+constexpr i64 kHash     = 4;   ///< Address of symbol hash table.
+constexpr i64 kStrTab   = 5;   ///< Address of string table.
+constexpr i64 kSymTab   = 6;   ///< Address of symbol table.
+constexpr i64 kRela     = 7;   ///< Address of Rela relocation table.
+constexpr i64 kRelaSz   = 8;   ///< Size in bytes of the Rela table.
+constexpr i64 kRelaEnt  = 9;   ///< Size in bytes of one Rela entry.
+constexpr i64 kStrSz    = 10;  ///< Size in bytes of string table.
+constexpr i64 kSymEnt   = 11;  ///< Size in bytes of a symbol table entry.
+constexpr i64 kInit     = 12;  ///< Address of init function.
+constexpr i64 kFini     = 13;  ///< Address of termination function.
 }  // namespace DynamicEntryTag
 
 /**
@@ -52,7 +52,7 @@ constexpr i64 kFini = 13;    ///< Address of termination function.
 struct Rela {
     u64 offset;  ///< Address of relocation.
     u64 info;    ///< Relocation type and symbol index.
-    i64 addend;  
+    i64 addend;
 
     u32 GetType() const { return static_cast<u32>(info); }
     u32 GetSymbol() const { return static_cast<u32>(info >> 32); }

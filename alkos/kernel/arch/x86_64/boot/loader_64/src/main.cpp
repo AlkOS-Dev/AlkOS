@@ -13,7 +13,6 @@
 #include "cpu/utils.hpp"
 #include "elf/elf_64.hpp"
 #include "elf/error.hpp"
-#include "mem/memory_manager.hpp"
 #include "mem/page_map.hpp"
 #include "mem/physical_ptr.hpp"
 #include "mem/pmm.hpp"

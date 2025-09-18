@@ -1,5 +1,5 @@
-#include "elf/elf_64.hpp"
 #include "elf/elf_dynamic.hpp"
+#include "elf/elf_64.hpp"
 
 namespace Elf64
 {
@@ -12,7 +12,8 @@ std::expected<void, Error> Relocate(byte* elf_ptr, u64 load_base_addr)
     }
 
     const auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry*>(
-        elf_ptr + header->program_header_table_file_offset);
+        elf_ptr + header->program_header_table_file_offset
+    );
 
     const ProgramHeaderEntry* dynamic_header = nullptr;
     for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
@@ -26,8 +27,7 @@ std::expected<void, Error> Relocate(byte* elf_ptr, u64 load_base_addr)
         return std::unexpected(Error::DynamicHeaderNotFound);
     }
 
-    auto* dynamic_section =
-        reinterpret_cast<DynamicEntry*>(elf_ptr + dynamic_header->offset);
+    auto* dynamic_section = reinterpret_cast<DynamicEntry*>(elf_ptr + dynamic_header->offset);
 
     u64 rela_addr     = 0;
     u64 rela_size     = 0;
@@ -59,7 +59,8 @@ std::expected<void, Error> Relocate(byte* elf_ptr, u64 load_base_addr)
     u64 rela_file_offset = 0;
     for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
         const auto& ph = program_header_table[i];
-        if (ph.type == ProgramHeaderEntry::kLoadableSegmentType && rela_addr >= ph.virtual_address &&
+        if (ph.type == ProgramHeaderEntry::kLoadableSegmentType &&
+            rela_addr >= ph.virtual_address &&
             rela_addr < ph.virtual_address + ph.size_in_file_bytes) {
             rela_file_offset = rela_addr - ph.virtual_address + ph.offset;
             break;
