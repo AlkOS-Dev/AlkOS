@@ -19,34 +19,6 @@ ARGPARSE_SKIP_OPTIONS=false
 ARGPARSE_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${ARGPARSE_SCRIPT_DIR}/helpers.bash"
 
-# Helper function to parse option variants and determine their types
-# Usage: _parse_option_variants "option_key" "short_var" "long_var"
-# Sets the provided variable names with the short and long option variants
-_parse_option_variants() {
-    local option="$1"
-    local short_var="$2"
-    local long_var="$3"
-
-    if [[ "$option" == *"|"* ]]; then
-        # Handle short|long format
-        local short_part=$(echo "$option" | cut -d'|' -f1)
-        local long_part=$(echo "$option" | cut -d'|' -f2)
-        eval "$short_var='$short_part'"
-        eval "$long_var='$long_part'"
-    else
-        # Single option - determine if it's short or long based on length
-        if [[ ${#option} -eq 1 ]]; then
-            # Single character = short option
-            eval "$short_var='$option'"
-            eval "$long_var=''"
-        else
-            # Multiple characters = long option
-            eval "$short_var=''"
-            eval "$long_var='$option'"
-        fi
-    fi
-}
-
 # Initialize the argument parser
 # Usage: argparse_init "script_name" "description" [help_function]
 argparse_init() {
@@ -326,6 +298,13 @@ argparse_parse() {
                 shift
                 ;;
             -*)
+                if [[ "$ARGPARSE_SKIP_OPTIONS" == true ]]; then
+                    _handle_positional_argument "$positional_index" "$1"
+                    ((positional_index++))
+                    shift
+                    continue
+                fi
+
                 local found_option=""
                 local option_key=""
 
@@ -383,19 +362,9 @@ argparse_parse() {
                     continue
                 fi
 
-                # Handle positional arguments
-                if [[ $positional_index -lt ${#ARGPARSE_POSITIONAL_NAMES[@]} ]]; then
-                    local pos_name="${ARGPARSE_POSITIONAL_NAMES[$positional_index]}"
-                    argparse_validate_choice "$pos_name" "$1"
-                    ARGPARSE_VALUES["$pos_name"]="$1"
-                    ((positional_index++))
-                    shift
-                elif [[ -n "$ARGPARSE_VARIADIC_NAME" ]]; then
-                    ARGPARSE_VARIADIC_ARGS+=("$1")
-                    shift
-                else
-                    dump_error "Unknown argument: $1"
-                fi
+                _handle_positional_argument "$positional_index" "$1"
+                ((positional_index++))
+                shift
                 ;;
         esac
     done
@@ -418,4 +387,51 @@ argparse_quick_setup() {
     argparse_init "$1" "$2"
     argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
     argparse_add_option "r|run" "Expected to run the script" true "" "" "flag"
+}
+
+#############################
+# Internal helper functions #
+#############################
+
+# Internal helper function to parse option variants and determine their types
+# Sets the provided variable names with the short and long option variants
+_parse_option_variants() {
+    local option="$1"
+    local short_var="$2"
+    local long_var="$3"
+
+    if [[ "$option" == *"|"* ]]; then
+        # Handle short|long format
+        local short_part=$(echo "$option" | cut -d'|' -f1)
+        local long_part=$(echo "$option" | cut -d'|' -f2)
+        eval "$short_var='$short_part'"
+        eval "$long_var='$long_part'"
+    else
+        # Single option - determine if it's short or long based on length
+        if [[ ${#option} -eq 1 ]]; then
+            # Single character = short option
+            eval "$short_var='$option'"
+            eval "$long_var=''"
+        else
+            # Multiple characters = long option
+            eval "$short_var=''"
+            eval "$long_var='$option'"
+        fi
+    fi
+}
+
+# Internal helper for argparse_parse to handle positional arguments
+_handle_positional_argument() {
+    local positional_index="$1"
+    local argument="$2"
+
+    if [[ $positional_index -lt ${#ARGPARSE_POSITIONAL_NAMES[@]} ]]; then
+        local pos_name="${ARGPARSE_POSITIONAL_NAMES[$positional_index]}"
+        argparse_validate_choice "$pos_name" "$argument"
+        ARGPARSE_VALUES["$pos_name"]="$argument"
+    elif [[ -n "$ARGPARSE_VARIADIC_NAME" ]]; then
+        ARGPARSE_VARIADIC_ARGS+=("$argument")
+    else
+        dump_error "Unknown argument: $argument"
+    fi
 }
