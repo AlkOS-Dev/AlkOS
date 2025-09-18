@@ -37,6 +37,7 @@ AlkOS is an open-source operating system project targeting the x86_64 architectu
         *   [Running Tests](#-running-tests)
         *   [Debugging with GDB](#-debugging-with-gdb)
         *   [Applying clang-format for Code Style](#-applying-clang-format-for-code-style)
+        *   [Shell Completions for Scripts](#-shell-completions-for-scripts)
     *   [License](#-license)
 
 ## Project Goals
@@ -324,11 +325,11 @@ AlkOS includes a custom testing framework inspired by Google Test. Tests are def
 
     This will format all C++ and C source files according to the project's style defined in `.clang-format` file.
 
-### 🔧 Script Autocompletion
+### 🔧 Shell Completions for Scripts
 
-AlkOS provides shell autocompletion for all project scripts to improve developer productivity. The autocompletion system supports bash, zsh, and fish shells.
+AlkOS provides shell completions for main project scripts to improve developer productivity. The completion generator supports bash, zsh, and fish shells.
 
-#### Setting Up Autocompletion
+#### Setting Up Completions
 
 1.  **Navigate to the scripts directory:**
 
@@ -336,7 +337,7 @@ AlkOS provides shell autocompletion for all project scripts to improve developer
     cd AlkOS/scripts
     ```
 
-2.  **Generate and enable completion scripts for your shell:**
+2.  **Generate and enable completions for your shell:**
 
     For bash:
     ```bash
@@ -353,9 +354,9 @@ AlkOS provides shell autocompletion for all project scripts to improve developer
     ./completions/generate.bash fish --run --enable
     ```
     
-#### Disabling Autocompletion
+#### Disabling Completions
 
-To disable autocompletion for any shell:
+To disable completions for any shell:
 
 ```bash
 ./completions/generate.bash <shell> --disable
@@ -363,7 +364,7 @@ To disable autocompletion for any shell:
 
 #### Regenerating Completions
 
-If you add new scripts or modify existing ones, just regenerate the completion files:
+If you add new scripts or modify existing ones, just regenerate the completions:
 
 ```bash
 ./completions/generate.bash <shell> --run
@@ -371,13 +372,13 @@ If you add new scripts or modify existing ones, just regenerate the completion f
 
 #### Supported Features
 
-The autocompletion system provides:
+The generated completions provide:
 
 - **Command completion**: Tab completion for all available scripts
 - **Option completion**: Completion for script flags and options (e.g., `--verbose`, `-h`)
 - **Argument completion**: Context-aware completion for script arguments
 - **Choice completion**: Predefined choices for parameters (e.g., architecture types, build modes)
-- **File path completion**: Automatic file and directory completion where appropriate
+- **Path completion**: File or directory completion where appropriate
 
 ## 📄 License
 
