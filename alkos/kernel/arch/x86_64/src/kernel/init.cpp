@@ -22,9 +22,13 @@
 // External Functions and Variables
 //==============================================================================
 
-extern "C" void EnableOSXSave();
-extern "C" void EnableSSE();
-extern "C" void EnableAVX();
+BEGIN_DECL_C
+
+void EnableOSXSave();
+void EnableSSE();
+void EnableAVX();
+
+END_DECL_C
 
 static int GetCpuModel()
 {
@@ -42,11 +46,9 @@ extern "C" void PreKernelInit(KernelInitialParams* kernel_init_params)
     arch::TerminalInit();
     TRACE_INFO("In PreKernelInit...");
 
-    TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
+    ASSERT_NOT_NULL(kernel_init_params, "Kernel reached with no initial params from loader");
 
-    if (kernel_init_params == nullptr) {
-        arch::KernelPanic("KernelInitialParams is null!");
-    }
+    TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
     TRACE_INFO("Setting up CPU features...");
     BlockHardwareInterrupts();
