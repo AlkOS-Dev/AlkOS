@@ -103,6 +103,8 @@ static u64 LoadKernelIntoMemory(
     MultibootInfo& multiboot_info, const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
 )
 {
+    KernelPanic("TMP END");
+
     auto& pmm = mem_managers.pmm;
     auto& vmm = mem_managers.vmm;
 

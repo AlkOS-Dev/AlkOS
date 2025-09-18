@@ -57,8 +57,8 @@ class PhysicalMemoryManager
     {
     }
 
-    static std::expected<PhysicalMemoryManager, MemError> Create(
-        Multiboot::MemoryMap mem_map, u64 lowest_safe_addr
+    static std::expected<PhysicalMemoryManager*, MemError> Create(
+        Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte* pmm_prealloc_mem
     );
 
     public:

@@ -15,8 +15,8 @@
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
 
-std::expected<PhysicalMemoryManager, MemError> PhysicalMemoryManager::Create(
-    Multiboot::MemoryMap mem_map, u64 lowest_safe_addr
+std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
+    Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte* pmm_prealloc_mem
 )
 {
     using namespace Multiboot;
@@ -38,14 +38,15 @@ std::expected<PhysicalMemoryManager, MemError> PhysicalMemoryManager::Create(
 
     TRACE_DEBUG("Creating PhysicalMemoryManager instance...");
 
-    PhysicalMemoryManager pmm{
+    PhysicalMemoryManager* pmm_ptr = new (pmm_prealloc_mem) PhysicalMemoryManager(
         PmmState{
-                 .bitmap_addr        = bitmap_addr,
-                 .total_pages        = total_pages,
-                 .iteration_index    = 0,
-                 .iteration_index_32 = 0
+            .bitmap_addr        = bitmap_addr,
+            .total_pages        = total_pages,
+            .iteration_index    = 0,
+            .iteration_index_32 = 0
         }
-    };
+    );
+    auto& pmm = *pmm_ptr;
 
     TRACE_DEBUG("Initializing free memory...");
     InitFreeMemory(pmm, mem_map);
@@ -57,7 +58,7 @@ std::expected<PhysicalMemoryManager, MemError> PhysicalMemoryManager::Create(
     // IterationState iteration_state = InitializeIterationIndices(mem_map);
     // pmm.SetIterationState(iteration_state);
 
-    return pmm;
+    return pmm_ptr;
 }
 
 void PhysicalMemoryManager::Reserve(PhysicalPtr<void> addr, u64 size)

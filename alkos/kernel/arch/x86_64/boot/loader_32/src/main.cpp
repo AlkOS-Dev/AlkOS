@@ -102,38 +102,36 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
     );
 
-    auto pmm_res = PhysicalMemoryManager::Create(MemoryMap(mmap_tag_res.value()), lowest_safe_addr);
+    auto pmm_res = PhysicalMemoryManager::Create(
+        MemoryMap(mmap_tag_res.value()), lowest_safe_addr, kPmmPreAllocatedMemory
+    );
     R_ASSERT_TRUE(pmm_res, "Physical memory manager creation failed");
 
     TRACE_DEBUG("Creating Physical Memory Manager...");
-    auto* pmm_ptr = new (kPmmPreAllocatedMemory) PhysicalMemoryManager(std::move(*pmm_res));
+    auto* pmm_ptr = *pmm_res;
     auto& pmm     = *pmm_ptr;
 
     TRACE_DEBUG("Creating Virtual Memory Manager...");
     auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
     auto& vmm     = *vmm_ptr;
 
-    pmm.Reserve(
-        PhysicalPtr<void>(
-            reinterpret_cast<u32>(AlignDown(loader_32_start, PageSize<PageSizeTag::k4Kb>()))
-        ),
-        AlignUp(
-            static_cast<u64>(reinterpret_cast<u32>(loader_32_end)) -
-                reinterpret_cast<u32>(loader_32_start),
-            PageSize<PageSizeTag::k4Kb>()
-        )
-    );
+    const u32 ld_start_addr = reinterpret_cast<u32>(loader_32_start);
+    const u32 ld_end_addr   = reinterpret_cast<u32>(loader_32_end);
+    const u64 ld_span       = static_cast<u64>(ld_end_addr) - ld_start_addr;
 
-    pmm.Reserve(
-        PhysicalPtr<void>(
-            reinterpret_cast<u32>(AlignDown(multiboot_header_start, PageSize<PageSizeTag::k4Kb>()))
-        ),
-        AlignUp(
-            static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end)) -
-                reinterpret_cast<u32>(multiboot_header_start),
-            PageSize<PageSizeTag::k4Kb>()
-        )
-    );
+    const u32 al_ld_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 al_ld_span = AlignUp(ld_span, PageSize<PageSizeTag::k4Kb>());
+
+    pmm.Reserve(PhysicalPtr<void>(al_ld_addr), al_ld_span);
+
+    const u32 mb_start_addr = reinterpret_cast<u32>(multiboot_header_start);
+    const u32 mb_end_addr   = reinterpret_cast<u32>(multiboot_header_end);
+    const u64 mb_span       = static_cast<u64>(mb_end_addr) - mb_start_addr;
+
+    const u32 al_mb_addr = AlignDown(mb_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 al_mb_span = AlignUp(al_mb_span, PageSize<PageSizeTag::k4Kb>());
+
+    pmm.Reserve(PhysicalPtr<void>(al_mb_addr), al_mb_span);
 
     TRACE_DEBUG("Identity mapping memory...");
     vmm.Map<&PhysicalMemoryManager::Alloc32, PageSizeTag::k1Gb>(
