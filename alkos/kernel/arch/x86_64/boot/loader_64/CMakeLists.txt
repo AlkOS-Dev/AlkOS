@@ -1,7 +1,5 @@
 message(STATUS "      -> Configuring 64-bit bootloader")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 #################################### Exec ####################################
 
 add_executable(alkos.boot.loader.64)
