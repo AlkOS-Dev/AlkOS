@@ -115,14 +115,12 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
     R_ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
 
+    TRACE_DEBUG("Creating Physical Memory Manager...");
     u64 lowest_safe_addr =
         std::max(static_cast<u64>(mb_hdr_end_addr), static_cast<u64>(ld_end_addr));
-
     const MemoryMap mmap(*mmap_tag_res);
     auto pmm_res = PhysicalMemoryManager::Create(mmap, lowest_safe_addr, kPmmPreAllocatedMemory);
     R_ASSERT_TRUE(pmm_res, "Physical memory manager creation failed");
-
-    TRACE_DEBUG("Creating Physical Memory Manager...");
     auto* pmm_ptr = *pmm_res;
     auto& pmm     = *pmm_ptr;
 
