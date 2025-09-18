@@ -179,10 +179,11 @@ NO_RET static void TransitionToKernel(
         transition_data->multiboot_header_start_addr;
     kernel_initial_params.multiboot_header_end_addr = transition_data->multiboot_header_end_addr;
 
-    pmm.Free(
-        PhysicalPtr<void>(reinterpret_cast<u64>(loader_64_start)),
-        reinterpret_cast<u64>(loader_64_end) - reinterpret_cast<u64>(loader_64_start)
-    );
+    const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
+    const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
+    const u64 al_ld_start_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 al_ld_span = AlignUp(ld_end_addr - ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    pmm.Free(PhysicalPtr<void>(al_ld_start_addr), al_ld_span);
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);
     EnterKernel(kernel_entry_point, &kernel_initial_params);
