@@ -33,20 +33,32 @@ using namespace Multiboot;
 // External Functions and Variables
 //==============================================================================
 
-extern "C" int CheckCpuId();
-extern "C" int CheckLongMode();
-extern "C" void EnablePaging(void* pml4_table_address);
-extern "C" void EnableLongMode();
-extern "C" void EnterElf64(
+BEGIN_DECL_C
+int CheckCpuId();
+int CheckLongMode();
+void EnablePaging(void* pml4_table_address);
+void EnableLongMode();
+void EnterElf64(
     void* higher_32_bits_of_entry_address, void* lower_32_bits_of_entry_address,
     void* transition_data_address
 );
 
+// Defined in .ld
 extern const char multiboot_header_start[];
 extern const char multiboot_header_end[];
 extern const char loader_32_start[];
 extern const char loader_32_end[];
-extern byte kLoaderPreAllocatedMemory[];
+
+END_DECL_C
+
+//==============================================================================
+// Global Definitions
+//==============================================================================
+
+struct MemoryManagers {
+    PhysicalMemoryManager& pmm;
+    VirtualMemoryManager& vmm;
+};
 
 //==============================================================================
 // Global Data
@@ -59,11 +71,6 @@ alignas(
 alignas(
     PageSize<PageSizeTag::k4Kb>()
 ) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
-
-struct MemoryManagers {
-    PhysicalMemoryManager& pmm;
-    VirtualMemoryManager& vmm;
-};
 
 //==============================================================================
 // High-Level Boot Steps
@@ -309,25 +316,38 @@ NO_RET static void TransitionTo64BitMode(
 
     TRACE_INFO("Preparing to transition to 64-bit mode...");
 
+    auto pmm_state = pmm.GetState();
+    auto vmm_state = vmm.GetState();
+
     // Prepare the data to be passed to the 64-bit stage
     transition_data.multiboot_info_addr         = multiboot_info_addr_32;
     transition_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
     transition_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
-    transition_data.pmm_addr                    = static_cast<u64>(reinterpret_cast<u64>(&pmm));
-    transition_data.vmm_addr                    = static_cast<u64>(reinterpret_cast<u32>(&vmm));
+
+    // Note : Stupid but compiler creates a buggy assigment operator for some reason
+    transition_data.pmm_state.total_pages        = pmm_state.total_pages;
+    transition_data.pmm_state.bitmap_addr        = pmm_state.bitmap_addr;
+    transition_data.pmm_state.iteration_index    = pmm_state.iteration_index;
+    transition_data.pmm_state.iteration_index_32 = pmm_state.iteration_index_32;
+
+    transition_data.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
+
+    // TODO: Update
     TRACE(
         "Transition Data:\n"
         "  multiboot_info_addr:         0x%llX\n"
         "  multiboot_header_start_addr: 0x%llX\n"
         "  multiboot_header_end_addr:   0x%llX\n"
-        "  pmm_addr:                    0x%llX\n"
-        "  vmm_addr:                    0x%llX\n",
+        "  pmm1:                    0x%llX\n"
+        "  pmm2:                    0x%llX\n"
+        "  vmm1:                    0x%llX\n",
         transition_data.multiboot_info_addr, transition_data.multiboot_header_start_addr,
-        transition_data.multiboot_header_end_addr, transition_data.pmm_addr,
-        transition_data.vmm_addr
+        transition_data.multiboot_header_end_addr, transition_data.pmm_state.bitmap_addr,
+        transition_data.pmm_state.total_pages, transition_data.vmm_state.pml_4_table_phys_addr
     );
 
     // Free the memory used by this 32-bit loader before jumping
+    // TODO: unaligned
     pmm.Free(
         PhysicalPtr<void>(reinterpret_cast<u32>(loader_32_start)),
         static_cast<u64>(reinterpret_cast<u32>(loader_32_end)) -
@@ -342,7 +362,6 @@ NO_RET static void TransitionTo64BitMode(
 
     EnterElf64(entry_high, entry_low, &transition_data);
 
-    // This code should be unreachable
     KernelPanic("EnterElf64 should not return!");
 }
 

@@ -15,24 +15,47 @@ class VirtualMemoryManager
     };
 
     public:
+    struct VmmState {
+        u64 pml_4_table_phys_addr;
+    };
+
     //==============================================================================
     // Class Creation & Destruction
     //==============================================================================
 
     explicit VirtualMemoryManager(PhysicalMemoryManager& pmm);
+    explicit VirtualMemoryManager(PhysicalMemoryManager& pmm, const VmmState& vmm_state)
+        : pmm_{pmm}, pm_table_4_{vmm_state.pml_4_table_phys_addr}
+    {
+    }
 
     //==============================================================================
     // Public Methods
     //==============================================================================
+
+    template <decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
+    void Alloc(const u64 virt_addr, const u64 size, const u64 flags = kNoFlags)
+    {
+        const u64 stride  = PageSize<PageSizeTag::k4Kb>();
+        const u64 al_size = AlignUp(size, stride);
+
+        for (u64 offset = 0; offset < al_size; offset += stride) {
+            const auto phys_page_res = (pmm_.*AllocFunc)();
+            ASSERT_TRUE(phys_page_res, "Failed to allocate physical page");
+            const auto phys_page = *phys_page_res;
+
+            Map<AllocFunc, PageSizeTag::k4Kb>(
+                MapOnePageTag{}, virt_addr + offset, phys_page.Value(), flags
+            );
+        }
+    }
 
     template <
         decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc,
         PageSizeTag kPageSizeTag = PageSizeTag::k4Kb>
     void Map(const u64 virt_addr, const u64 phys_addr, const u64 size, const u64 flags = kNoFlags)
     {
-        const u64 stride = (kPageSizeTag == PageSizeTag::k1Gb)   ? PageSize<PageSizeTag::k1Gb>()
-                           : (kPageSizeTag == PageSizeTag::k2Mb) ? PageSize<PageSizeTag::k2Mb>()
-                                                                 : PageSize<PageSizeTag::k4Kb>();
+        const u64 stride = PageSize<kPageSizeTag>();
 
         for (u64 offset = 0; offset < AlignUp(size, stride); offset += stride) {
             Map<AllocFunc, kPageSizeTag>(
@@ -103,13 +126,15 @@ class VirtualMemoryManager
     }
 
     PhysicalPtr<PageMapTable<4>> GetPml4Table() { return pm_table_4_; }
+    VmmState GetState() { return VmmState{.pml_4_table_phys_addr = GetPml4Table().Value()}; }
 
     private:
     //==============================================================================
-    // Private Fields
+    // Private Methods
     //==============================================================================
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
+
     FORCE_INLINE_F void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme)
     {
         if (!pme.present) {
@@ -139,6 +164,10 @@ class VirtualMemoryManager
         static constexpr u32 kIndexMask = kBitMaskRight<u32, 9>;
         return (addr >> (12 + (kLevel - 1) * 9)) & kIndexMask;
     }
+
+    //==============================================================================
+    // Private Fields
+    //==============================================================================
 
     PhysicalMemoryManager& pmm_;
     PhysicalPtr<PageMapTable<4>> pm_table_4_;

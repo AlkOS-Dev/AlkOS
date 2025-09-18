@@ -35,16 +35,16 @@ class PhysicalMemoryManager
     };
 
     struct IterationState {
-        size_t index;
-        size_t index_32;
+        u64 index;
+        u64 index_32;
     } PACK;
 
     public:
     struct PmmState {
         u64 bitmap_addr;
         u64 total_pages;
-        size_t iteration_index;
-        size_t iteration_index_32;
+        u64 iteration_index;
+        u64 iteration_index_32;
     } PACK;
 
     //==============================================================================
@@ -52,7 +52,7 @@ class PhysicalMemoryManager
     //==============================================================================
 
     explicit PhysicalMemoryManager(const PmmState& state)
-        : bitmap_view_{reinterpret_cast<void*>(state.bitmap_addr), state.total_pages},
+        : bitmap_view_{reinterpret_cast<void*>(state.bitmap_addr), static_cast<size_t>(state.total_pages)},
           iteration_state_{state.iteration_index, state.iteration_index_32}
     {
     }
@@ -108,16 +108,14 @@ class PhysicalMemoryManager
 
     // Init Helpers
 
-    static IterationState InitializeIterationIndices(Multiboot::MemoryMap& mem_map);
-
     static std::tuple<u64, u64> CalcBitmapSize(Multiboot::MemoryMap& mem_map);
-
     static std::expected<u64, MemError> FindBitmapLocation(
         Multiboot::MemoryMap& mem_map, u64 bitmap_size, u64 lowest_safe_addr
     );
 
     static BitMapView InitBitmapView(const u64 addr, const u64 size);
 
+    static void InitIterIndicies(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
     static void InitFreeMemory(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
 
     //==============================================================================
