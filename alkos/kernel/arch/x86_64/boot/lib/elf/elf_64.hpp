@@ -60,6 +60,7 @@ struct ProgramHeaderEntry {
     u64 alignment_bytes;
 
     static constexpr u32 kLoadableSegmentType = 1;
+    static constexpr u32 kDynamicSegmentType  = 2;
 } PACK;
 
 // TODO

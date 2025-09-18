@@ -31,7 +31,7 @@ SECTIONS
         *(.data .data.*)
     } :data
 
-    .bss : ALIGN(4K):
+    .bss : ALIGN(4K)
     {
         *(.bss .bss.*)
         *(COMMON)
