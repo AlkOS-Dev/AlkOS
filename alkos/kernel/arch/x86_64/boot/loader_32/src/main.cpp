@@ -164,7 +164,6 @@ static void EnableCpuFeatures(MemoryManagers mem_managers)
 static u64 LoadNextStageModule(MultibootInfo& multiboot_info, MemoryManagers mem_managers)
 {
     auto& pmm = mem_managers.pmm;
-    auto& vmm = mem_managers.vmm;
 
     TRACE_DEBUG("Loading next stage module: '%s' ...", kLoader64ModuleCmdline);
 

@@ -34,7 +34,7 @@ std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
     const u64 bitmap_addr = bitmap_addr_res.value();
 
     TRACE_DEBUG("Initializing bitmap view...");
-    BitMapView bitmap_view = InitBitmapView(bitmap_addr, total_pages);
+    [[maybe_unused]] BitMapView bitmap_view = InitBitmapView(bitmap_addr, total_pages);
 
     TRACE_DEBUG("Creating PhysicalMemoryManager instance...");
 

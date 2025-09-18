@@ -117,7 +117,7 @@ static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
 }
 
 static KernelModuleInfo AnalyzeKernelModule(
-    MultibootInfo& multiboot_info, MemoryManagers mem_managers
+    MultibootInfo& multiboot_info, [[maybe_unused]] MemoryManagers mem_managers
 )
 {
     TRACE_DEBUG("Locating and analyzing kernel module...");
@@ -144,7 +144,6 @@ static u64 LoadKernelIntoMemory(
     MultibootInfo& multiboot_info, const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
 )
 {
-    auto& pmm = mem_managers.pmm;
     auto& vmm = mem_managers.vmm;
 
     TRACE_DEBUG("Preparing memory and loading kernel...");
@@ -167,7 +166,6 @@ NO_RET static void TransitionToKernel(
 )
 {
     auto& pmm = mem_managers.pmm;
-    auto& vmm = mem_managers.vmm;
 
     TRACE_INFO("Preparing to transition to kernel...");
 
