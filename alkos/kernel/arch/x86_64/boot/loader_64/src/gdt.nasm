@@ -37,8 +37,8 @@ GDT64:
           dw .End - GDT64 - 1 ;
           dq GDT64
 
-GDT64_CODE_SELECTOR: dw GDT64.Code
-GDT64_DATA_SELECTOR: dw GDT64.Data
+GDT64_CODE_SELECTOR: dw GDT64.Code ; PIE compatibility
+GDT64_DATA_SELECTOR: dw GDT64.Data ; PIE compatibility
 
           global GDT64
           global GDT64.Pointer

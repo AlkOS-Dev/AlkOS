@@ -4,7 +4,7 @@
 
           ; GDT64
           extern GDT64.Pointer
-          extern GDT64_DATA_SELECTOR ; Use the new symbol
+          extern GDT64_DATA_SELECTOR 
 
           extern MainLoader64
 
@@ -12,18 +12,20 @@
           section .text
           bits 64
 Entry:
-          ; Set up the stack using a RIP-relative address
+          ; Note: RIP Relative Addressing for PIC
+
+          ; Set up the stack 
           lea rsp, [rel stack_top]
           mov rbp, rsp
 
           mov r10, 0
-          mov r10d, edi ; Edi is a 32 bit LoaderData pointer filled by the loader
+          mov r10d, edi ; edi - Transition Data
 
-          ; Load the GDT pointer using a RIP-relative address
+          ; Load the GDT pointer 
           lea rax, [rel GDT64.Pointer]
           lgdt [rax]
 
-          ; Load the data segment selector using a RIP-relative memory load
+          ; Load the data segment selector
           mov ax, [rel GDT64_DATA_SELECTOR]
           mov ss, ax
           mov ds, ax
