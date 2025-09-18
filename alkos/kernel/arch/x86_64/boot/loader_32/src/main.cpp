@@ -136,6 +136,10 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     const u64 al_ld_span = AlignUp(ld_span, PageSize<PageSizeTag::k4Kb>());
     pmm.Reserve(PhysicalPtr<void>(al_ld_addr), al_ld_span);
 
+    // For some reason deleting this line makes the program crash
+    // Quite possibly this aligns the stack properly
+    TRACE_DEBUG("");
+
     const u64 mb_hdr_span    = static_cast<u64>(mb_hdr_end_addr) - mb_hdr_start_addr;
     const u32 al_mb_hdr_addr = AlignDown(mb_hdr_start_addr, PageSize<PageSizeTag::k4Kb>());
     const u64 al_mb_hdr_span = AlignUp(mb_hdr_span, PageSize<PageSizeTag::k4Kb>());
