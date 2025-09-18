@@ -223,18 +223,23 @@ NO_RET static void TransitionTo64BitMode(
 
     transition_data.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
 
-    // TODO: Update
     TRACE(
         "Transition Data:\n"
         "  multiboot_info_addr:         0x%llX\n"
         "  multiboot_header_start_addr: 0x%llX\n"
         "  multiboot_header_end_addr:   0x%llX\n"
-        "  pmm1:                    0x%llX\n"
-        "  pmm2:                    0x%llX\n"
-        "  vmm1:                    0x%llX\n",
+        "  PMM State:\n"
+        "    total_pages:               %llu\n"
+        "    bitmap_addr:               0x%llX\n"
+        "    iteration_index:           %llu\n"
+        "    iteration_index_32:        %llu\n"
+        "  VMM State:\n"
+        "    pml_4_table_phys_addr:     0x%llX\n",
         transition_data.multiboot_info_addr, transition_data.multiboot_header_start_addr,
-        transition_data.multiboot_header_end_addr, transition_data.pmm_state.bitmap_addr,
-        transition_data.pmm_state.total_pages, transition_data.vmm_state.pml_4_table_phys_addr
+        transition_data.multiboot_header_end_addr, transition_data.pmm_state.total_pages,
+        transition_data.pmm_state.bitmap_addr, transition_data.pmm_state.iteration_index,
+        transition_data.pmm_state.iteration_index_32,
+        transition_data.vmm_state.pml_4_table_phys_addr
     );
 
     TRACE_DEBUG("Freeing memory of 32-bit loader before jump");
