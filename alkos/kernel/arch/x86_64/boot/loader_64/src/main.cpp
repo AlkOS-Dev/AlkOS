@@ -160,6 +160,21 @@ static u64 LoadKernelIntoMemory(
     return entry_point_res.value();
 }
 
+static void EstablishDirectMemMapping(MemoryManagers& mms)
+{
+    auto& vmm = mms.vmm;
+
+    TRACE_DEBUG(
+        "Creating direct memory mapping at 0x%llX with %llu Gb", kDirectMemMapAddrStart,
+        kDirectMemMapSizeGb
+    );
+
+    vmm.Map<PageSizeTag::k1Gb>(
+        kDirectMemMapAddrStart, 0, kDirectMemMapSizeGb * PageSize<PageSizeTag::k1Gb>(),
+        kPresentBit | kWriteBit | kGlobalBit
+    );
+}
+
 NO_RET static void TransitionToKernel(
     u64 kernel_entry_point, const TransitionData* transition_data,
     const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
@@ -204,6 +219,8 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     KernelModuleInfo kernel_info = AnalyzeKernelModule(multiboot_info, mms);
 
     u64 kernel_entry_point = LoadKernelIntoMemory(multiboot_info, kernel_info, mms);
+
+    EstablishDirectMemMapping(mms);
 
     TransitionToKernel(kernel_entry_point, transition_data, kernel_info, mms);
 }

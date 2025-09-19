@@ -18,13 +18,13 @@ void VirtualMemoryManager::Alloc(const u64 virt_addr, const u64 size, const u64 
         ASSERT_TRUE(phys_page_res, "Failed to allocate physical page");
         const auto phys_page = *phys_page_res;
 
-        Map<AllocFunc, PageSizeTag::k4Kb>(
+        Map<PageSizeTag::k4Kb, AllocFunc>(
             MapOnePageTag{}, virt_addr + offset, phys_page.Value(), flags
         );
     }
 }
 
-template <decltype(auto) AllocFunc, PageSizeTag kPageSizeTag>
+template <PageSizeTag kPageSizeTag, decltype(auto) AllocFunc>
 void VirtualMemoryManager::Map(
     const u64 virt_addr, const u64 phys_addr, const u64 size, const u64 flags
 )
@@ -32,13 +32,13 @@ void VirtualMemoryManager::Map(
     const u64 stride = PageSize<kPageSizeTag>();
 
     for (u64 offset = 0; offset < AlignUp(size, stride); offset += stride) {
-        Map<AllocFunc, kPageSizeTag>(
+        Map<kPageSizeTag, AllocFunc>(
             MapOnePageTag{}, virt_addr + offset, phys_addr + offset, flags
         );
     }
 }
 
-template <decltype(auto) AllocFunc, PageSizeTag kPageSizeTag>
+template <PageSizeTag kPageSizeTag, decltype(auto) AllocFunc>
 void VirtualMemoryManager::Map(
     MapOnePageTag, const u64 virt_addr, const u64 phys_addr, const u64 flags
 )

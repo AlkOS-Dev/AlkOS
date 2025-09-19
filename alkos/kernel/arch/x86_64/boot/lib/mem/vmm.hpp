@@ -37,13 +37,13 @@ class VirtualMemoryManager
     void Alloc(const u64 virt_addr, const u64 size, const u64 flags = kNoFlags);
 
     template <
-        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc,
-        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb>
+        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb,
+        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
     void Map(const u64 virt_addr, const u64 phys_addr, const u64 size, const u64 flags = kNoFlags);
 
     template <
-        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc,
-        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb>
+        PageSizeTag kPageSizeTag = PageSizeTag::k4Kb,
+        decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
     void Map(MapOnePageTag, const u64 virt_addr, const u64 phys_addr, const u64 flags = kNoFlags);
 
     PhysicalPtr<PageMapTable<4>> GetPml4Table() { return pm_table_4_; }
