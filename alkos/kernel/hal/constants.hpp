@@ -4,7 +4,7 @@
 /**
  * Expected fields in arch namespace:
  * - u64 kKernelVirtualAddressStart;
- * - u64 kKernelDirectMapAddressStart;
+ * - u64 kDirectMapAddrStart;
  */
 
 #include <hal/constants.hpp>

@@ -106,7 +106,7 @@ void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len)
     // auto offset = addr & (pmm::kPageSize - 1);
     // auto vsize  = AlignUp(len + offset, pmm::kPageSize);
     // TODO_WHEN_VMEM_WORKS
-    // auto vaddr = AlignDown(arch::kKernelDirectMapAddressStart + addr, pmm::kPageSize);
+    // auto vaddr = AlignDown(arch::kDirectMapAddrStart + addr, pmm::kPageSize);
     // auto loader_memory_manager =
     //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
 
@@ -127,7 +127,7 @@ void *uacpi_kernel_alloc(uacpi_size size)
     // // auto loader_memory_manager =
     // //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
     // // // TODO(F1r3d3v): Memory layout need to be established
-    // const u64 kVMemAllocStart = arch::kKernelDirectMapAddressStart + kSingleBit<u64, 46>;
+    // const u64 kVMemAllocStart = arch::kDirectMapAddrStart + kSingleBit<u64, 46>;
     // using pmm                 = memory::PhysicalMemoryManager;
 
     // auto vsize = AlignUp(size, pmm::kPageSize);
