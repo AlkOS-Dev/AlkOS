@@ -6,6 +6,7 @@
 #include <mem/virt_ptr.hpp>
 #include <mem/vmm_abi.hpp>
 
+#include "hal/mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
 
 namespace arch

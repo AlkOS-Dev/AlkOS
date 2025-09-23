@@ -802,11 +802,6 @@ concept DelayedInitDerivedT = requires(T t) {
 template <class DerivedT, class ConfigT>
 class DelayedInitMixin
 {
-    protected:
-    ConfigT c_;
-    bool is_configured_{false};
-    bool is_initialized_{false};
-
     public:
     //==============================================================================
     // Class Construction
@@ -836,6 +831,7 @@ class DelayedInitMixin
     //==============================================================================
     // Observers
     //==============================================================================
+
     NODISCARD const ConfigT &GetConfig() const
     {
         R_ASSERT_TRUE(is_configured_, "Accessing config before configured.");
@@ -843,6 +839,15 @@ class DelayedInitMixin
     }
     NODISCARD bool IsConfigured() const { return is_configured_; }
     NODISCARD bool IsInitialized() const { return is_initialized_; }
+
+    //==============================================================================
+    // Private Fields
+    //==============================================================================
+
+    private:
+    ConfigT c_;
+    bool is_configured_{false};
+    bool is_initialized_{false};
 };
 
 template <class DerivedT, class ConfigT>

@@ -1,5 +1,7 @@
-#include "bitmap.hpp"
 #include <assert.h>
+#include <extensions/bit_array.hpp>
+
+#include "hal/mem/pmm/bitmap.hpp"
 
 using namespace arch;
 
@@ -28,4 +30,10 @@ std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest re
 void BitmapPmm::Free(PhysicalPtr<Page> /*page*/, u64 /*num_pages*/)
 {
     FAIL_ALWAYS("Free() called on bootstrap PMM. This is not supported.");
+}
+
+void BitmapPmm::InitImpl()
+{
+    const BitmapPmmConfig& c = GetConfig();
+    bitmap_view_             = BitMapView(c.pmm_bitmap_addr.ToVirt(), c.pmm_total_pages);
 }

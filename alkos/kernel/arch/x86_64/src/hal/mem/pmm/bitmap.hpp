@@ -24,10 +24,22 @@ class BitmapPmm : public PhysicalMemoryManagerABI,
 
     BitmapPmm() = default;
 
-    void InitImpl() {}
+    //==============================================================================
+    // ABI : PhysicalMemoryManagerABI
+    //==============================================================================
 
     std::expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest req = {});
     void Free(PhysicalPtr<Page> page, u64 num_pages);
+
+    //==============================================================================
+    // ABI : DelayedInitMixin
+    //==============================================================================
+
+    void InitImpl();
+
+    //==============================================================================
+    // Private Fields
+    //==============================================================================
 
     private:
     BitMapView bitmap_view_{nullptr, 0};

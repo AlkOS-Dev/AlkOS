@@ -14,14 +14,21 @@ class BuddyPmm : public PhysicalMemoryManagerABI,
                  public template_lib::DelayedInitMixin<BuddyPmm, BuddyPmmConfig>
 {
     public:
-    void InitImpl() {}
-
     //==============================================================================
-    // ABI
+    // ABI : PhysicalMemoryManagerABI
     //==============================================================================
 
     std::expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest req = {});
     void Free(PhysicalPtr<Page> page, u64 num_pages);
+
+    //==============================================================================
+    // ABI : DelayedInitMixin
+    //==============================================================================
+
+    private:
+    void InitImpl();
+
+    public:
 
     private:
 };
