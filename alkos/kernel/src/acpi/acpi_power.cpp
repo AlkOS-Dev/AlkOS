@@ -3,6 +3,7 @@
 #include <arch_utils.hpp>
 #include <extensions/debug.hpp>
 #include <todo.hpp>
+#include "panic.hpp"
 
 #include <uacpi/sleep.h>
 

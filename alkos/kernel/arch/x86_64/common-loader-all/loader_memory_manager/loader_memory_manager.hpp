@@ -1,6 +1,8 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_LOADER_MEMORY_MANAGER_LOADER_MEMORY_MANAGER_HPP_
 
+#include <panic.hpp>
+
 #include <extensions/defines.hpp>
 #include "extensions/concepts.hpp"
 #include "extensions/types.hpp"

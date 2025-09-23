@@ -2,61 +2,37 @@
 #define ALKOS_LIBC_INCLUDE_ASSERT_H_
 
 #include <todo.h>
+#include "platform.h"
 
 // ------------------------------
 // Kernel Asserts
 // ------------------------------
 
-#ifdef __ALKOS_LIBK__
-
-#include <panic.hpp>
-
-#define __FAIL_KERNEL(expr)                                                                        \
-    arch::KernelPanic(                                                                             \
+#define __FAIL(expr)                                                                        \
+    __platform_panic(                                                                              \
         "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
     );
 
-#define __ASSERT_FAIL_FUNC arch::KernelPanic
+#define __ASSERT_FAIL_FUNC __platform_panic
 
-/* usual kernel assert macro */
 #ifdef NDEBUG
 #define ASSERT(expr)     ((void)0)
 #define FAIL_ALWAYS(msg) ((void)0)
 #else
 #define ASSERT(expr)            \
     if (!(expr)) [[unlikely]] { \
-        __FAIL_KERNEL(expr);    \
+        __FAIL(expr);    \
     }
-#define FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
+#define FAIL_ALWAYS(msg) __FAIL(false && msg)
 #endif  // NDEBUG
 
-/* usual kernel working in release assert macro */
 #define R_ASSERT(expr)          \
     if (!(expr)) [[unlikely]] { \
-        __FAIL_KERNEL(expr);    \
+        __FAIL(expr);    \
     }
-#define R_FAIL_ALWAYS(msg) __FAIL_KERNEL(false && msg)
+#define R_FAIL_ALWAYS(msg) __FAIL(false && msg)
 
-/* libc default assert macro */
 #define assert(expr) ASSERT(expr)
-
-// ------------------------------
-// Userspace asserts
-// ------------------------------
-
-#else
-
-#define __ASSERT_FAIL_FUNC TODO_USERSPACE
-
-#ifdef NDEBUG
-#define assert(expr)     ((void)0)
-#define FAIL_ALWAYS(msg) ((void)0)
-#else
-#define assert(expr)     TODO_USERSPACE
-#define FAIL_ALWAYS(msg) TODO_USERSPACE
-#endif  // NDEBUG
-
-#endif
 
 // ------------------------------
 // C++ extended asserts
