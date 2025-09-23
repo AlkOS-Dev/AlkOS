@@ -13,6 +13,9 @@ void BuddyPmm::InitImpl()
     bootstrap_pmm.Configure(c.bitmap_pmm_config);
     bootstrap_pmm.Init();
 
-    VirtualMemoryManagerImpl<BitmapPmm> bootstrap_vmm(bootstrap_pmm, c.vmm_config);
+    VirtualMemoryManagerImpl<BitmapPmm> bootstrap_vmm(bootstrap_pmm);
+    bootstrap_vmm.Configure(c.vmm_config);
     bootstrap_vmm.Init();
+
+    // TODO: Logic to init metadata of buddy allocator
 }

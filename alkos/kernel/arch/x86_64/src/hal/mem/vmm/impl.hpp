@@ -28,10 +28,7 @@ class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI,
     using BaseDelayedInitMixin =
         template_lib::DelayedInitMixin<VirtualMemoryManagerImpl<PmmT>, ConfigT>;
 
-    VirtualMemoryManagerImpl(PmmT& pmm, const ConfigT& config)
-        : BaseDelayedInitMixin(config), pmm_(pmm)
-    {
-    }
+    VirtualMemoryManagerImpl(PmmT& pmm) : pmm_(pmm) {}
 
     //==============================================================================
     // ABI : VirtualMemoryManagerABI
