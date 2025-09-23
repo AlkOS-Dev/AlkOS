@@ -21,6 +21,8 @@ void VirtualMemoryManagerImpl<PmmT>::InitImpl()
     pm_table_4_   = c.pml4_table;
 }
 
+// TODO : Implement this, and implement the ABI in sensible way
+
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_TPP_
