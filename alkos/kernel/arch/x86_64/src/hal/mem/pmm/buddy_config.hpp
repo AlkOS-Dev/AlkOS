@@ -9,8 +9,8 @@ namespace arch
 
 struct BuddyPmmConfig {
     // Dependencies during Init
-    BitmapPmmConfig& bitmap_pmm_config;
-    VirtualMemoryManagerImplConfig& vmm_config;
+    BitmapPmmConfig bitmap_pmm_config;
+    VirtualMemoryManagerImplConfig vmm_config;
 
     BuddyPmmConfig(BitmapPmmConfig bitmap_config, VirtualMemoryManagerImplConfig vmm_config)
         : bitmap_pmm_config(bitmap_config), vmm_config(vmm_config)
