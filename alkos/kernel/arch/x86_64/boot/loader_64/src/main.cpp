@@ -194,6 +194,7 @@ NO_RET static void TransitionToKernel(
     kernel_initial_params.multiboot_header_end_addr = transition_data->multiboot_header_end_addr;
 
     kernel_initial_params.mem_info_bitmap_addr = pmm.GetBitmapAddress().Value();
+    kernel_initial_params.mem_info_total_pages = pmm.GetTotalPages();
     kernel_initial_params.mem_info_bitmap_addr = vmm.GetPml4Table().Value();
 
     const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);

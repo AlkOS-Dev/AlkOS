@@ -790,5 +790,75 @@ class StaticVector : public ArraySingleTypeStaticStack<T, kMaxObjects>
     }
 };
 
+//==============================================================================
+// DelayedInitMixin
+//==============================================================================
+
+template <class T>
+concept DelayedInitDerivedT = requires(T t) {
+    { t.InitImpl() } -> std::same_as<void>;
+};
+
+template <class DerivedT, class ConfigT>
+class DelayedInitMixin
+{
+    protected:
+    ConfigT c_;
+    bool is_configured_{false};
+    bool is_initialized_{false};
+
+    public:
+    //==============================================================================
+    // Class Construction
+    //==============================================================================
+
+    DelayedInitMixin()  = default;
+    ~DelayedInitMixin() = default;
+
+    DelayedInitMixin(const DelayedInitMixin &)            = delete;
+    DelayedInitMixin &operator=(const DelayedInitMixin &) = delete;
+    DelayedInitMixin(DelayedInitMixin &&)                 = delete;
+    DelayedInitMixin &operator=(DelayedInitMixin &&)      = delete;
+
+    //==============================================================================
+    // Public Methods
+    //==============================================================================
+
+    void Configure(ConfigT c)
+    {
+        R_ASSERT_FALSE(is_configured_);
+        c_             = std::move(c);
+        is_configured_ = true;
+    }
+
+    void Init();
+
+    //==============================================================================
+    // Observers
+    //==============================================================================
+    NODISCARD const ConfigT &GetConfig() const
+    {
+        R_ASSERT_TRUE(is_configured_, "Accessing config before configured.");
+        return c_;
+    }
+    NODISCARD bool IsConfigured() const { return is_configured_; }
+    NODISCARD bool IsInitialized() const { return is_initialized_; }
+};
+
+template <class DerivedT, class ConfigT>
+void DelayedInitMixin<DerivedT, ConfigT>::Init()
+{
+    static_assert(
+        DelayedInitDerivedT<DerivedT>,
+        "DelayedInitMixin requires the derived type to have a 'void InitImpl()' method."
+    );
+    R_ASSERT_TRUE(is_configured_);
+    R_ASSERT_FALSE(is_initialized_);
+
+    static_cast<DerivedT *>(this)->InitImpl();
+
+    is_initialized_ = true;
+}
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
