@@ -1,20 +1,19 @@
-#ifndef ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
-#define ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_
+#define ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_
 
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include "constants.hpp"
 
 template <class T>
-class PhysicalPtr
+class VirtualPtr
 {
     public:
     //==============================================================================
     // Class Creation & Destruction
     //==============================================================================
 
-    explicit PhysicalPtr(T* phys_ptr) : phys_ptr_{phys_ptr} {}
-    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<T*>(phys_ptr)} {}
+    explicit VirtualPtr(T* virt_ptr) : virt_ptr_{virt_ptr} {}
 
     //==============================================================================
     // Operators
@@ -22,18 +21,18 @@ class PhysicalPtr
 
     // Enabling pointer-like behavior
 
-    T& operator*() const { return *(ToVirt()); }
-    T* operator->() const { return ToVirt(); }
+    T& operator*() const { return *virt_ptr_; }
+    T* operator->() const { return virt_ptr_; }
 
     explicit operator bool() const { return !IsNull(); }
 
     // Enabling pointer arithmetic
 
-    PhysicalPtr<T> operator+(u64 offset) const { return PhysicalPtr<T>(phys_ptr_ + offset); }
+    VirtualPtr<T> operator+(u64 offset) const { return VirtualPtr<T>(virt_ptr_ + offset); }
 
-    PhysicalPtr<T>& operator+=(u64 offset)
+    VirtualPtr<T>& operator+=(u64 offset)
     {
-        phys_ptr_ += offset;
+        virt_ptr_ += offset;
         return *this;
     }
 
@@ -41,31 +40,29 @@ class PhysicalPtr
     // Observers
     //==============================================================================
 
-    T* Get() const { return phys_ptr_; }
-    T* ToVirt() const
+    T* Get() const { return virt_ptr_; }
+    T* ToPhys() const
     {
         return reinterpret_cast<T*>(
-            reinterpret_cast<uintptr_t>(phys_ptr_) + kKernelVirtualAddressStart
+            reinterpret_cast<uintptr_t>(virt_ptr_) - kKernelVirtualAddressStart
         );
     }
-    bool IsNull() const { return phys_ptr_ == nullptr; }
-    uintptr_t AsUIntPtr() const { return reinterpret_cast<uintptr_t>(phys_ptr_); }
+    bool IsNull() const { return virt_ptr_ == nullptr; }
 
     private:
-    T* phys_ptr_;
+    T* virt_ptr_;
 };
 
 template <>
-class PhysicalPtr<void>
+class VirtualPtr<void>
 {
     public:
     //==============================================================================
     // Class Creation & Destruction
     //==============================================================================
 
-    PhysicalPtr() : phys_ptr_{nullptr} {}
-    explicit PhysicalPtr(void* phys_ptr) : phys_ptr_{phys_ptr} {}
-    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<void*>(phys_ptr)} {}
+    VirtualPtr() : virt_ptr_{nullptr} {}
+    explicit VirtualPtr(void* virt_ptr) : virt_ptr_{virt_ptr} {}
 
     //==============================================================================
     // Operators
@@ -75,16 +72,16 @@ class PhysicalPtr<void>
 
     // Enabling pointer arithmetic
 
-    PhysicalPtr<void> operator+(u64 offset) const
+    VirtualPtr<void> operator+(u64 offset) const
     {
         // `char*` for standard-compliant byte-level pointer arithmetic.
-        return PhysicalPtr<void>(static_cast<char*>(phys_ptr_) + offset);
+        return VirtualPtr<void>(static_cast<char*>(virt_ptr_) + offset);
     }
 
-    PhysicalPtr<void>& operator+=(u64 offset)
+    VirtualPtr<void>& operator+=(u64 offset)
     {
         // `char*` for standard-compliant byte-level pointer arithmetic.
-        phys_ptr_ = static_cast<char*>(phys_ptr_) + offset;
+        virt_ptr_ = static_cast<char*>(virt_ptr_) + offset;
         return *this;
     }
 
@@ -92,13 +89,12 @@ class PhysicalPtr<void>
     // Observers
     //==============================================================================
 
-    void* Get() const { return phys_ptr_; }
-    void* ToVirt() const { return static_cast<char*>(phys_ptr_) + kKernelVirtualAddressStart; }
-    bool IsNull() const { return phys_ptr_ == nullptr; }
-    uintptr_t AsUIntPtr() const { return reinterpret_cast<uintptr_t>(phys_ptr_); }
+    void* Get() const { return virt_ptr_; }
+    void* ToPhys() const { return static_cast<char*>(virt_ptr_) - kKernelVirtualAddressStart; }
+    bool IsNull() const { return virt_ptr_ == nullptr; }
 
     private:
-    void* phys_ptr_;
+    void* virt_ptr_;
 };
 
-#endif  // ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_

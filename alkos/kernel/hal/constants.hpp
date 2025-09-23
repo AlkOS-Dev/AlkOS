@@ -12,9 +12,11 @@
 #include <hal/constants.hpp>
 
 static constexpr u64 kKernelVirtualAddressStart = arch::kKernelVirtualAddressStart;
-static constexpr u64 kDirectMapAddrStart        = arch::kDirectMapAddrStart;
-static constexpr u64 kDirectMemMapSizeGb        = arch::kDirectMemMapSizeGb;
+
+static constexpr u64 kDirectMapAddrStart = arch::kDirectMapAddrStart;
+static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
 
 static constexpr size_t kCacheLineSizeBytes = arch::kCacheLineSizeBytes;
+static constexpr size_t kPageSizeBytes      = arch::kPageSizeBytes;
 
 #endif  // ALKOS_KERNEL_ABI_CONSTANTS_HPP_
