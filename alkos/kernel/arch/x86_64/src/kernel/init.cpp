@@ -1,3 +1,4 @@
+#include "hal/mem/pmm.hpp"
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
@@ -12,6 +13,7 @@
 #include <extensions/internal/formats.hpp>
 
 #include <modules/hardware.hpp>
+#include <modules/memory.hpp>
 #include <terminal.hpp>
 
 #include "abi/boot_params.hpp"
@@ -60,6 +62,17 @@ extern "C" void PreKernelInit(KernelInitialParams* kernel_init_params)
 
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
+
+    arch::PmmConfig b_pmm_conf;
+    b_pmm_conf.pmm_bitmap_addr = PhysicalPtr<void>(kernel_init_params->mem_info_bitmap_addr);
+    b_pmm_conf.pmm_total_pages = kernel_init_params->mem_info_total_pages;
+
+    arch::VmmConfig vmm_conf;
+    vmm_conf.pml4_table = PhysicalPtr<PageMapTable<4>>(kernel_init_params->pml_4_table_phys_addr);
+
+    MemoryModule::Init();
+    MemoryModule::Get().GetPmm().Configure(b_pmm_conf);
+    MemoryModule::Get().GetVmm().Configure(vmm_conf);
 
     EnableHardwareInterrupts();
 

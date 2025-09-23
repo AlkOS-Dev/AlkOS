@@ -3,13 +3,16 @@
 
 #include <mem/pmm_abi.hpp>
 #include "hal/mem/pmm/buddy.hpp"
+#include "hal/mem/settings.hpp"
 
 namespace arch
 {
 
-class Pmm : public BuddyPmm
+class PhysicalMemoryManager : public internal::PmmImpl
 {
 };
+
+using PmmConfig = internal::PmmConfig;
 
 }  // namespace arch
 
