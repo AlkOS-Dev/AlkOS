@@ -13,6 +13,7 @@ class PhysicalPtr
     // Class Creation & Destruction
     //==============================================================================
 
+    explicit PhysicalPtr() : phys_ptr_(nullptr) {}
     explicit PhysicalPtr(T* phys_ptr) : phys_ptr_{phys_ptr} {}
     explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<T*>(phys_ptr)} {}
 

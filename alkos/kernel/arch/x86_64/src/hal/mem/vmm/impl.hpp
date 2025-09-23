@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
 
+#include <extensions/template_lib.hpp>
 #include <mem/phys_ptr.hpp>
 #include <mem/pmm_abi.hpp>
 #include <mem/virt_ptr.hpp>
@@ -12,19 +13,28 @@
 namespace arch
 {
 
-template <class PMM>
-    requires std::is_base_of_v<PhysicalMemoryManagerABI, PMM>
-class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI
+template <class PmmT>
+    requires std::is_base_of_v<PhysicalMemoryManagerABI, PmmT>
+class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI,
+                                 public template_lib::DelayedInitMixin<
+                                     VirtualMemoryManagerImpl<PmmT>, VirtualMemoryManagerImplConfig>
 {
     public:
     static constexpr u64 kNoFlags = 0;
     struct MapOnePageTag {
     };
 
-    using Config = VirtualMemoryManagerImplConfig;
+    using ConfigT = VirtualMemoryManagerImplConfig;
+    using BaseDelayedInitMixin =
+        template_lib::DelayedInitMixin<VirtualMemoryManagerImpl<PmmT>, ConfigT>;
+
+    VirtualMemoryManagerImpl(PmmT& pmm, const ConfigT& config)
+        : BaseDelayedInitMixin(config), pmm_(pmm)
+    {
+    }
 
     //==============================================================================
-    // ABI
+    // ABI : VirtualMemoryManagerABI
     //==============================================================================
 
     void Alloc(const VirtualPtr<byte> vaddr, const u64 size, const u64 flags = kNoFlags);
@@ -41,13 +51,23 @@ class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI
         const u64 flags = kNoFlags
     );
 
+    //==============================================================================
+    // ABI : DelayedInitMixin
+    //==============================================================================
+
+    void InitImpl();
+
+    //==============================================================================
+    // Observers
+    //==============================================================================
+
     PhysicalPtr<PageMapTable<4>> GetPml4Table() { return pm_table_4_; }
 
-    private:
     //==============================================================================
     // Private Methods
     //==============================================================================
 
+    private:
     template <size_t kLevel>
     FORCE_INLINE_F void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme);
 
@@ -61,10 +81,12 @@ class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI
     // Private Fields
     //==============================================================================
 
-    PhysicalMemoryManager& pmm_;
+    PmmT& pmm_;
     PhysicalPtr<PageMapTable<4>> pm_table_4_;
 };
 
 }  // namespace arch
+
+#include "hal/mem/vmm/impl.tpp"
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_

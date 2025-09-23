@@ -7,6 +7,7 @@
 #include <extensions/defines.hpp>
 #include <extensions/internal/tuple_base.hpp>
 #include <extensions/new.hpp>
+#include <extensions/optional.hpp>
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
@@ -807,7 +808,8 @@ class DelayedInitMixin
     // Class Construction
     //==============================================================================
 
-    DelayedInitMixin()  = default;
+    DelayedInitMixin() = default;
+    DelayedInitMixin(const ConfigT &c) { Configure(c); }
     ~DelayedInitMixin() = default;
 
     DelayedInitMixin(const DelayedInitMixin &)            = delete;
@@ -819,11 +821,10 @@ class DelayedInitMixin
     // Public Methods
     //==============================================================================
 
-    void Configure(ConfigT c)
+    void Configure(const ConfigT &c)
     {
-        R_ASSERT_FALSE(is_configured_);
-        c_             = std::move(c);
-        is_configured_ = true;
+        R_ASSERT_FALSE(c_.has_value());
+        c_.emplace(c);
     }
 
     void Init();
@@ -834,10 +835,10 @@ class DelayedInitMixin
 
     NODISCARD const ConfigT &GetConfig() const
     {
-        R_ASSERT_TRUE(is_configured_, "Accessing config before configured.");
-        return c_;
+        R_ASSERT_TRUE(c_.has_value(), "Accessing config before configured.");
+        return *c_;
     }
-    NODISCARD bool IsConfigured() const { return is_configured_; }
+    NODISCARD bool IsConfigured() const { return c_.has_value(); }
     NODISCARD bool IsInitialized() const { return is_initialized_; }
 
     //==============================================================================
@@ -845,8 +846,7 @@ class DelayedInitMixin
     //==============================================================================
 
     private:
-    ConfigT c_;
-    bool is_configured_{false};
+    std::optional<ConfigT> c_;
     bool is_initialized_{false};
 };
 
@@ -857,7 +857,7 @@ void DelayedInitMixin<DerivedT, ConfigT>::Init()
         DelayedInitDerivedT<DerivedT>,
         "DelayedInitMixin requires the derived type to have a 'void InitImpl()' method."
     );
-    R_ASSERT_TRUE(is_configured_);
+    R_ASSERT_TRUE(c_.has_value());
     R_ASSERT_FALSE(is_initialized_);
 
     static_cast<DerivedT *>(this)->InitImpl();
