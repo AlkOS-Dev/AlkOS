@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_TSC_TSC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_TSC_TSC_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
 
 #include <cpuid.h>
 #include <extensions/bit.hpp>
@@ -63,7 +63,7 @@ NODISCARD FAST_CALL u64 Read()
 
 NODISCARD FAST_CALL u64 ReadViaMsr() { return cpu::GetMSR(kIA32TscMsrAddress); }
 
-NODISCARD FAST_CALL void Write(const u64 value) { cpu::SetMSR(kIA32TscMsrAddress, value); }
+FAST_CALL void Write(const u64 value) { cpu::SetMSR(kIA32TscMsrAddress, value); }
 
 NODISCARD FAST_CALL bool IsAvailable()
 {
@@ -96,4 +96,4 @@ NODISCARD FAST_CALL bool IsStable()
 void Initialize();
 }  // namespace tsc
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_TSC_TSC_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
