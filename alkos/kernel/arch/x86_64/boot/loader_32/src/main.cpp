@@ -1,24 +1,34 @@
+#if defined(__linux__)
+#error "You are not using a cross-compiler, you will most certainly run into trouble"
+#endif
+
+#if !defined(__i386__)
+#error "loader_32 needs to be compiled with a i386-elf compiler"
+#endif
+
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/new.hpp>
 
-#include "cpu/utils.hpp"
-
 #include "abi/transition_data.hpp"
-
-#include "elf/elf64.hpp"
-
+#include "cpu/utils.hpp"
+#include "elf/elf_64.hpp"
+#include "elf/error.hpp"
 #include "mem/memory_manager.hpp"
-
-#include "sys/panic.hpp"
-#include "sys/terminal.hpp"
-
 #include "multiboot2/info.hpp"
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
+#include "settings.hpp"
+#include "sys/panic.hpp"
+#include "sys/terminal.hpp"
 
-// External functions defined in assembly
+using namespace Multiboot;
+
+//==============================================================================
+// External Functions and Variables
+//==============================================================================
+
 extern "C" int CheckCpuId();
 extern "C" int CheckLongMode();
 extern "C" void EnablePaging(void* pml4_table_address);
@@ -28,191 +38,153 @@ extern "C" void EnterElf64(
     void* loader_data_address
 );
 
-// External symbols defined in the linker script
 extern const char multiboot_header_start[];
 extern const char multiboot_header_end[];
-
 extern const char loader_32_start[];
 extern const char loader_32_end[];
-
-// Pre-allocated memory for the loader memory manager
 extern byte kLoaderPreAllocatedMemory[];
 
-using namespace Multiboot;
+//==============================================================================
+// Global Data
+//==============================================================================
 
-// Data structure that holds information passed from the 32-bit loader to the 64-bit kernel
-TransitionData loader_data;
+static TransitionData loader_data;
 
-static void MultibootCheck(u32 boot_loader_magic)
+//==============================================================================
+// High-Level Boot Steps
+//==============================================================================
+
+static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
 {
-    TRACE_INFO("Checking for Multiboot2...");
+    TerminalInit();
+    TRACE_INFO("Loader 32-Bit Stage");
+
     if (boot_loader_magic != Multiboot::kMultiboot2BootloaderMagic) {
-        KernelPanic("Multiboot2 check failed!");
+        KernelPanic("Multiboot2 check failed! Invalid magic number.");
     }
-    TRACE_SUCCESS("Multiboot2 check passed!");
-}
 
-static void HardwareChecks()
-{
-    BlockHardwareInterrupts();
-
-    TRACE_INFO("Checking for hardware features");
-
-    TRACE_INFO("Checking for CPUID...");
+    TRACE_INFO("Checking for required hardware features...");
     if (CheckCpuId()) {
         KernelPanic("CPUID check failed!");
     }
-    TRACE_SUCCESS("CPUID check passed!");
-
-    TRACE_INFO("Checking for long mode...");
     if (CheckLongMode()) {
         KernelPanic("Long mode check failed!");
     }
-    TRACE_SUCCESS("Long mode check passed!");
+
+    BlockHardwareInterrupts();
 }
 
-static void IdentityMap(MemoryManager* memory_manager)
+static MemoryManager* SetupMemoryManagement(MultibootInfo& multiboot_info)
 {
-    TRACE_INFO("Identity mapping first 512 GiB of memory...");
+    TRACE_DEBUG("Setting up memory management...");
+    auto* memory_manager = new (kLoaderPreAllocatedMemory) MemoryManager();
 
-    static constexpr u32 k1GiB = 1 << 30;
+    // Identity map the first 512 GiB of memory
+    static constexpr u64 k1GiB = 1ULL << 30;
     for (u32 i = 0; i < 512; i++) {
-        u64 addr_64bit = static_cast<u64>(i) * k1GiB;
+        u64 addr = static_cast<u64>(i) * k1GiB;
         memory_manager->MapVirtualMemoryToPhysical<MemoryManager::PageSize::Page1G>(
-            addr_64bit, addr_64bit, MemoryManager::kPresentBit | MemoryManager::kWriteBit
+            addr, addr, MemoryManager::kPresentBit | MemoryManager::kWriteBit
         );
     }
 
-    TRACE_SUCCESS("Identity mapping complete!");
-}
-
-// TODO: Should just be a method of MemoryManager
-static void InitializeMemoryManagerWithFreeMemoryRegions(
-    MemoryManager* memory_manager, Multiboot::MemoryMap memory_map
-)
-{
-    TRACE_INFO("Adding available memory regions to memory manager...");
-    memory_map.WalkEntries([&](Multiboot::MmapEntry& mmap_entry) FORCE_INLINE_L {
-        if (mmap_entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
-            memory_manager->AddFreeMemoryRegion(mmap_entry.addr, mmap_entry.addr + mmap_entry.len);
-            TRACE_INFO(
-                "Memory region: 0x%llX-0x%llX, length: %sB - Added to memory manager",
-                mmap_entry.addr, mmap_entry.addr + mmap_entry.len, FormatMetricUint(mmap_entry.len)
-            );
+    // Add available memory regions from the Multiboot map
+    auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
+    if (!mmap_tag_res) {
+        KernelPanic("Error finding memory map tag in multiboot info!");
+    }
+    MemoryMap(mmap_tag_res.value()).WalkEntries([&](MmapEntry& entry) {
+        if (entry.type == MmapEntry::kMemoryAvailable) {
+            memory_manager->AddFreeMemoryRegion(entry.addr, entry.addr + entry.len);
         }
     });
-    TRACE_INFO(
-        "Total available memory: %s", FormatMetricUint(memory_manager->GetAvailableMemoryBytes())
+
+    // Reserve memory currently in use by this loader
+    memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(loader_32_start), reinterpret_cast<u64>(loader_32_end)
     );
+    memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(multiboot_header_start), reinterpret_cast<u64>(multiboot_header_end)
+    );
+    memory_manager->MarkMemoryAreaNotFree(
+        reinterpret_cast<u64>(kLoaderPreAllocatedMemory),
+        reinterpret_cast<u64>(kLoaderPreAllocatedMemory) + sizeof(MemoryManager)
+    );
+
+    return memory_manager;
 }
 
-static Multiboot::TagModule* GetLoader64Module(MultibootInfo& multiboot_info)
+static void EnableCpuFeatures(MemoryManager* memory_manager)
 {
-    TRACE_INFO("Searching for loader64 module...");
-    auto* loader64_module =
-        multiboot_info.FindTag<Multiboot::TagModule>([](Multiboot::TagModule* tag) -> bool {
-            return strcmp(tag->cmdline, "loader64") == 0;
-        });
-    if (loader64_module == nullptr) {
-        KernelPanic("loader64 module not found in multiboot tags!");
-    }
-    TRACE_SUCCESS("Found loader64 module in multiboot tags!");
-
-    return loader64_module;
-}
-
-static u64 LoadLoader64Module(Multiboot::TagModule* loader64_module)
-{
-    byte* loader_module_start_addr = reinterpret_cast<byte*>(loader64_module->mod_start);
-
-    TRACE_INFO("Loading module...");
-    u64 kernel_entry_point = elf::LoadElf64(loader_module_start_addr, 0);
-    if (kernel_entry_point == 0) {
-        KernelPanic("Failed to load kernel module!");
-    }
-    TRACE_SUCCESS("Module loaded!");
-
-    return kernel_entry_point;
-}
-
-extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr)
-{
-    //    OsHang();
-    TerminalInit();
-    TRACE_INFO("In 32 bit mode");
-
-    MultibootCheck(boot_loader_magic);
-
-    ////////////////////////////// Hardware Checks ///////////////////////////////
-    TRACE_INFO("Starting hardware checks...");
-    HardwareChecks();
-
-    ///////////////////////////// Enabling Hardware //////////////////////////////
-    TRACE_INFO("Enabling hardware features...");
-    BlockHardwareInterrupts();
-    auto* memory_manager = new (kLoaderPreAllocatedMemory) MemoryManager();
-    TRACE_SUCCESS("Loader memory manager created!");
-    IdentityMap(memory_manager);
-
-    TRACE_INFO("Enabling long mode...");
+    TRACE_INFO("Enabling long mode and paging...");
     EnableLongMode();
-    TRACE_SUCCESS("Long mode enabled!");
-
-    TRACE_INFO("Enabling paging...");
     EnablePaging(reinterpret_cast<void*>(memory_manager->GetPml4Table()));
-    TRACE_SUCCESS("Paging enabled!");
+}
 
-    TRACE_INFO("Finished hardware features setup for 32-bit mode.");
+static u64 LoadNextStageModule(MultibootInfo& multiboot_info)
+{
+    TRACE_DEBUG("Loading next stage module: '%s' ...", kLoader64ModuleCmdline);
+    auto loader64_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
+        return strcmp(tag->cmdline, kLoader64ModuleCmdline) == 0;
+    });
 
-    /////////////////////// Preparation for jump to 64 bit ///////////////////////
-    TRACE_INFO("Starting 64-bit kernel...");
-
-    MultibootInfo multiboot_info = MultibootInfo(static_cast<u64>(multiboot_info_addr));
-    auto* mmap_tag               = multiboot_info.FindTag<TagMmap>();
-    if (mmap_tag == nullptr) {
-        KernelPanic("Memory map tag not found in multiboot info!");
+    if (!loader64_module_res) {
+        KernelPanicFormat(
+            "Coud not find the '%s' module in multiboot tags!", kLoader64ModuleCmdline
+        );
     }
-    MemoryMap memory_map{mmap_tag};
-    InitializeMemoryManagerWithFreeMemoryRegions(memory_manager, mmap_tag);
-    memory_manager->MarkMemoryAreaNotFree(
-        static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
-        static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
-    );
-    memory_manager->MarkMemoryAreaNotFree(
-        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start)),
-        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end))
-    );
-    memory_manager->MarkMemoryAreaNotFree(
-        static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory)),
-        static_cast<u64>(reinterpret_cast<u32>(kLoaderPreAllocatedMemory) + sizeof(MemoryManager))
-    );
 
-    //////////////////////////// Loading Loader64 Module //////////////////////////
+    byte* module_start_addr = reinterpret_cast<byte*>(loader64_module_res.value()->mod_start);
+    auto entry_point_res    = Elf64::Load(module_start_addr, 0);
+    if (!entry_point_res) {
+        KernelPanic("Failed to load the next stage module!");
+    }
+    return entry_point_res.value();
+}
 
-    auto* loader64_module  = GetLoader64Module(multiboot_info);
-    u64 kernel_entry_point = LoadLoader64Module(loader64_module);
+NO_RET static void TransitionTo64BitMode(
+    u64 entry_point, MemoryManager* memory_manager, u32 multiboot_info_addr_32
+)
+{
+    TRACE_INFO("Preparing to transition to 64-bit mode...");
 
-    ///////////////////// Initializing LoaderData Structure //////////////////////
-    loader_data.multiboot_info_addr = static_cast<u64>(reinterpret_cast<u32>(multiboot_info_addr));
-    loader_data.multiboot_header_start_addr =
-        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_start));
-    loader_data.multiboot_header_end_addr =
-        static_cast<u64>(reinterpret_cast<u32>(multiboot_header_end));
-    loader_data.memory_manager_addr = reinterpret_cast<u64>(memory_manager);
+    // Prepare the data to be passed to the 64-bit stage
+    loader_data.multiboot_info_addr         = multiboot_info_addr_32;
+    loader_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
+    loader_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
+    loader_data.memory_manager_addr         = reinterpret_cast<u64>(memory_manager);
 
-    //////////////////////////// Printing LoaderData Info /////////////////////////
-    TODO_WHEN_DEBUGGING_FRAMEWORK
-
-    //////////////////////////// Jumping to 64-bit /////////////////////////
-    TRACE_INFO("Jumping to 64-bit loader...");
-
+    // Free the memory used by this 32-bit loader before jumping
     memory_manager->AddFreeMemoryRegion(
-        static_cast<u64>(reinterpret_cast<u32>(loader_32_start)),
-        static_cast<u64>(reinterpret_cast<u32>(loader_32_end))
+        reinterpret_cast<u64>(loader_32_start), reinterpret_cast<u64>(loader_32_end)
     );
 
-    EnterElf64(
-        reinterpret_cast<void*>(static_cast<u32>(kernel_entry_point >> 32)),
-        reinterpret_cast<void*>(static_cast<u32>(kernel_entry_point & kBitMask32)), &loader_data
-    );
+    // Split the 64-bit address for the 32-bit extern function
+    void* entry_high = reinterpret_cast<void*>(static_cast<u32>(entry_point >> 32));
+    void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
+
+    TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
+    EnterElf64(entry_high, entry_low, &loader_data);
+
+    // This code should be unreachable
+    KernelPanic("EnterElf64 should not return!");
+}
+
+//==================================================================================
+// Main Entry Point
+//==================================================================================
+
+extern "C" void MainLoader32(u32 boot_loader_magic, u32 multiboot_info_addr_32)
+{
+    InitializeAndVerifyEnvironment(boot_loader_magic);
+
+    MultibootInfo multiboot_info(multiboot_info_addr_32);
+
+    MemoryManager* memory_manager = SetupMemoryManagement(multiboot_info);
+
+    EnableCpuFeatures(memory_manager);
+
+    u64 next_stage_entry_point = LoadNextStageModule(multiboot_info);
+
+    TransitionTo64BitMode(next_stage_entry_point, memory_manager, multiboot_info_addr_32);
 }

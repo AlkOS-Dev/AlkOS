@@ -1,7 +1,7 @@
 #ifndef ALKOS_BOOT_LIB_MULTIBOOT2_MULTIBOOT2_H_
 #define ALKOS_BOOT_LIB_MULTIBOOT2_MULTIBOOT2_H_
 
-#include "extensions/types.hpp"
+#include <extensions/types.hpp>
 
 namespace Multiboot
 {

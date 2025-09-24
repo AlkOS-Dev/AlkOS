@@ -3,9 +3,11 @@
 
 #include <extensions/bit.hpp>
 #include <extensions/concepts.hpp>
+#include <extensions/defines.hpp>
+#include <extensions/expected.hpp>
 #include <extensions/types.hpp>
 
-#include "mem/memory_span.hpp"
+#include "multiboot2/error.hpp"
 #include "multiboot2/multiboot2.h"
 #include "multiboot2/tag_metadata.hpp"
 #include "todo.hpp"
@@ -39,18 +41,11 @@ class MultibootInfo
     // Class Creation and Destruction
     //------------------------------------------------------------------------------//
 
-    MultibootInfo(u64 multiboot_info_addr) : multiboot_info_addr_{multiboot_info_addr} {}
+    MultibootInfo(const u64 multiboot_info_addr) : multiboot_info_addr_{multiboot_info_addr} {}
 
     //------------------------------------------------------------------------------//
     // Public Methods
     //------------------------------------------------------------------------------//
-
-    MemorySpan GetMemorySpan()
-    {
-        MemorySpan ms;
-        ms.start = multiboot_info_addr_;
-        return ms;
-    }
 
     template <TagCallback Callback>
     void WalkTags(Callback cb)
@@ -66,10 +61,9 @@ class MultibootInfo
     }
 
     template <TagT Tag, typename Filter>
-    Tag* FindTag(Filter filter)
+    std::expected<Tag*, Error> FindTag(Filter filter)
     {
-        const u32 kType                    = TagMetadata<Tag>::kValue;
-        [[maybe_unused]] const char* kName = TagMetadata<Tag>::kTagName;
+        const u32 kType = TagMetadata<Tag>::kValue;
         static_assert(kType != kInvalidTagNumber);
 
         for (auto* tag_ptr = reinterpret_cast<Multiboot::Tag*>(multiboot_info_addr_ + 8);
@@ -84,11 +78,11 @@ class MultibootInfo
                 }
             }
         }
-        return nullptr;
+        return std::unexpected(Error::TagNotFound);
     }
 
     template <TagT Tag>
-    Tag* FindTag()
+    std::expected<Tag*, Error> FindTag()
     {
         return FindTag<Tag>([](const Tag*) {
             return true;
