@@ -63,19 +63,19 @@ struct MemoryManagers {
 // Global Data
 //==============================================================================
 
-alignas(64) static TransitionData transition_data;
+alignas(64) static TransitionData kTransitionData;
 alignas(
     PageSize<PageSizeTag::k4Kb>()
-) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+) static byte gPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 alignas(
     PageSize<PageSizeTag::k4Kb>()
-) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
+) static byte gVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
-u32 mb_hdr_start_addr;
-u32 mb_hdr_end_addr;
+u32 gMbHdrStartAddr;
+u32 gMbHdrEndAddr;
 
-u32 ld_start_addr;
-u32 ld_end_addr;
+u32 gLdStartAddr;
+u32 gLdEndAddr;
 
 //==============================================================================
 // High-Level Boot Steps
@@ -100,11 +100,11 @@ static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
 
     BlockHardwareInterrupts();
 
-    ld_start_addr = reinterpret_cast<u32>(loader_32_start);
-    ld_end_addr   = reinterpret_cast<u32>(loader_32_end);
+    gLdStartAddr = reinterpret_cast<u32>(loader_32_start);
+    gLdEndAddr   = reinterpret_cast<u32>(loader_32_end);
 
-    mb_hdr_start_addr = reinterpret_cast<u32>(multiboot_header_start);
-    mb_hdr_end_addr   = reinterpret_cast<u32>(multiboot_header_end);
+    gMbHdrStartAddr = reinterpret_cast<u32>(multiboot_header_start);
+    gMbHdrEndAddr   = reinterpret_cast<u32>(multiboot_header_end);
 }
 
 MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
@@ -116,21 +116,20 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     R_ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
 
     TRACE_DEBUG("Creating Physical Memory Manager...");
-    u64 lowest_safe_addr =
-        std::max(static_cast<u64>(mb_hdr_end_addr), static_cast<u64>(ld_end_addr));
+    u64 lowest_safe_addr = std::max(static_cast<u64>(gMbHdrEndAddr), static_cast<u64>(gLdEndAddr));
     const MemoryMap mmap(*mmap_tag_res);
-    auto pmm_res = PhysicalMemoryManager::Create(mmap, lowest_safe_addr, kPmmPreAllocatedMemory);
+    auto pmm_res = PhysicalMemoryManager::Create(mmap, lowest_safe_addr, gPmmPreAllocatedMemory);
     R_ASSERT_TRUE(pmm_res, "Physical memory manager creation failed");
     auto* pmm_ptr = *pmm_res;
     auto& pmm     = *pmm_ptr;
 
     TRACE_DEBUG("Creating Virtual Memory Manager...");
-    auto* vmm_ptr = new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
+    auto* vmm_ptr = new (gVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
     auto& vmm     = *vmm_ptr;
 
     TRACE_DEBUG("Marking used memory as reserved");
-    const u64 ld_span    = static_cast<u64>(ld_end_addr) - ld_start_addr;
-    const u32 al_ld_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 ld_span    = static_cast<u64>(gLdEndAddr) - gLdStartAddr;
+    const u32 al_ld_addr = AlignDown(gLdStartAddr, PageSize<PageSizeTag::k4Kb>());
     const u64 al_ld_span = AlignUp(ld_span, PageSize<PageSizeTag::k4Kb>());
     pmm.Reserve(PhysicalPtr<void>(al_ld_addr), al_ld_span);
 
@@ -138,8 +137,8 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     // Quite possibly this aligns the stack properly
     TRACE_DEBUG("");
 
-    const u64 mb_hdr_span    = static_cast<u64>(mb_hdr_end_addr) - mb_hdr_start_addr;
-    const u32 al_mb_hdr_addr = AlignDown(mb_hdr_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 mb_hdr_span    = static_cast<u64>(gMbHdrEndAddr) - gMbHdrStartAddr;
+    const u32 al_mb_hdr_addr = AlignDown(gMbHdrStartAddr, PageSize<PageSizeTag::k4Kb>());
     const u64 al_mb_hdr_span = AlignUp(mb_hdr_span, PageSize<PageSizeTag::k4Kb>());
     pmm.Reserve(PhysicalPtr<void>(al_mb_hdr_addr), al_mb_hdr_span);
 
@@ -212,17 +211,17 @@ NO_RET static void TransitionTo64BitMode(
     auto vmm_state = vmm.GetState();
 
     // Prepare the data to be passed to the 64-bit stage
-    transition_data.multiboot_info_addr         = multiboot_info_addr_32;
-    transition_data.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
-    transition_data.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
+    kTransitionData.multiboot_info_addr         = multiboot_info_addr_32;
+    kTransitionData.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
+    kTransitionData.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
 
     // Note : Stupid but compiler creates a buggy assigment operator for some reason
-    transition_data.pmm_state.total_pages        = pmm_state.total_pages;
-    transition_data.pmm_state.bitmap_addr        = pmm_state.bitmap_addr;
-    transition_data.pmm_state.iteration_index    = pmm_state.iteration_index;
-    transition_data.pmm_state.iteration_index_32 = pmm_state.iteration_index_32;
+    kTransitionData.pmm_state.total_pages        = pmm_state.total_pages;
+    kTransitionData.pmm_state.bitmap_addr        = pmm_state.bitmap_addr;
+    kTransitionData.pmm_state.iteration_index    = pmm_state.iteration_index;
+    kTransitionData.pmm_state.iteration_index_32 = pmm_state.iteration_index_32;
 
-    transition_data.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
+    kTransitionData.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
 
     TRACE(
         "Transition Data:\n"
@@ -236,23 +235,23 @@ NO_RET static void TransitionTo64BitMode(
         "    iteration_index_32:        %llu\n"
         "  VMM State:\n"
         "    pml_4_table_phys_addr:     0x%llX\n",
-        transition_data.multiboot_info_addr, transition_data.multiboot_header_start_addr,
-        transition_data.multiboot_header_end_addr, transition_data.pmm_state.total_pages,
-        transition_data.pmm_state.bitmap_addr, transition_data.pmm_state.iteration_index,
-        transition_data.pmm_state.iteration_index_32,
-        transition_data.vmm_state.pml_4_table_phys_addr
+        kTransitionData.multiboot_info_addr, kTransitionData.multiboot_header_start_addr,
+        kTransitionData.multiboot_header_end_addr, kTransitionData.pmm_state.total_pages,
+        kTransitionData.pmm_state.bitmap_addr, kTransitionData.pmm_state.iteration_index,
+        kTransitionData.pmm_state.iteration_index_32,
+        kTransitionData.vmm_state.pml_4_table_phys_addr
     );
 
     TRACE_DEBUG("Freeing memory of 32-bit loader before jump");
-    const u64 ld_span    = static_cast<u64>(ld_end_addr) - ld_start_addr;
-    const u32 al_ld_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 ld_span    = static_cast<u64>(gLdEndAddr) - gLdStartAddr;
+    const u32 al_ld_addr = AlignDown(gLdStartAddr, PageSize<PageSizeTag::k4Kb>());
     const u64 al_ld_span = AlignUp(ld_span, PageSize<PageSizeTag::k4Kb>());
     pmm.Free(PhysicalPtr<void>(al_ld_addr), al_ld_span);
 
     void* entry_high = reinterpret_cast<void*>(static_cast<u32>(entry_point >> 32));
     void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
-    EnterElf64(entry_high, entry_low, &transition_data);
+    EnterElf64(entry_high, entry_low, &kTransitionData);
 
     KernelPanic("EnterElf64 should not return!");
 }

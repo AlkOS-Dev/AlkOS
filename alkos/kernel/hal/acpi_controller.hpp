@@ -1,7 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_
-#define ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_
-
-#include <extensions/type_traits.hpp>
+#ifndef ALKOS_KERNEL_HAL_ACPI_CONTROLLER_HPP_
+#define ALKOS_KERNEL_HAL_ACPI_CONTROLLER_HPP_
 
 namespace arch
 {
@@ -19,4 +17,4 @@ struct AcpiABI {
 /* Load architecture definition of component */
 #include <hal/acpi_controller.hpp>
 
-#endif  // ALKOS_KERNEL_ABI_ACPI_CONTROLLER_HPP_
+#endif  // ALKOS_KERNEL_HAL_ACPI_CONTROLLER_HPP_

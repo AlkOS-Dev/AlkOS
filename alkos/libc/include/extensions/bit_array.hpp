@@ -11,91 +11,55 @@
 // https://en.cppreference.com/w/cpp/utility/bitset.html
 
 //==============================================================================
-// BitArrayBase
+// BitMapView - Non-owning view with runtime size
 //==============================================================================
 
-template <class DerivedT>
-class BitArrayBase
+class BitMapView final
 {
-    protected:
     using StorageT                        = u8;
     static constexpr size_t kStorageTBits = sizeof(StorageT) * 8;
-
-    //==============================================================================
-    // Accessors to DerivedT
-    //==============================================================================
-
-    FORCE_INLINE_F DerivedT* Derived() { return static_cast<DerivedT*>(this); }
-    FORCE_INLINE_F const DerivedT* Derived() const { return static_cast<const DerivedT*>(this); }
 
     public:
     //==============================================================================
     // Public Methods
     //==============================================================================
 
+    BitMapView(void* storage_ptr, const size_t num_bits)
+        : storage_ptr_{static_cast<StorageT*>(storage_ptr)}, num_bits_{num_bits}
+    {
+    }
+
     FORCE_INLINE_F void SetTrue(const size_t index)
     {
-        ASSERT_LT(index, Derived()->Size(), "Index out of bounds");
-        Derived()->Storage()[index / kStorageTBits] |= (kLsb<StorageT> << (index % kStorageTBits));
+        ASSERT_LT(index, num_bits_, "Index out of bounds");
+        storage_ptr_[index / kStorageTBits] |= (kLsb<StorageT> << (index % kStorageTBits));
     }
 
     FORCE_INLINE_F void SetFalse(const size_t index)
     {
-        ASSERT_LT(index, Derived()->Size(), "Index out of bounds");
-        Derived()->Storage()[index / kStorageTBits] &= ~(kLsb<StorageT> << (index % kStorageTBits));
+        ASSERT_LT(index, num_bits_, "Index out of bounds");
+        storage_ptr_[index / kStorageTBits] &= ~(kLsb<StorageT> << (index % kStorageTBits));
     }
 
     FORCE_INLINE_F void Set(const size_t index, const bool value)
     {
-        ASSERT_LT(index, Derived()->Size(), "Index out of bounds");
-        Derived()->Storage()[index / kStorageTBits] =
-            (Derived()->Storage()[index / kStorageTBits] &
-             ~(kLsb<StorageT> << (index % kStorageTBits))) |
+        ASSERT_LT(index, num_bits_, "Index out of bounds");
+        storage_ptr_[index / kStorageTBits] =
+            (storage_ptr_[index / kStorageTBits] & ~(kLsb<StorageT> << (index % kStorageTBits))) |
             (static_cast<StorageT>(value) << (index % kStorageTBits));
     }
 
     NODISCARD FORCE_INLINE_F bool Get(const size_t index) const
     {
-        ASSERT_LT(index, Derived()->Size(), "Index out of bounds");
-        return (Derived()->Storage()[index / kStorageTBits] >> (index % kStorageTBits)) &
-               kLsb<StorageT>;
+        ASSERT_LT(index, num_bits_, "Index out of bounds");
+        return (storage_ptr_[index / kStorageTBits] >> (index % kStorageTBits)) & kLsb<StorageT>;
     }
 
     FORCE_INLINE_F void SetAll(const bool value)
     {
-        const size_t numStorageT = (Derived()->Size() + kStorageTBits - 1) / kStorageTBits;
-        memset(Derived()->Storage(), value ? 0xFF : 0, numStorageT * sizeof(StorageT));
+        const size_t numStorageT = (num_bits_ + kStorageTBits - 1) / kStorageTBits;
+        memset(storage_ptr_, value ? 0xFF : 0, numStorageT * sizeof(StorageT));
     }
-
-    FORCE_INLINE_F u64 ToU64() const
-    {
-        ASSERT_LE(Derived()->Size(), 64, "ToU64 supported only for small enough arrays");
-        return *reinterpret_cast<const u64*>(Derived()->Storage());
-    }
-
-    FORCE_INLINE_F u32 ToU32() const
-    {
-        ASSERT_LE(Derived()->Size(), 32, "ToU32 supported only for small enough arrays");
-        return *reinterpret_cast<const u32*>(Derived()->Storage());
-    }
-};
-
-//==============================================================================
-// BitMapView - Non-owning view with runtime size
-//==============================================================================
-class BitMapView final : public BitArrayBase<BitMapView>
-{
-    friend class BitArrayBase<BitMapView>;
-
-    public:
-    BitMapView(void* storage_ptr, size_t num_bits)
-        : storage_ptr_{reinterpret_cast<StorageT*>(storage_ptr)}, num_bits_{num_bits}
-    {
-    }
-
-    //==============================================================================
-    // Implementation details for base class
-    //==============================================================================
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return num_bits_; }
 
@@ -110,37 +74,79 @@ class BitMapView final : public BitArrayBase<BitMapView>
 //==============================================================================
 // BitArray - Owning array with compile-time size
 //==============================================================================
+
 template <size_t kNumBits>
-class BitArray final : public BitArrayBase<BitArray<kNumBits>>
+class PACK BitArray final
 {
-    friend class BitArrayBase<BitArray<kNumBits>>;
+    using StorageT                        = u8;
+    static constexpr size_t kStorageTBits = sizeof(StorageT) * 8;
+    static constexpr size_t kNumStorageT  = (kNumBits + kStorageTBits - 1) / kStorageTBits;
 
     public:
-    BitArray() = default;
+    // ------------------------------
+    // Class creation
+    // ------------------------------
 
-    //==============================================================================
-    // Implementation details for base class
-    //==============================================================================
+    BitArray()  = default;
+    ~BitArray() = default;
 
-    NODISCARD FORCE_INLINE_F constexpr size_t Size() const { return kNumBits; }
+    // ------------------------------
+    // Class methods
+    // ------------------------------
 
-    protected:
-    NODISCARD FORCE_INLINE_F typename BitArrayBase<BitArray<kNumBits>>::StorageT* Storage()
+    FORCE_INLINE_F void SetTrue(const size_t index)
     {
-        return storage_data_;
+        ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
+
+        storage_[index / kStorageTBits] |= (kLsb<StorageT> << (index % kStorageTBits));
     }
-    NODISCARD FORCE_INLINE_F const typename BitArrayBase<BitArray<kNumBits>>::StorageT*
-    Storage() const
+
+    FORCE_INLINE_F void SetFalse(const size_t index)
     {
-        return storage_data_;
+        ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
+
+        storage_[index / kStorageTBits] &= ~(kLsb<StorageT> << (index % kStorageTBits));
     }
+
+    FORCE_INLINE_F void Set(const size_t index, const bool value)
+    {
+        ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
+
+        SetFalse(index);
+        storage_[index / kStorageTBits] |= (static_cast<u32>(value) << (index % kStorageTBits));
+    }
+
+    NODISCARD FORCE_INLINE_F bool Get(const size_t index) const
+    {
+        ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
+        return (storage_[index / kStorageTBits] >> (index % kStorageTBits)) & kLsb<StorageT>;
+    }
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return kNumBits; }
+
+    FORCE_INLINE_F void SetAll(const bool value)
+    {
+        memset(storage_, value ? UINT8_MAX : 0, kNumStorageT * sizeof(StorageT));
+    }
+
+    FORCE_INLINE_F u64 ToU64() const
+    {
+        ASSERT_LE(kNumBits, 64_size, "ToU64 supported only for small enough arrays");
+        return *reinterpret_cast<const u64*>(storage_);
+    }
+
+    FORCE_INLINE_F u32 ToU32() const
+    {
+        ASSERT_LE(kNumBits, 32_size, "ToU32 supported only for small enough arrays");
+        return *reinterpret_cast<const u32*>(storage_);
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
 
     private:
-    using Base = BitArrayBase<BitArray<kNumBits>>;
-    static constexpr size_t kNumStorageT =
-        (kNumBits + Base::kStorageTBits - 1) / Base::kStorageTBits;
-
-    typename Base::StorageT storage_data_[kNumStorageT]{};
+    StorageT storage_[kNumStorageT]{};
 };
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_ARRAY_HPP_
