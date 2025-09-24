@@ -2,8 +2,8 @@
 #include <stddef.h>
 
 /* internal include */
-#include "platform.h"
 #include "defines.h"
+#include "platform.h"
 
 // -------------------------------------------
 // Static initializer expected functions

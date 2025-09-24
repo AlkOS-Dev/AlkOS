@@ -8,7 +8,7 @@
 // Kernel Asserts
 // ------------------------------
 
-#define __FAIL(expr)                                                                        \
+#define __FAIL(expr)                                                                               \
     __platform_panic(                                                                              \
         "Assertion failed: " TOSTRING(expr) " at file: " __FILE__ " and line: " TOSTRING(__LINE__) \
     );
@@ -21,14 +21,14 @@
 #else
 #define ASSERT(expr)            \
     if (!(expr)) [[unlikely]] { \
-        __FAIL(expr);    \
+        __FAIL(expr);           \
     }
 #define FAIL_ALWAYS(msg) __FAIL(false && msg)
 #endif  // NDEBUG
 
 #define R_ASSERT(expr)          \
     if (!(expr)) [[unlikely]] { \
-        __FAIL(expr);    \
+        __FAIL(expr);           \
     }
 #define R_FAIL_ALWAYS(msg) __FAIL(false && msg)
 

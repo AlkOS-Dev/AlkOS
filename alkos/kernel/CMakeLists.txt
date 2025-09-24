@@ -1,23 +1,8 @@
 message(STATUS "Configuring kernel...")
 
-# This target acts as a central hub for configuration data that 
-# need to be shared across the kernel and its components.
+# TODO: This currently works as interface to attach crti and crtn object files
+# And should probably be kept that way and renamed
 add_library(alkos.kernel.config INTERFACE)
-add_library(alkos.kernel.deps INTERFACE)     # Target to link all dependencies to
-#------------------------------------------------------------------------------#
-#                           Notes: alkos.kernel.deps                           #
-#------------------------------------------------------------------------------#
-# Note: Caveat - linking objects to this target also requires
-# using target_sources $<TARGET_OBJECTS:{some lib name}> syntax because
-# interface libraries are only carriers for headers and properties
-#
-#------------------------------------------------------------------------------#
-# Note: This target is used to ensure proper linking order 
-# Idea was that this is the linking "api" of the kernel
-# So that arch etc, doesn't have to care about the linking order
-# This is current unused in the intended way, but may be useful in the future
-#
-#------------------------------------------------------------------------------#
 
 ############################### Error Checking ###############################
 
@@ -60,7 +45,7 @@ add_executable(alkos.kernel ${KERNEL_SOURCES})
 target_include_directories(alkos.kernel PUBLIC
     include
     test
-    abi
+    hal
 )
 
 ########################## Configure for given Arch ##########################
@@ -75,18 +60,14 @@ add_subdirectory(arch/${ARCH})
 
 add_subdirectory(thirdparty)
 
-target_link_libraries(alkos.kernel.deps INTERFACE
-    alkos.kernel.thirdparty
-    alkos.autogen.interface
-    c.core
-)
-
 ################################ Linking Kernel ################################
 
 target_link_libraries(alkos.kernel PRIVATE
     alkos.target.properties.interface
     alkos.kernel.config
-    alkos.kernel.deps
+    alkos.kernel.thirdparty
+    alkos.autogen.interface
+    c.core
 )
 
 ############## Linker Configuration for CXX Global Constructors ##############
@@ -120,15 +101,11 @@ alkos_ensure_defined(
     MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
 )
 
-message(STATUS "Found CRT Objects:")
-message(STATUS "  crti: ${CRTI_OBJ_PATH}")
-message(STATUS "  crtbegin: ${CRTBEGIN_OBJ_PATH}")
-message(STATUS "  crtend: ${CRTEND_OBJ_PATH}")
-message(STATUS "  crtn: ${CRTN_OBJ_PATH}")
-
-# TODO:
-# The below code could technically be replaced with target_link_libraries()
-# It didn't preserve the order of the objects and libraries, so giving up for now.
+message(STATUS "  [INFO] Found CRT Objects:")
+message(STATUS "    crti:     ${CRTI_OBJ_PATH}")
+message(STATUS "    crtbegin: ${CRTBEGIN_OBJ_PATH}")
+message(STATUS "    crtend:   ${CRTEND_OBJ_PATH}")
+message(STATUS "    crtn:     ${CRTN_OBJ_PATH}")
 
 # Add all objects and libraries to the kernel target in the correct link order.
 #    The linker requires: crti, crtbegin, <main objects>, <libraries>, crtend, crtn

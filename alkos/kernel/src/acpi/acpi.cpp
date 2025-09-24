@@ -1,11 +1,11 @@
 #include <acpi/acpi.hpp>
 
-/* Internal includes */
-#include <multiboot2/multiboot2.h>
-#include <arch_utils.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <multiboot2/multiboot_info.hpp>
+
+// TODO
+#include <include/multiboot2/multiboot2.h>
+#include <include/multiboot2/multiboot_info.hpp>
 
 /* External includes */
 #include <uacpi/event.h>
@@ -41,8 +41,8 @@ int ACPI::ACPIController::Init()
     // );
 
     // TRACE_SUCCESS(
-    //     "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
-    //     FormatMetricUint(acpi_tag->size)
+    //     "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64),
+    //     reinterpret_cast<u64>(acpi_tag), FormatMetricUint(acpi_tag->size)
     // );
 
     // RsdpAddress_ = reinterpret_cast<void*>(acpi_tag->rsdp);

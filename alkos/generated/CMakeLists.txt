@@ -1,3 +1,5 @@
+message(STATUS "Configuring Generated Files...")
+
 ############################### Preparing target ###############################
 
 add_library(alkos.autogen.interface INTERFACE)

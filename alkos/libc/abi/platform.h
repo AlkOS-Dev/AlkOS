@@ -1,9 +1,9 @@
 #ifndef ALKOS_LIBC_INTERNAL_PLATFORM_H_
 #define ALKOS_LIBC_INTERNAL_PLATFORM_H_
 
+#include <sys/time.h>
+#include <extensions/types.hpp>
 #include "defines.h"
-#include <extensions/types.hpp> 
-#include <sys/time.h>           
 
 BEGIN_DECL_C
 

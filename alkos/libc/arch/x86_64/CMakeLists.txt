@@ -1,3 +1,5 @@
+message(STATUS "  -> Configuring for x86_64")
+
 ############################### Preparing target ###############################
 
 add_library(c.core.32 STATIC ${LIB_SOURCES})
