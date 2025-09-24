@@ -1,35 +1,48 @@
 OUTPUT_FORMAT("elf64-x86-64")
 ENTRY(Entry)
 
+PHDRS
+{
+    text    PT_LOAD FLAGS(5) FILEHDR PHDRS;
+    data    PT_LOAD FLAGS(6);
+    dynamic PT_DYNAMIC; 
+}
+
 SECTIONS
 {
-          . = 100m;
+    /* PIE executable, base address will be defined at runtime */
+    . = 0x1000;
 
-	PROVIDE(loader_64_start = .);
+    PROVIDE(loader_64_start = .);
 
-	.text BLOCK(4K) : ALIGN(4K)
-	{
-		*(.text)
-	}
+    .text : ALIGN(4K)
+    {
+        *(.text .text.*)
+        *(.rodata .rodata.*)
+    } :text
 
-	/* Read-only data. */
-	.rodata BLOCK(4K) : ALIGN(4K)
-	{
-		*(.rodata)
-	}
+    .dynamic : 
+    {
+        *(.dynamic)
+    } :dynamic
 
-	/* Read-write data (initialized) */
-	.data BLOCK(4K) : ALIGN(4K)
-	{
-		*(.data)
-	}
+    .data : ALIGN(4K)
+    {
+        *(.data .data.*)
+    } :data
 
-	/* Read-write data (uninitialized) and stack */
-	.bss BLOCK(4K) : ALIGN(4K)
-	{
-		*(COMMON)
-		*(.bss)
-	}
+    .bss : ALIGN(4K)
+    {
+        *(.bss .bss.*)
+        *(COMMON)
+    } :data
 
-	PROVIDE(loader_64_end = .);
+    PROVIDE(loader_64_end = .);
+
+    /* Discard unnecessary sections */
+    /DISCARD/ :
+    {
+        *(.comment)
+        *(.eh_frame)
+    }
 }

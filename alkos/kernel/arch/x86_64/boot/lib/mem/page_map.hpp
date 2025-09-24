@@ -53,7 +53,7 @@ using PageMapTable = PageMapEntry<kLevel>[512];
 enum class PageSizeTag { k4Kb, k2Mb, k1Gb };
 
 template <PageSizeTag size>
-u64 PageSize()
+constexpr u64 PageSize()
 {
     switch (size) {
         case PageSizeTag::k4Kb:

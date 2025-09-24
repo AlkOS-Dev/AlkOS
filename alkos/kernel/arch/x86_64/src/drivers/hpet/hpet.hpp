@@ -123,6 +123,7 @@ class Hpet final
      * Shows which timers have triggered interrupts
      * Writing 1 to a bit clears the corresponding interrupt
      */
+    // TODO: This is non packed because of BitArray
     struct PACK GeneralInterruptStatusReg {
         BitArray<kMaxComparators> interrupt_status;  // Bit set for each timer that triggered
         u32 : 32;                                    // Reserved

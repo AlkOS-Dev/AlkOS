@@ -8,6 +8,8 @@ enum class Error {
     InvalidElf,
     UnsupportedMachine,
     NullEntryPoint,
+    DynamicHeaderNotFound,
+    RelocationTableNotFound,
 };
 
 }  // namespace Elf64

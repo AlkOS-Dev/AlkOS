@@ -4,11 +4,17 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
+#include "mem/pmm.hpp"
+#include "mem/vmm.hpp"
+
 struct alignas(64) TransitionData {
+    // TODO: Add magic key for validation
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;
     u64 multiboot_header_end_addr;
-    u64 memory_manager_addr;
+
+    alignas(64) PhysicalMemoryManager::PmmState pmm_state;
+    alignas(64) VirtualMemoryManager::VmmState vmm_state;
 };
 
 struct alignas(64) KernelInitialParams {

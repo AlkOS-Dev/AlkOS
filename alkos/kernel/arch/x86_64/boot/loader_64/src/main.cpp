@@ -13,7 +13,10 @@
 #include "cpu/utils.hpp"
 #include "elf/elf_64.hpp"
 #include "elf/error.hpp"
-#include "mem/memory_manager.hpp"
+#include "mem/page_map.hpp"
+#include "mem/physical_ptr.hpp"
+#include "mem/pmm.hpp"
+#include "mem/vmm.hpp"
 #include "multiboot2/info.hpp"
 #include "multiboot2/multiboot2.h"
 #include "settings.hpp"
@@ -26,15 +29,19 @@ using namespace Multiboot;
 // External Functions and Variables
 //==============================================================================
 
-extern "C" void EnterKernel(u64 kernel_entry_addr, KernelInitialParams* kernel_initial_params);
+BEGIN_DECL_C
+
+void EnterKernel(u64 kernel_entry_addr, KernelInitialParams* kernel_initial_params);
+
+// Defined in .ld
 extern const char loader_64_start[];
 extern const char loader_64_end[];
 
-//==============================================================================
-// Global Data
-//==============================================================================
+END_DECL_C
 
-static KernelInitialParams kernel_initial_params;
+//==============================================================================
+// Global Definitions
+//==============================================================================
 
 struct KernelModuleInfo {
     const TagModule* tag;
@@ -43,21 +50,75 @@ struct KernelModuleInfo {
     u64 size;
 };
 
+struct MemoryManagers {
+    PhysicalMemoryManager& pmm;
+    VirtualMemoryManager& vmm;
+};
+
+//==============================================================================
+// Global Data
+//==============================================================================
+
+static KernelInitialParams kernel_initial_params;
+
+alignas(
+    PageSize<PageSizeTag::k4Kb>()
+) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+alignas(
+    PageSize<PageSizeTag::k4Kb>()
+) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
+
 //==============================================================================
 // High-Level Boot Steps
 //==============================================================================
 
-static void InitializeLoaderEnvironment(const TransitionData* transition_data)
+static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
+    const TransitionData* transition_data
+)
 {
     TerminalInit();
     TRACE_INFO("Loader 64-Bit Stage");
-    if (transition_data == nullptr) {
-        KernelPanic("TransitionData validation failed: data is null!");
-    }
-    OsHangNoInterrupts();
+    ASSERT_NOT_NULL(transition_data, "TransitionData pointer is null");
+
+    TRACE(
+        "Transition Data:\n"
+        "  multiboot_info_addr:         0x%llX\n"
+        "  multiboot_header_start_addr: 0x%llX\n"
+        "  multiboot_header_end_addr:   0x%llX\n"
+        "  PMM State:\n"
+        "    total_pages:               %llu\n"
+        "    bitmap_addr:               0x%llX\n"
+        "    iteration_index:           %llu\n"
+        "    iteration_index_32:        %llu\n"
+        "  VMM State:\n"
+        "    pml_4_table_phys_addr:     0x%llX\n",
+        transition_data->multiboot_info_addr, transition_data->multiboot_header_start_addr,
+        transition_data->multiboot_header_end_addr, transition_data->pmm_state.total_pages,
+        transition_data->pmm_state.bitmap_addr, transition_data->pmm_state.iteration_index,
+        transition_data->pmm_state.iteration_index_32,
+        transition_data->vmm_state.pml_4_table_phys_addr
+    );
+
+    TRACE_DEBUG("Deserializing Pmm and Vmm");
+
+    PhysicalMemoryManager* pmm_ptr =
+        new (kPmmPreAllocatedMemory) PhysicalMemoryManager(transition_data->pmm_state);
+    auto& pmm = *pmm_ptr;
+
+    VirtualMemoryManager* vmm_ptr =
+        new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm, transition_data->vmm_state);
+    auto& vmm = *vmm_ptr;
+
+    MemoryManagers mms{.pmm = pmm, .vmm = vmm};
+
+    MultibootInfo mb_info(transition_data->multiboot_info_addr);
+
+    return {mms, mb_info};
 }
 
-static KernelModuleInfo AnalyzeKernelModule(MultibootInfo& multiboot_info)
+static KernelModuleInfo AnalyzeKernelModule(
+    MultibootInfo& multiboot_info, [[maybe_unused]] MemoryManagers mem_managers
+)
 {
     TRACE_DEBUG("Locating and analyzing kernel module...");
 
@@ -73,50 +134,39 @@ static KernelModuleInfo AnalyzeKernelModule(MultibootInfo& multiboot_info)
     const TagModule* kernel_tag = kernel_module_res.value();
 
     auto bounds_res = Elf64::GetProgramBounds(reinterpret_cast<byte*>(kernel_tag->mod_start));
-    if (!bounds_res) {
-        KernelPanic("Failed to get kernel ELF program bounds!");
-    }
+    ASSERT_TRUE(bounds_res, "Failed to get kernel ELF program bounds");
 
     auto [lower, upper] = bounds_res.value();
     return {kernel_tag, lower, upper, upper - lower};
 }
 
 static u64 LoadKernelIntoMemory(
-    MemoryManager* memory_manager, MultibootInfo& multiboot_info,
-    const KernelModuleInfo& kernel_info
+    MultibootInfo& multiboot_info, const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
 )
 {
+    auto& vmm = mem_managers.vmm;
+
     TRACE_DEBUG("Preparing memory and loading kernel...");
-
-    // Reserve this loader's memory temporarily
-    memory_manager->MarkMemoryAreaNotFree(
-        reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
-    );
-
-    // Find the memory map and map the kernel's virtual address space
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
-    if (!mmap_tag_res) {
-        KernelPanic("Could not find memory map tag required for kernel mapping!");
-    }
-    memory_manager->MapVirtualRangeUsingExternalMemoryMap<MemoryManager::WalkDirection::Descending>(
-        mmap_tag_res.value(), kKernelVirtualAddressStart, kernel_info.size, 0
-    );
+    ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
+
+    vmm.Alloc(kKernelVirtualAddressStart, kernel_info.size, kPresentBit | kWriteBit);
 
     // Load the ELF file from the module into the newly mapped memory
     byte* module_start   = reinterpret_cast<byte*>(kernel_info.tag->mod_start);
-    auto entry_point_res = Elf64::Load(module_start, 0);
-    if (!entry_point_res) {
-        KernelPanic("Failed to load kernel ELF module!");
-    }
+    auto entry_point_res = Elf64::Load(module_start);
+    ASSERT_TRUE(entry_point_res, "Failed to load kernel ELF");
 
     return entry_point_res.value();
 }
 
 NO_RET static void TransitionToKernel(
-    u64 kernel_entry_point, MemoryManager* memory_manager, const TransitionData* transition_data,
-    const KernelModuleInfo& kernel_info
+    u64 kernel_entry_point, const TransitionData* transition_data,
+    const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
 )
 {
+    auto& pmm = mem_managers.pmm;
+
     TRACE_INFO("Preparing to transition to kernel...");
 
     // Prepare parameters for the kernel
@@ -127,15 +177,15 @@ NO_RET static void TransitionToKernel(
         transition_data->multiboot_header_start_addr;
     kernel_initial_params.multiboot_header_end_addr = transition_data->multiboot_header_end_addr;
 
-    // Free this loader's memory region before jumping
-    memory_manager->AddFreeMemoryRegion(
-        reinterpret_cast<u64>(loader_64_start), reinterpret_cast<u64>(loader_64_end)
-    );
+    const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
+    const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
+    const u64 al_ld_start_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    const u64 al_ld_span = AlignUp(ld_end_addr - ld_start_addr, PageSize<PageSizeTag::k4Kb>());
+    pmm.Free(PhysicalPtr<void>(al_ld_start_addr), al_ld_span);
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);
     EnterKernel(kernel_entry_point, &kernel_initial_params);
 
-    // This code should be unreachable
     KernelPanic("EnterKernel should not return!");
 }
 
@@ -145,14 +195,11 @@ NO_RET static void TransitionToKernel(
 
 extern "C" void MainLoader64(TransitionData* transition_data)
 {
-    InitializeLoaderEnvironment(transition_data);
+    auto [mms, multiboot_info] = InitializeLoaderEnvironment(transition_data);
 
-    MultibootInfo multiboot_info{transition_data->multiboot_info_addr};
-    auto* memory_manager = reinterpret_cast<MemoryManager*>(transition_data->memory_manager_addr);
+    KernelModuleInfo kernel_info = AnalyzeKernelModule(multiboot_info, mms);
 
-    KernelModuleInfo kernel_info = AnalyzeKernelModule(multiboot_info);
+    u64 kernel_entry_point = LoadKernelIntoMemory(multiboot_info, kernel_info, mms);
 
-    u64 kernel_entry_point = LoadKernelIntoMemory(memory_manager, multiboot_info, kernel_info);
-
-    TransitionToKernel(kernel_entry_point, memory_manager, transition_data, kernel_info);
+    TransitionToKernel(kernel_entry_point, transition_data, kernel_info, mms);
 }

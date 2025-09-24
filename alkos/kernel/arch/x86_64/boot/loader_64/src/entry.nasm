@@ -4,7 +4,7 @@
 
           ; GDT64
           extern GDT64.Pointer
-          extern GDT64.Data
+          extern GDT64_DATA_SELECTOR 
 
           extern MainLoader64
 
@@ -12,16 +12,21 @@
           section .text
           bits 64
 Entry:
-          jmp OsHang ; Temporary hang
+          ; Note: RIP Relative Addressing for PIC
 
-          mov esp, stack_top
-          mov ebp, esp
+          ; Set up the stack 
+          lea rsp, [rel stack_top]
+          mov rbp, rsp
 
           mov r10, 0
-          mov r10d, edi ; Edi is a 32 bit LoaderData pointer filled by the loader
+          mov r10d, edi ; edi - Transition Data
 
-          lgdt [GDT64.Pointer]
-          mov ax, GDT64.Data
+          ; Load the GDT pointer 
+          lea rax, [rel GDT64.Pointer]
+          lgdt [rax]
+
+          ; Load the data segment selector
+          mov ax, [rel GDT64_DATA_SELECTOR]
           mov ss, ax
           mov ds, ax
           mov es, ax

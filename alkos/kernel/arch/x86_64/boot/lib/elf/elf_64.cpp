@@ -10,6 +10,9 @@
 namespace Elf64
 {
 
+// TODO
+// nullptr would mean "load at base", but we use 0 for u64 since it's
+// 32/64 agnostic. Some way must exist to implement this cleanly
 std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
 {
     if (!IsValid(elf_ptr)) {
@@ -47,7 +50,6 @@ std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
                 reinterpret_cast<u64>(elf_ptr) + program_header_entry->offset;
             const u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
-            // TODO
             TRACE_INFO(
                 "Segment %d: dest=0x%llX, dest_size=0x%sB, source=0x%llX, source_size=0x%sB", i + 1,
                 segment_dest, FormatMetricUint(segment_dest_size), segment_source,
@@ -67,10 +69,6 @@ std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
                 );
             }
         }
-    }
-
-    if (header->entry_point_virtual_address == 0) {
-        return std::unexpected(Error::NullEntryPoint);
     }
 
     const u64 adjusted_entry_point =
@@ -94,8 +92,10 @@ std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
 
 bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
 {
+    bool has_loadable_segments = false;
+
     out_start = static_cast<u64>(kFullMask<u64>);
-    out_end   = reinterpret_cast<u64>(nullptr);
+    out_end   = 0;
 
     if (!IsValid(elf_ptr)) {
         return false;
@@ -110,6 +110,8 @@ bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
         const ProgramHeaderEntry* program_header_entry = &program_header_table[i];
 
         if (program_header_entry->type == ProgramHeaderEntry::kLoadableSegmentType) {
+            has_loadable_segments = true;
+
             out_start = std::min(out_start, program_header_entry->virtual_address);
             out_end   = std::max(
                 out_start,
@@ -118,8 +120,7 @@ bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
         }
     }
 
-    if (out_start == static_cast<u64>(kFullMask<u64>) ||
-        out_end == reinterpret_cast<u64>(nullptr)) {
+    if (!has_loadable_segments) {
         return false;
     }
 

@@ -60,9 +60,13 @@ struct ProgramHeaderEntry {
     u64 alignment_bytes;
 
     static constexpr u32 kLoadableSegmentType = 1;
+    static constexpr u32 kDynamicSegmentType  = 2;
 } PACK;
 
-std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr);
+// TODO
+// nullptr would mean "load at base", but we use 0 for u64 since it's
+// 32/64 agnostic. Some way must exist to implement this cleanly
+std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr = 0);
 
 std::expected<void, Error> IsValid(const byte* elf_ptr);
 
