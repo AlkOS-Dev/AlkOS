@@ -63,7 +63,7 @@ struct MemoryManagers {
 // Global Data
 //==============================================================================
 
-alignas(64) static TransitionData kTransitionData;
+alignas(64) static TransitionData gTransitionData;
 alignas(
     PageSize<PageSizeTag::k4Kb>()
 ) static byte gPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
@@ -211,17 +211,17 @@ NO_RET static void TransitionTo64BitMode(
     auto vmm_state = vmm.GetState();
 
     // Prepare the data to be passed to the 64-bit stage
-    kTransitionData.multiboot_info_addr         = multiboot_info_addr_32;
-    kTransitionData.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
-    kTransitionData.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
+    gTransitionData.multiboot_info_addr         = multiboot_info_addr_32;
+    gTransitionData.multiboot_header_start_addr = reinterpret_cast<u64>(multiboot_header_start);
+    gTransitionData.multiboot_header_end_addr   = reinterpret_cast<u64>(multiboot_header_end);
 
     // Note : Stupid but compiler creates a buggy assigment operator for some reason
-    kTransitionData.pmm_state.total_pages        = pmm_state.total_pages;
-    kTransitionData.pmm_state.bitmap_addr        = pmm_state.bitmap_addr;
-    kTransitionData.pmm_state.iteration_index    = pmm_state.iteration_index;
-    kTransitionData.pmm_state.iteration_index_32 = pmm_state.iteration_index_32;
+    gTransitionData.pmm_state.total_pages        = pmm_state.total_pages;
+    gTransitionData.pmm_state.bitmap_addr        = pmm_state.bitmap_addr;
+    gTransitionData.pmm_state.iteration_index    = pmm_state.iteration_index;
+    gTransitionData.pmm_state.iteration_index_32 = pmm_state.iteration_index_32;
 
-    kTransitionData.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
+    gTransitionData.vmm_state.pml_4_table_phys_addr = vmm_state.pml_4_table_phys_addr;
 
     TRACE(
         "Transition Data:\n"
@@ -235,11 +235,11 @@ NO_RET static void TransitionTo64BitMode(
         "    iteration_index_32:        %llu\n"
         "  VMM State:\n"
         "    pml_4_table_phys_addr:     0x%llX\n",
-        kTransitionData.multiboot_info_addr, kTransitionData.multiboot_header_start_addr,
-        kTransitionData.multiboot_header_end_addr, kTransitionData.pmm_state.total_pages,
-        kTransitionData.pmm_state.bitmap_addr, kTransitionData.pmm_state.iteration_index,
-        kTransitionData.pmm_state.iteration_index_32,
-        kTransitionData.vmm_state.pml_4_table_phys_addr
+        gTransitionData.multiboot_info_addr, gTransitionData.multiboot_header_start_addr,
+        gTransitionData.multiboot_header_end_addr, gTransitionData.pmm_state.total_pages,
+        gTransitionData.pmm_state.bitmap_addr, gTransitionData.pmm_state.iteration_index,
+        gTransitionData.pmm_state.iteration_index_32,
+        gTransitionData.vmm_state.pml_4_table_phys_addr
     );
 
     TRACE_DEBUG("Freeing memory of 32-bit loader before jump");
@@ -251,7 +251,7 @@ NO_RET static void TransitionTo64BitMode(
     void* entry_high = reinterpret_cast<void*>(static_cast<u32>(entry_point >> 32));
     void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
-    EnterElf64(entry_high, entry_low, &kTransitionData);
+    EnterElf64(entry_high, entry_low, &gTransitionData);
 
     KernelPanic("EnterElf64 should not return!");
 }
