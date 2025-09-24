@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_MEM_VMM_HPP_
-#define ALKOS_BOOT_LIB_MEM_VMM_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
 
 #include <extensions/memory.hpp>
 
@@ -55,13 +55,13 @@ class VirtualMemoryManager
     //==============================================================================
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
-    FORCE_INLINE_F void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme);
+    void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme);
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
-    FORCE_INLINE_F PhysicalPtr<PageMapTable<kLevel - 1>> AllocNextLevelTable();
+    PhysicalPtr<PageMapTable<kLevel - 1>> AllocNextLevelTable();
 
     template <size_t kLevel>
-    FORCE_INLINE_F u64 PmeIdx(u64 addr);
+    u64 PmeIdx(u64 addr);
 
     //==============================================================================
     // Private Fields
@@ -73,4 +73,4 @@ class VirtualMemoryManager
 
 #include "mem/vmm.tpp"
 
-#endif  // ALKOS_BOOT_LIB_MEM_VMM_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_

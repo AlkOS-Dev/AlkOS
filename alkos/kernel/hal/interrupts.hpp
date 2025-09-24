@@ -1,7 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_INTERRUPTS_HPP_
-#define ALKOS_KERNEL_ABI_INTERRUPTS_HPP_
-
-#include <extensions/type_traits.hpp>
+#ifndef ALKOS_KERNEL_HAL_INTERRUPTS_HPP_
+#define ALKOS_KERNEL_HAL_INTERRUPTS_HPP_
 
 namespace arch
 {
@@ -19,4 +17,4 @@ struct InterruptsABI {
 /* Load architecture definition of component */
 #include <hal/interrupts.hpp>
 
-#endif  // ALKOS_KERNEL_ABI_INTERRUPTS_HPP_
+#endif  // ALKOS_KERNEL_HAL_INTERRUPTS_HPP_

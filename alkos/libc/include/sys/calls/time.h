@@ -11,14 +11,14 @@
 
 BEGIN_DECL_C
 
-inline void GetClockValueSysCall(ClockType type, TimeVal* time, Timezone* time_zone)
+FAST_CALL void GetClockValueSysCall(ClockType type, TimeVal* time, Timezone* time_zone)
 {
     __platform_get_clock_value(type, time, time_zone);
 }
 
-inline void GetTimezoneSysCall(Timezone* time_zone) { __platform_get_timezone(time_zone); }
+FAST_CALL void GetTimezoneSysCall(Timezone* time_zone) { __platform_get_timezone(time_zone); }
 
-inline u64 GetClockTicksInSecondSysCall(ClockType type)
+FAST_CALL u64 GetClockTicksInSecondSysCall(ClockType type)
 {
     return __platform_get_clock_ticks_in_second(type);
 }

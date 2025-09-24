@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_MEM_PMM_HPP_
-#define ALKOS_BOOT_LIB_MEM_PMM_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
 
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
@@ -94,14 +94,17 @@ class PhysicalMemoryManager
     FORCE_INLINE_F u64 GetTotalPages() const { return bitmap_view_.Size(); }
     FORCE_INLINE_F IterationState& GetIterationState() { return iteration_state_; }
     FORCE_INLINE_F IterationState GetIterationState() const { return iteration_state_; }
-    FORCE_INLINE_F void SetIterationState(IterationState state) { iteration_state_ = state; }
+    FORCE_INLINE_F void SetIterationState(const IterationState state) { iteration_state_ = state; }
 
     private:
     //==============================================================================
     // Private Methods
     //==============================================================================
 
-    static FORCE_INLINE_F u64 PageIndex(PhysicalPtr<void> addr) { return addr.Value() / kPageSize; }
+    static FORCE_INLINE_F u64 PageIndex(const PhysicalPtr<void> addr)
+    {
+        return addr.Value() / kPageSize;
+    }
 
     std::expected<void, MemError> IterateToNextFreePage();
     std::expected<void, MemError> IterateToNextFreePage32();
@@ -113,9 +116,9 @@ class PhysicalMemoryManager
         Multiboot::MemoryMap& mem_map, u64 bitmap_size, u64 lowest_safe_addr
     );
 
-    static BitMapView InitBitmapView(const u64 addr, const u64 size);
+    static BitMapView InitBitmapView(u64 addr, u64 size);
 
-    static void InitIterIndicies(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
+    static void InitIterIndices(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
     static void InitFreeMemory(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
 
     //==============================================================================
@@ -126,4 +129,4 @@ class PhysicalMemoryManager
     IterationState iteration_state_{};
 };
 
-#endif  // ALKOS_BOOT_LIB_MEM_PMM_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_

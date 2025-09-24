@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ABI_TERMINAL_HPP_
-#define ALKOS_KERNEL_ABI_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_HAL_TERMINAL_HPP_
+#define ALKOS_KERNEL_HAL_TERMINAL_HPP_
 
 #include <defines.h>
+#include <stdlib.h>
 #include <todo.hpp>
-#include "extensions/types.hpp"
 
 TODO_BY_THE_END_OF_MILESTONE0
 /* REWORK THAT */
@@ -68,4 +68,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
 
 #include <hal/terminal.hpp>
 
-#endif  // ALKOS_KERNEL_ABI_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_HAL_TERMINAL_HPP_

@@ -101,6 +101,9 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
 
 void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len)
 {
+    TODO_WHEN_VMEM_WORKS
+    // TODO: Map the pages
+
     // using pmm   = memory::PhysicalMemoryManager;
     // auto paddr  = AlignDown(addr, pmm::kPageSize);
     // auto offset = addr & (pmm::kPageSize - 1);
@@ -124,6 +127,8 @@ void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 void *uacpi_kernel_alloc(uacpi_size size)
 {
     TODO_WHEN_VMEM_WORKS
+    // TODO: Map the pages
+
     // // auto loader_memory_manager =
     // //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
     // // // TODO(F1r3d3v): Memory layout need to be established

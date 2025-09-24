@@ -9,7 +9,7 @@ using BitmapVmm = internal::VirtualMemoryManager<BitmapPmm>;
 
 void BuddyPmm::InitImpl()
 {
-    const auto &c = GetConfig();
+    const BuddyPmmConfig &c = GetConfig();
 
     BitmapPmm bootstrap_pmm;
     bootstrap_pmm.Configure(c.bitmap_pmm_config);

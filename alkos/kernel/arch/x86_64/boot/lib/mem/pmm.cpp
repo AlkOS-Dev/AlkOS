@@ -55,7 +55,7 @@ std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
     pmm.Reserve(PhysicalPtr<void>{bitmap_addr}, bitmap_size);
 
     TRACE_DEBUG("Initializing iteration indices...");
-    InitIterIndicies(pmm, mem_map);
+    InitIterIndices(pmm, mem_map);
 
     return pmm_ptr;
 }
@@ -379,7 +379,7 @@ void PhysicalMemoryManager::InitFreeMemory(
     }
 }
 
-void PhysicalMemoryManager::InitIterIndicies(
+void PhysicalMemoryManager::InitIterIndices(
     PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map
 )
 {

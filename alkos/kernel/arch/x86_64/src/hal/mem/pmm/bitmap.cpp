@@ -5,9 +5,9 @@
 
 using namespace arch;
 
-std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest req)
+std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(const AllocationRequest& req)
 {
-    ASSERT_LE(req.num_pages, 1u, "Bootstrap BitmapPmm does not support contiguous allocation");
+    ASSERT_EQ(req.num_pages, 1u, "Bootstrap BitmapPmm does not support contiguous allocation");
 
     const u64 total_pages = bitmap_view_.Size();
     for (u64 i = 0; i < total_pages; ++i) {
@@ -34,6 +34,6 @@ void BitmapPmm::Free(PhysicalPtr<Page> /*page*/, u64 /*num_pages*/)
 
 void BitmapPmm::InitImpl()
 {
-    const auto& c = GetConfig();
-    bitmap_view_  = BitMapView(c.pmm_bitmap_addr.ToVirt(), c.pmm_total_pages);
+    const BitmapPmmConfig& c = GetConfig();
+    bitmap_view_             = BitMapView(c.pmm_bitmap_addr.ToVirt(), c.pmm_total_pages);
 }

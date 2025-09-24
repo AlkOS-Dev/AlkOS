@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
-#define ALKOS_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/expected.hpp>
@@ -29,7 +29,7 @@ class MemoryMap
     class Iterator
     {
         public:
-        Iterator(MmapEntry* mmap_entry, uintptr_t entries_size)
+        Iterator(MmapEntry* mmap_entry, const uintptr_t entries_size)
             : current_entry_{mmap_entry}, entries_size_{entries_size}
         {
         }
@@ -46,8 +46,8 @@ class MemoryMap
 
         Iterator operator++(int)
         {
-            Iterator cp    = *this;
-            current_entry_ = reinterpret_cast<MmapEntry*>(
+            const Iterator cp = *this;
+            current_entry_    = reinterpret_cast<MmapEntry*>(
                 reinterpret_cast<uintptr_t>(current_entry_) + entries_size_
             );
             return cp;
@@ -102,4 +102,4 @@ class MemoryMap
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_

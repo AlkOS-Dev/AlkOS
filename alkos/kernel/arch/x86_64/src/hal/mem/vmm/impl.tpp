@@ -14,6 +14,7 @@ namespace arch::internal
 {
 
 template <class PmmT>
+    requires std::is_base_of_v<PhysicalMemoryManagerABI, PmmT>
 void VirtualMemoryManager<PmmT>::InitImpl()
 {
     const auto &c = this->GetConfig();

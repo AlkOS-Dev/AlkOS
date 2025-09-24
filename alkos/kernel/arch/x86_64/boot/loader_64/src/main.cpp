@@ -59,14 +59,14 @@ struct MemoryManagers {
 // Global Data
 //==============================================================================
 
-static KernelInitialParams kernel_initial_params;
+static KernelInitialParams gKernelInitialParams;
 
 alignas(
     PageSize<PageSizeTag::k4Kb>()
-) static byte kPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
+) static byte gPmmPreAllocatedMemory[sizeof(PhysicalMemoryManager)];
 alignas(
     PageSize<PageSizeTag::k4Kb>()
-) static byte kVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
+) static byte gVmmPreAllocatedMemory[sizeof(VirtualMemoryManager)];
 
 //==============================================================================
 // High-Level Boot Steps
@@ -102,11 +102,11 @@ static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
     TRACE_DEBUG("Deserializing Pmm and Vmm");
 
     PhysicalMemoryManager* pmm_ptr =
-        new (kPmmPreAllocatedMemory) PhysicalMemoryManager(transition_data->pmm_state);
+        new (gPmmPreAllocatedMemory) PhysicalMemoryManager(transition_data->pmm_state);
     auto& pmm = *pmm_ptr;
 
     VirtualMemoryManager* vmm_ptr =
-        new (kVmmPreAllocatedMemory) VirtualMemoryManager(pmm, transition_data->vmm_state);
+        new (gVmmPreAllocatedMemory) VirtualMemoryManager(pmm, transition_data->vmm_state);
     auto& vmm = *vmm_ptr;
 
     MemoryManagers mms{.pmm = pmm, .vmm = vmm};
@@ -186,16 +186,15 @@ NO_RET static void TransitionToKernel(
     TRACE_INFO("Preparing to transition to kernel...");
 
     // Prepare parameters for the kernel
-    kernel_initial_params.kernel_start_addr   = kernel_info.lower_bound;
-    kernel_initial_params.kernel_end_addr     = kernel_info.upper_bound;
-    kernel_initial_params.multiboot_info_addr = transition_data->multiboot_info_addr;
-    kernel_initial_params.multiboot_header_start_addr =
-        transition_data->multiboot_header_start_addr;
-    kernel_initial_params.multiboot_header_end_addr = transition_data->multiboot_header_end_addr;
+    gKernelInitialParams.kernel_start_addr           = kernel_info.lower_bound;
+    gKernelInitialParams.kernel_end_addr             = kernel_info.upper_bound;
+    gKernelInitialParams.multiboot_info_addr         = transition_data->multiboot_info_addr;
+    gKernelInitialParams.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
+    gKernelInitialParams.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
 
-    kernel_initial_params.mem_info_bitmap_addr = pmm.GetBitmapAddress().Value();
-    kernel_initial_params.mem_info_total_pages = pmm.GetTotalPages();
-    kernel_initial_params.mem_info_bitmap_addr = vmm.GetPml4Table().Value();
+    gKernelInitialParams.mem_info_bitmap_addr = pmm.GetBitmapAddress().Value();
+    gKernelInitialParams.mem_info_total_pages = pmm.GetTotalPages();
+    gKernelInitialParams.mem_info_bitmap_addr = vmm.GetPml4Table().Value();
 
     const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
     const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
@@ -204,7 +203,7 @@ NO_RET static void TransitionToKernel(
     pmm.Free(PhysicalPtr<void>(al_ld_start_addr), al_ld_span);
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);
-    EnterKernel(kernel_entry_point, &kernel_initial_params);
+    EnterKernel(kernel_entry_point, &gKernelInitialParams);
 
     KernelPanic("EnterKernel should not return!");
 }

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_BITMAP_PMM_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_BITMAP_PMM_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BITMAP_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BITMAP_HPP_
 
 #include <extensions/bit_array.hpp>
 #include <extensions/template_lib.hpp>
@@ -14,7 +14,7 @@ namespace arch
 // A simple PMM that takes over the bootloader's existing bitmap.
 // This serves as the temporary bootstrap allocator for the kernel.
 class BitmapPmm : public PhysicalMemoryManagerABI,
-                  public template_lib::DelayedInitMixin<BitmapPmm, Config<BitmapPmm>>
+                  public template_lib::DelayedInitMixin<BitmapPmm, BitmapPmmConfig>
 {
     public:
     enum {
@@ -28,7 +28,7 @@ class BitmapPmm : public PhysicalMemoryManagerABI,
     // ABI : PhysicalMemoryManagerABI
     //==============================================================================
 
-    std::expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest req = {});
+    std::expected<PhysicalPtr<Page>, MemError> Alloc(const AllocationRequest& req = {});
     void Free(PhysicalPtr<Page> page, u64 num_pages);
 
     //==============================================================================
@@ -48,4 +48,4 @@ class BitmapPmm : public PhysicalMemoryManagerABI,
 
 }  // namespace arch
 
-#endif
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BITMAP_HPP_

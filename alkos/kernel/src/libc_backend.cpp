@@ -9,7 +9,7 @@
 
 void __platform_panic(const char* msg) { arch::KernelPanic(msg); }
 
-void __platform_get_clock_value(ClockType type, TimeVal* time, Timezone* time_zone)
+void __platform_get_clock_value(const ClockType type, TimeVal* time, Timezone* time_zone)
 {
     assert(time != nullptr || time_zone != nullptr);
 
@@ -25,17 +25,23 @@ void __platform_get_clock_value(ClockType type, TimeVal* time, Timezone* time_zo
             } break;
             case kProcTime: {
                 R_FAIL_ALWAYS("Not implemented yet!");
-            } break;
+            };
             default:
                 R_FAIL_ALWAYS("Provided invalid ClockType!");
         }
     }
 }
 
-u64 __platform_get_clock_ticks_in_second(ClockType type)
+u64 __platform_get_clock_ticks_in_second(const ClockType type)
 {
-    const size_t idx = static_cast<size_t>(type);
+    const auto idx = static_cast<size_t>(type);
     ASSERT(idx != 0 && idx < timing_constants::kClockTicksInSecondSize);
+
+    TODO_USERSPACE
+    // if (idx == 0 || idx >= kResoSize) {
+    //     return 0;
+    // }
+
     return timing_constants::kClockTicksInSecond[idx];
 }
 
@@ -47,7 +53,7 @@ void __platform_get_timezone(Timezone* time_zone)
 
 void __platform_debug_write(const char* buffer) { DebugTerminalWrite(buffer); }
 
-size_t __platform_debug_read_line(char* buffer, size_t buffer_size)
+size_t __platform_debug_read_line(char* buffer, const size_t buffer_size)
 {
     return DebugTerminalReadLine(buffer, buffer_size);
 }

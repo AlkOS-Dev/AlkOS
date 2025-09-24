@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_ABI_CORE_HPP_
-#define ALKOS_KERNEL_ABI_CORE_HPP_
+#ifndef ALKOS_KERNEL_HAL_CORE_HPP_
+#define ALKOS_KERNEL_HAL_CORE_HPP_
 
-#include <extensions/type_traits.hpp>
+#include <extensions/defines.hpp>
 
 namespace arch
 {
@@ -24,4 +24,4 @@ NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 /* Load architecture definition of component */
 #include <hal/core.hpp>
 
-#endif  // ALKOS_KERNEL_ABI_CORE_HPP_
+#endif  // ALKOS_KERNEL_HAL_CORE_HPP_

@@ -1,7 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_SPINLOCK_HPP_
-#define ALKOS_KERNEL_ABI_SPINLOCK_HPP_
-
-#include <extensions/type_traits.hpp>
+#ifndef ALKOS_KERNEL_HAL_SPINLOCK_HPP_
+#define ALKOS_KERNEL_HAL_SPINLOCK_HPP_
 
 namespace arch
 {
@@ -22,4 +20,4 @@ struct SpinlockAbi {
 /* Load architecture definition of component */
 #include <hal/spinlock.hpp>
 
-#endif  // ALKOS_KERNEL_ABI_SPINLOCK_HPP_
+#endif  // ALKOS_KERNEL_HAL_SPINLOCK_HPP_
