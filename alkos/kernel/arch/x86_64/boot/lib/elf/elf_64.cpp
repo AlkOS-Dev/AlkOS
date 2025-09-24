@@ -84,8 +84,21 @@ std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
     u64 start_addr = static_cast<u64>(kFullMask<u64>);
     u64 end_addr   = reinterpret_cast<u64>(nullptr);
 
-    if (!IsValid(elf_ptr)) {
+    bool res = GetProgramBounds(elf_ptr, start_addr, end_addr);
+    if (!res) {
         return std::unexpected(Error::InvalidElf);
+    }
+
+    return std::expected<std::tuple<u64, u64>, Error>(std::in_place, start_addr, end_addr);
+}
+
+bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
+{
+    out_start = static_cast<u64>(kFullMask<u64>);
+    out_end   = reinterpret_cast<u64>(nullptr);
+
+    if (!IsValid(elf_ptr)) {
+        return false;
     }
 
     const auto* header               = reinterpret_cast<const Header*>(elf_ptr);
@@ -97,15 +110,20 @@ std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
         const ProgramHeaderEntry* program_header_entry = &program_header_table[i];
 
         if (program_header_entry->type == ProgramHeaderEntry::kLoadableSegmentType) {
-            start_addr = std::min(start_addr, program_header_entry->virtual_address);
-            end_addr   = std::max(
-                end_addr,
+            out_start = std::min(out_start, program_header_entry->virtual_address);
+            out_end   = std::max(
+                out_start,
                 program_header_entry->virtual_address + program_header_entry->size_in_memory_bytes
             );
         }
     }
 
-    return std::make_tuple(start_addr, end_addr);
+    if (out_start == static_cast<u64>(kFullMask<u64>) ||
+        out_end == reinterpret_cast<u64>(nullptr)) {
+        return false;
+    }
+
+    return true;
 }
 
 std::expected<void, Error> IsValid(const byte* elf_ptr)

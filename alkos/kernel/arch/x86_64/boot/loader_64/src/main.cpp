@@ -54,6 +54,7 @@ static void InitializeLoaderEnvironment(const TransitionData* transition_data)
     if (transition_data == nullptr) {
         KernelPanic("TransitionData validation failed: data is null!");
     }
+    OsHangNoInterrupts();
 }
 
 static KernelModuleInfo AnalyzeKernelModule(MultibootInfo& multiboot_info)

@@ -13,7 +13,14 @@ class PhysicalPtr
     //==============================================================================
 
     PhysicalPtr() : address_{0} {}
+    explicit PhysicalPtr(T* ptr) : address_{static_cast<u64>(reinterpret_cast<uptr>(ptr))} {}
+    explicit PhysicalPtr(u32 address) : address_{static_cast<u64>(address)} {}
     explicit PhysicalPtr(u64 address) : address_{address} {}
+
+    template <class OtherT>
+    explicit PhysicalPtr(const PhysicalPtr<OtherT>& other) : address_(other.Value())
+    {
+    }
 
     //==============================================================================
     // Operators
@@ -21,9 +28,10 @@ class PhysicalPtr
 
     // Enabling pointer-like behavior
 
-    T& operator*() const { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+    T& operator*() { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+    const T& operator*() const { return *reinterpret_cast<T*>(static_cast<uptr>(address_)); }
 
-    std::add_lvalue_reference_t<T> operator->() const
+    const std::add_lvalue_reference_t<T> operator->() const
     {
         return reinterpret_cast<T*>(static_cast<uptr>(address_));
     }
@@ -48,6 +56,8 @@ class PhysicalPtr
 
     bool IsNull() const { return address_ == 0; }
 
+    T* ValuePtr() { return reinterpret_cast<T*>(static_cast<uptr>(address_)); }
+
     private:
     u64 address_{};
 };
@@ -61,7 +71,14 @@ class PhysicalPtr<void>
     //==============================================================================
 
     PhysicalPtr() : address_{0} {}
+    explicit PhysicalPtr(void* ptr) : address_{static_cast<u64>(reinterpret_cast<uptr>(ptr))} {}
+    explicit PhysicalPtr(u32 address) : address_{static_cast<u64>(address)} {}
     explicit PhysicalPtr(u64 address) : address_{address} {}
+
+    template <class OtherT>
+    explicit PhysicalPtr(const PhysicalPtr<OtherT>& other) : address_(other.Value())
+    {
+    }
 
     //==============================================================================
     // Operators
@@ -87,8 +104,12 @@ class PhysicalPtr<void>
 
     bool IsNull() const { return address_ == 0; }
 
+    void* ValuePtr() { return reinterpret_cast<void*>(static_cast<uptr>(address_)); }
+
     private:
     u64 address_{};
-};
+} PACK;
+
+static_assert(sizeof(PhysicalPtr<void>) == sizeof(u64));  // Ensure no padding
 
 #endif  // ALKOS_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_

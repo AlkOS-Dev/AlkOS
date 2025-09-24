@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_MEMORY_HPP_
 
 #include "extensions/type_traits.hpp"
+#include "extensions/utility.hpp"
 #include "todo.h"
 
 namespace std

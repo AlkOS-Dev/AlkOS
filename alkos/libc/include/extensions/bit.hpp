@@ -128,6 +128,8 @@ FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
     return IsAligned(reinterpret_cast<uintptr_t>(ptr), alignment);
 }
 
+// TODO: Does this work for non-power of two alignments?
+
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
 FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)

@@ -68,6 +68,10 @@ std::expected<void, Error> IsValid(const byte* elf_ptr);
 
 std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr);
 
+// Simplified version cuz 32-bit code can't handle
+// the MAGIC of std::expected<std::tuple<u64, u64>, Error>
+bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end);
+
 }  // namespace Elf64
 
 #endif  // ALKOS_BOOT_LIB_ELF_ELF64_HPP_

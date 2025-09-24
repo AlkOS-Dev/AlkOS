@@ -12,6 +12,8 @@
           section .text
           bits 64
 Entry:
+          jmp OsHang ; Temporary hang
+
           mov esp, stack_top
           mov ebp, esp
 
