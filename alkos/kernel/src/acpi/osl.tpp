@@ -4,8 +4,10 @@
 #include <uacpi/status.h>
 #include <uacpi/types.h>
 #include <extensions/concepts_ext.hpp>
-#include <io.hpp>
-#include <pci.hpp>
+
+// TODO SHOULD BE THROUGH HAL
+#include <include/io.hpp>
+#include <include/pci.hpp>
 
 template <concepts_ext::IoT T>
 uacpi_status uacpi_kernel_pci_read(uacpi_handle device, uacpi_size offset, T *value)

@@ -90,16 +90,6 @@ TODO_LIBCPP_COMPLIANCE
 }
 
 // ------------------------------
-// std::addressof
-// ------------------------------
-
-template <typename T>
-NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
-{
-    return __builtin_addressof(arg);
-}
-
-// ------------------------------
 // std::monostate
 // ------------------------------
 
@@ -110,6 +100,35 @@ constexpr strong_ordering operator<=>(monostate, monostate) noexcept
 {
     return strong_ordering::equal;
 }
+
+// ------------------------------
+// std::in_place_t
+// ------------------------------
+
+// For tag dispatching to in-place construct an object.
+struct in_place_t {
+    explicit in_place_t() = default;
+};
+
+inline constexpr in_place_t in_place{};
+
+// For tag dispatching to in-place construct an object of a specific type.
+template <class T>
+struct in_place_type_t {
+    explicit in_place_type_t() = default;
+};
+
+template <class T>
+inline constexpr in_place_type_t<T> in_place_type{};
+
+// For tag dispatching to in-place construct an object at a specific index.
+template <size_t I>
+struct in_place_index_t {
+    explicit in_place_index_t() = default;
+};
+
+template <size_t I>
+inline constexpr in_place_index_t<I> in_place_index{};
 
 }  // namespace std
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_

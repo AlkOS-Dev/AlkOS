@@ -13,6 +13,7 @@ static constexpr bool kIsDebugBuild = true;
 
 #define NODISCARD         [[nodiscard]]
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
+#define MAYBE_UNUSED      [[maybe_unused]]
 
 /* 1 or nothing */
 #define VARIADIC_MACRO_HAS_ARGS(...) __VA_OPT__(1)

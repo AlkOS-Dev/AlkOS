@@ -4,11 +4,12 @@
 #include <autogen/feature_flags.h>
 #include <todo.h>
 
+#include "platform.h"
+
 #if FEATURE_FLAG_DEBUG_TRACES
 
 #include <assert.h>
 #include <stdio.h>
-#include <debug_terminal.hpp>
 #include <extensions/defines.hpp>
 
 // ------------------------------
@@ -28,7 +29,7 @@ void FormatTrace(const char* format, Args... args)
 
     [[maybe_unused]] const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
-    DebugTerminalWrite(buffer);
+    __platform_debug_write(buffer);
 }
 
 #define TRACE(message, ...) FormatTrace(message __VA_OPT__(, ) __VA_ARGS__)

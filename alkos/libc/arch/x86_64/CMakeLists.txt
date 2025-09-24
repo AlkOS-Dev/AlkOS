@@ -1,39 +1,47 @@
+message(STATUS "  -> Configuring for x86_64")
+
 ############################### Preparing target ###############################
 
-add_library(lib${LIB_NAME}.32 STATIC ${LIB_SOURCES})
-set_target_properties(lib${LIB_NAME}.32 PROPERTIES OUTPUT_NAME "${LIB_NAME}.32")
+add_library(c.core.32 STATIC ${LIB_SOURCES})
+add_library(c.core.pic STATIC ${LIB_SOURCES})
+
+set_target_properties(c.core.pic PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 ############################### Adding includes ###############################
 
-target_include_directories(lib${LIB_NAME}.32 PUBLIC
-        ../../include
+list(TRANSFORM LIB_PRIVATE_INCLUDE_DIRS PREPEND "../../")
+list(TRANSFORM LIB_PUBLIC_INCLUDE_DIRS  PREPEND "../../")
+
+target_include_directories(c.core.32 PUBLIC
+  ${LIB_PUBLIC_INCLUDE_DIRS}
 )
 
-target_include_directories(lib${LIB_NAME}.32 PRIVATE
-        ../../internal
+target_include_directories(c.core.32 PRIVATE
+  ${LIB_PRIVATE_INCLUDE_DIRS}
 )
 
-############################# Setting Custom Properties #########################
+target_include_directories(c.core.pic PUBLIC
+  ${LIB_PUBLIC_INCLUDE_DIRS}
+)
 
-target_link_libraries(lib${LIB_NAME}.32 PUBLIC target.properties.32)
+target_include_directories(c.core.pic PRIVATE
+  ${LIB_PRIVATE_INCLUDE_DIRS}
+)
 
 ################################# Dependencies ################################
 
-add_dependencies(lib${LIB_NAME}.32 lib${LIB_NAME})
+add_dependencies(c.core.32 c.core)
 
-target_link_libraries(lib${LIB_NAME}.32 PUBLIC 
-  target.properties.32
-  AutoGenLib
+target_link_libraries(c.core.32 PUBLIC 
+  alkos.target.properties.interface.32
+  alkos.autogen.interface
   gcc
 )
 
-if (SYSTEM_LIB_TYPE STREQUAL "k" OR SYSTEM_LIB_TYPE STREQUAL "K")
-    target_link_libraries(lib${LIB_NAME}.32 PRIVATE alkos.kernel.headers)
-endif ()
+add_dependencies(c.core.pic c.core)
 
-############################### Processing output ###############################
-
-set_target_properties(lib${LIB_NAME}.32 PROPERTIES
-        ARCHIVE_OUTPUT_DIRECTORY ${SYSROOT}/usr/lib
-        LIBRARY_OUTPUT_DIRECTORY ${SYSROOT}/usr/lib
+target_link_libraries(c.core.pic PUBLIC 
+  alkos.target.properties.pic.interface
+  alkos.autogen.interface
+  gcc
 )

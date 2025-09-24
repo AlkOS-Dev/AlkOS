@@ -125,13 +125,21 @@ FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 {
-    return (num + alignment - 1) & ~(alignment - 1);
+    if (!std::is_constant_evaluated()) {
+        ASSERT_ZERO(alignment % 2);
+    }
+
+    return (num + static_cast<NumT>(alignment) - 1) & ~(static_cast<NumT>(alignment) - 1);
 }
 
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
 {
-    return num & ~(alignment - 1);
+    if (!std::is_constant_evaluated()) {
+        ASSERT_ZERO(alignment % 2);
+    }
+
+    return num & ~(static_cast<NumT>(alignment) - 1);
 }
 
 template <typename PtrT>
