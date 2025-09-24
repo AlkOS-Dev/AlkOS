@@ -2,10 +2,11 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
 
 #include <stdint.h>
-#include <extensions/concepts.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+#include "assert.h"
+#include "extensions/concepts.hpp"
+#include "extensions/defines.hpp"
+#include "extensions/type_traits.hpp"
+#include "extensions/types.hpp"
 
 // ------------------------------
 // Various defines
