@@ -9,6 +9,7 @@
 /* internal includes */
 #include <cpuid.h>
 #include <extensions/debug.hpp>
+#include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
 #include <modules/hardware.hpp>
 #include <terminal.hpp>
@@ -63,6 +64,7 @@ extern "C" void PreKernelInit(void* loader_data)
 
     // HardwareModule::Init();
     // HardwareModule::Get().GetInterrupts().FirstStageInit();
+
     TRACE_INFO("KERNEL END");
     OsHangNoInterrupts();
 

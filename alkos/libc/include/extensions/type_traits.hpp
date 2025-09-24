@@ -26,13 +26,6 @@ TODO_LIBCPP_COMPLIANCE
  * TODO: Missing implementations:
  * - std::common_reference
  * - std::common_type
- * - std::is_swappable
- * - std::is_swappable_with
- * - std::is_nothrow_swappable
- * - std::is_nothrow_swappable_with
- * - std::is_destructible
- * - std::is_nothrow_destructible
- * - std::is_trivially_destructible
  */
 
 namespace std
@@ -1953,43 +1946,105 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 // std::is_swappable_with
 // ------------------------------
 
-// TODO
+template <class T, class U>
+struct is_swappable_with : std::false_type {
+};
 
-// ------------------------------
-// std::is_swappable
-// ------------------------------
+template <class T, class U>
+    requires requires { swap(internal::declval<T>(), internal::declval<U>()); }
+struct is_swappable_with<T, U> : std::true_type {
+};
 
-// TODO
-
-// -------------------------------
-// std::is_nothrow_swappable
-// -------------------------------
-
-// TODO
+template <class T, class U>
+constexpr bool is_swappable_with_v = is_swappable_with<T, U>::value;
 
 // ------------------------------------
 // std::is_nothrow_swappable_with
 // ------------------------------------
 
-// TODO
+template <class T, class U>
+struct is_nothrow_swappable_with : std::false_type {
+};
+
+template <class T, class U>
+    requires requires {
+        { swap(internal::declval<T>(), internal::declval<U>()) } noexcept;
+    }
+struct is_nothrow_swappable_with<T, U> : std::true_type {
+};
+
+template <class T, class U>
+constexpr bool is_nothrow_swappable_with_v = is_nothrow_swappable_with<T, U>::value;
+
+// ------------------------------
+// std::is_swappable
+// ------------------------------
+
+template <class T>
+struct is_swappable : is_swappable_with<add_lvalue_reference_t<T>, add_lvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_swappable)
+
+// -------------------------------
+// std::is_nothrow_swappable
+// -------------------------------
+
+template <class T>
+struct is_nothrow_swappable
+    : is_nothrow_swappable_with<add_lvalue_reference_t<T>, add_lvalue_reference_t<T>> {
+};
+
+__DEF_CONSTEXPR_ACCESSOR(is_nothrow_swappable)
 
 // ------------------------------
 // std::is_destructible
 // ------------------------------
 
-// TODO
+template <class T>
+    struct is_destructible : std::integral_constant < bool,
+    requires(T object) {
+    object.~T();
+}>{};
+
+template <class T>
+constexpr bool is_destructible_v = is_destructible<T>::value;
 
 // ------------------------------------
 // std::is_trivially_destructible
 // ------------------------------------
 
-// TODO
+#if __has_builtin(__is_trivially_destructible)
+template <class T>
+struct is_trivially_destructible
+    : integral_constant<bool, is_destructible<T>::value &&__is_trivially_destructible(T)> {
+};
+#elif __has_builtin(__has_trivial_destructor)
+template <class T>
+struct is_trivially_destructible
+    : integral_constant<bool, is_destructible<T>::value &&__has_trivial_destructor(T)> {
+};
+#else
+#error is_trivially_deconstructible is not implemented
+#endif
+
+template <class T>
+constexpr bool is_trivially_destructible_v = is_trivially_destructible<T>::value;
 
 // ----------------------------------
 // std::is_nothrow_destructible
 // ----------------------------------
 
-// TODO
+template <class T>
+    struct is_nothrow_destructible : std::integral_constant < bool,
+    requires(T object) {
+    {
+        object.~T()
+    } noexcept;
+}>{};
+
+template <class T>
+constexpr bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
 
 }  // namespace std
 
