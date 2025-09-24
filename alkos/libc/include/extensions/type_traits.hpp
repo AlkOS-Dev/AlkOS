@@ -37,6 +37,9 @@ namespace std
 template <class T>
 struct reference_wrapper;
 
+template <class T>
+void swap(T &, T &) noexcept;
+
 // ------------------------------
 // Internal helpers
 // ------------------------------
@@ -1945,14 +1948,42 @@ constexpr bool has_virtual_destructor_v = has_virtual_destructor<T>::value;
 // ------------------------------
 // std::is_swappable_with
 // ------------------------------
+namespace internal
+{
+// Forward declare swap for the SFINAE check below.
+// The actual definition will be in <utility>.
+template <class T>
+void swap(
+    T &a, T &b
+) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>);
 
-template <class T, class U>
-struct is_swappable_with : std::false_type {
+namespace swappable_details
+{
+using std::swap;
+
+template <class T, class U, class = void>
+struct swappable_with_check : std::false_type {
 };
 
 template <class T, class U>
-    requires requires { swap(internal::declval<T>(), internal::declval<U>()); }
-struct is_swappable_with<T, U> : std::true_type {
+struct swappable_with_check<
+    T, U, std::void_t<decltype(swap(internal::declval<T>(), internal::declval<U>()))>>
+    : std::true_type {
+};
+
+template <class T, class U>
+constexpr bool nothrow_swappable_with_check()
+{
+    if constexpr (swappable_with_check<T, U>::value) {
+        return noexcept(swap(internal::declval<T>(), internal::declval<U>()));
+    }
+    return false;
+}
+}  // namespace swappable_details
+}  // namespace internal
+
+template <class T, class U>
+struct is_swappable_with : internal::swappable_details::swappable_with_check<T, U> {
 };
 
 template <class T, class U>
@@ -1963,14 +1994,8 @@ constexpr bool is_swappable_with_v = is_swappable_with<T, U>::value;
 // ------------------------------------
 
 template <class T, class U>
-struct is_nothrow_swappable_with : std::false_type {
-};
-
-template <class T, class U>
-    requires requires {
-        { swap(internal::declval<T>(), internal::declval<U>()) } noexcept;
-    }
-struct is_nothrow_swappable_with<T, U> : std::true_type {
+struct is_nothrow_swappable_with
+    : std::bool_constant<internal::swappable_details::nothrow_swappable_with_check<T, U>()> {
 };
 
 template <class T, class U>

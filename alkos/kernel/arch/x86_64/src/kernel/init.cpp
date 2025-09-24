@@ -14,6 +14,7 @@
 #include <modules/hardware.hpp>
 #include <terminal.hpp>
 
+#include "abi/boot_params.hpp"
 #include "cpu/utils.hpp"
 #include "panic.hpp"
 
@@ -24,7 +25,6 @@
 extern "C" void EnableOSXSave();
 extern "C" void EnableSSE();
 extern "C" void EnableAVX();
-extern "C" void EnterKernel(u64 kernel_entry_addr);
 
 static int GetCpuModel()
 {
@@ -37,15 +37,15 @@ static int GetCpuModel()
 // Main Entry Point
 //==================================================================================
 
-extern "C" void PreKernelInit(void* loader_data)
+extern "C" void PreKernelInit(KernelInitialParams* kernel_init_params)
 {
     arch::TerminalInit();
     TRACE_INFO("In PreKernelInit...");
 
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
-    if (loader_data == nullptr) {
-        arch::KernelPanic("LoaderData is null");
+    if (kernel_init_params == nullptr) {
+        arch::KernelPanic("KernelInitialParams is null!");
     }
 
     TRACE_INFO("Setting up CPU features...");

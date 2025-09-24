@@ -132,14 +132,14 @@ template <typename NumT>
     requires std::is_unsigned_v<NumT>
 FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 {
-    return (num + alignment - 1) & ~(alignment - 1);
+    return (num + static_cast<NumT>(alignment) - 1) & ~(static_cast<NumT>(alignment) - 1);
 }
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>
 FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
 {
-    return num & ~(alignment - 1);
+    return num & ~(static_cast<NumT>(alignment) - 1);
 }
 
 template <typename PtrT>

@@ -154,6 +154,11 @@ template <class T>
 constexpr bool is_unexpected_v = false;
 template <class E>
 constexpr bool is_unexpected_v<unexpected<E>> = true;
+
+template <class T>
+constexpr bool is_expected_v = false;
+template <class T, class E>
+constexpr bool is_expected_v<expected<T, E>> = true;
 }  // namespace detail
 
 template <class T, class E>
@@ -416,9 +421,7 @@ class expected
         if (has_value()) {
             value_ = std::forward<U>(v);
         } else {
-            std::destroy_at(&error_);
-            std::construct_at(&value_, std::forward<U>(v));
-            has_value_ = true;
+            this->emplace(std::forward<U>(v));
         }
         return *this;
     }
@@ -812,7 +815,7 @@ class expected
     }
 
     template <typename T2>
-        requires requires(const T& t, const T2& v) {
+        requires(!detail::is_expected_v<remove_cvref_t<T2>>) && requires(const T& t, const T2& v) {
             { t == v } -> std::convertible_to<bool>;
         }
     friend constexpr bool operator==(const expected<T, E>& x, const T2& v)
@@ -1234,8 +1237,12 @@ class expected<void, E>
     {
         using U = remove_cv_t<invoke_result_t<F>>;
         if (has_value()) {
-            std::invoke(std::forward<F>(f));
-            return expected<U, E>(in_place);
+            if constexpr (is_void_v<U>) {
+                std::invoke(std::forward<F>(f));
+                return expected<void, E>(in_place);
+            } else {
+                return expected<U, E>(std::invoke(std::forward<F>(f)));
+            }
         }
         return expected<U, E>(unexpect, error_);
     }
@@ -1244,8 +1251,12 @@ class expected<void, E>
     {
         using U = remove_cv_t<invoke_result_t<F>>;
         if (has_value()) {
-            std::invoke(std::forward<F>(f));
-            return expected<U, E>(in_place);
+            if constexpr (is_void_v<U>) {
+                std::invoke(std::forward<F>(f));
+                return expected<void, E>(in_place);
+            } else {
+                return expected<U, E>(std::invoke(std::forward<F>(f)));
+            }
         }
         return expected<U, E>(unexpect, error_);
     }
@@ -1254,8 +1265,12 @@ class expected<void, E>
     {
         using U = remove_cv_t<invoke_result_t<F>>;
         if (has_value()) {
-            std::invoke(std::forward<F>(f));
-            return expected<U, E>(in_place);
+            if constexpr (is_void_v<U>) {
+                std::invoke(std::forward<F>(f));
+                return expected<void, E>(in_place);
+            } else {
+                return expected<U, E>(std::invoke(std::forward<F>(f)));
+            }
         }
         return expected<U, E>(unexpect, std::move(error_));
     }
@@ -1264,8 +1279,12 @@ class expected<void, E>
     {
         using U = remove_cv_t<invoke_result_t<F>>;
         if (has_value()) {
-            std::invoke(std::forward<F>(f));
-            return expected<U, E>(in_place);
+            if constexpr (is_void_v<U>) {
+                std::invoke(std::forward<F>(f));
+                return expected<void, E>(in_place);
+            } else {
+                return expected<U, E>(std::invoke(std::forward<F>(f)));
+            }
         }
         return expected<U, E>(unexpect, std::move(error_));
     }

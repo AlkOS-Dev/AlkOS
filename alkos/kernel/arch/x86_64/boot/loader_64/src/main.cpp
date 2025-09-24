@@ -121,7 +121,6 @@ NO_RET static void TransitionToKernel(
     // Prepare parameters for the kernel
     kernel_initial_params.kernel_start_addr   = kernel_info.lower_bound;
     kernel_initial_params.kernel_end_addr     = kernel_info.upper_bound;
-    kernel_initial_params.memory_manager_addr = transition_data->memory_manager_addr;
     kernel_initial_params.multiboot_info_addr = transition_data->multiboot_info_addr;
     kernel_initial_params.multiboot_header_start_addr =
         transition_data->multiboot_header_start_addr;
