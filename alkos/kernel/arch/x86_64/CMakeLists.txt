@@ -2,12 +2,8 @@ message(STATUS "Configuring for x86_64")
 
 ################################# Add Modules ##################################
 
-add_subdirectory(loader32)
-add_subdirectory(loader64)
+add_subdirectory(boot)
 add_subdirectory(kernel)
-
-add_subdirectory(common-loader-all)
-add_subdirectory(common-loader-64-kernel)
 
 ################################# Register Env #################################
 

@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_MEMORY_CYCLIC_ALLOCATOR_HPP_
 
 #include <stddef.h>
+#include <extensions/compare.hpp>
 #include <extensions/bit_array.hpp>
 #include <extensions/new.hpp>
 #include <todo.hpp>

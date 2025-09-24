@@ -13,7 +13,7 @@ alkos_target_sources(alkos.kernel
 
 ############################### Adding Headers ###############################
 
-target_include_directories(alkos.kernel.headers INTERFACE
+target_include_directories(alkos.kernel PUBLIC
         .
 )
 
@@ -51,12 +51,9 @@ add_dependencies(alkos.kernel alkos.kernel.crti alkos.kernel.crtn)
 
 target_link_libraries(alkos.kernel.deps INTERFACE
         alkos.target.properties.interface
-        arch.common.all.64
-        arch.common.kernel-loader.64
 )
 
 # This makes the interface also properly link to object files
 target_sources(alkos.kernel.deps INTERFACE
     $<TARGET_OBJECTS:arch.common.all.64>
-    $<TARGET_OBJECTS:arch.common.kernel-loader.64>
 )

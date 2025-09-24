@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
 
 #include <extensions/types.hpp>
+#include <extensions/defines.hpp>
 
 namespace std
 {

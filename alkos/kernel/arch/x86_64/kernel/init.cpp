@@ -8,68 +8,17 @@
 
 /* internal includes */
 #include <cpuid.h>
-#include <multiboot2/multiboot2.h>
 #include <arch_utils.hpp>
-#include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <loader_memory_manager/loader_memory_manager.hpp>
 #include <modules/hardware.hpp>
 #include <terminal.hpp>
 
-#include "multiboot2/memory_map.hpp"
-#include "multiboot2/multiboot2.h"
-#include "multiboot2/multiboot_info.hpp"
-
-#include "memory_management/physical_memory_manager.hpp"
-
 /* external init procedures */
 extern "C" void EnableOSXSave();
-
 extern "C" void EnableSSE();
-
 extern "C" void EnableAVX();
-
 extern "C" void EnterKernel(u64 kernel_entry_addr);
-
-loader64::LoaderData *kLoaderData;
-
-static memory::PhysicalMemoryManager::PageBufferInfo_t CreatePageBuffer(
-    loader64::LoaderData *loader_data, LoaderMemoryManager *loader_memory_manager
-)
-{
-    TRACE_INFO("Creating page buffer...");
-    memory::PhysicalMemoryManager::PageBufferInfo_t buffer_info{};
-    Multiboot::MultibootInfo multiboot_info(loader_data->multiboot_info_addr);
-    auto *mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
-
-    u64 total_memory_bytes = 0;
-    Multiboot::MemoryMap memory_map(mmap_tag);
-    memory_map.WalkEntries([&total_memory_bytes](Multiboot::MmapEntry &entry) {
-        if (entry.type == Multiboot::MmapEntry::kMemoryAvailable) {
-            total_memory_bytes += entry.len;
-        }
-    });
-    u64 pages_required = total_memory_bytes / memory::PhysicalMemoryManager::kPageSize + 1;
-
-    buffer_info.start_addr = AlignUp(
-        loader_data->kernel_end_addr + memory::PhysicalMemoryManager::kPageSize,
-        memory::PhysicalMemoryManager::kPageSize
-    );
-    buffer_info.size_bytes = pages_required * sizeof(u64);
-
-    loader_memory_manager
-        ->MapVirtualRangeUsingExternalMemoryMap<LoaderMemoryManager::WalkDirection::Descending>(
-            mmap_tag, buffer_info.start_addr, buffer_info.size_bytes
-        );
-    TRACE_INFO("Total memory bytes: %sB", FormatMetricUint(total_memory_bytes));
-    TRACE_INFO("Pages required: %sB", FormatMetricUint(pages_required));
-
-    loader_data->multiboot_header_end_addr = buffer_info.start_addr + buffer_info.size_bytes;
-
-    TRACE_SUCCESS("Page buffer created!");
-    return buffer_info;
-}
 
 static int GetCpuModel()
 {
@@ -78,7 +27,7 @@ static int GetCpuModel()
     return ebx;
 }
 
-extern "C" void PreKernelInit(loader64::LoaderData *loader_data)
+extern "C" void PreKernelInit(void* loader_data)
 {
     TODO_WHEN_DEBUGGING_FRAMEWORK
 
@@ -112,26 +61,11 @@ extern "C" void PreKernelInit(loader64::LoaderData *loader_data)
     EnableAVX();
     TRACE_SUCCESS("AVX setup complete!");
 
-    HardwareModule::Init();
-    HardwareModule::Get().GetInterrupts().FirstStageInit();
+    // HardwareModule::Init();
+    // HardwareModule::Get().GetInterrupts().FirstStageInit();
+    TRACE_INFO("KERNEL END");
+    OsHangNoInterrupts();
 
     EnableHardwareInterrupts();
     TRACE_INFO("Finished cpu features setup.");
-
-    auto *loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager *>(loader_data->loader_memory_manager_addr);
-    loader_memory_manager->MarkMemoryAreaNotFree(
-        loader_data->kernel_start_addr, loader_data->kernel_end_addr
-    );
-
-    memory::PhysicalMemoryManager::PageBufferInfo_t page_buffer_info =
-        CreatePageBuffer(loader_data, loader_memory_manager);
-    PhysicalMemoryManager::Init(page_buffer_info);
-
-    Multiboot::MultibootInfo multiboot_info(loader_data->multiboot_info_addr);
-    auto *mmap_tag = multiboot_info.FindTag<Multiboot::TagMmap>();
-
-    PhysicalMemoryManager::Get().PopulatePageBuffer(mmap_tag);
-
-    kLoaderData = loader_data;
 }
