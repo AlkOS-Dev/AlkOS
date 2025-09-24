@@ -72,18 +72,6 @@ FAST_CALL void OsHangNoInterrupts()
 FAST_CALL void InvokeInterrupt(const u8 idx) { __asm__ volatile("int %0" : : "N"(idx)); }
 
 /**
- * @brief Shut down QEMU emulator
- *
- * Writes shutdown command to QEMU exit port and halts CPU.
- * Only works when running under QEMU.
- */
-FAST_CALL NO_RET void QemuShutdown()
-{
-    outw(0x604, 0x2000);
-    OsHang();
-}
-
-/**
  * @brief CPU state container structure
  *
  * Holds values of all general-purpose registers for x86_64 CPU.

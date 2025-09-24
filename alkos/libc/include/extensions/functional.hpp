@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
 
 #include <extensions/internal/invoke.hpp>
+#include "utility.hpp"
 
 namespace std
 {
