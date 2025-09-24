@@ -5,6 +5,7 @@
 #include <acpi/acpi.hpp>
 #include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
+#include <modules/memory.hpp>
 #include <modules/timing.hpp>
 
 void KernelInit()
@@ -14,6 +15,9 @@ void KernelInit()
 
     /* Initialize the global state module */
     GlobalStateModule::Init();
+
+    MemoryModule::Get().GetPmm().Init();
+    MemoryModule::Get().GetVmm().Init();
 
     // TODO: DISABLING ACPI AND INTERRUPTS UNTIL
     // PROPER HANDLING OF MEMORY AND MULTIBOOT IS DONE

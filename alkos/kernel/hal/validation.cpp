@@ -3,6 +3,8 @@
 #include <hal/interrupts.hpp>
 #include <hal/spinlock.hpp>
 
+// TODO: Is this is included in build via CMakeLists.txt?
+
 /*
  * This file contains static assertions to verify that all architecture-specific
  * HAL implementations correctly derive from their corresponding ABI classes.

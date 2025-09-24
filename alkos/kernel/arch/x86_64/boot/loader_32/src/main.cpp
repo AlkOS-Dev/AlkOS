@@ -144,7 +144,7 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     pmm.Reserve(PhysicalPtr<void>(al_mb_hdr_addr), al_mb_hdr_span);
 
     TRACE_DEBUG("Identity mapping memory...");
-    vmm.Map<&PhysicalMemoryManager::Alloc32, PageSizeTag::k1Gb>(
+    vmm.Map<PageSizeTag::k1Gb, &PhysicalMemoryManager::Alloc32>(
         0, 0, 10 * PageSize<PageSizeTag::k1Gb>(), kPresentBit | kWriteBit | kGlobalBit
     );
 

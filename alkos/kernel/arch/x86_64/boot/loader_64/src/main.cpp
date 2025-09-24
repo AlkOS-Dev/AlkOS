@@ -160,12 +160,28 @@ static u64 LoadKernelIntoMemory(
     return entry_point_res.value();
 }
 
+static void EstablishDirectMemMapping(MemoryManagers& mms)
+{
+    auto& vmm = mms.vmm;
+
+    TRACE_DEBUG(
+        "Creating direct memory mapping at 0x%llX with %llu Gb", kDirectMemMapAddrStart,
+        kDirectMemMapSizeGb
+    );
+
+    vmm.Map<PageSizeTag::k1Gb>(
+        kDirectMemMapAddrStart, 0, kDirectMemMapSizeGb * PageSize<PageSizeTag::k1Gb>(),
+        kPresentBit | kWriteBit | kGlobalBit
+    );
+}
+
 NO_RET static void TransitionToKernel(
     u64 kernel_entry_point, const TransitionData* transition_data,
     const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
 )
 {
     auto& pmm = mem_managers.pmm;
+    auto& vmm = mem_managers.vmm;
 
     TRACE_INFO("Preparing to transition to kernel...");
 
@@ -176,6 +192,10 @@ NO_RET static void TransitionToKernel(
     kernel_initial_params.multiboot_header_start_addr =
         transition_data->multiboot_header_start_addr;
     kernel_initial_params.multiboot_header_end_addr = transition_data->multiboot_header_end_addr;
+
+    kernel_initial_params.mem_info_bitmap_addr = pmm.GetBitmapAddress().Value();
+    kernel_initial_params.mem_info_total_pages = pmm.GetTotalPages();
+    kernel_initial_params.mem_info_bitmap_addr = vmm.GetPml4Table().Value();
 
     const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
     const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
@@ -200,6 +220,8 @@ extern "C" void MainLoader64(TransitionData* transition_data)
     KernelModuleInfo kernel_info = AnalyzeKernelModule(multiboot_info, mms);
 
     u64 kernel_entry_point = LoadKernelIntoMemory(multiboot_info, kernel_info, mms);
+
+    EstablishDirectMemMapping(mms);
 
     TransitionToKernel(kernel_entry_point, transition_data, kernel_info, mms);
 }
