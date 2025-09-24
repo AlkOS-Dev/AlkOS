@@ -853,10 +853,8 @@ class DelayedInitMixin
 template <class DerivedT, class ConfigT>
 void DelayedInitMixin<DerivedT, ConfigT>::Init()
 {
-    static_assert(
-        DelayedInitDerivedT<DerivedT>,
-        "DelayedInitMixin requires the derived type to have a 'void InitImpl()' method."
-    );
+    STATIC_ASSERT_CONCEPT(DerivedT, DelayedInitDerivedT);
+
     R_ASSERT_TRUE(c_.has_value());
     R_ASSERT_FALSE(is_initialized_);
 
