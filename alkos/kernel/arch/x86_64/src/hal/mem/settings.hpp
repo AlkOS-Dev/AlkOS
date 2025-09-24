@@ -9,10 +9,13 @@ namespace arch
 
 namespace internal
 {
+
 using PmmImpl   = BitmapPmm;
-using VmmImpl   = VirtualMemoryManagerImpl<PmmImpl>;
 using PmmConfig = BitmapPmmConfig;
-using VmmConfig = VirtualMemoryManagerImplConfig;
+
+using VmmImpl   = VirtualMemoryManager<PmmImpl>;
+using VmmConfig = VirtualMemoryManagerConfig;
+
 }  // namespace internal
 
 }  // namespace arch

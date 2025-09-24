@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_HPP_
 
 #include <mem/pmm_abi.hpp>
-#include "hal/mem/pmm/buddy.hpp"
+
 #include "hal/mem/settings.hpp"
 
 namespace arch

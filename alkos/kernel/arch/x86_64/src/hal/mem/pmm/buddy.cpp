@@ -5,6 +5,8 @@
 
 using namespace arch;
 
+using BitmapVmm = internal::VirtualMemoryManager<BitmapPmm>;
+
 void BuddyPmm::InitImpl()
 {
     const BuddyPmmConfig &c = GetConfig();
@@ -13,7 +15,7 @@ void BuddyPmm::InitImpl()
     bootstrap_pmm.Configure(c.bitmap_pmm_config);
     bootstrap_pmm.Init();
 
-    VirtualMemoryManagerImpl<BitmapPmm> bootstrap_vmm(bootstrap_pmm);
+    BitmapVmm bootstrap_vmm(bootstrap_pmm);
     bootstrap_vmm.Configure(c.vmm_config);
     bootstrap_vmm.Init();
 

@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
 
 #include <extensions/template_lib.hpp>
+
 #include <mem/phys_ptr.hpp>
 #include <mem/pmm_abi.hpp>
 #include <mem/virt_ptr.hpp>
@@ -10,25 +11,25 @@
 #include "hal/mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
 
-namespace arch
+namespace arch::internal
 {
 
 template <class PmmT>
     requires std::is_base_of_v<PhysicalMemoryManagerABI, PmmT>
-class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI,
-                                 public template_lib::DelayedInitMixin<
-                                     VirtualMemoryManagerImpl<PmmT>, VirtualMemoryManagerImplConfig>
+class VirtualMemoryManager
+    : public VirtualMemoryManagerABI,
+      public template_lib::DelayedInitMixin<VirtualMemoryManager<PmmT>, VirtualMemoryManagerConfig>
 {
     public:
     static constexpr u64 kNoFlags = 0;
     struct MapOnePageTag {
     };
 
-    using ConfigT = VirtualMemoryManagerImplConfig;
+    using ConfigT = VirtualMemoryManagerConfig;
     using BaseDelayedInitMixin =
-        template_lib::DelayedInitMixin<VirtualMemoryManagerImpl<PmmT>, ConfigT>;
+        template_lib::DelayedInitMixin<VirtualMemoryManager<PmmT>, ConfigT>;
 
-    VirtualMemoryManagerImpl(PmmT& pmm) : pmm_(pmm) {}
+    VirtualMemoryManager(PmmT& pmm) : pmm_(pmm) {}
 
     //==============================================================================
     // ABI : VirtualMemoryManagerABI
@@ -82,7 +83,7 @@ class VirtualMemoryManagerImpl : public VirtualMemoryManagerABI,
     PhysicalPtr<PageMapTable<4>> pm_table_4_;
 };
 
-}  // namespace arch
+}  // namespace arch::internal
 
 #include "hal/mem/vmm/impl.tpp"
 

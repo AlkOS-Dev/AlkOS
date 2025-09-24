@@ -10,12 +10,12 @@
 #include "hal/mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
 
-namespace arch
+namespace arch::internal
 {
 
 template <class PmmT>
     requires std::is_base_of_v<PhysicalMemoryManagerABI, PmmT>
-void VirtualMemoryManagerImpl<PmmT>::InitImpl()
+void VirtualMemoryManager<PmmT>::InitImpl()
 {
     const auto &c = this->GetConfig();
     pm_table_4_   = c.pml4_table;
@@ -23,6 +23,6 @@ void VirtualMemoryManagerImpl<PmmT>::InitImpl()
 
 // TODO : Implement this, and implement the ABI in sensible way
 
-}  // namespace arch
+}  // namespace arch::internal
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_TPP_

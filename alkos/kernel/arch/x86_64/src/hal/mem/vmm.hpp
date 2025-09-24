@@ -5,9 +5,6 @@
 
 #include <mem/vmm_abi.hpp>
 
-#include "hal/mem/pmm/buddy.hpp"
-#include "hal/mem/vmm/impl.hpp"
-
 #include "hal/mem/settings.hpp"
 
 namespace arch

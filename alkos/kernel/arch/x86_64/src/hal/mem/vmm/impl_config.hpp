@@ -8,7 +8,7 @@
 namespace arch
 {
 
-struct VirtualMemoryManagerImplConfig {
+struct VirtualMemoryManagerConfig {
     PhysicalPtr<PageMapTable<4>> pml4_table;
 };
 
