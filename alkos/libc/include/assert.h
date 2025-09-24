@@ -103,6 +103,51 @@
 #define R_ASSERT_STRNEQ(val1, val2, ...) \
     BASE_ASSERT_STRNEQ(true, val1, val2, __ASSERT_FAIL_FUNC __VA_OPT__(, ) __VA_ARGS__)
 
+/**
+ * @def STATIC_ASSERT_CONCEPT(TYPE, CONCEPT)
+ * @brief A macro to statically assert that a given TYPE satisfies a CONCEPT.
+ *
+ * @param TYPE The template parameter type to be checked.
+ * @param CONCEPT The concept that the TYPE is expected to satisfy.
+ *
+ * To be used within a class or function body to enforce
+ * concept-based constraints on template parameters. Generates a standardized
+ * error message upon failure.
+ *
+ * Reasoning:
+ * Adding a 'requires' clause to a definition has the side-effect of adding
+ * whatever dependency the clause needed, as a dependency to every forward
+ * declaration of the class.
+ *
+ * Example:
+ * ```
+ * // Foo.hpp
+ *
+ * template < typename T >
+ * class Foo
+ *      requires something_from < Bar >
+ * [class definition]
+ *
+ * // OtherClass.hpp
+ *
+ * // Now when I need to forward declare 'Foo'
+ * // I need to write it as
+ *
+ * template < typename T >
+ * class Foo
+ *      requires something_from < Bar >
+ *
+ * // AND ALSO INCLUDE FULL DEFINITION OF 'Bar'
+ * ```
+ *
+ * Using this macro allows for compile time concept checking (with a bit
+ * less precise error message), but allows forward declarations to be
+ * self-contained again.
+ *
+ */
+#define STATIC_ASSERT_CONCEPT(TYPE, CONCEPT) \
+    static_assert(CONCEPT<TYPE>, #TYPE " must satisfy the " #CONCEPT " concept.")
+
 #endif  // __cplusplus
 
 #endif  // ALKOS_LIBC_INCLUDE_ASSERT_H_

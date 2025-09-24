@@ -9,14 +9,15 @@
 namespace arch
 {
 
-struct BuddyPmmConfig {
-    BitmapPmmConfig bitmap_pmm_config;
-    VirtualMemoryManagerConfig vmm_config;
+class BuddyPmm;
 
-    BuddyPmmConfig(BitmapPmmConfig bitmap_config, VirtualMemoryManagerConfig vmm_config)
-        : bitmap_pmm_config(std::move(bitmap_config)), vmm_config(std::move(vmm_config))
-    {
-    }
+template <class T>
+struct Config;
+
+template <>
+struct Config<BuddyPmm> {
+    Config<BitmapPmm> bitmap_pmm_config;
+    Config<VirtualMemoryManager> vmm_config;
 };
 
 }  // namespace arch

@@ -34,6 +34,6 @@ void BitmapPmm::Free(PhysicalPtr<Page> /*page*/, u64 /*num_pages*/)
 
 void BitmapPmm::InitImpl()
 {
-    const BitmapPmmConfig& c = GetConfig();
-    bitmap_view_             = BitMapView(c.pmm_bitmap_addr.ToVirt(), c.pmm_total_pages);
+    const auto& c = GetConfig();
+    bitmap_view_  = BitMapView(c.pmm_bitmap_addr.ToVirt(), c.pmm_total_pages);
 }

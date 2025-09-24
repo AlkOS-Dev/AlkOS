@@ -11,7 +11,7 @@ namespace arch
 {
 
 class BuddyPmm : public PhysicalMemoryManagerABI,
-                 public template_lib::DelayedInitMixin<BuddyPmm, BuddyPmmConfig>
+                 public template_lib::DelayedInitMixin<BuddyPmm, Config<BuddyPmm>>
 {
     public:
     //==============================================================================

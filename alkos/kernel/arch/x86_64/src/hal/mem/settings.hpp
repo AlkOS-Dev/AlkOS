@@ -11,10 +11,10 @@ namespace internal
 {
 
 using PmmImpl   = BitmapPmm;
-using PmmConfig = BitmapPmmConfig;
+using PmmConfig = Config<BitmapPmm>;
 
 using VmmImpl   = VirtualMemoryManager<PmmImpl>;
-using VmmConfig = VirtualMemoryManagerConfig;
+using VmmConfig = Config<arch::VirtualMemoryManager>;
 
 }  // namespace internal
 

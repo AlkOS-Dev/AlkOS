@@ -14,7 +14,7 @@ namespace arch
 // A simple PMM that takes over the bootloader's existing bitmap.
 // This serves as the temporary bootstrap allocator for the kernel.
 class BitmapPmm : public PhysicalMemoryManagerABI,
-                  public template_lib::DelayedInitMixin<BitmapPmm, BitmapPmmConfig>
+                  public template_lib::DelayedInitMixin<BitmapPmm, Config<BitmapPmm>>
 {
     public:
     enum {

@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
 
 #include <extensions/template_lib.hpp>
+#include <extensions/type_traits.hpp>
 
 #include <mem/phys_ptr.hpp>
 #include <mem/pmm_abi.hpp>
@@ -11,21 +12,30 @@
 #include "hal/mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
 
+namespace arch
+{
+class VirtualMemoryManager;
+}
+
 namespace arch::internal
 {
 
+template <typename T>
+concept IsPmm = std::is_base_of_v<PhysicalMemoryManagerABI, T>;
+
 template <class PmmT>
-    requires std::is_base_of_v<PhysicalMemoryManagerABI, PmmT>
-class VirtualMemoryManager
-    : public VirtualMemoryManagerABI,
-      public template_lib::DelayedInitMixin<VirtualMemoryManager<PmmT>, VirtualMemoryManagerConfig>
+class VirtualMemoryManager : public VirtualMemoryManagerABI,
+                             public template_lib::DelayedInitMixin<
+                                 VirtualMemoryManager<PmmT>, Config<arch::VirtualMemoryManager>>
 {
+    STATIC_ASSERT_CONCEPT(PmmT, IsPmm);
+
     public:
     static constexpr u64 kNoFlags = 0;
     struct MapOnePageTag {
     };
 
-    using ConfigT = VirtualMemoryManagerConfig;
+    using ConfigT = Config<VirtualMemoryManager>;
     using BaseDelayedInitMixin =
         template_lib::DelayedInitMixin<VirtualMemoryManager<PmmT>, ConfigT>;
 

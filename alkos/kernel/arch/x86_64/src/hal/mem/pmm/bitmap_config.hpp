@@ -7,7 +7,13 @@
 namespace arch
 {
 
-struct BitmapPmmConfig {
+class BitmapPmm;
+
+template <class T>
+struct Config;
+
+template <>
+struct Config<BitmapPmm> {
     PhysicalPtr<void> pmm_bitmap_addr;
     u64 pmm_total_pages;
 };
