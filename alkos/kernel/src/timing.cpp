@@ -2,7 +2,7 @@
 #include <extensions/debug.hpp>
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
-#include "time.hpp"
+#include "timers.hpp"
 
 internal::TimingModule::TimingModule() noexcept
 {

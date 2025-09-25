@@ -5,7 +5,7 @@
 
 using namespace arch;
 
-using BitmapVmm = internal::VirtualMemoryManager<BitmapPmm>;
+using BitmapVmm = arch::internal::VirtualMemoryManager<BitmapPmm>;
 
 void BuddyPmm::InitImpl()
 {

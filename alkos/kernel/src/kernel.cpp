@@ -1,23 +1,25 @@
+#include <assert.h>
 #include <autogen/feature_flags.h>
 #include <time.h>
-#include <test_module/test_module.hpp>
-
-/* internal includes */
-#include <assert.h>
 #include <extensions/debug.hpp>
+#include <test_module/test_module.hpp>
 #include <trace.hpp>
+/* internal includes */
 #include "init.hpp"
 #include "terminal.hpp"
+#include "todo.hpp"
 
 static void KernelRun()
 {
-    static constexpr size_t kBuffSize = 256;
-    char buff[kBuffSize];
-
-    const auto t = time(nullptr);
-    strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-
-    KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
+    KernelTraceSuccess("Hello word!");
+    TODO_MMU_MINIMAL
+    // static constexpr size_t kBuffSize = 256;
+    // char buff[kBuffSize];
+    //
+    // const auto t = time(nullptr);
+    // strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
+    //
+    // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
 }
 
 extern "C" void KernelMain()

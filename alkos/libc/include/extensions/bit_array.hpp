@@ -76,7 +76,7 @@ class BitMapView final
 //==============================================================================
 
 template <size_t kNumBits>
-class BitArray final
+class PACK BitArray final
 {
     using StorageT                        = u8;
     static constexpr size_t kStorageTBits = sizeof(StorageT) * 8;

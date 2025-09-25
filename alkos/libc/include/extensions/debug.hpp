@@ -2,6 +2,7 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
 #include <autogen/feature_flags.h>
+#include <todo.hpp>
 
 #include "platform.h"
 
@@ -9,7 +10,6 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <todo.hpp>
 
 // ------------------------------
 // Traces
@@ -19,7 +19,6 @@ static constexpr size_t kTraceBufferSize = 4096;
 template <typename... Args>
 void FormatTrace(const char* format, Args... args)
 {
-    TODO_WHEN_TIMER_INFRA_DONE
     // TODO: common loader does not have access to kernel structures
     // TODO: -> common loader should use different traces
     // TODO: without that kernel traces will not display time of the trace
