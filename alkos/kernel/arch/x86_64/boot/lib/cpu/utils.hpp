@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_CPU_UTILS_HPP_
-#define ALKOS_BOOT_LIB_CPU_UTILS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_CPU_UTILS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_CPU_UTILS_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
@@ -118,4 +118,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ALKOS_BOOT_LIB_CPU_UTILS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_CPU_UTILS_HPP_

@@ -33,6 +33,8 @@ TODO_WHEN_TIMER_INFRA_DONE
  * Volume 3A: System Programming Guide, Part 1. Chapter 19.17
  *
  * @note Possibly in future we should allow usage of RDTSC in user space
+ *
+ * @todo RDTSCP - atomicity and serialisation
  */
 namespace tsc
 {
@@ -41,6 +43,7 @@ namespace tsc
 // ------------------------------
 
 static constexpr u64 kIA32TscMsrAddress     = 0x10;
+static constexpr u64 kIA32CpuidClockInfo    = 0x15;
 static constexpr u64 kCpuIdTscInvariantLeaf = 0x80000007;
 
 // ------------------------------
@@ -68,13 +71,9 @@ FAST_CALL void Write(const u64 value) { cpu::SetMSR(kIA32TscMsrAddress, value); 
 NODISCARD FAST_CALL bool IsAvailable()
 {
     u32 unused, edx;
-
-    if (__get_cpuid(1, &unused, &unused, &unused, &edx)) {
-        // Bit 4 of EDX indicates TSC support
-        return IsBitEnabled<4>(edx);
-    }
-
-    return false;
+    __get_cpuid(1, &unused, &unused, &unused, &edx);
+    // Bit 4 of EDX indicates TSC support
+    return IsBitEnabled<4>(edx);
 }
 
 NODISCARD FAST_CALL bool IsStable()

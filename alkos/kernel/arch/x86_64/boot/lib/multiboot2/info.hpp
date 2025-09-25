@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_MULTIBOOT2_INFO_HPP_
-#define ALKOS_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/concepts.hpp>
@@ -98,4 +98,4 @@ class MultibootInfo
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_

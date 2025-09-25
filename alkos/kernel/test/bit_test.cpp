@@ -98,6 +98,96 @@ TEST_F(BitManipTest, SetBitValue)
     EXPECT_EQ(val16, kMsb<u16>);
 }
 
+TEST_F(BitManipTest, CountlZero)
+{
+    EXPECT_EQ(std::countl_zero(static_cast<u8>(0)), 8);
+    EXPECT_EQ(std::countl_zero(kFullMask<u8>), 0);
+    EXPECT_EQ(std::countl_zero(kMsb<u8>), 0);
+    EXPECT_EQ(std::countl_zero(kLsb<u8>), 7);
+    EXPECT_EQ(std::countl_zero(static_cast<u16>(0x0F00)), 4);
+    EXPECT_EQ(std::countl_zero(0x00001234u), 19);
+    EXPECT_EQ(std::countl_zero(0x000000000000ABCDull), 48);
+}
+
+TEST_F(BitManipTest, CountlOne)
+{
+    EXPECT_EQ(std::countl_one(static_cast<u8>(0)), 0);
+    EXPECT_EQ(std::countl_one(kFullMask<u8>), 8);
+    EXPECT_EQ(std::countl_one(kMsb<u8>), 1);
+    EXPECT_EQ(std::countl_one(kLsb<u8>), 0);
+    EXPECT_EQ(std::countl_one(static_cast<u16>(0xF0F0)), 4);
+    EXPECT_EQ(std::countl_one(0xFFF01234u), 12);
+    EXPECT_EQ(std::countl_one(0xFFFFFF000000ABCDull), 24);
+}
+
+TEST_F(BitManipTest, CountrZero)
+{
+    EXPECT_EQ(std::countr_zero(static_cast<u8>(0)), 8);
+    EXPECT_EQ(std::countr_zero(kFullMask<u8>), 0);
+    EXPECT_EQ(std::countr_zero(kMsb<u8>), 7);
+    EXPECT_EQ(std::countr_zero(kLsb<u8>), 0);
+    EXPECT_EQ(std::countr_zero(static_cast<u16>(0x0F00)), 8);
+    EXPECT_EQ(std::countr_zero(0x12340000u), 18);
+    EXPECT_EQ(std::countr_zero(0xABCD000000000000ull), 48);
+}
+
+TEST_F(BitManipTest, CountrOne)
+{
+    EXPECT_EQ(std::countr_one(static_cast<u8>(0)), 0);
+    EXPECT_EQ(std::countr_one(kFullMask<u8>), 8);
+    EXPECT_EQ(std::countr_one(kMsb<u8>), 0);
+    EXPECT_EQ(std::countr_one(kLsb<u8>), 1);
+    EXPECT_EQ(std::countr_one(static_cast<u16>(0x00FF)), 8);
+    EXPECT_EQ(std::countr_one(0x0000FFFFu), 16);
+    EXPECT_EQ(std::countr_one(0x00000000FFFFFFFFull), 32);
+}
+
+TEST_F(BitManipTest, Popcount)
+{
+    EXPECT_EQ(std::popcount(static_cast<u8>(0)), 0);
+    EXPECT_EQ(std::popcount(kFullMask<u8>), 8);
+    EXPECT_EQ(std::popcount(static_cast<u8>(0b10101010)), 4);
+    EXPECT_EQ(std::popcount(static_cast<u16>(0xF0F0)), 8);
+    EXPECT_EQ(std::popcount(0xAAAAAAAAu), 16);
+    EXPECT_EQ(std::popcount(0x5555555555555555ull), 32);
+}
+
+TEST_F(BitManipTest, BitWidth)
+{
+    EXPECT_EQ(std::bit_width(static_cast<u8>(0)), 0);
+    EXPECT_EQ(std::bit_width(static_cast<u8>(1)), 1);
+    EXPECT_EQ(std::bit_width(static_cast<u8>(2)), 2);
+    EXPECT_EQ(std::bit_width(static_cast<u8>(3)), 2);
+    EXPECT_EQ(std::bit_width(static_cast<u8>(128)), 8);
+    EXPECT_EQ(std::bit_width(kFullMask<u8>), 8);
+    EXPECT_EQ(std::bit_width(0x7FFFFFFFu), 31);
+    EXPECT_EQ(std::bit_width(kMsb<u32>), 32);
+}
+
+TEST_F(BitManipTest, BitFloor)
+{
+    EXPECT_EQ(std::bit_floor(static_cast<u8>(0)), 0);
+    EXPECT_EQ(std::bit_floor(static_cast<u8>(1)), 1);
+    EXPECT_EQ(std::bit_floor(static_cast<u8>(3)), 2);
+    EXPECT_EQ(std::bit_floor(static_cast<u8>(127)), 64);
+    EXPECT_EQ(std::bit_floor(kFullMask<u8>), kMsb<u8>);
+    EXPECT_EQ(std::bit_floor(0xABCDEF01u), 0x80000000u);
+    EXPECT_EQ(std::bit_floor(kFullMask<u32>), kMsb<u32>);
+}
+
+TEST_F(BitManipTest, BitCeil)
+{
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(0)), 1);
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(1)), 1);
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(2)), 2);
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(3)), 4);
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(127)), 128);
+    EXPECT_EQ(std::bit_ceil(static_cast<u8>(128)), 128);
+
+    EXPECT_EQ(std::bit_ceil(0x7FFFFFFFu), kMsb<u32>);
+    EXPECT_EQ(std::bit_ceil(kMsb<u32>), kMsb<u32>);
+}
+
 class AlignementTest : public TestGroupBase
 {
 };

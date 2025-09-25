@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_
-#define ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
+#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
 
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
@@ -97,4 +97,4 @@ class VirtualPtr<void>
     void* virt_ptr_;
 };
 
-#endif  // ALKOS_KERNEL_INCLUDE_VIRTUAL_PTR_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_

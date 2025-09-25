@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_BUDDY_PMM_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_BUDDY_PMM_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BUDDY_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BUDDY_HPP_
 
 #include <extensions/template_lib.hpp>
 
@@ -35,4 +35,4 @@ class BuddyPmm : public PhysicalMemoryManagerABI,
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_BUDDY_PMM_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_PMM_BUDDY_HPP_

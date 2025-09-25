@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 
+#include <extensions/data_structures/array_structures.hpp>
 #include <extensions/new.hpp>
 #include <extensions/template_lib.hpp>
 #include <extensions/types.hpp>
@@ -21,7 +22,7 @@ class CoresController final
 
     TODO_WHEN_VMEM_WORKS
     static constexpr size_t kTemporaryMaxCores = 128;
-    using CoreTable = template_lib::StaticVector<Core, kTemporaryMaxCores>;
+    using CoreTable = data_structures::StaticVector<Core, kTemporaryMaxCores>;
 
     // ------------------------------
     // Class creation

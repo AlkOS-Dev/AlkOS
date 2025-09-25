@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_MEM_PAGE_MAP_HPP_
-#define ALKOS_BOOT_LIB_MEM_PAGE_MAP_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_MEM_PAGE_MAP_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_MEM_PAGE_MAP_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/defines.hpp>
@@ -316,4 +316,4 @@ static_assert(sizeof(PageMapTable<3>) == 4096, "PDP table must be 4KB");
 static_assert(sizeof(PageMapTable<2>) == 4096, "PD table must be 4KB");
 static_assert(sizeof(PageMapTable<1>) == 4096, "PT table must be 4KB");
 
-#endif  // ALKOS_BOOT_LIB_MEM_PAGE_MAP_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_MEM_PAGE_MAP_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IMPL_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IMPL_HPP_
 
 #include <extensions/template_lib.hpp>
 
@@ -87,4 +87,4 @@ class VirtualMemoryManager
 
 #include "hal/mem/vmm/impl.tpp"
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IPML_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_MEM_VMM_IMPL_HPP_

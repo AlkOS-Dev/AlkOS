@@ -13,7 +13,7 @@ void KernelTrace(const char* format, Args... args)
 
     [[maybe_unused]] const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
-    DebugTerminalWrite(buffer);
+    arch::DebugTerminalWrite(buffer);
 }
 
 #define KernelTraceSuccess(format, ...) \

@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_SYS_PANIC_HPP_
-#define ALKOS_BOOT_LIB_SYS_PANIC_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_PANIC_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_PANIC_HPP_
 
 #include <stdio.h>
 
@@ -22,4 +22,4 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
     KernelPanic(buffer);
 }
 
-#endif  // ALKOS_BOOT_LIB_SYS_PANIC_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_PANIC_HPP_

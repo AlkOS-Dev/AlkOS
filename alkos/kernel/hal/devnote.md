@@ -10,4 +10,3 @@ that this pattern is very fragile.
 ABI shoud not know a thing about implementation.
 
 The hal folder needs a rework.
-

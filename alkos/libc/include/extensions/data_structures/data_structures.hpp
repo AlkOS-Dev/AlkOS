@@ -1,0 +1,8 @@
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_DATA_STRUCTURES_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_DATA_STRUCTURES_HPP_
+
+#include <extensions/data_structures/array_structures.hpp>
+#include <extensions/data_structures/events.hpp>
+#include <extensions/data_structures/hash_maps.hpp>
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_DATA_STRUCTURES_HPP_

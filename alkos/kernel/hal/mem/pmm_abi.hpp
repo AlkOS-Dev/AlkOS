@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_PMM_ABI_HPP_
-#define ALKOS_KERNEL_ABI_PMM_ABI_HPP_
+#ifndef ALKOS_KERNEL_HAL_MEM_PMM_ABI_HPP_
+#define ALKOS_KERNEL_HAL_MEM_PMM_ABI_HPP_
 
 #include <extensions/expected.hpp>
 #include <extensions/type_traits.hpp>
@@ -35,4 +35,4 @@ struct PhysicalMemoryManagerABI {
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ABI_PMM_ABI_HPP_
+#endif  // ALKOS_KERNEL_HAL_MEM_PMM_ABI_HPP_

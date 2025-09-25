@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ABI_CONSTANTS_HPP_
-#define ALKOS_KERNEL_ABI_CONSTANTS_HPP_
+#ifndef ALKOS_KERNEL_HAL_CONSTANTS_HPP_
+#define ALKOS_KERNEL_HAL_CONSTANTS_HPP_
 
 /**
  * Expected fields in arch namespace:
@@ -19,4 +19,6 @@ static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
 static constexpr size_t kCacheLineSizeBytes = arch::kCacheLineSizeBytes;
 static constexpr size_t kPageSizeBytes      = arch::kPageSizeBytes;
 
-#endif  // ALKOS_KERNEL_ABI_CONSTANTS_HPP_
+using HardwareClockId = arch::HardwareClockId;
+
+#endif  // ALKOS_KERNEL_HAL_CONSTANTS_HPP_

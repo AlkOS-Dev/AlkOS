@@ -11,7 +11,14 @@ void __platform_panic(const char* msg) { arch::KernelPanic(msg); }
 
 void __platform_get_clock_value(const ClockType type, TimeVal* time, Timezone* time_zone)
 {
-    assert(time != nullptr || time_zone != nullptr);
+    ASSERT_NOT_NULL(time);
+    ASSERT_NOT_NULL(time_zone);
+
+    if (!TimingModule::IsInited()) {
+        time->seconds   = 0;
+        time->remainder = 0;
+        return;
+    }
 
     if (time_zone != nullptr) {
         __platform_get_timezone(time_zone);
@@ -20,12 +27,17 @@ void __platform_get_clock_value(const ClockType type, TimeVal* time, Timezone* t
     if (time != nullptr) {
         switch (type) {
             case kTimeUtc: {
-                time->seconds   = TimingModule::Get().GetDayTime().GetTime();
+                time->seconds   = TimingModule::Get().GetSystemTime().Read();
                 time->remainder = 0;
             } break;
-            case kProcTime: {
-                R_FAIL_ALWAYS("Not implemented yet!");
-            };
+            case kProcTime: {  // In microseconds
+                time->seconds   = 0;
+                time->remainder = timing::SystemTime::ReadLifeTimeNs() / 1000;
+            } break;
+            case kProcTimePrecise: {  // In nanoseconds
+                time->seconds   = 0;
+                time->remainder = timing::SystemTime::ReadLifeTimeNs();
+            } break;
             default:
                 R_FAIL_ALWAYS("Provided invalid ClockType!");
         }
@@ -38,9 +50,9 @@ u64 __platform_get_clock_ticks_in_second(const ClockType type)
     ASSERT(idx != 0 && idx < timing_constants::kClockTicksInSecondSize);
 
     TODO_USERSPACE
-    // if (idx == 0 || idx >= kResoSize) {
-    //     return 0;
-    // }
+    //    if (idx == 0 || idx >= kResoSize) {
+    //        return 0;
+    //    }
 
     return timing_constants::kClockTicksInSecond[idx];
 }
@@ -48,7 +60,7 @@ u64 __platform_get_clock_ticks_in_second(const ClockType type)
 void __platform_get_timezone(Timezone* time_zone)
 {
     assert(time_zone != nullptr);
-    *time_zone = TimingModule::Get().GetDayTime().GetTimezone();
+    *time_zone = TimingModule::Get().GetSystemTime().GetTimezone();
 }
 
 void __platform_debug_write(const char* buffer) { DebugTerminalWrite(buffer); }

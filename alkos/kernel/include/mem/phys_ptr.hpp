@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
-#define ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MEM_PHYS_PTR_HPP_
+#define ALKOS_KERNEL_INCLUDE_MEM_PHYS_PTR_HPP_
 
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
@@ -102,4 +102,4 @@ class PhysicalPtr<void>
     void* phys_ptr_;
 };
 
-#endif  // ALKOS_KERNEL_INCLUDE_PHYSICAL_PTR_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_PTR_HPP_

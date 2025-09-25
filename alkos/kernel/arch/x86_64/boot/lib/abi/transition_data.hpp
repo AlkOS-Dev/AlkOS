@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
-#define ALKOS_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
@@ -28,4 +28,4 @@ struct alignas(64) KernelInitialParams {
     u64 mem_info_total_pages;
 };
 
-#endif  // ALKOS_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

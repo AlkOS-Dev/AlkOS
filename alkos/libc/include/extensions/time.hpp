@@ -1,12 +1,11 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_TIME_HPP_
 
+#include <assert.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
-#include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
-#include <extensions/time.hpp>
 #include <extensions/tuple.hpp>
 #include <extensions/types.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_TODO_HPP_
-#define ALKOS_BOOT_LIB_TODO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_TODO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_TODO_HPP_
 
 /**
  * @brief This file's purpose is to define a set of macros used as placeholders
@@ -16,4 +16,4 @@
 #define TODO_BY_THE_END_OF_MILESTONE0
 #define TODO_WHEN_DEBUGGING_FRAMEWORK
 
-#endif  // ALKOS_BOOT_LIB_TODO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_TODO_HPP_

@@ -19,9 +19,7 @@ void KernelInit()
     MemoryModule::Get().GetPmm().Init();
     MemoryModule::Get().GetVmm().Init();
 
-    // TODO: DISABLING ACPI AND INTERRUPTS UNTIL
-    // PROPER HANDLING OF MEMORY AND MULTIBOOT IS DONE
-    //
+    TODO_MMU_MINIMAL
     // /* Initialize ACPI */
     // HardwareModule::Get().GetACPIController().Init();
 
@@ -32,5 +30,5 @@ void KernelInit()
     // HardwareModule::Get().GetInterrupts().Initialise();
 
     /* Initialize the timing system */
-    TimingModule::Init();
+    // TimingModule::Init();
 }

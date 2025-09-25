@@ -42,4 +42,3 @@ set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/build/linker.ld")
 target_link_options(alkos.boot.loader.32 PRIVATE
         -T ${LINKER_SCRIPT}     
 )
-

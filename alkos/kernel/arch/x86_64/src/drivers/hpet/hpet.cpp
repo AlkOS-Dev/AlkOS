@@ -1,5 +1,49 @@
 #include "drivers/hpet/hpet.hpp"
 #include "cpu/utils.hpp"
+#include "modules/hardware.hpp"
+
+// ------------------------------
+// Clock callbacks
+// ------------------------------
+
+NODISCARD FAST_CALL Hpet *GetHpetFromClockEntry(hardware::ClockRegistryEntry *clock_entry)
+{
+    ASSERT_NOT_NULL(clock_entry);
+    auto hpet = static_cast<Hpet *>(clock_entry->own_data);
+    ASSERT_NOT_NULL(hpet);
+    return hpet;
+}
+
+static u64 ReadCb(hardware::ClockRegistryEntry *clock_entry)
+{
+    return GetHpetFromClockEntry(clock_entry)->ReadMainCounter();
+}
+
+static bool EnableDeviceCb(hardware::ClockRegistryEntry *clock_entry)
+{
+    GetHpetFromClockEntry(clock_entry)->StartMainCounter();
+    return true;
+}
+
+static bool DisableDeviceCb(hardware::ClockRegistryEntry *clock_entry)
+{
+    GetHpetFromClockEntry(clock_entry)->StopMainCounter();
+    return true;
+}
+
+static void StopCounterCb(hardware::ClockRegistryEntry *clock_entry)
+{
+    GetHpetFromClockEntry(clock_entry)->StopMainCounter();
+}
+
+static void ResumeCounterCb(hardware::ClockRegistryEntry *clock_entry)
+{
+    GetHpetFromClockEntry(clock_entry)->StartMainCounter();
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
 
 Hpet::Hpet(acpi_hpet *table)
 {
@@ -68,24 +112,26 @@ Hpet::Hpet(acpi_hpet *table)
     /* Ensure sensible initial state */
     SetupStandardMapping();
     StopMainCounter();
-}
 
-void Hpet::Setup()
-{
-    static constexpr u64 kFemtoPerNs = 1'000'000ULL;
-    static constexpr u64 kNsPerMs    = 1'000'000ULL;
-    static constexpr u64 kFemtoPerMs = kNsPerMs * kFemtoPerNs;
+    hardware::ClockRegistryEntry hpet_entry = {};
 
-    const u64 cur_counter = ReadMainCounter();
-    TRACE_DEBUG("Loading default settings to HPET timer. Current counter: %zu", cur_counter);
+    /* Clock data */
+    hpet_entry.id            = static_cast<u64>(arch::HardwareClockId::kHpet);
+    hpet_entry.frequency_kHz = (kFemtoSecondsPerSecond / clock_period_) / 1000;
 
     BlockHardwareInterrupts();
 
-    SetupLegacyMapping();
-    SetupPeriodicTimer(0, kFemtoPerMs * 100, 2);  // Shoot each 100ms
-    StartMainCounter();
+    /* Callbacks */
+    hpet_entry.read           = ReadCb;
+    hpet_entry.enable_device  = EnableDeviceCb;
+    hpet_entry.disable_device = DisableDeviceCb;
+    hpet_entry.stop_counter   = StopCounterCb;
+    hpet_entry.resume_counter = ResumeCounterCb;
 
-    EnableHardwareInterrupts();
+    /* Own data */
+    hpet_entry.own_data = this;
+
+    HardwareModule::Get().GetClockRegistry().Register(hpet_entry);
 }
 
 u64 Hpet::AdjustTimeToHpetCapabilities(const u64 time_femto) const

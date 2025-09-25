@@ -1,5 +1,5 @@
-#ifndef ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
-#define ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
 
 #include <autogen/feature_flags.h>
 #include <extensions/defines.hpp>
@@ -70,4 +70,4 @@ WRAP_CALL void TerminalWriteError(const char *data)
 }
 }
 
-#endif  // ALKOS_BOOT_LIB_SYS_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_

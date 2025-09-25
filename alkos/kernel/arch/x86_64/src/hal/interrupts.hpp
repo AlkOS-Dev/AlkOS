@@ -8,6 +8,7 @@
 #include "drivers/hpet/hpet.hpp"
 #include "interrupts/idt.hpp"
 
+#include <extensions/data_structures/array_structures.hpp>
 #include <extensions/optional.hpp>
 
 #include <interrupts.hpp>
@@ -21,7 +22,7 @@ class Interrupts : public InterruptsABI
 
     public:
     TODO_WHEN_VMEM_WORKS
-    using IoApicTable = template_lib::StaticVector<IoApic, kTemporaryIoApicTableSize>;
+    using IoApicTable = data_structures::StaticVector<IoApic, kTemporaryIoApicTableSize>;
 
     Interrupts()  = default;
     ~Interrupts() = default;
