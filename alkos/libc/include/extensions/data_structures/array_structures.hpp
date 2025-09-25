@@ -137,7 +137,7 @@ class ArrayStaticStack
     }
 
     template <class T>
-    FORCE_INLINE_F std::remove_reference_t<std::remove_const_t<T>> Pop()
+    FORCE_INLINE_F clean_type<T> Pop()
     {
         ASSERT_LE(sizeof(T), top_, "Stack underflow!!");
         top_ -= sizeof(T);
@@ -318,7 +318,7 @@ struct StringArray : public std::array<char, kSize> {
 
     constexpr StringArray(const char *str) noexcept
     {
-        if (!std::is_constant_evaluated()) {
+        if !consteval {
             ASSERT_LE(strlen(str), kSize, "String array size must be below given kSize!");
         }
 
@@ -352,7 +352,7 @@ NODISCARD FAST_CALL constexpr typename UnsignedIntegral<kSize>::type StringArray
 ) noexcept
 {
     using IntegralType = typename UnsignedIntegral<kSize>::type;
-    if (std::is_constant_evaluated()) {
+    if consteval {
         IntegralType result = 0;
         for (size_t i = 0; i < kSize; ++i) {
             result |= static_cast<IntegralType>(static_cast<unsigned char>(str[i])) << (i * 8);
@@ -366,7 +366,7 @@ template <class T>
     requires(std::is_integral_v<T> && std::is_unsigned_v<T>)
 NODISCARD FAST_CALL constexpr StringArray<sizeof(T)> IntegralToStringArray(const T &value) noexcept
 {
-    if (std::is_constant_evaluated()) {
+    if consteval {
         StringArray<sizeof(T)> result{};
         for (size_t i = 0; i < sizeof(T); ++i) {
             result[i] = static_cast<char>((value >> (i * 8)) & kBitMask8);

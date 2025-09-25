@@ -21,7 +21,7 @@ class RegistryTest : public TestGroupBase
 
 TEST_F(HashmapTest, SingleInsert)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(0_size, map.Size());
 
     EXPECT_EQ(true, map.Insert(1u, 100));
@@ -30,7 +30,7 @@ TEST_F(HashmapTest, SingleInsert)
 
 TEST_F(HashmapTest, DuplicateInsert)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(true, map.Insert(1u, 100));
     EXPECT_EQ(false, map.Insert(1u, 200));
     EXPECT_NOT_NULL(map.Find(1u));
@@ -40,7 +40,7 @@ TEST_F(HashmapTest, DuplicateInsert)
 
 TEST_F(HashmapTest, OverwriteInsert)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(true, map.Insert(1u, 100));
     EXPECT_EQ(false, map.Insert<true>(1u, 200));
     EXPECT_EQ(1_size, map.Size());
@@ -52,7 +52,7 @@ TEST_F(HashmapTest, OverwriteInsert)
 
 TEST_F(HashmapTest, MultipleInserts)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(true, map.Insert(1u, 100));
     EXPECT_EQ(true, map.Insert(2u, 200));
     EXPECT_EQ(true, map.Insert(3u, 300));
@@ -65,7 +65,7 @@ TEST_F(HashmapTest, MultipleInserts)
 
 TEST_F(HashmapTest, EmplaceSingle)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(true, map.Emplace(1u, 100));
     EXPECT_EQ(1_size, map.Size());
 
@@ -83,7 +83,7 @@ struct TestStruct {
 
 TEST_F(HashmapTest, EmplaceComplexType)
 {
-    FastMinimalStaticHashmap<uint32_t, TestStruct, 4> map;
+    FastMinimalStaticHashmap<u32, TestStruct, 4> map;
     EXPECT_EQ(true, map.Emplace(1u, 10, 20));
     EXPECT_EQ(1_size, map.Size());
 
@@ -99,7 +99,7 @@ TEST_F(HashmapTest, EmplaceComplexType)
 
 TEST_F(HashmapTest, FindNonExisting)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
 
     int* value = map.Find(999u);
@@ -108,14 +108,14 @@ TEST_F(HashmapTest, FindNonExisting)
 
 TEST_F(HashmapTest, FindInEmptyMap)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     int* value = map.Find(1u);
     EXPECT_EQ(nullptr, value);
 }
 
 TEST_F(HashmapTest, FindAfterMultipleInserts)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 8> map;
+    FastMinimalStaticHashmap<u32, int, 8> map;
     map.Insert(1u, 100);
     map.Insert(2u, 200);
     map.Insert(3u, 300);
@@ -134,7 +134,7 @@ TEST_F(HashmapTest, FindAfterMultipleInserts)
 
 TEST_F(HashmapTest, HasKeyExisting)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
 
     EXPECT_EQ(true, map.HasKey(1u));
@@ -142,7 +142,7 @@ TEST_F(HashmapTest, HasKeyExisting)
 
 TEST_F(HashmapTest, HasKeyNonExisting)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
 
     EXPECT_EQ(false, map.HasKey(999u));
@@ -150,7 +150,7 @@ TEST_F(HashmapTest, HasKeyNonExisting)
 
 TEST_F(HashmapTest, HasKeyEmptyMap)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
 
     EXPECT_EQ(false, map.HasKey(1u));
 }
@@ -161,7 +161,7 @@ TEST_F(HashmapTest, HasKeyEmptyMap)
 
 TEST_F(HashmapTest, RemoveExisting)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
     EXPECT_EQ(1_size, map.Size());
 
@@ -174,7 +174,7 @@ TEST_F(HashmapTest, RemoveExisting)
 
 TEST_F(HashmapTest, RemoveNonExisting)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
 
     EXPECT_EQ(false, map.Remove(999u));
@@ -183,14 +183,14 @@ TEST_F(HashmapTest, RemoveNonExisting)
 
 TEST_F(HashmapTest, RemoveFromEmptyMap)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
     EXPECT_EQ(false, map.Remove(1u));
     EXPECT_EQ(0_size, map.Size());
 }
 
 TEST_F(HashmapTest, RemoveMiddleElement)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 8> map;
+    FastMinimalStaticHashmap<u32, int, 8> map;
     map.Insert(1u, 100);
     map.Insert(2u, 200);
     map.Insert(3u, 300);
@@ -212,7 +212,7 @@ TEST_F(HashmapTest, RemoveMiddleElement)
 
 TEST_F(HashmapTest, HashKeyConsistency)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 4> map;
+    FastMinimalStaticHashmap<u32, int, 4> map;
 
     size_t hash1 = map.HashKey(42u);
     size_t hash2 = map.HashKey(42u);
@@ -222,7 +222,7 @@ TEST_F(HashmapTest, HashKeyConsistency)
 
 TEST_F(HashmapTest, HashKeyDifferentValues)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 16> map;
+    FastMinimalStaticHashmap<u32, int, 16> map;
 
     size_t hash1 = map.HashKey(1u);
     size_t hash2 = map.HashKey(2u);
@@ -238,7 +238,7 @@ TEST_F(HashmapTest, HashKeyDifferentValues)
 
 TEST_F(HashmapTest, MaxCapacity)
 {
-    FastMinimalStaticHashmap<uint32_t, int, 2> map;
+    FastMinimalStaticHashmap<u32, int, 2> map;
     EXPECT_EQ(true, map.Insert(1u, 100));
     EXPECT_EQ(true, map.Insert(2u, 200));
     EXPECT_EQ(2_size, map.Size());
@@ -363,7 +363,7 @@ TEST_F(RegistryTest, AccessOperator)
     EXPECT_EQ(150, registry[1u].value);
 
     // Test const access
-    const Registry<TestEntry, 4>& const_registry = registry;
+    const auto& const_registry = registry;
     EXPECT_EQ(150, const_registry[1u].value);
 }
 

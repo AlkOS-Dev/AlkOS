@@ -99,7 +99,7 @@ constexpr int popcount_constexpr(const T x) noexcept
     template <std::unsigned_integral T>                \
     constexpr FAST_CALL int func_name(T x) noexcept    \
     {                                                  \
-        if (std::is_constant_evaluated()) {            \
+        if consteval {                                 \
             return internal::func_name##_constexpr(x); \
         } else {                                       \
             TODO_OPTIMISE                              \
@@ -119,7 +119,7 @@ DEFINE_PUBLIC_FUNCTION(countr_zero)
 template <std::unsigned_integral T>
 constexpr FAST_CALL int popcount(T x) noexcept
 {
-    if (std::is_constant_evaluated()) {
+    if consteval {
         return internal::popcount_constexpr(x);
     } else {
         TODO_OPTIMISE
