@@ -7,7 +7,7 @@
 internal::TimingModule::TimingModule() noexcept
 {
     arch::PickSystemClockSource();
-    auto& clock_source = ::HardwareModule::Get().GetClockRegistry().GetActive();
+    auto& clock_source = ::HardwareModule::Get().GetClockRegistry().GetSelected();
 
     if (clock_source.enable_device) {
         clock_source.enable_device(&clock_source);

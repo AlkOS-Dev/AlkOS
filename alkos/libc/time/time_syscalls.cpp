@@ -29,16 +29,16 @@ void GetClockValueSysCall(const ClockType type, TimeVal* time, Timezone* time_zo
     if (time != nullptr) {
         switch (type) {
             case kTimeUtc: {
-                time->seconds   = TimingModule::Get().GetSystemTime().ReadSystemTime();
+                time->seconds   = TimingModule::Get().GetSystemTime().Read();
                 time->remainder = 0;
             } break;
             case kProcTime: {  // In microseconds
                 time->seconds   = 0;
-                time->remainder = timing::SystemTime::ReadSysLiveTimeNs() / 1000;
+                time->remainder = timing::SystemTime::ReadLifeTimeNs() / 1000;
             } break;
             case kProcTimePrecise: {  // In nanoseconds
                 time->seconds   = 0;
-                time->remainder = timing::SystemTime::ReadSysLiveTimeNs();
+                time->remainder = timing::SystemTime::ReadLifeTimeNs();
             } break;
             default:
                 R_FAIL_ALWAYS("Provided invalid ClockType!");

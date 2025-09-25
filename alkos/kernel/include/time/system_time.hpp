@@ -20,13 +20,13 @@ class SystemTime
     // Class interaction
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F time_t ReadSystemTime() const noexcept
+    NODISCARD FORCE_INLINE_F time_t Read() const noexcept
     {
         return boot_time_read_local_ +
-               (ReadSysLiveTimeNs() - sys_time_on_read_ + kNanosInSecond / 2) / kNanosInSecond;
+               (ReadLifeTimeNs() - sys_time_on_read_ + kNanosInSecond / 2) / kNanosInSecond;
     }
 
-    NODISCARD static time_t ReadSysLiveTimeNs();
+    NODISCARD static time_t ReadLifeTimeNs();
 
     void SyncWithHardware();
 

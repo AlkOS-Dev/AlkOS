@@ -10,7 +10,7 @@
 NODISCARD FAST_CALL bool PickClock(arch::HardwareClockId clock_id)
 {
     if (HardwareModule::Get().GetClockRegistry().HasKey(clock_id)) {
-        HardwareModule::Get().GetClockRegistry().SetActive(clock_id);
+        HardwareModule::Get().GetClockRegistry().SwitchSelected(clock_id);
         KernelTraceSuccess(
             "Picked %s clock source as active",
             data_structures::IntegralToStringArray(static_cast<u64>(clock_id))
@@ -31,7 +31,7 @@ namespace arch
 
 void PickSystemClockSource()
 {
-    ASSERT_FALSE(HardwareModule::Get().GetClockRegistry().IsActivePicked());
+    ASSERT_FALSE(HardwareModule::Get().GetClockRegistry().IsSelectedPicked());
 
     if (PickClock(HardwareClockId::kTsc)) {
         return;

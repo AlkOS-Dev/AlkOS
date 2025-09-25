@@ -303,7 +303,7 @@ class Registry
         );
     }
 
-    NODISCARD FORCE_INLINE_F bool IsActivePicked() const { return is_active_; }
+    NODISCARD FORCE_INLINE_F bool IsSelectedPicked() const { return is_active_; }
 
     template <class K>
     NODISCARD FORCE_INLINE_F bool HasKey(const K& key) const
@@ -311,20 +311,20 @@ class Registry
         return entries_.HasKey(static_cast<u64>(key));
     }
 
-    NODISCARD FORCE_INLINE_F T& GetActive()
+    NODISCARD FORCE_INLINE_F T& GetSelected()
     {
-        ASSERT_TRUE(IsActivePicked(), "Tried to get active item, but no active item is set!");
+        ASSERT_TRUE(IsSelectedPicked(), "Tried to get active item, but no active item is set!");
         return active_;
     }
 
-    NODISCARD FORCE_INLINE_F const T& GetActive() const
+    NODISCARD FORCE_INLINE_F const T& GetSelected() const
     {
-        ASSERT_TRUE(IsActivePicked(), "Tried to get active item, but no active item is set!");
+        ASSERT_TRUE(IsSelectedPicked(), "Tried to get active item, but no active item is set!");
         return active_;
     }
 
     template <class K>
-    FORCE_INLINE_F void SetActive(const K& key)
+    FORCE_INLINE_F void SwitchSelected(const K& key)
     {
         const u64 key_u64 = static_cast<u64>(key);
         ASSERT_TRUE(

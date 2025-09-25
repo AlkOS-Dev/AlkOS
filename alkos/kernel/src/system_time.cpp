@@ -8,7 +8,7 @@
 // Implementations
 // ------------------------------
 
-time_t timing::SystemTime::ReadSysLiveTimeNs()
+time_t timing::SystemTime::ReadLifeTimeNs()
 {
     return HardwareModule::Get().GetClockRegistry().ReadTimeNsUnsafe();
 }
@@ -18,7 +18,7 @@ void timing::SystemTime::SyncWithHardware()
     static constexpr size_t kBuffSize = 64;
     [[maybe_unused]] char buffer[kBuffSize];
     boot_time_read_utc_ = arch::QuerySystemTime(kUtcTimezone);
-    sys_time_on_read_   = ReadSysLiveTimeNs();
+    sys_time_on_read_   = ReadLifeTimeNs();
 
     tm time;
     ConvertFromPosixToTm(boot_time_read_utc_, time, kUtcTimezone);
