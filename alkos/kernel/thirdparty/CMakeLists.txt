@@ -1,4 +1,4 @@
-message(STATUS "Adding third-party libraries...")
+message(STATUS "  -> Adding third-party libraries...")
 include(FetchContent)
 
 add_library(alkos.kernel.thirdparty INTERFACE)

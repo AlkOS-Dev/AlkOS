@@ -22,7 +22,7 @@ include(ValidationHelpers)
 include(SourceHelpers)
 include(RuntimeHelpers)
 
-add_library(target.properties INTERFACE) # Populated by the toolchain file
+add_library(alkos.target.properties.interface INTERFACE) # Populated by the toolchain file
 
 ################################################################################
 #                                   Conf file                                  #
@@ -50,21 +50,25 @@ include(${CMAKE_FLAGS_FILE})
 #                                   Messages                                   #
 ################################################################################
 
-message(STATUS "Building for architecture: ${ARCH}")
-
-message(STATUS "Using toolchain file: ${CMAKE_TOOLCHAIN_FILE}")
-message(STATUS "Using build type: ${CMAKE_BUILD_TYPE}")
-
-message(STATUS "Using C compiler: ${CMAKE_C_COMPILER}")
-message(STATUS "Using C++ compiler: ${CMAKE_CXX_COMPILER}")
-message(STATUS "Using AR: ${CMAKE_AR}")
-message(STATUS "Using Ranlib: ${CMAKE_RANLIB}")
-message(STATUS "Using Linker: ${CMAKE_LINKER}")
-message(STATUS "Using gdb: ${CMAKE_GDB}")
-
-message(STATUS "Using C flags: ${CMAKE_C_FLAGS}")
-message(STATUS "Using C++ flags: ${CMAKE_CXX_FLAGS}")
-message(STATUS "Using ASM_NASM flags: ${CMAKE_ASM_NASM_FLAGS}")
+string(REPEAT "=" 80 separator)
+message(STATUS "${separator}")
+message(STATUS "AlkOS Build Configuration Summary")
+message(STATUS "")
+message(STATUS "  Architecture: ${ARCH}")
+message(STATUS "  Build Type:   ${CMAKE_BUILD_TYPE}")
+message(STATUS "  Toolchain:    ${CMAKE_TOOLCHAIN_FILE}")
+message(STATUS "")
+message(STATUS "  C Compiler:   ${CMAKE_C_COMPILER}")
+message(STATUS "  C++ Compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "  C Flags:      ${CMAKE_C_FLAGS}")
+message(STATUS "  C++ Flags:    ${CMAKE_CXX_FLAGS}")
+message(STATUS "  ASM (NASM) Flags: ${CMAKE_ASM_NASM_FLAGS}")
+message(STATUS "")
+message(STATUS "  Linker:       ${CMAKE_LINKER}")
+message(STATUS "  Archiver:     ${CMAKE_AR}")
+message(STATUS "  Ranlib:       ${CMAKE_RANLIB}")
+message(STATUS "  Debugger:     ${CMAKE_GDB}")
+message(STATUS "${separator}")
 
 ################################################################################
 #                                   Sysroot                                    #

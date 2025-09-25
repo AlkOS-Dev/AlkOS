@@ -45,7 +45,7 @@ class ACPIController final : public arch::AcpiController
      * @brief Initialize the ACPI subsystem.
      * @return Status code
      */
-    int Init();
+    int Init(u64 multiboot_info_addr);
 
     /**
      * @brief Deinitialize the ACPI subsystem.

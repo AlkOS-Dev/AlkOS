@@ -2,16 +2,13 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
 
 #include <autogen/feature_flags.h>
-#include <todo.h>
 
-// Allow debug traces only when we run inside kernel
-#if FEATURE_FLAG_DEBUG_TRACES && (defined(__ALKOS_KERNEL__) || defined(__ALKOS_LIBK__))
+#include "platform.h"
+
+#if FEATURE_FLAG_DEBUG_TRACES
 
 #include <assert.h>
 #include <stdio.h>
-#include <debug_terminal.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/time.hpp>
 #include <todo.hpp>
 
 // ------------------------------
@@ -31,7 +28,7 @@ void FormatTrace(const char* format, Args... args)
     [[maybe_unused]] const u64 bytesWritten =
         snprintf(buffer, kTraceBufferSize, format, 0ull, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
-    DebugTerminalWrite(buffer);
+    __platform_debug_write(buffer);
 }
 
 #define TRACE(message, ...) FormatTrace(message __VA_OPT__(, ) __VA_ARGS__)

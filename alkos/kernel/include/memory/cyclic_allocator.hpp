@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <extensions/bit_array.hpp>
+#include <extensions/compare.hpp>
 #include <extensions/new.hpp>
 #include <todo.hpp>
 #include "sync/kernel/spinlock.hpp"

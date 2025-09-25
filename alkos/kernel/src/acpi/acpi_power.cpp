@@ -1,10 +1,13 @@
 #include <acpi/acpi_power.hpp>
 
-#include <arch_utils.hpp>
 #include <extensions/debug.hpp>
 #include <todo.hpp>
+#include "panic.hpp"
 
 #include <uacpi/sleep.h>
+
+// TODO SHOULD BE THROUGH HAL
+#include <cpu/utils.hpp>
 
 bool ACPI::SystemShutdown()
 {
