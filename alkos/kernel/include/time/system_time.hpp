@@ -1,27 +1,32 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
-#define ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
+#define ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
 
 #include <sys/time.h>
 #include <time.h>
 #include <extensions/time.hpp>
-#include <modules/timing_constants.hpp>
 
 namespace timing
 {
-class DayTime
+class SystemTime
 {
     public:
     // ------------------------------
     // Class creation
     // ------------------------------
 
-    DayTime();
+    SystemTime() = default;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F time_t GetTime() const noexcept { return time_; }
+    NODISCARD FORCE_INLINE_F time_t Read() const noexcept
+    {
+        return boot_time_read_local_ +
+               (ReadLifeTimeNs() - sys_time_on_read_ + kNanosInSecond / 2) / kNanosInSecond;
+    }
+
+    NODISCARD static time_t ReadLifeTimeNs();
 
     void SyncWithHardware();
 
@@ -32,7 +37,9 @@ class DayTime
     // ------------------------------
 
     private:
-    time_t time_{};
+    time_t boot_time_read_utc_{};
+    time_t boot_time_read_local_{};
+    u64 sys_time_on_read_{};
 
     TODO_TIMEZONES
     /* Hard coded Poland */
@@ -47,4 +54,4 @@ class DayTime
 };
 }  // namespace timing
 
-#endif  // ALKOS_KERNEL_INCLUDE_TIME_DAYTIME_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_

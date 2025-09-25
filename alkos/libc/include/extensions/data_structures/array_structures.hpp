@@ -322,14 +322,22 @@ struct StringArray : public std::array<char, kSize> {
             ASSERT_LE(strlen(str), kSize, "String array size must be below given kSize!");
         }
 
-        for (size_t i = 0; str[i] != '\0'; ++i) {
+        size_t i;
+        for (i = 0; str[i] != '\0'; ++i) {
             this->at(i) = str[i];
         }
+
+        for (; i < kSize; ++i) {
+            this->at(i) = '\0';
+        }
+
+        TODO_OPTIMISE
+        // TODO: Use constexpr strcpy when available
     }
 
-    NODISCARD FORCE_INLINE_F std::array<char, kSize + 1> GetSafeStr() const noexcept
+    NODISCARD FORCE_INLINE_F StringArray<kSize + 1> GetSafeStr() const noexcept
     {
-        std::array<char, kSize + 1> result{};
+        StringArray<kSize + 1> result{};
         strncpy(result.data(), this->data(), kSize);
         return result;
     }
@@ -339,18 +347,32 @@ struct StringArray : public std::array<char, kSize> {
 
 template <size_t kSize>
     requires(IsIntegralSize(kSize))
-NODISCARD FAST_CALL typename UnsignedIntegral<kSize>::type StringArrayToIntegral(
+NODISCARD FAST_CALL constexpr typename UnsignedIntegral<kSize>::type StringArrayToIntegral(
     const StringArray<kSize> &str
 ) noexcept
 {
-    using integral_t = typename UnsignedIntegral<kSize>::type;
-    return *reinterpret_cast<const integral_t *>(str.data());
+    using IntegralType = typename UnsignedIntegral<kSize>::type;
+    if (std::is_constant_evaluated()) {
+        IntegralType result = 0;
+        for (size_t i = 0; i < kSize; ++i) {
+            result |= static_cast<IntegralType>(static_cast<unsigned char>(str[i])) << (i * 8);
+        }
+        return result;
+    }
+    return *reinterpret_cast<const IntegralType *>(&str);
 }
 
 template <class T>
     requires(std::is_integral_v<T> && std::is_unsigned_v<T>)
-NODISCARD FAST_CALL StringArray<sizeof(T)> IntegralToStringArray(const T &value) noexcept
+NODISCARD FAST_CALL constexpr StringArray<sizeof(T)> IntegralToStringArray(const T &value) noexcept
 {
+    if (std::is_constant_evaluated()) {
+        StringArray<sizeof(T)> result{};
+        for (size_t i = 0; i < sizeof(T); ++i) {
+            result[i] = static_cast<char>((value >> (i * 8)) & kBitMask8);
+        }
+        return result;
+    }
     return *reinterpret_cast<const StringArray<sizeof(T)> *>(&value);
 }
 

@@ -6,9 +6,10 @@
 namespace timing_constants
 {
 static constexpr u64 kClockTicksInSecond[]{
-    0,       /* reserved */
-    1,       /* kTimeUtc */
-    1000000, /* Process Clock */
+    0,             /* reserved */
+    1,             /* kTimeUtc */
+    1'000'000,     /* Process Clock */
+    1'000'000'000, /* Process Clock Precise */
 };
 static constexpr size_t kClockTicksInSecondSize = sizeof(kClockTicksInSecond) / sizeof(u64);
 static_assert(kClockTicksInSecondSize == static_cast<size_t>(ClockType::kLastClockType));

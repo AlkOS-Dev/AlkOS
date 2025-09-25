@@ -11,6 +11,7 @@
 enum ClockType {
     kTimeUtc = 1,
     kProcTime,
+    kProcTimePrecise,
     kLastClockType,
 };
 
