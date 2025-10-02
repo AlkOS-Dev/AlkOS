@@ -1,7 +1,8 @@
 #include "cpu/utils.hpp"
+
 #include <assert.h>
 #include <stdio.h>
-#include <hal/impl/terminal.hpp>
+#include <hal/terminal.hpp>
 
 /**
  * @brief Capture current CPU register state
@@ -69,5 +70,5 @@ void CpuState::DumpStateDesc() const
     char buff[kSizeBuff];
 
     GetStateDesc(buff, kSizeBuff);
-    arch::TerminalWriteString(buff);
+    hal::TerminalWriteString(buff);
 }

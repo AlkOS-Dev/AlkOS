@@ -12,5 +12,4 @@ struct InterruptsAPI {
 
 }  // namespace arch
 
-
 #endif  // ALKOS_KERNEL_HAL_INTERRUPTS_HPP_

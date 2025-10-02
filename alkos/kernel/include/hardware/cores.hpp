@@ -9,7 +9,6 @@
 #include <extensions/types.hpp>
 #include <todo.hpp>
 
-
 namespace hardware
 {
 

@@ -3,8 +3,9 @@
 
 #include <hal/impl/spinlock.hpp>
 
-namespace hal {
-    using namespace arch;
+namespace hal
+{
+using namespace arch;
 }
 
-#endif // ALKOS_KERNEL_INCLUDE_HAL_SPINLOCK_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_SPINLOCK_HPP_

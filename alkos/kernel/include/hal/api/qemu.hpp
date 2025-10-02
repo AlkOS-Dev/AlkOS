@@ -8,11 +8,11 @@
 
 /* This is plain bad. But it's also quick to implement and easy to delete
  * when time comes for proper abstraction */
-namespace arch {
+namespace arch
+{
 
 void QemuShutdown();
 
 }
-
 
 #endif  // ALKOS_KERNEL_HAL_QEMU_HPP_

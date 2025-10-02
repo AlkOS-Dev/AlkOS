@@ -1,8 +1,8 @@
 #include "modules/timing.hpp"
 #include <extensions/debug.hpp>
+#include "hal/timers.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
-#include "hal/timers.hpp"
 
 internal::TimingModule::TimingModule() noexcept
 {

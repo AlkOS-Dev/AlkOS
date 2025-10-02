@@ -1,15 +1,16 @@
 #ifndef ALKOS_KERNEL_HAL_API_TERMINAL_HPP_
 #define ALKOS_KERNEL_HAL_API_TERMINAL_HPP_
 
-#include <extensions/defines.hpp>
 #include <defines.h>
 #include <stdlib.h>
+#include <extensions/defines.hpp>
 #include <todo.hpp>
 
 TODO_BY_THE_END_OF_MILESTONE0
 /* REWORK THAT */
 
-namespace arch { 
+namespace arch
+{
 
 BEGIN_DECL_C
 
@@ -58,7 +59,6 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, size_t size);
 
 END_DECL_C
 
-} // namespace arch
-
+}  // namespace arch
 
 #endif  // ALKOS_KERNEL_HAL_API_TERMINAL_HPP_

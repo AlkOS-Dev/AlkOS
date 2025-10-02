@@ -1,7 +1,8 @@
 #ifndef ALKOS_KERNEL_ABI_PANIC_HPP_
 #define ALKOS_KERNEL_ABI_PANIC_HPP_
 
-namespace arch {
+namespace arch
+{
 
 /**
  * @brief Stops the kernel from functioning and disables all necessary devices and processes.
@@ -11,6 +12,6 @@ namespace arch {
  */
 extern "C" NO_RET void KernelPanic(const char *msg);
 
-}
+}  // namespace arch
 
 #endif  // ALKOS_KERNEL_ABI_PANIC_HPP_

@@ -3,6 +3,9 @@
 
 #include <hal/impl/debug_terminal.hpp>
 
+namespace hal
+{
+
 WRAP_CALL void DebugTerminalWrite(const char *str)
 {
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
@@ -19,4 +22,6 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
     return 0;
 }
 
-#endif // ALKOS_KERNEL_INCLUD_HAL_DEBUG_TERMINAL_HPP_
+}  // namespace hal
+
+#endif  // ALKOS_KERNEL_INCLUD_HAL_DEBUG_TERMINAL_HPP_

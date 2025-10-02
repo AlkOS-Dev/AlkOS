@@ -13,8 +13,6 @@
 #include "drivers/hpet/hpet.hpp"
 #include "interrupts/idt.hpp"
 
-
-
 namespace arch
 {
 class Interrupts : public InterruptsAPI

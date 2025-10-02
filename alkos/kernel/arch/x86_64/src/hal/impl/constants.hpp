@@ -1,8 +1,8 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CONSTANTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CONSTANTS_HPP_
 
-#include <extensions/data_structures/array_structures.hpp>
 #include <extensions/bit.hpp>
+#include <extensions/data_structures/array_structures.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
 

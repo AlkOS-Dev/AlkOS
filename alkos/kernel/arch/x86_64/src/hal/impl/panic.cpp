@@ -4,10 +4,11 @@
 #include <test_module/test_module.hpp>
 #endif
 
-#include "hal/impl/panic.hpp"
 #include <hal/impl/terminal.hpp>
+#include "hal/impl/panic.hpp"
 
-namespace arch {
+namespace arch
+{
 
 extern "C" void NO_RET KernelPanic(const char *msg)
 {
@@ -30,4 +31,4 @@ extern "C" void NO_RET KernelPanic(const char *msg)
 #endif
 }
 
-}
+}  // namespace arch

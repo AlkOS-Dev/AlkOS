@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include <hal/constants.hpp>
 #include <uacpi/kernel_api.h>
+#include <hal/constants.hpp>
 #include "todo.hpp"
 TODO_WHEN_VMEM_WORKS
 #include <modules/global_state.hpp>

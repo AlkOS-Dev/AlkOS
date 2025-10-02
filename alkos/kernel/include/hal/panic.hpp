@@ -21,6 +21,6 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
     arch::KernelPanic(buffer);
 }
 
-}
+}  // namespace hal
 
-#endif // ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_

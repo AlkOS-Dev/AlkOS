@@ -12,5 +12,4 @@ struct AcpiAPI {
 
 }  // namespace arch
 
-
 #endif  // ALKOS_KERNEL_HAL_API_ACPI_CONTROLLER_HPP_

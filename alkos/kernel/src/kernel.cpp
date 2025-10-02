@@ -5,8 +5,8 @@
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
 /* internal includes */
-#include "init.hpp"
 #include "hal/terminal.hpp"
+#include "init.hpp"
 #include "todo.hpp"
 
 static void KernelRun()

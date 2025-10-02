@@ -25,6 +25,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *buffer, size_t buffer_size);
 WRAP_CALL void DebugTerminalWrite(const char *buffer);
 }  // namespace arch
 
-
-
 #endif  // ALKOS_KERNEL_ABI_DEBUG_TERMINAL_HPP_

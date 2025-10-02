@@ -3,8 +3,9 @@
 
 #include <hal/impl/pmm.hpp>
 
-namespace hal {
-    using arch::PhysicalMemoryManager;
+namespace hal
+{
+using arch::PhysicalMemoryManager;
 }
 
-#endif // ALKOS_KERNEL_INCLUDE_HAL_PMM_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_PMM_HPP_

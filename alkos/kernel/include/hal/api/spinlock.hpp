@@ -14,5 +14,4 @@ struct SpinlockAPI {
 
 }  // namespace arch
 
-
 #endif  // ALKOS_KERNEL_HAL_SPINLOCK_HPP_

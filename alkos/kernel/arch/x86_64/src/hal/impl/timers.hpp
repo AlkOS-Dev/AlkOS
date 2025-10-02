@@ -1,9 +1,9 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_TIMERS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_TIMERS_HPP_
 
-#include <hal/api/timers.hpp>
 #include <time.h>
 #include <extensions/time.hpp>
+#include <hal/api/timers.hpp>
 #include <trace.hpp>
 #include "drivers/cmos/rtc.hpp"
 

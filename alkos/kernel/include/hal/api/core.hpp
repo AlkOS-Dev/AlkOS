@@ -20,5 +20,4 @@ NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 }  // namespace arch
 
-
 #endif  // ALKOS_KERNEL_HAL_CORE_HPP_

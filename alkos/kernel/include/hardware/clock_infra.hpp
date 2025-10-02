@@ -1,8 +1,8 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
 
-#include <hal/constants.hpp>
 #include <extensions/data_structures/data_structures.hpp>
+#include <hal/constants.hpp>
 
 namespace hardware
 {

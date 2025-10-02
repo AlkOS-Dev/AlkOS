@@ -15,7 +15,6 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
     return arch::TerminalReadLine(buffer, size);
 }
 
-}  
+}  // namespace hal
 
-
-#endif // ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_

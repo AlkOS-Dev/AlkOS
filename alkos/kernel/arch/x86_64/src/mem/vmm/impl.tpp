@@ -7,8 +7,8 @@
 #include <mem/phys_ptr.hpp>
 #include <mem/virt_ptr.hpp>
 
-#include "mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
+#include "mem/vmm/impl_config.hpp"
 
 namespace arch::internal
 {

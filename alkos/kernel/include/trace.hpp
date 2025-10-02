@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <extensions/debug.hpp>
-#include "hal/impl/debug_terminal.hpp"
+#include "hal/debug_terminal.hpp"
 
 template <class... Args>
 void KernelTrace(const char* format, Args... args)
@@ -13,7 +13,7 @@ void KernelTrace(const char* format, Args... args)
 
     [[maybe_unused]] const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
-    arch::DebugTerminalWrite(buffer);
+    hal::DebugTerminalWrite(buffer);
 }
 
 #define KernelTraceSuccess(format, ...) \

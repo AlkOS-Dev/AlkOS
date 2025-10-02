@@ -3,13 +3,13 @@
 
 #include <extensions/template_lib.hpp>
 
-#include <hal/api/vmm.hpp>
 #include <hal/api/pmm.hpp>
+#include <hal/api/vmm.hpp>
 #include <mem/phys_ptr.hpp>
 #include <mem/virt_ptr.hpp>
 
-#include "mem/vmm/impl_config.hpp"
 #include "mem/page_map.hpp"
+#include "mem/vmm/impl_config.hpp"
 
 namespace arch::internal
 {

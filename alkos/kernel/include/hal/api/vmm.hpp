@@ -12,7 +12,6 @@ namespace arch
 class VirtualMemoryManager;
 
 struct VirtualMemoryManagerAPI {
-
 };
 
 }  // namespace arch

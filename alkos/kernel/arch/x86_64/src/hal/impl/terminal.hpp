@@ -11,9 +11,11 @@
 #include "drivers/serial/qemu.hpp"
 #include "drivers/vga/vga.hpp"
 
-namespace arch {
+namespace arch
+{
 BEGIN_DECL_C
-WRAP_CALL void TerminalInit() {
+WRAP_CALL void TerminalInit()
+{
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         QemuTerminalInit();
     }
@@ -69,6 +71,6 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
     return 0;
 }
 END_DECL_C
-} 
+}  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_TERMINAL_HPP_
