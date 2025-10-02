@@ -1,16 +1,18 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 
+#include "hal/core.hpp"
+
 #include <extensions/data_structures/array_structures.hpp>
 #include <extensions/new.hpp>
 #include <extensions/template_lib.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
 
-#include "core.hpp"
 
 namespace hardware
 {
+
 class CoresController final
 {
     public:
@@ -49,6 +51,7 @@ class CoresController final
     private:
     CoreTable core_table_{};
 };
+
 }  // namespace hardware
 
 #endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_

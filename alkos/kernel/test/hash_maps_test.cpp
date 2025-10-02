@@ -324,19 +324,19 @@ TEST_F(RegistryTest, HasKeyNonExisting)
     EXPECT_EQ(false, registry.HasKey(999u));
 }
 
-TEST_F(RegistryTest, SetActiveEntry)
+TEST_F(RegistryTest, SwitchSelectedEntry)
 {
     Registry<TestEntry, 4> registry;
     registry.RegisterEmplace(1u, 1u, 100);
     registry.RegisterEmplace(2u, 2u, 200);
 
-    EXPECT_EQ(false, registry.IsActivePicked());
+    EXPECT_EQ(false, registry.IsSelectedPicked());
 
-    registry.SetActive(1u);
+    registry.SwitchSelected(1u);
 
-    EXPECT_EQ(true, registry.IsActivePicked());
-    EXPECT_EQ(100, registry.GetActive().value);
-    EXPECT_EQ(1u, registry.GetActive().id);
+    EXPECT_EQ(true, registry.IsSelectedPicked());
+    EXPECT_EQ(100, registry.GetSelected().value);
+    EXPECT_EQ(1u, registry.GetSelected().id);
 }
 
 TEST_F(RegistryTest, ChangeActiveEntry)
@@ -345,12 +345,12 @@ TEST_F(RegistryTest, ChangeActiveEntry)
     registry.RegisterEmplace(1u, 1u, 100);
     registry.RegisterEmplace(2u, 2u, 200);
 
-    registry.SetActive(1u);
-    EXPECT_EQ(100, registry.GetActive().value);
+    registry.SwitchSelected(1u);
+    EXPECT_EQ(100, registry.GetSelected().value);
 
-    registry.SetActive(2u);
-    EXPECT_EQ(200, registry.GetActive().value);
-    EXPECT_EQ(2u, registry.GetActive().id);
+    registry.SwitchSelected(2u);
+    EXPECT_EQ(200, registry.GetSelected().value);
+    EXPECT_EQ(2u, registry.GetSelected().id);
 }
 
 TEST_F(RegistryTest, AccessOperator)

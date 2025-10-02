@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <extensions/debug.hpp>
-#include "debug_terminal.hpp"
+#include "hal/impl/debug_terminal.hpp"
 
 template <class... Args>
 void KernelTrace(const char* format, Args... args)

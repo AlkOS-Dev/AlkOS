@@ -1,8 +1,7 @@
-/* internal includes */
 #include "cpu/utils.hpp"
 #include <assert.h>
 #include <stdio.h>
-#include <terminal.hpp>
+#include <hal/impl/terminal.hpp>
 
 /**
  * @brief Capture current CPU register state

@@ -1,6 +1,9 @@
 #include "interrupts/idt.hpp"
 #include <extensions/defines.hpp>
-#include <panic.hpp>
+
+#include <hal/panic.hpp> // I dislike this import architecturally, but let it be for now
+using hal::KernelPanicFormat;
+
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
 

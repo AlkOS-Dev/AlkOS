@@ -6,7 +6,7 @@
 #include <trace.hpp>
 /* internal includes */
 #include "init.hpp"
-#include "terminal.hpp"
+#include "hal/terminal.hpp"
 #include "todo.hpp"
 
 static void KernelRun()

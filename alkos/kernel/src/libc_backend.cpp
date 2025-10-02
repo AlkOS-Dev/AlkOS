@@ -2,10 +2,10 @@
 #include <assert.h>
 #include <platform.h>
 
-#include "debug_terminal.hpp"
+#include "hal/debug_terminal.hpp"
+#include "hal/panic.hpp"
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
-#include "panic.hpp"
 
 void __platform_panic(const char* msg) { arch::KernelPanic(msg); }
 
