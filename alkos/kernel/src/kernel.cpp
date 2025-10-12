@@ -5,7 +5,7 @@
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
 /* internal includes */
-#include "hal/kernel_arguments.hpp"
+#include "hal/kernel.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::KernelArguments&);
