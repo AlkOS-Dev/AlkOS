@@ -22,9 +22,6 @@ alkos.entry:
           mov rsp, stack_top
           mov rbp, rsp
 
-          ; LoaderData *loader_data = rdi
-          call PreKernelInit
-
           ; Call actual kernel entry point
           call KernelMain
 

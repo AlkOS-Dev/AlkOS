@@ -3,6 +3,7 @@
 /* Internal includes */
 #include "acpi/acpi.hpp"
 #include "hal/kernel.hpp"
+#include "hal/terminal.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
@@ -13,6 +14,27 @@ extern "C" void _init();
 
 void KernelInit(const hal::KernelArguments& args)
 {
+    hal::TerminalInit();
+
+    hal::ArchInit(args);
+
+    HardwareModule::Init();
+    HardwareModule::Get().GetInterrupts().FirstStageInit();
+
+    hal::PmmConfig b_pmm_conf;
+    b_pmm_conf.pmm_bitmap_addr = PhysicalPtr<void>(args.mem_info_bitmap_addr);
+    b_pmm_conf.pmm_total_pages = args.mem_info_total_pages;
+
+    hal::VmmConfig vmm_conf;
+    vmm_conf.pml4_table = PhysicalPtr<PageMapTable<4>>(args.pml_4_table_phys_addr);
+
+    MemoryModule::Get().GetPmm().Configure(b_pmm_conf);
+    MemoryModule::Get().GetVmm().Configure(vmm_conf);
+
+    MemoryModule::Init();
+    MemoryModule::Get().GetPmm().Init();
+    MemoryModule::Get().GetVmm().Init();
+
     /* GCC CXX provided function initializing global constructors */
     _init();
 
@@ -21,9 +43,6 @@ void KernelInit(const hal::KernelArguments& args)
 
     /* Initialize the global state module */
     GlobalStateModule::Init();
-
-    MemoryModule::Get().GetPmm().Init();
-    MemoryModule::Get().GetVmm().Init();
 
     TODO_MMU_MINIMAL
     // /* Initialize ACPI */

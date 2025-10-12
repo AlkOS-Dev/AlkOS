@@ -14,6 +14,7 @@
 #include <modules/hardware.hpp>
 #include <modules/memory.hpp>
 
+#include <hal/impl/kernel.hpp>
 #include <hal/panic.hpp>
 #include <hal/terminal.hpp>
 
@@ -43,13 +44,11 @@ static int GetCpuModel()
 // Main Entry Point
 //==================================================================================
 
-extern "C" void PreKernelInit(KernelInitialParams* kernel_init_params)
+namespace arch
 {
-    arch::TerminalInit();
-    TRACE_INFO("In PreKernelInit...");
-
-    ASSERT_NOT_NULL(kernel_init_params, "Kernel reached with no initial params from loader");
-
+void ArchInit(const KernelArguments& args)
+{
+    TRACE_INFO("In ArchInit...");
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
     TRACE_INFO("Setting up CPU features...");
@@ -60,21 +59,8 @@ extern "C" void PreKernelInit(KernelInitialParams* kernel_init_params)
     EnableSSE();
     EnableAVX();
 
-    HardwareModule::Init();
-    HardwareModule::Get().GetInterrupts().FirstStageInit();
-
-    arch::PmmConfig b_pmm_conf;
-    b_pmm_conf.pmm_bitmap_addr = PhysicalPtr<void>(kernel_init_params->mem_info_bitmap_addr);
-    b_pmm_conf.pmm_total_pages = kernel_init_params->mem_info_total_pages;
-
-    arch::VmmConfig vmm_conf;
-    vmm_conf.pml4_table = PhysicalPtr<PageMapTable<4>>(kernel_init_params->pml_4_table_phys_addr);
-
-    MemoryModule::Init();
-    MemoryModule::Get().GetPmm().Configure(b_pmm_conf);
-    MemoryModule::Get().GetVmm().Configure(vmm_conf);
-
     EnableHardwareInterrupts();
 
-    TRACE_INFO("Leaving PreKernelInit and entering kernel...");
+    TRACE_INFO("Leaving ArchInit");
 }
+}  // namespace arch
