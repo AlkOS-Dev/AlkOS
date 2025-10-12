@@ -6,8 +6,7 @@
           extern GDT64.Pointer
           extern GDT64.Data
 
-          ; GCC compiler global constructors initialization
-          extern _init
+          ; GCC compiler global destructor support
           extern _fini
 
           ; Pre-Kernel Initialization that couldn't be in loaders
@@ -25,9 +24,6 @@ alkos.entry:
 
           ; LoaderData *loader_data = rdi
           call PreKernelInit
-
-          ; Invoke CXX global constructors
-          call _init
 
           ; Call actual kernel entry point
           call KernelMain

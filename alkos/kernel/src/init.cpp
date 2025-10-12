@@ -8,8 +8,14 @@
 #include <modules/memory.hpp>
 #include <modules/timing.hpp>
 
+/* GCC CXX provided function initializing global constructors */
+extern "C" void _init();
+
 void KernelInit()
 {
+    /* GCC CXX provided function initializing global constructors */
+    _init();
+
     /* Initialize the stack protection */
     __stack_chk_init();
 
