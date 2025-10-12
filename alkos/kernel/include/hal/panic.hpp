@@ -8,7 +8,13 @@
 namespace hal
 {
 
-WRAP_CALL NO_RET void KernelPanic(const char *msg) { arch::KernelPanic(msg); }
+/**
+ * @brief Stops the kernel from functioning and disables all necessary devices and processes.
+ * @note This function should also dump relevant debug information to the terminal
+ *       to help diagnose the issue.
+ * @param msg A message providing additional information about the panic.
+ */
+WRAP_CALL void KernelPanic(const char *msg) { arch::KernelPanic(msg); }
 
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
@@ -18,7 +24,7 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 
     snprintf(buffer, kKernelPanicPrintBuffSize, fmt, args...);
 
-    arch::KernelPanic(buffer);
+    KernelPanic(buffer);
 }
 
 }  // namespace hal

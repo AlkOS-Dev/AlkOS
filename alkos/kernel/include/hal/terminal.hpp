@@ -5,12 +5,51 @@
 
 namespace hal
 {
-using arch::TerminalGetChar;
-using arch::TerminalInit;
-using arch::TerminalPutChar;
-using arch::TerminalReadLine;
-using arch::TerminalWriteError;
-using arch::TerminalWriteString;
+/**
+ * @brief Initializes the terminal for input and output operations.
+ * @note Must set up any required buffers or hardware state.
+ */
+WRAP_CALL void TerminalInit() { arch::TerminalInit(); }
+
+/**
+ * @brief Outputs a single character to the terminal.
+ * @param c The character to output.
+ * @note Must ensure the character is displayed immediately.
+ */
+WRAP_CALL void TerminalPutChar(char c) { arch::TerminalPutChar(c); }
+
+/**
+ * @brief Writes a null-terminated string to the terminal.
+ * @param data The string to write.
+ * @note Must handle newlines and special characters appropriately. (TODO)
+ */
+WRAP_CALL void TerminalWriteString(const char *data) { arch::TerminalWriteString(data); }
+
+/**
+ * @brief Writes an error message to the terminal.
+ * @param data The error string to write.
+ * @note Should visually distinguish error messages (e.g., with a specific color or prefix).
+ */
+WRAP_CALL void TerminalWriteError(const char *data) { arch::TerminalWriteError(data); }
+
+/**
+ * @brief Reads a single character from the terminal input.
+ * @return The character read from input.
+ * @note Must block until a character is available.
+ */
+WRAP_CALL char TerminalGetChar() { return arch::TerminalGetChar(); }
+
+/**
+ * @brief Reads a line of input from the terminal into a buffer.
+ * @param buffer The buffer to store the input.
+ * @param size The maximum number of characters to read (including null terminator).
+ * @return The number of characters read, including the null terminator.
+ * @note Must block until a character is available.
+ */
+WRAP_CALL size_t TerminalReadLine(char *buffer, size_t size)
+{
+    return arch::TerminalReadLine(buffer, size);
+}
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_

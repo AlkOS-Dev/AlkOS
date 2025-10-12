@@ -5,7 +5,9 @@
 
 namespace hal
 {
-using arch::QemuShutdown;
+/* This is plain bad. But it's also quick to implement and easy to delete
+ * when time comes for proper abstraction */
+WRAP_CALL void QemuShutdown() { arch::QemuShutdown(); }
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_QEMU_HPP_
