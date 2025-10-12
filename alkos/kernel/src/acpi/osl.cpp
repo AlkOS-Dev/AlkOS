@@ -1,8 +1,9 @@
 #include "osl.tpp"
 
 #include <string.h>
+
 #include <uacpi/kernel_api.h>
-#include <constants.hpp>
+#include <hal/constants.hpp>
 #include "todo.hpp"
 TODO_WHEN_VMEM_WORKS
 #include <modules/global_state.hpp>

@@ -5,13 +5,13 @@
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
 /* internal includes */
+#include "hal/terminal.hpp"
 #include "init.hpp"
-#include "terminal.hpp"
 #include "todo.hpp"
 
 static void KernelRun()
 {
-    KernelTraceSuccess("Hello word!");
+    KernelTraceSuccess("Hello from AlkOS!");
     TODO_MMU_MINIMAL
     // static constexpr size_t kBuffSize = 256;
     // char buff[kBuffSize];

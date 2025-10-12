@@ -1,9 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_VMM_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_VMM_HPP_
 
-// TODO: This include is here because of conflicing paths
-// This requires solving
-#include <hal/mem/vmm.hpp>
+#include <hal/vmm.hpp>
 
 namespace mem
 {

@@ -13,11 +13,12 @@
 
 #include <modules/hardware.hpp>
 #include <modules/memory.hpp>
-#include <terminal.hpp>
+
+#include <hal/panic.hpp>
+#include <hal/terminal.hpp>
 
 #include "abi/boot_params.hpp"
 #include "cpu/utils.hpp"
-#include "panic.hpp"
 
 //==============================================================================
 // External Functions and Variables

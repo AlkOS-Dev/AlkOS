@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
 
 #include <assert.h>
-#include <terminal.hpp>
+#include <hal/terminal.hpp>
 #include <test_module/test_module.hpp>
 
 inline void ExpectHandler(const char* msg)

@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <string.h>
 #include <hal/qemu.hpp>
-#include <terminal.hpp>
+#include <hal/terminal.hpp>
 #include <test_module/test_module.hpp>
 
 namespace test

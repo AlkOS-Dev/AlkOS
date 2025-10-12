@@ -1,11 +1,11 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_HASH_MAPS_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_HASH_MAPS_HPP_
 
-#include <constants.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/string.hpp>
 #include <extensions/tuple.hpp>
+#include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
 
 namespace data_structures
 {

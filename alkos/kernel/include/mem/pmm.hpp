@@ -1,12 +1,12 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_PMM_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_PMM_HPP_
 
-#include <hal/mem/pmm.hpp>
+#include <hal/pmm.hpp>
 
 namespace mem
 {
 
-class PhysicalMemoryManager final : public arch::PhysicalMemoryManager
+class PhysicalMemoryManager final : public hal::PhysicalMemoryManager
 {
 };
 using Pmm = PhysicalMemoryManager;

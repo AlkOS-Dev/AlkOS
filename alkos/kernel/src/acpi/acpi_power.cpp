@@ -2,7 +2,7 @@
 
 #include <extensions/debug.hpp>
 #include <todo.hpp>
-#include "panic.hpp"
+#include "hal/panic.hpp"
 
 #include <uacpi/sleep.h>
 

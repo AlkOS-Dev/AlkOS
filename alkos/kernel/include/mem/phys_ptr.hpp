@@ -3,7 +3,7 @@
 
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
-#include "constants.hpp"
+#include "hal/constants.hpp"
 
 template <class T>
 class PhysicalPtr

@@ -2,12 +2,12 @@
 #include <assert.h>
 #include <platform.h>
 
-#include "debug_terminal.hpp"
+#include "hal/debug_terminal.hpp"
+#include "hal/panic.hpp"
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
-#include "panic.hpp"
 
-void __platform_panic(const char* msg) { arch::KernelPanic(msg); }
+void __platform_panic(const char* msg) { hal::KernelPanic(msg); }
 
 void __platform_get_clock_value(const ClockType type, TimeVal* time, Timezone* time_zone)
 {
@@ -63,9 +63,9 @@ void __platform_get_timezone(Timezone* time_zone)
     *time_zone = TimingModule::Get().GetSystemTime().GetTimezone();
 }
 
-void __platform_debug_write(const char* buffer) { DebugTerminalWrite(buffer); }
+void __platform_debug_write(const char* buffer) { hal::DebugTerminalWrite(buffer); }
 
 size_t __platform_debug_read_line(char* buffer, const size_t buffer_size)
 {
-    return DebugTerminalReadLine(buffer, buffer_size);
+    return hal::DebugTerminalReadLine(buffer, buffer_size);
 }
