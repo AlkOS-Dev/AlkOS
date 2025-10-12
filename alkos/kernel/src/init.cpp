@@ -2,7 +2,7 @@
 
 /* Internal includes */
 #include "acpi/acpi.hpp"
-#include "hal/kernel_arguments.hpp"
+#include "hal/kernel.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"

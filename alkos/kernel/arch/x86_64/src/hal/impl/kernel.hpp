@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_ARGUMENTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_ARGUMENTS_HPP_
 
-#include "api/kernel_arguments.hpp"
+#include "api/kernel.hpp"
 
 namespace arch
 {
