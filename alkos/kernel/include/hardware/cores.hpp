@@ -15,10 +15,10 @@ namespace hardware
 class CoresController final
 {
     public:
-    class Core final : public arch::Core
+    class Core final : public hal::Core
     {
         /* Allow usage of arch constructor */
-        using arch::Core::Core;
+        using hal::Core::Core;
     };
 
     TODO_WHEN_VMEM_WORKS

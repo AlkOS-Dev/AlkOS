@@ -44,7 +44,7 @@ class VirtualPtr
     T* ToPhys() const
     {
         return reinterpret_cast<T*>(
-            reinterpret_cast<uintptr_t>(virt_ptr_) - kKernelVirtualAddressStart
+            reinterpret_cast<uintptr_t>(virt_ptr_) - hal::kKernelVirtualAddressStart
         );
     }
     bool IsNull() const { return virt_ptr_ == nullptr; }
@@ -90,7 +90,7 @@ class VirtualPtr<void>
     //==============================================================================
 
     void* Get() const { return virt_ptr_; }
-    void* ToPhys() const { return static_cast<char*>(virt_ptr_) - kKernelVirtualAddressStart; }
+    void* ToPhys() const { return static_cast<char*>(virt_ptr_) - hal::kKernelVirtualAddressStart; }
     bool IsNull() const { return virt_ptr_ == nullptr; }
 
     private:
