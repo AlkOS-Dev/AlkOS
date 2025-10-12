@@ -11,7 +11,7 @@
 
 static void KernelRun()
 {
-    KernelTraceSuccess("Hello word!");
+    KernelTraceSuccess("Hello from AlkOS!");
     TODO_MMU_MINIMAL
     // static constexpr size_t kBuffSize = 256;
     // char buff[kBuffSize];
