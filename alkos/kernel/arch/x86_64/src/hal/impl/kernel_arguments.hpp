@@ -1,8 +1,12 @@
-//
-// Created by Jlisowskyy on 12/10/25.
-//
-
 #ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_ARGUMENTS_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_ARGUMENTS_HPP_
+
+#include "api/kernel_arguments.hpp"
+
+namespace arch
+{
+struct KernelArguments : KernelArgumentsAPI {
+};
+}  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_ARGUMENTS_HPP_

@@ -3,7 +3,8 @@
 
 namespace arch
 {
-struct KernelArguments {
+struct KernelArguments;
+struct KernelArgumentsAPI {
 };
 }  // namespace arch
 

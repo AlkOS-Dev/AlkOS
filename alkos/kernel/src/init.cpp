@@ -1,17 +1,17 @@
-/* Internal includes */
-#include "init.hpp"
 #include <libssp.h>
 
-#include <acpi/acpi.hpp>
-#include <modules/global_state.hpp>
-#include <modules/hardware.hpp>
-#include <modules/memory.hpp>
-#include <modules/timing.hpp>
+/* Internal includes */
+#include "acpi/acpi.hpp"
+#include "hal/kernel_arguments.hpp"
+#include "modules/global_state.hpp"
+#include "modules/hardware.hpp"
+#include "modules/memory.hpp"
+#include "modules/timing.hpp"
 
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
-void KernelInit()
+void KernelInit(const hal::KernelArguments& args)
 {
     /* GCC CXX provided function initializing global constructors */
     _init();
