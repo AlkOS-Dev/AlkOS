@@ -3,7 +3,8 @@
 
 namespace arch
 {
-
+struct KernelArguments {
+};
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_API_KERNEL_ARGUMENTS_HPP_

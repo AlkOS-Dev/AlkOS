@@ -5,7 +5,7 @@
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
 /* internal includes */
-#include "hal/terminal.hpp"
+#include "hal/kernel_arguments.hpp"
 #include "init.hpp"
 #include "todo.hpp"
 
