@@ -5,7 +5,7 @@
 
 namespace arch
 {
-struct PACK KernelArguments : KernelArgumentsAPI {
+struct PACK alignas(64) KernelArguments : KernelArgumentsAPI {
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;
     u64 multiboot_header_end_addr;
