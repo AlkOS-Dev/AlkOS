@@ -25,9 +25,7 @@ static void KernelRun()
 
 extern "C" void KernelMain(const hal::KernelArguments* args)
 {
-    char buff[512];
-    VerboseAssertDumpObjToHex(*args, buff, 512);
-    KernelTraceInfo("KernelMain called with args: %s", buff);
+    DumpObjHexWithSep(hal::DebugTerminalWrite, *args);
 
     KernelTraceInfo("Running kernel initialization...");
     KernelInit(*args);
