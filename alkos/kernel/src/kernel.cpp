@@ -25,8 +25,6 @@ static void KernelRun()
 
 extern "C" void KernelMain(const hal::KernelArguments* args)
 {
-    DumpObjHexWithSep(hal::DebugTerminalWrite, *args);
-
     KernelTraceInfo("Running kernel initialization...");
     KernelInit(*args);
 

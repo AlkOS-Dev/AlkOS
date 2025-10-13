@@ -59,6 +59,9 @@ void ArchInit(const KernelArguments& args)
     EnableSSE();
     EnableAVX();
 
+    HardwareModule::Init();
+    HardwareModule::Get().GetInterrupts().FirstStageInit();
+
     EnableHardwareInterrupts();
 
     TRACE_INFO("Leaving ArchInit");
