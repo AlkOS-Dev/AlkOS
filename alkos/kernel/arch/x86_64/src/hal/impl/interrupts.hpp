@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
 
 #include <hal/api/interrupts.hpp>
 
@@ -15,6 +15,9 @@
 
 namespace arch
 {
+
+static constexpr size_t kPageFaultIsrId = 14;
+
 class Interrupts : public InterruptsAPI
 {
     TODO_WHEN_VMEM_WORKS
@@ -23,6 +26,7 @@ class Interrupts : public InterruptsAPI
     public:
     TODO_WHEN_VMEM_WORKS
     using IoApicTable = data_structures::StaticVector<IoApic, kTemporaryIoApicTableSize>;
+    static constexpr size_t kMaxSupportedIsr = 48;
 
     Interrupts()  = default;
     ~Interrupts() = default;
@@ -32,6 +36,8 @@ class Interrupts : public InterruptsAPI
     // ------------------------------
 
     void Init();
+
+    void InstallIsrHandler(size_t isr_id, IsrHandler handler);
 
     // ------------------------------
     // Class methods
@@ -82,4 +88,4 @@ class Interrupts : public InterruptsAPI
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_

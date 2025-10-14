@@ -46,7 +46,7 @@ static int GetCpuModel()
 
 namespace arch
 {
-void ArchInit(const KernelArguments& args)
+void ArchInit(const KernelArguments &)
 {
     TRACE_INFO("In ArchInit...");
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
