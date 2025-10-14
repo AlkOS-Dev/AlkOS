@@ -4,7 +4,7 @@
 #include <extensions/template_lib.hpp>
 
 #include "hal/kernel.hpp"
-#include "mem/vmm/virtual_memory_manager.hpp"
+#include "mem/vmm/vmm.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal

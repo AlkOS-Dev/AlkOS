@@ -1,5 +1,5 @@
 #include "extensions/debug.hpp"
-#include "mem/vmm/virtual_memory_manager.hpp"
+#include "mem/vmm/vmm.hpp"
 
 namespace mem
 {
