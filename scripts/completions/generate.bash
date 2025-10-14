@@ -23,7 +23,7 @@ declare -Ar GENCOMP_CONFIG_FILE=(
     [fish]="$HOME/.config/fish/config.fish"
 )
 
-declare -ar GENCOMP_EXCLUDED_DIRS=(
+readonly GENCOMP_EXCLUDED_DIRS=(
     "${GENCOMP_DIR}"
     "${GENCOMP_SCRIPTS_BASE_DIR}/actions"
     "${GENCOMP_SCRIPTS_BASE_DIR}/cicd"
