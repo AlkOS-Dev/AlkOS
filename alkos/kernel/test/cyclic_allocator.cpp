@@ -32,7 +32,7 @@ TEST_F(CyclicAllocatorTest, BasicAllocFree)
     EXPECT_EQ(obj->GetValue(), 42);
 
     allocator.Free(obj);
-    EXPECT_EQ(allocator.GetFreeSlots(), 8);
+    EXPECT_EQ(allocator.GetFreeSlots(), 8_size);
 }
 
 TEST_F(CyclicAllocatorTest, AllocateWithArgs)
@@ -57,13 +57,13 @@ TEST_F(CyclicAllocatorTest, CyclicBehavior)
     TestObject* obj2 = allocator.Allocate(2);
     TestObject* obj3 = allocator.Allocate(3);
 
-    EXPECT_EQ(allocator.GetFreeSlots(), 0);
+    EXPECT_EQ(allocator.GetFreeSlots(), 0_size);
 
     allocator.Free(obj2);
-    EXPECT_EQ(allocator.GetFreeSlots(), 1);
+    EXPECT_EQ(allocator.GetFreeSlots(), 1_size);
 
     TestObject* obj4 = allocator.Allocate(4);
-    EXPECT_EQ(allocator.GetFreeSlots(), 0);
+    EXPECT_EQ(allocator.GetFreeSlots(), 0_size);
 
     EXPECT_EQ(obj1->GetValue(), 1);
     EXPECT_EQ(obj3->GetValue(), 3);
@@ -84,14 +84,14 @@ TEST_F(CyclicAllocatorTest, FullAllocationCycle)
         EXPECT_EQ(objects[i]->GetValue(), i);
     }
 
-    EXPECT_EQ(allocator.GetFreeSlots(), 0);
+    EXPECT_EQ(allocator.GetFreeSlots(), 0_size);
 
     for (int i = 3; i >= 0; --i) {
         allocator.Free(objects[i]);
-        EXPECT_EQ(allocator.GetFreeSlots(), 4 - i);
+        EXPECT_EQ(allocator.GetFreeSlots(), 4_size - i);
     }
 
-    EXPECT_EQ(allocator.GetFreeSlots(), 4);
+    EXPECT_EQ(allocator.GetFreeSlots(), 4_size);
 
     for (int i = 0; i < 4; ++i) {
         objects[i] = allocator.Allocate(i + 10);

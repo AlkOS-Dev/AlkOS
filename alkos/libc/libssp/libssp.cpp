@@ -9,84 +9,28 @@
 #include <stdint.h>
 
 /* internal includes */
-#include <defines.h>
-
-#ifdef __ALKOS_LIBK__
-#include "panic.hpp"
-#endif  // __ALKOS_LIBK__
-
-#if __STDC_HOSTED__
-#error "NOT IMPLEMENTED"
-#endif  // __STDC_HOSTED__
+#include "defines.h"
+#include "platform.h"
+#include "todo.h"
 
 // ------------------------------
 // Stack Check Variable
 // ------------------------------
 
-/* random init value, should be changed by init proc */
+TODO_RANDOM
+/* TODO: random init value, should be changed by init proc */
+
 static constexpr uintptr_t kStackChkGuard =
     UINT32_MAX == UINTPTR_MAX ? 0xe2dee396 : 0x595e9fbd94fda766;
 volatile uintptr_t __stack_chk_guard = kStackChkGuard;
 
 // ------------------------------
-// Host implementation
-// ------------------------------
-
-#if __STDC_HOSTED__
-
-static void __stack_chk_init_hosted() {}
-
-static NO_RET void __stack_chk_fail_hosted() {}
-
-#endif  // __STDC_HOSTED__
-
-// ------------------------------
-// Kernel implementation
-// ------------------------------
-
-#ifdef __ALKOS_LIBK__
-
-/**
- * @todo Implement this when random number generator is implemented
- */
-static void __stack_chk_init_kernel() {}
-
-/**
- * @todo Add some debug message about stack in future
- */
-WRAP_CALL NO_RET void __stack_chk_fail_kernel()
-{
-    arch::KernelPanic("Stack smashing detected");
-    while (true);  // This makes it explicit to the compiler that this function does not return.
-}
-#endif  // __ALKOS_LIBK__
-
-// ------------------------------
 // libssp implementation
 // ------------------------------
 
-void __stack_chk_init()
-{
-#if __STDC_HOSTED__
+void __stack_chk_init() {}
 
-    __stack_chk_init_hosted();
+TODO_BY_THE_END_OF_MILESTONE0
+/* TODO: Improve messaging */
 
-#else
-
-    __stack_chk_init_kernel();
-
-#endif
-}
-
-extern "C" NO_RET void __stack_chk_fail()
-{
-#if __STDC_HOSTED__
-
-    __stack_chk_fail_hosted();
-
-#else
-
-    __stack_chk_fail_kernel();
-
-#endif
-}
+extern "C" NO_RET void __stack_chk_fail() { __platform_panic("Stack smashing detected"); }

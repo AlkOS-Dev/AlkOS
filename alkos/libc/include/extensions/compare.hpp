@@ -1,6 +1,7 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
 
+#include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
 namespace std

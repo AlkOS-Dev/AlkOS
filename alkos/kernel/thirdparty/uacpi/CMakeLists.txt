@@ -1,4 +1,4 @@
-message(STATUS "-> uACPI...")
+message(STATUS "    -> uACPI...")
 
 #######################################################################
 #                                uACPI                                #
@@ -34,12 +34,12 @@ target_include_directories(uacpi PRIVATE .)
 
 ############################# Linking libraries ##############################
 
-target_link_libraries(uacpi PRIVATE libk)
+target_link_libraries(uacpi PRIVATE c.core)
 
 ######################### Setting Custom Properties ##########################
 
 target_link_libraries(uacpi PRIVATE
-        target.properties
+        alkos.target.properties.interface
 )
 
 ################################ Export itself #################################

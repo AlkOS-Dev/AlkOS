@@ -22,4 +22,7 @@ typedef int64_t i64;
 typedef float f32;
 typedef double f64;
 
+typedef uintptr_t uptr;
+typedef intptr_t iptr;
+
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPES_HPP_

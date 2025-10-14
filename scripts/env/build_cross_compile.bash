@@ -152,7 +152,7 @@ build_binutils() {
     prepare_directory "${binutils_dir}"
     cd "${binutils_dir}"
 
-    download_extract_gnu_source "binutils/${binutils_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "binutils/releases/${binutils_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring binutils"
     runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot --disable-nls --disable-werror
@@ -194,7 +194,7 @@ build_gcc() {
     prepare_directory "${gcc_dir}"
     cd "${gcc_dir}"
 
-    download_extract_gnu_source "gcc/${gcc_name}/${gcc_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
     runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers
@@ -232,7 +232,7 @@ build_gdb() {
     prepare_directory "${gdb_dir}"
     cd "${gdb_dir}"
 
-    download_extract_gnu_source "gdb/${gdb_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "gdb/releases/${gdb_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GDB"
     runner "Failed to configure GDB" ${gdb_name}/configure --target=$(argparse_get "c|custom_target") --prefix="$(argparse_get "t|tool_dir")" --disable-werror

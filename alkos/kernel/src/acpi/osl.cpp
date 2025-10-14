@@ -1,18 +1,14 @@
 #include "osl.tpp"
 
 #include <string.h>
+
 #include <uacpi/kernel_api.h>
-#include <constants.hpp>
-#include <definitions/loader64_data.hpp>
+#include <hal/constants.hpp>
 #include "todo.hpp"
 TODO_WHEN_VMEM_WORKS
-#include <loader_memory_manager/loader_memory_manager.hpp>
-#include <memory_management/physical_memory_manager.hpp>
 #include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
 #include <todo.hpp>
-
-extern loader64::LoaderData *kLoaderData;
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
@@ -106,22 +102,25 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
 
 void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len)
 {
-    using pmm   = memory::PhysicalMemoryManager;
-    auto paddr  = AlignDown(addr, pmm::kPageSize);
-    auto offset = addr & (pmm::kPageSize - 1);
-    auto vsize  = AlignUp(len + offset, pmm::kPageSize);
     TODO_WHEN_VMEM_WORKS
-    auto vaddr = AlignDown(arch::kKernelDirectMapAddressStart + addr, pmm::kPageSize);
-    auto loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
+    // TODO: Map the pages
 
-    for (size_t pg = 0; pg < vsize; pg += pmm::kPageSize) {
-        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-            vaddr + pg, paddr + pg, LoaderMemoryManager::kWriteBit
-        );
-    }
+    // using pmm   = memory::PhysicalMemoryManager;
+    // auto paddr  = AlignDown(addr, pmm::kPageSize);
+    // auto offset = addr & (pmm::kPageSize - 1);
+    // auto vsize  = AlignUp(len + offset, pmm::kPageSize);
+    // TODO_WHEN_VMEM_WORKS
+    // auto vaddr = AlignDown(arch::kDirectMapAddrStart + addr, pmm::kPageSize);
+    // auto loader_memory_manager =
+    //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
 
-    return reinterpret_cast<byte *>(vaddr) + offset;
+    // for (size_t pg = 0; pg < vsize; pg += pmm::kPageSize) {
+    //     loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+    //         vaddr + pg, paddr + pg, LoaderMemoryManager::kWriteBit
+    //     );
+    // }
+    // return reinterpret_cast<byte *>(vaddr) + offset;
+    return nullptr;
 }
 
 void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
@@ -129,27 +128,30 @@ void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
 void *uacpi_kernel_alloc(uacpi_size size)
 {
     TODO_WHEN_VMEM_WORKS
-    auto loader_memory_manager =
-        reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
-    // TODO(F1r3d3v): Memory layout need to be established
-    const u64 kVMemAllocStart = arch::kKernelDirectMapAddressStart + kSingleBit<u64, 46>;
-    using pmm                 = memory::PhysicalMemoryManager;
+    // TODO: Map the pages
 
-    auto vsize = AlignUp(size, pmm::kPageSize);
-    auto paddr = PhysicalMemoryManager::Get().Allocate();
-    auto vaddr = AlignDown(kVMemAllocStart + paddr, pmm::kPageSize);
-    loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-        vaddr, paddr, LoaderMemoryManager::kWriteBit
-    );
+    // // auto loader_memory_manager =
+    // //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
+    // // // TODO(F1r3d3v): Memory layout need to be established
+    // const u64 kVMemAllocStart = arch::kDirectMapAddrStart + kSingleBit<u64, 46>;
+    // using pmm                 = memory::PhysicalMemoryManager;
 
-    for (size_t pg = pmm::kPageSize; pg < vsize; pg += pmm::kPageSize) {
-        auto phys_addr = PhysicalMemoryManager::Get().Allocate();
-        loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-            vaddr + pg, phys_addr, LoaderMemoryManager::kWriteBit
-        );
-    }
+    // auto vsize = AlignUp(size, pmm::kPageSize);
+    // auto paddr = PhysicalMemoryManager::Get().Allocate();
+    // auto vaddr = AlignDown(kVMemAllocStart + paddr, pmm::kPageSize);
+    // loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+    //     vaddr, paddr, LoaderMemoryManager::kWriteBit
+    // );
 
-    return reinterpret_cast<void *>(vaddr);
+    // for (size_t pg = pmm::kPageSize; pg < vsize; pg += pmm::kPageSize) {
+    //     auto phys_addr = PhysicalMemoryManager::Get().Allocate();
+    //     loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
+    //         vaddr + pg, phys_addr, LoaderMemoryManager::kWriteBit
+    //     );
+    // }
+
+    // return reinterpret_cast<void *>(vaddr);
+    return nullptr;
 }
 
 void uacpi_kernel_free(void *mem)
