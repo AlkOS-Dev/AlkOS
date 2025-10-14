@@ -5,6 +5,9 @@
 #include <extensions/types.hpp>
 #include "hal/constants.hpp"
 
+namespace mem
+{
+
 template <class T>
 class VirtualPtr
 {
@@ -96,5 +99,7 @@ class VirtualPtr<void>
     private:
     void* virt_ptr_;
 };
+
+}  // namespace mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
