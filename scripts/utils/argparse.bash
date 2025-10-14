@@ -37,6 +37,9 @@ argparse_init() {
     ARGPARSE_TYPES=()
     ARGPARSE_SEPARATORS=()
     ARGPARSE_POSITIONAL_NAMES=()
+    ARGPARSE_VARIADIC_NAME=""
+    ARGPARSE_VARIADIC_ARGS=()
+    ARGPARSE_SKIP_OPTIONS=false
 }
 
 # Add an option argument

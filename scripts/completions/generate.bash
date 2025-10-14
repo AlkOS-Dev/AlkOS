@@ -5,25 +5,25 @@ readonly GENCOMP_SCRIPT_PATH="${GENCOMP_DIR}/$(basename "$0")"
 readonly GENCOMP_SCRIPTS_BASE_DIR="$(realpath "${GENCOMP_DIR}/..")"
 readonly GENCOMP_OUTPUT_DIR="${GENCOMP_DIR}/output"
 
-readonly -A GENCOMP_GENERATED_OUTPUT_PATH=(
+declare -Ar GENCOMP_GENERATED_OUTPUT_PATH=(
     [bash]="${GENCOMP_OUTPUT_DIR}/bash_completion.generated.bash"
     [zsh]="${GENCOMP_OUTPUT_DIR}/zsh_completion.generated.zsh"
     [fish]="${GENCOMP_OUTPUT_DIR}/fish_completion.generated.fish"
 )
 
-readonly -A GENCOMP_TARGET_LINK_PATH=(
+declare -Ar GENCOMP_TARGET_LINK_PATH=(
     [bash]="$HOME/.local/share/bash-completion/completions/alkos"
     [zsh]="$HOME/.local/share/zsh/site-functions/_alkos"
     [fish]="$HOME/.config/fish/completions/alkos.fish"
 )
 
-readonly -A GENCOMP_CONFIG_FILE=(
+declare -Ar GENCOMP_CONFIG_FILE=(
     [bash]="$HOME/.bash_completion"
     [zsh]="$HOME/.zshrc"
     [fish]="$HOME/.config/fish/config.fish"
 )
 
-readonly -a GENCOMP_EXCLUDED_DIRS=(
+declare -ar GENCOMP_EXCLUDED_DIRS=(
     "${GENCOMP_DIR}"
     "${GENCOMP_SCRIPTS_BASE_DIR}/actions"
     "${GENCOMP_SCRIPTS_BASE_DIR}/cicd"
@@ -246,7 +246,7 @@ enable_completion() {
             user_choice "Do you want to add the local zsh fpath to your .zshrc?" add_local_zsh_fpath
             if [[ $? -ne 0 ]]; then
                 pretty_warn "Please remember to add the local zsh fpath manually to your .zshrc:"
-                pretty_warn "$(get_config_line "$shell")"
+                pretty_warn 'fpath=(~/.local/share/zsh/site-functions $fpath)'
             fi
             ;;
         fish)
@@ -291,11 +291,11 @@ disable_completion() {
 
 synthesize_find_command() {
     local target_path="$1"; shift
-    local exluded_paths=("$@")
+    local excluded_paths=("$@")
 
     # Construct the find command with excluded paths
     find_command=(find "$target_path" \\\( )
-    for path in "${exluded_paths[@]}"; do
+    for path in "${excluded_paths[@]}"; do
         find_command+=(-path "$path" -o)
     done
     unset 'find_command[${#find_command[@]}-1]'
