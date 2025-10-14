@@ -25,10 +25,10 @@ source "${MAKE_ISO_SCRIPT_DIR}/../utils/argparse.bash"
 
 parse_args() {
   argparse_init "${MAKE_ISO_SCRIPT_PATH}" "Create a bootable AlkOS ISO from a sysroot directory"
-  argparse_add_positional "iso_file" "Path to the .iso file to create" true
-  argparse_add_positional "sysroot" "Path to the sysroot directory of AlkOS" true
+  argparse_add_positional "iso_file" "Path to the .iso file to create" true "" "file"
+  argparse_add_positional "sysroot" "Path to the sysroot directory of AlkOS" true "" "directory"
   argparse_add_option "e|exec_name" "Name of the executable in sysroot/boot to boot" false "alkos.kernel" "" "string"
-  argparse_add_option "m|modules" "Space-separated list of tuples in the form module_name/module_command" false "" "" "string"
+  argparse_add_option "m|modules" "Space-separated list of tuples in the form module_name/module_command" false "" "" "list" " "
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
 
   argparse_parse "$@"
