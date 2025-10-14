@@ -644,9 +644,6 @@ main() {
     local output_path="${GENCOMP_GENERATED_OUTPUT_PATH[$shell]}"
 
     if [[ "$(argparse_get "r|run")" == "true" ]]; then
-        base_runner "Failed to create output directory" false \
-            mkdir -p "$GENCOMP_OUTPUT_DIR"
-
         # Get all .bash scripts excluding certain directories
         while IFS= read -r -d '' script; do
             GENCOMP_SCRIPTS_LIST+=("$script")
