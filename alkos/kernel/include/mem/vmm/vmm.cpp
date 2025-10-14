@@ -5,8 +5,7 @@
 namespace mem
 {
 
-VirtualMemoryManager::VirtualMemoryManager(const u64 page_table_phys_addr) noexcept
-    : page_table_phys_addr_(page_table_phys_addr)
+VirtualMemoryManager::VirtualMemoryManager(AddressSpace as) noexcept : current_as_(as)
 {
     TRACE_INFO("VirtualMemoryManager::VirtualMemoryManager()");
 }

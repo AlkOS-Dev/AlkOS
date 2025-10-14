@@ -11,6 +11,9 @@
 namespace mem
 {
 
+template <typename T, typename E>
+using Expected = std::expected<T, E>;
+
 class BitmapPmm
 {
     public:
@@ -21,7 +24,7 @@ class BitmapPmm
 
     enum class Zone { B64, B32, B16 };
 
-    std::expected<PhysicalPtr<Page>, MemError> Alloc();
+    Expected<PhysicalPtr<Page>, MemError> Alloc();
     void Free(PhysicalPtr<Page> page);
 
     BitMapView bitmap_view_{nullptr, 0};

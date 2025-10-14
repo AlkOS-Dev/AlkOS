@@ -6,11 +6,7 @@
 namespace mem
 {
 
-struct AddressSpace {
-    size_t start;
-    size_t end;
-    uptr page_table_phys_addr;
-};
+static constexpr size_t kMaxMemRegions = 10;
 
 struct MemoryRegionFlags {
     bool read : 1;
@@ -23,6 +19,13 @@ struct MemoryRegion {
     MemoryRegionFlags flags;
 };
 
+struct AddressSpace {
+    size_t start;
+    size_t end;
+    uptr page_table_phys_addr;
+    MemoryRegion regions[kMaxMemRegions];
+};
+
 }  // namespace mem
 
-#endif /* ALKOS_KERNEL_INCLUDE_MEM_VMM_ADDR_SPACE_HPP_ */
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_VMM_ADDR_SPACE_HPP_
