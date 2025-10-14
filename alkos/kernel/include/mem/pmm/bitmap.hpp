@@ -22,8 +22,6 @@ class BitmapPmm
         BitMapAllocated = 1,
     };
 
-    enum class Zone { B64, B32, B16 };
-
     Expected<PhysicalPtr<Page>, MemError> Alloc();
     void Free(PhysicalPtr<Page> page);
 
