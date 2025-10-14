@@ -18,19 +18,7 @@ void KernelInit(const hal::KernelArguments& args)
 
     hal::ArchInit(args);
 
-    hal::PmmConfig b_pmm_conf;
-    b_pmm_conf.pmm_bitmap_addr = PhysicalPtr<void>(args.mem_info_bitmap_addr);
-    b_pmm_conf.pmm_total_pages = args.mem_info_total_pages;
-
-    hal::VmmConfig vmm_conf;
-    vmm_conf.pml4_table = PhysicalPtr<PageMapTable<4>>(args.pml_4_table_phys_addr);
-
-    MemoryModule::Init();
-    MemoryModule::Get().GetPmm().Configure(b_pmm_conf);
-    MemoryModule::Get().GetVmm().Configure(vmm_conf);
-
-    MemoryModule::Get().GetPmm().Init();
-    MemoryModule::Get().GetVmm().Init();
+    MemoryModule::Init(args);
 
     /* GCC CXX provided function initializing global constructors */
     _init();

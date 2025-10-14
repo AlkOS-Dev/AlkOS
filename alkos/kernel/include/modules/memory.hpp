@@ -3,8 +3,7 @@
 
 #include <extensions/template_lib.hpp>
 
-#include "mem/pmm.hpp"
-#include "mem/vmm.hpp"
+#include "hal/kernel.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -16,14 +15,11 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    MemoryModule() noexcept;
+    explicit MemoryModule(const hal::KernelArguments& args) noexcept;
 
     // ------------------------------
     // Module fields
     // ------------------------------
-
-    DEFINE_MODULE_FIELD(mem, Pmm);
-    DEFINE_MODULE_FIELD(mem, Vmm);
 };
 }  // namespace internal
 
