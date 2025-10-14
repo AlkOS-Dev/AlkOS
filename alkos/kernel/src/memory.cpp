@@ -2,7 +2,7 @@
 
 #include <extensions/debug.hpp>
 
-internal::MemoryModule::MemoryModule() noexcept : Vmm_(Pmm_)
+internal::MemoryModule::MemoryModule(const hal::KernelArguments &) noexcept
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 }
