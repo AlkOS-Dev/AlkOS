@@ -31,7 +31,7 @@ using namespace Multiboot;
 
 BEGIN_DECL_C
 
-void EnterKernel(u64 kernel_entry_addr, KernelInitialParams* kernel_initial_params);
+void EnterKernel(u64 kernel_entry_addr, KernelArguments* kernel_initial_params);
 
 // Defined in .ld
 extern const char loader_64_start[];
@@ -59,7 +59,7 @@ struct MemoryManagers {
 // Global Data
 //==============================================================================
 
-static KernelInitialParams gKernelInitialParams;
+static KernelArguments gKernelInitialParams;
 
 alignas(
     PageSize<PageSizeTag::k4Kb>()

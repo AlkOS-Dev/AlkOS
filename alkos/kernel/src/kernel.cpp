@@ -5,9 +5,10 @@
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
 /* internal includes */
-#include "hal/terminal.hpp"
-#include "init.hpp"
+#include "hal/kernel.hpp"
 #include "todo.hpp"
+
+extern void KernelInit(const hal::KernelArguments&);
 
 static void KernelRun()
 {
@@ -22,10 +23,10 @@ static void KernelRun()
     // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
 }
 
-extern "C" void KernelMain()
+extern "C" void KernelMain(const hal::KernelArguments* args)
 {
     KernelTraceInfo("Running kernel initialization...");
-    KernelInit();
+    KernelInit(*args);
 
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         KernelTraceInfo("Running tests...");

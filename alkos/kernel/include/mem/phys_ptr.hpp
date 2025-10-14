@@ -46,7 +46,7 @@ class PhysicalPtr
     T* ToVirt() const
     {
         return reinterpret_cast<T*>(
-            reinterpret_cast<uintptr_t>(phys_ptr_) + kKernelVirtualAddressStart
+            reinterpret_cast<uintptr_t>(phys_ptr_) + hal::kKernelVirtualAddressStart
         );
     }
     bool IsNull() const { return phys_ptr_ == nullptr; }
@@ -94,7 +94,7 @@ class PhysicalPtr<void>
     //==============================================================================
 
     void* Get() const { return phys_ptr_; }
-    void* ToVirt() const { return static_cast<char*>(phys_ptr_) + kKernelVirtualAddressStart; }
+    void* ToVirt() const { return static_cast<char*>(phys_ptr_) + hal::kKernelVirtualAddressStart; }
     bool IsNull() const { return phys_ptr_ == nullptr; }
     uintptr_t AsUIntPtr() const { return reinterpret_cast<uintptr_t>(phys_ptr_); }
 

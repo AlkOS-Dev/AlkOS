@@ -1,9 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_TIMERS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_TIMERS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
 
 #include <time.h>
 #include <extensions/time.hpp>
-#include <hal/api/timers.hpp>
 #include <trace.hpp>
 #include "drivers/cmos/rtc.hpp"
 
@@ -23,6 +22,9 @@ WRAP_CALL time_t QuerySystemTime(const timezone &tz)
 
     return ConvertDateTimeToPosix(rtcTime, tz);
 }
+
+void PickSystemClockSource();
+
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_TIMERS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_

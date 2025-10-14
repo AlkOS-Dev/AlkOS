@@ -5,7 +5,7 @@
 
 namespace hal
 {
-using namespace arch;
+using arch::Spinlock;
 }
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_SPINLOCK_HPP_

@@ -60,23 +60,23 @@ void TestModule::RunTestModule()
     );
     if (arch::TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
         arch::TerminalWriteError("[TEST] [FAIL] Too long input message...\n");
-        QemuShutdown();
+        hal::QemuShutdown();
     }
 
     if (strcmp(buff, "exit") == 0) {
         arch::TerminalWriteString("Kernel shutdown on test...\n");
-        QemuShutdown();
+        hal::QemuShutdown();
     }
 
     const TestSpec *test = FindTestFunction(buff);
 
     if (test == nullptr) {
         arch::TerminalWriteError("[TEST] [FAIL] Test not found...\n");
-        QemuShutdown();
+        hal::QemuShutdown();
     }
 
     RunTest_(test);
-    QemuShutdown();
+    hal::QemuShutdown();
 }
 
 void TestModule::DisplayTests_()
@@ -170,17 +170,17 @@ NO_RET void OnKernelPanic()
     if (!g_testStarted) {
         /* test not started yet, but we received failure -> some critical bug -> abort execution */
         arch::TerminalWriteError("[TEST] [FAIL] Kernel panic received before test started...\n");
-        QemuShutdown();
+        hal::QemuShutdown();
     }
 
     if (g_expectFail) {
         /* fail was expected we are good */
         arch::TerminalWriteString("[TEST] [SUCCESS] Test failed successfully...\n");
-        QemuShutdown();
+        hal::QemuShutdown();
     }
 
     /* ups... */
     arch::TerminalWriteError("[TEST] [FAIL] Test failed on kernel panic...\n");
-    QemuShutdown();
+    hal::QemuShutdown();
 }
 }  // namespace test

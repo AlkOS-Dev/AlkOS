@@ -26,7 +26,7 @@ namespace ACPI
 //         Structs          //
 //////////////////////////////
 
-class ACPIController final : public arch::AcpiController
+class ACPIController final : public hal::AcpiController
 {
     public:
     // ------------------------------
