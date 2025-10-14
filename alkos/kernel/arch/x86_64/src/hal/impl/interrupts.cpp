@@ -33,7 +33,6 @@ void Interrupts::Init()
 
     TRACE_INFO("Interrupts system initialised...");
 }
-void Interrupts::InstallIsrHandler(size_t isr_id, IsrHandler handler) {}
 
 void Interrupts::FirstStageInit()
 {
