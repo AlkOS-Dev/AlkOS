@@ -1,5 +1,6 @@
-#include "extensions/debug.hpp"
 #include "mem/vmm/vmm.hpp"
+#include "extensions/debug.hpp"
+#include "mem/vmm/addr_space.hpp"
 
 namespace mem
 {
