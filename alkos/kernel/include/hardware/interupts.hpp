@@ -42,7 +42,7 @@ class Interrupts final : public arch::Interrupts
         ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
 
         InterruptHandlerEntry& entry = handler_table_[lirq];
-        ASSERT_NOT_NULL(entry.driver.cbs->ack);
+        ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
 
         if (entry.handler_data.handler) {
             (*entry.handler_data.handler)(entry);
