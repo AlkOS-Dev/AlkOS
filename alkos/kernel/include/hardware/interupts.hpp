@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_INTERUPTS_HPP_
 
 #include <hal/interrupts.hpp>
+#include <hal/spinlock.hpp>
 
 namespace hardware
 {
@@ -13,10 +14,22 @@ class Interrupts final : public arch::Interrupts
 
     public:
     struct InterruptHandlerEntry {
-        using InterruptHandler = void (*)(u16 idx, InterruptHandlerEntry& entry);
-        InterruptHandler handler{};
-        void* data{};
+        struct HandlerData {
+            using InterruptHandler = void (*)(InterruptHandlerEntry& entry);
+            InterruptHandler handler{};
+            void* data{};
+        };
+
+        HandlerData handler_data{};
+        u16 irq{};
+        hal::Spinlock spinlock{};
     };
+
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    Interrupts() noexcept;
 
     // ------------------------------
     // Class interaction
@@ -26,9 +39,17 @@ class Interrupts final : public arch::Interrupts
     {
         ASSERT_LT(idx, hal::kMaxInterruptsSupported);
 
-        if (InterruptHandlerEntry& entry = handler_table_[idx]; entry.handler) {
-            (*entry.handler)(idx, entry);
+        if (InterruptHandlerEntry& entry = handler_table_[idx]; entry.handler_data.handler) {
+            (*entry.handler_data.handler)(entry);
         }
+    }
+
+    FORCE_INLINE_F void InstallInterruptHandler(
+        const u16 idx, const InterruptHandlerEntry::HandlerData& handler
+    )
+    {
+        ASSERT_LT(idx, hal::kMaxInterruptsSupported);
+        handler_table_[idx].handler_data = handler;
     }
 
     // ------------------------------

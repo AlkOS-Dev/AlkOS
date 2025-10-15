@@ -22,7 +22,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // Module fields
     // ------------------------------
 
-    DEFINE_MODULE_FIELD(mem, VirtualMemoryManager)
+    // DEFINE_MODULE_FIELD(mem, VirtualMemoryManager)
 };
 }  // namespace internal
 
