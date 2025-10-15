@@ -26,7 +26,7 @@ class HardwareModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     DEFINE_MODULE_FIELD(ACPI, ACPIController)
-    DEFINE_MODULE_FIELD(hardware, Interrupts)
+    DEFINE_MODULE_FIELD(intr, Interrupts)
     DEFINE_MODULE_FIELD(hardware, CoresController)
     DEFINE_MODULE_FIELD(hardware, ClockRegistry)
     DEFINE_MODULE_FIELD(hardware, EventClockRegistry)

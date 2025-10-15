@@ -3,8 +3,9 @@
 
 #include <hal/interrupts.hpp>
 #include <hal/spinlock.hpp>
+#include "hardware/interrupt_driver.hpp"
 
-namespace hardware
+namespace intr
 {
 class Interrupts final : public arch::Interrupts
 {
@@ -23,6 +24,7 @@ class Interrupts final : public arch::Interrupts
         HandlerData handler_data{};
         u16 irq{};
         hal::Spinlock spinlock{};
+        interrupt_driver driver{};
     };
 
     // ------------------------------
@@ -35,21 +37,38 @@ class Interrupts final : public arch::Interrupts
     // Class interaction
     // ------------------------------
 
-    FORCE_INLINE_F void HandleInterrupt(const u16 idx)
+    FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
     {
-        ASSERT_LT(idx, hal::kMaxInterruptsSupported);
+        ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
 
-        if (InterruptHandlerEntry& entry = handler_table_[idx]; entry.handler_data.handler) {
+        InterruptHandlerEntry& entry = handler_table_[lirq];
+        ASSERT_NOT_NULL(entry.driver.cbs->ack);
+
+        if (entry.handler_data.handler) {
             (*entry.handler_data.handler)(entry);
         }
+
+        entry.driver.cbs->ack(entry.driver);
     }
 
     FORCE_INLINE_F void InstallInterruptHandler(
-        const u16 idx, const InterruptHandlerEntry::HandlerData& handler
+        const u16 lirq, const InterruptHandlerEntry::HandlerData& handler
     )
     {
-        ASSERT_LT(idx, hal::kMaxInterruptsSupported);
-        handler_table_[idx].handler_data = handler;
+        ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
+        handler_table_[lirq].handler_data = handler;
+    }
+
+    FORCE_INLINE_F void MapLogicalInterruptToHw(const u16 lirq, const u64 hardware_irq)
+    {
+        ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
+        handler_table_[lirq].driver.hardware_irq = hardware_irq;
+    }
+
+    FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, interrupt_driver::callbacks* driver)
+    {
+        ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
+        handler_table_[lirq].driver.cbs = driver;
     }
 
     // ------------------------------
@@ -59,6 +78,6 @@ class Interrupts final : public arch::Interrupts
     private:
     InterruptHandlerEntry handler_table_[hal::kMaxInterruptsSupported];
 };
-}  // namespace hardware
+}  // namespace intr
 
 #endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_INTERUPTS_HPP_
