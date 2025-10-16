@@ -4,8 +4,22 @@
 #include <extensions/expected.hpp>
 
 #include "hal/constants.hpp"
+#include "mem/page_meta.hpp"
+#include "mem/virt/ptr.hpp"
 
 using namespace mem;
+
+BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size)
+{
+    BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
+    Init(bmv);
+};
+
+void BitmapPmm::Init(BitMapView bmv, pfn_t last_alloc_idx)
+{
+    bitmap_view_    = bmv;
+    last_alloc_idx_ = last_alloc_idx;
+};
 
 std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 {
@@ -51,7 +65,6 @@ void BitmapPmm::Free(PhysicalPtr<Page> page, size_t num_pages)
     size_t pfn = PageFrameNumber(page);
 
     for (size_t i = 0; i < num_pages; i++) {
-        // Use the MarkFree helper to leverage its internal assertion
         MarkFree(pfn + i);
     }
 }

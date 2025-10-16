@@ -7,6 +7,7 @@
 #include "mem/error.hpp"
 #include "mem/page.hpp"
 #include "mem/phys/ptr.hpp"
+#include "mem/virt/ptr.hpp"
 
 namespace mem
 {
@@ -26,12 +27,17 @@ class BitmapPmm
         size_t num_pages = 1;
     };
 
+    BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size);
+    void Init(BitMapView bmv, pfn_t last_alloc_idx = 0);
+
     Expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PhysicalPtr<Page> page, size_t num_pages = 1);
 
+    size_t BitMapSize() const { return bitmap_view_.Size(); }
+
     private:
-    bool IsFree(size_t pfn) { return bitmap_view_.Get(pfn) == BitMapFree; }
-    bool IsAllocated(size_t pfn) { return bitmap_view_.Get(pfn) == BitMapAllocated; }
+    bool IsFree(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapFree; }
+    bool IsAllocated(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapAllocated; }
     void MarkAllocated(size_t pfn)
     {
         R_ASSERT_TRUE(IsFree(pfn));
@@ -44,7 +50,7 @@ class BitmapPmm
     }
 
     BitMapView bitmap_view_{nullptr, 0};
-    u64 last_alloc_idx_ = 0;
+    pfn_t last_alloc_idx_ = 0;
 };
 
 }  // namespace mem

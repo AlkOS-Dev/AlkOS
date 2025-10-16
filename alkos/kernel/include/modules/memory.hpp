@@ -4,6 +4,7 @@
 #include <extensions/template_lib.hpp>
 
 #include "hal/kernel.hpp"
+#include "mem/page_meta_table.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -20,6 +21,8 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // ------------------------------
     // Module fields
     // ------------------------------
+
+    DEFINE_MODULE_FIELD(mem, PageMetaTable);
 };
 }  // namespace internal
 
