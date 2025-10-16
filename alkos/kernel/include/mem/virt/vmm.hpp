@@ -5,9 +5,9 @@
 #include <extensions/types.hpp>
 
 #include "mem/error.hpp"
-#include "mem/phys_ptr.hpp"
-#include "mem/virt_ptr.hpp"
-#include "mem/vmm/addr_space.hpp"
+#include "mem/virt/addr_space.hpp"
+#include "mem/virt/ptr.hpp"
+#include "mem/phys/ptr.hpp"
 
 namespace mem
 {
@@ -37,15 +37,16 @@ class VirtualMemoryManager
     // ------------------------------
 
     Expected<VirtualPtr<AddressSpace>, MemError> CreateAddrSpace();
-    Expected<void, MemError> DestroyAddrSpace();
-    void SwitchAddrSpace(AddressSpace as);
+    Expected<void, MemError> DestroyAddrSpace(VirtualPtr<AddressSpace> as);
+    void SwitchAddrSpace(VirtualPtr<AddressSpace> as);
 
     // Returns handle to it so it can be deleted?
-    using MemRegHandle = u64;
-    Expected<MemRegHandle, MemError> AddRegion(MemoryRegion mr);
-    Expected<void, MemError> RmRegion(MemRegHandle mrh);
-    Expected<void, MemError> UpdateRegionFlags(MemoryRegion mrh, MemoryRegionFlags mrf);
+    using MemoryAreaHandle = u64;
+    Expected<MemoryAreaHandle, MemError> AddRegion(VirtualPtr<AddressSpace> as, MemoryArea ma);
+    Expected<void, MemError> RmRegion(VirtualPtr<AddressSpace> as, MemoryAreaHandle mah);
+    Expected<void, MemError> UpdateRegionFlags(VirtualPtr<AddressSpace> as, MemoryArea ma, MemoryAreaFlags maf);
 
+    private:
     void Map(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
     void UnMap(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
 
