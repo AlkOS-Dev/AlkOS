@@ -27,8 +27,8 @@ class BitmapPmm
         size_t num_pages = 1;
     };
 
-    BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size);
-    void Init(BitMapView bmv, pfn_t last_alloc_idx = 0);
+    BitmapPmm(VirtualPtr<void> mem_bitmap, size_t mem_bitmap_size);
+    void Init(BitMapView bmv, size_t last_alloc_idx = 0);
 
     Expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PhysicalPtr<Page> page, size_t num_pages = 1);
@@ -50,7 +50,7 @@ class BitmapPmm
     }
 
     BitMapView bitmap_view_{nullptr, 0};
-    pfn_t last_alloc_idx_ = 0;
+    size_t last_alloc_idx_ = 0;
 };
 
 }  // namespace mem

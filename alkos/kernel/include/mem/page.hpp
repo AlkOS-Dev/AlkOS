@@ -15,16 +15,14 @@ struct Page {
     byte bytes[hal::kPageSizeBytes];
 };
 
-using pfn_t = size_t;
-
-FAST_CALL pfn_t PageFrameNumber(PhysicalPtr<Page> page)
+FAST_CALL size_t PageFrameNumber(PhysicalPtr<Page> page)
 {
     const uptr addr = page.AsUIntPtr();
     R_ASSERT_TRUE(IsAligned(addr, hal::kPageSizeBytes));
     return addr / hal::kPageSizeBytes;
 }
 
-FAST_CALL PhysicalPtr<Page> PageFrameAddr(pfn_t pfn)
+FAST_CALL PhysicalPtr<Page> PageFrameAddr(size_t pfn)
 {
     return PhysicalPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
 }

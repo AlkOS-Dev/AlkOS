@@ -9,13 +9,13 @@
 
 using namespace mem;
 
-BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size)
+BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, size_t mem_bitmap_size)
 {
     BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
     Init(bmv);
 };
 
-void BitmapPmm::Init(BitMapView bmv, pfn_t last_alloc_idx)
+void BitmapPmm::Init(BitMapView bmv, size_t last_alloc_idx)
 {
     bitmap_view_    = bmv;
     last_alloc_idx_ = last_alloc_idx;

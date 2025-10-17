@@ -18,6 +18,8 @@ namespace mem
 
 template <typename T, typename E>
 using Expected = std::expected<T, E>;
+template <typename E>
+using Unexpected = std::unexpected<E>;
 
 //==============================================================================
 // VMM
@@ -30,7 +32,7 @@ class VirtualMemoryManager
     // Class creation
     // ------------------------------
 
-    explicit VirtualMemoryManager(AddressSpace as) noexcept;
+    explicit VirtualMemoryManager() noexcept;
 
     // ------------------------------
     // Class interaction
@@ -51,15 +53,11 @@ class VirtualMemoryManager
     );
 
     private:
-    void Map(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
-    void UnMap(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    AddressSpace current_as_;
 };
 
 }  // namespace mem

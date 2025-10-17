@@ -2,10 +2,14 @@
 #define ALKOS_KERNEL_INCLUDE_MEM_VIRT_AREA_HPP_
 
 #include <extensions/types.hpp>
+#include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
 namespace mem
 {
+
+TODO_STD_VARIANT
+enum class VirtualMemAreaT { Anonymous, DirectMapping };
 
 struct VirtualMemAreaFlags {
     bool readable : 1;
@@ -19,7 +23,10 @@ struct VirtualMemArea {
     size_t size;
     VirtualMemAreaFlags flags;
 
-    // Pointer to the next region in the address space for simple linked-list management.
+    TODO_STD_VARIANT
+    VirtualMemAreaT type;
+    PhysicalPtr<void> direct_mapping_start;
+
     VirtualMemArea* next = nullptr;
 };
 
