@@ -6,6 +6,7 @@
 #include "hal/kernel.hpp"
 #include "kernel_args.hpp"
 #include "mem/page_meta_table.hpp"
+#include "mem/phys/mngr/bitmap.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -24,6 +25,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     DEFINE_MODULE_FIELD(mem, PageMetaTable);
+    DEFINE_MODULE_FIELD(mem, BitmapPmm);
 };
 }  // namespace internal
 
