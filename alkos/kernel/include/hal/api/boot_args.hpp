@@ -1,12 +1,12 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_KERNEL_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_KERNEL_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
+#define ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
 
 #include <extensions/types.hpp>
 
 namespace arch
 {
-struct RawKernelArguments;
-struct PACK RawKernelArgumentsAPI {
+struct RawBootArguments;
+struct PACK RawBootArgumentsAPI {
     u64 kernel_start_addr;
     u64 kernel_end_addr;
 
@@ -17,4 +17,4 @@ struct PACK RawKernelArgumentsAPI {
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_KERNEL_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_

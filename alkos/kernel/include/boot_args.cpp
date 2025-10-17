@@ -1,14 +1,14 @@
 
 #include <assert.h>
 
-#include "hal/kernel.hpp"
-#include "kernel_args.hpp"
+#include "hal/boot_args.hpp"
+#include "boot_args.hpp"
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
 using namespace mem;
 
-KernelArguments SanitizeKernelArgs(const hal::RawKernelArguments raw_args)
+BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args)
 {
     R_ASSERT_NOT_ZERO(
         raw_args.multiboot_info_phys_addr, "Multiboot info physical address is null."
@@ -20,7 +20,7 @@ KernelArguments SanitizeKernelArgs(const hal::RawKernelArguments raw_args)
     );
     R_ASSERT_GT(raw_args.mem_info_total_pages, 0, "Total memory pages is zero.");
 
-    KernelArguments sanitized_k_args{
+    BootArguments sanitized_k_args{
         .kernel_start      = VirtualPtr<void>(raw_args.kernel_start_addr),
         .kernel_end        = VirtualPtr<void>(raw_args.kernel_end_addr),
         .root_page_table   = PhysicalPtr<void>(raw_args.page_table_phys_addr),

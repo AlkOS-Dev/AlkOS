@@ -6,11 +6,11 @@
 #include <trace.hpp>
 
 /* internal includes */
-#include "hal/kernel.hpp"
-#include "kernel_args.hpp"
+#include "boot_args.hpp"
+#include "hal/boot_args.hpp"
 #include "todo.hpp"
 
-extern void KernelInit(const hal::RawKernelArguments&);
+extern void KernelInit(const hal::RawBootArguments&);
 
 static void KernelRun()
 {
@@ -28,7 +28,7 @@ static void KernelRun()
     }
 }
 
-extern "C" void KernelMain(const hal::RawKernelArguments* raw_args)
+extern "C" void KernelMain(const hal::RawBootArguments* raw_args)
 {
     KernelTraceInfo("Running kernel initialization...");
     KernelInit(*raw_args);

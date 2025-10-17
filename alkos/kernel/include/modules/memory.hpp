@@ -3,8 +3,8 @@
 
 #include <extensions/template_lib.hpp>
 
-#include "hal/kernel.hpp"
-#include "kernel_args.hpp"
+#include "boot_args.hpp"
+#include "hal/boot_args.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "modules/helpers.hpp"
@@ -18,7 +18,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    explicit MemoryModule(const KernelArguments& args) noexcept;
+    explicit MemoryModule(const BootArguments& args) noexcept;
 
     // ------------------------------
     // Module fields

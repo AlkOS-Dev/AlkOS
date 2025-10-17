@@ -2,8 +2,8 @@
 
 #include <extensions/debug.hpp>
 
+#include "boot_args.hpp"
 #include "hal/constants.hpp"
-#include "kernel_args.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/phys/ptr.hpp"
@@ -11,7 +11,7 @@
 
 using namespace mem;
 
-static BitmapPmm InitBitMapPmm(const KernelArguments &args)
+static BitmapPmm InitBitMapPmm(const BootArguments &args)
 {
     const size_t total_pages          = args.total_page_frames;
     const VirtualPtr<void> mem_bitmap = args.mem_bitmap.ToVirt();
@@ -19,7 +19,7 @@ static BitmapPmm InitBitMapPmm(const KernelArguments &args)
     return BitmapPmm{mem_bitmap, total_pages};
 }
 
-internal::MemoryModule::MemoryModule(const KernelArguments &args) noexcept
+internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     : BitmapPmm_{InitBitMapPmm(args)}
 {
     TRACE_INFO("MemoryModule::MemoryModule()");

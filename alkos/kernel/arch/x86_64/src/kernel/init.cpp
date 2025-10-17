@@ -18,7 +18,7 @@
 #include <hal/panic.hpp>
 #include <hal/terminal.hpp>
 
-#include "abi/boot_params.hpp"
+#include "abi/boot_args.hpp"
 #include "cpu/utils.hpp"
 
 //==============================================================================
@@ -46,7 +46,7 @@ static int GetCpuModel()
 
 namespace arch
 {
-void ArchInit(const RawKernelArguments &)
+void ArchInit(const RawBootArguments &)
 {
     TRACE_INFO("In ArchInit...");
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());

@@ -43,7 +43,7 @@ class BitmapPmm
         R_ASSERT_TRUE(IsFree(pfn));
         bitmap_view_.Set(pfn, BitMapAllocated);
     }
-    bool MarkFree(u64 pfn)
+    void MarkFree(u64 pfn)
     {
         R_ASSERT_TRUE(IsAllocated(pfn));
         bitmap_view_.Set(pfn, BitMapFree);

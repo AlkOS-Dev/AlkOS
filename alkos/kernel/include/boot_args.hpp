@@ -1,11 +1,11 @@
-#ifndef ALKOS_KERNEL_INCLUDE_KERNEL_ARGS_HPP_
-#define ALKOS_KERNEL_INCLUDE_KERNEL_ARGS_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_BOOT_ARGS_HPP_
+#define ALKOS_KERNEL_INCLUDE_BOOT_ARGS_HPP_
 
-#include "hal/kernel.hpp"
+#include "hal/boot_args.hpp"
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-struct KernelArguments {
+struct BootArguments {
     mem::VirtualPtr<void> kernel_start;
     mem::VirtualPtr<void> kernel_end;
     mem::PhysicalPtr<void> root_page_table;
@@ -14,6 +14,6 @@ struct KernelArguments {
     mem::PhysicalPtr<void> multiboot_info;
 };
 
-KernelArguments SanitizeKernelArgs(const hal::RawKernelArguments raw_args);
+BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args);
 
-#endif  // ALKOS_KERNEL_INCLUDE_KERNEL_ARGS_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_BOOT_ARGS_HPP_

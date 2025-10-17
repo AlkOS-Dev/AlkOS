@@ -15,8 +15,8 @@ Expected<VirtualPtr<void>, MemError> KMalloc(size_t size)
     }
 
     const size_t required_pages = (size + hal::kPageSizeBytes - 1) / hal::kPageSizeBytes;
-    const auto &b_pmm           = MemoryModule::Get().GetBitmapPmm();
-    const auto res              = b_pmm.Alloc(AllocationRequest{.num_pages = required_pages});
+    auto &b_pmm                 = MemoryModule::Get().GetBitmapPmm();
+    auto res                    = b_pmm.Alloc(AllocationRequest{.num_pages = required_pages});
     ASSERT_TRUE(res, "KMalloc out of mem");
 
     const auto phys_ptr      = *res;
