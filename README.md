@@ -37,6 +37,7 @@ AlkOS is an open-source operating system project targeting the x86_64 architectu
         *   [Running Tests](#-running-tests)
         *   [Debugging with GDB](#-debugging-with-gdb)
         *   [Applying clang-format for Code Style](#-applying-clang-format-for-code-style)
+        *   [Shell Completions for Scripts](#-shell-completions-for-scripts)
     *   [License](#-license)
 
 ## Project Goals
@@ -323,6 +324,61 @@ AlkOS includes a custom testing framework inspired by Google Test. Tests are def
     ```
 
     This will format all C++ and C source files according to the project's style defined in `.clang-format` file.
+
+### 🔧 Shell Completions for Scripts
+
+AlkOS provides shell completions for main project scripts to improve developer productivity. The completion generator supports bash, zsh, and fish shells.
+
+#### Setting Up Completions
+
+1.  **Navigate to the scripts directory:**
+
+    ```bash
+    cd AlkOS/scripts
+    ```
+
+2.  **Generate and enable completions for your shell:**
+
+    For bash:
+    ```bash
+    ./completions/generate.bash bash --run --enable
+    ```
+
+    For zsh:
+    ```bash
+    ./completions/generate.bash zsh --run --enable
+    ```
+
+    For fish:
+    ```bash
+    ./completions/generate.bash fish --run --enable
+    ```
+    
+#### Disabling Completions
+
+To disable completions for any shell:
+
+```bash
+./completions/generate.bash <shell> --disable
+```
+
+#### Regenerating Completions
+
+If you add new scripts or modify existing ones, just regenerate the completions:
+
+```bash
+./completions/generate.bash <shell> --run
+```
+
+#### Supported Features
+
+The generated completions provide:
+
+- **Command completion**: Tab completion for all available scripts
+- **Option completion**: Completion for script flags and options (e.g., `--verbose`, `-h`)
+- **Argument completion**: Context-aware completion for script arguments
+- **Choice completion**: Predefined choices for parameters (e.g., architecture types, build modes)
+- **Path completion**: File or directory completion where appropriate
 
 ## 📄 License
 

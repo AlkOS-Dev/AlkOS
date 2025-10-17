@@ -11,8 +11,8 @@ source "${ATTACH_GDB_SCRIPT_SOURCE_DIR}/scripts/utils/argparse.bash"
 
 parse_args() {
   argparse_init "${ATTACH_GDB_SCRIPT_PATH}" "Attach GDB to a running QEMU instance of AlkOS kernel"
-  argparse_add_positional "kernel_source_path" "Path to the AlkOS kernel source file" true
-  argparse_add_option "g|gdb" "Path to GDB executable" false "${ATTACH_GDB_SCRIPT_SOURCE_DIR}/tools/bin/${ATTACH_GDB_ARCH}-gdb" "" "string"
+  argparse_add_positional "kernel_source_path" "Path to the AlkOS kernel source file" true "" "file"
+  argparse_add_option "g|gdb" "Path to GDB executable" false "${ATTACH_GDB_SCRIPT_SOURCE_DIR}/tools/bin/${ATTACH_GDB_ARCH}-gdb" "" "file"
 
   argparse_parse "$@"
 }
