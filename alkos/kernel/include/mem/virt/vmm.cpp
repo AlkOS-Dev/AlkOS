@@ -8,23 +8,25 @@
 namespace mem
 {
 
-VirtualMemoryManager::VirtualMemoryManager() noexcept
-{
-    TRACE_INFO("VirtualMemoryManager::VirtualMemoryManager()");
-}
+using Vmm = VirtualMemoryManager;
+template <typename T>
+using VPtr = VirtualPtr<T>;
 
-Expected<VirtualPtr<AddressSpace>, MemError> VirtualMemoryManager::CreateAddrSpace()
+Vmm::VirtualMemoryManager() noexcept { TRACE_INFO("VirtualMemoryManager::VirtualMemoryManager()"); }
+
+Expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
     return KMalloc<AddressSpace>();
 }
 
-Expected<void, MemError> VirtualMemoryManager::DestroyAddrSpace(VirtualPtr<AddressSpace> as)
+Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 {
     // Later invalidate TLB etc
-    return KFree(as);
+    KFree(as);
+    return {};
 }
 
-void VirtualMemoryManager::SwitchAddrSpace(VirtualPtr<AddressSpace> as)
+void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 {
     // TODO
 }

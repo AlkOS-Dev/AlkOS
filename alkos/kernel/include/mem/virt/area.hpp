@@ -17,6 +17,7 @@ struct VirtualMemAreaFlags {
     bool executable : 1;
     // Future flags: bool user_accessible, bool copy_on_write, etc.
 };
+using VMemAreaFlags = VirtualMemAreaFlags;
 
 struct VirtualMemArea {
     VirtualPtr<void> start;
@@ -29,6 +30,7 @@ struct VirtualMemArea {
 
     VirtualMemArea* next = nullptr;
 };
+using VMemArea = VirtualMemArea;
 
 }  // namespace mem
 

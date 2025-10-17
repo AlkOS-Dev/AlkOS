@@ -7,6 +7,7 @@ namespace mem
 enum class MemError {
     OutOfMemory,
     InvalidArgument,
+    NotFound,
 };
 
 }  // namespace mem

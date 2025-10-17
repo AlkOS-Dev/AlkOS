@@ -38,26 +38,20 @@ class VirtualMemoryManager
     // Class interaction
     // ------------------------------
 
-    Expected<VirtualPtr<AddressSpace>, MemError> CreateAddrSpace();
-    Expected<void, MemError> DestroyAddrSpace(VirtualPtr<AddressSpace> as);
-    void SwitchAddrSpace(VirtualPtr<AddressSpace> as);
+    Expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
+    Expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
+    void SwitchAddrSpace(VPtr<AddressSpace> as);
 
-    // Returns handle to it so it can be deleted?
-    using VirtualMemAreaHandle = u64;
-    Expected<VirtualMemAreaHandle, MemError> AddRegion(
-        VirtualPtr<AddressSpace> as, VirtualMemArea ma
-    );
-    Expected<void, MemError> RmRegion(VirtualPtr<AddressSpace> as, VirtualMemAreaHandle mah);
-    Expected<void, MemError> UpdateRegionFlags(
-        VirtualPtr<AddressSpace> as, VirtualMemArea ma, VirtualMemAreaFlags maf
-    );
+    Expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VirtualMemArea vma);
+    Expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
+    // Expected<void, MemError> UpdateAreaFlags(
+    //     VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
+    // );
 
     private:
     // ------------------------------
     // Class fields
     // ------------------------------
-
-    private:
 };
 
 }  // namespace mem

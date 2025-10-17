@@ -15,13 +15,26 @@ template <typename E>
 using Unexpected = std::unexpected<E>;
 
 // Heap
-Expected<VirtualPtr<void>, MemError> KMalloc(size_t);
+Expected<VPtr<void>, MemError> KMalloc(size_t size);
 template <typename T>
-Expected<VirtualPtr<T>, MemError> KMalloc()
+Expected<VPtr<T>, MemError> KMalloc()
 {
-    return KMalloc(sizeof(T));
+    return {};
+    // return KMalloc(sizeof(T)).transform([](void* ptr) {
+    //     return reinterpret_cast<VPtr<T>>(ptr);
+    // });
 }
-Expected<void, MemError> KFree(VirtualPtr<void>);
+template <typename T>
+void KFree(VPtr<T> ptr);
+
+template <>
+void KFree(VPtr<void> ptr);
+
+template <typename T>
+void KFree(VPtr<T> ptr)
+{
+    KFree(reinterpret_cast<VPtr<void>>(ptr));
+}
 
 }  // namespace mem
 

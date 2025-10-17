@@ -10,6 +10,8 @@ namespace mem
 
 template <typename T>
 using VirtualPtr = T *;
+template <typename T>
+using VPtr = VirtualPtr<T>;
 
 }  // namespace mem
 

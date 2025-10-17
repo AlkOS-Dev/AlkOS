@@ -4,9 +4,10 @@
 #include "mem/phys/mngr/bitmap.hpp"
 #include "modules/memory.hpp"
 
-using namespace mem;
+namespace mem
+{
 
-Expected<VirtualPtr<void>, MemError> KMalloc(size_t size)
+Expected<VPtr<void>, MemError> KMalloc(size_t size)
 {
     using AllocationRequest = BitmapPmm::AllocationRequest;
 
@@ -24,7 +25,10 @@ Expected<VirtualPtr<void>, MemError> KMalloc(size_t size)
     return m;
 }
 
-Expected<void, MemError> KFree(VirtualPtr<void>)
+template <>
+void KFree(VPtr<void> ptr)
 {
     // Dont care about free till buddy allocator.
 }
+
+}  // namespace mem

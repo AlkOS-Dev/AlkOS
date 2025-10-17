@@ -1,0 +1,79 @@
+#include "mem/virt/addr_space.hpp"
+#include "mem/error.hpp"
+#include "mem/heap.hpp"
+#include "mem/phys/ptr.hpp"
+#include "mem/virt/ptr.hpp"
+
+using namespace mem;
+using AS = AddressSpace;
+
+void AS::AddArea(VMemArea vma)
+{
+    auto res = KMalloc<VMemArea>();
+    R_ASSERT_TRUE(res, "Out of mem");
+
+    VPtr<VMemArea> n_area = *res;
+    *n_area               = vma;
+
+    // TODO: This list should probably be sorted
+    // TODO: Add checks to prevent adding overlapping areas
+
+    n_area->next    = area_list_head_;
+    area_list_head_ = n_area;
+}
+
+void AS::RmArea(VPtr<void> ptr)
+{
+    if (!area_list_head_) {
+        return;  // Nothing to remove
+    }
+
+    // Head is to be removed
+    if (IsAddrInArea(area_list_head_, ptr)) {
+        auto to_free    = area_list_head_;
+        area_list_head_ = area_list_head_->next;
+        KFree(to_free);
+        return;
+    }
+
+    // Traverse rest
+    auto iterator = area_list_head_;
+    while (iterator->next) {
+        if (IsAddrInArea(iterator->next, ptr)) {
+            auto to_free   = iterator->next;
+            iterator->next = to_free->next;
+            KFree(to_free);
+            return;
+        }
+        iterator = iterator->next;
+    }
+}
+
+Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
+{
+    VPtr<VMemArea> vma = area_list_head_;
+    while (vma != nullptr) {
+        if (IsAddrInArea(vma, ptr)) {
+            return vma;
+        }
+        vma = vma->next;
+    }
+
+    return Unexpected(MemError::NotFound);
+}
+
+bool AS::IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr)
+{
+    R_ASSERT_NOT_NULL(vma);
+
+    const auto vma_s_addr = reinterpret_cast<uptr>(vma->start);
+    const auto vma_e_addr = vma_s_addr + vma->size;
+    const auto addr       = reinterpret_cast<uptr>(ptr);
+
+    // Check if ptr is in [vma start, vma end]
+    if (vma_s_addr <= addr && addr < vma_e_addr) {
+        return true;
+    }
+
+    return false;
+}

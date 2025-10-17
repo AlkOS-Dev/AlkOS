@@ -105,6 +105,9 @@ class PhysicalPtr<void>
     void* phys_ptr_;
 };
 
+template <typename T>
+using PPtr = PhysicalPtr<T>;
+
 }  // namespace mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_PTR_HPP_
