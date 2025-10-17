@@ -1,13 +1,13 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_VMM_VMM_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_VMM_VMM_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_
+#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_
 
 #include <extensions/expected.hpp>
 #include <extensions/types.hpp>
 
 #include "mem/error.hpp"
+#include "mem/phys/ptr.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/ptr.hpp"
-#include "mem/phys/ptr.hpp"
 
 namespace mem
 {
@@ -41,10 +41,14 @@ class VirtualMemoryManager
     void SwitchAddrSpace(VirtualPtr<AddressSpace> as);
 
     // Returns handle to it so it can be deleted?
-    using MemoryAreaHandle = u64;
-    Expected<MemoryAreaHandle, MemError> AddRegion(VirtualPtr<AddressSpace> as, MemoryArea ma);
-    Expected<void, MemError> RmRegion(VirtualPtr<AddressSpace> as, MemoryAreaHandle mah);
-    Expected<void, MemError> UpdateRegionFlags(VirtualPtr<AddressSpace> as, MemoryArea ma, MemoryAreaFlags maf);
+    using VirtualMemAreaHandle = u64;
+    Expected<VirtualMemAreaHandle, MemError> AddRegion(
+        VirtualPtr<AddressSpace> as, VirtualMemArea ma
+    );
+    Expected<void, MemError> RmRegion(VirtualPtr<AddressSpace> as, VirtualMemAreaHandle mah);
+    Expected<void, MemError> UpdateRegionFlags(
+        VirtualPtr<AddressSpace> as, VirtualMemArea ma, VirtualMemAreaFlags maf
+    );
 
     private:
     void Map(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
@@ -60,4 +64,4 @@ class VirtualMemoryManager
 
 }  // namespace mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_VMM_VMM_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_

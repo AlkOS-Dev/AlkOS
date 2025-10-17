@@ -22,7 +22,7 @@ class AddressSpace
 
     private:
     PhysicalPtr<void> page_table_root_;
-    MemoryArea* area_list_head_;
+    VirtualMemArea* area_list_head_;
 };
 
 }  // namespace mem
