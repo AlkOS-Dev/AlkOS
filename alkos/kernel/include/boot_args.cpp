@@ -1,8 +1,8 @@
 
 #include <assert.h>
 
-#include "hal/boot_args.hpp"
 #include "boot_args.hpp"
+#include "hal/boot_args.hpp"
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
