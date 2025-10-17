@@ -21,6 +21,9 @@ static void KernelRun()
     // strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
     //
     // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
+    while (true) {
+        volatile u8 a = 1;
+    }
 }
 
 extern "C" void KernelMain(const hal::KernelArguments* args)

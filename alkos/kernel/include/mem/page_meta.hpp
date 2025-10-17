@@ -1,7 +1,6 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
 
-
 #include <defines.h>
 #include <extensions/types.hpp>
 
@@ -14,7 +13,7 @@
 
 namespace mem
 {
-enum class PageMetaType {
+enum class PageMetaType : u8 {
     Buddy,
     Virtual,
     Dummy,
@@ -42,4 +41,4 @@ static_assert(sizeof(PageMeta<Buddy>) == kExpectedSize);
 static_assert(sizeof(PageMeta<Virtual>) == kExpectedSize);
 }  // namespace mem
 
-#endif /* ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_ */
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
