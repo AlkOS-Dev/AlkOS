@@ -2,6 +2,7 @@
 
 #include <extensions/debug.hpp>
 
+#include "kernel_args.hpp"
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
@@ -10,14 +11,14 @@
 
 using namespace mem;
 
-internal::MemoryModule::MemoryModule(const hal::KernelArguments &args) noexcept
+internal::MemoryModule::MemoryModule(const KernelArguments &args) noexcept
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 
-    const size_t total_pages               = static_cast<size_t>(args.mem_info_total_pages);
-    const VirtualPtr<void> mem_bitmap_addr = reinterpret_cast<void *>(args.mem_info_bitmap_addr);
+    const size_t total_pages               = args.total_page_frames;
+    const VirtualPtr<void> mem_bitmap = args.mem_bitmap.ToVirt();
 
-    BitmapPmm b_pmm{mem_bitmap_addr, total_pages};
+    BitmapPmm b_pmm{mem_bitmap, total_pages};
 
     const size_t required_size  = PageMetaTable::CalcRequiredSize(total_pages);
     const size_t required_pages = required_size / hal::kPageSizeBytes;

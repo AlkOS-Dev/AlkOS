@@ -5,13 +5,13 @@
 
 namespace arch
 {
-struct PACK alignas(64) KernelArguments : KernelArgumentsAPI {
-    u64 multiboot_info_addr;
-    u64 multiboot_header_start_addr;
-    u64 multiboot_header_end_addr;
+struct PACK alignas(64) RawKernelArguments : RawKernelArgumentsAPI {
+    u64 multiboot_info_phys_addr;
+    u64 multiboot_header_start_phys_addr;
+    u64 multiboot_header_end_phys_addr;
 };
 
-void ArchInit(const KernelArguments& args);
+void ArchInit(const RawKernelArguments& args);
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_HPP_

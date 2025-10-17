@@ -4,6 +4,7 @@
 #include <extensions/template_lib.hpp>
 
 #include "hal/kernel.hpp"
+#include "kernel_args.hpp"
 #include "mem/page_meta_table.hpp"
 #include "modules/helpers.hpp"
 
@@ -16,7 +17,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    explicit MemoryModule(const hal::KernelArguments& args) noexcept;
+    explicit MemoryModule(const KernelArguments& args) noexcept;
 
     // ------------------------------
     // Module fields

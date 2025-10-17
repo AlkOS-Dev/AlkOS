@@ -4,6 +4,7 @@
 #include "acpi/acpi.hpp"
 #include "hal/kernel.hpp"
 #include "hal/terminal.hpp"
+#include "kernel_args.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
@@ -12,11 +13,12 @@
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
-void KernelInit(const hal::KernelArguments& args)
+void KernelInit(const hal::RawKernelArguments& raw_args)
 {
     hal::TerminalInit();
+    hal::ArchInit(raw_args);
 
-    hal::ArchInit(args);
+    KernelArguments args = SanitizeKernelArgs(raw_args);
 
     MemoryModule::Init(args);
 

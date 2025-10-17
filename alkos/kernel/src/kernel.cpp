@@ -4,11 +4,13 @@
 #include <extensions/debug.hpp>
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
+
 /* internal includes */
 #include "hal/kernel.hpp"
+#include "kernel_args.hpp"
 #include "todo.hpp"
 
-extern void KernelInit(const hal::KernelArguments&);
+extern void KernelInit(const hal::RawKernelArguments&);
 
 static void KernelRun()
 {
@@ -26,10 +28,10 @@ static void KernelRun()
     }
 }
 
-extern "C" void KernelMain(const hal::KernelArguments* args)
+extern "C" void KernelMain(const hal::RawKernelArguments* raw_args)
 {
     KernelTraceInfo("Running kernel initialization...");
-    KernelInit(*args);
+    KernelInit(*raw_args);
 
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         KernelTraceInfo("Running tests...");

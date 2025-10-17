@@ -5,9 +5,9 @@
 
 namespace hal
 {
-using arch::KernelArguments;
+using arch::RawKernelArguments;
 
-WRAP_CALL void ArchInit(const KernelArguments& args) { arch::ArchInit(args); }
+WRAP_CALL void ArchInit(const RawKernelArguments& args) { arch::ArchInit(args); }
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_KERNEL_HPP_
