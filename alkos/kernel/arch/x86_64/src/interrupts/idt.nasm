@@ -148,41 +148,43 @@ exception_error_wrapper 29 ; VMM Communication Exception
 exception_error_wrapper 30 ; Security Exception: Security-related error
 exception_wrapper 31 ; Reserved: Reserved by Intel
 
-; IRQs for PICs (32-47) -> HandleHardwareInterrupt
-interrupt_wrapper 0, HandleHardwareInterrupt ; IRQ0: System timer
-interrupt_wrapper 1, HandleHardwareInterrupt ; IRQ1: Keyboard
-interrupt_wrapper 2, HandleHardwareInterrupt ; IRQ2: Cascade
-interrupt_wrapper 3, HandleHardwareInterrupt ; IRQ3: Serial port 2
-interrupt_wrapper 4, HandleHardwareInterrupt ; IRQ4: Serial port 1
-interrupt_wrapper 5, HandleHardwareInterrupt ; IRQ5: Parallel port 2 or sound card
-interrupt_wrapper 6, HandleHardwareInterrupt ; IRQ6: Floppy disk controller
-interrupt_wrapper 7, HandleHardwareInterrupt ; IRQ7: Parallel port 1
-interrupt_wrapper 8, HandleHardwareInterrupt ; IRQ8: Real-time clock
-interrupt_wrapper 9, HandleHardwareInterrupt ; IRQ9: Free for peripherals
-interrupt_wrapper 10, HandleHardwareInterrupt ; IRQ10: Free for peripherals
-interrupt_wrapper 11, HandleHardwareInterrupt ; IRQ11: Free for peripherals
-interrupt_wrapper 12, HandleHardwareInterrupt ; IRQ12: Mouse
-interrupt_wrapper 13, HandleHardwareInterrupt ; IRQ13: FPU (legacy)
-interrupt_wrapper 14, HandleHardwareInterrupt ; IRQ14: Primary ATA channel
-interrupt_wrapper 15, HandleHardwareInterrupt ; IRQ15: Secondary ATA channel
+; IRQs for PICs (32–47) -> HandleHardwareInterrupt
+interrupt_wrapper 0, 32, HandleHardwareInterrupt ; IRQ0: System timer
+interrupt_wrapper 1, 33, HandleHardwareInterrupt ; IRQ1: Keyboard
+interrupt_wrapper 2, 34, HandleHardwareInterrupt ; IRQ2: Cascade
+interrupt_wrapper 3, 35, HandleHardwareInterrupt ; IRQ3: Serial port 2
+interrupt_wrapper 4, 36, HandleHardwareInterrupt ; IRQ4: Serial port 1
+interrupt_wrapper 5, 37, HandleHardwareInterrupt ; IRQ5: Parallel port 2 / sound card
+interrupt_wrapper 6, 38, HandleHardwareInterrupt ; IRQ6: Floppy controller
+interrupt_wrapper 7, 39, HandleHardwareInterrupt ; IRQ7: Parallel port 1
+interrupt_wrapper 8, 40, HandleHardwareInterrupt ; IRQ8: Real-time clock
+interrupt_wrapper 9, 41, HandleHardwareInterrupt ; IRQ9: Free for peripherals
+interrupt_wrapper 10, 42, HandleHardwareInterrupt ; IRQ10: Free for peripherals
+interrupt_wrapper 11, 43, HandleHardwareInterrupt ; IRQ11: Free for peripherals
+interrupt_wrapper 12, 44, HandleHardwareInterrupt ; IRQ12: Mouse
+interrupt_wrapper 13, 45, HandleHardwareInterrupt ; IRQ13: FPU (legacy)
+interrupt_wrapper 14, 46, HandleHardwareInterrupt ; IRQ14: Primary ATA channel
+interrupt_wrapper 15, 47, HandleHardwareInterrupt ; IRQ15: Secondary ATA channel
 
-; Software interrupts (48-63) -> HandleSoftwareInterrupt
-interrupt_wrapper 0, HandleSoftwareInterrupt
-interrupt_wrapper 1, HandleSoftwareInterrupt
-interrupt_wrapper 2, HandleSoftwareInterrupt
-interrupt_wrapper 3, HandleSoftwareInterrupt
-interrupt_wrapper 4, HandleSoftwareInterrupt
-interrupt_wrapper 5, HandleSoftwareInterrupt
-interrupt_wrapper 6, HandleSoftwareInterrupt
-interrupt_wrapper 7, HandleSoftwareInterrupt
-interrupt_wrapper 8, HandleSoftwareInterrupt
-interrupt_wrapper 9, HandleSoftwareInterrupt
-interrupt_wrapper 10, HandleSoftwareInterrupt
-interrupt_wrapper 11, HandleSoftwareInterrupt
-interrupt_wrapper 12, HandleSoftwareInterrupt
-interrupt_wrapper 13, HandleSoftwareInterrupt
-interrupt_wrapper 14, HandleSoftwareInterrupt
-interrupt_wrapper 15, HandleSoftwareInterrupt
+
+; Software interrupts (48–63) -> HandleSoftwareInterrupt
+interrupt_wrapper 0, 48, HandleSoftwareInterrupt
+interrupt_wrapper 1, 49, HandleSoftwareInterrupt
+interrupt_wrapper 2, 50, HandleSoftwareInterrupt
+interrupt_wrapper 3, 51, HandleSoftwareInterrupt
+interrupt_wrapper 4, 52, HandleSoftwareInterrupt
+interrupt_wrapper 5, 53, HandleSoftwareInterrupt
+interrupt_wrapper 6, 54, HandleSoftwareInterrupt
+interrupt_wrapper 7, 55, HandleSoftwareInterrupt
+interrupt_wrapper 8, 56, HandleSoftwareInterrupt
+interrupt_wrapper 9, 57, HandleSoftwareInterrupt
+interrupt_wrapper 10, 58, HandleSoftwareInterrupt
+interrupt_wrapper 11, 59, HandleSoftwareInterrupt
+interrupt_wrapper 12, 60, HandleSoftwareInterrupt
+interrupt_wrapper 13, 61, HandleSoftwareInterrupt
+interrupt_wrapper 14, 62, HandleSoftwareInterrupt
+interrupt_wrapper 15, 63, HandleSoftwareInterrupt
+
 
 ; Total number of ISRs.
 _num_isrs equ 64
