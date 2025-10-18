@@ -6,6 +6,18 @@
 
 namespace intr
 {
+/* Simplify programming interface */
+using LitType = LogicalInterruptTable<
+    hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
+
+template <InterruptType kInterruptType>
+using HandlerData = LitType::HandlerData<kInterruptType>;
+
+template <InterruptType kInterruptType>
+using HandlerType = LitType::HandlerType<kInterruptType>;
+
+using InterruptDriver = LitType::InterruptDriver;
+
 class Interrupts final : public arch::Interrupts
 {
     // ------------------------------
@@ -13,9 +25,6 @@ class Interrupts final : public arch::Interrupts
     // ------------------------------
 
     public:
-    using LitType = LogicalInterruptTable<
-        hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
-
     Interrupts() noexcept = default;
 
     // ------------------------------

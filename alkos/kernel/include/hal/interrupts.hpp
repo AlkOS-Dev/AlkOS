@@ -5,6 +5,7 @@
 
 namespace hal
 {
+using arch::ExceptionData;
 using arch::Interrupts;
 static constexpr size_t kNumExceptionHandlers  = arch::kNumExceptionHandlers;
 static constexpr size_t kNumHardwareInterrupts = arch::kNumHardwareInterrupts;
