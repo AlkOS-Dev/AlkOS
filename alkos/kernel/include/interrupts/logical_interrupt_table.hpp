@@ -74,4 +74,6 @@ class LogicalInterruptTable
 };
 }  // namespace intr
 
+#include "logical_interrupt_table.tpp"
+
 #endif  // ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_

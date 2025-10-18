@@ -16,7 +16,7 @@ class Interrupts final : public arch::Interrupts
     using LitType = LogicalInterruptTable<
         hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
 
-    Interrupts() noexcept;
+    Interrupts() noexcept = default;
 
     // ------------------------------
     // Class interaction
