@@ -12,15 +12,18 @@ LogicalInterruptTable<
     kNumExceptions, kNumHardwareExceptions, kNumSoftwareExceptions>::LogicalInterruptTable()
 {
     for (u16 irq = 0; irq < kNumExceptions; irq++) {
-        exception_table_[irq].logical_irq = irq;
+        exception_table_[irq].logical_irq  = irq;
+        exception_table_[irq].hardware_irq = kUnmappedIrq;
     }
 
     for (u16 irq = 0; irq < kNumHardwareExceptions; irq++) {
         hardware_exception_table_[irq].logical_irq = irq;
+        exception_table_[irq].hardware_irq         = kUnmappedIrq;
     }
 
     for (u16 irq = 0; irq < software_exception_table_; irq++) {
         software_exception_table_[irq].logical_irq = irq;
+        exception_table_[irq].hardware_irq         = kUnmappedIrq;
     }
 }
 }  // namespace intr

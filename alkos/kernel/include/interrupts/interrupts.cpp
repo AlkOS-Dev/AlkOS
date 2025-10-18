@@ -1,4 +1,34 @@
-#include "interrupts/interupts.hpp"
+#include "modules/hardware.hpp"
+// ------------------------------
+// Assembly interface
+// ------------------------------
+
+extern "C" void HandleException(const u16 lirq, const hal::ExceptionData* data)
+{
+    HardwareModule::Get().GetInterrupts().GetLit().HandleInterrupt<intr::InterruptType::kException>(
+        lirq, *data
+    );
+}
+
+extern "C" void HandleHardwareInterrupt(const u16 lirq)
+{
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .HandleInterrupt<intr::InterruptType::kHardwareException>(lirq);
+}
+
+extern "C" void HandleSoftwareInterrupt(const u16 lirq)
+{
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .HandleInterrupt<intr::InterruptType::kSoftwareException>(lirq);
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
 
 namespace intr
 {

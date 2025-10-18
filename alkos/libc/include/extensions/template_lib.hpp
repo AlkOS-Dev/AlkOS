@@ -345,5 +345,9 @@ template <class T>
     requires DerivedFromHelper<T>
 SingletonInstanceCreator<T> StaticSingleton<T>::instance_creator_;
 
+// ------------------------------
+// OptionalField
+// ------------------------------
+
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

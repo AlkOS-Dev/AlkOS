@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
 
+#include <extensions/bit.hpp>
 #include <extensions/cstddef.hpp>
 #include <extensions/type_traits.hpp>
 
@@ -17,6 +18,19 @@ template <
     std::size_t kNumSoftwareExceptions>
 class LogicalInterruptTable
 {
+    static constexpr u16 kUnmappedIrq = kFullMask<u16>;
+    static_assert(
+        kNumExceptions < kUnmappedIrq, "Maximal allowed number of exception handlers exceeded"
+    );
+    static_assert(
+        kNumHardwareExceptions < kUnmappedIrq,
+        "Maximal allowed number of hardware interrupts handlers exceeded"
+    );
+    static_assert(
+        kNumSoftwareExceptions < kUnmappedIrq,
+        "Maximal allowed number of software interrupts handlers exceeded"
+    );
+
     template <InterruptType kInterruptType>
     struct InterruptHandlerEntry {
         /* Interrupt handler */
@@ -44,7 +58,7 @@ class LogicalInterruptTable
         HandlerData handler_data{};
         u16 logical_irq{};
         u64 hardware_irq{};
-        std::enable_if_t<kInterruptType == InterruptType::kHardwareException, InterruptDriver>
+        std::enable_if<kInterruptType == InterruptType::kHardwareException, InterruptDriver>
             driver{};
     };
 
@@ -72,9 +86,11 @@ class LogicalInterruptTable
     // ------------------------------
 
     template <InterruptType kInterruptType>
+        requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
     {
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
         auto& entry = GetTable_<kInterruptType>()[lirq];
 
         if (entry.handler_data.handler) {
@@ -85,6 +101,16 @@ class LogicalInterruptTable
             ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
             entry.driver.cbs->ack(entry.driver);
         }
+    }
+
+    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData data)
+    {
+        ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
+        ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
+        auto& entry = GetTable_<InterruptType::kException>()[lirq];
+
+        /* Exception MUST be handled */
+        (*entry.handler_data.handler)(entry, data);
     }
 
     template <InterruptType kInterruptType>
@@ -140,6 +166,13 @@ class LogicalInterruptTable
         } else {
             R_FAIL_ALWAYS("Invalid type provided");
         }
+    }
+
+    template <InterruptType kInterruptType>
+    NODISCARD FORCE_INLINE_F bool IsUnmapped_(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        return GetTable_<kInterruptType>()[lirq].hardware_irq == kUnmappedIrq;
     }
 
     // ------------------------------
