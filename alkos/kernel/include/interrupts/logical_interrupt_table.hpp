@@ -36,7 +36,7 @@ class LogicalInterruptTable
         /* Interrupt handler */
         using InterruptHandler = void (*)(InterruptHandlerEntry& entry);
         using InterruptHandlerException =
-            void (*)(InterruptHandlerEntry& entry, hal::ExceptionData data);
+            void (*)(InterruptHandlerEntry& entry, hal::ExceptionData* data);
         using HandlerType = std::conditional_t<
             kInterruptType == InterruptType::kException, InterruptHandlerException,
             InterruptHandler>;
@@ -86,7 +86,7 @@ class LogicalInterruptTable
     // Class interaction
     // ------------------------------
 
-    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData data)
+    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData* data)
     {
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
         ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));

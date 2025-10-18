@@ -19,9 +19,7 @@ static constexpr size_t kNumExceptionHandlers  = 32;
 static constexpr size_t kNumHardwareInterrupts = 32;
 static constexpr size_t kNumSoftwareInterrupts = 32;
 
-struct ExceptionData {
-    void *stack_frame;
-};
+using ExceptionData = IsrErrorStackFrame;
 
 class Interrupts : public InterruptsAPI
 {
