@@ -15,12 +15,6 @@
 
 namespace arch
 {
-static constexpr size_t kNumExceptionHandlers  = 32;
-static constexpr size_t kNumHardwareInterrupts = 32;
-static constexpr size_t kNumSoftwareInterrupts = 32;
-
-using ExceptionData = IsrErrorStackFrame;
-
 class Interrupts : public InterruptsAPI
 {
     TODO_WHEN_VMEM_WORKS

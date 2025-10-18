@@ -352,6 +352,5 @@ SingletonInstanceCreator<T> StaticSingleton<T>::instance_creator_;
 
 template <bool cond, class T>
 using OptionalField = std::conditional_t<cond, T, std::monostate>;
-
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_

@@ -63,18 +63,6 @@ struct PACK Idtr {
     u64 base;
 };
 
-struct PACK IsrStackFrame {
-    u64 rip;
-    u64 cs;
-    u64 rflags;
-    u64 rsp;
-};
-
-struct PACK IsrErrorStackFrame {
-    u64 error_code;
-    IsrStackFrame isr_stack_frame;
-};
-
 struct Idt {
     /* global structure defining isr specifics for each interrupt signal */
     alignas(32) IdtEntry idt[kIdtEntries]{};

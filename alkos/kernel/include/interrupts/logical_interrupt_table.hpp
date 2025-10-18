@@ -1,8 +1,10 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
 
+#include <assert.h>
 #include <extensions/bit.hpp>
 #include <extensions/cstddef.hpp>
+#include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
 
 namespace intr
@@ -112,7 +114,7 @@ class LogicalInterruptTable
 
         if constexpr (kInterruptType == InterruptType::kHardwareException) {
             ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
-            entry.driver.cbs->ack(entry.driver);
+            entry.driver.cbs->ack(entry);
         }
     }
 
@@ -144,7 +146,7 @@ class LogicalInterruptTable
 
     private:
     template <InterruptType kInterruptType>
-    FORCE_INLINE_F NODISCARD InterruptHandlerEntry<kInterruptType> GetTable_()
+    FORCE_INLINE_F NODISCARD InterruptHandlerEntry<kInterruptType> *GetTable_()
     {
         if constexpr (kInterruptType == InterruptType::kException) {
             return exception_table_;

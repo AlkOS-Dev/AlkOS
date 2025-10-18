@@ -88,14 +88,14 @@ isr_wrapper_%+%1:
 
 ; Macro for hardware or software interrupts.
 ; Calls a handler with the signature 'void handler(u16 lirq)'.
-%macro interrupt_wrapper 2 ; %1: Logical IRQ, %3: C handler function
-isr_wrapper_%+%1:
+%macro interrupt_wrapper 2 ; %1: Logical IRQ, %2: idt idx %3: C handler function
+isr_wrapper_%+%2:
     sub rsp, _reg_size          ; Allocate space for saving registers.
     push_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space for function calls.
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
-    call %2                     ; Call the specific ISR handler.
+    call %3                     ; Call the specific ISR handler.
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_regs                    ; Restore registers.
     add rsp, _reg_size          ; Deallocate register save space.

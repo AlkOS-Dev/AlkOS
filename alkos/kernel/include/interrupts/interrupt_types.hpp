@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
 
-#include "hal/interrupts.hpp"
+#include "hal/interrupt_params.hpp"
 #include "interrupts/logical_interrupt_table.tpp"
 
 namespace intr

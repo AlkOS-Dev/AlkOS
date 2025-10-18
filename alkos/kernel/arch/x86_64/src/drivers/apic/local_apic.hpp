@@ -9,7 +9,6 @@
 #include <todo.hpp>
 #include "cpu/msrs.hpp"
 #include "include/memory_io.hpp"
-#include "interrupts/interrupt_types.hpp"
 
 /**
  * TODO: SUPPORT 2x APIC

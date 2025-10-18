@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERUPTS_HPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERUPTS_HPP_
 
+#include "hal/interrupts.hpp"
 #include "interrupts/interrupt_types.hpp"
 
 namespace intr

@@ -5,11 +5,7 @@
 
 namespace hal
 {
-using arch::ExceptionData;
 using arch::Interrupts;
-static constexpr size_t kNumExceptionHandlers  = arch::kNumExceptionHandlers;
-static constexpr size_t kNumHardwareInterrupts = arch::kNumHardwareInterrupts;
-static constexpr size_t kNumSoftwareInterrupts = arch::kNumSoftwareInterrupts;
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_INTERRUPTS_HPP_
