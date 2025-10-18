@@ -2,7 +2,8 @@
 
 /* Internal includes */
 #include "acpi/acpi.hpp"
-#include "hal/kernel.hpp"
+#include "boot_args.hpp"
+#include "hal/boot_args.hpp"
 #include "hal/terminal.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
@@ -12,11 +13,12 @@
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
-void KernelInit(const hal::KernelArguments& args)
+void KernelInit(const hal::RawBootArguments& raw_args)
 {
     hal::TerminalInit();
+    hal::ArchInit(raw_args);
 
-    hal::ArchInit(args);
+    BootArguments args = SanitizeBootArgs(raw_args);
 
     MemoryModule::Init(args);
 
@@ -30,6 +32,7 @@ void KernelInit(const hal::KernelArguments& args)
     GlobalStateModule::Init();
 
     TODO_MMU_MINIMAL
+    HardwareModule::Get();
     // /* Initialize ACPI */
     // HardwareModule::Get().GetACPIController().Init();
 

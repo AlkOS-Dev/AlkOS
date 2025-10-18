@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
 
 #include <hal/api/interrupts.hpp>
 
@@ -15,6 +15,8 @@
 
 namespace arch
 {
+// TODO: In reality IDT has size of 256, but currently only 48 isrs are defined
+static constexpr size_t kMaxInterruptsSupported = 48;
 class Interrupts : public InterruptsAPI
 {
     TODO_WHEN_VMEM_WORKS
@@ -82,4 +84,4 @@ class Interrupts : public InterruptsAPI
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_INTERRUPTS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_

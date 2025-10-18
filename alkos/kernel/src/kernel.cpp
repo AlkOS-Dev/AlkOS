@@ -4,11 +4,13 @@
 #include <extensions/debug.hpp>
 #include <test_module/test_module.hpp>
 #include <trace.hpp>
+
 /* internal includes */
-#include "hal/kernel.hpp"
+#include "boot_args.hpp"
+#include "hal/boot_args.hpp"
 #include "todo.hpp"
 
-extern void KernelInit(const hal::KernelArguments&);
+extern void KernelInit(const hal::RawBootArguments&);
 
 static void KernelRun()
 {
@@ -23,10 +25,10 @@ static void KernelRun()
     // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
 }
 
-extern "C" void KernelMain(const hal::KernelArguments* args)
+extern "C" void KernelMain(const hal::RawBootArguments* raw_args)
 {
     KernelTraceInfo("Running kernel initialization...");
-    KernelInit(*args);
+    KernelInit(*raw_args);
 
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         KernelTraceInfo("Running tests...");

@@ -1,5 +1,4 @@
-          bits 32
-          ; This is a 32-bit stack for the 64-bit loader
+          bits 64
 
           global stack_bottom
           global stack_top
