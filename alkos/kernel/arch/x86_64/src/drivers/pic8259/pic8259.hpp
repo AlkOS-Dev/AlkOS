@@ -1,11 +1,12 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_PIC8259_PIC8259_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_PIC8259_PIC8259_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
 
 /* internal includes */
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include "include/io.hpp"
+#include "interrupts/
 
 #include <extensions/types.hpp>
 
@@ -96,4 +97,15 @@ FAST_CALL void Pic8259Disable()
     TRACE_INFO("Pic8259 disabled...");
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_PIC8259_PIC8259_HPP_
+class Pic8259Driver
+{
+    // ------------------------------
+    // Class methods
+    // ------------------------------
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+};
+
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
