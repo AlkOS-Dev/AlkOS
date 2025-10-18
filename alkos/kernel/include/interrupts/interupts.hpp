@@ -3,7 +3,7 @@
 
 #include <hal/interrupts.hpp>
 #include <hal/spinlock.hpp>
-#include "hardware/interrupt_driver.hpp"
+#include "interrupts/interrupt_driver.hpp"
 
 namespace intr
 {
