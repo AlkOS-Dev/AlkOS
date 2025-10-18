@@ -78,14 +78,19 @@ NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 id
     );
 }
 
-void LogIrqReceived(const u8 idt_idx)
+FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
 {
-    KernelTraceInfo("Received interrupt with idx: %hhu", idt_idx);
+    KernelTraceInfo("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
 }
 
-void TestIsr()
+void SimpleIrqHandler(intr::LitHwEntry &entry)
 {
-    LogIrqReceived(48);
+    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+}
+
+void TestIsr(intr::LitSwEntry &entry)
+{
+    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 
     /* pollute all registers possible */
     __asm__ volatile("movq $-1, %%rax" : : : "rax");
@@ -104,8 +109,10 @@ void TestIsr()
     __asm__ volatile("movq $-1, %%r15" : : : "r15");
 }
 
-void TimerIsr()
+void TimerIsr(intr::LitHwEntry &entry)
 {
+    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+
     // TODO: Temporary code
     static u64 counter = 0;
     if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {

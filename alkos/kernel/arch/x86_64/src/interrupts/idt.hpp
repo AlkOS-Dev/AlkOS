@@ -3,6 +3,7 @@
 
 #include <extensions/defines.hpp>
 #include "extensions/types.hpp"
+#include "interrupts/interupts.hpp"
 
 // ------------------------------
 // Crucial defines
@@ -89,8 +90,8 @@ struct Idt {
 const char *GetExceptionMsg(u8 idx);
 void DefaultInterruptHandler(u8 idt_idx);
 void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, u8 idt_idx);
-void LogIrqReceived(u8 idt_idx);
-void TestIsr();
-void TimerIsr();
+void SimpleIrqHandler(intr::LitHwEntry &entry);
+void TestIsr(intr::LitSwEntry &entry);
+void TimerIsr(intr::LitHwEntry &entry);
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_

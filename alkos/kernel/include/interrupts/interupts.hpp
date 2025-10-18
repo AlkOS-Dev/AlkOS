@@ -18,6 +18,12 @@ using HandlerType = LitType::HandlerType<kInterruptType>;
 
 using InterruptDriver = LitType::InterruptDriver;
 
+template <InterruptType kInterruptType>
+using LitEntry    = LitType::InterruptHandlerEntry<kInterruptType>;
+using LitExcEntry = LitEntry<InterruptType::kException>;
+using LitHwEntry  = LitEntry<InterruptType::kHardwareException>;
+using LitSwEntry  = LitEntry<InterruptType::kSoftwareException>;
+
 class Interrupts final : public arch::Interrupts
 {
     // ------------------------------
