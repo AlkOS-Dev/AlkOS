@@ -5,7 +5,7 @@
 #include <extensions/types.hpp>
 #include "hal/constants.hpp"
 
-namespace mem
+namespace Mem
 {
 
 template <class T>
@@ -108,6 +108,6 @@ class PhysicalPtr<void>
 template <typename T>
 using PPtr = PhysicalPtr<T>;
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_PTR_HPP_

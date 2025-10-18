@@ -4,7 +4,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-using namespace mem;
+using namespace Mem;
 using AS = AddressSpace;
 
 void AS::AddArea(VMemArea vma)

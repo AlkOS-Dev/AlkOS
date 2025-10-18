@@ -8,7 +8,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/area.hpp"
 
-namespace mem
+namespace Mem
 {
 
 //==============================================================================
@@ -56,6 +56,6 @@ class AddressSpace
 };
 using AddrSp = AddressSpace;
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_ADDR_SPACE_HPP_

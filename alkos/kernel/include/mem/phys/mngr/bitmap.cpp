@@ -7,7 +7,7 @@
 #include "mem/page_meta.hpp"
 #include "mem/virt/ptr.hpp"
 
-using namespace mem;
+using namespace Mem;
 
 BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, size_t mem_bitmap_size)
 {

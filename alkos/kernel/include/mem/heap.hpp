@@ -6,7 +6,7 @@
 #include "mem/error.hpp"
 #include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 // Alias
 template <typename T, typename E>
@@ -36,6 +36,6 @@ void KFree(VPtr<T> ptr)
     KFree(reinterpret_cast<VPtr<void>>(ptr));
 }
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_HEAP_HPP_

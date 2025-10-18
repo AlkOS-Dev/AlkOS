@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_ERROR_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_ERROR_HPP_
 
-namespace mem
+namespace Mem
 {
 
 enum class MemError {
@@ -10,6 +10,6 @@ enum class MemError {
     NotFound,
 };
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_ERROR_HPP_

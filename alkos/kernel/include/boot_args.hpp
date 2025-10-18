@@ -6,12 +6,12 @@
 #include "mem/virt/ptr.hpp"
 
 struct BootArguments {
-    mem::VirtualPtr<void> kernel_start;
-    mem::VirtualPtr<void> kernel_end;
-    mem::PhysicalPtr<void> root_page_table;
-    mem::PhysicalPtr<void> mem_bitmap;
+    Mem::VirtualPtr<void> kernel_start;
+    Mem::VirtualPtr<void> kernel_end;
+    Mem::PhysicalPtr<void> root_page_table;
+    Mem::PhysicalPtr<void> mem_bitmap;
     size_t total_page_frames;
-    mem::PhysicalPtr<void> multiboot_info;
+    Mem::PhysicalPtr<void> multiboot_info;
 };
 
 BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args);

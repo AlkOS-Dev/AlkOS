@@ -11,7 +11,7 @@
 // purpose
 //==============================================================================
 
-namespace mem
+namespace Mem
 {
 enum class PageMetaType : u8 {
     Buddy,
@@ -39,6 +39,6 @@ struct PageMeta<Virtual> {
 static constexpr size_t kExpectedSize = sizeof(PageMeta<Dummy>);
 static_assert(sizeof(PageMeta<Buddy>) == kExpectedSize);
 static_assert(sizeof(PageMeta<Virtual>) == kExpectedSize);
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_

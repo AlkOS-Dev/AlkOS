@@ -24,8 +24,8 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // Module fields
     // ------------------------------
 
-    DEFINE_MODULE_FIELD(mem, PageMetaTable);
-    DEFINE_MODULE_FIELD(mem, BitmapPmm);
+    DEFINE_MODULE_FIELD(Mem, PageMetaTable);
+    DEFINE_MODULE_FIELD(Mem, BitmapPmm);
 };
 }  // namespace internal
 

@@ -9,7 +9,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 
 template <typename T, typename E>
@@ -53,6 +53,6 @@ class BitmapPmm
     size_t last_alloc_idx_ = 0;
 };
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_

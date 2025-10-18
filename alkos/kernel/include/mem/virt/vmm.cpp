@@ -5,7 +5,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/vmm.hpp"
 
-namespace mem
+namespace Mem
 {
 
 using Vmm = VirtualMemoryManager;
@@ -31,4 +31,4 @@ void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
     // TODO
 }
 
-}  // namespace mem
+}  // namespace Mem

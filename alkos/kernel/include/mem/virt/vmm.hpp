@@ -9,7 +9,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 
 //==============================================================================
@@ -54,6 +54,6 @@ class VirtualMemoryManager
     // ------------------------------
 };
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_

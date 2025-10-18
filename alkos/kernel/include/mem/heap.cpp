@@ -4,7 +4,7 @@
 #include "mem/phys/mngr/bitmap.hpp"
 #include "modules/memory.hpp"
 
-namespace mem
+namespace Mem
 {
 
 Expected<VPtr<void>, MemError> KMalloc(size_t size)
@@ -31,4 +31,4 @@ void KFree(VPtr<void> ptr)
     // Dont care about free till buddy allocator.
 }
 
-}  // namespace mem
+}  // namespace Mem

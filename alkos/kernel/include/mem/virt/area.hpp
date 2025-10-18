@@ -5,7 +5,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 
 TODO_STD_VARIANT
@@ -32,6 +32,6 @@ struct VirtualMemArea {
 };
 using VMemArea = VirtualMemArea;
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_AREA_HPP_

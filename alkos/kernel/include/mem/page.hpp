@@ -8,7 +8,7 @@
 #include "hal/constants.hpp"
 #include "mem/phys/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 
 struct Page {
@@ -27,6 +27,6 @@ FAST_CALL PhysicalPtr<Page> PageFrameAddr(size_t pfn)
     return PhysicalPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
 }
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_HPP_

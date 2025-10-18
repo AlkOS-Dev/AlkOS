@@ -6,7 +6,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-using namespace mem;
+using namespace Mem;
 
 BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args)
 {

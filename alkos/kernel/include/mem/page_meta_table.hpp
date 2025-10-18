@@ -5,7 +5,7 @@
 #include "mem/phys/ptr.hpp"
 #include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
 class PageMetaTable
 {
@@ -23,6 +23,6 @@ class PageMetaTable
     VirtualPtr<PageMeta<Dummy>> page_frames_metas_;
     size_t num_page_frames_;
 };
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_TABLE_HPP_

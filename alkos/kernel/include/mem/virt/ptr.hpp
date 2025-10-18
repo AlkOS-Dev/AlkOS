@@ -5,7 +5,7 @@
 #include <extensions/types.hpp>
 #include "hal/constants.hpp"
 
-namespace mem
+namespace Mem
 {
 
 template <typename T>
@@ -13,6 +13,6 @@ using VirtualPtr = T *;
 template <typename T>
 using VPtr = VirtualPtr<T>;
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
