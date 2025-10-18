@@ -31,12 +31,17 @@ class LogicalInterruptTable
         "Maximal allowed number of software interrupts handlers exceeded"
     );
 
+    // ------------------------------
+    // class types
+    // ------------------------------
+
+    public:
     template <InterruptType kInterruptType>
     struct InterruptHandlerEntry {
         /* Interrupt handler */
-        using InterruptHandler = void (*)(InterruptHandlerEntry& entry);
+        using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
         using InterruptHandlerException =
-            void (*)(InterruptHandlerEntry& entry, hal::ExceptionData* data);
+            void (*)(InterruptHandlerEntry &entry, hal::ExceptionData *data);
         using HandlerType = std::conditional_t<
             kInterruptType == InterruptType::kException, InterruptHandlerException,
             InterruptHandler>;
@@ -44,15 +49,15 @@ class LogicalInterruptTable
         /* Interrupt driver */
         struct InterruptDriver {
             struct callbacks {
-                void (*ack)(InterruptHandlerEntry&);
+                void (*ack)(InterruptHandlerEntry &);
             };
 
-            callbacks* cbs{};
+            callbacks *cbs{};
         };
 
         struct HandlerData {
             HandlerType handler{};
-            void* data{};
+            void *data{};
         };
 
         HandlerData handler_data{};
@@ -63,11 +68,6 @@ class LogicalInterruptTable
             driver{};
     };
 
-    // ------------------------------
-    // class types
-    // ------------------------------
-
-    public:
     template <InterruptType kInterruptType>
     using HandlerData = typename InterruptHandlerEntry<kInterruptType>::HandlerData;
 
@@ -86,11 +86,11 @@ class LogicalInterruptTable
     // Class interaction
     // ------------------------------
 
-    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData* data)
+    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
         ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
-        auto& entry = GetTable_<InterruptType::kException>()[lirq];
+        auto &entry = GetTable_<InterruptType::kException>()[lirq];
 
         /* Exception MUST be handled */
         (*entry.handler_data.handler)(entry, data);
@@ -102,7 +102,7 @@ class LogicalInterruptTable
     {
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
-        auto& entry = GetTable_<kInterruptType>()[lirq];
+        auto &entry = GetTable_<kInterruptType>()[lirq];
 
         if (entry.handler_data.handler) {
             (*entry.handler_data.handler)(entry);
@@ -116,7 +116,7 @@ class LogicalInterruptTable
 
     template <InterruptType kInterruptType>
     FORCE_INLINE_F void InstallInterruptHandler(
-        const u16 lirq, const HandlerData<kInterruptType>& handler
+        const u16 lirq, const HandlerData<kInterruptType> &handler
     )
     {
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());

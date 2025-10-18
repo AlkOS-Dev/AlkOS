@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
 
 #include <extensions/defines.hpp>
 #include "extensions/types.hpp"
@@ -87,5 +87,10 @@ struct Idt {
 // ------------------------------
 
 const char *GetExceptionMsg(u8 idx);
+void DefaultInterruptHandler(u8 idt_idx);
+void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, u8 idt_idx);
+void LogIrqReceived(u8 idt_idx);
+void TestIsr();
+void TimerIsr();
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
