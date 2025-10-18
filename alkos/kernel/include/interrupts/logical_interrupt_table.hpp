@@ -58,7 +58,8 @@ class LogicalInterruptTable
         HandlerData handler_data{};
         u16 logical_irq{};
         u64 hardware_irq{};
-        std::enable_if<kInterruptType == InterruptType::kHardwareException, InterruptDriver>
+        template_lib::OptionalField<
+            kInterruptType == InterruptType::kHardwareException, InterruptDriver>
             driver{};
     };
 
@@ -85,6 +86,16 @@ class LogicalInterruptTable
     // Class interaction
     // ------------------------------
 
+    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData data)
+    {
+        ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
+        ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
+        auto& entry = GetTable_<InterruptType::kException>()[lirq];
+
+        /* Exception MUST be handled */
+        (*entry.handler_data.handler)(entry, data);
+    }
+
     template <InterruptType kInterruptType>
         requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
@@ -101,16 +112,6 @@ class LogicalInterruptTable
             ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
             entry.driver.cbs->ack(entry.driver);
         }
-    }
-
-    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData data)
-    {
-        ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
-        ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
-        auto& entry = GetTable_<InterruptType::kException>()[lirq];
-
-        /* Exception MUST be handled */
-        (*entry.handler_data.handler)(entry, data);
     }
 
     template <InterruptType kInterruptType>

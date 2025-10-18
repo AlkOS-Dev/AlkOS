@@ -5,9 +5,7 @@
 
 extern "C" void HandleException(const u16 lirq, const hal::ExceptionData* data)
 {
-    HardwareModule::Get().GetInterrupts().GetLit().HandleInterrupt<intr::InterruptType::kException>(
-        lirq, *data
-    );
+    HardwareModule::Get().GetInterrupts().GetLit().HandleInterrupt(lirq, *data);
 }
 
 extern "C" void HandleHardwareInterrupt(const u16 lirq)
