@@ -27,6 +27,7 @@ static void KernelRun()
 
 extern "C" void KernelMain(const hal::RawBootArguments* raw_args)
 {
+    ASSERT_NOT_NULL(raw_args, "Raw boot arguments are null");
     KernelTraceInfo("Running kernel initialization...");
     KernelInit(*raw_args);
 

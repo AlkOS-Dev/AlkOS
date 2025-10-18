@@ -18,7 +18,9 @@ struct Page {
 FAST_CALL size_t PageFrameNumber(PhysicalPtr<Page> page)
 {
     const uptr addr = page.AsUIntPtr();
-    R_ASSERT_TRUE(IsAligned(addr, hal::kPageSizeBytes));
+    ASSERT_TRUE(
+        IsAligned(addr, hal::kPageSizeBytes), "Physical page pointer is not aligned to page size"
+    );
     return addr / hal::kPageSizeBytes;
 }
 

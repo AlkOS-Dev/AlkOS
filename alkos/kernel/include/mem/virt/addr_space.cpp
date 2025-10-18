@@ -10,16 +10,28 @@ using AS = AddressSpace;
 void AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
-    R_ASSERT_TRUE(res, "Out of mem");
+    R_ASSERT_TRUE(res, "Failed to allocate memory for VMemArea");
 
     VPtr<VMemArea> n_area = *res;
     *n_area               = vma;
 
-    // TODO: This list should probably be sorted
-    // TODO: Add checks to prevent adding overlapping areas
+    // Check for overlapping areas
+    for (auto it = area_list_head_; it; it = it->next) {
+        ASSERT(!AreasOverlap(it, n_area), "Virtual memory areas overlap");
+    }
 
     n_area->next    = area_list_head_;
     area_list_head_ = n_area;
+}
+
+bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
+{
+    const auto a_s_addr = reinterpret_cast<uptr>(a->start);
+    const auto a_e_addr = a_s_addr + a->size;
+    const auto b_s_addr = reinterpret_cast<uptr>(b->start);
+    const auto b_e_addr = b_s_addr + b->size;
+
+    return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
 }
 
 void AS::RmArea(VPtr<void> ptr)
@@ -64,7 +76,7 @@ Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
 
 bool AS::IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr)
 {
-    R_ASSERT_NOT_NULL(vma);
+    ASSERT_NOT_NULL(vma, "Virtual memory area is null");
 
     const auto vma_s_addr = reinterpret_cast<uptr>(vma->start);
     const auto vma_e_addr = vma_s_addr + vma->size;

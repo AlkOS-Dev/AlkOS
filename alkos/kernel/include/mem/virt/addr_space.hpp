@@ -48,6 +48,7 @@ class AddressSpace
     // Helpers
     Expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
     bool IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr);
+    bool AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b);
 
     PPtr<void> page_table_root_;
     VPtr<VMemArea> area_list_head_;

@@ -11,6 +11,7 @@ using namespace Mem;
 
 BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, size_t mem_bitmap_size)
 {
+    ASSERT_NOT_NULL(mem_bitmap, "Memory bitmap pointer is null");
     BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
     Init(bmv);
 };

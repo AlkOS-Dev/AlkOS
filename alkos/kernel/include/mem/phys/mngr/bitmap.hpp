@@ -40,12 +40,12 @@ class BitmapPmm
     bool IsAllocated(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapAllocated; }
     void MarkAllocated(size_t pfn)
     {
-        R_ASSERT_TRUE(IsFree(pfn));
+        ASSERT_TRUE(IsFree(pfn), "Page frame is already allocated");
         bitmap_view_.Set(pfn, BitMapAllocated);
     }
     void MarkFree(u64 pfn)
     {
-        R_ASSERT_TRUE(IsAllocated(pfn));
+        ASSERT_TRUE(IsAllocated(pfn), "Page frame is already free");
         bitmap_view_.Set(pfn, BitMapFree);
     }
 

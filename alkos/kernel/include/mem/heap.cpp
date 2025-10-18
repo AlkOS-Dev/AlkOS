@@ -11,6 +11,7 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size)
 {
     using AllocationRequest = BitmapPmm::AllocationRequest;
 
+    ASSERT(size != 0, "KMalloc size cannot be 0");
     if (size == 0) {
         return Unexpected(MemError::InvalidArgument);
     }
@@ -18,7 +19,7 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size)
     const size_t required_pages = (size + hal::kPageSizeBytes - 1) / hal::kPageSizeBytes;
     auto &b_pmm                 = MemoryModule::Get().GetBitmapPmm();
     auto res                    = b_pmm.Alloc(AllocationRequest{.num_pages = required_pages});
-    ASSERT_TRUE(res, "KMalloc out of mem");
+    R_ASSERT_TRUE(res, "Failed to allocate memory from bitmap physical memory manager");
 
     const auto phys_ptr      = *res;
     const VirtualPtr<void> m = reinterpret_cast<VirtualPtr<void>>(phys_ptr.ToVirt());

@@ -31,7 +31,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     TRACE_DEBUG("Total  : | %llu | pages", total_pages);
     TRACE_DEBUG("Finding: | %llu | pages for page metadata table", required_pages);
     auto res = BitmapPmm_.Alloc(BitmapPmm::AllocationRequest{.num_pages = required_pages});
-    R_ASSERT_TRUE(res, "Failed to find memory region large enough to contain map metatada");
+    R_ASSERT_TRUE(res, "Failed to allocate memory for page metadata table");
 
     auto page_metas = reinterpret_cast<VirtualPtr<PageMeta<Dummy>>>((*res).ToVirt());
     PageMetaTable_  = PageMetaTable(page_metas, total_pages);
