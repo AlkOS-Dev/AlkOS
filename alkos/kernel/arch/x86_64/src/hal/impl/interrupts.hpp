@@ -15,8 +15,9 @@
 
 namespace arch
 {
-// TODO: In reality IDT has size of 256, but currently only 48 isrs are defined
-static constexpr size_t kMaxInterruptsSupported = 48;
+static constexpr size_t kNumExceptionHandlers  = 32;
+static constexpr size_t kNumHardwareInterrupts = 32;
+static constexpr size_t kNumSoftwareInterrupts = 32;
 class Interrupts : public InterruptsAPI
 {
     TODO_WHEN_VMEM_WORKS
