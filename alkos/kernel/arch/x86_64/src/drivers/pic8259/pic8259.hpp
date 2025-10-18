@@ -6,7 +6,7 @@
 #include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include "include/io.hpp"
-#include "interrupts/
+#include "interrupts/interrupt_types.hpp"
 
 #include <extensions/types.hpp>
 
@@ -99,13 +99,26 @@ FAST_CALL void Pic8259Disable()
 
 class Pic8259Driver
 {
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    Pic8259Driver();
+
     // ------------------------------
     // Class methods
     // ------------------------------
 
+    FORCE_INLINE_F NODISCARD const intr::InterruptDriver& GetDriver_() const { return driver_; }
+
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    private:
+    intr::InterruptDriver::callbacks cbs_{};
+    intr::InterruptDriver driver_{};
 };
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_

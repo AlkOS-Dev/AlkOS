@@ -53,6 +53,7 @@ class LogicalInterruptTable
             };
 
             callbacks *cbs{};
+            const char *name;
         };
 
         struct HandlerData {
@@ -74,7 +75,8 @@ class LogicalInterruptTable
     template <InterruptType kInterruptType>
     using HandlerType = typename InterruptHandlerEntry<kInterruptType>::HandlerType;
 
-    using InterruptDriver = InterruptHandlerEntry<InterruptType::kHardwareException>;
+    using InterruptDriver =
+        typename InterruptHandlerEntry<InterruptType::kHardwareException>::InterruptDriver;
 
     // ------------------------------
     // Class creation

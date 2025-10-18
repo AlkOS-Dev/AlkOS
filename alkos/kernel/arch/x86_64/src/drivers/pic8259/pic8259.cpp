@@ -86,3 +86,26 @@ void InitPic8259(const byte pic1_offset, const byte pic2_offset)
 
     TRACE_SUCCESS("PIC units correctly initialized...");
 }
+
+// ------------------------------
+// Static functions
+// ------------------------------
+
+static void Pic8259Ack(intr::LitHwEntry& entry)
+{
+    Pic8259SendEOI(
+        entry.logical_irq
+    );  // NOTE: logical IRQ is mapped in such manner that corresponds to hw irq number
+}
+
+// ------------------------------
+// Driver functions
+// ------------------------------
+
+Pic8259Driver::Pic8259Driver()
+{
+    cbs_.ack = Pic8259Ack;
+
+    driver_.name = "Pic8259";
+    driver_.cbs  = &cbs_;
+}

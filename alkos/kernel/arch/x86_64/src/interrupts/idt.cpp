@@ -8,7 +8,7 @@ using hal::KernelPanicFormat;
 
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
-#include "interrupts/interupts.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 #include <assert.h>
 #include <extensions/bit.hpp>

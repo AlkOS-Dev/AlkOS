@@ -3,7 +3,7 @@
 
 #include <extensions/defines.hpp>
 #include "extensions/types.hpp"
-#include "interrupts/interupts.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 // ------------------------------
 // Crucial defines
