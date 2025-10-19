@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 
 #include <uacpi/acpi.h>
 #include <extensions/array.hpp>
-#include <extensions/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/time.hpp>
 #include <extensions/types.hpp>
@@ -128,8 +128,9 @@ class Hpet final
      */
     // TODO: This is non packed because of BitArray
     struct PACK GeneralInterruptStatusReg {
-        BitArray<kMaxComparators> interrupt_status;  // Bit set for each timer that triggered
-        u32 : 32;                                    // Reserved
+        data_structures::BitArray<kMaxComparators>
+            interrupt_status;  // Bit set for each timer that triggered
+        u32 : 32;              // Reserved
     };
     static_assert(sizeof(GeneralInterruptStatusReg) == 8);
 
@@ -189,8 +190,9 @@ class Hpet final
         u8 vector : 5;  // Interrupt vector to trigger
         FsbRoute fsb_route : 1;
         const FsbSupported fsb_supported : 1;
-        u16 : 16;                                            // Reserved
-        const BitArray<kMaxComparators> route_capabilities;  // Which interrupt routes are available
+        u16 : 16;  // Reserved
+        const data_structures::BitArray<kMaxComparators>
+            route_capabilities;  // Which interrupt routes are available
     };
     static_assert(sizeof(TimerConfigurationReg) == 8);
 
@@ -380,9 +382,10 @@ class Hpet final
     // ------------------------------
 
     /* comparators gathered data */
-    BitArray<kMaxComparators> comparators_64bit_supported_{};
-    BitArray<kMaxComparators> comparators_periodic_supported_{};
-    std::array<BitArray<kComparatorMaxIrqMap>, kMaxComparators> comparators_allowed_irqs_{};
+    data_structures::BitArray<kMaxComparators> comparators_64bit_supported_{};
+    data_structures::BitArray<kMaxComparators> comparators_periodic_supported_{};
+    std::array<data_structures::BitArray<kComparatorMaxIrqMap>, kMaxComparators>
+        comparators_allowed_irqs_{};
 
     /* General hpet information */
     acpi_gas address_{};    // Memory-mapped register address information
@@ -395,4 +398,4 @@ class Hpet final
     bool is_main_counter_enabled_{};
 };
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_HPET_HPET_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_

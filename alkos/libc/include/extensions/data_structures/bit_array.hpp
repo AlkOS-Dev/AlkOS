@@ -3,9 +3,9 @@
 
 #include <stddef.h>
 #include "assert.h"
-#include "bit.hpp"
+#include "../bit.hpp"
 #include "string.h"
-#include "types.hpp"
+#include "../types.hpp"
 
 // TODO: Minimal changes would be required to make this
 // https://en.cppreference.com/w/cpp/utility/bitset.html
@@ -13,6 +13,8 @@
 //==============================================================================
 // BitMapView - Non-owning view with runtime size
 //==============================================================================
+
+namespace data_structures {
 
 class BitMapView final
 {
@@ -148,5 +150,7 @@ class PACK BitArray final
     private:
     StorageT storage_[kNumStorageT]{};
 };
+
+} // namespace data_structures
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_ARRAY_HPP_
