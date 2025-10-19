@@ -24,6 +24,11 @@ static constexpr size_t kNumX86_64CpuExceptions = 32;
 static constexpr size_t kNumX86_64Irqs          = 16;
 
 using ExceptionData = IsrErrorStackFrame;
+
+/* Mapping params */
+static constexpr u16 kTimerHwLirq      = 0;
+static constexpr u16 kPageFaultExcLirq = 14;
+
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPT_PARAMS_HPP_
