@@ -412,6 +412,8 @@ class LocalApic
 
     NODISCARD FORCE_INLINE_F bool IsEnabled() const { return is_enabled_; }
 
+    NODISCARD FORCE_INLINE_F intr::InterruptDriver &GetInterruptDriver() { return driver_; }
+
     // ------------------------------
     // Class fields
     // ------------------------------

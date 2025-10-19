@@ -11,8 +11,8 @@ namespace intr
 {
 enum class InterruptType : uint8_t {
     kException         = 0,
-    kHardwareException = 1,
-    kSoftwareException = 2,
+    kHardwareInterrupt = 1,
+    kSoftwareInterrupt = 2,
 };
 
 template <
@@ -68,7 +68,7 @@ class LogicalInterruptTable
         u16 logical_irq{};
         u64 hardware_irq{};
         template_lib::OptionalField<
-            kInterruptType == InterruptType::kHardwareException, InterruptDriver>
+            kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *>
             driver{};
     };
 
@@ -79,7 +79,7 @@ class LogicalInterruptTable
     using HandlerType = typename InterruptHandlerEntry<kInterruptType>::HandlerType;
 
     using InterruptDriver =
-        typename InterruptHandlerEntry<InterruptType::kHardwareException>::InterruptDriver;
+        typename InterruptHandlerEntry<InterruptType::kHardwareInterrupt>::InterruptDriver;
 
     // ------------------------------
     // Class creation
@@ -113,9 +113,9 @@ class LogicalInterruptTable
             (*entry.handler_data.handler)(entry);
         }
 
-        if constexpr (kInterruptType == InterruptType::kHardwareException) {
+        if constexpr (kInterruptType == InterruptType::kHardwareInterrupt) {
             ASSERT_NOT_NULL(entry.driver, "Interrupt driver is not installed!");
-            entry.driver.cbs.ack(entry);
+            entry.driver->cbs.ack(entry);
         }
     }
 
@@ -137,8 +137,8 @@ class LogicalInterruptTable
 
     FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, InterruptDriver *driver)
     {
-        ASSERT_LT(lirq, GetTableSize_<InterruptType::kHardwareException>());
-        GetTable_<InterruptType::kHardwareException>()[lirq].driver = driver;
+        ASSERT_LT(lirq, GetTableSize_<InterruptType::kHardwareInterrupt>());
+        GetTable_<InterruptType::kHardwareInterrupt>()[lirq].driver = driver;
     }
 
     // ------------------------------
@@ -151,9 +151,9 @@ class LogicalInterruptTable
     {
         if constexpr (kInterruptType == InterruptType::kException) {
             return exception_table_;
-        } else if constexpr (kInterruptType == InterruptType::kHardwareException) {
+        } else if constexpr (kInterruptType == InterruptType::kHardwareInterrupt) {
             return hardware_exception_table_;
-        } else if constexpr (kInterruptType == InterruptType::kSoftwareException) {
+        } else if constexpr (kInterruptType == InterruptType::kSoftwareInterrupt) {
             return software_exception_table_;
         } else {
             R_FAIL_ALWAYS("Invalid type provided");
@@ -165,9 +165,9 @@ class LogicalInterruptTable
     {
         if constexpr (kInterruptType == InterruptType::kException) {
             return kNumExceptions;
-        } else if constexpr (kInterruptType == InterruptType::kHardwareException) {
+        } else if constexpr (kInterruptType == InterruptType::kHardwareInterrupt) {
             return kNumHardwareExceptions;
-        } else if constexpr (kInterruptType == InterruptType::kSoftwareException) {
+        } else if constexpr (kInterruptType == InterruptType::kSoftwareInterrupt) {
             return kNumSoftwareExceptions;
         } else {
             R_FAIL_ALWAYS("Invalid type provided");
@@ -186,9 +186,9 @@ class LogicalInterruptTable
     // ------------------------------
 
     InterruptHandlerEntry<InterruptType::kException> exception_table_[kNumExceptions];
-    InterruptHandlerEntry<InterruptType::kHardwareException>
+    InterruptHandlerEntry<InterruptType::kHardwareInterrupt>
         hardware_exception_table_[kNumHardwareExceptions];
-    InterruptHandlerEntry<InterruptType::kSoftwareException>
+    InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>
         software_exception_table_[kNumSoftwareExceptions];
 };
 }  // namespace intr

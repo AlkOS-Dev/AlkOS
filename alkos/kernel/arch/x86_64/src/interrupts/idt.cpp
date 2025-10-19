@@ -48,7 +48,7 @@ NO_RET void DefaultInterruptHandler(const u8 idt_idx)
     KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
 }
 
-NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
+NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
 {
     static constexpr size_t kStateMsgSize = 1024;
 
@@ -76,6 +76,11 @@ NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 id
         idt_idx, exception_msg, stack_frame->error_code, stack_frame->isr_stack_frame.rip,
         state_buffer, stack_frame->isr_stack_frame.rflags
     );
+}
+
+void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
+{
+    DefaultExceptionHandler(data, entry.hardware_irq);
 }
 
 FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
@@ -111,7 +116,7 @@ void TestIsr(intr::LitSwEntry &entry)
 
 void TimerIsr(intr::LitHwEntry &entry)
 {
-    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+    // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 
     // TODO: Temporary code
     static u64 counter = 0;

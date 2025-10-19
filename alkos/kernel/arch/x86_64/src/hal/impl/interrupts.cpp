@@ -7,6 +7,7 @@
 #include "interrupts/idt.hpp"
 
 #include <extensions/debug.hpp>
+#include <modules/hardware.hpp>
 
 using namespace arch;
 
@@ -39,6 +40,8 @@ void Interrupts::FirstStageInit()
     TRACE_INFO("Interrupts first stage init...");
 
     InitPic8259(kIrq1Offset, kIrq2Offset);
+    MapToLogicalInterrupts_();
+    SetupPicAsDefaultDriver_();
     InitializeDefaultIdt_();
 }
 
@@ -81,4 +84,80 @@ IoApic &Interrupts::GetIoApicHandler(const u32 gsi)
     }
 
     R_FAIL_ALWAYS("No I/O APIC devices found handling given gsi...");
+}
+
+void Interrupts::MapToLogicalInterrupts_()
+{
+    // REFER to layout established by idt.nasm file
+
+    // Map exceptions
+    for (u16 idt_idx = 0; idt_idx < kNumX86_64CpuExceptions; idt_idx++) {
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .MapLogicalInterruptToHw<intr::InterruptType::kException>(idt_idx, idt_idx);
+
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .InstallInterruptHandler<intr::InterruptType::kException>(
+                idt_idx, intr::ExcHandler{.handler = DefaultExceptionHandler}
+            );
+    }
+
+    // Map basic pic or lapic irqs
+    for (u16 idx = 0; idx < kNumX86_64Irqs; idx++) {
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .MapLogicalInterruptToHw<intr::InterruptType::kHardwareInterrupt>(
+                idx, idx + kNumX86_64CpuExceptions
+            );
+
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
+                idx, intr::HwHandler{.handler = SimpleIrqHandler}
+            );
+    }
+
+    // Map timer handler
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
+            0, intr::HwHandler{.handler = TimerIsr}
+        );
+
+    // Map test software irq
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 48);
+
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .InstallInterruptHandler<intr::InterruptType::kSoftwareInterrupt>(
+            0, intr::SwHandler{.handler = TestIsr}
+        );
+}
+
+void Interrupts::SetupPicAsDefaultDriver_()
+{
+    for (u16 idx = 0; idx < kNumX86_64Irqs; idx++) {
+        HardwareModule::Get().GetInterrupts().GetLit().InstallInterruptDriver(
+            idx, &Pic8259InterruptDriver()
+        );
+    }
+}
+
+void Interrupts::ReplacePicDriverWithLapic_()
+{
+    for (u16 idx = 0; idx < kNumX86_64Irqs; idx++) {
+        HardwareModule::Get().GetInterrupts().GetLit().InstallInterruptDriver(
+            idx, &local_apic_.GetInterruptDriver()
+        );
+    }
 }

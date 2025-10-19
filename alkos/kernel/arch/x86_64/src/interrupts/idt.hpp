@@ -77,7 +77,7 @@ struct Idt {
 
 const char *GetExceptionMsg(u8 idx);
 void DefaultInterruptHandler(u8 idt_idx);
-void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, u8 idt_idx);
+void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 void SimpleIrqHandler(intr::LitHwEntry &entry);
 void TestIsr(intr::LitSwEntry &entry);
 void TimerIsr(intr::LitHwEntry &entry);

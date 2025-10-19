@@ -17,9 +17,11 @@ struct PACK IsrErrorStackFrame {
 
 namespace arch
 {
-static constexpr size_t kNumExceptionHandlers  = 32;
-static constexpr size_t kNumHardwareInterrupts = 32;
-static constexpr size_t kNumSoftwareInterrupts = 32;
+static constexpr size_t kNumExceptionHandlers   = 32;
+static constexpr size_t kNumHardwareInterrupts  = 32;
+static constexpr size_t kNumSoftwareInterrupts  = 32;
+static constexpr size_t kNumX86_64CpuExceptions = 32;
+static constexpr size_t kNumX86_64Irqs          = 16;
 
 using ExceptionData = IsrErrorStackFrame;
 }  // namespace arch

@@ -13,7 +13,7 @@ extern "C" void HandleHardwareInterrupt(const u16 lirq)
     HardwareModule::Get()
         .GetInterrupts()
         .GetLit()
-        .HandleInterrupt<intr::InterruptType::kHardwareException>(lirq);
+        .HandleInterrupt<intr::InterruptType::kHardwareInterrupt>(lirq);
 }
 
 extern "C" void HandleSoftwareInterrupt(const u16 lirq)
@@ -21,7 +21,7 @@ extern "C" void HandleSoftwareInterrupt(const u16 lirq)
     HardwareModule::Get()
         .GetInterrupts()
         .GetLit()
-        .HandleInterrupt<intr::InterruptType::kSoftwareException>(lirq);
+        .HandleInterrupt<intr::InterruptType::kSoftwareInterrupt>(lirq);
 }
 
 // ------------------------------
