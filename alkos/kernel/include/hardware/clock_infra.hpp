@@ -7,7 +7,7 @@
 namespace hardware
 {
 
-struct ClockRegistryEntry : data_structures::RegistryEntry {
+struct alignas(arch::kCacheLineSizeBytes) ClockRegistryEntry : data_structures::RegistryEntry {
     /* Clock numbers */
     u64 frequency_kHz;                  // Frequency in kHz
     u64 ns_uncertainty_margin_per_sec;  // Uncertainty margin in femto seconds per second
@@ -15,11 +15,11 @@ struct ClockRegistryEntry : data_structures::RegistryEntry {
     u64 clock_denominator;              // For conversion to nanoseconds, this is the denominator
 
     /* Callbacks */
-    u64 (*read)(ClockRegistryEntry* clock_entry);
-    bool (*enable_device)(ClockRegistryEntry* clock_entry);
-    bool (*disable_device)(ClockRegistryEntry* clock_entry);
-    void (*stop_counter)(ClockRegistryEntry* clock_entry);
-    void (*resume_counter)(ClockRegistryEntry* clock_entry);
+    u64 (*read)(ClockRegistryEntry*);
+    bool (*enable_device)(ClockRegistryEntry*);
+    bool (*disable_device)(ClockRegistryEntry*);
+    void (*stop_counter)(ClockRegistryEntry*);
+    void (*resume_counter)(ClockRegistryEntry*);
 
     /* Own data */
     void* own_data;
