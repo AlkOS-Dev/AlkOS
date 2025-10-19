@@ -15,7 +15,10 @@ static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
 static constexpr size_t kCacheLineSizeBytes = arch::kCacheLineSizeBytes;
 static constexpr size_t kPageSizeBytes      = arch::kPageSizeBytes;
 
+static constexpr u32 kMaxCores = arch::kMaxCores;
+
 using arch::HardwareClockId;
+using arch::HardwareEventClockId;
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
