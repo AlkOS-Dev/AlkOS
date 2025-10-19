@@ -9,6 +9,7 @@
 #include <todo.hpp>
 #include "cpu/msrs.hpp"
 #include "include/memory_io.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 /**
  * TODO: SUPPORT 2x APIC
@@ -385,7 +386,7 @@ class LocalApic
     // Class creation
     // ------------------------------
 
-    LocalApic()  = default;
+    LocalApic();
     ~LocalApic() = default;
 
     // --------------------------------
@@ -418,7 +419,6 @@ class LocalApic
     protected:
     bool is_enabled_{};
     u64 local_apic_physical_address_{};
-    // intr::InterruptDriver::callbacks cbs_{};
-    // intr::InterruptDriver driver_{};
+    intr::InterruptDriver driver_{};
 };
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_

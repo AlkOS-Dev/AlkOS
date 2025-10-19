@@ -55,7 +55,8 @@ class LogicalInterruptTable
             };
 
             callbacks cbs{};
-            const char *name;
+            const char *name{};
+            void *data{};
         };
 
         struct HandlerData {
