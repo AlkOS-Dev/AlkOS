@@ -64,6 +64,7 @@ NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, c
     char state_buffer[kStateMsgSize];
     cpu_state.GetStateDesc(state_buffer, kStateMsgSize);
 
+    TRACE_DEBUG("what: %hhu", idt_idx);
     const char *exception_msg = GetExceptionMsg(idt_idx);
     R_ASSERT_NOT_NULL(exception_msg);
 

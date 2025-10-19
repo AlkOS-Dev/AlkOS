@@ -43,17 +43,8 @@ TEST_RUNS: list[TestRun] = [
             "SnprintfTest_BufferSizeHandling",  # Fails <- issue added on low prio
             "SnprintfTest_EdgeCases",  # Fails <- issue added on low prio
             # Time related tests fail since timing module is disabled for now
-            "MkTimeTest_BasicMkTimeConversion",
-            "MkTimeTest_NormalizesTimeComponents",
-            "MkTimeTest_LeapYearHandling",
-            "MkTimeTest_OutOfRangeHandling",
-            "MkTimeTest_YearDayCalculation",
-            "TimeTConversionTest_BasicTimeConversion",
-            "TimeTConversionTest_ManualTimestamps",
-            "TimeTConversionTest_LeapYears",
-            "TimeTConversionTest_HistoricalDates",
-            "TimeTConversionTest_LocaltimeVsGmtime",
-            "TimeTConversionTest_DateComponents",
+            "MkTimeTest_*",
+            "TimeTConversionTest_*",
             "TimeTests_TestTime",
         ]
     )
