@@ -102,10 +102,12 @@ static void Pic8259Ack(intr::LitHwEntry& entry)
 // Driver functions
 // ------------------------------
 
-Pic8259Driver::Pic8259Driver()
-{
-    cbs_.ack = Pic8259Ack;
+static intr::InterruptDriver kPic8259Driver{
+    .cbs =
+        {
+              .ack = Pic8259Ack,
+              },
+    .name = "Pic8259",
+};
 
-    driver_.name = "Pic8259";
-    driver_.cbs  = &cbs_;
-}
+intr::InterruptDriver& Pic8259InterruptDriver() { return kPic8259Driver; }

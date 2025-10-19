@@ -88,7 +88,7 @@ isr_wrapper_%+%1:
 
 ; Macro for hardware or software interrupts.
 ; Calls a handler with the signature 'void handler(u16 lirq)'.
-%macro interrupt_wrapper 2 ; %1: Logical IRQ, %2: idt idx %3: C handler function
+%macro interrupt_wrapper 3 ; %1: Logical IRQ, %2: idt idx %3: C handler function
 isr_wrapper_%+%2:
     sub rsp, _reg_size          ; Allocate space for saving registers.
     push_regs                   ; Save registers.

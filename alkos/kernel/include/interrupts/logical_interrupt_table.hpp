@@ -54,7 +54,7 @@ class LogicalInterruptTable
                 void (*ack)(InterruptHandlerEntry &);
             };
 
-            callbacks *cbs{};
+            callbacks cbs{};
             const char *name;
         };
 
@@ -113,8 +113,8 @@ class LogicalInterruptTable
         }
 
         if constexpr (kInterruptType == InterruptType::kHardwareException) {
-            ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
-            entry.driver.cbs->ack(entry);
+            ASSERT_NOT_NULL(entry.driver, "Interrupt driver is not installed!");
+            entry.driver.cbs.ack(entry);
         }
     }
 
@@ -134,7 +134,7 @@ class LogicalInterruptTable
         GetTable_<kInterruptType>()[lirq].hardware_irq = hardware_irq;
     }
 
-    FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, InterruptDriver driver)
+    FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, InterruptDriver *driver)
     {
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kHardwareException>());
         GetTable_<InterruptType::kHardwareException>()[lirq].driver = driver;

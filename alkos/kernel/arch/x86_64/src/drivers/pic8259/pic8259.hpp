@@ -97,28 +97,6 @@ FAST_CALL void Pic8259Disable()
     TRACE_INFO("Pic8259 disabled...");
 }
 
-class Pic8259Driver
-{
-    public:
-    // ------------------------------
-    // Class creation
-    // ------------------------------
-
-    Pic8259Driver();
-
-    // ------------------------------
-    // Class methods
-    // ------------------------------
-
-    FORCE_INLINE_F NODISCARD const intr::InterruptDriver& GetDriver_() const { return driver_; }
-
-    // ------------------------------
-    // Class fields
-    // ------------------------------
-
-    private:
-    intr::InterruptDriver::callbacks cbs_{};
-    intr::InterruptDriver driver_{};
-};
+intr::InterruptDriver& Pic8259InterruptDriver();
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
