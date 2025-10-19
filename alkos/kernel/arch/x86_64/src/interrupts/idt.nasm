@@ -1,26 +1,3 @@
-; ------------------------------
-; Unsupported ISR
-; ------------------------------
-
-; Macro to define an unsupported ISR handler.
-; It invokes the default interrupt handler which should never return.
-%macro unsupported_isr 1
-isr_wrapper_%+%1:
-    mov rdi, %1
-    call DefaultInterruptHandler
-%endmacro
-
-; Macro to define an unsupported error ISR handler.
-; It invokes the default exception handler which should never return.
-%macro unsupported_error_isr 1
-isr_wrapper_%+%1:
-    push rdi ; save state for debug print
-    push rsi ; save state for debug prints
-    lea rdi, [rsp + 2 * 8] ; pass pointer to stack frame
-    mov rsi, %1 ; pass the interrupt number (debugging aid)
-    call DefaultExceptionHandler
-%endmacro
-
 ; ------------------------------------
 ; ISR with full GPR save/restore
 ; ------------------------------------
@@ -42,9 +19,6 @@ _reg_size equ 8*10
 
 ; Shadow space required for C++ function calls
 _shadow_space equ 8*4
-
-; Full ISR stack frame offset
-_isr_stack_frame_offset equ 14
 
 ; Macro to save all volatile registers (SysV ABI) onto the stack.
 %macro push_regs 0
@@ -74,61 +48,58 @@ _isr_stack_frame_offset equ 14
     mov rbp, qword [rsp + _rbp]
 %endmacro
 
-; Macro to define an ISR wrapper with general-purpose register save/restore.
-%macro isr_wrapper_save_general_regs 1
-extern isr_%+%1
-
+; Macro for CPU exceptions that DO NOT push an error code.
+; A dummy error code is pushed to create a consistent stack frame.
+; Calls 'HandleException(u16 lirq, ExceptionData* data)'.
+%macro exception_wrapper 1
 isr_wrapper_%+%1:
+    push 0                      ; Push a dummy error code for alignment.
+    sub rsp, _reg_size          ; Allocate space for saving registers.
+    push_regs                   ; Save registers.
+    sub rsp, _shadow_space      ; Allocate shadow space.
+    cld                         ; Clear direction flag.
+    mov rdi, %1                 ; Arg1: interrupt number.
+    lea rsi, [rsp + _shadow_space + _reg_size + 8] ; Arg2: pointer to stack frame.
+    call HandleException
+    add rsp, _shadow_space      ; Deallocate shadow space.
+    pop_regs                    ; Restore registers.
+    add rsp, _reg_size          ; Deallocate register save space.
+    add rsp, 8                  ; Pop dummy error code.
+    iretq
+%endmacro
+
+; Macro for CPU exceptions that DO push an error code.
+; Calls 'HandleException(u16 lirq, ExceptionData* data)'.
+%macro exception_error_wrapper 1
+isr_wrapper_%+%1:
+    sub rsp, _reg_size          ; Allocate space for saving registers.
+    push_regs                   ; Save registers.
+    sub rsp, _shadow_space      ; Allocate shadow space.
+    cld                         ; Clear direction flag.
+    mov rdi, %1                 ; Arg1: interrupt number.
+    lea rsi, [rsp + _shadow_space + _reg_size + 8] ; Arg2: pointer to stack frame.
+    call HandleException
+    add rsp, _shadow_space      ; Deallocate shadow space.
+    pop_regs                    ; Restore registers.
+    add rsp, _reg_size          ; Deallocate register save space.
+    add rsp, 8                  ; Pop real error code.
+    iretq
+%endmacro
+
+; Macro for hardware or software interrupts.
+; Calls a handler with the signature 'void handler(u16 lirq)'.
+%macro interrupt_wrapper 3 ; %1: Logical IRQ, %2: idt idx %3: C handler function
+isr_wrapper_%+%2:
     sub rsp, _reg_size          ; Allocate space for saving registers.
     push_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space for function calls.
     cld                         ; Clear direction flag for string operations.
-    lea rdi, [rsp + 8*_isr_stack_frame_offset] ; Pass pointer to stack frame.
-    mov rsi, %1                 ; Pass the interrupt number (debugging aid).
-    call isr_%+%1               ; Call the specific ISR handler.
+    mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
+    call %3                     ; Call the specific ISR handler.
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_regs                    ; Restore registers.
     add rsp, _reg_size          ; Deallocate register save space.
     iretq                       ; Return from interrupt.
-%endmacro
-
-; Macro to define an error ISR wrapper with general-purpose register save/restore.
-%macro error_isr_wrapper_save_general_regs 1
-extern isr_%+%1
-
-isr_wrapper_%+%1:
-    sub rsp, _reg_size          ; Allocate space for saving registers.
-    push_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space for function calls.
-    cld                         ; Clear direction flag for string operations.
-    lea rdi, [rsp + 8*_isr_stack_frame_offset] ; Pass pointer to stack frame.
-    mov rsi, %1                 ; Pass the interrupt number (debugging aid).
-    call isr_%+%1               ; Call the specific ISR handler.
-    add rsp, _shadow_space      ; Deallocate shadow space.
-    pop_regs                    ; Restore registers.
-    add rsp, _reg_size          ; Deallocate register save space.
-    add rsp, 8                  ; Skip error code.
-    iretq                       ; Return from interrupt.
-%endmacro
-
-; --------------------------------------
-; ISR with full state save/restore
-; --------------------------------------
-
-; Macro for defining an ISR wrapper with full state save/restore (TODO).
-%macro isr_wrapper_save_all_regs 1
-    ; TODO: Implement full state save/restore.
-    unsupported_isr %1
-%endmacro
-
-; ---------------------------------
-; ISR without any state saved
-; ---------------------------------
-
-; Macro for defining an ISR wrapper without saving any state (TODO).
-%macro isr_wrapper_no_save 1
-    ; TODO: Implement no-save ISR.
-    unsupported_isr %1
 %endmacro
 
 ; ------------------------------
@@ -137,68 +108,86 @@ isr_wrapper_%+%1:
 
 bits 64
 
-extern DefaultInterruptHandler
-extern DefaultExceptionHandler
+extern HandleException
+extern HandleHardwareInterrupt
+extern HandleSoftwareInterrupt
 
 section .text
 
-; Intel-defined interrupts (0-31).
-unsupported_isr 0  ; Division Error: Divide by zero error
-unsupported_isr 1  ; Debug: Reserved for debugging exceptions
-unsupported_isr 2  ; Non-Maskable Interrupt: Non-maskable interrupt detected
-unsupported_isr 3  ; Breakpoint: Breakpoint detected
-unsupported_isr 4  ; Overflow: Overflow detected
-unsupported_isr 5  ; Bound Range Exceeded: Bound range exceeded
-unsupported_isr 6  ; Invalid Opcode: Invalid instruction
-unsupported_isr 7  ; Device Not Available: FPU device unavailable
-unsupported_error_isr 8  ; Double Fault: Critical CPU error
-unsupported_isr 9  ; Coprocessor Segment Overrun: Legacy interrupt (not used)
-unsupported_error_isr 10 ; Invalid TSS: Invalid Task State Segment
-unsupported_error_isr 11 ; Segment Not Present: Segment not present in memory
-unsupported_error_isr 12 ; Stack Segment Fault: Stack-related fault
-unsupported_error_isr 13 ; General Protection Fault: Memory access violation
-unsupported_error_isr 14 ; Page Fault: Page not found in memory
-unsupported_isr 15 ; Reserved: Reserved by Intel
-unsupported_isr 16 ; x87 Floating-Point Exception: FPU error
-unsupported_error_isr 17 ; Alignment Check: Alignment error
-unsupported_isr 18 ; Machine Check: Hardware failure detected
-unsupported_isr 19 ; SIMD Floating-Point Exception: SIMD operation error
-unsupported_isr 20 ; Virtualization Exception: Virtualization error
-unsupported_error_isr 21 ; Control Protection Exception
-unsupported_isr 22 ; Reserved: Reserved by Intel
-unsupported_isr 23 ; Reserved: Reserved by Intel
-unsupported_isr 24 ; Reserved: Reserved by Intel
-unsupported_isr 25 ; Reserved: Reserved by Intel
-unsupported_isr 26 ; Reserved: Reserved by Intel
-unsupported_isr 27 ; Reserved: Reserved by Intel
-unsupported_isr 28 ; Hypervisor Injection Exception
-unsupported_error_isr 29 ; VMM Communication Exception
-unsupported_error_isr 30 ; Security Exception: Security-related error
-unsupported_isr 31 ; Reserved: Reserved by Intel
+; Intel-defined interrupts (0-31) -> HandleException
+exception_wrapper 0  ; Division Error: Divide by zero error
+exception_wrapper 1  ; Debug: Reserved for debugging exceptions
+exception_wrapper 2  ; Non-Maskable Interrupt: Non-maskable interrupt detected
+exception_wrapper 3  ; Breakpoint: Breakpoint detected
+exception_wrapper 4  ; Overflow: Overflow detected
+exception_wrapper 5  ; Bound Range Exceeded: Bound range exceeded
+exception_wrapper 6  ; Invalid Opcode: Invalid instruction
+exception_wrapper 7  ; Device Not Available: FPU device unavailable
+exception_error_wrapper 8  ; Double Fault: Critical CPU error
+exception_wrapper 9  ; Coprocessor Segment Overrun: Legacy interrupt (not used)
+exception_error_wrapper 10 ; Invalid TSS: Invalid Task State Segment
+exception_error_wrapper 11 ; Segment Not Present: Segment not present in memory
+exception_error_wrapper 12 ; Stack Segment Fault: Stack-related fault
+exception_error_wrapper 13 ; General Protection Fault: Memory access violation
+exception_error_wrapper 14 ; Page Fault: Page not found in memory
+exception_wrapper 15 ; Reserved: Reserved by Intel
+exception_wrapper 16 ; x87 Floating-Point Exception: FPU error
+exception_error_wrapper 17 ; Alignment Check: Alignment error
+exception_wrapper 18 ; Machine Check: Hardware failure detected
+exception_wrapper 19 ; SIMD Floating-Point Exception: SIMD operation error
+exception_wrapper 20 ; Virtualization Exception: Virtualization error
+exception_error_wrapper 21 ; Control Protection Exception
+exception_wrapper 22 ; Reserved: Reserved by Intel
+exception_wrapper 23 ; Reserved: Reserved by Intel
+exception_wrapper 24 ; Reserved: Reserved by Intel
+exception_wrapper 25 ; Reserved: Reserved by Intel
+exception_wrapper 26 ; Reserved: Reserved by Intel
+exception_wrapper 27 ; Reserved: Reserved by Intel
+exception_wrapper 28 ; Hypervisor Injection Exception
+exception_error_wrapper 29 ; VMM Communication Exception
+exception_error_wrapper 30 ; Security Exception: Security-related error
+exception_wrapper 31 ; Reserved: Reserved by Intel
 
-; IRQs for PICs (32-47).
-isr_wrapper_save_general_regs 32 ; IRQ0: System timer
-isr_wrapper_save_general_regs 33 ; IRQ1: Keyboard
-unsupported_isr 34               ; IRQ2: Cascade (used by second PIC, should never occur)
-isr_wrapper_save_general_regs 35 ; IRQ3: Serial port 2
-isr_wrapper_save_general_regs 36 ; IRQ4: Serial port 1
-unsupported_isr 37               ; IRQ5: Parallel port 2 or sound card
-unsupported_isr 38               ; IRQ6: Floppy disk controller
-unsupported_isr 39               ; IRQ7: Parallel port 1
-isr_wrapper_save_general_regs 40 ; IRQ8: Real-time clock
-unsupported_isr 41               ; IRQ9: Free for peripherals / legacy SCSI / NIC
-unsupported_isr 42               ; IRQ10: Free for peripherals / SCSI / NIC
-unsupported_isr 43               ; IRQ11: Free for peripherals / SCSI / NIC
-isr_wrapper_save_general_regs 44 ; IRQ12: Mouse
-unsupported_isr 45               ; IRQ13: FPU (legacy)
-unsupported_isr 46               ; IRQ14: Primary ATA channel
-unsupported_isr 47               ; IRQ15: Secondary ATA channel
+; IRQs for PICs (32–47) -> HandleHardwareInterrupt
+interrupt_wrapper 0, 32, HandleHardwareInterrupt ; IRQ0: System timer
+interrupt_wrapper 1, 33, HandleHardwareInterrupt ; IRQ1: Keyboard
+interrupt_wrapper 2, 34, HandleHardwareInterrupt ; IRQ2: Cascade
+interrupt_wrapper 3, 35, HandleHardwareInterrupt ; IRQ3: Serial port 2
+interrupt_wrapper 4, 36, HandleHardwareInterrupt ; IRQ4: Serial port 1
+interrupt_wrapper 5, 37, HandleHardwareInterrupt ; IRQ5: Parallel port 2 / sound card
+interrupt_wrapper 6, 38, HandleHardwareInterrupt ; IRQ6: Floppy controller
+interrupt_wrapper 7, 39, HandleHardwareInterrupt ; IRQ7: Parallel port 1
+interrupt_wrapper 8, 40, HandleHardwareInterrupt ; IRQ8: Real-time clock
+interrupt_wrapper 9, 41, HandleHardwareInterrupt ; IRQ9: Free for peripherals
+interrupt_wrapper 10, 42, HandleHardwareInterrupt ; IRQ10: Free for peripherals
+interrupt_wrapper 11, 43, HandleHardwareInterrupt ; IRQ11: Free for peripherals
+interrupt_wrapper 12, 44, HandleHardwareInterrupt ; IRQ12: Mouse
+interrupt_wrapper 13, 45, HandleHardwareInterrupt ; IRQ13: FPU (legacy)
+interrupt_wrapper 14, 46, HandleHardwareInterrupt ; IRQ14: Primary ATA channel
+interrupt_wrapper 15, 47, HandleHardwareInterrupt ; IRQ15: Secondary ATA channel
 
-; Test interrupt (48).
-isr_wrapper_save_general_regs 48
+
+; Software interrupts (48–63) -> HandleSoftwareInterrupt
+interrupt_wrapper 0, 48, HandleSoftwareInterrupt
+interrupt_wrapper 1, 49, HandleSoftwareInterrupt
+interrupt_wrapper 2, 50, HandleSoftwareInterrupt
+interrupt_wrapper 3, 51, HandleSoftwareInterrupt
+interrupt_wrapper 4, 52, HandleSoftwareInterrupt
+interrupt_wrapper 5, 53, HandleSoftwareInterrupt
+interrupt_wrapper 6, 54, HandleSoftwareInterrupt
+interrupt_wrapper 7, 55, HandleSoftwareInterrupt
+interrupt_wrapper 8, 56, HandleSoftwareInterrupt
+interrupt_wrapper 9, 57, HandleSoftwareInterrupt
+interrupt_wrapper 10, 58, HandleSoftwareInterrupt
+interrupt_wrapper 11, 59, HandleSoftwareInterrupt
+interrupt_wrapper 12, 60, HandleSoftwareInterrupt
+interrupt_wrapper 13, 61, HandleSoftwareInterrupt
+interrupt_wrapper 14, 62, HandleSoftwareInterrupt
+interrupt_wrapper 15, 63, HandleSoftwareInterrupt
+
 
 ; Total number of ISRs.
-_num_isrs equ 49
+_num_isrs equ 64
 
 ; ----------------------------------
 ; ISR wrapper table definition

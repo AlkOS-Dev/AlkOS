@@ -10,6 +10,7 @@
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
+#include <extensions/variant.hpp>
 
 namespace template_lib
 {
@@ -345,5 +346,11 @@ template <class T>
     requires DerivedFromHelper<T>
 SingletonInstanceCreator<T> StaticSingleton<T>::instance_creator_;
 
+// ------------------------------
+// OptionalField
+// ------------------------------
+
+template <bool cond, class T>
+using OptionalField = std::conditional_t<cond, T, std::monostate>;
 }  // namespace template_lib
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TEMPLATE_LIB_HPP_
