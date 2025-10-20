@@ -16,13 +16,13 @@ using namespace arch;
 // ------------------------------
 
 using MadtTable = ACPI::Table<acpi_madt>;
-NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t core_idx)
+NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table)
 {
     if (!IsBitEnabled<0>(table->flags)) {
-        TRACE_INFO("Core with idx: %lu is not enabled...", core_idx);
+        TRACE_INFO("Core with id: %lu is not enabled...", table->id);
 
         if (!IsBitEnabled<1>(table->flags)) {
-            TRACE_WARNING("Core with idx: %lu is not online capable...", core_idx);
+            TRACE_WARNING("Core with id: %lu is not online capable...", table->id);
             return false;
         }
     }
@@ -41,9 +41,7 @@ static void InitializeCores_(MadtTable &table)
             return;
         }
 
-        if (!IsCoreUsable(
-                table_ptr, HardwareModule::Get().GetCoresController().GetCoreTable().Size()
-            )) {
+        if (!IsCoreUsable(table_ptr)) {
             return;
         }
         num_cores++;
@@ -58,18 +56,17 @@ static void InitializeCores_(MadtTable &table)
             return;
         }
 
-        if (!IsCoreUsable(
-                table_ptr, HardwareModule::Get().GetCoresController().GetCoreTable().Size()
-            )) {
+        if (!IsCoreUsable(table_ptr)) {
             return;
         }
 
-        HardwareModule::Get().GetCoresController().GetCoreTable().PushEmplace(
-            static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
-        );
+        // HardwareModule::Get().GetCoresController().GetCoreTable().PushEmplace(
+        //     static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
+        // );
     });
 
-    TRACE_INFO("Found %zu cores", HardwareModule::Get().GetCoresController().GetCoreTable().Size());
+    // TRACE_INFO("Found %zu cores",
+    // HardwareModule::Get().GetCoresController().GetCoreTable().Size());
 }
 
 static void PrepareIoApic_(MadtTable &table)

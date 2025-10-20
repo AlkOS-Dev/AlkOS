@@ -5,29 +5,87 @@
 
 namespace alloca
 {
-
-mem::Expected<mem::VirtualPtr<void>, mem::MemError> AlignedKMalloc(size_t size, size_t alignment);
-FAST_CALL mem::Expected<void, mem::MemError> AlignedKFree(void*) { return {}; }
+using namespace mem;
+Expected<VirtualPtr<void>, MemError> AlignedKMalloc(size_t size, size_t alignment);
+FAST_CALL Expected<void, MemError> AlignedKFree(void*) { return {}; }
 
 template <class T, size_t kAlign>
 class DynArray
 {
+    static_assert(alignof(T) <= kAlign);
+    static_assert(kAlign % alignof(T) == 0);
+
     public:
+    /* type usings */
+    using value_type      = T;
+    using size_type       = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using reference       = value_type&;
+    using const_reference = const value_type&;
+    using pointer         = T*;
+    using const_pointer   = const T*;
+
+    /* iterators */
+    using iterator               = value_type*;
+    using const_iterator         = const value_type*;
+    using reverse_iterator       = iterator;
+    using const_reverse_iterator = const_iterator;
+
     // ------------------------------
     // Class creation
     // ------------------------------
 
     DynArray() = default;
-    explicit DynArray(const size_t size) : size_(size)
+    explicit DynArray(const size_t size) : mem_(nullptr) { Reallocate(size); }
+    ~DynArray()
     {
-        ASSERT_LE(alignof(T), kAlign);
-        auto alloc = mem::KMalloc(kAlign + size * sizeof(T));  // safety buffer
-        ASSERT_TRUE(static_cast<bool>(alloc));
+        if (mem_) {
+            AlignedFree(mem_);
+        }
     }
+
+    // ------------------------------
+    // Iterators
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F iterator begin() noexcept { return mem_; }
+
+    NODISCARD FORCE_INLINE_F const_iterator begin() const noexcept { return mem_; }
+
+    NODISCARD FORCE_INLINE_F const_iterator cbegin() const noexcept { return mem_; }
+
+    NODISCARD FORCE_INLINE_F iterator end() noexcept { return mem_ + size(); }
+
+    NODISCARD FORCE_INLINE_F const_iterator end() const noexcept { return mem_ + size(); }
+
+    NODISCARD FORCE_INLINE_F const_iterator cend() const noexcept { return mem_ + size(); }
 
     // ------------------------------
     // Class interaction
     // ------------------------------
+
+    NODISCARD FORCE_INLINE_F T* data() { return mem_; }
+    NODISCARD FORCE_INLINE_F const T* data() const { return mem_; }
+
+    NODISCARD FORCE_INLINE_F size_t size() const { return size_; }
+    NODISCARD FORCE_INLINE_F bool empty() const { return size_ == 0; }
+
+    FORCE_INLINE_F Expected<void, MemError> Reallocate(const size_t size)
+    {
+        if (mem_) {
+            AlignedKFree(mem_);
+        }
+        auto alloc = AlignedKMalloc(size * sizeof(T), kAlign);
+
+        if (!alloc) {
+            return alloc;
+        }
+
+        mem_  = alloc.value();
+        size_ = size;
+
+        return {};
+    }
 
     // ------------------------------
     // Class fields

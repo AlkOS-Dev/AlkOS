@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
 
 #include <types.h>
-
+#include <extensions/cstddef.hpp>
 #include <hal/impl/constants.hpp>
 
 namespace hal
