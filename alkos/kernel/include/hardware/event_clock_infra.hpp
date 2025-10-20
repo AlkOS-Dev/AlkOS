@@ -48,8 +48,10 @@ struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structu
 };
 
 static constexpr size_t kMaxEventClocks = 8;
-using EventClockRegistry = data_structures::StaticVector<EventClockRegistryEntry, kMaxEventClocks>;
-
+class EventClockRegistry
+    : public data_structures::Registry<EventClockRegistryEntry, kMaxEventClocks>
+{
+};
 }  // namespace hardware
 
 #endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
