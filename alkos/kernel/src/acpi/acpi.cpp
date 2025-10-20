@@ -29,13 +29,14 @@ static Multiboot::TagNewAcpi* FindAcpiTag(u64 multiboot_info_addr)
 
     return new_acpi_tag;
 }
-int ACPI::ACPIController::Init(const u64 multiboot_info_addr)
+
+int ACPI::ACPIController::Init(const BootArguments& args)
 {
     TODO_WHEN_VMEM_WORKS
     TRACE_INFO("ACPI initialization...");
 
     TRACE_INFO("Finding RSDP...");
-    auto* acpi_tag = FindAcpiTag(multiboot_info_addr);
+    auto* acpi_tag = FindAcpiTag(args.multiboot_info.AsUIntPtr());
     R_ASSERT_NOT_NULL(
         acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
     );

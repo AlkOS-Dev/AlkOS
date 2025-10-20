@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
 
 #include <uacpi/uacpi.h>
+#include <boot_args.hpp>
 #include <extensions/defines.hpp>
 
 #include "acpi_battery.hpp"
@@ -45,7 +46,7 @@ class ACPIController final : public hal::AcpiController
      * @brief Initialize the ACPI subsystem.
      * @return Status code
      */
-    int Init(u64 multiboot_info_addr);
+    int Init(const BootArguments &args);
 
     /**
      * @brief Deinitialize the ACPI subsystem.
