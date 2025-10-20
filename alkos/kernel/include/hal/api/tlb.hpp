@@ -3,7 +3,7 @@
 
 #include <extensions/expected.hpp>
 
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 template <typename T, typename E>
 using Expected = std::expected<T, E>;

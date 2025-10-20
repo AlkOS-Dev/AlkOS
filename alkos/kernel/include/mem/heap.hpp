@@ -4,7 +4,7 @@
 #include <extensions/expected.hpp>
 
 #include "mem/error.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {

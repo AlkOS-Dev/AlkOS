@@ -5,9 +5,7 @@
 #include <extensions/types.hpp>
 
 #include "mem/error.hpp"
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/addr_space.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {

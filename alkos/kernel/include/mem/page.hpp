@@ -6,7 +6,7 @@
 #include <extensions/types.hpp>
 
 #include "hal/constants.hpp"
-#include "mem/phys/ptr.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {
@@ -15,18 +15,18 @@ struct Page {
     byte bytes[hal::kPageSizeBytes];
 };
 
-FAST_CALL size_t PageFrameNumber(PhysicalPtr<Page> page)
+FAST_CALL size_t PageFrameNumber(PPtr<Page> page)
 {
-    const uptr addr = page.AsUIntPtr();
+    const uptr addr = PtrToUptr(page);
     ASSERT_TRUE(
         IsAligned(addr, hal::kPageSizeBytes), "Physical page pointer is not aligned to page size"
     );
     return addr / hal::kPageSizeBytes;
 }
 
-FAST_CALL PhysicalPtr<Page> PageFrameAddr(size_t pfn)
+FAST_CALL PPtr<Page> PageFrameAddr(size_t pfn)
 {
-    return PhysicalPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
+    return UptrToPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
 }
 
 }  // namespace Mem

@@ -2,8 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_MEM_VIRT_AREA_HPP_
 
 #include <extensions/types.hpp>
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {
@@ -20,13 +19,13 @@ struct VirtualMemAreaFlags {
 using VMemAreaFlags = VirtualMemAreaFlags;
 
 struct VirtualMemArea {
-    VirtualPtr<void> start;
+    VPtr<void> start;
     size_t size;
     VirtualMemAreaFlags flags;
 
     TODO_STD_VARIANT
     VirtualMemAreaT type;
-    PhysicalPtr<void> direct_mapping_start;
+    PPtr<void> direct_mapping_start;
 
     VirtualMemArea* next = nullptr;
 };

@@ -21,13 +21,13 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size)
     auto res                    = b_pmm.Alloc(AllocationRequest{.num_pages = required_pages});
     R_ASSERT_TRUE(res, "Failed to allocate memory from bitmap physical memory manager");
 
-    const auto phys_ptr      = *res;
-    const VirtualPtr<void> m = reinterpret_cast<VirtualPtr<void>>(phys_ptr.ToVirt());
+    const auto phys_ptr = *res;
+    const VPtr<void> m  = reinterpret_cast<VPtr<void>>(PhysToVirt(phys_ptr));
     return m;
 }
 
 template <>
-void KFree(VPtr<void> ptr)
+void KFree([[maybe_unused]] VPtr<void> ptr)
 {
     // Dont care about free till buddy allocator.
 }

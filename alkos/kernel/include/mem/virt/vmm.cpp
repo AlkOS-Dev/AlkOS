@@ -1,7 +1,7 @@
 #include <extensions/debug.hpp>
 
 #include "mem/heap.hpp"
-#include "mem/phys/ptr.hpp"
+#include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/vmm.hpp"
 

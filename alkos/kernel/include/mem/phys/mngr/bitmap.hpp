@@ -6,8 +6,7 @@
 
 #include "mem/error.hpp"
 #include "mem/page.hpp"
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {
@@ -27,11 +26,11 @@ class BitmapPmm
         size_t num_pages = 1;
     };
 
-    BitmapPmm(VirtualPtr<void> mem_bitmap, size_t mem_bitmap_size);
+    BitmapPmm(VPtr<void> mem_bitmap, size_t mem_bitmap_size);
     void Init(BitMapView bmv, size_t last_alloc_idx = 0);
 
-    Expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest ar);
-    void Free(PhysicalPtr<Page> page, size_t num_pages = 1);
+    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
+    void Free(PPtr<Page> page, size_t num_pages = 1);
 
     size_t BitMapSize() const { return bitmap_view_.Size(); }
 

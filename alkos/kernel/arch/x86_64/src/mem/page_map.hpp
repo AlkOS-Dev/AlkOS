@@ -5,7 +5,7 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
-#include <mem/phys_ptr.hpp>
+#include <mem/types.hpp>
 
 //==============================================================================
 // Source: Intel® 64 and IA-32 Architectures Software Developer’s Manual,
@@ -92,14 +92,14 @@ struct PageMapEntry<4> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<3>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<3>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<3>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<3>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -130,14 +130,14 @@ struct PageMapEntry<3> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<2>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<2>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<2>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<2>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -167,14 +167,14 @@ struct PageMapEntry<3, kHugePage> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 30);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 30);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 30;
+        frame = Mem::PtrToUptr(page_addr) >> 30;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -204,14 +204,14 @@ struct PageMapEntry<2> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<1>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<1>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<1>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<1>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -241,14 +241,14 @@ struct PageMapEntry<2, kHugePage> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 21);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 21);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 21;
+        frame = Mem::PtrToUptr(page_addr) >> 21;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -280,14 +280,14 @@ struct PageMapEntry<1> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 12);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(page_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;

@@ -6,15 +6,14 @@
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 using namespace Mem;
 
 static BitmapPmm InitBitMapPmm(const BootArguments &args)
 {
-    const size_t total_pages          = args.total_page_frames;
-    const VirtualPtr<void> mem_bitmap = args.mem_bitmap.ToVirt();
+    const size_t total_pages    = args.total_page_frames;
+    const VPtr<void> mem_bitmap = PhysToVirt(args.mem_bitmap);
 
     return BitmapPmm{mem_bitmap, total_pages};
 }
@@ -33,6 +32,6 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     auto res = BitmapPmm_.Alloc(BitmapPmm::AllocationRequest{.num_pages = required_pages});
     R_ASSERT_TRUE(res, "Failed to allocate memory for page metadata table");
 
-    auto page_metas = reinterpret_cast<VirtualPtr<PageMeta<Dummy>>>((*res).ToVirt());
+    auto page_metas = reinterpret_cast<VPtr<PageMeta<Dummy>>>(PhysToVirt(*res));
     PageMetaTable_  = PageMetaTable(page_metas, total_pages);
 }

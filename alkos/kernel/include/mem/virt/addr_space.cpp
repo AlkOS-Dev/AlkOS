@@ -1,8 +1,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
 using namespace Mem;
 using AS = AddressSpace;
