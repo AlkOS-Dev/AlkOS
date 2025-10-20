@@ -33,6 +33,24 @@ NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t co
 static void InitializeCores_(MadtTable &table)
 {
     /* Initialize core structures */
+    size_t num_cores = 0;
+    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
+
+        if (!table_ptr) {
+            return;
+        }
+
+        if (!IsCoreUsable(
+                table_ptr, HardwareModule::Get().GetCoresController().GetCoreTable().Size()
+            )) {
+            return;
+        }
+        num_cores++;
+    });
+
+    TRACE_INFO("Found %zu cores", num_cores);
+
     table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
 

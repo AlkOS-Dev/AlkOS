@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <extensions/data_structures/bit_array.hpp>
+#include <extensions/data_structures/hash_maps.hpp>
 #include "hardware/core_mask.hpp"
 
 namespace hardware
