@@ -1,5 +1,5 @@
-#ifndef ZANSKDBBJWFEKWEBWEr
-#define ZANSKDBBJWFEKWEBWEr
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_TPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_TPP_
 
 #include "hal/impl/mmu.hpp"
 
@@ -25,4 +25,4 @@ u64 Mmu::PmeIdx(Mem::VPtr<void> vaddr)
 
 }  // namespace arch
 
-#endif
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_TPP_

@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
 
 #include <hal/api/mmu.hpp>
+#include "mem/page_map.hpp"
 
 namespace arch
 {
@@ -20,8 +21,12 @@ class Mmu : public MmuAPI
     );
 
     private:
+    template <size_t kLevel = 0>
+    PageMapEntry<kLevel> WalkPageEntries(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
+
     template <size_t kLevel>
-    u64 PmeIdx(Mem::VPtr<void> vaddr)
+    u64 PmeIdx(Mem::VPtr<void> vaddr);
+    u64 ToArchFlags(PageFlags flags);
 };
 
 }  // namespace arch
