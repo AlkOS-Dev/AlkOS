@@ -5,11 +5,6 @@
 
 #include "mem/types.hpp"
 
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-template <typename E>
-using Unexpected = std::unexpected<E>;
-
 namespace Mem
 {
 

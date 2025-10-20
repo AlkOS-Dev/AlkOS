@@ -8,11 +8,6 @@
 
 namespace Mem
 {
-// Alias
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-template <typename E>
-using Unexpected = std::unexpected<E>;
 
 // Heap
 Expected<VPtr<void>, MemError> KMalloc(size_t size);

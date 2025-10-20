@@ -6,14 +6,14 @@
 #include <extensions/types.hpp>
 #include "hal/constants.hpp"
 
-namespace Mem
-{
-
 template <typename T, typename E>
 using Expected = std::expected<T, E>;
 
 template <typename E>
 using Unexpected = std::unexpected<E>;
+
+namespace Mem
+{
 
 template <typename T>
 using VirtualPtr = T*;

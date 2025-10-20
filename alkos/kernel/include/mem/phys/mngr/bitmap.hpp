@@ -11,9 +11,6 @@
 namespace Mem
 {
 
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-
 class BitmapPmm
 {
     public:
