@@ -25,23 +25,24 @@ struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structu
     u64 max_event_time_ns;       // Maximum time for the event in nanoseconds
 
     /* Clock specific data */
-    u16 irq;                                 // IRQ number for the event clock
     data_structures::BitArray<32> features;  // Features of the event clock, e.g., core-local
 
     /* infra data */
-    time_t next_event_time_ns;  // Time for the next event in nanoseconds
-    EventClockState state;      // Current state of the clock
-
-    /* Callbacks */
-    void (*handler)(EventClockRegistryEntry*);  // Handler for the clock event
+    u64 next_event_time_ns;  // Time for the next event in nanoseconds
+    EventClockState state;   // Current state of the clock
 
     TODO_WHEN_TIMER_INFRA_DONE
     // TODO: suspend/resume for os supsend etc
 
     /* Driver data */
     void* own_data;  // Pointer to the clock's own data, used for callback
-    u32 (*next_event)(EventClockRegistryEntry*);                  // Callback to set next event time
-    u32 (*set_state)(EventClockRegistryEntry*, EventClockState);  // Callback to set clock state
+
+    /* callbacks */
+    struct callbacks {
+        u32 (*next_event)(EventClockRegistryEntry*, u64);  // Callback to set next event time
+        u32 (*set_oneshot)(EventClockRegistryEntry*);      // Callback to set clock state
+        u32 (*set_periodic)(EventClockRegistryEntry*);     // Callback to set clock state
+    } cbs;
 };
 
 static constexpr size_t kMaxEventClocks = 8;
