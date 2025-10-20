@@ -1,13 +1,37 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_ALLOCATORS_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_ALLOCATORS_HPP_
 
+#include "extensions/bits_ext.hpp"
 #include "mem/heap.hpp"
 
 namespace alloca
 {
 using namespace mem;
-Expected<VirtualPtr<void>, MemError> AlignedKMalloc(size_t size, size_t alignment);
-FAST_CALL Expected<void, MemError> AlignedKFree(void*) { return {}; }
+FAST_CALL Expected<VirtualPtr<void>, MemError> AlignedKMalloc(
+    const size_t size, const size_t alignment
+)
+{
+    ASSERT_TRUE(IsPowerOfTwo(alignment));
+    const size_t full_size = size + alignment - 1 + sizeof(void*);
+    auto result            = KMalloc(full_size);
+    if (!result) {
+        return result;
+    }
+
+    const u64 addr    = reinterpret_cast<u64>(result.value()) + sizeof(void*);
+    const u64 aligned = (addr + alignment - 1) & ~(alignment - 1);
+
+    *reinterpret_cast<void**>(aligned - sizeof(void*)) = result.value();
+    return reinterpret_cast<void*>(aligned);
+}
+
+FAST_CALL Expected<void, MemError> AlignedKFree(void* ptr)
+{
+    if (!ptr)
+        return {};
+    void* original = (static_cast<void**>(ptr))[-1];
+    KFree(original);
+}
 
 template <class T, size_t kAlign>
 class DynArray
@@ -63,6 +87,18 @@ class DynArray
     // ------------------------------
     // Class interaction
     // ------------------------------
+
+    NODISCARD FORCE_INLINE_F T& operator[](const size_t index) noexcept
+    {
+        ASSERT_LE(index, size());
+        return mem_[index];
+    }
+
+    NODISCARD FORCE_INLINE_F const T& operator[](const size_t index) const noexcept
+    {
+        ASSERT_LE(index, size());
+        return mem_[index];
+    }
 
     NODISCARD FORCE_INLINE_F T* data() { return mem_; }
     NODISCARD FORCE_INLINE_F const T* data() const { return mem_; }
