@@ -21,7 +21,7 @@ class Mmu : public MmuAPI
 
     private:
     template <size_t kLevel>
-    u64 PmeIdx(u64 addr);
+    u64 PmeIdx(Mem::VPtr<void> vaddr)
 };
 
 }  // namespace arch
