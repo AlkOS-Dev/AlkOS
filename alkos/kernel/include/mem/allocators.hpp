@@ -33,7 +33,7 @@ FAST_CALL Expected<void, MemError> AlignedKFree(void* ptr)
     KFree(original);
 }
 
-template <class T, size_t kAlign>
+template <class T, size_t kAlign = alignof(T)>
 class DynArray
 {
     static_assert(alignof(T) <= kAlign);
@@ -90,13 +90,13 @@ class DynArray
 
     NODISCARD FORCE_INLINE_F T& operator[](const size_t index) noexcept
     {
-        ASSERT_LE(index, size());
+        ASSERT_LT(index, size());
         return mem_[index];
     }
 
     NODISCARD FORCE_INLINE_F const T& operator[](const size_t index) const noexcept
     {
-        ASSERT_LE(index, size());
+        ASSERT_LT(index, size());
         return mem_[index];
     }
 
@@ -121,6 +121,21 @@ class DynArray
         size_ = size;
 
         return {};
+    }
+
+    template <class... Args>
+    FORCE_INLINE_F void AllocEntry(const size_t idx, Args&&... args)
+    {
+        ASSERT_LT(idx, size());
+        T* data = mem_ + idx;
+        new (reinterpret_cast<void*>(data)) T(std::forward<Args>(args)...);
+    }
+
+    FORCE_INLINE_F void FreeEntry(const size_t idx)
+    {
+        ASSERT_LT(idx, size());
+        T* data = mem_ + idx;
+        data->~T();
     }
 
     // ------------------------------
