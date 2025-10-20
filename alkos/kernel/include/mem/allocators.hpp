@@ -15,7 +15,7 @@ FAST_CALL Expected<VirtualPtr<void>, MemError> AlignedKMalloc(
     const size_t full_size = size + alignment - 1 + sizeof(void*);
     auto result            = KMalloc(full_size);
     if (!result) {
-        return result;
+        return Unexpected(result.error());
     }
 
     const u64 addr    = reinterpret_cast<u64>(result.value()) + sizeof(void*);
@@ -64,7 +64,7 @@ class DynArray
     ~DynArray()
     {
         if (mem_) {
-            AlignedFree(mem_);
+            AlignedKFree(mem_);
         }
     }
 
@@ -114,10 +114,10 @@ class DynArray
         auto alloc = AlignedKMalloc(size * sizeof(T), kAlign);
 
         if (!alloc) {
-            return alloc;
+            return Unexpected(alloc.error());
         }
 
-        mem_  = alloc.value();
+        mem_  = static_cast<T*>(alloc.value());
         size_ = size;
 
         return {};

@@ -4,6 +4,7 @@
 #include "hal/constants.hpp"
 #include "hal/core.hpp"
 
+#include <extensions/cstddef.hpp>
 #include "mem/allocators.hpp"
 
 namespace hardware
