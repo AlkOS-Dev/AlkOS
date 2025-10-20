@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
 
+#include "hal/constants.hpp"
 #include "hal/core.hpp"
 
 #include <extensions/data_structures/array_structures.hpp>
@@ -15,7 +16,7 @@ namespace hardware
 class CoresController final
 {
     public:
-    class Core final : public hal::Core
+    class alignas(hal::kCacheLineSizeBytes) Core final : public hal::Core
     {
         /* Allow usage of arch constructor */
         using hal::Core::Core;
@@ -40,7 +41,6 @@ class CoresController final
     // ------------------------------
 
     private:
-    num
 };
 
 }  // namespace hardware
