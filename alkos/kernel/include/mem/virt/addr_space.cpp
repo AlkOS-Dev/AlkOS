@@ -17,7 +17,7 @@ void AS::AddArea(VMemArea vma)
 
     // Check for overlapping areas
     for (auto it = area_list_head_; it; it = it->next) {
-        ASSERT(!AreasOverlap(it, n_area), "Virtual memory areas overlap");
+        ASSERT_FALSE(AreasOverlap(it, n_area), "Virtual memory areas overlap");
     }
 
     n_area->next    = area_list_head_;

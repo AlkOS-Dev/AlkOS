@@ -8,6 +8,7 @@
 /* internal includes */
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
+#include "mem/heap.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::RawBootArguments&);

@@ -20,9 +20,9 @@ template <typename T>
 Expected<VPtr<T>, MemError> KMalloc()
 {
     return {};
-    // return KMalloc(sizeof(T)).transform([](void* ptr) {
-    //     return reinterpret_cast<VPtr<T>>(ptr);
-    // });
+    return KMalloc(sizeof(T)).transform([](void* ptr) {
+        return reinterpret_cast<VPtr<T>>(ptr);
+    });
 }
 template <typename T>
 void KFree(VPtr<T> ptr);
