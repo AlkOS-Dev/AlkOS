@@ -21,6 +21,9 @@ void hardware::CoresController::AllocateTables(const size_t num_cores, const siz
 
 hardware::Core &hardware::CoresController::AllocateCore(const CoreConfig &config)
 {
+    ASSERT_FALSE(core_arr_.empty());
+    ASSERT_FALSE(hw_to_core_id_map_.empty());
+
     core_arr_.AllocEntry(config.lid, config);
     hw_to_core_id_map_[config.hwid] = config.lid;
     return core_arr_[config.lid];

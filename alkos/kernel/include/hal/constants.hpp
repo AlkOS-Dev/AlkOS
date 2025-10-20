@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
 
 #include <types.h>
+#include <extensions/bits_ext.hpp>
 #include <extensions/cstddef.hpp>
 #include <hal/impl/constants.hpp>
 
@@ -16,6 +17,7 @@ static constexpr size_t kCacheLineSizeBytes = arch::kCacheLineSizeBytes;
 static constexpr size_t kPageSizeBytes      = arch::kPageSizeBytes;
 
 static constexpr u32 kMaxCores = arch::kMaxCores;
+static_assert(kMaxCores <= kBitMask16);  // Must fit in u16
 
 using arch::HardwareClockId;
 using arch::HardwareEventClockId;
