@@ -35,9 +35,7 @@ enum class HardwareClockId : u64 {
 
 enum class HardwareEventClockId : u64 {
     kLapic                   = data_structures::StringArrayToIntegral(DeviceName("LAPIC")),
-    kHpet1                   = data_structures::StringArrayToIntegral(DeviceName("HPET1")),
-    kHpet2                   = data_structures::StringArrayToIntegral(DeviceName("HPET2")),
-    kHpet3                   = data_structures::StringArrayToIntegral(DeviceName("HPET3")),
+    kHpet                    = data_structures::StringArrayToIntegral(DeviceName("HPET")),
     TODO_DEVICE_SUPPORT kPit = data_structures::StringArrayToIntegral(DeviceName("PIT")),
 };
 }  // namespace arch

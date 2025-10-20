@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <extensions/data_structures/bit_array.hpp>
+#include "hardware/core_mask.hpp"
 
 namespace hardware
 {
@@ -26,6 +27,7 @@ struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structu
 
     /* Clock specific data */
     data_structures::BitArray<32> features;  // Features of the event clock, e.g., core-local
+    CoreMask supported_cores;                // Cores that support this event clock
 
     /* infra data */
     u64 next_event_time_ns;  // Time for the next event in nanoseconds
