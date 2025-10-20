@@ -1,6 +1,8 @@
 #ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_HPP_
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_HPP_
 
+#include <defines.h>
+#include <extensions/types.hpp>
 #include <hal/api/boot_args.hpp>
 
 namespace arch

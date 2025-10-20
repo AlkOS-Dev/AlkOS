@@ -8,6 +8,7 @@
 #include <trace.hpp>
 
 #include "drivers/hpet/hpet.hpp"
+#include "hardware/cores.hpp"
 
 using namespace arch;
 
@@ -16,13 +17,13 @@ using namespace arch;
 // ------------------------------
 
 using MadtTable = ACPI::Table<acpi_madt>;
-NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t core_idx)
+NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table)
 {
     if (!IsBitEnabled<0>(table->flags)) {
-        TRACE_INFO("Core with idx: %lu is not enabled...", core_idx);
+        TRACE_INFO("Core with id: %lu is not enabled...", table->id);
 
         if (!IsBitEnabled<1>(table->flags)) {
-            TRACE_WARNING("Core with idx: %lu is not online capable...", core_idx);
+            TRACE_WARNING("Core with id: %lu is not online capable...", table->id);
             return false;
         }
     }
@@ -33,25 +34,57 @@ NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table, const size_t co
 static void InitializeCores_(MadtTable &table)
 {
     /* Initialize core structures */
-    table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
+    u32 cores_to_use = 0;
+    u32 total_cores  = 0;
+    u32 max_hw_id    = 0;
+    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
 
         if (!table_ptr) {
             return;
         }
 
-        if (!IsCoreUsable(
-                table_ptr, HardwareModule::Get().GetCoresController().GetCoreTable().Size()
-            )) {
+        if (!IsCoreUsable(table_ptr)) {
             return;
         }
 
-        HardwareModule::Get().GetCoresController().GetCoreTable().PushEmplace(
-            static_cast<u64>(table_ptr->id), static_cast<u64>(table_ptr->uid)
-        );
+        total_cores++;
+        if (cores_to_use >= kMaxCores) {
+            return;
+        }
+
+        cores_to_use++;
+        max_hw_id = std::max(max_hw_id, static_cast<u32>(table_ptr->id));
     });
 
-    TRACE_INFO("Found %zu cores", HardwareModule::Get().GetCoresController().GetCoreTable().Size());
+    TRACE_INFO("Found %u cores, using: %u", total_cores, cores_to_use);
+
+    HardwareModule::Get().GetCoresController().AllocateTables(cores_to_use, max_hw_id);
+
+    hardware::CoreMask mask{};
+    u16 counter = 0;
+    table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
+        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_lapic>(entry);
+
+        if (!table_ptr) {
+            return;
+        }
+
+        if (!IsCoreUsable(table_ptr)) {
+            return;
+        }
+
+        hardware::CoreConfig config{};
+        ASSERT_LE(static_cast<size_t>(table_ptr->id), kBitMask16);
+        config.hwid = static_cast<u16>(table_ptr->id);
+        ASSERT_LE(static_cast<size_t>(table_ptr->uid), kBitMask16);
+        config.acpi_id = static_cast<u16>(table_ptr->uid);
+        config.lid     = counter;
+        config.enabled = IsBitEnabled<0>(table_ptr->flags);
+
+        HardwareModule::Get().GetCoresController().AllocateCore(config);
+        mask.SetTrue(counter++);
+    });
 }
 
 static void PrepareIoApic_(MadtTable &table)

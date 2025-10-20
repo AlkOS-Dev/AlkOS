@@ -1,6 +1,6 @@
 #include "mem/phys/mngr/bitmap.hpp"
 
-#include <extensions/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/expected.hpp>
 
 #include "hal/constants.hpp"
@@ -11,11 +11,11 @@ using namespace mem;
 
 BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size)
 {
-    BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
+    data_structures::BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
     Init(bmv);
 };
 
-void BitmapPmm::Init(BitMapView bmv, pfn_t last_alloc_idx)
+void BitmapPmm::Init(data_structures::BitMapView bmv, pfn_t last_alloc_idx)
 {
     bitmap_view_    = bmv;
     last_alloc_idx_ = last_alloc_idx;

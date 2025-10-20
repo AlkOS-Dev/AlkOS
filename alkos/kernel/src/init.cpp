@@ -32,9 +32,8 @@ void KernelInit(const hal::RawBootArguments& raw_args)
     GlobalStateModule::Init();
 
     TODO_MMU_MINIMAL
-    HardwareModule::Get();
     // /* Initialize ACPI */
-    // HardwareModule::Get().GetACPIController().Init();
+    // HardwareModule::Get().GetACPIController().Init(args);
 
     // /* Extract all necessary data from ACPI tables */
     // HardwareModule::Get().GetACPIController().ParseTables();

@@ -1,7 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_
 
-#include <extensions/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/expected.hpp>
 
 #include "mem/error.hpp"
@@ -28,7 +28,7 @@ class BitmapPmm
     };
 
     BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size);
-    void Init(BitMapView bmv, pfn_t last_alloc_idx = 0);
+    void Init(data_structures::BitMapView bmv, pfn_t last_alloc_idx = 0);
 
     Expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PhysicalPtr<Page> page, size_t num_pages = 1);
@@ -49,7 +49,7 @@ class BitmapPmm
         bitmap_view_.Set(pfn, BitMapFree);
     }
 
-    BitMapView bitmap_view_{nullptr, 0};
+    data_structures::BitMapView bitmap_view_{nullptr, 0};
     pfn_t last_alloc_idx_ = 0;
 };
 

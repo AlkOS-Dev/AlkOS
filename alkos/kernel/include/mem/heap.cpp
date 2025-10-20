@@ -6,7 +6,7 @@
 
 using namespace mem;
 
-Expected<VirtualPtr<void>, MemError> KMalloc(size_t size)
+Expected<VirtualPtr<void>, MemError> mem::KMalloc(const size_t size)
 {
     using AllocationRequest = BitmapPmm::AllocationRequest;
 
@@ -24,7 +24,8 @@ Expected<VirtualPtr<void>, MemError> KMalloc(size_t size)
     return m;
 }
 
-Expected<void, MemError> KFree(VirtualPtr<void>)
+Expected<void, MemError> mem::KFree(VirtualPtr<void>)
 {
     // Dont care about free till buddy allocator.
+    return {};
 }

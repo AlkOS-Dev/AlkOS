@@ -3,7 +3,7 @@
 
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
-#include <extensions/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
@@ -116,7 +116,7 @@ class PhysicalMemoryManager
         Multiboot::MemoryMap& mem_map, u64 bitmap_size, u64 lowest_safe_addr
     );
 
-    static BitMapView InitBitmapView(u64 addr, u64 size);
+    static data_structures::BitMapView InitBitmapView(u64 addr, u64 size);
 
     static void InitIterIndices(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
     static void InitFreeMemory(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
@@ -125,7 +125,7 @@ class PhysicalMemoryManager
     // Private fields
     //==============================================================================
 
-    BitMapView bitmap_view_;
+    data_structures::BitMapView bitmap_view_;
     IterationState iteration_state_{};
 };
 

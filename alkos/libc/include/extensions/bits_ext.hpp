@@ -179,4 +179,10 @@ FAST_CALL constexpr bool AreIntersecting(const NumT a, const NumT b)
     return (a & b) != 0;
 }
 
+template <std::unsigned_integral NumT>
+FAST_CALL constexpr bool IsPowerOfTwo(const NumT n)
+{
+    return n > 0 && (n & (n - 1)) == 0;
+}
+
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
