@@ -18,21 +18,15 @@ namespace arch
 /**
  * @brief Architecture-independent page mapping flags.
  */
-enum class PageFlags : u64 {
-    None           = 0ULL,
-    Present        = 1ULL << 0,
-    Writable       = 1ULL << 1,
-    UserAccessible = 1ULL << 2,
-    WriteThrough   = 1ULL << 3,
-    CacheDisable   = 1ULL << 4,
-    Global         = 1ULL << 8,
-    NoExecute      = 1ULL << 63,
+struct PageFlags {
+    bool Present : 1;
+    bool Writable : 1;
+    bool UserAccessible : 1;
+    bool WriteThrough : 1;
+    bool CacheDisable : 1;
+    bool Global : 1;
+    bool NoExecute : 1;
 };
-
-inline constexpr PageFlags operator|(PageFlags a, PageFlags b)
-{
-    return static_cast<PageFlags>(static_cast<u64>(a) | static_cast<u64>(b));
-}
 
 struct MmuAPI {
     /**

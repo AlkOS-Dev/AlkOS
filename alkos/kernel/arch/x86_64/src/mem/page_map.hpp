@@ -26,17 +26,18 @@
 
 // TODO: Properly document these flags
 
-static constexpr u64 kPresentBit             = 1;        ///< Present bit
-static constexpr u64 kWriteBit               = 1 << 1;   ///< Write bit
-static constexpr u64 kUserAccessibleBit      = 1 << 2;   ///< User accessible bit
-static constexpr u64 kWriteThroughCachingBit = 1 << 3;   ///< Write-through caching bit
-static constexpr u64 kDisableCacheBit        = 1 << 4;   ///< Disable cache bit
-static constexpr u64 kAccessedBit            = 1 << 5;   ///< Accessed bit
-static constexpr u64 kDirtyBit               = 1 << 6;   ///< Dirty bit
-static constexpr u64 kGlobalBit              = 1 << 8;   ///< Global bit
-static constexpr u64 kPatBit                 = 1 << 12;  ///< PAT bit
-static constexpr u64 kHlatRestartBit         = 1 << 13;  ///< HLAT restart bit
-static constexpr u64 kHugePageBit            = 1 << 7;   ///< Huge page bit
+static constexpr u64 kPresentBit             = 1ULL;        ///< Present bit
+static constexpr u64 kWriteBit               = 1ULL << 1;   ///< Write bit
+static constexpr u64 kUserAccessibleBit      = 1ULL << 2;   ///< User accessible bit
+static constexpr u64 kWriteThroughCachingBit = 1ULL << 3;   ///< Write-through caching bit
+static constexpr u64 kDisableCacheBit        = 1ULL << 4;   ///< Disable cache bit
+static constexpr u64 kAccessedBit            = 1ULL << 5;   ///< Accessed bit
+static constexpr u64 kDirtyBit               = 1ULL << 6;   ///< Dirty bit
+static constexpr u64 kGlobalBit              = 1ULL << 8;   ///< Global bit
+static constexpr u64 kPatBit                 = 1ULL << 12;  ///< PAT bit
+static constexpr u64 kHlatRestartBit         = 1ULL << 13;  ///< HLAT restart bit
+static constexpr u64 kHugePageBit            = 1ULL << 7;   ///< Huge page bit
+static constexpr u64 kNoExecuteBit           = 1ULL << 63;
 
 //==============================================================================
 // PageMapEntries

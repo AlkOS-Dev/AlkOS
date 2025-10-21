@@ -9,6 +9,27 @@ using namespace Mem;
 u64 Mmu::ToArchFlags(PageFlags flags)
 {
     u64 arch_flags = 0;
+    if (flags.Present) {
+        arch_flags |= kPresentBit;
+    }
+    if (flags.Writable) {
+        arch_flags |= kWriteBit;
+    }
+    if (flags.UserAccessible) {
+        arch_flags |= kUserAccessibleBit;
+    }
+    if (flags.WriteThrough) {
+        arch_flags |= kWriteThroughCachingBit;
+    }
+    if (flags.CacheDisable) {
+        arch_flags |= kDisableCacheBit;
+    }
+    if (flags.Global) {
+        arch_flags |= kGlobalBit;
+    }
+    if (flags.NoExecute) {
+        arch_flags |= kNoExecuteBit;
+    }
     return arch_flags;
 }
 
