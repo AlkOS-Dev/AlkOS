@@ -376,6 +376,8 @@ class Hpet final
 
     private:
     NODISCARD u64 AdjustTimeToHpetCapabilities(u64 time_femto) const;
+    void AddHpetToClockInfra();
+    void AddHpetToEventClockInfra();
 
     // ------------------------------
     // Class fields

@@ -113,6 +113,22 @@ Hpet::Hpet(acpi_hpet *table)
     SetupStandardMapping();
     StopMainCounter();
 
+    AddHpetToClockInfra();
+    AddHpetToEventClockInfra();
+}
+
+u64 Hpet::AdjustTimeToHpetCapabilities(const u64 time_femto) const
+{
+    if (time_femto > clock_period_) {
+        return (time_femto + clock_period_ / 2) / clock_period_;
+    }
+
+    // TODO: increase accuracy, important when hpet resolution is around 100ns etc
+    return 1;
+}
+
+void Hpet::AddHpetToClockInfra()
+{
     hardware::ClockRegistryEntry hpet_entry = {};
 
     /* Clock data */
@@ -134,12 +150,10 @@ Hpet::Hpet(acpi_hpet *table)
     HardwareModule::Get().GetClockRegistry().Register(hpet_entry);
 }
 
-u64 Hpet::AdjustTimeToHpetCapabilities(const u64 time_femto) const
+void Hpet::AddHpetToEventClockInfra()
 {
-    if (time_femto > clock_period_) {
-        return (time_femto + clock_period_ / 2) / clock_period_;
-    }
+    hardware::EventClockRegistryEntry hpet_entry = {};
 
-    // TODO: increase accuracy, important when hpet resolution is around 100ns etc
-    return 1;
+    /* Event clock data */
+    hpet_entry.id = static_cast<u64>(arch::HardwareClockId::kHpet);
 }
