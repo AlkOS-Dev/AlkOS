@@ -72,7 +72,7 @@ constexpr u32 kRelative = 8;  ///< The most common type for PIE.
  * @param load_base_addr The address where the ELF file has been loaded.
  * @return std::expected<void, Error> An empty expected on success, or an error.
  */
-std::expected<void, Error> Relocate(byte* elf_ptr, u64 load_base_addr);
+std::expected<void, Error> Relocate(byte *elf_ptr, u64 load_base_addr);
 
 }  // namespace Elf64
 

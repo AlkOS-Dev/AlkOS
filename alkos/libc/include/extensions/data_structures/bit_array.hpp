@@ -27,8 +27,8 @@ class BitMapView final
     // Public Methods
     //==============================================================================
 
-    BitMapView(void* storage_ptr, const size_t num_bits)
-        : storage_ptr_{static_cast<StorageT*>(storage_ptr)}, num_bits_{num_bits}
+    BitMapView(void *storage_ptr, const size_t num_bits)
+        : storage_ptr_{static_cast<StorageT *>(storage_ptr)}, num_bits_{num_bits}
     {
     }
 
@@ -66,11 +66,11 @@ class BitMapView final
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return num_bits_; }
 
-    NODISCARD FORCE_INLINE_F StorageT* Storage() { return storage_ptr_; }
-    NODISCARD FORCE_INLINE_F const StorageT* Storage() const { return storage_ptr_; }
+    NODISCARD FORCE_INLINE_F StorageT *Storage() { return storage_ptr_; }
+    NODISCARD FORCE_INLINE_F const StorageT *Storage() const { return storage_ptr_; }
 
     private:
-    StorageT* storage_ptr_;
+    StorageT *storage_ptr_;
     size_t num_bits_;
 };
 
@@ -135,13 +135,13 @@ class PACK BitArray final
     FORCE_INLINE_F u64 ToU64() const
     {
         ASSERT_LE(kNumBits, 64_size, "ToU64 supported only for small enough arrays");
-        return *reinterpret_cast<const u64*>(storage_);
+        return *reinterpret_cast<const u64 *>(storage_);
     }
 
     FORCE_INLINE_F u32 ToU32() const
     {
         ASSERT_LE(kNumBits, 32_size, "ToU32 supported only for small enough arrays");
-        return *reinterpret_cast<const u32*>(storage_);
+        return *reinterpret_cast<const u32 *>(storage_);
     }
 
     // ------------------------------

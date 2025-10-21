@@ -13,10 +13,10 @@ namespace test
 // --------------------------------
 
 /* should use given memory to construct test object - used due to lack of vmem */
-using test_factory_t = TestGroupBase* (*)(void*);
+using test_factory_t = TestGroupBase *(*)(void *);
 
 struct TestSpec {
-    const char* name;
+    const char *name;
     test_factory_t factory;
 };
 
@@ -39,7 +39,7 @@ class TestModule final
     // ------------------------------
 
     void RunTestModule();
-    static TestSpec* FindTestFunction(const char* name);
+    static TestSpec *FindTestFunction(const char *name);
 
     // ------------------------------
     // Class private methods
@@ -47,7 +47,7 @@ class TestModule final
 
     private:
     static void DisplayTests_();
-    static void RunTest_(const TestSpec* test);
+    static void RunTest_(const TestSpec *test);
 
     // ------------------------------
     // Class fields
@@ -58,9 +58,9 @@ class TestModule final
 // Various functions
 // ------------------------------
 
-void AddTest(const char* name, test_factory_t factory);
+void AddTest(const char *name, test_factory_t factory);
 
-void AddManualTest(const char* name, test_factory_t factory);
+void AddManualTest(const char *name, test_factory_t factory);
 
 NO_RET void OnKernelPanic();
 

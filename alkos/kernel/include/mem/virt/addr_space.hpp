@@ -26,8 +26,8 @@ class AddressSpace
     public:
     AddressSpace(PPtr<void> page_table_root) : page_table_root_{page_table_root} {}
     ~AddressSpace();
-    AddressSpace(const AddressSpace&)            = delete;
-    AddressSpace& operator=(const AddressSpace&) = delete;
+    AddressSpace(const AddressSpace &)            = delete;
+    AddressSpace &operator=(const AddressSpace &) = delete;
 
     PPtr<void> PageTableRoot() const { return page_table_root_; }
 

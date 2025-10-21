@@ -16,13 +16,13 @@ namespace Mem
 {
 
 template <typename T>
-using VirtualPtr = T*;
+using VirtualPtr = T *;
 
 template <typename T>
 using VPtr = VirtualPtr<T>;
 
 template <typename T>
-using PhysicalPtr = T*;
+using PhysicalPtr = T *;
 
 template <typename T>
 using PPtr = PhysicalPtr<T>;
@@ -44,15 +44,15 @@ PPtr<T> VirtToPhys(VPtr<T> virtAddr)
 }
 
 template <typename T>
-uintptr_t PtrToUptr(T* ptr)
+uintptr_t PtrToUptr(T *ptr)
 {
     return reinterpret_cast<uintptr_t>(ptr);
 }
 
 template <typename T>
-T* UptrToPtr(uintptr_t uptr)
+T *UptrToPtr(uintptr_t uptr)
 {
-    return reinterpret_cast<T*>(uptr);
+    return reinterpret_cast<T *>(uptr);
 }
 
 }  // namespace Mem

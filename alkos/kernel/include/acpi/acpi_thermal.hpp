@@ -27,7 +27,7 @@ enum class CoolingPolicy {
  */
 struct PACK ThermalZone {
     u32 id;
-    const char* name;
+    const char *name;
 
     // Temperature information
     i32 temperature;   // In millidegrees Celsius

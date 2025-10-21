@@ -38,13 +38,13 @@ struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structu
     // TODO: suspend/resume for os supsend etc
 
     /* Driver data */
-    void* own_data;  // Pointer to the clock's own data, used for callback
+    void *own_data;  // Pointer to the clock's own data, used for callback
 
     /* callbacks */
     struct callbacks {
-        u32 (*next_event)(EventClockRegistryEntry*, u64);  // Callback to set next event time
-        u32 (*set_oneshot)(EventClockRegistryEntry*);      // Callback to set clock state
-        u32 (*set_periodic)(EventClockRegistryEntry*);     // Callback to set clock state
+        u32 (*next_event)(EventClockRegistryEntry *, u64);  // Callback to set next event time
+        u32 (*set_oneshot)(EventClockRegistryEntry *);      // Callback to set clock state
+        u32 (*set_periodic)(EventClockRegistryEntry *);     // Callback to set clock state
     } cbs;
 };
 

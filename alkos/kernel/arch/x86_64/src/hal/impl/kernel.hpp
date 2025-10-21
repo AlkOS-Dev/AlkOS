@@ -13,7 +13,7 @@ struct PACK alignas(64) RawBootArguments : RawBootArgumentsAPI {
     u64 multiboot_header_end_phys_addr;
 };
 
-void ArchInit(const RawBootArguments& args);
+void ArchInit(const RawBootArguments &args);
 }  // namespace arch
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_HPP_

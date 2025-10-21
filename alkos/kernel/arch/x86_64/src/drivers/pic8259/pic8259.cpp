@@ -91,7 +91,7 @@ void InitPic8259(const byte pic1_offset, const byte pic2_offset)
 // Static functions
 // ------------------------------
 
-static void Pic8259Ack(intr::LitHwEntry& entry)
+static void Pic8259Ack(intr::LitHwEntry &entry)
 {
     Pic8259SendEOI(
         entry.logical_irq
@@ -110,4 +110,4 @@ static intr::InterruptDriver kPic8259Driver{
     .name = "Pic8259",
 };
 
-intr::InterruptDriver& Pic8259InterruptDriver() { return kPic8259Driver; }
+intr::InterruptDriver &Pic8259InterruptDriver() { return kPic8259Driver; }

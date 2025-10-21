@@ -139,7 +139,7 @@ TEST_F(ArrayTest, IteratorAccess)
     ++it;
     EXPECT_EQ(arr.end(), it);
 
-    const std::array<int, 3>& const_arr = arr;
+    const std::array<int, 3> &const_arr = arr;
     auto const_it                       = const_arr.begin();
     EXPECT_EQ(10, *const_it);
     ++const_it;
@@ -209,9 +209,9 @@ TEST_F(ArrayTest, ComplexTypes)
         int x;
         double y;
 
-        bool operator==(const TestStruct& other) const { return x == other.x && y == other.y; }
+        bool operator==(const TestStruct &other) const { return x == other.x && y == other.y; }
 
-        bool operator!=(const TestStruct& other) const { return !(*this == other); }
+        bool operator!=(const TestStruct &other) const { return !(*this == other); }
     };
 
     std::array<TestStruct, 2> arr = {
@@ -274,7 +274,7 @@ TEST_F(ArrayTest, StringArrayGetSafeStr)
 TEST_F(ArrayTest, StringArrayGetCStr)
 {
     StringArray<5> str("hello");
-    const char* cstr = str.GetCStr();
+    const char *cstr = str.GetCStr();
     EXPECT_EQ('h', cstr[0]);
     EXPECT_EQ('e', cstr[1]);
 }

@@ -20,7 +20,7 @@ TEST_F(OptionalTestClass, OptionalEmplace)
 {
     std::optional<TestClass> opt;
 
-    TestClass& ref = opt.emplace(42);
+    TestClass &ref = opt.emplace(42);
     R_ASSERT_TRUE(opt.has_value());
     R_ASSERT_EQ(42, ref.m_a);
     R_ASSERT_EQ(86, ref.m_b);
@@ -53,12 +53,12 @@ TEST_F(OptionalTestClass, OptionalDereference)
     std::optional<TestClass> opt;
     opt.emplace(7);
 
-    TestClass& ref = *opt;
+    TestClass &ref = *opt;
     R_ASSERT_EQ(7, ref.m_a);
     R_ASSERT_EQ(16, ref.m_b);
 
-    const auto& const_opt      = opt;
-    const TestClass& const_ref = *const_opt;
+    const auto &const_opt      = opt;
+    const TestClass &const_ref = *const_opt;
     R_ASSERT_EQ(7, const_ref.m_a);
     R_ASSERT_EQ(16, const_ref.m_b);
 
@@ -74,7 +74,7 @@ TEST_F(OptionalTestClass, OptionalArrow)
     R_ASSERT_EQ(15, opt->m_a);
     R_ASSERT_EQ(32, opt->m_b);
 
-    const auto& const_opt = opt;
+    const auto &const_opt = opt;
     R_ASSERT_EQ(15, const_opt->m_a);
     R_ASSERT_EQ(32, const_opt->m_b);
 

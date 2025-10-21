@@ -5,7 +5,7 @@
 #include <hal/terminal.hpp>
 #include <test_module/test_module.hpp>
 
-inline void ExpectHandler(const char* msg)
+inline void ExpectHandler(const char *msg)
 {
     test::g_testCheckFailed = true;
     arch::TerminalWriteString(msg);

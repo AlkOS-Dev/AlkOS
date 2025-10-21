@@ -23,7 +23,7 @@ class alignas(hal::kCacheLineSizeBytes) Core final : public hal::Core
     // Class creation
     // ------------------------------
 
-    explicit Core(const CoreConfig& config);
+    explicit Core(const CoreConfig &config);
 
     // ------------------------------
     // Class interaction
@@ -72,11 +72,11 @@ class CoresController final
 
     void AllocateTables(size_t num_cores, size_t max_hw_id);
 
-    Core& AllocateCore(const CoreConfig& config);
+    Core &AllocateCore(const CoreConfig &config);
 
-    NODISCARD FORCE_INLINE_F Core& GetCoreByLid(const u16 lid) { return core_arr_[lid]; }
+    NODISCARD FORCE_INLINE_F Core &GetCoreByLid(const u16 lid) { return core_arr_[lid]; }
 
-    NODISCARD FORCE_INLINE_F Core& GetCoreByHw(const u16 hwid)
+    NODISCARD FORCE_INLINE_F Core &GetCoreByHw(const u16 hwid)
     {
         return core_arr_[hw_to_core_id_map_[hwid]];
     }

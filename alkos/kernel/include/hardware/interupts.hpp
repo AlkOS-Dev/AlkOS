@@ -16,9 +16,9 @@ class Interrupts final : public arch::Interrupts
     public:
     struct InterruptHandlerEntry {
         struct HandlerData {
-            using InterruptHandler = void (*)(InterruptHandlerEntry& entry);
+            using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
             InterruptHandler handler{};
-            void* data{};
+            void *data{};
         };
 
         HandlerData handler_data{};
@@ -41,7 +41,7 @@ class Interrupts final : public arch::Interrupts
     {
         ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
 
-        InterruptHandlerEntry& entry = handler_table_[lirq];
+        InterruptHandlerEntry &entry = handler_table_[lirq];
         ASSERT_NOT_NULL(entry.driver.cbs, "Interrupt driver is not installed!");
 
         if (entry.handler_data.handler) {
@@ -52,7 +52,7 @@ class Interrupts final : public arch::Interrupts
     }
 
     FORCE_INLINE_F void InstallInterruptHandler(
-        const u16 lirq, const InterruptHandlerEntry::HandlerData& handler
+        const u16 lirq, const InterruptHandlerEntry::HandlerData &handler
     )
     {
         ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
@@ -65,7 +65,7 @@ class Interrupts final : public arch::Interrupts
         handler_table_[lirq].driver.hardware_irq = hardware_irq;
     }
 
-    FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, interrupt_driver::callbacks* driver)
+    FORCE_INLINE_F void InstallInterruptDriver(const u16 lirq, interrupt_driver::callbacks *driver)
     {
         ASSERT_LT(lirq, hal::kMaxInterruptsSupported);
         handler_table_[lirq].driver.cbs = driver;

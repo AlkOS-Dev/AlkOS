@@ -7,6 +7,6 @@
     name_space::type type##_;                 \
                                               \
     public:                                   \
-    NODISCARD FORCE_INLINE_F auto& Get##type() noexcept { return type##_; }
+    NODISCARD FORCE_INLINE_F auto &Get##type() noexcept { return type##_; }
 
 #endif  // ALKOS_KERNEL_INCLUDE_MODULES_HELPERS_HPP_

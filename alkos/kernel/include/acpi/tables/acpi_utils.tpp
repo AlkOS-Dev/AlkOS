@@ -5,17 +5,17 @@ namespace internal
 {
 
 template <typename Table, typename Callback>
-FAST_CALL void ForEachTableEntry(Table* table, Callback callback)
+FAST_CALL void ForEachTableEntry(Table *table, Callback callback)
 {
     if (!table) {
         return;
     }
 
-    u8* entry_ptr = reinterpret_cast<u8*>(table) + sizeof(Table);
-    u8* end_ptr   = reinterpret_cast<u8*>(table) + table->hdr.length;
+    u8 *entry_ptr = reinterpret_cast<u8 *>(table) + sizeof(Table);
+    u8 *end_ptr   = reinterpret_cast<u8 *>(table) + table->hdr.length;
 
     while (entry_ptr < end_ptr) {
-        auto* entry = reinterpret_cast<acpi_entry_hdr*>(entry_ptr);
+        auto *entry = reinterpret_cast<acpi_entry_hdr *>(entry_ptr);
         callback(entry);
         entry_ptr += entry->length;
     }

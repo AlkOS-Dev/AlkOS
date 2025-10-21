@@ -275,7 +275,7 @@ TEST_F(StaticVectorTest, FunctionalityTest)
     reg.Push(3);
 
     int idx{};
-    for (const auto& obj : reg) {
+    for (const auto &obj : reg) {
         EXPECT_EQ(obj, ++idx);
     }
 }

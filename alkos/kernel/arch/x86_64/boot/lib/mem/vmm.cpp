@@ -10,7 +10,7 @@
 #include "mem/vmm.hpp"
 #include "sys/panic.hpp"
 
-static PhysicalPtr<PageMapTable<4>> AllocatePml4Table(PhysicalMemoryManager& pmm)
+static PhysicalPtr<PageMapTable<4>> AllocatePml4Table(PhysicalMemoryManager &pmm)
 {
     auto free_page_res = pmm.Alloc32();
     if (!free_page_res) {
@@ -24,7 +24,7 @@ static PhysicalPtr<PageMapTable<4>> AllocatePml4Table(PhysicalMemoryManager& pmm
     return pml_ptr;
 }
 
-VirtualMemoryManager::VirtualMemoryManager(PhysicalMemoryManager& pmm)
+VirtualMemoryManager::VirtualMemoryManager(PhysicalMemoryManager &pmm)
     : pmm_{pmm}, pm_table_4_{AllocatePml4Table(pmm)}
 {
 }

@@ -20,7 +20,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    explicit MemoryModule(const BootArguments& args) noexcept;
+    explicit MemoryModule(const BootArguments &args) noexcept;
 
     // ------------------------------
     // Module fields

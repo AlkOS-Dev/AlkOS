@@ -15,8 +15,8 @@
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
 
-std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
-    Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte* pmm_prealloc_mem
+std::expected<PhysicalMemoryManager *, MemError> PhysicalMemoryManager::Create(
+    Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte *pmm_prealloc_mem
 )
 {
     using namespace Multiboot;
@@ -39,7 +39,7 @@ std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
 
     TRACE_DEBUG("Creating PhysicalMemoryManager instance...");
 
-    PhysicalMemoryManager* pmm_ptr = new (pmm_prealloc_mem) PhysicalMemoryManager(
+    PhysicalMemoryManager *pmm_ptr = new (pmm_prealloc_mem) PhysicalMemoryManager(
         PmmState{
             .bitmap_addr        = bitmap_addr,
             .total_pages        = total_pages,
@@ -47,7 +47,7 @@ std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
             .iteration_index_32 = 0
         }
     );
-    auto& pmm = *pmm_ptr;
+    auto &pmm = *pmm_ptr;
 
     TRACE_DEBUG("Initializing free memory...");
     InitFreeMemory(pmm, mem_map);
@@ -271,12 +271,12 @@ std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage32()
     return std::unexpected{MemError::OutOfMemory};
 }
 
-std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap& mem_map)
+std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap &mem_map)
 {
     using namespace Multiboot;
 
     u64 maximum_physical_address = 0;
-    for (MmapEntry& entry : mem_map) {
+    for (MmapEntry &entry : mem_map) {
         if (entry.type != MmapEntry::kMemoryAvailable) {
             continue;
         }
@@ -295,13 +295,13 @@ std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap&
 }
 
 std::expected<u64, MemError> PhysicalMemoryManager::FindBitmapLocation(
-    Multiboot::MemoryMap& mem_map, u64 bitmap_size, u64 lowest_safe_addr
+    Multiboot::MemoryMap &mem_map, u64 bitmap_size, u64 lowest_safe_addr
 )
 {
     using namespace Multiboot;
 
     std::optional<u64> bitmap_addr{};
-    for (MmapEntry& entry : mem_map) {
+    for (MmapEntry &entry : mem_map) {
         if (entry.type != MmapEntry::kMemoryAvailable) {
             continue;
         }
@@ -346,7 +346,7 @@ data_structures::BitMapView PhysicalMemoryManager::InitBitmapView(
     TRACE_DEBUG("Bitmap located at: %#018llx, size: %sB", addr, FormatMetricUint(size));
     const u64 num_bits = total_pages;
     data_structures::BitMapView bitmap_view =
-        data_structures::BitMapView(reinterpret_cast<void*>(addr), num_bits);
+        data_structures::BitMapView(reinterpret_cast<void *>(addr), num_bits);
     bitmap_view.SetAll(BitMapAllocated);
 
     TRACE_DEBUG("Bitmap initialized, verifying...");
@@ -358,12 +358,12 @@ data_structures::BitMapView PhysicalMemoryManager::InitBitmapView(
 }
 
 void PhysicalMemoryManager::InitFreeMemory(
-    PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map
+    PhysicalMemoryManager &pmm, Multiboot::MemoryMap &mem_map
 )
 {
     using namespace Multiboot;
 
-    for (MmapEntry& entry : mem_map) {
+    for (MmapEntry &entry : mem_map) {
         if (entry.type == MmapEntry::kMemoryAvailable) {
             u64 start_addr = AlignUp<u64>(entry.addr, kPageSize);
             u64 end_addr   = AlignDown<u64>(entry.addr + entry.len, kPageSize);
@@ -384,7 +384,7 @@ void PhysicalMemoryManager::InitFreeMemory(
 }
 
 void PhysicalMemoryManager::InitIterIndices(
-    PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map
+    PhysicalMemoryManager &pmm, Multiboot::MemoryMap &mem_map
 )
 {
     using namespace Multiboot;
@@ -392,7 +392,7 @@ void PhysicalMemoryManager::InitIterIndices(
     u64 max_free_addr        = 0;
     u64 max_32_bit_free_addr = 0;
 
-    for (MmapEntry& entry : mem_map) {
+    for (MmapEntry &entry : mem_map) {
         if (entry.type != MmapEntry::kMemoryAvailable) {
             continue;
         }

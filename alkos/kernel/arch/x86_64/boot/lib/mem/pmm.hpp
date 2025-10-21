@@ -51,14 +51,14 @@ class PhysicalMemoryManager
     // Class Creation
     //==============================================================================
 
-    explicit PhysicalMemoryManager(const PmmState& state)
-        : bitmap_view_{reinterpret_cast<void*>(state.bitmap_addr), static_cast<size_t>(state.total_pages)},
+    explicit PhysicalMemoryManager(const PmmState &state)
+        : bitmap_view_{reinterpret_cast<void *>(state.bitmap_addr), static_cast<size_t>(state.total_pages)},
           iteration_state_{state.iteration_index, state.iteration_index_32}
     {
     }
 
-    static std::expected<PhysicalMemoryManager*, MemError> Create(
-        Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte* pmm_prealloc_mem
+    static std::expected<PhysicalMemoryManager *, MemError> Create(
+        Multiboot::MemoryMap mem_map, u64 lowest_safe_addr, byte *pmm_prealloc_mem
     );
 
     public:
@@ -92,7 +92,7 @@ class PhysicalMemoryManager
         return PhysicalPtr<void>(bitmap_view_.Storage());
     }
     FORCE_INLINE_F u64 GetTotalPages() const { return bitmap_view_.Size(); }
-    FORCE_INLINE_F IterationState& GetIterationState() { return iteration_state_; }
+    FORCE_INLINE_F IterationState &GetIterationState() { return iteration_state_; }
     FORCE_INLINE_F IterationState GetIterationState() const { return iteration_state_; }
     FORCE_INLINE_F void SetIterationState(const IterationState state) { iteration_state_ = state; }
 
@@ -111,15 +111,15 @@ class PhysicalMemoryManager
 
     // Init Helpers
 
-    static std::tuple<u64, u64> CalcBitmapSize(Multiboot::MemoryMap& mem_map);
+    static std::tuple<u64, u64> CalcBitmapSize(Multiboot::MemoryMap &mem_map);
     static std::expected<u64, MemError> FindBitmapLocation(
-        Multiboot::MemoryMap& mem_map, u64 bitmap_size, u64 lowest_safe_addr
+        Multiboot::MemoryMap &mem_map, u64 bitmap_size, u64 lowest_safe_addr
     );
 
     static data_structures::BitMapView InitBitmapView(u64 addr, u64 size);
 
-    static void InitIterIndices(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
-    static void InitFreeMemory(PhysicalMemoryManager& pmm, Multiboot::MemoryMap& mem_map);
+    static void InitIterIndices(PhysicalMemoryManager &pmm, Multiboot::MemoryMap &mem_map);
+    static void InitFreeMemory(PhysicalMemoryManager &pmm, Multiboot::MemoryMap &mem_map);
 
     //==============================================================================
     // Private fields

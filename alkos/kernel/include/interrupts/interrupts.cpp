@@ -3,7 +3,7 @@
 // Assembly interface
 // ------------------------------
 
-extern "C" void HandleException(const u16 lirq, hal::ExceptionData* data)
+extern "C" void HandleException(const u16 lirq, hal::ExceptionData *data)
 {
     HardwareModule::Get().GetInterrupts().GetLit().HandleInterrupt(lirq, data);
 }

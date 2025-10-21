@@ -10,25 +10,25 @@ namespace std
 // ------------------------------
 
 template <class C>
-constexpr auto data(C& c) -> decltype(c.data())
+constexpr auto data(C &c) -> decltype(c.data())
 {
     return c.data();
 }
 
 template <class C>
-constexpr auto data(const C& c) -> decltype(c.data())
+constexpr auto data(const C &c) -> decltype(c.data())
 {
     return c.data();
 }
 
 template <class T, std::size_t N>
-constexpr T* data(T (&array)[N]) noexcept
+constexpr T *data(T (&array)[N]) noexcept
 {
     return array;
 }
 
 template <class E>
-constexpr const E* data(std::initializer_list<E> il) noexcept
+constexpr const E *data(std::initializer_list<E> il) noexcept
 {
     return il.begin();
 }

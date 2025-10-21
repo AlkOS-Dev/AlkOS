@@ -31,7 +31,7 @@ using namespace Multiboot;
 
 BEGIN_DECL_C
 
-void EnterKernel(u64 kernel_entry_addr, KernelArguments* kernel_initial_params);
+void EnterKernel(u64 kernel_entry_addr, KernelArguments *kernel_initial_params);
 
 // Defined in .ld
 extern const char loader_64_start[];
@@ -44,15 +44,15 @@ END_DECL_C
 //==============================================================================
 
 struct KernelModuleInfo {
-    const TagModule* tag;
+    const TagModule *tag;
     u64 lower_bound;
     u64 upper_bound;
     u64 size;
 };
 
 struct MemoryManagers {
-    PhysicalMemoryManager& pmm;
-    VirtualMemoryManager& vmm;
+    PhysicalMemoryManager &pmm;
+    VirtualMemoryManager &vmm;
 };
 
 //==============================================================================
@@ -73,7 +73,7 @@ alignas(
 //==============================================================================
 
 static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
-    const TransitionData* transition_data
+    const TransitionData *transition_data
 )
 {
     TerminalInit();
@@ -101,13 +101,13 @@ static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
 
     TRACE_DEBUG("Deserializing Pmm and Vmm");
 
-    PhysicalMemoryManager* pmm_ptr =
+    PhysicalMemoryManager *pmm_ptr =
         new (gPmmPreAllocatedMemory) PhysicalMemoryManager(transition_data->pmm_state);
-    auto& pmm = *pmm_ptr;
+    auto &pmm = *pmm_ptr;
 
-    VirtualMemoryManager* vmm_ptr =
+    VirtualMemoryManager *vmm_ptr =
         new (gVmmPreAllocatedMemory) VirtualMemoryManager(pmm, transition_data->vmm_state);
-    auto& vmm = *vmm_ptr;
+    auto &vmm = *vmm_ptr;
 
     MemoryManagers mms{.pmm = pmm, .vmm = vmm};
 
@@ -117,12 +117,12 @@ static std::tuple<MemoryManagers, MultibootInfo> InitializeLoaderEnvironment(
 }
 
 static KernelModuleInfo AnalyzeKernelModule(
-    MultibootInfo& multiboot_info, [[maybe_unused]] MemoryManagers mem_managers
+    MultibootInfo &multiboot_info, [[maybe_unused]] MemoryManagers mem_managers
 )
 {
     TRACE_DEBUG("Locating and analyzing kernel module...");
 
-    auto kernel_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
+    auto kernel_module_res = multiboot_info.FindTag<TagModule>([](TagModule *tag) {
         return strcmp(tag->cmdline, kKernelModuleCmdline) == 0;
     });
 
@@ -131,9 +131,9 @@ static KernelModuleInfo AnalyzeKernelModule(
             "Could not find the '%s' module in multiboot tags!", kKernelModuleCmdline
         );
     }
-    const TagModule* kernel_tag = kernel_module_res.value();
+    const TagModule *kernel_tag = kernel_module_res.value();
 
-    auto bounds_res = Elf64::GetProgramBounds(reinterpret_cast<byte*>(kernel_tag->mod_start));
+    auto bounds_res = Elf64::GetProgramBounds(reinterpret_cast<byte *>(kernel_tag->mod_start));
     ASSERT_TRUE(bounds_res, "Failed to get kernel ELF program bounds");
 
     auto [lower, upper] = bounds_res.value();
@@ -141,10 +141,10 @@ static KernelModuleInfo AnalyzeKernelModule(
 }
 
 static u64 LoadKernelIntoMemory(
-    MultibootInfo& multiboot_info, const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
+    MultibootInfo &multiboot_info, const KernelModuleInfo &kernel_info, MemoryManagers mem_managers
 )
 {
-    auto& vmm = mem_managers.vmm;
+    auto &vmm = mem_managers.vmm;
 
     TRACE_DEBUG("Preparing memory and loading kernel...");
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
@@ -153,16 +153,16 @@ static u64 LoadKernelIntoMemory(
     vmm.Alloc(kKernelVirtualAddressStart, kernel_info.size, kPresentBit | kWriteBit);
 
     // Load the ELF file from the module into the newly mapped memory
-    byte* module_start   = reinterpret_cast<byte*>(kernel_info.tag->mod_start);
+    byte *module_start   = reinterpret_cast<byte *>(kernel_info.tag->mod_start);
     auto entry_point_res = Elf64::Load(module_start);
     ASSERT_TRUE(entry_point_res, "Failed to load kernel ELF");
 
     return entry_point_res.value();
 }
 
-static void EstablishDirectMemMapping(MemoryManagers& mms)
+static void EstablishDirectMemMapping(MemoryManagers &mms)
 {
-    auto& vmm = mms.vmm;
+    auto &vmm = mms.vmm;
 
     TRACE_DEBUG(
         "Creating direct memory mapping at 0x%llX with %llu Gb", kDirectMemMapAddrStart,
@@ -176,12 +176,12 @@ static void EstablishDirectMemMapping(MemoryManagers& mms)
 }
 
 NO_RET static void TransitionToKernel(
-    u64 kernel_entry_point, const TransitionData* transition_data,
-    const KernelModuleInfo& kernel_info, MemoryManagers mem_managers
+    u64 kernel_entry_point, const TransitionData *transition_data,
+    const KernelModuleInfo &kernel_info, MemoryManagers mem_managers
 )
 {
-    auto& pmm = mem_managers.pmm;
-    auto& vmm = mem_managers.vmm;
+    auto &pmm = mem_managers.pmm;
+    auto &vmm = mem_managers.vmm;
 
     TRACE_INFO("Preparing to transition to kernel...");
 
@@ -212,7 +212,7 @@ NO_RET static void TransitionToKernel(
 // Main 64-bit Loader Entry Point
 //==============================================================================
 
-extern "C" void MainLoader64(TransitionData* transition_data)
+extern "C" void MainLoader64(TransitionData *transition_data)
 {
     auto [mms, multiboot_info] = InitializeLoaderEnvironment(transition_data);
 

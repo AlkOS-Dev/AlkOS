@@ -11,7 +11,7 @@
 #include "mem/heap.hpp"
 #include "todo.hpp"
 
-extern void KernelInit(const hal::RawBootArguments&);
+extern void KernelInit(const hal::RawBootArguments &);
 
 static void KernelRun()
 {
@@ -26,7 +26,7 @@ static void KernelRun()
     // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
 }
 
-extern "C" void KernelMain(const hal::RawBootArguments* raw_args)
+extern "C" void KernelMain(const hal::RawBootArguments *raw_args)
 {
     ASSERT_NOT_NULL(raw_args, "Raw boot arguments are null");
     KernelTraceInfo("Running kernel initialization...");

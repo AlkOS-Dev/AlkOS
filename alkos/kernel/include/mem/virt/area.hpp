@@ -27,7 +27,7 @@ struct VirtualMemArea {
     VirtualMemAreaT type;
     PPtr<void> direct_mapping_start;
 
-    VirtualMemArea* next = nullptr;
+    VirtualMemArea *next = nullptr;
 };
 using VMemArea = VirtualMemArea;
 

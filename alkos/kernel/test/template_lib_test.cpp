@@ -11,7 +11,7 @@ class TemplateLibTest : public TestGroupBase
 
 struct TestFunc {
     template <uint64_t N>
-    void operator()(int& out) const
+    void operator()(int &out) const
     {
         out = static_cast<int>(N);
     }
@@ -25,7 +25,7 @@ struct TestFuncReturn {
     }
 };
 
-void DefaultFunc(int& out) { out = -1; }
+void DefaultFunc(int &out) { out = -1; }
 
 int DefaultFuncReturn() { return -1; }
 
@@ -210,7 +210,7 @@ TEST_F(TemplateLibTest, StaticSingletonAlignTest)
         alignas(512) char tab[1024];
     };
 
-    const TestSingleton* addr = &StaticSingleton<TestSingleton>::Init();
+    const TestSingleton *addr = &StaticSingleton<TestSingleton>::Init();
     const uint64_t align      = reinterpret_cast<uint64_t>(addr) % 512;
     ASSERT_EQ(0LLU, align);
 }
@@ -223,19 +223,19 @@ struct CallbackCounters {
     int totalSum{};
 };
 
-static void IncrementCounter1(CallbackCounters* counters, int value)
+static void IncrementCounter1(CallbackCounters *counters, int value)
 {
     counters->count1++;
     counters->totalSum += value;
 }
 
-static void IncrementCounter2(CallbackCounters* counters, int value)
+static void IncrementCounter2(CallbackCounters *counters, int value)
 {
     counters->count2++;
     counters->totalSum += value * 2;
 }
 
-static void IncrementCounter3(CallbackCounters* counters, int value)
+static void IncrementCounter3(CallbackCounters *counters, int value)
 {
     counters->count3++;
     counters->totalSum += value * 3;
@@ -246,8 +246,8 @@ TEST_F(TemplateLibTest, StaticEventTableTest)
     constexpr size_t kTableSize = 3;
 
     struct EventCallback {
-        CallbackCounters* counters;
-        void (*func)(CallbackCounters*, int);
+        CallbackCounters *counters;
+        void (*func)(CallbackCounters *, int);
 
         void operator()(int value) const { func(counters, value); }
     };
@@ -280,7 +280,7 @@ TEST_F(TemplateLibTest, StaticEventTableTest)
 
 struct TestData {
     int value;
-    bool operator==(const TestData& other) const { return value == other.value; }
+    bool operator==(const TestData &other) const { return value == other.value; }
 };
 
 TEST_F(TemplateLibTest, SettingsTest)
@@ -311,7 +311,7 @@ struct EventCounters {
 
 // Global data for callback functions
 EventCounters g_counters;
-Settings<TypeList<int, float, TestData>>* g_settings_ptr = nullptr;
+Settings<TypeList<int, float, TestData>> *g_settings_ptr = nullptr;
 
 // Callback functions
 void IntChangedCallback() { g_counters.intChanged++; }

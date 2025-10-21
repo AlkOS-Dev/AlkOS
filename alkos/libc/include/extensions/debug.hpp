@@ -17,7 +17,7 @@
 
 static constexpr size_t kTraceBufferSize = 4096;
 template <typename... Args>
-void FormatTrace(const char* format, Args... args)
+void FormatTrace(const char *format, Args... args)
 {
     // TODO: common loader does not have access to kernel structures
     // TODO: -> common loader should use different traces
