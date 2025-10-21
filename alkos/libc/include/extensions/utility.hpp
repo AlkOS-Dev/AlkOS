@@ -81,8 +81,7 @@ template <class T, size_t N>
 TODO_LIBCPP_COMPLIANCE
     // requires std::is_swapable_v<T>
     //  noexcept(...)
-    constexpr void
-    swap(internal::arr_t<T, N> &a, internal::arr_t<T, N> &b)
+    constexpr void swap(internal::arr_t<T, N> &a, internal::arr_t<T, N> &b)
 {
     for (size_t idx = 0; idx < N; ++idx) {
         std::swap(a[idx], b[idx]);

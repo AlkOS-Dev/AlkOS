@@ -15,7 +15,7 @@ namespace Multiboot
 //------------------------------------------------------------------------------//
 
 template <typename Callback>
-concept MmapEntryCallback = requires(Callback cb, MmapEntry& entry) {
+concept MmapEntryCallback = requires(Callback cb, MmapEntry &entry) {
     { cb(entry) };
 };
 
@@ -29,16 +29,16 @@ class MemoryMap
     class Iterator
     {
         public:
-        Iterator(MmapEntry* mmap_entry, const uintptr_t entries_size)
+        Iterator(MmapEntry *mmap_entry, const uintptr_t entries_size)
             : current_entry_{mmap_entry}, entries_size_{entries_size}
         {
         }
 
-        MmapEntry& operator*() { return *current_entry_; }
+        MmapEntry &operator*() { return *current_entry_; }
 
-        Iterator& operator++()
+        Iterator &operator++()
         {
-            current_entry_ = reinterpret_cast<MmapEntry*>(
+            current_entry_ = reinterpret_cast<MmapEntry *>(
                 reinterpret_cast<uintptr_t>(current_entry_) + entries_size_
             );
             return *this;
@@ -47,20 +47,20 @@ class MemoryMap
         Iterator operator++(int)
         {
             const Iterator cp = *this;
-            current_entry_    = reinterpret_cast<MmapEntry*>(
+            current_entry_    = reinterpret_cast<MmapEntry *>(
                 reinterpret_cast<uintptr_t>(current_entry_) + entries_size_
             );
             return cp;
         }
 
-        friend bool operator!=(const Iterator& a, const Iterator& b)
+        friend bool operator!=(const Iterator &a, const Iterator &b)
         {
             return a.current_entry_ != b.current_entry_;
         }
-        friend bool operator==(const Iterator& a, const Iterator& b) { return !(a != b); }
+        friend bool operator==(const Iterator &a, const Iterator &b) { return !(a != b); }
 
         private:
-        MmapEntry* current_entry_;
+        MmapEntry *current_entry_;
         uintptr_t entries_size_;
     };
 
@@ -68,7 +68,7 @@ class MemoryMap
     // Class Creation and Destruction
     //------------------------------------------------------------------------------//
 
-    MemoryMap(TagMmap* mmap_tag_ptr) : mmap_tag_ptr_{mmap_tag_ptr} {}
+    MemoryMap(TagMmap *mmap_tag_ptr) : mmap_tag_ptr_{mmap_tag_ptr} {}
 
     //------------------------------------------------------------------------------//
     // Public Methods
@@ -80,14 +80,14 @@ class MemoryMap
     Iterator begin()
     {
         return Iterator{
-            reinterpret_cast<MmapEntry*>(mmap_tag_ptr_->entries),
+            reinterpret_cast<MmapEntry *>(mmap_tag_ptr_->entries),
             static_cast<uintptr_t>(mmap_tag_ptr_->entry_size)
         };
     }
 
     Iterator end()
     {
-        auto* end_ptr = reinterpret_cast<MmapEntry*>(
+        auto *end_ptr = reinterpret_cast<MmapEntry *>(
             reinterpret_cast<uintptr_t>(mmap_tag_ptr_) + mmap_tag_ptr_->size
         );
         return Iterator{end_ptr, static_cast<uintptr_t>(mmap_tag_ptr_->entry_size)};
@@ -97,7 +97,7 @@ class MemoryMap
     //------------------------------------------------------------------------------//
     // Private Fields
     //------------------------------------------------------------------------------//
-    TagMmap* mmap_tag_ptr_;
+    TagMmap *mmap_tag_ptr_;
 };
 
 }  // namespace Multiboot

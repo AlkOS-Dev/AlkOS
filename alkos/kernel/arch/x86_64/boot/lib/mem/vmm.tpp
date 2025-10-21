@@ -50,18 +50,18 @@ void VirtualMemoryManager::Map(
     // works only because of the identity mapping
     // !!!
 
-    PageMapTable<4>& pm_table_4 = *pm_table_4_;
+    PageMapTable<4> &pm_table_4 = *pm_table_4_;
 
-    PageMapEntry<4>& pme_4 = pm_table_4[PmeIdx<4>(virt_addr)];
+    PageMapEntry<4> &pme_4 = pm_table_4[PmeIdx<4>(virt_addr)];
     EnsurePMEntryPresent<4, AllocFunc>(pme_4);
 
     if constexpr (kPageSizeTag == PageSizeTag::k1Gb) {
         ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 30>) == 0, "1GB pages must be 1GB-aligned");
         ASSERT_TRUE((phys_addr & kBitMaskRight<u64, 30>) == 0, "1GB pages must be 1GB-aligned");
 
-        PageMapEntry<3>& pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
-        PageMapEntry<3, kHugePage>& pme_3_1gb =
-            reinterpret_cast<PageMapEntry<3, kHugePage>&>(pme_3);
+        PageMapEntry<3> &pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
+        PageMapEntry<3, kHugePage> &pme_3_1gb =
+            reinterpret_cast<PageMapEntry<3, kHugePage> &>(pme_3);
         ASSERT_FALSE(pme_3.present);
 
         pme_3_1gb.SetFrameAddress(
@@ -70,16 +70,16 @@ void VirtualMemoryManager::Map(
         return;
     }
 
-    PageMapEntry<3>& pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
+    PageMapEntry<3> &pme_3 = (*pme_4.GetNextLevelTable())[PmeIdx<3>(virt_addr)];
     EnsurePMEntryPresent<3, AllocFunc>(pme_3);
 
     if constexpr (kPageSizeTag == PageSizeTag::k2Mb) {
         ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 21>) == 0, "2MB pages must be 2MB-aligned");
         ASSERT_TRUE((phys_addr & kBitMaskRight<u64, 21>) == 0, "2MB pages must be 2MB-aligned");
 
-        PageMapEntry<2>& pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
-        PageMapEntry<2, kHugePage>& pme_2_2mb =
-            reinterpret_cast<PageMapEntry<2, kHugePage>&>(pme_2);
+        PageMapEntry<2> &pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
+        PageMapEntry<2, kHugePage> &pme_2_2mb =
+            reinterpret_cast<PageMapEntry<2, kHugePage> &>(pme_2);
         ASSERT_FALSE(pme_2.present);
 
         pme_2_2mb.SetFrameAddress(
@@ -88,10 +88,10 @@ void VirtualMemoryManager::Map(
         return;
     }
 
-    PageMapEntry<2>& pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
+    PageMapEntry<2> &pme_2 = (*pme_3.GetNextLevelTable())[PmeIdx<2>(virt_addr)];
     EnsurePMEntryPresent<2, AllocFunc>(pme_2);
 
-    PageMapEntry<1>& pme_1 = (*pme_2.GetNextLevelTable())[PmeIdx<1>(virt_addr)];
+    PageMapEntry<1> &pme_1 = (*pme_2.GetNextLevelTable())[PmeIdx<1>(virt_addr)];
 
     ASSERT_FALSE(pme_1.present);
     ASSERT_TRUE((virt_addr & kBitMaskRight<u64, 12>) == 0, "4KB pages must be 4KB-aligned");
@@ -105,7 +105,7 @@ void VirtualMemoryManager::Map(
 
 template <size_t kLevel, decltype(auto) AllocFunc>
 
-FORCE_INLINE_F void VirtualMemoryManager::EnsurePMEntryPresent(PageMapEntry<kLevel>& pme)
+FORCE_INLINE_F void VirtualMemoryManager::EnsurePMEntryPresent(PageMapEntry<kLevel> &pme)
 {
     if (!pme.present) {
         auto new_table_ptr = AllocNextLevelTable<kLevel, AllocFunc>();

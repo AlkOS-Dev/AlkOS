@@ -256,7 +256,7 @@ TEST_F(SpanTest, ComplexTypes)
         int x;
         double y;
 
-        bool operator==(const TestStruct& other) const { return x == other.x && y == other.y; }
+        bool operator==(const TestStruct &other) const { return x == other.x && y == other.y; }
     };
 
     TestStruct arr[] = {

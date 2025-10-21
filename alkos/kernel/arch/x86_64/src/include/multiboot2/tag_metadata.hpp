@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_TAG_METADATA_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_TAG_METADATA_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/defines.hpp>
@@ -16,7 +16,7 @@ static constexpr u32 kInvalidTagNumber = kFullMask<u32>;
 template <class TagType>
 struct TagMetadata {
     static constexpr u32 kValue           = kInvalidTagNumber;
-    static constexpr const char* kTagName = "INVALID_TAG";
+    static constexpr const char *kTagName = "INVALID_TAG";
 };
 
 // Macro to conveniently specialize TagNumber for a given tag structure and its constant.
@@ -24,7 +24,7 @@ struct TagMetadata {
     template <>                                            \
     struct TagMetadata<TagStruct> {                        \
         static constexpr u32 kValue           = TagValue;  \
-        static constexpr const char* kTagName = #TagValue; \
+        static constexpr const char *kTagName = #TagValue; \
     }
 
 // Specializations for each tag type based on the kMultibootTagType constants.
@@ -53,4 +53,4 @@ DEFINE_TAG_METADATA(TagLoadBaseAddr, kMultibootTagTypeLoadBaseAddr);
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_TAG_METADATA_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_

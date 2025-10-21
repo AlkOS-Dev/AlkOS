@@ -5,6 +5,8 @@
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
+#include "hal/mmu.hpp"
+#include "hal/tlb.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "modules/helpers.hpp"
@@ -18,14 +20,16 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    explicit MemoryModule(const BootArguments& args) noexcept;
+    explicit MemoryModule(const BootArguments &args) noexcept;
 
     // ------------------------------
     // Module fields
     // ------------------------------
 
-    DEFINE_MODULE_FIELD(mem, PageMetaTable);
-    DEFINE_MODULE_FIELD(mem, BitmapPmm);
+    DEFINE_MODULE_FIELD(Mem, PageMetaTable);
+    DEFINE_MODULE_FIELD(Mem, BitmapPmm);
+    DEFINE_MODULE_FIELD(hal, Tlb);
+    DEFINE_MODULE_FIELD(hal, Mmu);
 };
 }  // namespace internal
 

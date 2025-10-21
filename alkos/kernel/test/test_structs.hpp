@@ -6,12 +6,12 @@ class MoveOnlyInt
     public:
     MoveOnlyInt(int value) : value_(value) {}
 
-    MoveOnlyInt(const MoveOnlyInt&)            = delete;
-    MoveOnlyInt& operator=(const MoveOnlyInt&) = delete;
+    MoveOnlyInt(const MoveOnlyInt &)            = delete;
+    MoveOnlyInt &operator=(const MoveOnlyInt &) = delete;
 
-    MoveOnlyInt(MoveOnlyInt&& other) : value_(other.value_) { other.value_ = 0; }
+    MoveOnlyInt(MoveOnlyInt &&other) : value_(other.value_) { other.value_ = 0; }
 
-    MoveOnlyInt& operator=(MoveOnlyInt&& other)
+    MoveOnlyInt &operator=(MoveOnlyInt &&other)
     {
         if (this != &other) {
             value_       = other.value_;
@@ -36,7 +36,7 @@ class CustomString
     public:
     CustomString() : data_{}, size_(0) {}
 
-    CustomString(const char* str)
+    CustomString(const char *str)
     {
         size_ = 0;
         while (str[size_] != '\0' && size_ < 63) {
@@ -46,7 +46,7 @@ class CustomString
         data_[size_] = '\0';
     }
 
-    bool operator==(const CustomString& other) const
+    bool operator==(const CustomString &other) const
     {
         if (size_ != other.size_)
             return false;
@@ -57,7 +57,7 @@ class CustomString
         return true;
     }
 
-    bool operator==(const char* str) const
+    bool operator==(const char *str) const
     {
         size_t i = 0;
         while (str[i] != '\0' && i < size_) {
@@ -77,7 +77,7 @@ struct ComplexType {
     double values[4];
     CustomString name;
 
-    bool operator==(const ComplexType& other) const
+    bool operator==(const ComplexType &other) const
     {
         for (int i = 0; i < 4; ++i) {
             if (values[i] != other.values[i])

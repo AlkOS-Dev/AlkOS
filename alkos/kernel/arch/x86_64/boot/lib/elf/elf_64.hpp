@@ -66,15 +66,15 @@ struct ProgramHeaderEntry {
 // TODO
 // nullptr would mean "load at base", but we use 0 for u64 since it's
 // 32/64 agnostic. Some way must exist to implement this cleanly
-std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr = 0);
+std::expected<u64, Error> Load(const byte *elf_ptr, u64 destination_addr = 0);
 
-std::expected<void, Error> IsValid(const byte* elf_ptr);
+std::expected<void, Error> IsValid(const byte *elf_ptr);
 
-std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr);
+std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte *elf_ptr);
 
 // Simplified version cuz 32-bit code can't handle
 // the MAGIC of std::expected<std::tuple<u64, u64>, Error>
-bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end);
+bool GetProgramBounds(const byte *elf_ptr, u64 &out_start, u64 &out_end);
 
 }  // namespace Elf64
 

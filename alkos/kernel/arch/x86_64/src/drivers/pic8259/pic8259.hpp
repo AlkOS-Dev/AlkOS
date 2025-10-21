@@ -97,6 +97,6 @@ FAST_CALL void Pic8259Disable()
     TRACE_INFO("Pic8259 disabled...");
 }
 
-intr::InterruptDriver& Pic8259InterruptDriver();
+intr::InterruptDriver &Pic8259InterruptDriver();
 
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_

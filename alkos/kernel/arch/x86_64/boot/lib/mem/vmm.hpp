@@ -23,8 +23,8 @@ class VirtualMemoryManager
     // Class Creation & Destruction
     //==============================================================================
 
-    explicit VirtualMemoryManager(PhysicalMemoryManager& pmm);
-    explicit VirtualMemoryManager(PhysicalMemoryManager& pmm, const VmmState& vmm_state)
+    explicit VirtualMemoryManager(PhysicalMemoryManager &pmm);
+    explicit VirtualMemoryManager(PhysicalMemoryManager &pmm, const VmmState &vmm_state)
         : pmm_{pmm}, pm_table_4_{vmm_state.pml_4_table_phys_addr}
     {
     }
@@ -55,7 +55,7 @@ class VirtualMemoryManager
     //==============================================================================
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
-    void EnsurePMEntryPresent(PageMapEntry<kLevel>& pme);
+    void EnsurePMEntryPresent(PageMapEntry<kLevel> &pme);
 
     template <size_t kLevel, decltype(auto) AllocFunc = &PhysicalMemoryManager::Alloc>
     PhysicalPtr<PageMapTable<kLevel - 1>> AllocNextLevelTable();
@@ -67,7 +67,7 @@ class VirtualMemoryManager
     // Private Fields
     //==============================================================================
 
-    PhysicalMemoryManager& pmm_;
+    PhysicalMemoryManager &pmm_;
     PhysicalPtr<PageMapTable<4>> pm_table_4_;
 };
 

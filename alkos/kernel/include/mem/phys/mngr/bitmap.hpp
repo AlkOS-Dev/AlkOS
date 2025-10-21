@@ -6,14 +6,10 @@
 
 #include "mem/error.hpp"
 #include "mem/page.hpp"
-#include "mem/phys/ptr.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
-namespace mem
+namespace Mem
 {
-
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
 
 class BitmapPmm
 {
@@ -27,11 +23,11 @@ class BitmapPmm
         size_t num_pages = 1;
     };
 
-    BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size);
-    void Init(data_structures::BitMapView bmv, pfn_t last_alloc_idx = 0);
+    BitmapPmm(VPtr<void> mem_bitmap, size_t mem_bitmap_size);
+    void Init(data_structures::BitMapView bmv, size_t last_alloc_idx = 0);
 
-    Expected<PhysicalPtr<Page>, MemError> Alloc(AllocationRequest ar);
-    void Free(PhysicalPtr<Page> page, size_t num_pages = 1);
+    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
+    void Free(PPtr<Page> page, size_t num_pages = 1);
 
     size_t BitMapSize() const { return bitmap_view_.Size(); }
 
@@ -40,19 +36,19 @@ class BitmapPmm
     bool IsAllocated(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapAllocated; }
     void MarkAllocated(size_t pfn)
     {
-        R_ASSERT_TRUE(IsFree(pfn));
+        ASSERT_TRUE(IsFree(pfn), "Page frame is already allocated");
         bitmap_view_.Set(pfn, BitMapAllocated);
     }
     void MarkFree(u64 pfn)
     {
-        R_ASSERT_TRUE(IsAllocated(pfn));
+        ASSERT_TRUE(IsAllocated(pfn), "Page frame is already free");
         bitmap_view_.Set(pfn, BitMapFree);
     }
 
     data_structures::BitMapView bitmap_view_{nullptr, 0};
-    pfn_t last_alloc_idx_ = 0;
+    size_t last_alloc_idx_ = 0;
 };
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_

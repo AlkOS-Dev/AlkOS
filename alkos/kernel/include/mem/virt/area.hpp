@@ -2,10 +2,13 @@
 #define ALKOS_KERNEL_INCLUDE_MEM_VIRT_AREA_HPP_
 
 #include <extensions/types.hpp>
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
-namespace mem
+namespace Mem
 {
+
+TODO_STD_VARIANT
+enum class VirtualMemAreaT { Anonymous, DirectMapping };
 
 struct VirtualMemAreaFlags {
     bool readable : 1;
@@ -13,16 +16,21 @@ struct VirtualMemAreaFlags {
     bool executable : 1;
     // Future flags: bool user_accessible, bool copy_on_write, etc.
 };
+using VMemAreaFlags = VirtualMemAreaFlags;
 
 struct VirtualMemArea {
-    VirtualPtr<void> start;
+    VPtr<void> start;
     size_t size;
     VirtualMemAreaFlags flags;
 
-    // Pointer to the next region in the address space for simple linked-list management.
-    VirtualMemArea* next = nullptr;
-};
+    TODO_STD_VARIANT
+    VirtualMemAreaT type;
+    PPtr<void> direct_mapping_start;
 
-}  // namespace mem
+    VirtualMemArea *next = nullptr;
+};
+using VMemArea = VirtualMemArea;
+
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_AREA_HPP_

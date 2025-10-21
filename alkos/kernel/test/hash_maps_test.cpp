@@ -45,7 +45,7 @@ TEST_F(HashmapTest, OverwriteInsert)
     EXPECT_EQ(false, map.Insert<true>(1u, 200));
     EXPECT_EQ(1_size, map.Size());
 
-    int* value = map.Find(1u);
+    int *value = map.Find(1u);
     ASSERT_NOT_NULL(value);
     EXPECT_EQ(200, *value);
 }
@@ -69,7 +69,7 @@ TEST_F(HashmapTest, EmplaceSingle)
     EXPECT_EQ(true, map.Emplace(1u, 100));
     EXPECT_EQ(1_size, map.Size());
 
-    int* value = map.Find(1u);
+    int *value = map.Find(1u);
     ASSERT_NOT_NULL(value);
     EXPECT_EQ(100, *value);
 }
@@ -87,7 +87,7 @@ TEST_F(HashmapTest, EmplaceComplexType)
     EXPECT_EQ(true, map.Emplace(1u, 10, 20));
     EXPECT_EQ(1_size, map.Size());
 
-    TestStruct* value = map.Find(1u);
+    TestStruct *value = map.Find(1u);
     ASSERT_NOT_NULL(value);
     EXPECT_EQ(10, value->a);
     EXPECT_EQ(20, value->b);
@@ -102,14 +102,14 @@ TEST_F(HashmapTest, FindNonExisting)
     FastMinimalStaticHashmap<u32, int, 4> map;
     map.Insert(1u, 100);
 
-    int* value = map.Find(999u);
+    int *value = map.Find(999u);
     EXPECT_EQ(nullptr, value);
 }
 
 TEST_F(HashmapTest, FindInEmptyMap)
 {
     FastMinimalStaticHashmap<u32, int, 4> map;
-    int* value = map.Find(1u);
+    int *value = map.Find(1u);
     EXPECT_EQ(nullptr, value);
 }
 
@@ -168,7 +168,7 @@ TEST_F(HashmapTest, RemoveExisting)
     EXPECT_EQ(true, map.Remove(1u));
     EXPECT_EQ(0_size, map.Size());
 
-    int* value = map.Find(1u);
+    int *value = map.Find(1u);
     EXPECT_EQ(nullptr, value);
 }
 
@@ -363,7 +363,7 @@ TEST_F(RegistryTest, AccessOperator)
     EXPECT_EQ(150, registry[1u].value);
 
     // Test const access
-    const auto& const_registry = registry;
+    const auto &const_registry = registry;
     EXPECT_EQ(150, const_registry[1u].value);
 }
 
@@ -375,7 +375,7 @@ TEST_F(RegistryTest, IteratorAccess)
     registry.RegisterEmplace(3u, 3u, 300);
 
     size_t count = 0;
-    for (const u64* it = registry.cbegin(); it != registry.cend(); ++it) {
+    for (const u64 *it = registry.cbegin(); it != registry.cend(); ++it) {
         count++;
         EXPECT_TRUE(registry.HasKey(*it));
     }

@@ -26,10 +26,10 @@ class span
     using value_type      = std::remove_cv_t<T>;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
-    using pointer         = T*;
-    using const_pointer   = const T*;
-    using reference       = T&;
-    using const_reference = const T&;
+    using pointer         = T *;
+    using const_pointer   = const T *;
+    using reference       = T &;
+    using const_reference = const T &;
 
     TODO_LIBCPP_COMPLIANCE
     using iterator               = pointer;
@@ -116,7 +116,7 @@ class span
     // From std::array
     template <typename U, std::size_t N>
         requires(is_dynamic_extent_)
-    constexpr span(std::array<U, N>& arr) noexcept
+    constexpr span(std::array<U, N> &arr) noexcept
         requires convertible_<std::remove_pointer_t<decltype(std::data(arr))>>
         : data_(arr.data()), size_(N)
     {
@@ -124,7 +124,7 @@ class span
 
     template <typename U, std::size_t N>
         requires(!is_dynamic_extent_ && Extent == N)
-    constexpr span(std::array<U, N>& arr) noexcept
+    constexpr span(std::array<U, N> &arr) noexcept
         requires convertible_<std::remove_pointer_t<decltype(std::data(arr))>>
         : data_(arr.data())
     {
@@ -132,7 +132,7 @@ class span
 
     template <typename U, std::size_t N>
         requires(is_dynamic_extent_)
-    constexpr span(const std::array<U, N>& arr) noexcept
+    constexpr span(const std::array<U, N> &arr) noexcept
         requires convertible_<std::remove_pointer_t<decltype(std::data(arr))>>
         : data_(arr.data()), size_(N)
     {
@@ -140,7 +140,7 @@ class span
 
     template <typename U, std::size_t N>
         requires(!is_dynamic_extent_ && Extent == N)
-    constexpr span(const std::array<U, N>& arr) noexcept
+    constexpr span(const std::array<U, N> &arr) noexcept
         requires convertible_<std::remove_pointer_t<decltype(std::data(arr))>>
         : data_(arr.data())
     {
@@ -168,7 +168,7 @@ class span
     template <class U, std::size_t N>
         requires convertible_<U> && (is_dynamic_extent_)
     explicit(!is_dynamic_extent_ && N == std::dynamic_extent) constexpr span(
-        const std::span<U, N>& source
+        const std::span<U, N> &source
     ) noexcept
         : data_(source.data()), size_(source.size())
     {
@@ -177,7 +177,7 @@ class span
     template <class U, std::size_t N>
         requires convertible_<U> && (!is_dynamic_extent_ && N == std::dynamic_extent)
     explicit(!is_dynamic_extent_ && N == std::dynamic_extent) constexpr span(
-        const std::span<U, N>& source
+        const std::span<U, N> &source
     ) noexcept
         : data_(source.data())
     {
@@ -187,16 +187,16 @@ class span
     template <class U, std::size_t N>
         requires convertible_<U> && (!is_dynamic_extent_ && N != std::dynamic_extent && Extent == N)
     explicit(!is_dynamic_extent_ && N == std::dynamic_extent) constexpr span(
-        const std::span<U, N>& source
+        const std::span<U, N> &source
     ) noexcept
         : data_(source.data())
     {
         ASSERT_EQ(source.size(), Extent);
     }
 
-    constexpr span(const span& other) noexcept = default;
+    constexpr span(const span &other) noexcept = default;
 
-    constexpr span& operator=(const span& other) noexcept = default;
+    constexpr span &operator=(const span &other) noexcept = default;
 
     // ------------------------------
     // Iterators
@@ -375,7 +375,7 @@ template <class T, std::size_t N>
 FORCE_INLINE_F constexpr auto as_bytes(std::span<T, N> s) noexcept
 {
     constexpr size_t count = N == std::dynamic_extent ? std::dynamic_extent : N * sizeof(T);
-    return std::span<const byte, count>(reinterpret_cast<const byte*>(s.data()), s.size_bytes());
+    return std::span<const byte, count>(reinterpret_cast<const byte *>(s.data()), s.size_bytes());
 }
 
 // ------------------------------
@@ -387,7 +387,7 @@ template <class T, std::size_t N>
 FORCE_INLINE_F constexpr auto as_writable_bytes(std::span<T, N> s) noexcept
 {
     constexpr size_t count = N == std::dynamic_extent ? std::dynamic_extent : N * sizeof(T);
-    return std::span<byte, count>(reinterpret_cast<byte*>(s.data()), s.size_bytes());
+    return std::span<byte, count>(reinterpret_cast<byte *>(s.data()), s.size_bytes());
 }
 
 }  // namespace std

@@ -6,29 +6,29 @@
 #include <extensions/types.hpp>
 
 #include "hal/constants.hpp"
-#include "mem/phys/ptr.hpp"
+#include "mem/types.hpp"
 
-namespace mem
+namespace Mem
 {
 
 struct Page {
     byte bytes[hal::kPageSizeBytes];
 };
 
-using pfn_t = size_t;
-
-FAST_CALL pfn_t PageFrameNumber(PhysicalPtr<Page> page)
+FAST_CALL size_t PageFrameNumber(PPtr<Page> page)
 {
-    const uptr addr = page.AsUIntPtr();
-    R_ASSERT_TRUE(IsAligned(addr, hal::kPageSizeBytes));
+    const uptr addr = PtrToUptr(page);
+    ASSERT_TRUE(
+        IsAligned(addr, hal::kPageSizeBytes), "Physical page pointer is not aligned to page size"
+    );
     return addr / hal::kPageSizeBytes;
 }
 
-FAST_CALL PhysicalPtr<Page> PageFrameAddr(pfn_t pfn)
+FAST_CALL PPtr<Page> PageFrameAddr(size_t pfn)
 {
-    return PhysicalPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
+    return UptrToPtr<Page>(static_cast<uptr>(pfn * hal::kPageSizeBytes));
 }
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_HPP_

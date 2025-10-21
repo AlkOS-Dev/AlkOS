@@ -2,26 +2,26 @@
 
 #include <extensions/data_structures/bit_array.hpp>
 #include <extensions/expected.hpp>
-
 #include "hal/constants.hpp"
 #include "mem/page_meta.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
-using namespace mem;
+using namespace Mem;
 
-BitmapPmm::BitmapPmm(VirtualPtr<void> mem_bitmap, pfn_t mem_bitmap_size)
+BitmapPmm::BitmapPmm(VPtr<void> mem_bitmap, size_t mem_bitmap_size)
 {
+    ASSERT_NOT_NULL(mem_bitmap, "Memory bitmap pointer is null");
     data_structures::BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
     Init(bmv);
 };
 
-void BitmapPmm::Init(data_structures::BitMapView bmv, pfn_t last_alloc_idx)
+void BitmapPmm::Init(data_structures::BitMapView bmv, size_t last_alloc_idx)
 {
     bitmap_view_    = bmv;
     last_alloc_idx_ = last_alloc_idx;
 };
 
-std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
+std::expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 {
     const u64 total_pages = bitmap_view_.Size();
 
@@ -60,7 +60,7 @@ std::expected<PhysicalPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar
     return std::unexpected(MemError::OutOfMemory);
 }
 
-void BitmapPmm::Free(PhysicalPtr<Page> page, size_t num_pages)
+void BitmapPmm::Free(PPtr<Page> page, size_t num_pages)
 {
     size_t pfn = PageFrameNumber(page);
 

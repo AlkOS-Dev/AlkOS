@@ -15,14 +15,14 @@ struct alignas(arch::kCacheLineSizeBytes) ClockRegistryEntry : data_structures::
     u64 clock_denominator;              // For conversion to nanoseconds, this is the denominator
 
     /* Callbacks */
-    u64 (*read)(ClockRegistryEntry*);
-    bool (*enable_device)(ClockRegistryEntry*);
-    bool (*disable_device)(ClockRegistryEntry*);
-    void (*stop_counter)(ClockRegistryEntry*);
-    void (*resume_counter)(ClockRegistryEntry*);
+    u64 (*read)(ClockRegistryEntry *);
+    bool (*enable_device)(ClockRegistryEntry *);
+    bool (*disable_device)(ClockRegistryEntry *);
+    void (*stop_counter)(ClockRegistryEntry *);
+    void (*resume_counter)(ClockRegistryEntry *);
 
     /* Own data */
-    void* own_data;
+    void *own_data;
 };
 
 static constexpr size_t kMaxClocks = 8;

@@ -5,19 +5,11 @@
 #include <extensions/types.hpp>
 
 #include "mem/error.hpp"
-#include "mem/phys/ptr.hpp"
+#include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
-#include "mem/virt/ptr.hpp"
 
-namespace mem
+namespace Mem
 {
-
-//==============================================================================
-// Aliases
-//==============================================================================
-
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
 
 //==============================================================================
 // VMM
@@ -30,38 +22,28 @@ class VirtualMemoryManager
     // Class creation
     // ------------------------------
 
-    explicit VirtualMemoryManager(AddressSpace as) noexcept;
+    explicit VirtualMemoryManager() noexcept;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    Expected<VirtualPtr<AddressSpace>, MemError> CreateAddrSpace();
-    Expected<void, MemError> DestroyAddrSpace(VirtualPtr<AddressSpace> as);
-    void SwitchAddrSpace(VirtualPtr<AddressSpace> as);
+    Expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
+    Expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
+    void SwitchAddrSpace(VPtr<AddressSpace> as);
 
-    // Returns handle to it so it can be deleted?
-    using VirtualMemAreaHandle = u64;
-    Expected<VirtualMemAreaHandle, MemError> AddRegion(
-        VirtualPtr<AddressSpace> as, VirtualMemArea ma
-    );
-    Expected<void, MemError> RmRegion(VirtualPtr<AddressSpace> as, VirtualMemAreaHandle mah);
-    Expected<void, MemError> UpdateRegionFlags(
-        VirtualPtr<AddressSpace> as, VirtualMemArea ma, VirtualMemAreaFlags maf
-    );
+    Expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VirtualMemArea vma);
+    Expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
+    // Expected<void, MemError> UpdateAreaFlags(
+    //     VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
+    // );
 
     private:
-    void Map(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
-    void UnMap(VirtualPtr<void> vaddr, PhysicalPtr<void> paddr);
-
     // ------------------------------
     // Class fields
     // ------------------------------
-
-    private:
-    AddressSpace current_as_;
 };
 
-}  // namespace mem
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_

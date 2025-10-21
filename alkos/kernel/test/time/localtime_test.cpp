@@ -40,7 +40,7 @@ class TimeTConversionTest : public TestGroupBase
     timestamp, exp_year, exp_month, exp_day, exp_hour, exp_min, exp_sec, exp_wday \
 )                                                                                 \
     {                                                                             \
-        struct tm* timeinfo = localtime(&timestamp);                              \
+        struct tm *timeinfo = localtime(&timestamp);                              \
         ASSERT_NOT_NULL(timeinfo);                                                \
         EXPECT_EQ((exp_year) - 1900, timeinfo->tm_year);                          \
         EXPECT_EQ((exp_month) - 1, timeinfo->tm_mon);                             \
@@ -55,7 +55,7 @@ class TimeTConversionTest : public TestGroupBase
     timestamp, exp_year, exp_month, exp_day, exp_hour, exp_min, exp_sec, exp_wday \
 )                                                                                 \
     {                                                                             \
-        struct tm* timeinfo = gmtime(&timestamp);                                 \
+        struct tm *timeinfo = gmtime(&timestamp);                                 \
         ASSERT_NOT_NULL(timeinfo);                                                \
         EXPECT_EQ((exp_year) - 1900, timeinfo->tm_year);                          \
         EXPECT_EQ((exp_month) - 1, timeinfo->tm_mon);                             \
@@ -161,7 +161,7 @@ TEST_F(TimeTConversionTest, LeapYears)
     // February 29, 2024 12:00:00 UTC is 1709208000
     time_t leap_timestamp = 1709208000;
 
-    struct tm* leap_info_local = localtime(&leap_timestamp);
+    struct tm *leap_info_local = localtime(&leap_timestamp);
     ASSERT_NOT_NULL(leap_info_local);
     EXPECT_EQ(2024 - 1900, leap_info_local->tm_year);
     EXPECT_EQ(2 - 1, leap_info_local->tm_mon);
@@ -172,7 +172,7 @@ TEST_F(TimeTConversionTest, LeapYears)
     EXPECT_EQ(4, leap_info_local->tm_wday);  // Thursday
     EXPECT_EQ(59, leap_info_local->tm_yday);
 
-    struct tm* leap_info_gmt = gmtime(&leap_timestamp);
+    struct tm *leap_info_gmt = gmtime(&leap_timestamp);
     ASSERT_NOT_NULL(leap_info_gmt);
     EXPECT_EQ(2024 - 1900, leap_info_gmt->tm_year);
     EXPECT_EQ(2 - 1, leap_info_gmt->tm_mon);
@@ -185,18 +185,18 @@ TEST_F(TimeTConversionTest, LeapYears)
 
     const time_t non_leap_mar1 = CreateTimestamp(2023, 3, 1, 12, 0, 0);
 
-    struct tm* non_leap_local = localtime(&non_leap_mar1);
+    struct tm *non_leap_local = localtime(&non_leap_mar1);
     EXPECT_EQ(59, non_leap_local->tm_yday);
 
-    struct tm* non_leap_gmt = gmtime(&non_leap_mar1);
+    struct tm *non_leap_gmt = gmtime(&non_leap_mar1);
     EXPECT_EQ(59, non_leap_gmt->tm_yday);
 
     const time_t leap_mar1 = CreateTimestamp(2024, 3, 1, 12, 0, 0);
 
-    struct tm* leap_mar1_local = localtime(&leap_mar1);
+    struct tm *leap_mar1_local = localtime(&leap_mar1);
     EXPECT_EQ(60, leap_mar1_local->tm_yday);
 
-    struct tm* leap_mar1_gmt = gmtime(&leap_mar1);
+    struct tm *leap_mar1_gmt = gmtime(&leap_mar1);
     EXPECT_EQ(60, leap_mar1_gmt->tm_yday);
 }
 
@@ -220,8 +220,8 @@ TEST_F(TimeTConversionTest, LocaltimeVsGmtime)
     // March 15, 2024 12:00:00 UTC is 1710504000
     time_t timestamp = 1710504000;
 
-    struct tm* local = localtime(&timestamp);
-    struct tm* gmt   = gmtime(&timestamp);
+    struct tm *local = localtime(&timestamp);
+    struct tm *gmt   = gmtime(&timestamp);
 
     ASSERT_NOT_NULL(local);
     ASSERT_NOT_NULL(gmt);
@@ -251,7 +251,7 @@ TEST_F(TimeTConversionTest, DateComponents)
     time_t timestamp = CreateTimestamp(2024, 7, 15, 12, 30, 45);
 
     // Test localtime components
-    struct tm* local_info = localtime(&timestamp);
+    struct tm *local_info = localtime(&timestamp);
     ASSERT_NOT_NULL(local_info);
     EXPECT_EQ(2024 - 1900, local_info->tm_year);
     EXPECT_EQ(7 - 1, local_info->tm_mon);
@@ -263,7 +263,7 @@ TEST_F(TimeTConversionTest, DateComponents)
     EXPECT_EQ(196, local_info->tm_yday);
 
     // Test gmtime components
-    struct tm* gmt_info = gmtime(&timestamp);
+    struct tm *gmt_info = gmtime(&timestamp);
     ASSERT_NOT_NULL(gmt_info);
     EXPECT_EQ(2024 - 1900, gmt_info->tm_year);
     EXPECT_EQ(7 - 1, gmt_info->tm_mon);

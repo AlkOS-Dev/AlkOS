@@ -36,11 +36,11 @@ using test::TestGroupBase;
         static const bool registered_;                                                             \
     };                                                                                             \
                                                                                                    \
-    static TestGroupBase* ___TEST_TEST_FACTORY_NAME(fixture, test_name)(void* mem)                 \
+    static TestGroupBase *___TEST_TEST_FACTORY_NAME(fixture, test_name)(void *mem)                 \
     {                                                                                              \
         static constexpr size_t kAlignment = alignof(___TEST_TEST_CLASS_NAME(fixture, test_name)); \
         const size_t offset = kAlignment - (reinterpret_cast<size_t>(mem) % kAlignment);           \
-        void* aligned_mem   = reinterpret_cast<void*>(reinterpret_cast<size_t>(mem) + offset);     \
+        void *aligned_mem   = reinterpret_cast<void *>(reinterpret_cast<size_t>(mem) + offset);    \
         return new (aligned_mem) ___TEST_TEST_CLASS_NAME(fixture, test_name)();                    \
     }                                                                                              \
                                                                                                    \

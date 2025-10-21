@@ -30,7 +30,7 @@ concept TagT = requires(Tag tag) {
 };
 
 template <class FilterT, class TagT>
-concept TagFilter = requires(FilterT filter, TagT* tag) {
+concept TagFilter = requires(FilterT filter, TagT *tag) {
     { filter(tag) } -> std::convertible_to<bool>;
 };
 
@@ -50,29 +50,29 @@ class MultibootInfo
     template <TagCallback Callback>
     void WalkTags(Callback cb)
     {
-        for (Tag* tag_ptr = reinterpret_cast<Tag*>(multiboot_info_addr_ + 8);
+        for (Tag *tag_ptr = reinterpret_cast<Tag *>(multiboot_info_addr_ + 8);
              tag_ptr->type != kMultibootTagTypeEnd;
-             tag_ptr = reinterpret_cast<Tag*>(
-                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             tag_ptr = reinterpret_cast<Tag *>(
+                 reinterpret_cast<u8 *>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
              )) {
-            Tag& tag = *tag_ptr;
+            Tag &tag = *tag_ptr;
             cb(tag);
         }
     }
 
     template <TagT Tag, typename Filter>
-    std::expected<Tag*, Error> FindTag(Filter filter)
+    std::expected<Tag *, Error> FindTag(Filter filter)
     {
         const u32 kType = TagMetadata<Tag>::kValue;
         static_assert(kType != kInvalidTagNumber);
 
-        for (auto* tag_ptr = reinterpret_cast<Multiboot::Tag*>(multiboot_info_addr_ + 8);
+        for (auto *tag_ptr = reinterpret_cast<Multiboot::Tag *>(multiboot_info_addr_ + 8);
              tag_ptr->type != kMultibootTagTypeEnd;
-             tag_ptr = reinterpret_cast<Multiboot::Tag*>(
-                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             tag_ptr = reinterpret_cast<Multiboot::Tag *>(
+                 reinterpret_cast<u8 *>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
              )) {
             if (tag_ptr->type == kType) {
-                auto* specific_tag = reinterpret_cast<Tag*>(tag_ptr);
+                auto *specific_tag = reinterpret_cast<Tag *>(tag_ptr);
                 if (filter(specific_tag)) {
                     return specific_tag;
                 }
@@ -82,9 +82,9 @@ class MultibootInfo
     }
 
     template <TagT Tag>
-    std::expected<Tag*, Error> FindTag()
+    std::expected<Tag *, Error> FindTag()
     {
-        return FindTag<Tag>([](const Tag*) {
+        return FindTag<Tag>([](const Tag *) {
             return true;
         });
     }

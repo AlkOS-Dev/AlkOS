@@ -35,11 +35,11 @@ using namespace Multiboot;
 BEGIN_DECL_C
 int CheckCpuId();
 int CheckLongMode();
-void EnablePaging(void* pml4_table_address);
+void EnablePaging(void *pml4_table_address);
 void EnableLongMode();
 void EnterElf64(
-    void* higher_32_bits_of_entry_address, void* lower_32_bits_of_entry_address,
-    void* transition_data_address
+    void *higher_32_bits_of_entry_address, void *lower_32_bits_of_entry_address,
+    void *transition_data_address
 );
 
 // Defined in .ld
@@ -55,8 +55,8 @@ END_DECL_C
 //==============================================================================
 
 struct MemoryManagers {
-    PhysicalMemoryManager& pmm;
-    VirtualMemoryManager& vmm;
+    PhysicalMemoryManager &pmm;
+    VirtualMemoryManager &vmm;
 };
 
 //==============================================================================
@@ -107,7 +107,7 @@ static void InitializeAndVerifyEnvironment(u32 boot_loader_magic)
     gMbHdrEndAddr   = reinterpret_cast<u32>(multiboot_header_end);
 }
 
-MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
+MemoryManagers SetupMemoryManagement(MultibootInfo &multiboot_info)
 {
     TRACE_DEBUG("Setting up memory management...");
 
@@ -120,12 +120,12 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
     const MemoryMap mmap(*mmap_tag_res);
     auto pmm_res = PhysicalMemoryManager::Create(mmap, lowest_safe_addr, gPmmPreAllocatedMemory);
     R_ASSERT_TRUE(pmm_res, "Physical memory manager creation failed");
-    auto* pmm_ptr = *pmm_res;
-    auto& pmm     = *pmm_ptr;
+    auto *pmm_ptr = *pmm_res;
+    auto &pmm     = *pmm_ptr;
 
     TRACE_DEBUG("Creating Virtual Memory Manager...");
-    auto* vmm_ptr = new (gVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
-    auto& vmm     = *vmm_ptr;
+    auto *vmm_ptr = new (gVmmPreAllocatedMemory) VirtualMemoryManager(pmm);
+    auto &vmm     = *vmm_ptr;
 
     TRACE_DEBUG("Marking used memory as reserved");
     const u64 ld_span    = static_cast<u64>(gLdEndAddr) - gLdStartAddr;
@@ -154,7 +154,7 @@ MemoryManagers SetupMemoryManagement(MultibootInfo& multiboot_info)
 
 static void EnableCpuFeatures(MemoryManagers mem_managers)
 {
-    auto& vmm = mem_managers.vmm;
+    auto &vmm = mem_managers.vmm;
     PhysicalPtr<void> pml4_phys_ptr(vmm.GetPml4Table());
 
     TRACE_INFO("Enabling long mode and paging...");
@@ -162,14 +162,14 @@ static void EnableCpuFeatures(MemoryManagers mem_managers)
     EnablePaging(pml4_phys_ptr.ValuePtr());
 }
 
-static u64 LoadNextStageModule(MultibootInfo& multiboot_info, MemoryManagers mem_managers)
+static u64 LoadNextStageModule(MultibootInfo &multiboot_info, MemoryManagers mem_managers)
 {
-    auto& pmm = mem_managers.pmm;
+    auto &pmm = mem_managers.pmm;
 
     TRACE_DEBUG("Loading next stage module: '%s' ...", kLoader64ModuleCmdline);
 
     TRACE_DEBUG("Searching for next stage module tag in multiboot info...");
-    auto next_module_res = multiboot_info.FindTag<TagModule>([](TagModule* tag) {
+    auto next_module_res = multiboot_info.FindTag<TagModule>([](TagModule *tag) {
         return strcmp(tag->cmdline, kLoader64ModuleCmdline) == 0;
     });
     ASSERT_TRUE(next_module_res, "Failed to find the next stage module tag in multiboot info");
@@ -202,8 +202,8 @@ NO_RET static void TransitionTo64BitMode(
     u64 entry_point, MemoryManagers mem_managers, u32 multiboot_info_addr_32
 )
 {
-    auto& pmm = mem_managers.pmm;
-    auto& vmm = mem_managers.vmm;
+    auto &pmm = mem_managers.pmm;
+    auto &vmm = mem_managers.vmm;
 
     TRACE_INFO("Preparing to transition to 64-bit mode...");
 
@@ -248,8 +248,8 @@ NO_RET static void TransitionTo64BitMode(
     const u64 al_ld_span = AlignUp(ld_span, PageSize<PageSizeTag::k4Kb>());
     pmm.Free(PhysicalPtr<void>(al_ld_addr), al_ld_span);
 
-    void* entry_high = reinterpret_cast<void*>(static_cast<u32>(entry_point >> 32));
-    void* entry_low  = reinterpret_cast<void*>(static_cast<u32>(entry_point & kBitMask32));
+    void *entry_high = reinterpret_cast<void *>(static_cast<u32>(entry_point >> 32));
+    void *entry_low  = reinterpret_cast<void *>(static_cast<u32>(entry_point & kBitMask32));
     TRACE_INFO("Jumping to 64-bit loader at entry point: 0x%llX", entry_point);
     EnterElf64(entry_high, entry_low, &gTransitionData);
 

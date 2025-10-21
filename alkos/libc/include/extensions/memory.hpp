@@ -13,14 +13,14 @@ namespace std
 // ------------------------------
 
 template <class T>
-constexpr T* to_address(T* p) noexcept
+constexpr T *to_address(T *p) noexcept
 {
     static_assert(!std::is_function_v<T>);
     return p;
 }
 
 template <class T>
-constexpr auto to_address(const T& p) noexcept
+constexpr auto to_address(const T &p) noexcept
 {
     TODO_LIBCPP_COMPLIANCE
     return std::to_address(p.operator->());
@@ -31,7 +31,7 @@ constexpr auto to_address(const T& p) noexcept
 // ------------------------------
 
 template <typename T>
-NODISCARD FORCE_INLINE_F constexpr T* addressof(T& arg) noexcept
+NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
 {
     return __builtin_addressof(arg);
 }
@@ -42,9 +42,9 @@ NODISCARD FORCE_INLINE_F constexpr T* addressof(T& arg) noexcept
 
 template <class T, class... Args>
     requires(!is_unbounded_array_v<T>) &&
-            requires { ::new (static_cast<void*>(nullptr)) T(std::declval<Args>()...); }
-constexpr T* construct_at(T* location, Args&&... args) noexcept(
-    noexcept(::new(static_cast<void*>(nullptr)) T(std::declval<Args>()...))
+            requires { ::new (static_cast<void *>(nullptr)) T(std::declval<Args>()...); }
+constexpr T *construct_at(T *location, Args &&...args) noexcept(
+    noexcept(::new (static_cast<void *>(nullptr)) T(std::declval<Args>()...))
 )
 {
     if constexpr (is_array_v<T>) {
@@ -54,9 +54,9 @@ constexpr T* construct_at(T* location, Args&&... args) noexcept(
             "std::construct_at for array types must not use any "
             "arguments to initialize the array"
         );
-        return ::new (static_cast<void*>(location)) T{};
+        return ::new (static_cast<void *>(location)) T{};
     } else {
-        return ::new (static_cast<void*>(location)) T(std::forward<Args>(args)...);
+        return ::new (static_cast<void *>(location)) T(std::forward<Args>(args)...);
     }
 }
 
@@ -65,10 +65,10 @@ constexpr T* construct_at(T* location, Args&&... args) noexcept(
 // ------------------------------
 
 template <typename T>
-constexpr void destroy_at(T* location) noexcept
+constexpr void destroy_at(T *location) noexcept
 {
     if constexpr (is_array_v<T>) {
-        for (auto& elem : *location) {
+        for (auto &elem : *location) {
             std::destroy_at(std::addressof(elem));
         }
     } else {

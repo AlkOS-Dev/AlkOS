@@ -13,20 +13,20 @@ namespace Elf64
 // TODO
 // nullptr would mean "load at base", but we use 0 for u64 since it's
 // 32/64 agnostic. Some way must exist to implement this cleanly
-std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
+std::expected<u64, Error> Load(const byte *elf_ptr, u64 destination_addr)
 {
     if (!IsValid(elf_ptr)) {
         return std::unexpected(Error::InvalidElf);
     }
 
-    const auto* header               = reinterpret_cast<const Header*>(elf_ptr);
-    const auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry*>(
+    const auto *header               = reinterpret_cast<const Header *>(elf_ptr);
+    const auto *program_header_table = reinterpret_cast<const ProgramHeaderEntry *>(
         elf_ptr + header->program_header_table_file_offset
     );
 
     u64 elf_base = kFullMask<u64>;
     for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
-        const ProgramHeaderEntry* program_header_entry = &program_header_table[i];
+        const ProgramHeaderEntry *program_header_entry = &program_header_table[i];
         if (program_header_entry->type == ProgramHeaderEntry::kLoadableSegmentType) {
             if (program_header_entry->virtual_address < elf_base) {
                 elf_base = program_header_entry->virtual_address;
@@ -40,7 +40,7 @@ std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
     }
 
     for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
-        const ProgramHeaderEntry* program_header_entry = &program_header_table[i];
+        const ProgramHeaderEntry *program_header_entry = &program_header_table[i];
 
         if (program_header_entry->type == ProgramHeaderEntry::kLoadableSegmentType) {
             const u64 segment_dest =
@@ -57,14 +57,14 @@ std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
             );
 
             memcpy(
-                reinterpret_cast<void*>(segment_dest),
-                reinterpret_cast<const void*>(segment_source), segment_source_size
+                reinterpret_cast<void *>(segment_dest),
+                reinterpret_cast<const void *>(segment_source), segment_source_size
             );
 
             // Zero out the remaining memory (For things like .bss sections, etc.)
             if (segment_dest_size > segment_source_size) {
                 memset(
-                    reinterpret_cast<void*>(segment_dest + segment_source_size), 0,
+                    reinterpret_cast<void *>(segment_dest + segment_source_size), 0,
                     segment_dest_size - segment_source_size
                 );
             }
@@ -77,7 +77,7 @@ std::expected<u64, Error> Load(const byte* elf_ptr, u64 destination_addr)
     return adjusted_entry_point;
 }
 
-std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
+std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte *elf_ptr)
 {
     u64 start_addr = static_cast<u64>(kFullMask<u64>);
     u64 end_addr   = reinterpret_cast<u64>(nullptr);
@@ -90,7 +90,7 @@ std::expected<std::tuple<u64, u64>, Error> GetProgramBounds(const byte* elf_ptr)
     return std::expected<std::tuple<u64, u64>, Error>(std::in_place, start_addr, end_addr);
 }
 
-bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
+bool GetProgramBounds(const byte *elf_ptr, u64 &out_start, u64 &out_end)
 {
     bool has_loadable_segments = false;
 
@@ -101,13 +101,13 @@ bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
         return false;
     }
 
-    const auto* header               = reinterpret_cast<const Header*>(elf_ptr);
-    const auto* program_header_table = reinterpret_cast<const ProgramHeaderEntry*>(
+    const auto *header               = reinterpret_cast<const Header *>(elf_ptr);
+    const auto *program_header_table = reinterpret_cast<const ProgramHeaderEntry *>(
         elf_ptr + header->program_header_table_file_offset
     );
 
     for (u16 i = 0; i < header->program_header_table_entry_count; i++) {
-        const ProgramHeaderEntry* program_header_entry = &program_header_table[i];
+        const ProgramHeaderEntry *program_header_entry = &program_header_table[i];
 
         if (program_header_entry->type == ProgramHeaderEntry::kLoadableSegmentType) {
             has_loadable_segments = true;
@@ -127,13 +127,13 @@ bool GetProgramBounds(const byte* elf_ptr, u64& out_start, u64& out_end)
     return true;
 }
 
-std::expected<void, Error> IsValid(const byte* elf_ptr)
+std::expected<void, Error> IsValid(const byte *elf_ptr)
 {
     if (elf_ptr == nullptr) {
         return std::unexpected(Error::InvalidElf);
     }
 
-    const auto* elf_header = reinterpret_cast<const Header*>(elf_ptr);
+    const auto *elf_header = reinterpret_cast<const Header *>(elf_ptr);
 
     if (memcmp(elf_header->identifier, Header::kMagic, sizeof(Header::kMagic)) != 0) {
         return std::unexpected(Error::InvalidElf);

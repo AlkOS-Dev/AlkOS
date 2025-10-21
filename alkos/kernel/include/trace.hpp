@@ -6,7 +6,7 @@
 #include "hal/debug_terminal.hpp"
 
 template <class... Args>
-void KernelTrace(const char* format, Args... args)
+void KernelTrace(const char *format, Args... args)
 {
     static constexpr size_t kTraceBufferSize = 4096;
     char buffer[kTraceBufferSize];

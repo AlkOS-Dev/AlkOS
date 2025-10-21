@@ -4,17 +4,33 @@
 #include <extensions/expected.hpp>
 
 #include "mem/error.hpp"
-#include "mem/virt/ptr.hpp"
+#include "mem/types.hpp"
 
-namespace mem
+namespace Mem
 {
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-template <typename E>
-using Unexpected = std::unexpected<E>;
 
-Expected<VirtualPtr<void>, MemError> KMalloc(size_t);
-Expected<void, MemError> KFree(VirtualPtr<void>);
-}  // namespace mem
+// Heap
+Expected<VPtr<void>, MemError> KMalloc(size_t size);
+template <typename T>
+Expected<VPtr<T>, MemError> KMalloc()
+{
+    return {};
+    return KMalloc(sizeof(T)).transform([](void *ptr) {
+        return reinterpret_cast<VPtr<T>>(ptr);
+    });
+}
+template <typename T>
+void KFree(VPtr<T> ptr);
+
+template <>
+void KFree(VPtr<void> ptr);
+
+template <typename T>
+void KFree(VPtr<T> ptr)
+{
+    KFree(reinterpret_cast<VPtr<void>>(ptr));
+}
+
+}  // namespace Mem
 
 #endif  // ALKOS_KERNEL_INCLUDE_MEM_HEAP_HPP_

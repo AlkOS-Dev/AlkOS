@@ -41,7 +41,7 @@ template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
 template <class C, class Pointed, class Object, class... Args>
-constexpr decltype(auto) invoke_memptr(Pointed C::* member, Object&& object, Args&&... args)
+constexpr decltype(auto) invoke_memptr(Pointed C::*member, Object &&object, Args &&...args)
 {
     using object_t                    = remove_cvref_t<Object>;
     constexpr bool is_member_function = std::is_function_v<Pointed>;
@@ -70,7 +70,7 @@ constexpr decltype(auto) invoke_memptr(Pointed C::* member, Object&& object, Arg
 
 template <class F, class... Args>
 constexpr std::invoke_result_t<F, Args...> invoke(
-    F&& f, Args&&... args
+    F &&f, Args &&...args
 ) noexcept(std::is_nothrow_invocable_v<F, Args...>)
 {
     if constexpr (std::is_member_pointer_v<detail::remove_cvref_t<F>>)
@@ -81,7 +81,7 @@ constexpr std::invoke_result_t<F, Args...> invoke(
 
 template <class R, class F, class... Args>
     requires std::is_invocable_r_v<R, F, Args...>
-constexpr R invoke_r(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_r_v<R, F, Args...>)
+constexpr R invoke_r(F &&f, Args &&...args) noexcept(std::is_nothrow_invocable_r_v<R, F, Args...>)
 {
     if constexpr (std::is_void_v<R>)
         std::invoke(std::forward<F>(f), std::forward<Args>(args)...);

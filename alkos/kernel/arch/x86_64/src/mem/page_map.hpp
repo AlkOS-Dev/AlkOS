@@ -5,7 +5,7 @@
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
 
-#include <mem/phys_ptr.hpp>
+#include <mem/types.hpp>
 
 //==============================================================================
 // Source: Intel® 64 and IA-32 Architectures Software Developer’s Manual,
@@ -26,17 +26,18 @@
 
 // TODO: Properly document these flags
 
-static constexpr u64 kPresentBit             = 1;        ///< Present bit
-static constexpr u64 kWriteBit               = 1 << 1;   ///< Write bit
-static constexpr u64 kUserAccessibleBit      = 1 << 2;   ///< User accessible bit
-static constexpr u64 kWriteThroughCachingBit = 1 << 3;   ///< Write-through caching bit
-static constexpr u64 kDisableCacheBit        = 1 << 4;   ///< Disable cache bit
-static constexpr u64 kAccessedBit            = 1 << 5;   ///< Accessed bit
-static constexpr u64 kDirtyBit               = 1 << 6;   ///< Dirty bit
-static constexpr u64 kGlobalBit              = 1 << 8;   ///< Global bit
-static constexpr u64 kPatBit                 = 1 << 12;  ///< PAT bit
-static constexpr u64 kHlatRestartBit         = 1 << 13;  ///< HLAT restart bit
-static constexpr u64 kHugePageBit            = 1 << 7;   ///< Huge page bit
+static constexpr u64 kPresentBit             = 1ULL;        ///< Present bit
+static constexpr u64 kWriteBit               = 1ULL << 1;   ///< Write bit
+static constexpr u64 kUserAccessibleBit      = 1ULL << 2;   ///< User accessible bit
+static constexpr u64 kWriteThroughCachingBit = 1ULL << 3;   ///< Write-through caching bit
+static constexpr u64 kDisableCacheBit        = 1ULL << 4;   ///< Disable cache bit
+static constexpr u64 kAccessedBit            = 1ULL << 5;   ///< Accessed bit
+static constexpr u64 kDirtyBit               = 1ULL << 6;   ///< Dirty bit
+static constexpr u64 kGlobalBit              = 1ULL << 8;   ///< Global bit
+static constexpr u64 kPatBit                 = 1ULL << 12;  ///< PAT bit
+static constexpr u64 kHlatRestartBit         = 1ULL << 13;  ///< HLAT restart bit
+static constexpr u64 kHugePageBit            = 1ULL << 7;   ///< Huge page bit
+static constexpr u64 kNoExecuteBit           = 1ULL << 63;
 
 //==============================================================================
 // PageMapEntries
@@ -92,14 +93,14 @@ struct PageMapEntry<4> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<3>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<3>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<3>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<3>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -130,14 +131,14 @@ struct PageMapEntry<3> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<2>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<2>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<2>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<2>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -167,14 +168,14 @@ struct PageMapEntry<3, kHugePage> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 30);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 30);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 30;
+        frame = Mem::PtrToUptr(page_addr) >> 30;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -204,14 +205,14 @@ struct PageMapEntry<2> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<PageMapTable<1>> GetNextLevelTable() const
+    NODISCARD Mem::PPtr<PageMapTable<1>> GetNextLevelTable() const
     {
-        return PhysicalPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
     }
 
-    void SetNextLevelTable(PhysicalPtr<PageMapTable<1>> table_addr, u64 flags)
+    void SetNextLevelTable(Mem::PPtr<PageMapTable<1>> table_addr, u64 flags)
     {
-        frame = table_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;
@@ -241,14 +242,14 @@ struct PageMapEntry<2, kHugePage> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 21);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 21);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 21;
+        frame = Mem::PtrToUptr(page_addr) >> 21;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -280,14 +281,14 @@ struct PageMapEntry<1> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD PhysicalPtr<void> GetFrameAddress() const
+    NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
-        return PhysicalPtr<void>(static_cast<u64>(frame) << 12);
+        return Mem::UptrToPtr<void>(static_cast<u64>(frame) << 12);
     }
 
-    void SetFrameAddress(PhysicalPtr<void> page_addr, u64 flags)
+    void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        frame = page_addr.AsUIntPtr() >> 12;
+        frame = Mem::PtrToUptr(page_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;

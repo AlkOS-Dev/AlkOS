@@ -13,7 +13,7 @@
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
-void KernelInit(const hal::RawBootArguments& raw_args)
+void KernelInit(const hal::RawBootArguments &raw_args)
 {
     hal::TerminalInit();
     hal::ArchInit(raw_args);
@@ -32,6 +32,7 @@ void KernelInit(const hal::RawBootArguments& raw_args)
     GlobalStateModule::Init();
 
     TODO_MMU_MINIMAL
+    HardwareModule::Get();
     // /* Initialize ACPI */
     // HardwareModule::Get().GetACPIController().Init(args);
 

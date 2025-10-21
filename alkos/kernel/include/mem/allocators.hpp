@@ -6,30 +6,30 @@
 
 namespace alloca
 {
-using namespace mem;
+using namespace Mem;
 FAST_CALL Expected<VirtualPtr<void>, MemError> AlignedKMalloc(
     const size_t size, const size_t alignment
 )
 {
     ASSERT_TRUE(IsPowerOfTwo(alignment));
-    const size_t full_size = size + alignment - 1 + sizeof(void*);
+    const size_t full_size = size + alignment - 1 + sizeof(void *);
     auto result            = KMalloc(full_size);
     if (!result) {
         return Unexpected(result.error());
     }
 
-    const u64 addr    = reinterpret_cast<u64>(result.value()) + sizeof(void*);
+    const u64 addr    = reinterpret_cast<u64>(result.value()) + sizeof(void *);
     const u64 aligned = (addr + alignment - 1) & ~(alignment - 1);
 
-    *reinterpret_cast<void**>(aligned - sizeof(void*)) = result.value();
-    return reinterpret_cast<void*>(aligned);
+    *reinterpret_cast<void **>(aligned - sizeof(void *)) = result.value();
+    return reinterpret_cast<void *>(aligned);
 }
 
-FAST_CALL Expected<void, MemError> AlignedKFree(void* ptr)
+FAST_CALL Expected<void, MemError> AlignedKFree(void *ptr)
 {
     if (!ptr)
         return {};
-    void* original = (static_cast<void**>(ptr))[-1];
+    void *original = (static_cast<void **>(ptr))[-1];
     KFree(original);
 }
 
@@ -44,14 +44,14 @@ class DynArray
     using value_type      = T;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
-    using reference       = value_type&;
-    using const_reference = const value_type&;
-    using pointer         = T*;
-    using const_pointer   = const T*;
+    using reference       = value_type &;
+    using const_reference = const value_type &;
+    using pointer         = T *;
+    using const_pointer   = const T *;
 
     /* iterators */
-    using iterator               = value_type*;
-    using const_iterator         = const value_type*;
+    using iterator               = value_type *;
+    using const_iterator         = const value_type *;
     using reverse_iterator       = iterator;
     using const_reverse_iterator = const_iterator;
 
@@ -88,20 +88,20 @@ class DynArray
     // Class interaction
     // ------------------------------
 
-    NODISCARD FORCE_INLINE_F T& operator[](const size_t index) noexcept
+    NODISCARD FORCE_INLINE_F T &operator[](const size_t index) noexcept
     {
         ASSERT_LT(index, size());
         return mem_[index];
     }
 
-    NODISCARD FORCE_INLINE_F const T& operator[](const size_t index) const noexcept
+    NODISCARD FORCE_INLINE_F const T &operator[](const size_t index) const noexcept
     {
         ASSERT_LT(index, size());
         return mem_[index];
     }
 
-    NODISCARD FORCE_INLINE_F T* data() { return mem_; }
-    NODISCARD FORCE_INLINE_F const T* data() const { return mem_; }
+    NODISCARD FORCE_INLINE_F T *data() { return mem_; }
+    NODISCARD FORCE_INLINE_F const T *data() const { return mem_; }
 
     NODISCARD FORCE_INLINE_F size_t size() const { return size_; }
     NODISCARD FORCE_INLINE_F bool empty() const { return size_ == 0; }
@@ -117,24 +117,24 @@ class DynArray
             return Unexpected(alloc.error());
         }
 
-        mem_  = static_cast<T*>(alloc.value());
+        mem_  = static_cast<T *>(alloc.value());
         size_ = size;
 
         return {};
     }
 
     template <class... Args>
-    FORCE_INLINE_F void AllocEntry(const size_t idx, Args&&... args)
+    FORCE_INLINE_F void AllocEntry(const size_t idx, Args &&...args)
     {
         ASSERT_LT(idx, size());
-        T* data = mem_ + idx;
-        new (reinterpret_cast<void*>(data)) T(std::forward<Args>(args)...);
+        T *data = mem_ + idx;
+        new (reinterpret_cast<void *>(data)) T(std::forward<Args>(args)...);
     }
 
     FORCE_INLINE_F void FreeEntry(const size_t idx)
     {
         ASSERT_LT(idx, size());
-        T* data = mem_ + idx;
+        T *data = mem_ + idx;
         data->~T();
     }
 
@@ -143,7 +143,7 @@ class DynArray
     // ------------------------------
 
     private:
-    T* mem_{};
+    T *mem_{};
     size_t size_{};
 };
 }  // namespace alloca

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_MULTIBOOT_INFO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/concepts.hpp>
@@ -28,7 +28,7 @@ concept TagT = requires(Tag tag) {
 };
 
 template <class FilterT, class TagT>
-concept TagFilter = requires(FilterT filter, TagT* tag) {
+concept TagFilter = requires(FilterT filter, TagT *tag) {
     { filter(tag) } -> std::convertible_to<bool>;
 };
 
@@ -55,30 +55,30 @@ class MultibootInfo
     template <TagCallback Callback>
     void WalkTags(Callback cb)
     {
-        for (Tag* tag_ptr = reinterpret_cast<Tag*>(multiboot_info_addr_ + 8);
+        for (Tag *tag_ptr = reinterpret_cast<Tag *>(multiboot_info_addr_ + 8);
              tag_ptr->type != kMultibootTagTypeEnd;
-             tag_ptr = reinterpret_cast<Tag*>(
-                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             tag_ptr = reinterpret_cast<Tag *>(
+                 reinterpret_cast<u8 *>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
              )) {
-            Tag& tag = *tag_ptr;
+            Tag &tag = *tag_ptr;
             cb(tag);
         }
     }
 
     template <TagT Tag, typename Filter>
-    Tag* FindTag(Filter filter)
+    Tag *FindTag(Filter filter)
     {
         const u32 kType                    = TagMetadata<Tag>::kValue;
-        [[maybe_unused]] const char* kName = TagMetadata<Tag>::kTagName;
+        [[maybe_unused]] const char *kName = TagMetadata<Tag>::kTagName;
         static_assert(kType != kInvalidTagNumber);
 
-        for (auto* tag_ptr = reinterpret_cast<Multiboot::Tag*>(multiboot_info_addr_ + 8);
+        for (auto *tag_ptr = reinterpret_cast<Multiboot::Tag *>(multiboot_info_addr_ + 8);
              tag_ptr->type != kMultibootTagTypeEnd;
-             tag_ptr = reinterpret_cast<Multiboot::Tag*>(
-                 reinterpret_cast<u8*>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
+             tag_ptr = reinterpret_cast<Multiboot::Tag *>(
+                 reinterpret_cast<u8 *>(tag_ptr) + AlignUp(tag_ptr->size, 8u)
              )) {
             if (tag_ptr->type == kType) {
-                auto* specific_tag = reinterpret_cast<Tag*>(tag_ptr);
+                auto *specific_tag = reinterpret_cast<Tag *>(tag_ptr);
                 if (filter(specific_tag)) {
                     return specific_tag;
                 }
@@ -88,9 +88,9 @@ class MultibootInfo
     }
 
     template <TagT Tag>
-    Tag* FindTag()
+    Tag *FindTag()
     {
-        return FindTag<Tag>([](const Tag*) {
+        return FindTag<Tag>([](const Tag *) {
             return true;
         });
     }
@@ -104,4 +104,4 @@ class MultibootInfo
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_

@@ -17,8 +17,8 @@ class PhysicalPtr
     //==============================================================================
 
     explicit PhysicalPtr() : phys_ptr_(nullptr) {}
-    explicit PhysicalPtr(T* phys_ptr) : phys_ptr_{phys_ptr} {}
-    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<T*>(phys_ptr)} {}
+    explicit PhysicalPtr(T *phys_ptr) : phys_ptr_{phys_ptr} {}
+    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<T *>(phys_ptr)} {}
 
     //==============================================================================
     // Operators
@@ -26,8 +26,8 @@ class PhysicalPtr
 
     // Enabling pointer-like behavior
 
-    T& operator*() const { return *(ToVirt()); }
-    T* operator->() const { return ToVirt(); }
+    T &operator*() const { return *(ToVirt()); }
+    T *operator->() const { return ToVirt(); }
 
     explicit operator bool() const { return !IsNull(); }
 
@@ -35,7 +35,7 @@ class PhysicalPtr
 
     PhysicalPtr<T> operator+(u64 offset) const { return PhysicalPtr<T>(phys_ptr_ + offset); }
 
-    PhysicalPtr<T>& operator+=(u64 offset)
+    PhysicalPtr<T> &operator+=(u64 offset)
     {
         phys_ptr_ += offset;
         return *this;
@@ -45,10 +45,10 @@ class PhysicalPtr
     // Observers
     //==============================================================================
 
-    T* Get() const { return phys_ptr_; }
-    T* ToVirt() const
+    T *Get() const { return phys_ptr_; }
+    T *ToVirt() const
     {
-        return reinterpret_cast<T*>(
+        return reinterpret_cast<T *>(
             reinterpret_cast<uintptr_t>(phys_ptr_) + hal::kKernelVirtualAddressStart
         );
     }
@@ -56,7 +56,7 @@ class PhysicalPtr
     uintptr_t AsUIntPtr() const { return reinterpret_cast<uintptr_t>(phys_ptr_); }
 
     private:
-    T* phys_ptr_;
+    T *phys_ptr_;
 };
 
 template <>
@@ -68,8 +68,8 @@ class PhysicalPtr<void>
     //==============================================================================
 
     PhysicalPtr() : phys_ptr_{nullptr} {}
-    explicit PhysicalPtr(void* phys_ptr) : phys_ptr_{phys_ptr} {}
-    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<void*>(phys_ptr)} {}
+    explicit PhysicalPtr(void *phys_ptr) : phys_ptr_{phys_ptr} {}
+    explicit PhysicalPtr(uintptr_t phys_ptr) : phys_ptr_{reinterpret_cast<void *>(phys_ptr)} {}
 
     //==============================================================================
     // Operators
@@ -82,13 +82,13 @@ class PhysicalPtr<void>
     PhysicalPtr<void> operator+(u64 offset) const
     {
         // `char*` for standard-compliant byte-level pointer arithmetic.
-        return PhysicalPtr<void>(static_cast<char*>(phys_ptr_) + offset);
+        return PhysicalPtr<void>(static_cast<char *>(phys_ptr_) + offset);
     }
 
-    PhysicalPtr<void>& operator+=(u64 offset)
+    PhysicalPtr<void> &operator+=(u64 offset)
     {
         // `char*` for standard-compliant byte-level pointer arithmetic.
-        phys_ptr_ = static_cast<char*>(phys_ptr_) + offset;
+        phys_ptr_ = static_cast<char *>(phys_ptr_) + offset;
         return *this;
     }
 
@@ -96,13 +96,16 @@ class PhysicalPtr<void>
     // Observers
     //==============================================================================
 
-    void* Get() const { return phys_ptr_; }
-    void* ToVirt() const { return static_cast<char*>(phys_ptr_) + hal::kKernelVirtualAddressStart; }
+    void *Get() const { return phys_ptr_; }
+    void *ToVirt() const
+    {
+        return static_cast<char *>(phys_ptr_) + hal::kKernelVirtualAddressStart;
+    }
     bool IsNull() const { return phys_ptr_ == nullptr; }
     uintptr_t AsUIntPtr() const { return reinterpret_cast<uintptr_t>(phys_ptr_); }
 
     private:
-    void* phys_ptr_;
+    void *phys_ptr_;
 };
 
 }  // namespace mem

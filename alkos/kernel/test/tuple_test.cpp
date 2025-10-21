@@ -30,7 +30,7 @@ TEST_F(TupleTest, TupleBasics)
 
 TEST_F(TupleTest, TupleMixedTypes)
 {
-    const char* str   = "abcd";
+    const char *str   = "abcd";
     const auto tuple1 = std::make_tuple(1, 1.0, 2.0f, str);
     EXPECT_EQ(static_cast<int>(1), tuple1.get<0>());
     EXPECT_EQ(1.0, tuple1.get<1>());
@@ -40,7 +40,7 @@ TEST_F(TupleTest, TupleMixedTypes)
     EXPECT_TRUE((std::is_same_v<const int, std::tuple_element_t<0, decltype(tuple1)>>));
     EXPECT_TRUE((std::is_same_v<const double, std::tuple_element_t<1, decltype(tuple1)>>));
     EXPECT_TRUE((std::is_same_v<const float, std::tuple_element_t<2, decltype(tuple1)>>));
-    EXPECT_TRUE((std::is_same_v<const char* const, std::tuple_element_t<3, decltype(tuple1)>>));
+    EXPECT_TRUE((std::is_same_v<const char *const, std::tuple_element_t<3, decltype(tuple1)>>));
 
     EXPECT_EQ(4_size, std::tuple_size_v<decltype(tuple1)>);
 }
@@ -62,7 +62,7 @@ TEST_F(TupleTest, TupleGet)
     EXPECT_STREQ("test", std::get<2>(constTuple));
 
     EXPECT_EQ(100, std::get<int>(tuple));
-    EXPECT_STREQ("hello", std::get<const char*>(tuple));
+    EXPECT_STREQ("hello", std::get<const char *>(tuple));
     EXPECT_EQ(3.14, std::get<double>(tuple));
 
     EXPECT_EQ(10, std::get<0>(std::make_tuple(10, 20, 30)));
@@ -70,21 +70,21 @@ TEST_F(TupleTest, TupleGet)
 
 TEST_F(TupleTest, TupleElement)
 {
-    using TupleType = std::tuple<int, double, const char*>;
+    using TupleType = std::tuple<int, double, const char *>;
 
     EXPECT_TRUE((std::is_same_v<int, std::tuple_element_t<0, TupleType>>));
     EXPECT_TRUE((std::is_same_v<double, std::tuple_element_t<1, TupleType>>));
-    EXPECT_TRUE((std::is_same_v<const char*, std::tuple_element_t<2, TupleType>>));
+    EXPECT_TRUE((std::is_same_v<const char *, std::tuple_element_t<2, TupleType>>));
 
-    using ConstTupleType = const std::tuple<int, double, const char*>;
+    using ConstTupleType = const std::tuple<int, double, const char *>;
     EXPECT_TRUE((std::is_same_v<const int, std::tuple_element_t<0, ConstTupleType>>));
     EXPECT_TRUE((std::is_same_v<const double, std::tuple_element_t<1, ConstTupleType>>));
-    EXPECT_TRUE((std::is_same_v<const char* const, std::tuple_element_t<2, ConstTupleType>>));
+    EXPECT_TRUE((std::is_same_v<const char *const, std::tuple_element_t<2, ConstTupleType>>));
 
-    using VolatileTupleType = volatile std::tuple<int, double, const char*>;
+    using VolatileTupleType = volatile std::tuple<int, double, const char *>;
     EXPECT_TRUE((std::is_same_v<volatile int, std::tuple_element_t<0, VolatileTupleType>>));
 
-    using CVTupleType = const volatile std::tuple<int, double, const char*>;
+    using CVTupleType = const volatile std::tuple<int, double, const char *>;
     EXPECT_TRUE((std::is_same_v<const volatile int, std::tuple_element_t<0, CVTupleType>>));
 }
 
@@ -100,7 +100,7 @@ TEST_F(TupleTest, TupleBindings)
     EXPECT_TRUE((std::is_same_v<const int, decltype(b)>));
     EXPECT_TRUE((std::is_same_v<const int, decltype(c)>));
 
-    static constexpr const char* str = "abcd";
+    static constexpr const char *str = "abcd";
     const auto tuple1                = std::make_tuple(static_cast<int>(1), 1.0, 2.0f, str);
 
     const auto [d, e, f, g] = tuple1;
@@ -112,7 +112,7 @@ TEST_F(TupleTest, TupleBindings)
     EXPECT_TRUE((std::is_same_v<const int, decltype(d)>));
     EXPECT_TRUE((std::is_same_v<const double, decltype(e)>));
     EXPECT_TRUE((std::is_same_v<const float, decltype(f)>));
-    EXPECT_TRUE((std::is_same_v<const char* const, decltype(g)>));
+    EXPECT_TRUE((std::is_same_v<const char *const, decltype(g)>));
 
     auto tuple2       = std::make_tuple(static_cast<int>(1), 1.0, 2.0f, str);
     auto [h, i, j, k] = tuple2;
@@ -124,7 +124,7 @@ TEST_F(TupleTest, TupleBindings)
     EXPECT_TRUE((std::is_same_v<int, decltype(h)>));
     EXPECT_TRUE((std::is_same_v<double, decltype(i)>));
     EXPECT_TRUE((std::is_same_v<float, decltype(j)>));
-    EXPECT_TRUE((std::is_same_v<const char*, decltype(k)>));
+    EXPECT_TRUE((std::is_same_v<const char *, decltype(k)>));
 }
 
 TEST_F(TupleTest, TupleHelpers)
@@ -136,7 +136,7 @@ TEST_F(TupleTest, TupleHelpers)
 
     int arr[3] = {1, 2, 3};
     auto t2    = std::make_tuple(arr, 5);
-    EXPECT_TRUE((std::is_same_v<int*, std::tuple_element_t<0, decltype(t2)>>));
+    EXPECT_TRUE((std::is_same_v<int *, std::tuple_element_t<0, decltype(t2)>>));
 
     TODO_FULL_TUPLE_SUPPORT
     // // Test make_tuple with references using std::ref and std::cref
@@ -232,7 +232,7 @@ TEST_F(TupleTest, TupleEmptyConstruction)
     std::tuple<> emptyTuple{};
     EXPECT_EQ(0_size, std::tuple_size_v<decltype(emptyTuple)>);
 
-    std::tuple<int, double, const char*> defaultTuple{};
+    std::tuple<int, double, const char *> defaultTuple{};
     EXPECT_EQ(0, std::get<0>(defaultTuple));
     EXPECT_EQ(0.0, std::get<1>(defaultTuple));
     EXPECT_EQ(nullptr, std::get<2>(defaultTuple));

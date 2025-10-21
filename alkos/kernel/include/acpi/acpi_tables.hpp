@@ -22,7 +22,7 @@ namespace ACPI
 //////////////////////////////
 
 template <typename Callback>
-concept TableEntryCallback = requires(Callback cb, acpi_entry_hdr* entry) {
+concept TableEntryCallback = requires(Callback cb, acpi_entry_hdr *entry) {
     { cb(entry) } -> std::same_as<void>;
 };
 
@@ -38,10 +38,10 @@ class Table
     explicit Table(const uacpi_table t) : table_(t) {}
     ~Table() { Unref_(); }
 
-    Table(const Table&)            = delete;
-    Table& operator=(const Table&) = delete;
-    Table(Table&& other) noexcept : table_(other.table_) { other.table_.ptr = nullptr; }
-    Table& operator=(Table&& other) noexcept
+    Table(const Table &)            = delete;
+    Table &operator=(const Table &) = delete;
+    Table(Table &&other) noexcept : table_(other.table_) { other.table_.ptr = nullptr; }
+    Table &operator=(Table &&other) noexcept
     {
         if (this != &other) {
             Unref_();
@@ -51,7 +51,7 @@ class Table
         return *this;
     }
 
-    [[nodiscard]] T* GetNative() const { return static_cast<T*>(table_.ptr); }
+    [[nodiscard]] T *GetNative() const { return static_cast<T *>(table_.ptr); }
 
     [[nodiscard]] size_t GetSize() const
     {

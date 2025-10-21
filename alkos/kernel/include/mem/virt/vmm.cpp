@@ -1,16 +1,34 @@
 #include <extensions/debug.hpp>
 
-#include "mem/phys/ptr.hpp"
+#include "mem/heap.hpp"
+#include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/vmm.hpp"
 
-namespace mem
+namespace Mem
 {
 
-VirtualMemoryManager::VirtualMemoryManager(AddressSpace as) noexcept
-    : current_as_{PhysicalPtr<void>()}
+using Vmm = VirtualMemoryManager;
+template <typename T>
+using VPtr = VirtualPtr<T>;
+
+Vmm::VirtualMemoryManager() noexcept { TRACE_INFO("VirtualMemoryManager::VirtualMemoryManager()"); }
+
+Expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
-    TRACE_INFO("VirtualMemoryManager::VirtualMemoryManager()");
+    return KMalloc<AddressSpace>();
 }
 
-}  // namespace mem
+Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
+{
+    // Later invalidate TLB etc
+    KFree(as);
+    return {};
+}
+
+void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
+{
+    // TODO
+}
+
+}  // namespace Mem
