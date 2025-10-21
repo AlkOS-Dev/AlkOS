@@ -17,10 +17,12 @@ class Tlb : public TlbAPI
         cpu::Cr3 cr3 = cpu::GetCR<cpu::Cr3>();
         cpu::SetCR(cr3);
     }
+
     void InvalidatePage(Mem::VPtr<void> vaddr)
     {
         asm volatile("invlpg (%0)" ::"r"(vaddr) : "memory");
     }
+
     void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as)
     {
         cpu::Cr3 cr3{};

@@ -1,5 +1,6 @@
 #include "hal/impl/mmu.hpp"
 
+#include <modules/memory.hpp>
 #include "mem/page_map.hpp"
 
 using namespace arch;
@@ -28,9 +29,7 @@ Expected<void, MemError> Mmu::Map(
 
     pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
 
-    // Invalidate the TLB for this page
-    // TODO
-    // HardwareModule::Get().GetTlb().InvalidatePage(vaddr);
+    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
 
     return {};
 }
@@ -50,8 +49,22 @@ Expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     // Clear the entry
     *reinterpret_cast<u64 *>(pme_l1) = 0;
 
-    // Invalidate the TLB for this page
-    // HardwareModule::Get().GetTlb().InvalidatePage(vaddr);
+    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
 
     return {};
+}
+
+Expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> vaddr)
+{
+    auto res = WalkToEntry<1>(as, vaddr, false);
+    if (!res) {
+        return Unexpected(res.error());
+    }
+
+    auto pme_l1 = *res;
+    if (!pme_l1->IsPresent()) {
+        return Unexpected(MemError::InvalidArgument);
+    }
+
+    return pme_l1->GetFrameAddress();
 }
