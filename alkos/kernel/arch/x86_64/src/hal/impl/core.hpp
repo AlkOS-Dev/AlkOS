@@ -1,11 +1,15 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CORE_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CORE_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
 
 #include <hal/api/core.hpp>
 #include "drivers/apic/local_apic.hpp"
 
 namespace arch
 {
+
+struct CoreConfig {
+    u16 acpi_id;
+};
 
 class Core : public CoreAPI
 {
@@ -14,9 +18,7 @@ class Core : public CoreAPI
     // Class creation
     // ------------------------------
 
-    Core() = delete;
-
-    explicit Core(u32 acpi_id, u32 apic_id);
+    Core()  = default;
     ~Core() = default;
 
     // ------------------------------
@@ -25,23 +27,15 @@ class Core : public CoreAPI
 
     void EnableCore();
 
-    NODISCARD FORCE_INLINE_F u32 GetCoreId() const { return apic_id_; }
-
-    // ------------------------------
-    // Class methods
-    // ------------------------------
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
     protected:
-    u32 acpi_id_;
-    u32 apic_id_;
 };
 
 NODISCARD WRAP_CALL u32 GetCurrentCoreId() { return LocalApic::GetCoreId(); }
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_CORE_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_

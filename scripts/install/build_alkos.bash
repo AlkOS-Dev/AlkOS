@@ -15,7 +15,7 @@ source "${BUILD_SCRIPT_SOURCE_DIR}/scripts/utils/argparse.bash"
 # Parse command-line arguments
 parse_args() {
   argparse_init "${BUILD_SCRIPT_PATH}" "Build AlkOS from the specified CMake configuration directory"
-  argparse_add_positional "cmake_conf_dir" "Path to the CMake configuration directory" true
+  argparse_add_positional "cmake_conf_dir" "Path to the CMake configuration directory" true "" "directory"
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_parse "$@"
 }

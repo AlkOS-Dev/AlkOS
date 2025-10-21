@@ -1,8 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
 
 #include <extensions/defines.hpp>
 #include "extensions/types.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 // ------------------------------
 // Crucial defines
@@ -14,20 +15,43 @@ static constexpr u16 kIrq1Offset     = 0x20; /* Start for hardware interrupts */
 static constexpr u16 kIrq2Offset     = 0x28;
 static constexpr u16 kSpuriousVector = 0xFF; /* Spurious interrupt vector */
 
-static constexpr u8 kExceptionIdx[]{8, 10, 11, 12, 13, 14, 17, 21, 29, 30};
+static constexpr u8 kExceptionIdx[]{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                                    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 static constexpr size_t kExceptionCount = sizeof(kExceptionIdx) / sizeof(kExceptionIdx[0]);
 
 static const char *kExceptionMsg[]{
-    "Double fault",
-    "Invalid TSS",
-    "Segment not present",
-    "Stack-segment fault",
-    "General protection fault",
-    "Page fault",
-    "Alignment check",
-    "Control Protection Exception",
-    "VMM Communication Exception",
-    "Security exception"
+    "Divide Error (#DE)",                       // 0
+    "Debug Exception (#DB)",                    // 1
+    "Non-maskable Interrupt (NMI)",             // 2
+    "Breakpoint (#BP)",                         // 3
+    "Overflow (#OF)",                           // 4
+    "BOUND Range Exceeded (#BR)",               // 5
+    "Invalid Opcode (#UD)",                     // 6
+    "Device Not Available (#NM)",               // 7
+    "Double Fault (#DF)",                       // 8
+    "Coprocessor Segment Overrun (reserved)",   // 9
+    "Invalid TSS (#TS)",                        // 10
+    "Segment Not Present (#NP)",                // 11
+    "Stack-Segment Fault (#SS)",                // 12
+    "General Protection Fault (#GP)",           // 13
+    "Page Fault (#PF)",                         // 14
+    "Reserved",                                 // 15
+    "x87 Floating-Point Exception (#MF)",       // 16
+    "Alignment Check (#AC)",                    // 17
+    "Machine Check (#MC)",                      // 18
+    "SIMD Floating-Point Exception (#XM/#XF)",  // 19
+    "Virtualization Exception (#VE)",           // 20
+    "Control Protection Exception (#CP)",       // 21 (CET)
+    "Reserved",                                 // 22
+    "Reserved",                                 // 23
+    "Reserved",                                 // 24
+    "Reserved",                                 // 25
+    "Reserved",                                 // 26
+    "Reserved",                                 // 27
+    "Hypervisor Injection Exception (#HV)",     // 28 (AMD/VM)
+    "VMM Communication Exception (#VC)",        // 29 (AMD)
+    "Security Exception (#SX)",                 // 30
+    "Reserved"                                  // 31
 };
 static constexpr size_t kExceptionMsgCount = sizeof(kExceptionMsg) / sizeof(kExceptionMsg[0]);
 
@@ -62,18 +86,6 @@ struct PACK Idtr {
     u64 base;
 };
 
-struct PACK IsrStackFrame {
-    u64 rip;
-    u64 cs;
-    u64 rflags;
-    u64 rsp;
-};
-
-struct PACK IsrErrorStackFrame {
-    u64 error_code;
-    IsrStackFrame isr_stack_frame;
-};
-
 struct Idt {
     /* global structure defining isr specifics for each interrupt signal */
     alignas(32) IdtEntry idt[kIdtEntries]{};
@@ -87,5 +99,10 @@ struct Idt {
 // ------------------------------
 
 const char *GetExceptionMsg(u8 idx);
+void DefaultInterruptHandler(u8 idt_idx);
+void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+void SimpleIrqHandler(intr::LitHwEntry &entry);
+void TestIsr(intr::LitSwEntry &entry);
+void TimerIsr(intr::LitHwEntry &entry);
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_INTERRUPTS_IDT_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_

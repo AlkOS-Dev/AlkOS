@@ -2,10 +2,13 @@
 #include <extensions/defines.hpp>
 
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
+#include <modules/timing.hpp>
+#include <trace.hpp>
 using hal::KernelPanicFormat;
 
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 #include <assert.h>
 #include <extensions/bit.hpp>
@@ -40,12 +43,12 @@ extern "C" void *IsrWrapperTable[];
  *
  * @param idt_idx index of interrupt triggered.
  */
-extern "C" NO_RET void DefaultInterruptHandler(const u8 idt_idx)
+NO_RET void DefaultInterruptHandler(const u8 idt_idx)
 {
     KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
 }
 
-extern "C" NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
+NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
 {
     static constexpr size_t kStateMsgSize = 1024;
 
@@ -61,6 +64,7 @@ extern "C" NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, 
     char state_buffer[kStateMsgSize];
     cpu_state.GetStateDesc(state_buffer, kStateMsgSize);
 
+    TRACE_DEBUG("what: %hhu", idt_idx);
     const char *exception_msg = GetExceptionMsg(idt_idx);
     R_ASSERT_NOT_NULL(exception_msg);
 
@@ -73,6 +77,64 @@ extern "C" NO_RET void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, 
         idt_idx, exception_msg, stack_frame->error_code, stack_frame->isr_stack_frame.rip,
         state_buffer, stack_frame->isr_stack_frame.rflags
     );
+}
+
+void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
+{
+    DefaultExceptionHandler(data, entry.hardware_irq);
+}
+
+FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
+{
+    KernelTraceInfo("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
+}
+
+void SimpleIrqHandler(intr::LitHwEntry &entry)
+{
+    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+}
+
+void TestIsr(intr::LitSwEntry &entry)
+{
+    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+
+    /* pollute all registers possible */
+    __asm__ volatile("movq $-1, %%rax" : : : "rax");
+    __asm__ volatile("movq $-1, %%rbx" : : : "rbx");
+    __asm__ volatile("movq $-1, %%rcx" : : : "rcx");
+    __asm__ volatile("movq $-1, %%rdx" : : : "rdx");
+    __asm__ volatile("movq $-1, %%rsi" : : : "rsi");
+    __asm__ volatile("movq $-1, %%rdi" : : : "rdi");
+    __asm__ volatile("movq $-1, %%r8" : : : "r8");
+    __asm__ volatile("movq $-1, %%r9" : : : "r9");
+    __asm__ volatile("movq $-1, %%r10" : : : "r10");
+    __asm__ volatile("movq $-1, %%r11" : : : "r11");
+    __asm__ volatile("movq $-1, %%r12" : : : "r12");
+    __asm__ volatile("movq $-1, %%r13" : : : "r13");
+    __asm__ volatile("movq $-1, %%r14" : : : "r14");
+    __asm__ volatile("movq $-1, %%r15" : : : "r15");
+}
+
+void TimerIsr(intr::LitHwEntry &entry)
+{
+    // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+
+    // TODO: Temporary code
+    static u64 counter = 0;
+    if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {
+        static constexpr size_t kBuffSize = 256;
+        char buff[kBuffSize]{};
+
+        if (TimingModule::IsInited()) {
+            const auto t = time(nullptr);
+            strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
+        }
+
+        KernelTraceInfo(
+            "Kernel time update: %s, have a nice day!",
+            TimingModule::IsInited() ? buff : "Timing module is not initialized!"
+        );
+    }
 }
 
 // ------------------------------

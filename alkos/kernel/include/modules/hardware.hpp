@@ -7,7 +7,7 @@
 #include "hardware/clock_infra.hpp"
 #include "hardware/cores.hpp"
 #include "hardware/event_clock_infra.hpp"
-#include "hardware/interupts.hpp"
+#include "interrupts/interupts.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal

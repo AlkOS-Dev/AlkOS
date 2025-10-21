@@ -49,8 +49,21 @@ static void ParseMadtRules_()
 }
 
 // ------------------------------
+// Driver functions
+// ------------------------------
+
+static void LApicACK(intr::LitHwEntry &) { LocalApic::SendEOI(); }
+
+// ------------------------------
 // Implementations
 // ------------------------------
+
+LocalApic::LocalApic()
+{
+    driver_.name    = "Local APIC";
+    driver_.data    = this;
+    driver_.cbs.ack = LApicACK;
+}
 
 void LocalApic::Enable()
 {

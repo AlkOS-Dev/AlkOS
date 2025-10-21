@@ -129,3 +129,70 @@ strip_quotes() {
     local input="$1"
     echo "$input" | sed 's/^"\(.*\)"$/\1/' | sed "s/^'\(.*\)'$/\1/"
 }
+
+require_root_privileges() {
+    if [ "$EUID" -ne 0 ]; then
+        dump_error "This operation requires root privileges. Please run as root or use sudo."
+    fi
+}
+
+# https://unix.stackexchange.com/a/438712
+run_with_sudo() {
+    assert_argument_provided "$1"
+    local arg="$1"
+    if [ $(type -t $arg) = function ]
+    then
+        shift && command sudo bash -c "
+            source '${HELPERS_SCRIPT_DIR}/helpers.bash'
+            $(declare -f $arg)
+            $arg $*
+        "
+    elif [ $(type -t $arg) = alias ]
+    then
+            alias sudo='\sudo '
+            eval "sudo $@"
+    else
+            command sudo "$@"
+    fi
+}
+
+user_choice() {
+    assert_argument_provided "$1"
+    local prompt="$1"
+    shift
+
+    read -r -p "$prompt (y/N): " choice
+    case "$choice" in
+        y|Y)
+            "$@"
+            return 0
+            ;;
+        '') ;&
+        n|N) return 1 ;;
+        *) return 2 ;;
+    esac
+}
+
+prompt_to_execute() {
+  local root_required="$1"
+  shift
+
+  local func_name="$1"
+  shift
+  pretty_info "The following function will be executed: ${func_name} $*"
+  if [ "$(type -t $func_name)" = function ]; then
+      pretty_info "Function content:"
+      declare -f "$func_name"
+  fi
+  if [ "$root_required" = true ]; then
+      pretty_warn "This function requires root privileges."
+  fi
+
+  if [[ "$root_required" = true ]]; then
+      user_choice "Do you want to proceed with root privileges?" \
+          run_with_sudo "$func_name" "$@"
+  else
+      user_choice "Do you want to proceed?" \
+          "$func_name" "$@"
+  fi
+}

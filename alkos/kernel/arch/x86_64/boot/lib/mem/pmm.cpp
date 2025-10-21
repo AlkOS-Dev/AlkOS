@@ -2,7 +2,7 @@
 
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
-#include <extensions/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/optional.hpp>
@@ -34,7 +34,8 @@ std::expected<PhysicalMemoryManager*, MemError> PhysicalMemoryManager::Create(
     const u64 bitmap_addr = bitmap_addr_res.value();
 
     TRACE_DEBUG("Initializing bitmap view...");
-    [[maybe_unused]] BitMapView bitmap_view = InitBitmapView(bitmap_addr, total_pages);
+    [[maybe_unused]] data_structures::BitMapView bitmap_view =
+        InitBitmapView(bitmap_addr, total_pages);
 
     TRACE_DEBUG("Creating PhysicalMemoryManager instance...");
 
@@ -337,12 +338,15 @@ std::expected<u64, MemError> PhysicalMemoryManager::FindBitmapLocation(
     return *bitmap_addr;
 }
 
-BitMapView PhysicalMemoryManager::InitBitmapView(const u64 addr, const u64 total_pages)
+data_structures::BitMapView PhysicalMemoryManager::InitBitmapView(
+    const u64 addr, const u64 total_pages
+)
 {
     const u64 size = (total_pages + 7) / 8;
     TRACE_DEBUG("Bitmap located at: %#018llx, size: %sB", addr, FormatMetricUint(size));
-    const u64 num_bits     = total_pages;
-    BitMapView bitmap_view = BitMapView(reinterpret_cast<void*>(addr), num_bits);
+    const u64 num_bits = total_pages;
+    data_structures::BitMapView bitmap_view =
+        data_structures::BitMapView(reinterpret_cast<void*>(addr), num_bits);
     bitmap_view.SetAll(BitMapAllocated);
 
     TRACE_DEBUG("Bitmap initialized, verifying...");

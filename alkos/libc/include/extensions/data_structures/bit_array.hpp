@@ -1,11 +1,11 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_ARRAY_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_ARRAY_HPP_
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_
 
 #include <stddef.h>
 #include "assert.h"
-#include "bit.hpp"
+#include "extensions/bit.hpp"
+#include "extensions/types.hpp"
 #include "string.h"
-#include "types.hpp"
 
 // TODO: Minimal changes would be required to make this
 // https://en.cppreference.com/w/cpp/utility/bitset.html
@@ -13,6 +13,9 @@
 //==============================================================================
 // BitMapView - Non-owning view with runtime size
 //==============================================================================
+
+namespace data_structures
+{
 
 class BitMapView final
 {
@@ -149,4 +152,6 @@ class PACK BitArray final
     StorageT storage_[kNumStorageT]{};
 };
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_ARRAY_HPP_
+}  // namespace data_structures
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_

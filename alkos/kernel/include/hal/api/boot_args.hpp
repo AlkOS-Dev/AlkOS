@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
 #define ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
 
+#include <defines.h>
 #include <extensions/types.hpp>
 
 namespace arch

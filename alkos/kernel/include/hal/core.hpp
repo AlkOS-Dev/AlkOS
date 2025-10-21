@@ -6,6 +6,7 @@
 namespace hal
 {
 using arch::Core;
+using arch::CoreConfig;
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_CORE_HPP_

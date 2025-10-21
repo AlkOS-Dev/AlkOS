@@ -72,6 +72,9 @@ class Interrupts : public InterruptsAPI
 
     protected:
     void InitializeDefaultIdt_();
+    static void MapToLogicalInterrupts_();
+    static void SetupPicAsDefaultDriver_();
+    void ReplacePicDriverWithLapic_();
 
     // ------------------------------
     // Class fields

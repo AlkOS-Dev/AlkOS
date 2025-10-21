@@ -20,8 +20,8 @@ INSTALL_TOOLCHAIN_VERBOSE_FLAG=""
 
 parse_args() {
   argparse_init "${INSTALL_TOOLCHAIN_BUILD_SCRIPT_PATH}" "Install cross-compile toolchain"
-  argparse_add_positional "install_dir" "Directory to install the toolchain" true ""
-  argparse_add_positional "build_dir" "Directory to store build files" true ""
+  argparse_add_positional "install_dir" "Directory to install the toolchain" true "" "directory"
+  argparse_add_positional "build_dir" "Directory to store build files" true "" "directory"
   argparse_add_positional "arch" "Architecture to build the toolchain for" true "x86_64"
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_parse "$@"
