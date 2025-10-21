@@ -3,6 +3,7 @@
 
 #include <hal/api/mmu.hpp>
 #include <mem/virt/addr_space.hpp>
+#include "cpu/control_registers.hpp"
 #include "mem/page_map.hpp"
 
 namespace arch
@@ -20,6 +21,13 @@ class Mmu : public MmuAPI
     Expected<Mem::PPtr<void>, Mem::MemError> Translate(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
     );
+
+    void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as)
+    {
+        cpu::Cr3 cr3{};
+        cr3.PageMapLevel4Address = Mem::PtrToUptr(as->PageTableRoot()) >> 12;
+        cpu::SetCR(cr3);
+    }
 
     private:
     template <size_t kLevel = 0>

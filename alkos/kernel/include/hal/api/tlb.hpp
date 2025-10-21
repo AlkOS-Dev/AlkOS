@@ -26,13 +26,6 @@ struct TlbAPI {
      * @param vaddr The virtual address of the page to invalidate.
      */
     void InvalidatePage(Mem::VPtr<void> vaddr);
-
-    /**
-     * @brief Switches the current address space, which typically involves
-     * loading a new page table root into a CPU register (e.g., CR3).
-     * @param as The new address space to switch to.
-     */
-    void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as);
 };
 
 }  // namespace arch
