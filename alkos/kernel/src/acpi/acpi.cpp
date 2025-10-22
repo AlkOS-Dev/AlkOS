@@ -53,29 +53,30 @@ int ACPI::ACPIController::Init(const BootArguments &args)
     uacpi_status ret = uacpi_initialize(0);
     R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
 
-    /* Load the AML namespace */
-    ret = uacpi_namespace_load();
-    if (uacpi_unlikely_error(ret)) {
-        TRACE_ERROR("uacpi_namespace_load error: %s", uacpi_status_to_string(ret));
-        return -1;
-    }
-
-    /* Initialize the namespace */
-    ret = uacpi_namespace_initialize();
-    if (uacpi_unlikely_error(ret)) {
-        TRACE_ERROR("uacpi_namespace_initialize error: %s", uacpi_status_to_string(ret));
-        return -1;
-    }
-
-    /*
-     * Tell uACPI that we have marked all GPEs we wanted for wake. This is needed to
-     * let uACPI enable all unmarked GPEs that have a corresponding AML handler.
-     */
-    ret = uacpi_finalize_gpe_initialization();
-    if (uacpi_unlikely_error(ret)) {
-        TRACE_ERROR("uACPI GPE initialization error: %s", uacpi_status_to_string(ret));
-        return -1;
-    }
+    // TODO: When OSL finished
+    // /* Load the AML namespace */
+    // ret = uacpi_namespace_load();
+    // if (uacpi_unlikely_error(ret)) {
+    //     TRACE_ERROR("uacpi_namespace_load error: %s", uacpi_status_to_string(ret));
+    //     return -1;
+    // }
+    //
+    // /* Initialize the namespace */
+    // ret = uacpi_namespace_initialize();
+    // if (uacpi_unlikely_error(ret)) {
+    //     TRACE_ERROR("uacpi_namespace_initialize error: %s", uacpi_status_to_string(ret));
+    //     return -1;
+    // }
+    //
+    // /*
+    //  * Tell uACPI that we have marked all GPEs we wanted for wake. This is needed to
+    //  * let uACPI enable all unmarked GPEs that have a corresponding AML handler.
+    //  */
+    // ret = uacpi_finalize_gpe_initialization();
+    // if (uacpi_unlikely_error(ret)) {
+    //     TRACE_ERROR("uACPI GPE initialization error: %s", uacpi_status_to_string(ret));
+    //     return -1;
+    // }
 
     return 0;
 }

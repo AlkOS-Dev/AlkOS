@@ -44,15 +44,15 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Initialize the global state module */
     GlobalStateModule::Init();
 
-    // /* Initialize ACPI */
+    /* Initialize ACPI */
     HardwareModule::Get().GetACPIController().Init(args);
 
-    // /* Extract all necessary data from ACPI tables */
-    // HardwareModule::Get().GetACPIController().ParseTables();
+    /* Extract all necessary data from ACPI tables */
+    HardwareModule::Get().GetACPIController().ParseTables();
 
-    // /* Allow hardware to fully initialise interrupt system */
-    // HardwareModule::Get().GetInterrupts().Init();
+    /* Allow hardware to fully initialise interrupt system */
+    HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
-    // TimingModule::Init();
+    TimingModule::Init();
 }
