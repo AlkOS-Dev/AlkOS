@@ -35,7 +35,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
     const u64 crystal_freq = ecx;
 
     TRACE_DEBUG(
-        "denominator: %llu, numerator: %lluu, crystal_freq: %llu", denominator, numerator,
+        "denominator: %llu, numerator: %llu, crystal_freq: %llu", denominator, numerator,
         crystal_freq
     );
 
