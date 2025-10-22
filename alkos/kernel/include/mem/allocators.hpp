@@ -7,31 +7,6 @@
 namespace alloca
 {
 using namespace Mem;
-FAST_CALL Expected<VirtualPtr<void>, MemError> AlignedKMalloc(
-    const size_t size, const size_t alignment
-)
-{
-    ASSERT_TRUE(IsPowerOfTwo(alignment));
-    const size_t full_size = size + alignment - 1 + sizeof(void *);
-    auto result            = KMalloc(full_size);
-    if (!result) {
-        return Unexpected(result.error());
-    }
-
-    const u64 addr    = reinterpret_cast<u64>(result.value()) + sizeof(void *);
-    const u64 aligned = (addr + alignment - 1) & ~(alignment - 1);
-
-    *reinterpret_cast<void **>(aligned - sizeof(void *)) = result.value();
-    return reinterpret_cast<void *>(aligned);
-}
-
-FAST_CALL Expected<void, MemError> AlignedKFree(void *ptr)
-{
-    if (!ptr)
-        return {};
-    void *original = (static_cast<void **>(ptr))[-1];
-    KFree(original);
-}
 
 template <class T, size_t kAlign = alignof(T)>
 class DynArray
@@ -64,7 +39,7 @@ class DynArray
     ~DynArray()
     {
         if (mem_) {
-            AlignedKFree(mem_);
+            KFree(mem_);
         }
     }
 
@@ -110,12 +85,10 @@ class DynArray
     {
         if (mem_) {
             AlignedKFree(mem_);
+            KFree(mem_);
         }
-        auto alloc = AlignedKMalloc(size * sizeof(T), kAlign);
-
-        if (!alloc) {
-            return Unexpected(alloc.error());
-        }
+        auto alloc = KMalloc({.size = size * sizeof(T), .alignment = kAlign});
+        UNEXPETED_RET_IF_ERR(alloc);
 
         mem_  = static_cast<T *>(alloc.value());
         size_ = size;

@@ -12,8 +12,8 @@ using Expected = std::expected<T, E>;
 template <typename E>
 using Unexpected = std::unexpected<E>;
 
-#define EXPECTED_RET_IF_ERR(res) \
-    if (!res)                    \
+#define UNEXPETED_RET_IF_ERR(res) \
+    if (!res)                     \
     return Unexpected(res.error())
 
 namespace Mem

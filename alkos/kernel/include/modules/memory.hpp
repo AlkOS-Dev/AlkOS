@@ -26,10 +26,13 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // Module fields
     // ------------------------------
 
+    using KernelAddressSpace = Mem::AddressSpace;
+
     DEFINE_MODULE_FIELD(Mem, PageMetaTable);
     DEFINE_MODULE_FIELD(Mem, BitmapPmm);
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);
+    DEFINE_MODULE_FIELD(MemoryModule, KernelAddressSpace);
 };
 }  // namespace internal
 

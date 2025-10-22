@@ -4,6 +4,7 @@
 #include <extensions/data_structures/data_structures.hpp>
 #include <extensions/template_lib.hpp>
 
+#include "mem/virt/addr_space.hpp"
 #include "memory/cyclic_allocator.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"

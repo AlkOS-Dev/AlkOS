@@ -115,7 +115,7 @@ void uacpi_kernel_unmap(void *addr, uacpi_size len)
 
 void *uacpi_kernel_alloc(uacpi_size size)
 {
-    auto ptr_or_error = Mem::KMalloc(size);
+    auto ptr_or_error = Mem::KMalloc({.size = size});
     if (!ptr_or_error) {
         return nullptr;
     }

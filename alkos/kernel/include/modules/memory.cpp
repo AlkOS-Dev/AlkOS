@@ -19,7 +19,7 @@ static BitmapPmm InitBitMapPmm(const BootArguments &args)
 }
 
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
-    : BitmapPmm_{InitBitMapPmm(args)}
+    : BitmapPmm_{InitBitMapPmm(args)}, KernelAddressSpace_(args.root_page_table)
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 

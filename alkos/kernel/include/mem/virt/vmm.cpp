@@ -41,7 +41,7 @@ void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 Expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 {
     auto res = as->AddArea(vma);
-    EXPECTED_RET_IF_ERR(res);
+    UNEXPETED_RET_IF_ERR(res);
 
     return vma.start;
 }
@@ -50,14 +50,14 @@ Expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 {
     // Get area start/end
     auto a_or_err = as->FindArea(region_start);
-    EXPECTED_RET_IF_ERR(a_or_err);
+    UNEXPETED_RET_IF_ERR(a_or_err);
     auto area  = *a_or_err;
     auto start = area->start;
     auto size  = area->size;
 
     // Rm
     auto err = as->RmArea(region_start);
-    EXPECTED_RET_IF_ERR(err);
+    UNEXPETED_RET_IF_ERR(err);
 
     // Invalidate
     tlb_.InvalidateRange(start, size);

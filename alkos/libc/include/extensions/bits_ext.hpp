@@ -7,6 +7,13 @@
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 
+//==============================================================================
+// Forward Declarations
+//==============================================================================
+
+template <std::unsigned_integral NumT>
+FAST_CALL constexpr bool IsPowerOfTwo(const NumT n);
+
 // ------------------------------
 // Various defines
 // ------------------------------
@@ -111,7 +118,10 @@ FAST_CALL NumT &SetBitValue(NumT &num, const u16 bit, const bool val)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr bool IsAligned(const NumT num, const size_t alignment)
 {
-    return (num & (alignment - 1)) == 0;
+    if (IsPowerOfTwo(alignment)) {
+        return (num & (alignment - 1)) == 0;
+    }
+    return (num % alignment) == 0;
 }
 
 // Overload for pointer types
@@ -125,13 +135,19 @@ FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 {
-    return (num + static_cast<NumT>(alignment) - 1) & ~(static_cast<NumT>(alignment) - 1);
+    if (IsPowerOfTwo(alignment)) {
+        return (num + static_cast<NumT>(alignment) - 1) & ~(static_cast<NumT>(alignment) - 1);
+    }
+    return ((num + alignment - 1) / alignment) * alignment;
 }
 
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
 {
-    return num & ~(static_cast<NumT>(alignment) - 1);
+    if (IsPowerOfTwo(alignment)) {
+        return num & ~(static_cast<NumT>(alignment) - 1);
+    }
+    return (num / alignment) * alignment;
 }
 
 template <typename PtrT>
