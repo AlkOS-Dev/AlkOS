@@ -6,6 +6,7 @@
 
 #include "mem/error.hpp"
 #include "mem/types.hpp"
+#include "mem/virt/addr_space_iterator.hpp"
 #include "mem/virt/area.hpp"
 
 namespace Mem
@@ -31,6 +32,10 @@ class AddressSpace
 
     PPtr<void> PageTableRoot() const { return page_table_root_; }
 
+    // Iterator
+    AddrSpIt begin() const { return AddrSpIt(area_list_head_); }
+    AddrSpIt end() const { return AddrSpIt(nullptr); }
+
     private:
     // This is orchestrated in VMM (For proper TLB management)
     Expected<void, MemError> AddArea(VMemArea vma);
@@ -45,6 +50,8 @@ class AddressSpace
     VPtr<VMemArea> area_list_head_;
 
     friend VirtualMemoryManager;
+
+    public:
 };
 using AddrSp = AddressSpace;
 

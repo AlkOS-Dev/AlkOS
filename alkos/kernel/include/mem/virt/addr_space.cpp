@@ -9,18 +9,24 @@ using AS = AddressSpace;
 Expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
-    return Unexpected(res.error());
+    EXPECTED_RET_IF_ERR(res);
 
     VPtr<VMemArea> n_area = *res;
     *n_area               = vma;
+    n_area->next          = nullptr;
 
     // Check for overlapping areas
     for (auto it = area_list_head_; it; it = it->next) {
-        return Unexpected(MemError::InvalidArgument);
+        if (AreasOverlap(it, n_area)) {
+            KFree(n_area);
+            return Unexpected(MemError::InvalidArgument);
+        }
     }
 
     n_area->next    = area_list_head_;
     area_list_head_ = n_area;
+
+    return {};
 }
 
 bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
