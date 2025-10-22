@@ -6,17 +6,17 @@
 using namespace Mem;
 using AS = AddressSpace;
 
-void AS::AddArea(VMemArea vma)
+Expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
-    R_ASSERT_TRUE(res, "Failed to allocate memory for VMemArea");
+    return Unexpected(res.error());
 
     VPtr<VMemArea> n_area = *res;
     *n_area               = vma;
 
     // Check for overlapping areas
     for (auto it = area_list_head_; it; it = it->next) {
-        ASSERT_FALSE(AreasOverlap(it, n_area), "Virtual memory areas overlap");
+        return Unexpected(MemError::InvalidArgument);
     }
 
     n_area->next    = area_list_head_;
@@ -33,10 +33,10 @@ bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
     return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
 }
 
-void AS::RmArea(VPtr<void> ptr)
+Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
 {
     if (!area_list_head_) {
-        return;  // Nothing to remove
+        return {};  // Nothing to remove
     }
 
     // Head is to be removed
@@ -44,7 +44,7 @@ void AS::RmArea(VPtr<void> ptr)
         auto to_free    = area_list_head_;
         area_list_head_ = area_list_head_->next;
         KFree(to_free);
-        return;
+        return {};
     }
 
     // Traverse rest
@@ -54,10 +54,12 @@ void AS::RmArea(VPtr<void> ptr)
             auto to_free   = iterator->next;
             iterator->next = to_free->next;
             KFree(to_free);
-            return;
+            return {};
         }
         iterator = iterator->next;
     }
+
+    return Unexpected(MemError::InvalidArgument);
 }
 
 Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)

@@ -33,8 +33,8 @@ class AddressSpace
 
     private:
     // This is orchestrated in VMM (For proper TLB management)
-    void AddArea(VMemArea vma);
-    void RmArea(VPtr<void> ptr);
+    Expected<void, MemError> AddArea(VMemArea vma);
+    Expected<void, MemError> RmArea(VPtr<void> ptr);
 
     // Helpers
     Expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
