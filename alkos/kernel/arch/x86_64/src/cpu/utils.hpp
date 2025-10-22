@@ -106,6 +106,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-[[nodiscard]] u32 StackLeftBytes();
-
 #endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_

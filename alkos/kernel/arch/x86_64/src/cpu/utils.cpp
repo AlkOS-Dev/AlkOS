@@ -33,8 +33,6 @@ CpuState DumpCpuState()
     return cpu_state;
 }
 
-u32 StackLeftBytes() {}
-
 /**
  * Simply formats the CPU state into a human-readable string.
  *
