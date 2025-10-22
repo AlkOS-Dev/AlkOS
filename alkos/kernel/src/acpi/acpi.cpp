@@ -51,6 +51,7 @@ int ACPI::ACPIController::Init(const BootArguments &args)
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);
+    TRACE_SUCCESS("DUPA");
     R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
 
     // TODO: When OSL finished

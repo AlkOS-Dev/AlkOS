@@ -118,6 +118,9 @@ FAST_CALL NumT &SetBitValue(NumT &num, const u16 bit, const bool val)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr bool IsAligned(const NumT num, const size_t alignment)
 {
+    if (alignment == 0 || alignment == 1) {
+        return true;
+    }
     if (IsPowerOfTwo(alignment)) {
         return (num & (alignment - 1)) == 0;
     }
@@ -135,6 +138,9 @@ FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 {
+    if (alignment == 0 || alignment == 1) {
+        return num;
+    }
     if (IsPowerOfTwo(alignment)) {
         return (num + static_cast<NumT>(alignment) - 1) & ~(static_cast<NumT>(alignment) - 1);
     }
@@ -144,6 +150,9 @@ FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
 template <std::unsigned_integral NumT>
 FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
 {
+    if (alignment == 0 || alignment == 1) {
+        return num;
+    }
     if (IsPowerOfTwo(alignment)) {
         return num & ~(static_cast<NumT>(alignment) - 1);
     }

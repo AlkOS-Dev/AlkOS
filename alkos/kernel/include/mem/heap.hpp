@@ -16,9 +16,9 @@ struct KMallocRequest {
 };
 
 // Heap
-Expected<VPtr<void>, MemError> KMalloc(KMallocRequest request);
+Expected<VPtr<void>, MemError> KMalloc(KMallocRequest request = {});
 template <typename T>
-Expected<VPtr<T>, MemError> KMalloc(KMallocRequest request)
+Expected<VPtr<T>, MemError> KMalloc(KMallocRequest request = {})
 {
     request.size = sizeof(T);
     return KMalloc(request).transform([](void *ptr) {

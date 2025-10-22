@@ -84,7 +84,6 @@ class DynArray
     FORCE_INLINE_F Expected<void, MemError> Reallocate(const size_t size)
     {
         if (mem_) {
-            AlignedKFree(mem_);
             KFree(mem_);
         }
         auto alloc = KMalloc({.size = size * sizeof(T), .alignment = kAlign});
