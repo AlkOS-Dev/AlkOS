@@ -26,40 +26,30 @@ _shadow_space equ 8*4
 ; Saving all regs  was how it was solved
 ; Check if pushing all is really needed
 %macro push_regs 0
-    push rax; 
-    push rbx; 
-    push rcx; 
-    push rdx
-    push rsi; 
-    push rdi; 
-    push rbp
-    push r8;  
-    push r9;  
-    push r10; 
-    push r11
-    push r12; 
-    push r13; 
-    push r14; 
-    push r15
+    mov qword [rsp + _rax], rax
+    mov qword [rsp + _rcx], rcx
+    mov qword [rsp + _rdx], rdx
+    mov qword [rsp + _rsi], rsi
+    mov qword [rsp + _rdi], rdi
+    mov qword [rsp + _r8], r8
+    mov qword [rsp + _r9], r9
+    mov qword [rsp + _r10], r10
+    mov qword [rsp + _r11], r11
+    mov qword [rsp + _rbp], rbp
 %endmacro
 
 ; Macro to restore all volatile registers (SysV ABI) from the stack.
 %macro pop_regs 0
-    pop r15; 
-    pop r14; 
-    pop r13; 
-    pop r12
-    pop r11; 
-    pop r10; 
-    pop r9;  
-    pop r8
-    pop rbp; 
-    pop rdi; 
-    pop rsi
-    pop rdx; 
-    pop rcx; 
-    pop rbx; 
-    pop rax
+    mov rax, qword [rsp + _rax]
+    mov rcx, qword [rsp + _rcx]
+    mov rdx, qword [rsp + _rdx]
+    mov rsi, qword [rsp + _rsi]
+    mov rdi, qword [rsp + _rdi]
+    mov r8, qword [rsp + _r8]
+    mov r9, qword [rsp + _r9]
+    mov r10, qword [rsp + _r10]
+    mov r11, qword [rsp + _r11]
+    mov rbp, qword [rsp + _rbp]
 %endmacro
 
 ; Macro for CPU exceptions that DO NOT push an error code.
