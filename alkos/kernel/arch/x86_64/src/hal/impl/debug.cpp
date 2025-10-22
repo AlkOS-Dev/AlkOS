@@ -1,18 +1,25 @@
 #include <extensions/debug.hpp>
 #include <hal/impl/debug.hpp>
 
-extern u64 stack_top;
-extern u64 stack_bottom;
+extern "C" {
+extern char stack_top;
+extern char stack_bottom;
+}
+
 namespace arch
 {
+
 void DebugStack()
 {
     u64 rsp;
     asm volatile("mov %%rsp, %0" : "=r"(rsp));
 
-    u64 total = stack_top - stack_bottom;
-    u64 used  = stack_top - rsp;
-    u64 left  = rsp - stack_bottom;
+    u64 top    = reinterpret_cast<u64>(&stack_top);
+    u64 bottom = reinterpret_cast<u64>(&stack_bottom);
+
+    u64 total = top - bottom;
+    u64 used  = top - rsp;
+    u64 left  = rsp - bottom;
 
     TRACE_DEBUG(
         "Stack [top=0x%016lx, "
@@ -21,7 +28,8 @@ void DebugStack()
         "total=%luB, "
         "used=%luB, "
         "left=%luB]",
-        stack_top, stack_bottom, rsp, total, used, left
+        top, bottom, rsp, total, used, left
     );
 }
+
 }  // namespace arch
