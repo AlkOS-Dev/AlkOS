@@ -4,6 +4,7 @@
 #include "acpi/acpi.hpp"
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
+#include "hal/debug.hpp"
 #include "hal/terminal.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
@@ -44,8 +45,10 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Initialize the global state module */
     GlobalStateModule::Init();
 
+    hal::DebugStack();
+
     /* Initialize ACPI */
-    HardwareModule::Get().GetACPIController().Init(args);
+    // HardwareModule::Get().GetACPIController().Init(args);
 
     /* Extract all necessary data from ACPI tables */
     // HardwareModule::Get().GetACPIController().ParseTables();
