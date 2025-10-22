@@ -23,12 +23,12 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     KernelTraceInfo("Sanitized boot arguments received by kernel:");
     KernelTrace(
         "  Boot Arguments:\n"
-        "    kernel_start:       0x%llX\n"
-        "    kernel_end:         0x%llX\n"
-        "    root_page_table:    0x%llX\n"
-        "    mem_bitmap:         0x%llX\n"
+        "    kernel_start:       0x%p\n"
+        "    kernel_end:         0x%p\n"
+        "    root_page_table:    0x%p\n"
+        "    mem_bitmap:         0x%p\n"
         "    total_page_frames:  %zu\n"
-        "    multiboot_info:     0x%llX\n",
+        "    multiboot_info:     0x%p\n",
         args.kernel_start, args.kernel_end, args.root_page_table, args.mem_bitmap,
         args.total_page_frames, args.multiboot_info
     );
@@ -46,13 +46,12 @@ void KernelInit(const hal::RawBootArguments &raw_args)
 
     /* Initialize ACPI */
     HardwareModule::Get().GetACPIController().Init(args);
-    TRACE_SUCCESS("DUPA");
 
     /* Extract all necessary data from ACPI tables */
-    // HardwareModule::Get().GetACPIController().ParseTables();
+    HardwareModule::Get().GetACPIController().ParseTables();
 
     /* Allow hardware to fully initialise interrupt system */
-    // HardwareModule::Get().GetInterrupts().Init();
+    HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
     // TimingModule::Init();

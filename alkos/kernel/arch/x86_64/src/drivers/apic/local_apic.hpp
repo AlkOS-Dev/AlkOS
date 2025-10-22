@@ -8,6 +8,7 @@
 #include <extensions/types.hpp>
 #include <todo.hpp>
 #include "cpu/msrs.hpp"
+#include "hal/impl/constants.hpp"
 #include "include/memory_io.hpp"
 #include "interrupts/interrupt_types.hpp"
 
@@ -325,7 +326,10 @@ class LocalApic
      */
     FAST_CALL void SetPhysicalAddressOnCore(const u64 new_address)
     {
-        ASSERT_TRUE(IsAligned(new_address, 12), "Local APIC address is not aligned to 4k page!");
+        ASSERT_TRUE(
+            IsAligned(new_address, arch::kPageSizeBytes),
+            "Local APIC address is not aligned to 4k page!"
+        );
         cpu::SetMSR(kIA32ApicBaseMsr, new_address | kIA32ApicBaseMsrEnable);
     }
 
