@@ -14,7 +14,6 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size);
 template <typename T>
 Expected<VPtr<T>, MemError> KMalloc()
 {
-    return {};
     return KMalloc(sizeof(T)).transform([](void *ptr) {
         return reinterpret_cast<VPtr<T>>(ptr);
     });
