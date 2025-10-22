@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_SPINLOCK_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_SPINLOCK_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
 
 #include <hal/api/spinlock.hpp>
 
@@ -111,10 +111,11 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
             ++failed_lock_tries;
         }
 
-        TRACE_DEBUG(
-            "Spinlock %p locked by core %d, failed tries: %d", this, GetCurrentCoreId(),
-            failed_lock_tries
-        );
+        // This triggers a protection fault for some reason
+        // TRACE_DEBUG(
+        //    "Spinlock %p locked by core %u, failed tries: %llu", this, GetCurrentCoreId(),
+        //    failed_lock_tries
+        //);
 
         success_lock_tries_ += 1;
         failed_lock_tries_ += failed_lock_tries;
@@ -126,7 +127,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
 
         R_ASSERT_EQ(
             GetLockedValueWithDebugInfo_(), static_cast<u32>(lock_),
-            "Spinlock is locked by core %d, but unlocking by core %d",
+            "Spinlock is locked by core %d, but unlocking by core %u",
             CastRegister<DebugLock>(lock_).owner, GetCurrentCoreId()
         );
 
@@ -137,7 +138,7 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
     {
         R_ASSERT_NEQ(
             GetLockedValueWithDebugInfo_(), static_cast<u32>(lock_),
-            "Double lock detected! Spinlock is already locked by core %d", GetCurrentCoreId()
+            "Double lock detected! Spinlock is already locked by core %u", GetCurrentCoreId()
         );
 
         const u32 value = GetLockedValueWithDebugInfo_();
@@ -155,4 +156,4 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_ABI_SPINLOCK_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_

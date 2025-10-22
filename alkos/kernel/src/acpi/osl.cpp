@@ -4,11 +4,11 @@
 
 #include <uacpi/kernel_api.h>
 #include <hal/constants.hpp>
-#include "todo.hpp"
-TODO_WHEN_VMEM_WORKS
 #include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
+#include <modules/timing.hpp>
 #include <todo.hpp>
+#include "todo.hpp"
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
@@ -145,7 +145,13 @@ void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
     }
 }
 
-uacpi_u64 uacpi_kernel_get_nanoseconds_since_boot() { return 0; }
+uacpi_u64 uacpi_kernel_get_nanoseconds_since_boot()
+{
+    if (TimingModule::IsInited()) {
+        return TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    }
+    return 0;
+}
 
 void uacpi_kernel_stall(uacpi_u8 usec) {}
 

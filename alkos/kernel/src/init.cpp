@@ -9,6 +9,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
+#include "trace.hpp"
 
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
@@ -19,6 +20,18 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     hal::ArchInit(raw_args);
 
     BootArguments args = SanitizeBootArgs(raw_args);
+    KernelTraceInfo("Sanitized boot arguments received by kernel:");
+    KernelTrace(
+        "  Boot Arguments:\n"
+        "    kernel_start:       0x%llX\n"
+        "    kernel_end:         0x%llX\n"
+        "    root_page_table:    0x%llX\n"
+        "    mem_bitmap:         0x%llX\n"
+        "    total_page_frames:  %zu\n"
+        "    multiboot_info:     0x%llX\n",
+        args.kernel_start, args.kernel_end, args.root_page_table, args.mem_bitmap,
+        args.total_page_frames, args.multiboot_info
+    );
 
     MemoryModule::Init(args);
 
@@ -35,11 +48,11 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().GetACPIController().Init(args);
 
     // /* Extract all necessary data from ACPI tables */
-    HardwareModule::Get().GetACPIController().ParseTables();
+    // HardwareModule::Get().GetACPIController().ParseTables();
 
     // /* Allow hardware to fully initialise interrupt system */
-    HardwareModule::Get().GetInterrupts().Init();
+    // HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
-    TimingModule::Init();
+    // TimingModule::Init();
 }

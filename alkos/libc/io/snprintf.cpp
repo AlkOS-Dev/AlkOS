@@ -366,9 +366,11 @@ int vsnprintf(char *str, size_t size, const char *format, va_list va)
 
                     break;
                 }
+#ifndef __ALKOS_LIBK__
                 case 'f':
                 case 'F':
                 case 'e':
+#endif
                 case 'E':
                 case 'g':
                 case 'G':

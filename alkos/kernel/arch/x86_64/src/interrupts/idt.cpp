@@ -72,8 +72,8 @@ NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, c
         "Received exception: %d (%s)\n"
         "And error: %llu\n"
         "At instruction address: 0x%016llx\n"
-        "%s"
-        "RFLAGS: %0x%016llx\n",
+        "%s\n"
+        "RFLAGS: 0x%016llx\n",
         idt_idx, exception_msg, stack_frame->error_code, stack_frame->isr_stack_frame.rip,
         state_buffer, stack_frame->isr_stack_frame.rflags
     );
