@@ -21,43 +21,48 @@ void BitmapPmm::Init(data_structures::BitMapView bmv, size_t last_alloc_idx)
     last_alloc_idx_ = last_alloc_idx;
 };
 
-std::expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
+Expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 {
     const u64 total_pages = bitmap_view_.Size();
 
-    for (u64 i = 0; i < total_pages;) {
-        const u64 start_idx = (last_alloc_idx_ + i) % total_pages;
+    // Iterate from the end of the bitmap to the beginning.
+    for (i64 i = total_pages - ar.num_pages; i >= 0;) {
+        const u64 end_idx = i + ar.num_pages - 1;
 
-        if (!IsFree(start_idx)) {
-            i++;
+        // Check if the potential end of the block is free.
+        if (!IsFree(end_idx)) {
+            i--;
             continue;
         }
 
-        // Try to find a contiguous block of the required size
-        u64 block_end_idx = start_idx + 1;
-        while ((block_end_idx < total_pages) && (block_end_idx - start_idx < ar.num_pages) &&
-               IsFree(block_end_idx)) {
-            block_end_idx++;
+        // Try to find a contiguous block of the required size, searching backwards.
+        u64 block_start_idx = end_idx;
+        while ((block_start_idx > 0) && (end_idx - (block_start_idx - 1) < ar.num_pages) &&
+               IsFree(block_start_idx - 1)) {
+            block_start_idx--;
         }
 
-        const u64 found_pages = block_end_idx - start_idx;
+        const u64 found_pages = end_idx - block_start_idx + 1;
 
         // Not found
         if (found_pages != ar.num_pages) {
-            i += found_pages + 1;
+            // Jump the index past the checked non-contiguous block.
+            i = block_start_idx - 1;
             continue;
         }
 
         // Found
-        for (u64 pfn = start_idx; pfn < block_end_idx; ++pfn) {
+        for (u64 pfn = block_start_idx; pfn <= end_idx; ++pfn) {
             MarkAllocated(pfn);
         }
 
-        last_alloc_idx_ = block_end_idx % total_pages;
-        return PageFrameAddr(start_idx);  // Return the START of the block
+        // Update last_alloc_idx_ to the start of the allocated block for potential future
+        // optimizations.
+        last_alloc_idx_ = block_start_idx;
+        return PageFrameAddr(block_start_idx);  // Return the START of the block
     }
 
-    return std::unexpected(MemError::OutOfMemory);
+    return Unexpected(MemError::OutOfMemory);
 }
 
 void BitmapPmm::Free(PPtr<Page> page, size_t num_pages)

@@ -102,64 +102,27 @@ uacpi_status uacpi_kernel_io_write32(uacpi_handle handle, uacpi_size offset, uac
 
 void *uacpi_kernel_map(uacpi_phys_addr addr, uacpi_size len)
 {
-    TODO_WHEN_VMEM_WORKS
-    // TODO: Map the pages
-
-    // using pmm   = memory::PhysicalMemoryManager;
-    // auto paddr  = AlignDown(addr, pmm::kPageSize);
-    // auto offset = addr & (pmm::kPageSize - 1);
-    // auto vsize  = AlignUp(len + offset, pmm::kPageSize);
-    // TODO_WHEN_VMEM_WORKS
-    // auto vaddr = AlignDown(arch::kDirectMapAddrStart + addr, pmm::kPageSize);
-    // auto loader_memory_manager =
-    //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
-
-    // for (size_t pg = 0; pg < vsize; pg += pmm::kPageSize) {
-    //     loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-    //         vaddr + pg, paddr + pg, LoaderMemoryManager::kWriteBit
-    //     );
-    // }
-    // return reinterpret_cast<byte *>(vaddr) + offset;
-    return nullptr;
+    (void)len;
+    return Mem::PhysToVirt(reinterpret_cast<Mem::PPtr<void>>(addr));
 }
 
-void uacpi_kernel_unmap(void *addr, uacpi_size len) { TODO_WHEN_VMEM_WORKS }
+void uacpi_kernel_unmap(void *addr, uacpi_size len)
+{
+    // No unmapping needed
+    (void)len;
+    (void)(addr);
+}
 
 void *uacpi_kernel_alloc(uacpi_size size)
 {
-    TODO_WHEN_VMEM_WORKS
-    // TODO: Map the pages
-
-    // // auto loader_memory_manager =
-    // //     reinterpret_cast<LoaderMemoryManager *>(kLoaderData->loader_memory_manager_addr);
-    // // // TODO(F1r3d3v): Memory layout need to be established
-    // const u64 kVMemAllocStart = arch::kDirectMapAddrStart + kSingleBit<u64, 46>;
-    // using pmm                 = memory::PhysicalMemoryManager;
-
-    // auto vsize = AlignUp(size, pmm::kPageSize);
-    // auto paddr = PhysicalMemoryManager::Get().Allocate();
-    // auto vaddr = AlignDown(kVMemAllocStart + paddr, pmm::kPageSize);
-    // loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-    //     vaddr, paddr, LoaderMemoryManager::kWriteBit
-    // );
-
-    // for (size_t pg = pmm::kPageSize; pg < vsize; pg += pmm::kPageSize) {
-    //     auto phys_addr = PhysicalMemoryManager::Get().Allocate();
-    //     loader_memory_manager->MapVirtualMemoryToPhysical<LoaderMemoryManager::PageSize::Page4k>(
-    //         vaddr + pg, phys_addr, LoaderMemoryManager::kWriteBit
-    //     );
-    // }
-
-    // return reinterpret_cast<void *>(vaddr);
-    return nullptr;
-}
-
-void uacpi_kernel_free(void *mem)
-{
-    if (mem) {
-        // kfree();
+    auto ptr_or_error = Mem::KMalloc(size);
+    if (!ptr_or_error) {
+        return nullptr;
     }
+    return *ptr_or_error;
 }
+
+void uacpi_kernel_free(void *mem) { Mem::KFree(mem); }
 
 void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
 {
