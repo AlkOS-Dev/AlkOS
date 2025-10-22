@@ -51,8 +51,8 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().GetACPIController().ParseTables();
 
     /* Allow hardware to fully initialise interrupt system */
-    HardwareModule::Get().GetInterrupts().Init();
+    // HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
-    TimingModule::Init();
+    // TimingModule::Init();
 }
