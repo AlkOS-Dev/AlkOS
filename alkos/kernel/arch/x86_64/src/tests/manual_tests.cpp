@@ -10,4 +10,11 @@ MTEST(VerifyDefaultExceptionMsg)
     ++(*ptr);
 }
 
-MTEST(SimulateLongWork) {}
+MTEST(SimulateLongWork)
+{
+    static constexpr size_t kNumRetries    = 100;
+    static constexpr size_t kNumIterations = 1000000;
+
+    for (size_t i = 0; i < kNumRetries; ++i) {
+    }
+}

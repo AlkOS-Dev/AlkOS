@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 
 #include <extensions/defines.hpp>
 #include <extensions/types.hpp>
@@ -106,4 +106,6 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ARCH_UTILS_HPP_
+[[nodiscard]] u32 StackLeftBytes();
+
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
