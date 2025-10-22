@@ -1,6 +1,7 @@
 #include "interrupts/idt.hpp"
 #include <extensions/defines.hpp>
 
+#include <hal/debug.hpp>
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
 #include <modules/timing.hpp>
 #include <trace.hpp>
@@ -118,6 +119,8 @@ void TestIsr(intr::LitSwEntry &entry)
 void TimerIsr(intr::LitHwEntry &entry)
 {
     // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+
+    hal::DebugStack();
 
     // TODO: Temporary code
     static u64 counter = 0;
