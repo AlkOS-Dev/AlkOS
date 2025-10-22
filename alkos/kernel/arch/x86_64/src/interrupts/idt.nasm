@@ -20,11 +20,7 @@ _reg_size equ 8*10
 ; Shadow space required for C++ function calls
 _shadow_space equ 8*4
 
-; TODO: This is a hotfix. In the past only
-; "volatile" registers were pushed and restored
-; errors with interrupts during ACPI init happened. 
-; Saving all regs  was how it was solved
-; Check if pushing all is really needed
+; Macro to save all volatile registers (SysV ABI) onto the stack.
 %macro push_regs 0
     mov qword [rsp + _rax], rax
     mov qword [rsp + _rcx], rcx
