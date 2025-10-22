@@ -5,8 +5,10 @@
 
 namespace hal
 {
-using arch::Core;
-using arch::CoreConfig;
+/**
+ * @brief Display some debug info for stack
+ */
+WRAP_CALL void DebugStack() { arch::DebugStack(); }
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_DEBUG_HPP_
