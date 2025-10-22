@@ -42,7 +42,7 @@ static char *FormatDoubleHex(
 
 // If char is lowercase the 0x20 bit is set
 static constexpr int kIsLower                  = 0x20;
-static constexpr int kBufferSize               = 1024;
+static constexpr int kBufferSize               = 1024 * 4;
 static constexpr int kDoublePrecisionDigits    = 6;
 static constexpr int kDoubleHexPrecisionDigits = 13;
 static constexpr double kIntegralPrecision     = 1e-4;
