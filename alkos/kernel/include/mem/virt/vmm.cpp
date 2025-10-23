@@ -26,6 +26,7 @@ Expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 {
     for (const VMemArea &vma : *as) {
+        // TODO: Unmap
         tlb_.InvalidateRange(vma.start, vma.size);
     }
     KFree(as);

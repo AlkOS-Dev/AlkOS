@@ -22,7 +22,7 @@ class Mmu : public MmuAPI
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
     );
 
-    void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as)
+    void SwitchRootPageMapTable(Mem::VPtr<Mem::AddressSpace> as)
     {
         cpu::Cr3 cr3{};
         cr3.PageMapLevel4Address = Mem::PtrToUptr(as->PageTableRoot()) >> 12;
