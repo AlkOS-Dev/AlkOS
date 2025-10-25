@@ -7,6 +7,7 @@
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/types.hpp"
+#include "mem/virt/page_fault.hpp"
 
 using namespace Mem;
 
@@ -34,4 +35,12 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     auto page_metas = reinterpret_cast<VPtr<PageMeta<Dummy>>>(PhysToVirt(*res));
     PageMetaTable_  = PageMetaTable(page_metas, total_pages);
+}
+
+void internal::MemoryModule::RegisterPageFault(HardwareModule hw)
+{
+    TRACE_INFO("Registering Page Fault handler...");
+    hw.GetInterrupts().GetLit().InstallInterruptHandler<intr::InterruptType::kException>(
+        hal::kPageFaultExcLirq, intr::ExcHandler{.handler = Mem::PageFaultHandler}
+    );
 }

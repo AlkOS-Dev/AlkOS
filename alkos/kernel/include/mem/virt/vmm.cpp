@@ -35,7 +35,7 @@ Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 
 void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 {
-    mmu_.SwitchAddrSpace(as);
+    mmu_.SwitchRootPageMapTable(as->PageTableRoot());
     tlb_.FlushAll();
 }
 

@@ -5,7 +5,6 @@
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
 #include <modules/timing.hpp>
 #include <trace.hpp>
-using hal::KernelPanicFormat;
 
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
@@ -46,7 +45,7 @@ extern "C" void *IsrWrapperTable[];
  */
 NO_RET void DefaultInterruptHandler(const u8 idt_idx)
 {
-    KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
+    hal::KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
 }
 
 NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
@@ -69,7 +68,7 @@ NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, c
     const char *exception_msg = GetExceptionMsg(idt_idx);
     R_ASSERT_NOT_NULL(exception_msg);
 
-    KernelPanicFormat(
+    hal::KernelPanicFormat(
         "Received exception: %d (%s)\n"
         "And error: %llu\n"
         "At instruction address: 0x%016llx\n"

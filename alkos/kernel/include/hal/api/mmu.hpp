@@ -69,11 +69,11 @@ struct MmuAPI {
     void SwitchRootPageMapTable(Mem::PPtr<void> root_page_table);
 
     /**
-     * @brief Destroys and free's the current root page table including
-     * all it's entries, subentries subsubentries etc
+     * @brief Destroys and free's the current root page table entries,
+     * subentries, subsubentries etc
      *
      */
-    void DestroyRootPageMapTable(Mem::PPtr<void> root_page_table);
+    void CleanRootPageMapTable(Mem::PPtr<void> root_page_table);
 };
 
 }  // namespace arch
