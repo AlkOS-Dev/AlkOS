@@ -30,7 +30,7 @@ enum class TraceModule {
     kMemory = 0,
     kInterrupts,
     kBoot,
-    kLast,
+    kGeneral kLast,
 };
 
 NODISCARD TracingStage GetCurrentStage();

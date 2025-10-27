@@ -55,6 +55,71 @@ EOF
 }
 
 # --------------------------------------------
+# Helper functions for flag validation
+# --------------------------------------------
+
+get_flag_type() {
+  local flag=$1
+  local type
+  type=$(yq ".feature_flags[] | select(.name == \"$flag\") | .type" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+  type=$(strip_quotes "${type}")
+
+  # Default to boolean if type is not specified
+  if [[ -z "$type" || "$type" == "null" ]]; then
+    echo "boolean"
+  else
+    echo "$type"
+  fi
+}
+
+validate_flag_value() {
+  local flag=$1
+  local value=$2
+  local type
+  type=$(get_flag_type "$flag")
+
+  case "$type" in
+    boolean)
+      if [[ "$value" != "true" && "$value" != "false" ]]; then
+        return 1
+      fi
+      ;;
+    integer)
+      # Check if value is an integer
+      if ! [[ "$value" =~ ^-?[0-9]+$ ]]; then
+        return 1
+      fi
+
+      # Check min constraint
+      local min
+      min=$(yq ".feature_flags[] | select(.name == \"$flag\") | .min" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+      if [[ -n "$min" && "$min" != "null" ]]; then
+        if (( value < min )); then
+          dump_error "Value $value is below minimum $min for flag $flag"
+          return 1
+        fi
+      fi
+
+      # Check max constraint
+      local max
+      max=$(yq ".feature_flags[] | select(.name == \"$flag\") | .max" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+      if [[ -n "$max" && "$max" != "null" ]]; then
+        if (( value > max )); then
+          dump_error "Value $value exceeds maximum $max for flag $flag"
+          return 1
+        fi
+      fi
+      ;;
+    *)
+      dump_error "Unknown type '$type' for flag $flag"
+      return 1
+      ;;
+  esac
+
+  return 0
+}
+
+# --------------------------------------------
 # Feature flags generation functionality
 # --------------------------------------------
 
@@ -92,10 +157,17 @@ feature_flags_generate_cxx_files_c_macros() {
     flag=$(strip_quotes "${flag}")
     flag_upper=$(convert_to_upper_case "${flag}")
 
-    if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
-      echo "#define FEATURE_FLAG_${flag_upper} 1" >> "${FEATURE_FLAGS_CXX_PATH}"
+    local type
+    type=$(get_flag_type "$flag")
+
+    if [[ "$type" == "boolean" ]]; then
+      if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
+        echo "#define FEATURE_FLAG_${flag_upper} 1" >> "${FEATURE_FLAGS_CXX_PATH}"
+      else
+        echo "#define FEATURE_FLAG_${flag_upper} 0" >> "${FEATURE_FLAGS_CXX_PATH}"
+      fi
     else
-      echo "#define FEATURE_FLAG_${flag_upper} 0" >> "${FEATURE_FLAGS_CXX_PATH}"
+      echo "#define FEATURE_FLAG_${flag_upper} ${CONFIGURE_FEATURE_FLAGS[$flag]}" >> "${FEATURE_FLAGS_CXX_PATH}"
     fi
 
     echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
@@ -129,29 +201,69 @@ feature_flags_generate_cxx_files_cxx_vars() {
   local flag_names
   mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
 
-  # Prepare constexpr variable for C++ code
-  echo "template <FeatureFlag Flag>" >> "${FEATURE_FLAGS_CXX_PATH}"
-  echo "inline constexpr bool FeatureEnabled = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
-  echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
+  # Separate boolean and integer flags
+  local bool_flags=()
+  local int_flags=()
 
   for flag in "${flag_names[@]}"; do
-    default=$(yq ".feature_flags[] | select(.name == $flag) | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-    description=$(yq ".feature_flags[] | select(.name == $flag) | .description" "${FEATURE_FLAGS_DEFS_PATH}")
-
-    echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
-
     flag=$(strip_quotes "${flag}")
-    local flag_pascal
-    flag_pascal=$(snake_case_to_pascal_case "${flag}")
+    local type
+    type=$(get_flag_type "$flag")
 
-    if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
-      echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = true;" >> "${FEATURE_FLAGS_CXX_PATH}"
+    if [[ "$type" == "boolean" ]]; then
+      bool_flags+=("$flag")
     else
-      echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
+      int_flags+=("$flag")
     fi
-
-    echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
   done
+
+  # Generate boolean flag template
+  if [[ ${#bool_flags[@]} -gt 0 ]]; then
+    echo "// Boolean feature flags" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "template <FeatureFlag Flag>" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "inline constexpr bool FeatureEnabled = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
+
+    for flag in "${bool_flags[@]}"; do
+      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
+      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
+
+      echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
+
+      local flag_pascal
+      flag_pascal=$(snake_case_to_pascal_case "${flag}")
+
+      if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
+        echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = true;" >> "${FEATURE_FLAGS_CXX_PATH}"
+      else
+        echo "template <> inline constexpr bool FeatureEnabled<FeatureFlag::k${flag_pascal}> = false;" >> "${FEATURE_FLAGS_CXX_PATH}"
+      fi
+
+      echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
+    done
+  fi
+
+  # Generate integer flag template
+  if [[ ${#int_flags[@]} -gt 0 ]]; then
+    echo "// Integer feature flags" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "template <FeatureFlag Flag>" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "inline constexpr int FeatureValue = 0;" >> "${FEATURE_FLAGS_CXX_PATH}"
+    echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
+
+    for flag in "${int_flags[@]}"; do
+      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
+      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
+
+      echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
+
+      local flag_pascal
+      flag_pascal=$(snake_case_to_pascal_case "${flag}")
+
+      echo "template <> inline constexpr int FeatureValue<FeatureFlag::k${flag_pascal}> = ${CONFIGURE_FEATURE_FLAGS[$flag]};" >> "${FEATURE_FLAGS_CXX_PATH}"
+
+      echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
+    done
+  fi
 }
 
 feature_flags_generate_cxx_files() {
@@ -227,18 +339,18 @@ feature_flags_process() {
       pretty_warn "Feature flag ${flag} is unrecognized. Correcting to default."
     fi
 
-    # Validate if flag value is boolean
-    if [[ "${CONFIGURE_FEATURE_FLAGS[$flag]}" != "true" && "${CONFIGURE_FEATURE_FLAGS[$flag]}" != "false" ]]; then
-      pretty_warn "Feature flag ${flag} has invalid value ${CONFIGURE_FEATURE_FLAGS[$flag]}. Expected 'true' or 'false'."
+    # Validate flag value based on type
+    if ! validate_flag_value "$flag" "${CONFIGURE_FEATURE_FLAGS[$flag]}"; then
+      pretty_warn "Feature flag ${flag} has invalid value ${CONFIGURE_FEATURE_FLAGS[$flag]}."
       default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
       CONFIGURE_FEATURE_FLAGS[$flag]="$default"
       flags_updated=true
     fi
   done
 
-    if [[ "$flags_updated" == true ]]; then
-      save_feature_flags_to_yaml
-    fi
+  if [[ "$flags_updated" == true ]]; then
+    save_feature_flags_to_yaml
+  fi
 }
 
 feature_flags_reset_to_defaults() {
@@ -269,10 +381,18 @@ feature_flags_generate_cmake() {
     flag=$(echo "${flag}" | tr -d '"')
     flag_upper=$(convert_to_upper_case "${flag}")
 
-    if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
-      echo "set(CMAKE_FEATURE_FLAG_${flag_upper} ON)" >> "${conf_cmake}"
+    local type
+    type=$(get_flag_type "$flag")
+
+    if [[ "$type" == "boolean" ]]; then
+      if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
+        echo "set(CMAKE_FEATURE_FLAG_${flag_upper} ON)" >> "${conf_cmake}"
+      else
+        echo "set(CMAKE_FEATURE_FLAG_${flag_upper} OFF)" >> "${conf_cmake}"
+      fi
     else
-      echo "set(CMAKE_FEATURE_FLAG_${flag_upper} OFF)" >> "${conf_cmake}"
+      # For integer flags, set the actual value
+      echo "set(CMAKE_FEATURE_FLAG_${flag_upper} ${CONFIGURE_FEATURE_FLAGS[$flag]})" >> "${conf_cmake}"
     fi
   done
 }
@@ -294,8 +414,14 @@ feature_flags_set() {
     return 1
   fi
 
-  if [[ "$flag_value" != "true" && "$flag_value" != "false" ]]; then
-    dump_error "Invalid value for feature flag '${flag_name}'. Use 'true' or 'false'."
+  if ! validate_flag_value "$flag_name" "$flag_value"; then
+    local type
+    type=$(get_flag_type "$flag_name")
+    if [[ "$type" == "boolean" ]]; then
+      dump_error "Invalid value for feature flag '${flag_name}'. Use 'true' or 'false'."
+    else
+      dump_error "Invalid value for feature flag '${flag_name}'."
+    fi
     return 1
   fi
 

@@ -14,3 +14,45 @@ feature_flags:
   - name: debug_traces
     description: Enables additional debug traces in the kernel, which can help to identify issues during execution.
     default: false
+
+  - name: single_trace_max_size
+    description: Maximum size of a single debug trace entry in bytes.
+    type: integer
+    default: 2048
+    min: 1
+    max: 8192
+
+  - name: trace_buffer_size
+    description: Size of the trace buffer in bytes.
+    type: integer
+    default: 65536
+    min: 1024
+    max: 8388608
+
+  - name: memory_trace_level
+    description: Level of Memory module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
+  - name: interrupts_trace_level
+    description: Level of Interrupts module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
+  - name: boot_trace_level
+    description: Level of Boot module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
+  - name: general_trace_level
+    description: Level of General module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
