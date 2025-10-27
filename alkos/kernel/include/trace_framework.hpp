@@ -5,6 +5,10 @@
 
 namespace trace
 {
+// ------------------------------
+// Type definitions
+// ------------------------------
+
 enum class TracingStage {
     kSingleThreadEnv = 0, /* Starts on this stage */
     kSingleThreadInterruptsEnv,
@@ -35,9 +39,11 @@ enum class TraceModule {
     kLast,
 };
 
-NODISCARD TracingStage GetCurrentStage();
+// ------------------------------
+// User API
+// ------------------------------
+
 void AdvanceTracingStage();
-void SetTraceLevel(TraceModule module, TraceLevel level);
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>

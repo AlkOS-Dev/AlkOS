@@ -116,11 +116,7 @@ void CommitToDebugLog(size_t trace_size, trace::TraceModule module) {}
 
 namespace trace
 {
-NODISCARD TracingStage GetCurrentStage() { return g_TraceFramework.stage; }
-
 void AdvanceTracingStage() {}
-
-void SetTraceLevel(TraceModule module, TraceLevel level) { R_FAIL_ALWAYS("Not Implemented..."); }
 
 NODISCARD TraceLevel GetTraceLevel(TraceModule module)
 {
