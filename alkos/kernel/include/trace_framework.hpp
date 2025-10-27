@@ -30,7 +30,8 @@ enum class TraceModule {
     kMemory = 0,
     kInterrupts,
     kBoot,
-    kGeneral kLast,
+    kGeneral,
+    kLast,
 };
 
 NODISCARD TracingStage GetCurrentStage();
@@ -38,8 +39,10 @@ void AdvanceTracingStage();
 void SetTraceLevel(TraceModule module, TraceLevel level);
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 
-// template<TraceType type, TraceModule module>
-// void Write()
+template <TraceType type, TraceModule module, class... Args>
+void Write(const char *format, Args... args);
 }  // namespace trace
+
+#include "trace_framework.tpp"
 
 #endif  // ALKOS_KERNEL_INCLUDE_TRACE_FRAMEWORK_HPP_
