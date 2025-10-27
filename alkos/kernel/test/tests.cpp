@@ -1,5 +1,6 @@
 #include <extensions/initializer_list.hpp>
 #include <test_module/test.hpp>
+#include <trace_framework.hpp>
 
 // ------------------------------
 // Test Framework Test
@@ -116,3 +117,5 @@ FAIL_TEST(SimpleExceptionTest)
 extern "C" void PreserveCpuStateTest();
 
 TEST(PreserveCpuStateTest) { PreserveCpuStateTest(); }
+
+MTEST(TraceFramework) {}
