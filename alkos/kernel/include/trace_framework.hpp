@@ -7,7 +7,8 @@ namespace trace
 {
 enum class TracingStage {
     kSingleThreadEnv = 0, /* Starts on this stage */
-    kMultiThreadEnv,      /* Should end up here */
+    kSingleThreadInterruptsEnv,
+    kMultiThreadEnv, /* Should end up here */
     kLast,
 };
 
@@ -39,8 +40,8 @@ void AdvanceTracingStage();
 void SetTraceLevel(TraceModule module, TraceLevel level);
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 
-template <TraceType type, TraceModule module, class... Args>
-void Write(const char *format, Args... args);
+template <TraceType type, TraceModule module, TraceLevel level, class... Args>
+FAST_CALL void Write(const char *format, Args... args);
 }  // namespace trace
 
 #include "trace_framework.tpp"
