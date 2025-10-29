@@ -20,7 +20,7 @@ static BitmapPmm InitBitMapPmm(const BootArguments &args)
 }
 
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
-    : BitmapPmm_{InitBitMapPmm(args)}, KernelAddressSpace_(args.root_page_table)
+    : BitmapPmm_{InitBitMapPmm(args)}, Vmm_{Tlb_, Mmu_}, KernelAddressSpace_(args.root_page_table)
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 
@@ -37,7 +37,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     PageMetaTable_  = PageMetaTable(page_metas, total_pages);
 }
 
-void internal::MemoryModule::RegisterPageFault(HardwareModule hw)
+void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)
 {
     TRACE_INFO("Registering Page Fault handler...");
     hw.GetInterrupts().GetLit().InstallInterruptHandler<intr::InterruptType::kException>(

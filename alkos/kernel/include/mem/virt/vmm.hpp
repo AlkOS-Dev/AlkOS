@@ -47,6 +47,7 @@ class VirtualMemoryManager
     hal::Tlb &tlb_;
     hal::Mmu &mmu_;
 };
+using Vmm = VirtualMemoryManager;
 
 }  // namespace Mem
 

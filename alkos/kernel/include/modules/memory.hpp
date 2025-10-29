@@ -9,6 +9,7 @@
 #include "hal/tlb.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
+#include "mem/virt/vmm.hpp"
 #include "modules/hardware.hpp"
 #include "modules/helpers.hpp"
 
@@ -31,12 +32,13 @@ class MemoryModule : template_lib::StaticSingletonHelper
 
     DEFINE_MODULE_FIELD(Mem, PageMetaTable);
     DEFINE_MODULE_FIELD(Mem, BitmapPmm);
+    DEFINE_MODULE_FIELD(Mem, Vmm);
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);
     DEFINE_MODULE_FIELD(MemoryModule, KernelAddressSpace);
 
-    protected:
-    void RegisterPageFault(HardwareModule hw);
+    public:
+    void RegisterPageFault(HardwareModule &hw);
 };
 }  // namespace internal
 
