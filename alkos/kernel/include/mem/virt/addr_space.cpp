@@ -6,6 +6,16 @@
 using namespace Mem;
 using AS = AddressSpace;
 
+AS::~AddressSpace()
+{
+    // Free all allocated areas
+    while (area_list_head_) {
+        auto to_free    = area_list_head_;
+        area_list_head_ = area_list_head_->next;
+        KFree(to_free);
+    }
+}
+
 Expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();

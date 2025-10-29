@@ -28,7 +28,10 @@ class VirtualMemoryManager;
 class AddressSpace
 {
     public:
-    AddressSpace(PPtr<void> page_table_root) : page_table_root_{page_table_root} {}
+    AddressSpace(PPtr<void> page_table_root)
+        : page_table_root_{page_table_root}, area_list_head_{nullptr}
+    {
+    }
     ~AddressSpace();
     AddressSpace(const AddressSpace &)            = delete;
     AddressSpace &operator=(const AddressSpace &) = delete;
