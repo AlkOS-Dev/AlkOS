@@ -1,12 +1,33 @@
+#include <extensions/algorithm.hpp>
+
+#include "modules/hardware.hpp"
+#include "modules/timing.hpp"
 #include "trace_framework.hpp"
 
 #include <extensions/array.hpp>
+#include <hal/debug_terminal.hpp>
+#include <hal/terminal.hpp>
 
 using namespace trace;
 
 // ------------------------------
 // Helper static functions
 // ------------------------------
+
+FAST_CALL void HardenFullString(const char *str)
+{
+    TODO_BY_THE_END_OF_MILESTONE0
+    hal::TerminalWriteString(str);
+}
+
+FAST_CALL void EnsureEos(char *str, const size_t trace_size)
+{
+    ASSERT_NOT_ZERO(trace_size);
+    const size_t eos_index = std::max(
+        trace_size - 1, static_cast<size_t>(FeatureValue<FeatureFlag::kSingleTraceMaxSize>)
+    );
+    str[eos_index] = '\0';
+}
 
 // ------------------------------------
 // Trace framework implementation
@@ -20,6 +41,18 @@ static struct TraceFramework {
     static constexpr auto kDefaultTraceLevel = TraceLevel::kInfo;
     static constexpr auto kMaxInterruptNestingAllowed =
         4; /* E.g irq -> NMI -> fault -> double fault */
+
+    static constexpr std::array<const char *, static_cast<size_t>(TraceModule::kLast)>
+        kTraceModuleNames = []() constexpr {
+            std::array<const char *, static_cast<size_t>(TraceModule::kLast)> rv{};
+
+            rv[static_cast<size_t>(TraceModule::kBoot)]       = "BootModule";
+            rv[static_cast<size_t>(TraceModule::kGeneral)]    = "GeneralModule";
+            rv[static_cast<size_t>(TraceModule::kMemory)]     = "MemoryModule";
+            rv[static_cast<size_t>(TraceModule::kInterrupts)] = "InterruptsModule";
+
+            return rv;
+        }();
 
     // ------------------------------
     // Helper types
@@ -39,17 +72,59 @@ static struct TraceFramework {
 
     struct StageCallbacks {
         char *(TraceFramework::*get_workspace_cb)();
-        void (TraceFramework::*commit_to_log_cb)(size_t, TraceModule);
-        void (TraceFramework::*commit_to_debug_log_cb)(size_t, TraceModule);
+        void (TraceFramework::*commit_to_log_cb)(size_t);
+        void (TraceFramework::*commit_to_debug_log_cb)(size_t);
     };
 
     // ------------------------------
     // Implementation details
     // ------------------------------
 
+    FORCE_INLINE_F void AdvanceStage()
+    {
+        ASSERT_LT(stage, TracingStage::kLast);
+
+        switch (stage) {
+            case TracingStage::kSingleThreadEnv:
+                AdvanceToSingleThreadInterruptsStage();
+                stage = TracingStage::kSingleThreadInterruptsEnv;
+                break;
+
+            case TracingStage::kSingleThreadInterruptsEnv:
+                AdvanceToMultiThreadStage();
+                stage = TracingStage::kMultiThreadEnv;
+                break;
+
+            case TracingStage::kMultiThreadEnv:
+            case TracingStage::kLast:
+                R_FAIL_ALWAYS("Cannot advance tracing stage beyond multi thread env...");
+        }
+    }
+
+    FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage() {}
+
+    FORCE_INLINE_F void AdvanceToMultiThreadStage() {}
+
     // --------------------------------------
     // Single thread env implementation
     // --------------------------------------
+
+    char *GetWorkspaceSingleThread() { return single_thread_env.main_execution_workspace; }
+
+    void CommitToLogSingleThread(const size_t trace_size)
+    {
+        EnsureEos(single_thread_env.main_execution_workspace, trace_size);
+
+        /* Bypass kernel log as we are only writers and we do not care bout perf here */
+        HardenFullString(single_thread_env.main_execution_workspace);
+    }
+
+    void CommitToDebugLogSingleThread(const size_t trace_size)
+    {
+        EnsureEos(single_thread_env.main_execution_workspace, trace_size);
+
+        hal::DebugTerminalWrite(single_thread_env.main_execution_workspace);
+    }
 
     // -------------------------------------------------
     // Single thread interrupts env implementation
@@ -64,7 +139,13 @@ static struct TraceFramework {
     // ------------------------------
 
     TracingStage stage = TracingStage::kSingleThreadEnv;
-    StageCallbacks stage_callbacks{};
+
+    StageCallbacks stage_callbacks{
+        .get_workspace_cb       = &TraceFramework::GetWorkspaceSingleThread,
+        .commit_to_log_cb       = &TraceFramework::CommitToLogSingleThread,
+        .commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogSingleThread,
+    };
+
     std::array<TraceLevel, static_cast<size_t>(TraceModule::kLast)> trace_levels = []() constexpr {
         std::array<TraceLevel, static_cast<size_t>(TraceModule::kLast)> rv{};
 
@@ -107,16 +188,52 @@ static struct TraceFramework {
 
 namespace internal
 {
-char *GetWorkspace() {}
+char *GetWorkspace()
+{
+    return (g_TraceFramework.*g_TraceFramework.stage_callbacks.get_workspace_cb)();
+}
 
-void CommitToLog(size_t trace_size, trace::TraceModule module) {}
+void CommitToLog(const size_t trace_size)
+{
+    return (g_TraceFramework.*g_TraceFramework.stage_callbacks.commit_to_log_cb)(trace_size);
+}
 
-void CommitToDebugLog(size_t trace_size, trace::TraceModule module) {}
+void CommitToDebugLog(const size_t trace_size)
+{
+    return (g_TraceFramework.*g_TraceFramework.stage_callbacks.commit_to_debug_log_cb)(trace_size);
+}
+
+size_t WriteTraceData(char *dst, TraceModule module)
+{
+    const char *module_name = TraceFramework::kTraceModuleNames[static_cast<size_t>(module)];
+
+    u64 system_time = 0;
+    if (::TimingModule::IsInited()) {
+        system_time = ::TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    }
+
+    u32 core_id = hal::GetCurrentCoreId();
+    if (::HardwareModule::IsInited() &&
+        ::HardwareModule::Get().GetCoresController().AreCoresKnown()) {
+        core_id = ::HardwareModule::Get().GetCoresController().MapHwToLogical(core_id);
+    }
+
+    return snprintf(
+        dst, FeatureValue<FeatureFlag::kSingleTraceMaxSize>,
+        "%s "    // Module name
+        "%llu "  // Timestamp
+        "%u "    // Core ID
+        "%u ",   // Process ID
+        module_name, system_time, core_id,
+        0u  // TODO: process ID
+    );
+}
+
 }  // namespace internal
 
 namespace trace
 {
-void AdvanceTracingStage() {}
+void AdvanceTracingStage() { g_TraceFramework.AdvanceStage(); }
 
 NODISCARD TraceLevel GetTraceLevel(TraceModule module)
 {

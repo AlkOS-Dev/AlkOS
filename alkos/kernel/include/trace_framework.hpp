@@ -3,6 +3,8 @@
 
 #include <extensions/defines.hpp>
 
+#define TRACE_FORMAT_LOCATION(message) __FILE__ " " TOSTRING(__LINE__) " " message
+
 namespace trace
 {
 // ------------------------------
@@ -46,9 +48,13 @@ enum class TraceModule {
 void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 
+/* MODULE TIME CORE PROC FILE LINE MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
 FAST_CALL void Write(const char *format, Args... args);
 }  // namespace trace
+
+#define KERNEL_TRACE(type, module, level, message, ...) \
+    trace::Write<type, module, level>(TRACE_FORMAT_LOCATION(message) __VA_OPT__(, ) __VA_ARGS__)
 
 #include "trace_framework.tpp"
 

@@ -8,8 +8,9 @@
 namespace internal
 {
 char* GetWorkspace();
-void CommitToLog(size_t trace_size, trace::TraceModule module);
-void CommitToDebugLog(size_t trace_size, trace::TraceModule module);
+void CommitToLog(size_t trace_size);
+void CommitToDebugLog(size_t trace_size);
+size_t WriteTraceData(char* dst, trace::TraceModule module);
 }  // namespace internal
 
 namespace trace
@@ -28,9 +29,15 @@ FAST_CALL void Write(const char* format, Args... args)
         return;
     }
 
-    char* workspace                         = internal::GetWorkspace();
-    [[maybe_unused]] const u64 bytesWritten = snprintf(workspace, kWorkspaceSize, format, args...);
-    ASSERT_LT(bytesWritten, kWorkspaceSize);
+    char* workspace = internal::GetWorkspace();
+
+    /* Write kernel trace info */
+    const size_t trace_info_size = internal::WriteTraceData(workspace, module);
+
+    /* User message */
+    [[maybe_unused]] const u64 bytesWritten =
+        snprintf(workspace + trace_info_size, kWorkspaceSize - trace_info_size, format, args...);
+    ASSERT_LT(bytesWritten, kWorkspaceSize - trace_info_size);
 
     if constexpr (type == TraceType::kKernelLog) {
         internal::CommitToLog(bytesWritten, module);

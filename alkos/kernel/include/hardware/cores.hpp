@@ -74,11 +74,18 @@ class CoresController final
 
     Core &AllocateCore(const CoreConfig &config);
 
+    NODISCARD FORCE_INLINE_F bool AreCoresKnown() const { return !core_arr_.empty(); }
+
+    NODISCARD FORCE_INLINE_F u16 MapHwToLogical(const u16 hwid) const
+    {
+        return hw_to_core_id_map_[hwid];
+    }
+
     NODISCARD FORCE_INLINE_F Core &GetCoreByLid(const u16 lid) { return core_arr_[lid]; }
 
     NODISCARD FORCE_INLINE_F Core &GetCoreByHw(const u16 hwid)
     {
-        return core_arr_[hw_to_core_id_map_[hwid]];
+        return core_arr_[MapHwToLogical(hwid)];
     }
 
     // ------------------------------
