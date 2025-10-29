@@ -285,8 +285,8 @@ TEST_F(SpanTest, ComplexTypes)
 
 TEST_F(SpanTest, SpanStructureSize)
 {
-    EXPECT_EQ(16, sizeof(std::span<int>));
-    EXPECT_EQ(8, sizeof(std::span<int, 5>));
+    EXPECT_EQ(16UL, sizeof(std::span<int>));
+    EXPECT_EQ(8UL, sizeof(std::span<int, 5>));
 }
 
 // ------------------------------

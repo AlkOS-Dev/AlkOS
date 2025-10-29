@@ -182,5 +182,6 @@ NO_RET void OnKernelPanic()
     /* ups... */
     arch::TerminalWriteError("[TEST] [FAIL] Test failed on kernel panic...\n");
     hal::QemuShutdown();
+    __builtin_unreachable();
 }
 }  // namespace test

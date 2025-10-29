@@ -25,6 +25,7 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
     snprintf(buffer, kKernelPanicPrintBuffSize, fmt, args...);
 
     KernelPanic(buffer);
+    __builtin_unreachable();
 }
 
 }  // namespace hal

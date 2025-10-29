@@ -7,7 +7,7 @@
 
 using namespace Mem;
 
-BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args)
+BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
 {
     R_ASSERT_NOT_ZERO(
         raw_args.multiboot_info_phys_addr, "Multiboot info physical address is null."
@@ -17,7 +17,7 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args)
     R_ASSERT_NOT_ZERO(
         raw_args.mem_info_bitmap_phys_addr, "Memory bitmap physical address is null."
     );
-    R_ASSERT_GT(raw_args.mem_info_total_pages, 0, "Total memory pages is zero.");
+    R_ASSERT_GT(raw_args.mem_info_total_pages, 0UL, "Total memory pages is zero.");
 
     BootArguments sanitized_k_args{
         .kernel_start      = UptrToPtr<void>(raw_args.kernel_start_addr),

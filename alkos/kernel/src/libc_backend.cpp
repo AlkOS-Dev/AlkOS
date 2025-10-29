@@ -8,7 +8,11 @@
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
 
-void __platform_panic(const char *msg) { hal::KernelPanic(msg); }
+void __platform_panic(const char *msg)
+{
+    hal::KernelPanic(msg);
+    __builtin_unreachable();
+}
 
 void __platform_get_clock_value(const ClockType type, TimeVal *time, Timezone *time_zone)
 {

@@ -137,14 +137,14 @@ TEST_F(LimitsTest, SignedBitManipulation)
 
 TEST_F(LimitsTest, DigitsVsSize)
 {
-    EXPECT_EQ(sizeof(uint8_t) * 8, std::numeric_limits<uint8_t>::digits);
-    EXPECT_EQ(sizeof(uint16_t) * 8, std::numeric_limits<uint16_t>::digits);
-    EXPECT_EQ(sizeof(uint32_t) * 8, std::numeric_limits<uint32_t>::digits);
-    EXPECT_EQ(sizeof(uint64_t) * 8, std::numeric_limits<uint64_t>::digits);
-    EXPECT_EQ(sizeof(int8_t) * 8 - 1, std::numeric_limits<int8_t>::digits);
-    EXPECT_EQ(sizeof(int16_t) * 8 - 1, std::numeric_limits<int16_t>::digits);
-    EXPECT_EQ(sizeof(int32_t) * 8 - 1, std::numeric_limits<int32_t>::digits);
-    EXPECT_EQ(sizeof(int64_t) * 8 - 1, std::numeric_limits<int64_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(uint8_t) * 8), std::numeric_limits<uint8_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(uint16_t) * 8), std::numeric_limits<uint16_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(uint32_t) * 8), std::numeric_limits<uint32_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(uint64_t) * 8), std::numeric_limits<uint64_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(int8_t) * 8 - 1), std::numeric_limits<int8_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(int16_t) * 8 - 1), std::numeric_limits<int16_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(int32_t) * 8 - 1), std::numeric_limits<int32_t>::digits);
+    EXPECT_EQ(static_cast<int>(sizeof(int64_t) * 8 - 1), std::numeric_limits<int64_t>::digits);
 }
 
 TEST_F(LimitsTest, DefaultSpecialization)

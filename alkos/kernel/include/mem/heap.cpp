@@ -13,7 +13,7 @@ Expected<VPtr<void>, MemError> KMalloc(KMallocRequest r)
     auto &size              = r.size;
     auto &al                = r.alignment;
 
-    ASSERT_NEQ(size, 0, "KMalloc size cannot be 0");
+    ASSERT_NEQ(size, 0UL, "KMalloc size cannot be 0");
     if (size == 0) {
         return Unexpected(MemError::InvalidArgument);
     }

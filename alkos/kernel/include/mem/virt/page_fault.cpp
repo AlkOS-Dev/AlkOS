@@ -61,8 +61,13 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         }
 
         hal::PageFlags page_flags{
-            .Present = true, .Writable = vma.flags.writable, .NoExecute = !vma.flags.executable
-            // Set other flags based on VMA properties as needed
+            .Present        = true,
+            .Writable       = vma.flags.writable,
+            .UserAccessible = false,
+            .WriteThrough   = false,
+            .CacheDisable   = false,
+            .Global         = false,
+            .NoExecute      = !vma.flags.executable
         };
 
         auto map_res = mmu.Map(&as, AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags);

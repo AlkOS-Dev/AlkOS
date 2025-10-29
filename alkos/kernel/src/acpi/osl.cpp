@@ -24,7 +24,7 @@ uacpi_status uacpi_kernel_pci_device_open(uacpi_pci_address address, uacpi_handl
     return UACPI_STATUS_OK;
 }
 
-void uacpi_kernel_pci_device_close(uacpi_handle handle) {}
+void uacpi_kernel_pci_device_close(uacpi_handle handle) { (void)handle; }
 
 uacpi_status uacpi_kernel_pci_read8(uacpi_handle device, uacpi_size offset, uacpi_u8 *value)
 {
@@ -58,11 +58,12 @@ uacpi_status uacpi_kernel_pci_write32(uacpi_handle device, uacpi_size offset, ua
 
 uacpi_status uacpi_kernel_io_map(uacpi_io_addr base, uacpi_size len, uacpi_handle *out_handle)
 {
+    (void)len;
     *out_handle = reinterpret_cast<uacpi_handle>(base);
     return UACPI_STATUS_OK;
 }
 
-void uacpi_kernel_io_unmap(uacpi_handle handle) {}
+void uacpi_kernel_io_unmap(uacpi_handle handle) { (void)handle; }
 
 uacpi_status uacpi_kernel_io_read8(uacpi_handle handle, uacpi_size offset, uacpi_u8 *out_value)
 {
@@ -153,9 +154,9 @@ uacpi_u64 uacpi_kernel_get_nanoseconds_since_boot()
     return 0;
 }
 
-void uacpi_kernel_stall(uacpi_u8 usec) {}
+void uacpi_kernel_stall(uacpi_u8 usec) { (void)usec; }
 
-void uacpi_kernel_sleep(uacpi_u64 msec) {}
+void uacpi_kernel_sleep(uacpi_u64 msec) { (void)msec; }
 
 uacpi_handle uacpi_kernel_create_event() { return nullptr; }
 
@@ -178,6 +179,9 @@ uacpi_status uacpi_kernel_install_interrupt_handler(
     uacpi_u32 irq, uacpi_interrupt_handler, uacpi_handle ctx, uacpi_handle *out_irq_handle
 )
 {
+    (void)irq;
+    (void)ctx;
+    (void)out_irq_handle;
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
@@ -185,11 +189,13 @@ uacpi_status uacpi_kernel_uninstall_interrupt_handler(
     uacpi_interrupt_handler, uacpi_handle irq_handle
 )
 {
+    (void)irq_handle;
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
 uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)
 {
+    (void)ctx;
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 

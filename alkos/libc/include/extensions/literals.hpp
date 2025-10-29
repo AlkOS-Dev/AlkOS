@@ -9,6 +9,10 @@ namespace std::literals
 namespace string_view_literals
 {
 
+// Suppress warning for standard library literal operators
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wliteral-suffix"
+
 NODISCARD constexpr string_view operator""sv(const char *str, size_t len) noexcept
 {
     return string_view(str, len);
@@ -33,6 +37,8 @@ NODISCARD constexpr wstring_view operator""sv(const wchar_t *str, size_t len) no
 {
     return wstring_view(str, len);
 }
+
+#pragma GCC diagnostic pop
 
 }  // namespace string_view_literals
 

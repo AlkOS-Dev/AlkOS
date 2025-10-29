@@ -117,6 +117,7 @@ void TestIsr(intr::LitSwEntry &entry)
 
 void TimerIsr(intr::LitHwEntry &entry)
 {
+    (void)entry;  // Unused parameter
     // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 
     hal::DebugStack();
