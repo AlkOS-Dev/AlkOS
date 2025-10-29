@@ -37,7 +37,7 @@ Expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 
         // Try to find a contiguous block of the required size, searching backwards.
         u64 block_start_idx = end_idx;
-        while ((block_start_idx > 0) && (end_idx - (block_start_idx - 1) < ar.num_pages) &&
+        while ((block_start_idx > 0) && (end_idx + 1 - block_start_idx < ar.num_pages) &&
                IsFree(block_start_idx - 1)) {
             block_start_idx--;
         }

@@ -26,7 +26,8 @@ Expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 {
     for (const VMemArea &vma : *as) {
-        // TODO: Unmap
+        // Unmap all pages in the VMA
+        mmu_.UnMapRange(as, vma.start, vma.size);
         tlb_.InvalidateRange(vma.start, vma.size);
     }
     KFree(as);
@@ -56,11 +57,15 @@ Expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     auto start = area->start;
     auto size  = area->size;
 
-    // Rm
+    // Unmap the range
+    auto unmap_res = mmu_.UnMapRange(as, start, size);
+    UNEXPETED_RET_IF_ERR(unmap_res);
+
+    // Remove from address space
     auto err = as->RmArea(region_start);
     UNEXPETED_RET_IF_ERR(err);
 
-    // Invalidate
+    // Invalidate TLB
     tlb_.InvalidateRange(start, size);
     return {};
 }

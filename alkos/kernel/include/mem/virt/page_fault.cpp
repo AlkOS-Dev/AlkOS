@@ -24,10 +24,11 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         KernelPanicFormat("Page fault in unmapped memory at 0x%p", f_ptr);
         return;
     }
-    const auto &vma = *(*area_or_error);
+    VPtr<VMemArea> vma_ptr = *area_or_error;
+    const auto &vma        = *vma_ptr;
 
     if (!err.present) {  // Page just wasn't there
-        if (err.write & !vma.flags.writable) {
+        if (err.write && !vma.flags.writable) {
             hal::KernelPanicFormat("Write to read-only memory area at 0x%p", f_ptr);
             return;
         }
@@ -35,7 +36,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         auto &pmm = MemoryModule::Get().GetBitmapPmm();
         auto &mmu = MemoryModule::Get().GetMmu();
 
-        PPtr<void> map_to;
+        PPtr<void> map_to = nullptr;
         if (vma.type == VirtualMemAreaT::Anonymous) {
             auto new_page_or_error = pmm.Alloc();
             if (!new_page_or_error) {
@@ -52,6 +53,11 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             map_to            = UptrToPtr<void>(
                 AlignDown(PtrToUptr(vma.direct_mapping_start) + offset, kPageSizeBytes)
             );
+        } else {
+            hal::KernelPanicFormat(
+                "Unsupported VMA type %d at 0x%p", static_cast<int>(vma.type), f_ptr
+            );
+            return;
         }
 
         hal::PageFlags page_flags{

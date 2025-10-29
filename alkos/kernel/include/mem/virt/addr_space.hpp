@@ -5,6 +5,7 @@
 #include <extensions/types.hpp>
 
 #include "hal/interrupt_params.hpp"
+#include "hal/spinlock.hpp"
 #include "interrupts/interrupt_types.hpp"
 #include "mem/error.hpp"
 #include "mem/types.hpp"
@@ -50,6 +51,7 @@ class AddressSpace
 
     PPtr<void> page_table_root_;
     VPtr<VMemArea> area_list_head_;
+    hal::Spinlock area_list_lock_;
 
     friend VirtualMemoryManager;
     friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);

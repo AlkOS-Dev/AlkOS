@@ -117,6 +117,9 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
         //    failed_lock_tries
         //);
 
+        // TODO: These statistics counters are incremented without atomic operations,
+        // which technically causes a data race (UB). Consider using atomic operations
+        // if accurate statistics are required, or accept that these are approximate.
         success_lock_tries_ += 1;
         failed_lock_tries_ += failed_lock_tries;
     }

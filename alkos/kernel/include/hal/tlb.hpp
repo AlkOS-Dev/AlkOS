@@ -14,6 +14,8 @@ class Tlb : public arch::Tlb
     using arch::Tlb::Tlb;
 
     public:
+    /// Invalidates TLB entries for the range [start, start + size)
+    /// The range is treated as half-open: start is inclusive, end is exclusive.
     void InvalidateRange(Mem::VPtr<void> start, size_t size)
     {
         using namespace Mem;

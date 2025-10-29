@@ -15,9 +15,12 @@ Expected<void, MemError> AS::AddArea(VMemArea vma)
     *n_area               = vma;
     n_area->next          = nullptr;
 
+    area_list_lock_.Lock();
+
     // Check for overlapping areas
     for (auto it = area_list_head_; it; it = it->next) {
         if (AreasOverlap(it, n_area)) {
+            area_list_lock_.Unlock();
             KFree(n_area);
             return Unexpected(MemError::InvalidArgument);
         }
@@ -26,6 +29,7 @@ Expected<void, MemError> AS::AddArea(VMemArea vma)
     n_area->next    = area_list_head_;
     area_list_head_ = n_area;
 
+    area_list_lock_.Unlock();
     return {};
 }
 
@@ -41,7 +45,10 @@ bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
 
 Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
 {
+    area_list_lock_.Lock();
+
     if (!area_list_head_) {
+        area_list_lock_.Unlock();
         return {};  // Nothing to remove
     }
 
@@ -49,6 +56,7 @@ Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
     if (IsAddrInArea(area_list_head_, ptr)) {
         auto to_free    = area_list_head_;
         area_list_head_ = area_list_head_->next;
+        area_list_lock_.Unlock();
         KFree(to_free);
         return {};
     }
@@ -59,25 +67,31 @@ Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
         if (IsAddrInArea(iterator->next, ptr)) {
             auto to_free   = iterator->next;
             iterator->next = to_free->next;
+            area_list_lock_.Unlock();
             KFree(to_free);
             return {};
         }
         iterator = iterator->next;
     }
 
+    area_list_lock_.Unlock();
     return Unexpected(MemError::InvalidArgument);
 }
 
 Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
 {
+    area_list_lock_.Lock();
+
     VPtr<VMemArea> vma = area_list_head_;
     while (vma != nullptr) {
         if (IsAddrInArea(vma, ptr)) {
+            area_list_lock_.Unlock();
             return vma;
         }
         vma = vma->next;
     }
 
+    area_list_lock_.Unlock();
     return Unexpected(MemError::NotFound);
 }
 
