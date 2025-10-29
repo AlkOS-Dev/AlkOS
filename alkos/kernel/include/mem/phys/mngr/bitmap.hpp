@@ -11,6 +11,8 @@
 namespace Mem
 {
 
+class BuddyPmm;
+
 class BitmapPmm
 {
     public:
@@ -44,9 +46,14 @@ class BitmapPmm
         ASSERT_TRUE(IsAllocated(pfn), "Page frame is already free");
         bitmap_view_.Set(pfn, BitMapFree);
     }
+    /// Private accessor for friend (buddy pmm)
+    data_structures::BitMapView &GetBitmapView() { return bitmap_view_; }
 
     data_structures::BitMapView bitmap_view_{nullptr, 0};
     size_t last_alloc_idx_ = 0;
+
+    /// Friends
+    friend BuddyPmm;
 };
 
 }  // namespace Mem

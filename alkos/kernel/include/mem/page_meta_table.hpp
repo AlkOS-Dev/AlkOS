@@ -6,17 +6,16 @@
 
 namespace Mem
 {
+
+class BitmapPmm;
+
 class PageMetaTable
 {
     public:
-    PageMetaTable() = default;
-    PageMetaTable(VPtr<PageMeta<Dummy>> page_frames_metas, size_t num_page_frames)
-        : page_frames_metas_{page_frames_metas}, num_page_frames_{num_page_frames}
-    {
-    }
+    PageMetaTable()  = default;
     ~PageMetaTable() = default;
 
-    static size_t CalcRequiredSize(size_t num_page_frames);
+    void Init(size_t total_pages, BitmapPmm &b_pmm);
 
     private:
     VPtr<PageMeta<Dummy>> page_frames_metas_;

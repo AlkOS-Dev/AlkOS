@@ -24,17 +24,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 
-    const size_t total_pages    = args.total_page_frames;
-    const size_t required_size  = PageMetaTable::CalcRequiredSize(total_pages);
-    const size_t required_pages = required_size / hal::kPageSizeBytes;
-
-    TRACE_DEBUG("Total  : | %llu | pages", total_pages);
-    TRACE_DEBUG("Finding: | %llu | pages for page metadata table", required_pages);
-    auto res = BitmapPmm_.Alloc(BitmapPmm::AllocationRequest{.num_pages = required_pages});
-    R_ASSERT_TRUE(res, "Failed to allocate memory for page metadata table");
-
-    auto page_metas = reinterpret_cast<VPtr<PageMeta<Dummy>>>(PhysToVirt(*res));
-    PageMetaTable_  = PageMetaTable(page_metas, total_pages);
+    PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)
