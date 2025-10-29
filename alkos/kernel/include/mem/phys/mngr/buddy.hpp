@@ -1,7 +1,6 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BUDDY_HPP_
 #define ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BUDDY_HPP_
 
-
 #include <extensions/types.hpp>
 
 #include "mem/error.hpp"
@@ -38,4 +37,4 @@ class BuddyPmm
 
 }  // namespace Mem
 
-#endif /* ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BUDDY_HPP_ */
+#endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BUDDY_HPP_

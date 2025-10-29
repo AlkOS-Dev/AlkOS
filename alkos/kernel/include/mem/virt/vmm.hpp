@@ -24,7 +24,8 @@ class VirtualMemoryManager
     // Class creation
     // ------------------------------
 
-    explicit VirtualMemoryManager(hal::Tlb &tlb, hal::Mmu &mmu) noexcept;
+    VirtualMemoryManager() = default;
+    void Init(hal::Tlb &tlb, hal::Mmu &mmu) noexcept;
 
     // ------------------------------
     // Class interaction
@@ -44,8 +45,8 @@ class VirtualMemoryManager
     // ------------------------------
     // Class fields
     // ------------------------------
-    hal::Tlb &tlb_;
-    hal::Mmu &mmu_;
+    hal::Tlb *tlb_;
+    hal::Mmu *mmu_;
 };
 using Vmm = VirtualMemoryManager;
 

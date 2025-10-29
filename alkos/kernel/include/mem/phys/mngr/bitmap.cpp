@@ -8,13 +8,6 @@
 
 using namespace Mem;
 
-BitmapPmm::BitmapPmm(VPtr<void> mem_bitmap, size_t mem_bitmap_size)
-{
-    ASSERT_NOT_NULL(mem_bitmap, "Memory bitmap pointer is null");
-    data_structures::BitMapView bmv{mem_bitmap, static_cast<size_t>(mem_bitmap_size)};
-    Init(bmv);
-};
-
 void BitmapPmm::Init(data_structures::BitMapView bmv, size_t last_alloc_idx)
 {
     bitmap_view_    = bmv;
