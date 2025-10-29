@@ -4,6 +4,8 @@
 #include <extensions/expected.hpp>
 #include <extensions/types.hpp>
 
+#include "hal/interrupt_params.hpp"
+#include "interrupts/interrupt_types.hpp"
 #include "mem/error.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space_iterator.hpp"
@@ -50,6 +52,7 @@ class AddressSpace
     VPtr<VMemArea> area_list_head_;
 
     friend VirtualMemoryManager;
+    friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
     public:
 };
