@@ -3,7 +3,7 @@
           global stack_bottom
           global stack_top
 
-          section .bss
+          section .stack
           align 16
 stack_bottom:
           resb 32768
