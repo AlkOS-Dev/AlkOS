@@ -147,7 +147,7 @@ class LogicalInterruptTable
 
     private:
     template <InterruptType kInterruptType>
-    FORCE_INLINE_F NODISCARD InterruptHandlerEntry<kInterruptType> *GetTable_()
+    NODISCARD FORCE_INLINE_F InterruptHandlerEntry<kInterruptType> *GetTable_()
     {
         if constexpr (kInterruptType == InterruptType::kException) {
             return exception_table_;

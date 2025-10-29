@@ -40,11 +40,11 @@ FAST_CALL void Write(const char* format, Args... args)
     ASSERT_LT(bytesWritten, kWorkspaceSize - trace_info_size);
 
     if constexpr (type == TraceType::kKernelLog) {
-        internal::CommitToLog(bytesWritten, module);
+        internal::CommitToLog(bytesWritten);
     }
 
     if constexpr (type == TraceType::kDebugOnly) {
-        internal::CommitToDebugLog(bytesWritten, module);
+        internal::CommitToDebugLog(bytesWritten);
     }
 }
 }  // namespace  trace

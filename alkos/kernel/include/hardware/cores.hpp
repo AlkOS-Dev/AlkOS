@@ -42,12 +42,18 @@ class alignas(hal::kCacheLineSizeBytes) Core final : public hal::Core
 
     NODISCARD FORCE_INLINE_F bool IsEnabled() const { return config_.enabled; }
 
+    NODISCARD FORCE_INLINE_F u32 GetInterruptNestingLevel() const
+    {
+        return interrupt_nesting_level_;
+    }
+
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    CoreConfig config_;
+    CoreConfig config_{};
+    u32 interrupt_nesting_level_{0};
 };
 
 class CoresController final
@@ -86,6 +92,12 @@ class CoresController final
     NODISCARD FORCE_INLINE_F Core &GetCoreByHw(const u16 hwid)
     {
         return core_arr_[MapHwToLogical(hwid)];
+    }
+
+    NODISCARD FORCE_INLINE_F Core &GetCurrentCore()
+    {
+        const u32 hwid = hal::GetCurrentCoreId();
+        return GetCoreByHw(static_cast<u16>(hwid));
     }
 
     // ------------------------------

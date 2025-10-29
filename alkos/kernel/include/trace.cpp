@@ -29,6 +29,16 @@ FAST_CALL void EnsureEos(char *str, const size_t trace_size)
     str[eos_index] = '\0';
 }
 
+FAST_CALL u32 GetInterruptNestingCounter()
+{
+    if (::HardwareModule::Get().GetCoresController().AreCoresKnown()) {
+        return ::HardwareModule::Get()
+            .GetCoresController()
+            .GetCurrentCore()
+            .GetInterruptNestingLevel();
+    }
+}
+
 // ------------------------------------
 // Trace framework implementation
 // ------------------------------------
@@ -82,6 +92,7 @@ static struct TraceFramework {
 
     FORCE_INLINE_F void AdvanceStage()
     {
+        /* Assumes only one execution may call this */
         ASSERT_LT(stage, TracingStage::kLast);
 
         switch (stage) {
@@ -101,7 +112,13 @@ static struct TraceFramework {
         }
     }
 
-    FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage() {}
+    FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage()
+    {
+        stage_callbacks.get_workspace_cb = &TraceFramework::GetWorkspaceSingleThreadInterrupts;
+        stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleThreadInterrupts;
+        stage_callbacks.commit_to_debug_log_cb =
+            &TraceFramework::CommitToDebugLogSingleThreadInterrupts;
+    }
 
     FORCE_INLINE_F void AdvanceToMultiThreadStage() {}
 
@@ -129,6 +146,17 @@ static struct TraceFramework {
     // -------------------------------------------------
     // Single thread interrupts env implementation
     // -------------------------------------------------
+
+    char *GetWorkspaceSingleThreadInterrupts()
+    {
+        HardwareModule::
+
+            return nullptr;
+    }
+
+    void CommitToLogSingleThreadInterrupts(const size_t trace_size) {}
+
+    void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size) {}
 
     // ------------------------------------
     // Multithread env implementation
@@ -176,7 +204,7 @@ static struct TraceFramework {
     // Single thread env fields
     // ------------------------------
 
-    ThreadTraceData single_thread_env;
+    ThreadTraceData single_thread_env{};
 
     // ------------------------------
     // Multi thread env fields
