@@ -46,7 +46,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 
             memset(new_page_virt, 0, hal::kPageSizeBytes);
 
-            map_to = new_page_virt;
+            map_to = new_page_phys;
         } else if (vma.type == VirtualMemAreaT::DirectMapping) {
             const auto offset = PtrToUptr(f_ptr) - PtrToUptr(vma.start);
             map_to            = UptrToPtr<void>(
