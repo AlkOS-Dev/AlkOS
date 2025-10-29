@@ -1,0 +1,61 @@
+---
+# Clangd configuration for AlkOS kernel development
+
+# Use the compile_commands.json from the root
+CompileFlags:
+  CompilationDatabase: .
+  
+  # Add compiler flags that help clangd understand the environment
+  Add:
+    # Ensure C++23 support
+    - "-std=gnu++23"
+    # Kernel-specific flags
+    - "-ffreestanding"
+    - "-fno-exceptions"
+    - "-fno-rtti"
+    - "-mcmodel=kernel"
+    - "-mno-red-zone"
+    - "-D__x86_64__=1"
+    # Help clangd find system headers from the cross-compiler
+    - "-I/home/wookie/Projects/AlkOS/tools/x86_64-elf/lib/gcc/x86_64-elf/15.1.0/include"
+    - "-I/home/wookie/Projects/AlkOS/tools/x86_64-elf/lib/gcc/x86_64-elf/15.1.0/include-fixed"
+    
+  # Remove problematic flags that confuse clangd
+  Remove:
+    - "-mstackrealign"  # May not be recognized by clang
+    - "--sysroot=*"     # Remove sysroot as it may cause issues with clangd
+
+# Diagnostics configuration
+Diagnostics:
+  # Suppress warnings that are common in kernel development
+  Suppress:
+    - "unused-parameter"
+    - "unused-variable"
+  ClangTidy:
+    # Enable clang-tidy checks appropriate for kernel code
+    Add:
+      - "bugprone-*"
+      - "performance-*"
+      - "readability-*"
+    Remove:
+      - "readability-identifier-length"
+      - "readability-magic-numbers"
+      - "bugprone-easily-swappable-parameters"
+
+# Index configuration for better code navigation
+Index:
+  Background: Build
+  StandardLibrary: No  # We're using a custom libc
+
+# Hover and completion settings
+Hover:
+  ShowAKA: Yes
+
+Completion:
+  AllScopes: Yes
+
+# InlayHints for better code understanding
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes

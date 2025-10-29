@@ -34,11 +34,18 @@ SECTIONS
 		*(.data)
 	}
 
-	/* Read-write data (uninitialized) and stack */
+	/* Read-write data (uninitialized) */
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
 		*(COMMON)
 		*(.bss)
+	}
+
+	/* Stack section with 10MB gap */
+	. += 10M;
+	.stack BLOCK(4K) : ALIGN(4K)
+	{
+		*(.stack)
 	}
 
 	/* Provide the start and end symbols for the kernel */

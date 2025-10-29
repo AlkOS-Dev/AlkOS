@@ -250,3 +250,42 @@ TEST_F(AlignementTest, AlignUp_GivenAlignedPointer_ReturnsSamePointer)
     auto aligned_ptr = reinterpret_cast<char *>(uintptr_t(0x1004));
     EXPECT_EQ(AlignUp(aligned_ptr, 4), aligned_ptr);
 }
+
+TEST_F(AlignementTest, IsAligned_GivenNonPowerOfTwoAlignment_ReturnsCorrectResult)
+{
+    EXPECT_TRUE(IsAligned(18u, 6));
+    EXPECT_TRUE(IsAligned(30u, 10));
+    EXPECT_FALSE(IsAligned(17u, 6));
+    EXPECT_FALSE(IsAligned(29u, 10));
+}
+TEST_F(AlignementTest, IsAligned_GivenNonPowerOfTwoAlignedPointer_ReturnsCorrectResult)
+{
+    auto aligned_ptr   = reinterpret_cast<byte *>(uintptr_t(24));
+    auto unaligned_ptr = reinterpret_cast<byte *>(uintptr_t(25));
+    EXPECT_TRUE(IsAligned(aligned_ptr, 12));
+    EXPECT_FALSE(IsAligned(unaligned_ptr, 12));
+}
+TEST_F(AlignementTest, AlignDown_GivenNonPowerOfTwoAlignment_ReturnsAlignedValue)
+{
+    EXPECT_EQ(AlignDown(23u, 10), 20u);
+    EXPECT_EQ(AlignDown(17u, 5), 15u);
+    EXPECT_EQ(AlignDown(100u, 3), 99u);
+}
+TEST_F(AlignementTest, AlignDown_GivenNonPowerOfTwoAlignedPointer_ReturnsCorrectPointer)
+{
+    auto unaligned_ptr = reinterpret_cast<char *>(uintptr_t(128));
+    auto aligned_ptr   = AlignDown(unaligned_ptr, 13);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(aligned_ptr), uintptr_t(117));
+}
+TEST_F(AlignementTest, AlignUp_GivenNonPowerOfTwoAlignment_ReturnsAlignedValue)
+{
+    EXPECT_EQ(AlignUp(21u, 10), 30u);
+    EXPECT_EQ(AlignUp(16u, 5), 20u);
+    EXPECT_EQ(AlignUp(99u, 3), 99u);
+}
+TEST_F(AlignementTest, AlignUp_GivenNonPowerOfTwoAlignedPointer_ReturnsCorrectPointer)
+{
+    auto unaligned_ptr = reinterpret_cast<char *>(uintptr_t(118));
+    auto aligned_ptr   = AlignUp(unaligned_ptr, 13);
+    EXPECT_EQ(reinterpret_cast<uintptr_t>(aligned_ptr), uintptr_t(130));
+}

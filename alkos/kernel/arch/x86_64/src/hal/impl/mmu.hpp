@@ -22,22 +22,28 @@ class Mmu : public MmuAPI
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
     );
 
-    void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as)
+    void SwitchRootPageMapTable(Mem::PPtr<void> pmt4)
     {
         cpu::Cr3 cr3{};
-        cr3.PageMapLevel4Address = Mem::PtrToUptr(as->PageTableRoot()) >> 12;
+        cr3.PageMapLevel4Address = Mem::PtrToUptr(pmt4) >> 12;
         cpu::SetCR(cr3);
     }
 
+    void DestroyRootPageMapTable(Mem::PPtr<void> pmt4) { (void)pmt4; }
+
     private:
+    template <size_t kLevel>
+    u64 PmeIdx(Mem::VPtr<void> vaddr);
+
+    u64 ToArchFlags(PageFlags flags);
+
+    template <size_t kLevel = 0>
+    void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme);
+
     template <size_t kLevel = 0>
     Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> WalkToEntry(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, bool create_if_missing = false
     );
-
-    template <size_t kLevel>
-    u64 PmeIdx(Mem::VPtr<void> vaddr);
-    u64 ToArchFlags(PageFlags flags);
 };
 
 }  // namespace arch

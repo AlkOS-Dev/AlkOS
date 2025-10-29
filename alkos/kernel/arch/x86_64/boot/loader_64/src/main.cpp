@@ -192,15 +192,33 @@ NO_RET static void TransitionToKernel(
     gKernelInitialParams.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
     gKernelInitialParams.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
 
-    gKernelInitialParams.mem_info_bitmap_addr = pmm.GetBitmapAddress().Value();
-    gKernelInitialParams.mem_info_total_pages = pmm.GetTotalPages();
-    gKernelInitialParams.mem_info_bitmap_addr = vmm.GetPml4Table().Value();
+    gKernelInitialParams.mem_info_bitmap_addr  = pmm.GetBitmapAddress().Value();
+    gKernelInitialParams.mem_info_total_pages  = pmm.GetTotalPages();
+    gKernelInitialParams.pml_4_table_phys_addr = vmm.GetPml4Table().Value();
 
     const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
     const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
     const u64 al_ld_start_addr = AlignDown(ld_start_addr, PageSize<PageSizeTag::k4Kb>());
     const u64 al_ld_span = AlignUp(ld_end_addr - ld_start_addr, PageSize<PageSizeTag::k4Kb>());
     pmm.Free(PhysicalPtr<void>(al_ld_start_addr), al_ld_span);
+
+    TRACE_INFO("Transitioning to kernel with parameters:");
+    TRACE(
+        "  Kernel Arguments:\n"
+        "    kernel_start_addr:           0x%llX\n"
+        "    kernel_end_addr:             0x%llX\n"
+        "    pml_4_table_phys_addr:       0x%llX\n"
+        "    mem_info_bitmap_addr:        0x%llX\n"
+        "    mem_info_total_pages:        %llu\n"
+        "    multiboot_info_addr:         0x%llX\n"
+        "    multiboot_header_start_addr: 0x%llX\n"
+        "    multiboot_header_end_addr:   0x%llX\n",
+        gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
+        gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
+        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
+        gKernelInitialParams.multiboot_header_start_addr,
+        gKernelInitialParams.multiboot_header_end_addr
+    );
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);
     EnterKernel(kernel_entry_point, &gKernelInitialParams);

@@ -14,6 +14,7 @@ static constexpr size_t kNumSoftwareInterrupts = arch::kNumSoftwareInterrupts;
 /* Mapping params - each architecture MUST define this */
 static constexpr u16 kTimerHwLirq      = arch::kTimerHwLirq;
 static constexpr u16 kPageFaultExcLirq = arch::kPageFaultExcLirq;
+
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_INTERRUPT_PARAMS_HPP_

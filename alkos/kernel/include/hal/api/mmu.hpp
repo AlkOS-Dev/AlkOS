@@ -45,6 +45,8 @@ struct MmuAPI {
 
     /**
      * @brief Unmaps a virtual address, invalidating its page table entry.
+     * should also free the pme entries and tables if adequate
+     *
      * @param as The target address space.
      * @param vaddr The virtual address to unmap.
      * @return Success or a memory error if the page is not mapped.
@@ -62,11 +64,16 @@ struct MmuAPI {
     );
 
     /**
-     * @brief Switches the current address space, which typically involves
-     * loading a new page table root into a CPU register (e.g., CR3).
-     * @param as The new address space to switch to.
+     * @brief Switches the current root page table
      */
-    void SwitchAddrSpace(Mem::VPtr<Mem::AddressSpace> as);
+    void SwitchRootPageMapTable(Mem::PPtr<void> root_page_table);
+
+    /**
+     * @brief Destroys and free's the current root page table entries,
+     * subentries, subsubentries etc
+     *
+     */
+    void CleanRootPageMapTable(Mem::PPtr<void> root_page_table);
 };
 
 }  // namespace arch

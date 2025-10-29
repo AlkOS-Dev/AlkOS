@@ -6,21 +6,31 @@
 using namespace Mem;
 using AS = AddressSpace;
 
-void AS::AddArea(VMemArea vma)
+Expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
-    R_ASSERT_TRUE(res, "Failed to allocate memory for VMemArea");
+    UNEXPETED_RET_IF_ERR(res);
 
     VPtr<VMemArea> n_area = *res;
     *n_area               = vma;
+    n_area->next          = nullptr;
+
+    area_list_lock_.Lock();
 
     // Check for overlapping areas
     for (auto it = area_list_head_; it; it = it->next) {
-        ASSERT_FALSE(AreasOverlap(it, n_area), "Virtual memory areas overlap");
+        if (AreasOverlap(it, n_area)) {
+            area_list_lock_.Unlock();
+            KFree(n_area);
+            return Unexpected(MemError::InvalidArgument);
+        }
     }
 
     n_area->next    = area_list_head_;
     area_list_head_ = n_area;
+
+    area_list_lock_.Unlock();
+    return {};
 }
 
 bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
@@ -33,18 +43,22 @@ bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
     return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
 }
 
-void AS::RmArea(VPtr<void> ptr)
+Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
 {
+    area_list_lock_.Lock();
+
     if (!area_list_head_) {
-        return;  // Nothing to remove
+        area_list_lock_.Unlock();
+        return {};  // Nothing to remove
     }
 
     // Head is to be removed
     if (IsAddrInArea(area_list_head_, ptr)) {
         auto to_free    = area_list_head_;
         area_list_head_ = area_list_head_->next;
+        area_list_lock_.Unlock();
         KFree(to_free);
-        return;
+        return {};
     }
 
     // Traverse rest
@@ -53,23 +67,31 @@ void AS::RmArea(VPtr<void> ptr)
         if (IsAddrInArea(iterator->next, ptr)) {
             auto to_free   = iterator->next;
             iterator->next = to_free->next;
+            area_list_lock_.Unlock();
             KFree(to_free);
-            return;
+            return {};
         }
         iterator = iterator->next;
     }
+
+    area_list_lock_.Unlock();
+    return Unexpected(MemError::InvalidArgument);
 }
 
 Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
 {
+    area_list_lock_.Lock();
+
     VPtr<VMemArea> vma = area_list_head_;
     while (vma != nullptr) {
         if (IsAddrInArea(vma, ptr)) {
+            area_list_lock_.Unlock();
             return vma;
         }
         vma = vma->next;
     }
 
+    area_list_lock_.Unlock();
     return Unexpected(MemError::NotFound);
 }
 

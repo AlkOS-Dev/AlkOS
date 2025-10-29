@@ -20,10 +20,10 @@ using MadtTable = ACPI::Table<acpi_madt>;
 NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table)
 {
     if (!IsBitEnabled<0>(table->flags)) {
-        TRACE_INFO("Core with id: %lu is not enabled...", table->id);
+        TRACE_INFO("Core with id: %hhu is not enabled...", table->id);
 
         if (!IsBitEnabled<1>(table->flags)) {
-            TRACE_WARNING("Core with id: %lu is not online capable...", table->id);
+            TRACE_WARNING("Core with id: %hhu is not online capable...", table->id);
             return false;
         }
     }
@@ -156,8 +156,8 @@ static void ParseLApicAddress_(MadtTable &table)
 
         TRACE_INFO(
             "Found LAPIC Address Override: "
-            "address: %016X, "
-            "rsvd: %hhu",
+            "address: %016llX, "
+            "rsvd: %hu",
             table_ptr->address, table_ptr->rsvd
         );
 

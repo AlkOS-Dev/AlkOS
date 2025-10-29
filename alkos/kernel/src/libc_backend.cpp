@@ -4,6 +4,7 @@
 
 #include "hal/debug_terminal.hpp"
 #include "hal/panic.hpp"
+#include "hal/spinlock.hpp"
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
 
@@ -63,7 +64,14 @@ void __platform_get_timezone(Timezone *time_zone)
     *time_zone = TimingModule::Get().GetSystemTime().GetTimezone();
 }
 
-void __platform_debug_write(const char *buffer) { hal::DebugTerminalWrite(buffer); }
+void __platform_debug_write(const char *buffer)
+{
+    if constexpr (!FeatureEnabled<FeatureFlag::kDebugOutput>) {
+        return;
+    }
+
+    hal::DebugTerminalWrite(buffer);
+}
 
 size_t __platform_debug_read_line(char *buffer, const size_t buffer_size)
 {

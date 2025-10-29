@@ -26,7 +26,7 @@ class BitmapPmm
     BitmapPmm(VPtr<void> mem_bitmap, size_t mem_bitmap_size);
     void Init(data_structures::BitMapView bmv, size_t last_alloc_idx = 0);
 
-    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
+    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar = {.num_pages = 1});
     void Free(PPtr<Page> page, size_t num_pages = 1);
 
     size_t BitMapSize() const { return bitmap_view_.Size(); }
