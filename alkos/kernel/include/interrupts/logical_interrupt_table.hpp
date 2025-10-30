@@ -7,6 +7,7 @@
 #include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
 #include "hal/sync.hpp"
+#include "hardware/cores.hpp"
 
 namespace intr
 {
@@ -106,6 +107,8 @@ class LogicalInterruptTable
         requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
     {
+        // GetCore
+
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
         auto &entry = GetTable_<kInterruptType>()[lirq];
