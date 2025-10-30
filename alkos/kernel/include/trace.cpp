@@ -149,9 +149,9 @@ static struct TraceFramework {
 
     char *GetWorkspaceSingleThreadInterrupts()
     {
-        HardwareModule::
+        // HardwareModule::
 
-            return nullptr;
+        return nullptr;
     }
 
     void CommitToLogSingleThreadInterrupts(const size_t trace_size) {}
