@@ -54,8 +54,6 @@ void ArchInit(const RawBootArguments &)
     TRACE_INFO("In ArchInit...");
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
-    SetCoreLocalData(&g_CoreLocal);
-
     TRACE_INFO("Setting up CPU features...");
     BlockHardwareInterrupts();
 
@@ -67,6 +65,7 @@ void ArchInit(const RawBootArguments &)
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
 
+    cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(&g_CoreLocal));
     EnableHardwareInterrupts();
 
     TRACE_INFO("Leaving ArchInit");
