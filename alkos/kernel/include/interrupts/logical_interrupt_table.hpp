@@ -6,15 +6,10 @@
 #include <extensions/cstddef.hpp>
 #include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
+#include "interrupts/interrupt_types.hpp"
 
 namespace intr
 {
-enum class InterruptType : uint8_t {
-    kException         = 0,
-    kHardwareInterrupt = 1,
-    kSoftwareInterrupt = 2,
-};
-
 template <
     std::size_t kNumExceptions, std::size_t kNumHardwareExceptions,
     std::size_t kNumSoftwareExceptions>
@@ -34,57 +29,10 @@ class LogicalInterruptTable
     );
 
     // ------------------------------
-    // class types
-    // ------------------------------
-
-    public:
-    template <InterruptType kInterruptType>
-    struct InterruptHandlerEntry {
-        /* Interrupt handler */
-        using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
-        using InterruptHandlerException =
-            void (*)(InterruptHandlerEntry &entry, hal::ExceptionData *data);
-        using HandlerType = std::conditional_t<
-            kInterruptType == InterruptType::kException, InterruptHandlerException,
-            InterruptHandler>;
-
-        /* Interrupt driver */
-        struct InterruptDriver {
-            struct callbacks {
-                void (*ack)(InterruptHandlerEntry &);
-            };
-
-            callbacks cbs{};
-            const char *name{};
-            void *data{};
-        };
-
-        struct HandlerData {
-            HandlerType handler{};
-            void *data{};
-        };
-
-        HandlerData handler_data{};
-        u16 logical_irq{};
-        u64 hardware_irq{};
-        template_lib::OptionalField<
-            kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *>
-            driver{};
-    };
-
-    template <InterruptType kInterruptType>
-    using HandlerData = typename InterruptHandlerEntry<kInterruptType>::HandlerData;
-
-    template <InterruptType kInterruptType>
-    using HandlerType = typename InterruptHandlerEntry<kInterruptType>::HandlerType;
-
-    using InterruptDriver =
-        typename InterruptHandlerEntry<InterruptType::kHardwareInterrupt>::InterruptDriver;
-
-    // ------------------------------
     // Class creation
     // ------------------------------
 
+    public:
     LogicalInterruptTable();
 
     // ------------------------------
@@ -193,6 +141,9 @@ class LogicalInterruptTable
     InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>
         software_exception_table_[kNumSoftwareExceptions];
 };
+
+using LitType = LogicalInterruptTable<
+    hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
 }  // namespace intr
 
 #include "logical_interrupt_table.tpp"

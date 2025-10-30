@@ -2,7 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERUPTS_HPP_
 
 #include "hal/interrupts.hpp"
-#include "interrupts/interrupt_types.hpp"
+#include "interrupts/logical_interrupt_table.hpp"
 
 namespace intr
 {

@@ -1,31 +1,65 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
 
+#include <extensions/template_lib.hpp>
 #include "hal/interrupt_params.hpp"
-#include "interrupts/logical_interrupt_table.tpp"
 
 namespace intr
 {
-/* Simplify programming interface */
-using LitType = LogicalInterruptTable<
-    hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
+enum class InterruptType : uint8_t {
+    kException         = 0,
+    kHardwareInterrupt = 1,
+    kSoftwareInterrupt = 2,
+};
 
 template <InterruptType kInterruptType>
-using HandlerData = LitType::HandlerData<kInterruptType>;
-using ExcHandler  = HandlerData<InterruptType::kException>;
-using HwHandler   = HandlerData<InterruptType::kHardwareInterrupt>;
-using SwHandler   = HandlerData<InterruptType::kSoftwareInterrupt>;
+struct InterruptHandlerEntry {
+    /* Interrupt handler */
+    using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
+    using InterruptHandlerException =
+        void (*)(InterruptHandlerEntry &entry, hal::ExceptionData *data);
+    using HandlerType = std::conditional_t<
+        kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
+
+    /* Interrupt driver */
+    struct InterruptDriver {
+        struct callbacks {
+            void (*ack)(InterruptHandlerEntry &);
+        };
+
+        callbacks cbs{};
+        const char *name{};
+        void *data{};
+    };
+
+    struct HandlerData {
+        HandlerType handler{};
+        void *data{};
+    };
+
+    HandlerData handler_data{};
+    u16 logical_irq{};
+    u64 hardware_irq{};
+    template_lib::OptionalField<
+        kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *>
+        driver{};
+};
 
 template <InterruptType kInterruptType>
-using HandlerType = LitType::HandlerType<kInterruptType>;
-
-using InterruptDriver = LitType::InterruptDriver;
+using HandlerData = typename InterruptHandlerEntry<kInterruptType>::HandlerData;
 
 template <InterruptType kInterruptType>
-using LitEntry    = LitType::InterruptHandlerEntry<kInterruptType>;
-using LitExcEntry = LitEntry<InterruptType::kException>;
-using LitHwEntry  = LitEntry<InterruptType::kHardwareInterrupt>;
-using LitSwEntry  = LitEntry<InterruptType::kSoftwareInterrupt>;
+using HandlerType = typename InterruptHandlerEntry<kInterruptType>::HandlerType;
+
+using InterruptDriver = InterruptHandlerEntry<InterruptType::kHardwareInterrupt>::InterruptDriver;
+
+using ExcHandler = HandlerData<InterruptType::kException>;
+using HwHandler  = HandlerData<InterruptType::kHardwareInterrupt>;
+using SwHandler  = HandlerData<InterruptType::kSoftwareInterrupt>;
+
+using LitExcEntry = InterruptHandlerEntry<InterruptType::kException>;
+using LitHwEntry  = InterruptHandlerEntry<InterruptType::kHardwareInterrupt>;
+using LitSwEntry  = InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>;
 }  // namespace intr
 
 #endif  // ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_

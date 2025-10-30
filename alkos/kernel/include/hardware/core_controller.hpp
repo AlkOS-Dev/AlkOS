@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_CONTROLLER_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_CONTROLLER_HPP_
 
+#include "hardware/core_local.hpp"
 #include "hardware/cores.hpp"
 #include "mem/allocators.hpp"
 
