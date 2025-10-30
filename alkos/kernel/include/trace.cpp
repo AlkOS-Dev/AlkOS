@@ -1,5 +1,6 @@
 #include <extensions/algorithm.hpp>
 
+#include "hardware/core_local.hpp"
 #include "modules/hardware.hpp"
 #include "modules/timing.hpp"
 #include "trace_framework.hpp"
@@ -68,13 +69,22 @@ static struct TraceFramework {
     // Helper types
     // ------------------------------
 
-    struct TraceCyclicBuffer {
-        size_t head;
-        size_t tail;
-        char buffer[FeatureValue<FeatureFlag::kTraceBufferSize>];
+    struct SmallTraceCyclicBuffer {
+        static constexpr size_t kSize = 65536;
+
+        u32 bytes_left = kSize;
+        u32 head{};
+        u32 tail{};
+        char buffer[kSize]{};
     };
 
-    struct ThreadTraceData {
+    struct MultithreadTraceCyclicBuffer {
+        u32 head;
+        u32 tail;
+        char *buffer;
+    };
+
+    struct CoreTraceData {
         char main_execution_workspace[FeatureValue<FeatureFlag::kSingleTraceMaxSize>];
         char interrupt_workspace[kMaxInterruptNestingAllowed]
                                 [FeatureValue<FeatureFlag::kSingleTraceMaxSize>];
@@ -149,9 +159,13 @@ static struct TraceFramework {
 
     char *GetWorkspaceSingleThreadInterrupts()
     {
-        // HardwareModule::
+        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
 
-        return nullptr;
+        if (nested_intrs == 0) {
+            return single_thread_env.main_execution_workspace;
+        }
+
+        return single_thread_env.interrupt_workspace[nested_intrs - 1];
     }
 
     void CommitToLogSingleThreadInterrupts(const size_t trace_size) {}
@@ -204,13 +218,17 @@ static struct TraceFramework {
     // Single thread env fields
     // ------------------------------
 
-    ThreadTraceData single_thread_env{};
+    CoreTraceData single_thread_env{};
+    SmallTraceCyclicBuffer trace_log{};
+    SmallTraceCyclicBuffer trace_debug_log{};
 
     // ------------------------------
     // Multi thread env fields
     // ------------------------------
 
-    ThreadTraceData *multithread_env = nullptr;
+    MultithreadTraceCyclicBuffer dyn_trace_log{};
+    MultithreadTraceCyclicBuffer dyn_debug_trace_log{};
+    CoreTraceData *multithread_env = nullptr;
 
 } g_TraceFramework{};
 

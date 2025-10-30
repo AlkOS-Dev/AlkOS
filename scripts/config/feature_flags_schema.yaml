@@ -25,8 +25,8 @@ feature_flags:
   - name: trace_buffer_size
     description: Size of the trace buffer in bytes.
     type: integer
-    default: 65536
-    min: 1024
+    default: 1048576
+    min: 65536
     max: 8388608
 
   - name: memory_trace_level

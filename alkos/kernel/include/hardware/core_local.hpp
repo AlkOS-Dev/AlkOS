@@ -1,6 +1,7 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_LOCAL_HPP_
 #define ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_LOCAL_HPP_
 
+#include "hal/constants.hpp"
 #include "hal/core.hpp"
 
 namespace hardware
