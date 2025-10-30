@@ -1,6 +1,8 @@
 #ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_TPP_
 #define ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_TPP_
 
+#include "hal/sync.hpp"
+#include "hardware/core_local.hpp"
 #include "interrupts/logical_interrupt_table.hpp"
 
 namespace intr

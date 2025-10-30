@@ -6,8 +6,6 @@
 #include <extensions/cstddef.hpp>
 #include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
-#include "hal/sync.hpp"
-#include "hardware/cores.hpp"
 
 namespace intr
 {

@@ -9,16 +9,6 @@
 namespace hardware
 {
 
-struct alignas(hal::kCacheLineSizeBytes) CoreLocal {
-    u8 nested_interrupts{};
-    u16 lid{};
-};
-
-FAST_CALL CoreLocal &GetCoreLocalData()
-{
-    return *static_cast<CoreLocal *>(hal::GetCoreLocalData());
-}
-
 struct CoreConfig : hal::CoreConfig {
     u16 hwid;
     u16 lid;
