@@ -4,8 +4,9 @@
 #include <assert.h>
 #include <extensions/bit.hpp>
 #include <extensions/cstddef.hpp>
-#include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
+#include "hal/sync.hpp"
+#include "hardware/core_local.hpp"
 #include "interrupts/interrupt_types.hpp"
 
 namespace intr
@@ -41,19 +42,26 @@ class LogicalInterruptTable
 
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
+        hardware::GetCoreLocalData().nested_interrupts++;
+        hal::FullMemFence();
+
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
         ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
         auto &entry = GetTable_<InterruptType::kException>()[lirq];
 
         /* Exception MUST be handled */
         (*entry.handler_data.handler)(entry, data);
+
+        hal::FullMemFence();
+        hardware::GetCoreLocalData().nested_interrupts--;
     }
 
     template <InterruptType kInterruptType>
         requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
     {
-        // GetCore
+        hardware::GetCoreLocalData().nested_interrupts++;
+        hal::FullMemFence();
 
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
@@ -67,6 +75,9 @@ class LogicalInterruptTable
             ASSERT_NOT_NULL(entry.driver, "Interrupt driver is not installed!");
             entry.driver->cbs.ack(entry);
         }
+
+        hal::FullMemFence();
+        hardware::GetCoreLocalData().nested_interrupts--;
     }
 
     template <InterruptType kInterruptType>
