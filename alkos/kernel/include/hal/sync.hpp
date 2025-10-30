@@ -1,4 +1,6 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
 #define ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
 
+#include <hal/impl/sync.hpp>
+
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
