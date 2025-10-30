@@ -79,6 +79,7 @@ static void InitializeCores_(MadtTable &table)
         config.hwid = static_cast<u16>(table_ptr->id);
         ASSERT_LE(static_cast<size_t>(table_ptr->uid), kBitMask16);
         config.acpi_id = static_cast<u16>(table_ptr->uid);
+        ASSERT_FALSE(mask.Get(counter));
         config.lid     = counter;
         config.enabled = IsBitEnabled<0>(table_ptr->flags);
 

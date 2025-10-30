@@ -39,6 +39,8 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     // /* Extract all necessary data from ACPI tables */
     // HardwareModule::Get().GetACPIController().ParseTables();
 
+    // /* Setup core local data */
+
     // /* Allow hardware to fully initialise interrupt system */
     // HardwareModule::Get().GetInterrupts().Initialise();
 

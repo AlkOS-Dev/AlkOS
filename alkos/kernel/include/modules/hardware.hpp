@@ -5,6 +5,7 @@
 
 #include "acpi/acpi.hpp"
 #include "hardware/clock_infra.hpp"
+#include "hardware/core_controller.hpp"
 #include "hardware/cores.hpp"
 #include "hardware/event_clock_infra.hpp"
 #include "interrupts/interupts.hpp"

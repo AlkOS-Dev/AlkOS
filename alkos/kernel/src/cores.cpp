@@ -1,4 +1,5 @@
 #include "hardware/cores.hpp"
+#include "hardware/core_controller.hpp"
 
 #include <assert.h>
 #include <extensions/debug.hpp>
@@ -17,6 +18,9 @@ void hardware::CoresController::AllocateTables(const size_t num_cores, const siz
 
     const auto result2 = hw_to_core_id_map_.Reallocate(max_hw_id);
     R_ASSERT_TRUE(static_cast<bool>(result2));
+
+    const auto result3 = core_local_table_.Reallocate(num_cores);
+    R_ASSERT_TRUE(static_cast<bool>(result3));
 }
 
 hardware::Core &hardware::CoresController::AllocateCore(const CoreConfig &config)
@@ -26,6 +30,11 @@ hardware::Core &hardware::CoresController::AllocateCore(const CoreConfig &config
 
     core_arr_.AllocEntry(config.lid, config);
     hw_to_core_id_map_[config.hwid] = config.lid;
+    core_local_table_.AllocEntry(config.lid);
+
+    // Setup core local table
+    core_local_table_[config.lid].lid = config.lid;
+
     return core_arr_[config.lid];
 }
 

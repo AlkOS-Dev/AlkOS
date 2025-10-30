@@ -17,6 +17,7 @@
 #include <hal/impl/kernel.hpp>
 #include <hal/panic.hpp>
 #include <hal/terminal.hpp>
+#include <hardware/cores.hpp>
 
 #include "abi/boot_args.hpp"
 #include "cpu/utils.hpp"
@@ -44,12 +45,16 @@ static int GetCpuModel()
 // Main Entry Point
 //==================================================================================
 
+static hardware::CoreLocal g_CoreLocal{};
+
 namespace arch
 {
 void ArchInit(const RawBootArguments &)
 {
     TRACE_INFO("In ArchInit...");
     TRACE_INFO("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
+
+    SetCoreLocalData(&g_CoreLocal);
 
     TRACE_INFO("Setting up CPU features...");
     BlockHardwareInterrupts();
