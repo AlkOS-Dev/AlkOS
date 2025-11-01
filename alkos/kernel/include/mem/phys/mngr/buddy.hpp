@@ -8,6 +8,7 @@
 #include "mem/page_meta.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/types.hpp"
+#include "sync/kernel/spinlock.hpp"
 
 namespace Mem
 {
@@ -21,18 +22,23 @@ class BuddyPmm
 
     public:
     struct AllocationRequest {
-        size_t num_pages = 1;
+        u8 order = 0;
     };
 
     BuddyPmm();
 
-    void Init(BitmapPmm &b_pmm);
+    void Init(BitmapPmm &b_pmm, PageMetaTable &pmt);
 
-    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar = {.num_pages = 1});
-    void Free(PPtr<Page> page, size_t num_pages = 1);
+    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
+    void Free(PPtr<Page> page);
 
     private:
-    PageMeta<Buddy> *freelist_table[kMaxPageOrder];
+    void ListRemove(PageMeta *meta);
+    void ListPush(PageMeta *meta);
+
+    VPtr<PageMeta> freelist_table_[kMaxPageOrder + 1];
+    PageMetaTable *pmt_{nullptr};
+    Spinlock lock_{};
 };
 
 }  // namespace Mem
