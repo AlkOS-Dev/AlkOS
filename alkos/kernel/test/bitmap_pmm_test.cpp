@@ -1,4 +1,4 @@
-#include <string.h>
+
 #include <test_module/test.hpp>
 #include "hal/constants.hpp"
 #include "mem/page.hpp"
@@ -25,7 +25,9 @@ class BitmapPmmTest : public TestGroupBase
     }
 };
 
-// --- Suite 4.1: Initialization Tests ---
+// ------------------------------
+// Initialization Tests
+// ------------------------------
 
 TEST_F(BitmapPmmTest, InitialStateIsCorrect)
 {
@@ -44,7 +46,9 @@ FAIL_TEST_F(BitmapPmmTest, InitWithZeroPages)
     pmm_.Init(bmv);
 }
 
-// --- Suite 4.2: Single-Page Allocation Tests ---
+// ------------------------------
+// Single-Page Allocation Tests
+// ------------------------------
 
 TEST_F(BitmapPmmTest, AllocReturnsDifferentPages)
 {
@@ -71,7 +75,9 @@ TEST_F(BitmapPmmTest, AllocExhaustsMemory)
     EXPECT_EQ(Mem::MemError::OutOfMemory, final_page.error());
 }
 
-// --- Suite 4.3: Contiguous Block Allocation Tests ---
+// ------------------------------
+// Contiguous Block Allocation Tests
+// ------------------------------
 
 TEST_F(BitmapPmmTest, AllocContiguousFailsWithFragmentation)
 {
@@ -100,6 +106,10 @@ TEST_F(BitmapPmmTest, AllocContiguousFailsWhenRequestingTooManyPages)
     EXPECT_EQ(Mem::MemError::OutOfMemory, result.error());
 }
 
+// ------------------------------
+// Free Operation Tests
+// ------------------------------
+
 FAIL_TEST_F(BitmapPmmTest, DoubleFreeCausesAssert)
 {
     auto page_res = pmm_.Alloc();
@@ -115,7 +125,9 @@ FAIL_TEST_F(BitmapPmmTest, FreeUnallocatedPageCausesAssert)
     pmm_.Free(Mem::PageFrameAddr(kNumPages / 2));
 }
 
-// --- Suite 4.5: Boundary and Edge Case Tests ---
+// ------------------------------
+// Boundary and Edge Case Tests
+// ------------------------------
 
 TEST_F(BitmapPmmTest, AllocZeroPagesFails)
 {
@@ -134,7 +146,9 @@ TEST_F(BitmapPmmTest, AllocAllMemoryAsOneBlock)
     EXPECT_FALSE(final_page.has_value());
 }
 
-// --- Suite 4.6: Stress and High-Churn Scenarios ---
+// ------------------------------
+// Stress and High-Churn Scenarios
+// ------------------------------
 
 TEST_F(BitmapPmmTest, HighChurnStressTest)
 {
