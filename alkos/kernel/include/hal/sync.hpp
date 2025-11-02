@@ -1,7 +1,6 @@
 #ifndef ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
 #define ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
 
-#include <extensions/type_traits.hpp>
 #include <hal/impl/sync.hpp>
 
 namespace hal
