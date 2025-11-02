@@ -26,7 +26,7 @@ class BitmapPmm
     };
 
     BitmapPmm() = default;
-    void Init(data_structures::BitMapView bmv, size_t last_alloc_idx = 0);
+    void Init(data_structures::BitMapView bmv);
 
     Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar = {.num_pages = 1});
     void Free(PPtr<Page> page, size_t num_pages = 1);
@@ -34,12 +34,26 @@ class BitmapPmm
     size_t BitMapSize() const { return bitmap_view_.Size(); }
 
     private:
+    struct FindBlockResult {
+        size_t start_pfn;
+    };
+
+    Expected<FindBlockResult, MemError> FindContiguousBlock(
+        size_t start_range_pfn, size_t end_range_pfn, u64 num_pages
+    );
     bool IsFree(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapFree; }
     bool IsAllocated(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapAllocated; }
     void MarkAllocated(size_t pfn)
     {
         ASSERT_TRUE(IsFree(pfn), "Page frame is already allocated");
         bitmap_view_.Set(pfn, BitMapAllocated);
+    }
+    void MarkAllocated(size_t start_range_pfn, size_t end_range_pfn)
+    {
+        ASSERT_LT(start_range_pfn, end_range_pfn);
+        for (size_t i = start_range_pfn; i < end_range_pfn; i++) {
+            MarkAllocated(i);
+        }
     }
     void MarkFree(u64 pfn)
     {

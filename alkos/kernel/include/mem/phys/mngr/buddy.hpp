@@ -35,10 +35,16 @@ class BuddyPmm
     private:
     void ListRemove(PageMeta *meta);
     void ListPush(PageMeta *meta);
+    static size_t GetBuddyPfn(size_t pfn, u8 order);
+
+    void SplitBlock(PageMeta *block, u8 target_order);
+    size_t MergeBlock(size_t pfn, u8 &order);
 
     VPtr<PageMeta> freelist_table_[kMaxPageOrder + 1];
-    PageMetaTable *pmt_{nullptr};
     Spinlock lock_{};
+
+    /// Dependencies
+    PageMetaTable *pmt_{nullptr};
 };
 
 }  // namespace Mem
