@@ -70,7 +70,8 @@ static struct TraceFramework {
     // ------------------------------
 
     struct SmallTraceCyclicBuffer {
-        static constexpr size_t kSize = 65536;
+        static constexpr size_t kSize     = 65536;
+        static constexpr size_t kDumpSize = 65536 / 4;
 
         u32 bytes_left = kSize;
         u32 head{};
@@ -157,6 +158,17 @@ static struct TraceFramework {
     // Single thread interrupts env implementation
     // -------------------------------------------------
 
+    void CommitToLogPtrSingleThreadInterrupts(
+        SmallTraceCyclicBuffer &buffer, const size_t trace_size
+    )
+    {
+        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
+
+        if (nested_intrs == 0 && buffer.bytes_left < SmallTraceCyclicBuffer::kDumpSize) {
+            // Dump the content
+        }
+    }
+
     char *GetWorkspaceSingleThreadInterrupts()
     {
         const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
@@ -168,9 +180,15 @@ static struct TraceFramework {
         return single_thread_env.interrupt_workspace[nested_intrs - 1];
     }
 
-    void CommitToLogSingleThreadInterrupts(const size_t trace_size) {}
+    void CommitToLogSingleThreadInterrupts(const size_t trace_size)
+    {
+        CommitToLogPtrSingleThreadInterrupts(trace_log, trace_size);
+    }
 
-    void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size) {}
+    void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size)
+    {
+        CommitToLogPtrSingleThreadInterrupts(trace_debug_log, trace_size);
+    }
 
     // ------------------------------------
     // Multithread env implementation

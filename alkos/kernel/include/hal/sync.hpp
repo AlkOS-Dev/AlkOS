@@ -10,6 +10,31 @@ WRAP_CALL void FullMemFence() { arch::FullMemFence(); }
 WRAP_CALL void LoadMemFence() { arch::LoadMemFence(); }
 
 WRAP_CALL void SaveMemFence() { arch::SaveMemFence(); }
+
+template <typename T>
+WRAP_CALL T AtomicLoad(volatile const T *ptr);
+
+template <typename T>
+WRAP_CALL void AtomicStore(volatile T *ptr, T value);
+
+template <typename T>
+WRAP_CALL T AtomicCompareExchange(volatile T *ptr, T expected, T desired);
+
+template <typename T>
+WRAP_CALL T AtomicExchange(volatile T *ptr, T value);
+
+template <typename T>
+WRAP_CALL T AtomicAdd(volatile T *ptr, T value);
+
+template <typename T>
+WRAP_CALL T AtomicSub(volatile T *ptr, T value);
+
+template <typename T>
+WRAP_CALL T AtomicIncrement(volatile T *ptr);
+
+template <typename T>
+WRAP_CALL T AtomicDecrement(volatile T *ptr);
+
 }  // namespace hal
 
 #endif  // ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
