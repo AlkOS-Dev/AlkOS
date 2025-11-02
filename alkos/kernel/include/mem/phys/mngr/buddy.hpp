@@ -20,12 +20,10 @@ class BitmapPmm;
 
 class BuddyPmm
 {
-    private:
+    public:
     /// MaxPageOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
     /// and system will try to merge into continous areas as such
-    static constexpr u8 kMaxPageOrder = 9;
-
-    public:
+    static constexpr u8 kMaxOrder = 10;
     struct AllocationRequest {
         u8 order = 0;
     };
@@ -64,7 +62,7 @@ class BuddyPmm
      */
     VPtr<PageMeta> GetFreelistHead(u8 order) const { return freelist_table_[order]; }
 
-    VPtr<PageMeta> freelist_table_[kMaxPageOrder + 1];
+    VPtr<PageMeta> freelist_table_[kMaxOrder + 1];
     Spinlock lock_{};
 
     /// Dependencies

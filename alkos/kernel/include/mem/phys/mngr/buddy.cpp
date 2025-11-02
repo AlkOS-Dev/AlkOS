@@ -78,7 +78,7 @@ PageMeta *B::MergeBlock(PageMeta *block_to_merge)
     u8 order   = block_to_merge->order;
     size_t pfn = pmt_->GetPageFrameNumber(block_to_merge);
 
-    while (order < kMaxPageOrder) {
+    while (order < kMaxOrder) {
         size_t buddy_pfn = GetBuddyPfn(pfn, order);
 
         if (buddy_pfn >= pmt_->TotalPages()) {
@@ -116,7 +116,7 @@ void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
 {
     pmt_ = &pmt;
 
-    for (size_t i = 0; i <= kMaxPageOrder; i++) {
+    for (size_t i = 0; i <= kMaxOrder; i++) {
         freelist_table_[i] = nullptr;
     }
 
@@ -139,12 +139,12 @@ Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
     std::lock_guard guard{lock_};
     u8 order = ar.order;
 
-    if (order > kMaxPageOrder) {
+    if (order > kMaxOrder) {
         return Unexpected(MemError::InvalidArgument);
     }
 
     // Find the smallest available block that is large enough
-    for (u8 current_order = order; current_order <= kMaxPageOrder; current_order++) {
+    for (u8 current_order = order; current_order <= kMaxOrder; current_order++) {
         if (freelist_table_[current_order] != nullptr) {
             PageMeta *block_to_alloc = freelist_table_[current_order];
             ListRemove(block_to_alloc);
