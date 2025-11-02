@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUD_HAL_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_INCLUD_HAL_DEBUG_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_
+#define ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_
 
 #include <hal/impl/debug_terminal.hpp>
 
@@ -10,6 +10,13 @@ WRAP_CALL void DebugTerminalWrite(const char *str)
 {
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         arch::DebugTerminalWrite(str);
+    }
+}
+
+WRAP_CALL void DebugTerminalPutChar(const char c)
+{
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
+        arch::DebugTerminalPutChar(c);
     }
 }
 
@@ -24,4 +31,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUD_HAL_DEBUG_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_

@@ -21,25 +21,6 @@ FAST_CALL void HardenFullString(const char *str)
     hal::TerminalWriteString(str);
 }
 
-FAST_CALL void EnsureEos(char *str, const size_t trace_size)
-{
-    ASSERT_NOT_ZERO(trace_size);
-    const size_t eos_index = std::max(
-        trace_size - 1, static_cast<size_t>(FeatureValue<FeatureFlag::kSingleTraceMaxSize>)
-    );
-    str[eos_index] = '\0';
-}
-
-FAST_CALL u32 GetInterruptNestingCounter()
-{
-    if (::HardwareModule::Get().GetCoresController().AreCoresKnown()) {
-        return ::HardwareModule::Get()
-            .GetCoresController()
-            .GetCurrentCore()
-            .GetInterruptNestingLevel();
-    }
-}
-
 // ------------------------------------
 // Trace framework implementation
 // ------------------------------------
@@ -70,12 +51,14 @@ static struct TraceFramework {
     // ------------------------------
 
     struct SmallTraceCyclicBuffer {
-        static constexpr size_t kSize     = 65536;
-        static constexpr size_t kDumpSize = 65536 / 4;
+        static constexpr size_t kSize           = 65536;
+        static constexpr size_t kDumpSize       = kSize / 4;
+        static constexpr size_t kBatchSize      = 512;
+        static constexpr size_t kBufferDumpDone = kSize - kSize / 8;
 
-        u32 bytes_left = kSize;
-        u32 head{};
-        u32 tail{};
+        hal::Atomic32 bytes_left{.value = kSize};
+        hal::Atomic32 head{};
+        hal::Atomic32 tail{};
         char buffer[kSize]{};
     };
 
@@ -131,7 +114,7 @@ static struct TraceFramework {
             &TraceFramework::CommitToDebugLogSingleThreadInterrupts;
     }
 
-    FORCE_INLINE_F void AdvanceToMultiThreadStage() {}
+    FORCE_INLINE_F void AdvanceToMultiThreadStage() { R_FAIL_ALWAYS("Not implemented"); }
 
     // --------------------------------------
     // Single thread env implementation
@@ -139,18 +122,14 @@ static struct TraceFramework {
 
     char *GetWorkspaceSingleThread() { return single_thread_env.main_execution_workspace; }
 
-    void CommitToLogSingleThread(const size_t trace_size)
+    void CommitToLogSingleThread(const size_t)
     {
-        EnsureEos(single_thread_env.main_execution_workspace, trace_size);
-
         /* Bypass kernel log as we are only writers and we do not care bout perf here */
         HardenFullString(single_thread_env.main_execution_workspace);
     }
 
-    void CommitToDebugLogSingleThread(const size_t trace_size)
+    void CommitToDebugLogSingleThread(const size_t)
     {
-        EnsureEos(single_thread_env.main_execution_workspace, trace_size);
-
         hal::DebugTerminalWrite(single_thread_env.main_execution_workspace);
     }
 
@@ -158,14 +137,116 @@ static struct TraceFramework {
     // Single thread interrupts env implementation
     // -------------------------------------------------
 
-    void CommitToLogPtrSingleThreadInterrupts(
+    template <bool kIsDebug>
+    FAST_CALL void HardenSingleThread(const char *src, const size_t size)
+    {
+        const char *start = src;
+        const char *end   = src + size;
+
+        while (start != end) {
+            if constexpr (kIsDebug) {
+                hal::DebugTerminalPutChar(*src);
+            } else {
+                hal::TerminalPutChar(*src);
+            }
+            ++start;
+        }
+    }
+
+    template <bool kIsDebug>
+    FORCE_INLINE_F void DumpBufferSingleThread(SmallTraceCyclicBuffer &buffer)
+    {
+        // 1. Save exact amount of bytes to write at entry level (IMPORTANT: to not write infinite)
+        const i32 bytes_left = hal::AtomicIncrement(&buffer.bytes_left);
+        i32 bytes_to_write   = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - bytes_left;
+
+        while (bytes_to_write > 0) {
+            // 1. Write out the content
+            const i32 tail = buffer.tail.value;
+            const i32 batch_write_size =
+                std::min(bytes_to_write, static_cast<i32>(SmallTraceCyclicBuffer::kBatchSize));
+
+            if (tail + batch_write_size > SmallTraceCyclicBuffer::kSize) {
+                // We cross the boundary
+
+            } else {
+                HardenSingleThread<kIsDebug>(
+                    buffer.buffer + tail, static_cast<size_t>(bytes_to_write)
+                );
+            }
+
+            // 2. Push the tail
+            buffer.tail.value = (buffer.tail.value + batch_write_size) %
+                                static_cast<i32>(SmallTraceCyclicBuffer::kSize);
+
+            // 3. Release space
+            hal::AtomicAdd(&buffer.bytes_left, batch_write_size);
+
+            // 4. Iterate further
+            bytes_to_write -= batch_write_size;
+        }
+    }
+
+    template <bool kIsDebug>
+    FORCE_INLINE_F void CommitToLogPtrSingleThreadInterrupts(
         SmallTraceCyclicBuffer &buffer, const size_t trace_size
     )
     {
         const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
+        i32 available_bytes;
+        i32 bytes_left;
+        i32 new_value;
 
-        if (nested_intrs == 0 && buffer.bytes_left < SmallTraceCyclicBuffer::kDumpSize) {
+        // 1. Allocate space for the trait
+        do {
+            do {
+                /* For main execution just empty the space and retry */
+                bytes_left = hal::AtomicLoad(&buffer.bytes_left);
+                DumpBufferSingleThread<kIsDebug>(buffer);
+            } while (nested_intrs == 0 && bytes_left < trace_size);
+
+            /* For interrupt traces, some information may be lost */
+
+            available_bytes = std::min(bytes_left, static_cast<i32>(trace_size));
+            new_value       = bytes_left - available_bytes;
+        } while (hal::AtomicCompareExchange(&buffer.bytes_left, bytes_left, new_value) !=
+                 bytes_left);
+
+        char *src = nested_intrs == 0 ? single_thread_env.main_execution_workspace
+                                      : single_thread_env.interrupt_workspace[nested_intrs - 1];
+        if (nested_intrs != 0) {
+            if (available_bytes == 0) {
+                return;
+            }
+
+            /* Ensure EOS for interrupt traces */
+            src[available_bytes - 1] = '\0';
+        }
+
+        // 2. Adjust head ptr
+        i32 old_head;
+        i32 new_head;
+        do {
+            old_head = hal::AtomicLoad(&buffer.head);
+            new_head =
+                (old_head + available_bytes) % static_cast<i32>(SmallTraceCyclicBuffer::kSize);
+        } while (hal::AtomicCompareExchange(&buffer.head, old_head, new_head) != old_head);
+
+        // 3. Write the message
+        if (new_head < old_head) {
+            // our message is not continuous
+            const i32 first_part  = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - old_head;
+            const i32 second_part = new_head;
+
+            strncpy(buffer.buffer + old_head, src, first_part);
+            strncpy(buffer.buffer, src + first_part, second_part);
+        } else {
+            strcpy(buffer.buffer + old_head, src);
+        }
+
+        if (nested_intrs == 0 && buffer.bytes_left.value < SmallTraceCyclicBuffer::kDumpSize) {
             // Dump the content
+            DumpBufferSingleThread<kIsDebug>(buffer);
         }
     }
 
@@ -182,12 +263,12 @@ static struct TraceFramework {
 
     void CommitToLogSingleThreadInterrupts(const size_t trace_size)
     {
-        CommitToLogPtrSingleThreadInterrupts(trace_log, trace_size);
+        CommitToLogPtrSingleThreadInterrupts<false>(trace_log, trace_size);
     }
 
     void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size)
     {
-        CommitToLogPtrSingleThreadInterrupts(trace_debug_log, trace_size);
+        CommitToLogPtrSingleThreadInterrupts<true>(trace_debug_log, trace_size);
     }
 
     // ------------------------------------

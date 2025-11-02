@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
 
 /* internal includes */
 #include <assert.h>
@@ -17,6 +17,14 @@ WRAP_CALL void DebugTerminalWrite(const char *const buffer)
     QemuTerminalWriteString(buffer);
 }
 
+WRAP_CALL void DebugTerminalPutChar(const char c)
+{
+    /* verify if the usage is permitted */
+    ASSERT_TRUE(FeatureEnabled<FeatureFlag::kDebugOutput>);
+
+    QemuTerminalPutChar(c);
+}
+
 WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_size)
 {
     /* verify if the usage is permitted */
@@ -26,4 +34,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
 }
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_ABI_DEBUG_TERMINAL_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_

@@ -12,29 +12,53 @@ WRAP_CALL void LoadMemFence() { arch::LoadMemFence(); }
 WRAP_CALL void SaveMemFence() { arch::SaveMemFence(); }
 
 template <AtomicT T>
-WRAP_CALL T AtomicLoad(volatile const T *ptr);
+WRAP_CALL typename T::BaseT AtomicLoad(volatile const T *ptr)
+{
+    return arch::AtomicLoad(ptr);
+}
 
 template <AtomicT T>
-WRAP_CALL void AtomicStore(volatile T *ptr, typename T::BaseT value);
+WRAP_CALL void AtomicStore(volatile T *ptr, typename T::BaseT value)
+{
+    arch::AtomicStore(ptr, value);
+}
 
 template <AtomicT T>
-WRAP_CALL T
-AtomicCompareExchange(volatile T *ptr, typename T::BaseT expected, typename T::BaseT desired);
+WRAP_CALL typename T::BaseT AtomicCompareExchange(
+    volatile T *ptr, typename T::BaseT expected, typename T::BaseT desired
+)
+{
+    return arch::AtomicCompareExchange(ptr, expected, desired);
+}
+template <AtomicT T>
+WRAP_CALL typename T::BaseT AtomicExchange(volatile T *ptr, typename T::BaseT value)
+{
+    return arch::AtomicExchange(ptr, value);
+}
 
 template <AtomicT T>
-WRAP_CALL T AtomicExchange(volatile T *ptr, typename T::BaseT value);
+WRAP_CALL typename T::BaseT AtomicAdd(volatile T *ptr, typename T::BaseT value)
+{
+    return arch::AtomicAdd(ptr, value);
+}
 
 template <AtomicT T>
-WRAP_CALL T AtomicAdd(volatile T *ptr, typename T::BaseT value);
+WRAP_CALL typename T::BaseT AtomicSub(volatile T *ptr, typename T::BaseT value)
+{
+    return arch::AtomicSub(ptr, value);
+}
 
 template <AtomicT T>
-WRAP_CALL T AtomicSub(volatile T *ptr, typename T::BaseT value);
+WRAP_CALL typename T::BaseT AtomicIncrement(volatile T *ptr)
+{
+    return arch::AtomicIncrement(ptr);
+}
 
 template <AtomicT T>
-WRAP_CALL T AtomicIncrement(volatile T *ptr);
-
-template <AtomicT T>
-WRAP_CALL T AtomicDecrement(volatile T *ptr);
+WRAP_CALL typename T::BaseT AtomicDecrement(volatile T *ptr)
+{
+    return arch::AtomicDecrement(ptr);
+}
 
 }  // namespace hal
 
