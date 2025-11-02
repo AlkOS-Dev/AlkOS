@@ -4,6 +4,7 @@
 #include <hal/qemu.hpp>
 #include <hal/terminal.hpp>
 #include <test_module/test_module.hpp>
+#include "trace_framework.hpp"
 
 namespace test
 {
@@ -181,6 +182,7 @@ NO_RET void OnKernelPanic()
 
     /* ups... */
     arch::TerminalWriteError("[TEST] [FAIL] Test failed on kernel panic...\n");
+    trace::DumpAllBuffersOnFailure();
     hal::QemuShutdown();
 }
 }  // namespace test

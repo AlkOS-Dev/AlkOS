@@ -5,6 +5,7 @@
 #include "drivers/pic8259/pic8259.hpp"
 #include "drivers/tsc/tsc.hpp"
 #include "interrupts/idt.hpp"
+#include "trace_framework.hpp"
 
 #include <extensions/debug.hpp>
 #include <modules/hardware.hpp>

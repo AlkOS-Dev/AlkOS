@@ -78,6 +78,7 @@ static struct TraceFramework {
         char *(TraceFramework::*get_workspace_cb)();
         void (TraceFramework::*commit_to_log_cb)(size_t);
         void (TraceFramework::*commit_to_debug_log_cb)(size_t);
+        void (TraceFramework::*dump_all)();
     };
 
     // ------------------------------
@@ -112,6 +113,7 @@ static struct TraceFramework {
         stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleThreadInterrupts;
         stage_callbacks.commit_to_debug_log_cb =
             &TraceFramework::CommitToDebugLogSingleThreadInterrupts;
+        stage_callbacks.dump_all = &TraceFramework::DumpAllSingleThreadInterrupts;
     }
 
     FORCE_INLINE_F void AdvanceToMultiThreadStage() { R_FAIL_ALWAYS("Not implemented"); }
@@ -132,6 +134,8 @@ static struct TraceFramework {
     {
         hal::DebugTerminalWrite(single_thread_env.main_execution_workspace);
     }
+
+    void DumpAllSingleThread() { /* No need to dump */ }
 
     // -------------------------------------------------
     // Single thread interrupts env implementation
@@ -168,7 +172,12 @@ static struct TraceFramework {
 
             if (tail + batch_write_size > SmallTraceCyclicBuffer::kSize) {
                 // We cross the boundary
-
+                const size_t first_write  = SmallTraceCyclicBuffer::kSize - buffer.tail.value;
+                const size_t second_write = batch_write_size - first_write;
+                HardenSingleThread<kIsDebug>(
+                    buffer.buffer + tail, static_cast<size_t>(first_write)
+                );
+                HardenSingleThread<kIsDebug>(buffer.buffer, static_cast<size_t>(second_write));
             } else {
                 HardenSingleThread<kIsDebug>(
                     buffer.buffer + tail, static_cast<size_t>(bytes_to_write)
@@ -269,6 +278,14 @@ static struct TraceFramework {
     void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size)
     {
         CommitToLogPtrSingleThreadInterrupts<true>(trace_debug_log, trace_size);
+    }
+
+    void DumpAllSingleThreadInterrupts()
+    {
+        /* There is possibility to write out garbage at this stage but everything important is in
+         * place */
+        DumpBufferSingleThread<false>(trace_log);
+        DumpBufferSingleThread<true>(trace_debug_log);
     }
 
     // ------------------------------------
@@ -384,4 +401,6 @@ NODISCARD TraceLevel GetTraceLevel(TraceModule module)
 {
     return g_TraceFramework.trace_levels[static_cast<size_t>(module)];
 }
+
+void DumpAllBuffersOnFailure() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
 }  // namespace trace
