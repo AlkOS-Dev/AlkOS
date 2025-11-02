@@ -40,10 +40,13 @@ void B::ListPush(PageMeta *meta)
     head = meta;
 }
 
+// Todo: what state does it leave the non buddy block in?
+// is its order updated?
 void B::SplitBlock(PageMeta *block, u8 target_order)
 {
     size_t pfn       = pmt_->GetPageFrameNumber(block);
     u8 current_order = block->order;
+    ASSERT_GE(current_order, target_order);
 
     for (u8 i = current_order; i > target_order; i--) {
         u8 lower_order       = i - 1;
@@ -89,6 +92,8 @@ void B::Free(PPtr<Page> page)
     ListPush(&pmt_->GetPageMeta(pfn));
 }
 
+// TODO: return tuple / struct instead of ref in
+// TODO: This leaves old pfn at unmerged state
 size_t B::MergeBlock(size_t pfn, u8 &order)
 {
     while (order < kMaxPageOrder) {
@@ -126,7 +131,10 @@ Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
 
             SplitBlock(block, order);
 
+            // This is outside splitblock ?? why
+            // so splitblock returns block in invalid state?
             block->InitAllocated(order);
+
             return PageFrameAddr(pmt_->GetPageFrameNumber(block));
         }
     }

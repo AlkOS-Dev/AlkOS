@@ -13,7 +13,7 @@ using namespace hal;
 class BuddyPmmTest : public TestGroupBase
 {
     protected:
-    static constexpr size_t kNumPages    = 1024;
+    static constexpr size_t kNumPages    = 512;
     static constexpr size_t kBitmapBytes = kNumPages / 8;
 
     uint8_t bitmap_buffer_[kBitmapBytes];
@@ -128,10 +128,10 @@ TEST_F(BuddyPmmTest, Coalescing)
 TEST_F(BuddyPmmTest, OutOfMemory)
 {
     // There are 1024 pages total, forming two blocks of order 9.
-    auto p1 = buddy_pmm_.Alloc({.order = 9});
+    auto p1 = buddy_pmm_.Alloc({.order = 8});
     ASSERT_TRUE(p1.has_value());
 
-    auto p2 = buddy_pmm_.Alloc({.order = 9});
+    auto p2 = buddy_pmm_.Alloc({.order = 8});
     ASSERT_TRUE(p2.has_value());
 
     auto page3 = buddy_pmm_.Alloc({.order = 0});
