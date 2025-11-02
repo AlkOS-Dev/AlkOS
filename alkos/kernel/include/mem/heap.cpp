@@ -30,9 +30,9 @@ Expected<VPtr<void>, MemError> KMalloc(KMallocRequest r)
     auto res = b_pmm.Alloc(AllocationRequest{.num_pages = required_pages});
     R_ASSERT_TRUE(res, "Failed to allocate memory from bitmap physical memory manager");
 
-    const auto phys_ptr = *res;
-    VPtr<void> m        = reinterpret_cast<VPtr<void>>(PhysToVirt(phys_ptr));
-    m                   = AlignUp(m, al);
+    auto *const phys_ptr = *res;
+    VPtr<void> m         = reinterpret_cast<VPtr<void>>(PhysToVirt(phys_ptr));
+    m                    = AlignUp(m, al);
     return m;
 }
 

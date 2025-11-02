@@ -10,6 +10,9 @@
 #include "mem/types.hpp"
 #include "sync/kernel/spinlock.hpp"
 
+// Forward declaration for test access (test class is in global namespace)
+class BuddyPmmTest;
+
 namespace Mem
 {
 
@@ -18,7 +21,9 @@ class BitmapPmm;
 class BuddyPmm
 {
     private:
-    static constexpr u8 kMaxPageOrder = 10;
+    /// MaxPageOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
+    /// and system will try to merge into continous areas as such
+    static constexpr u8 kMaxPageOrder = 9;
 
     public:
     struct AllocationRequest {
@@ -52,11 +57,21 @@ class BuddyPmm
      */
     PageMeta *MergeBlock(PageMeta *block_to_merge);
 
+    /**
+     * @brief Private accessor for test/debug use.
+     * @param order The freelist order to query.
+     * @return Pointer to the head of the freelist for the given order.
+     */
+    VPtr<PageMeta> GetFreelistHead(u8 order) const { return freelist_table_[order]; }
+
     VPtr<PageMeta> freelist_table_[kMaxPageOrder + 1];
     Spinlock lock_{};
 
     /// Dependencies
     PageMetaTable *pmt_{nullptr};
+
+    /// Friends
+    friend ::BuddyPmmTest;
 };
 
 }  // namespace Mem

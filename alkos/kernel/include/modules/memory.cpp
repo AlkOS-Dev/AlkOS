@@ -22,11 +22,14 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     data_structures::BitMapView bmv{mem_bitmap, total_pages};
     BitmapPmm_.Init(bmv);
 
-    // Initialize Vmm
-    Vmm_.Init(Tlb_, Mmu_);
-
     // Initialize PageMetaTable
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
+
+    // Initialize BuddyPmm
+    // BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
+
+    // Initialize Vmm
+    Vmm_.Init(Tlb_, Mmu_);
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)
