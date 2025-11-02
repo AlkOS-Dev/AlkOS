@@ -37,8 +37,20 @@ class BuddyPmm
     void ListPush(PageMeta *meta);
     static size_t GetBuddyPfn(size_t pfn, u8 order);
 
-    void SplitBlock(PageMeta *block, u8 target_order);
-    size_t MergeBlock(size_t pfn, u8 &order);
+    /**
+     * @brief Splits a large block until a block of target_order is created.
+     * @param block_to_split Block to split. MUST NOT be on a freelist.
+     * @param target_order The desired final order.
+     * @return A pointer to the final, correctly-sized block.
+     */
+    PageMeta *SplitBlock(PageMeta *block_to_split, u8 target_order);
+
+    /**
+     * @brief Coalesces a free block with its buddies recursively.
+     * @param block_to_merge Block to merge. MUST NOT be on a freelist.
+     * @return A pointer to the final, largest possible merged block.
+     */
+    PageMeta *MergeBlock(PageMeta *block_to_merge);
 
     VPtr<PageMeta> freelist_table_[kMaxPageOrder + 1];
     Spinlock lock_{};

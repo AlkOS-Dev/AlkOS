@@ -1,118 +1,137 @@
+#include "mem/phys/mngr/buddy.hpp"
+
 #include <extensions/algorithm.hpp>
 #include <extensions/mutex.hpp>
-#include <extensions/types.hpp>
 
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
-#include "mem/phys/mngr/buddy.hpp"
 
 using namespace Mem;
 using B = BuddyPmm;
 
-size_t B::GetBuddyPfn(size_t pfn, u8 order) { return pfn ^ (1 << order); }
+//==============================================================================
+// Private Helper Methods
+//==============================================================================
 
-B::BuddyPmm() = default;
+size_t B::GetBuddyPfn(size_t pfn, u8 order)
+{
+    // The buddy's PFN is found by XORing the current PFN with the block size (2^order).
+    return pfn ^ (1 << order);
+}
 
 void B::ListRemove(PageMeta *meta)
 {
     auto &buddy_meta = PageMeta::AsBuddy(*meta);
-    if (buddy_meta.prev != nullptr) {
-        PageMeta::AsBuddy(*buddy_meta.prev).next = buddy_meta.next;
-    }
+
     if (buddy_meta.next != nullptr) {
         PageMeta::AsBuddy(*buddy_meta.next).prev = buddy_meta.prev;
+    }
+    if (buddy_meta.prev != nullptr) {
+        PageMeta::AsBuddy(*buddy_meta.prev).next = buddy_meta.next;
     }
 
     if (freelist_table_[meta->order] == meta) {
         freelist_table_[meta->order] = buddy_meta.next;
     }
+
+    buddy_meta.next = nullptr;
+    buddy_meta.prev = nullptr;
 }
 
 void B::ListPush(PageMeta *meta)
 {
-    auto &head = freelist_table_[meta->order];
-
+    auto &head       = freelist_table_[meta->order];
     auto &buddy_meta = PageMeta::AsBuddy(*meta);
-    buddy_meta.next  = head;
+
+    buddy_meta.next = head;
     if (head != nullptr) {
         PageMeta::AsBuddy(*head).prev = meta;
     }
-    head = meta;
+    buddy_meta.prev = nullptr;
+    head            = meta;
 }
 
-// Todo: what state does it leave the non buddy block in?
-// is its order updated?
-void B::SplitBlock(PageMeta *block, u8 target_order)
+PageMeta *B::SplitBlock(PageMeta *block_to_split, u8 target_order)
 {
-    size_t pfn       = pmt_->GetPageFrameNumber(block);
-    u8 current_order = block->order;
-    ASSERT_GE(current_order, target_order);
+    u8 current_order = block_to_split->order;
+    size_t pfn       = pmt_->GetPageFrameNumber(block_to_split);
+
+    ASSERT_GT(current_order, target_order, "SplitBlock called on a block that isn't larger");
 
     for (u8 i = current_order; i > target_order; i--) {
-        u8 lower_order       = i - 1;
-        size_t buddy_pfn     = GetBuddyPfn(pfn, lower_order);
+        u8 lower_order   = i - 1;
+        size_t buddy_pfn = GetBuddyPfn(pfn, lower_order);
+
+        // The higher-address buddy is always split off and added to the freelist
         PageMeta &buddy_meta = pmt_->GetPageMeta(buddy_pfn);
         buddy_meta.InitBuddy(lower_order);
         ListPush(&buddy_meta);
     }
+
+    PageMeta &final_block = pmt_->GetPageMeta(pfn);
+    final_block.order     = target_order;
+    return &final_block;
 }
 
-void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
+PageMeta *B::MergeBlock(PageMeta *block_to_merge)
 {
-    pmt_ = &pmt;
+    u8 order   = block_to_merge->order;
+    size_t pfn = pmt_->GetPageFrameNumber(block_to_merge);
 
-    for (size_t i = 0; i < kMaxPageOrder + 1; i++) {
-        freelist_table_[i] = nullptr;
-    }
-
-    for (size_t i = 0; i < pmt.TotalPages(); i++) {
-        auto &meta = pmt.GetPageMeta(i);
-        meta.InitAllocated(0);
-    }
-
-    for (size_t i = 0; i < pmt.TotalPages(); i++) {
-        if (b_pmm.IsFree(i)) {
-            Free(PageFrameAddr(i));
-        }
-    }
-}
-
-void B::Free(PPtr<Page> page)
-{
-    std::lock_guard guard{lock_};
-    size_t pfn     = PageFrameNumber(page);
-    PageMeta &meta = pmt_->GetPageMeta(pfn);
-
-    ASSERT_EQ(meta.type, PageMetaType::Allocated);
-    u8 order = meta.order;
-
-    pfn = MergeBlock(pfn, order);
-
-    pmt_->GetPageMeta(pfn).InitBuddy(order);
-    ListPush(&pmt_->GetPageMeta(pfn));
-}
-
-// TODO: return tuple / struct instead of ref in
-// TODO: This leaves old pfn at unmerged state
-size_t B::MergeBlock(size_t pfn, u8 &order)
-{
     while (order < kMaxPageOrder) {
         size_t buddy_pfn = GetBuddyPfn(pfn, order);
 
         if (buddy_pfn >= pmt_->TotalPages()) {
             break;
         }
+
         PageMeta &buddy_meta = pmt_->GetPageMeta(buddy_pfn);
 
+        // Check if the buddy is also free and has the same order
         if (buddy_meta.type == PageMetaType::Buddy && buddy_meta.order == order) {
             ListRemove(&buddy_meta);
+
             pfn = std::min(pfn, buddy_pfn);
             order++;
+
+            // Invalidate the old buddy's metadata to prevent dangling state
+            buddy_meta.type = PageMetaType::Dummy;
         } else {
             break;
         }
     }
-    return pfn;
+
+    PageMeta &final_block = pmt_->GetPageMeta(pfn);
+    final_block.order     = order;
+    return &final_block;
+}
+
+//==============================================================================
+// Public Methods
+//==============================================================================
+
+B::BuddyPmm() = default;
+
+void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
+{
+    pmt_ = &pmt;
+
+    for (size_t i = 0; i <= kMaxPageOrder; i++) {
+        freelist_table_[i] = nullptr;
+    }
+
+    // Init all metatadata in allocated state
+    for (size_t i = 0; i < pmt.TotalPages(); i++) {
+        auto &meta = pmt.GetPageMeta(i);
+        meta.InitAllocated(0);
+    }
+
+    // Works because of merging strat
+    for (size_t i = 0; i < pmt.TotalPages(); i++) {
+        if (b_pmm.IsFree(i)) {
+            Free(PageFrameAddr(i));
+        }
+    }
 }
 
 Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
@@ -121,23 +140,38 @@ Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
     u8 order = ar.order;
 
     if (order > kMaxPageOrder) {
-        return Unexpected(MemError::OutOfMemory);
+        return Unexpected(MemError::InvalidArgument);
     }
 
+    // Find the smallest available block that is large enough
     for (u8 current_order = order; current_order <= kMaxPageOrder; current_order++) {
-        if (freelist_table_[current_order]) {
-            PageMeta *block = freelist_table_[current_order];
-            ListRemove(block);
+        if (freelist_table_[current_order] != nullptr) {
+            PageMeta *block_to_alloc = freelist_table_[current_order];
+            ListRemove(block_to_alloc);
 
-            SplitBlock(block, order);
+            if (current_order > order) {
+                block_to_alloc = SplitBlock(block_to_alloc, order);
+            }
 
-            // This is outside splitblock ?? why
-            // so splitblock returns block in invalid state?
-            block->InitAllocated(order);
-
-            return PageFrameAddr(pmt_->GetPageFrameNumber(block));
+            block_to_alloc->InitAllocated(order);
+            return PageFrameAddr(pmt_->GetPageFrameNumber(block_to_alloc));
         }
     }
 
     return Unexpected(MemError::OutOfMemory);
+}
+
+void B::Free(PPtr<Page> page)
+{
+    std::lock_guard guard{lock_};
+    size_t pfn     = PageFrameNumber(page);
+    PageMeta &meta = pmt_->GetPageMeta(pfn);
+
+    ASSERT_EQ(
+        meta.type, PageMetaType::Allocated, "Double free detected or freeing an invalid page!"
+    );
+
+    PageMeta *merged_block = MergeBlock(&meta);
+    merged_block->InitBuddy(merged_block->order);
+    ListPush(merged_block);
 }
