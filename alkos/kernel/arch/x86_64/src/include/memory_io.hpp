@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_IO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_IO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MEMORY_IO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MEMORY_IO_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/defines.hpp>
@@ -49,4 +49,4 @@ NODISCARD FAST_CALL RetT ReadMemoryIo(const byte *base_address, const u32 offset
     return CastRegister<RetT>(reg);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_MEMORY_IO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MEMORY_IO_HPP_

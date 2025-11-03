@@ -24,11 +24,13 @@ include(RuntimeHelpers)
 
 add_library(alkos.target.properties.interface INTERFACE) # Populated by the toolchain file
 
+cmake_path(GET CMAKE_SOURCE_DIR PARENT_PATH CMAKE_ROOT_DIR)
+
 ################################################################################
 #                                   Conf file                                  #
 ################################################################################
 
-set(CMAKE_CONF_FILE "${CMAKE_SOURCE_DIR}/../config/conf.generated.cmake")
+set(CMAKE_CONF_FILE "${CMAKE_ROOT_DIR}/config/conf.generated.cmake")
 
 # Check if configuration was done
 if (NOT EXISTS "${CMAKE_CONF_FILE}")

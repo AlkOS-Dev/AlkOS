@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
 
 #include <assert.h>
 #include <extensions/defines.hpp>
@@ -95,4 +95,4 @@ WRAP_CALL void out(const u16 port, const T v)
 
 #endif  // __cplusplus
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_IO_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_

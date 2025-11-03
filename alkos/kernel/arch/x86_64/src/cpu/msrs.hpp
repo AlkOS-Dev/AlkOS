@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_CPU_MSRS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_CPU_MSRS_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_MSRS_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_MSRS_HPP_
 
 #include <extensions/types.hpp>
 
@@ -24,4 +24,4 @@ FAST_CALL void SetMSR(const u32 msr, const u64 value)
 }
 }  // namespace cpu
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_CPU_MSRS_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_MSRS_HPP_

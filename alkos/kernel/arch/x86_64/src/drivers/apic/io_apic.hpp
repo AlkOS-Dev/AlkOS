@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_IO_APIC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_IO_APIC_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_IO_APIC_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_IO_APIC_HPP_
 
 #include <defines.h>
 #include <extensions/defines.hpp>
@@ -214,4 +214,4 @@ class IoApic final
     u8 num_entries_{};        ///< Number of redirection table entries
 };
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_KERNEL_DRIVERS_APIC_IO_APIC_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_IO_APIC_HPP_
