@@ -19,8 +19,8 @@ struct VirtualMemAreaFlags {
 using VMemAreaFlags = VirtualMemAreaFlags;
 
 struct VirtualMemArea {
-    VPtr<void> start;
-    size_t size;
+    VPtr<void> start;  // Page aligned
+    size_t size;       // Page size divisable
     VirtualMemAreaFlags flags;
 
     TODO_STD_VARIANT

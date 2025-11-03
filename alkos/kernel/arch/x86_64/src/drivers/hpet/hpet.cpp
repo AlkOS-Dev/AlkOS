@@ -76,7 +76,7 @@ Hpet::Hpet(acpi_hpet *table)
 
     TRACE_INFO(
         "Initialized driver for HPET: "
-        "address: %016X, "
+        "address: %016llX, "
         "vendor_id: %04X, "
         "revision: %08X, "
         "num_comparators: %u, "

@@ -9,12 +9,19 @@
 namespace Mem
 {
 
+struct KMallocRequest {
+    size_t size      = 0;
+    size_t alignment = 0;
+    // TODO: zones
+};
+
 // Heap
-Expected<VPtr<void>, MemError> KMalloc(size_t size);
+Expected<VPtr<void>, MemError> KMalloc(KMallocRequest request = {});
 template <typename T>
-Expected<VPtr<T>, MemError> KMalloc()
+Expected<VPtr<T>, MemError> KMalloc(KMallocRequest request = {})
 {
-    return KMalloc(sizeof(T)).transform([](void *ptr) {
+    request.size = sizeof(T);
+    return KMalloc(request).transform([](void *ptr) {
         return reinterpret_cast<VPtr<T>>(ptr);
     });
 }

@@ -13,6 +13,6 @@ struct BootArguments {
     Mem::PPtr<void> multiboot_info;
 };
 
-BootArguments SanitizeBootArgs(const hal::RawBootArguments raw_args);
+BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args);
 
 #endif  // ALKOS_KERNEL_INCLUDE_BOOT_ARGS_HPP_

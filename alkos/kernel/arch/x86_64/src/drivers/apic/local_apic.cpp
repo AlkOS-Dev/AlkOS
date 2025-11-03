@@ -17,7 +17,7 @@ static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
 
     TRACE_INFO(
         "Got LAPIC NMI source: "
-        "flags: %hhu, "
+        "flags: %hu, "
         "lapic_id: %hhu, "
         "lint: %hhu",
         nmi_source->flags, nmi_source->uid, nmi_source->lint
@@ -73,7 +73,7 @@ void LocalApic::Enable()
     /* Map local apic address to vmem */
     // TODO: currently: identity
 
-    TRACE_INFO("Assuming APIC address as: %016X", local_apic_physical_address_);
+    TRACE_INFO("Assuming APIC address as: %016llX", local_apic_physical_address_);
 
     /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
     is_enabled_ = true;

@@ -33,9 +33,9 @@ class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxC
     NODISCARD FORCE_INLINE_F u64 ReadTimeNsUnsafe()
     {
         const u64 timer_val = GetSelected().read(&GetSelected());
-        TRACE_DEBUG("Timer value read: %zu", timer_val);
+        TRACE_DEBUG("Timer value read: %llu", timer_val);
         TRACE_DEBUG(
-            "Numerator: %zu, Denominator: %zu", GetSelected().clock_numerator,
+            "Numerator: %llu, Denominator: %llu", GetSelected().clock_numerator,
             GetSelected().clock_denominator
         );
 

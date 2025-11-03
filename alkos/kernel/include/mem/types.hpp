@@ -12,6 +12,10 @@ using Expected = std::expected<T, E>;
 template <typename E>
 using Unexpected = std::unexpected<E>;
 
+#define UNEXPETED_RET_IF_ERR(res) \
+    if (!res)                     \
+    return Unexpected(res.error())
+
 namespace Mem
 {
 
@@ -31,16 +35,19 @@ template <typename T>
 VPtr<T> PhysToVirt(PPtr<T> physAddr)
 {
     return reinterpret_cast<VPtr<T>>(
-        reinterpret_cast<uintptr_t>(physAddr) + hal::kKernelVirtualAddressStart
+        reinterpret_cast<uintptr_t>(physAddr) + hal::kDirectMapAddrStart
     );
 }
 
 template <typename T>
 PPtr<T> VirtToPhys(VPtr<T> virtAddr)
 {
-    return reinterpret_cast<PPtr<T>>(
-        reinterpret_cast<uintptr_t>(virtAddr) - hal::kKernelVirtualAddressStart
-    );
+    uintptr_t vaddr = reinterpret_cast<uintptr_t>(virtAddr);
+    if (vaddr >= hal::kDirectMapAddrStart) {
+        return reinterpret_cast<PPtr<T>>(vaddr - hal::kDirectMapAddrStart);
+    }
+
+    return reinterpret_cast<PPtr<T>>(vaddr - hal::kKernelVirtualAddressStart);
 }
 
 template <typename T>

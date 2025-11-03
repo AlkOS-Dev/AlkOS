@@ -19,13 +19,8 @@ static constexpr size_t kTraceBufferSize = 4096;
 template <typename... Args>
 void FormatTrace(const char *format, Args... args)
 {
-    // TODO: common loader does not have access to kernel structures
-    // TODO: -> common loader should use different traces
-    // TODO: without that kernel traces will not display time of the trace
-
     char buffer[kTraceBufferSize];
-    [[maybe_unused]] const u64 bytesWritten =
-        snprintf(buffer, kTraceBufferSize, format, 0ull, args...);
+    [[maybe_unused]] const u64 bytesWritten = snprintf(buffer, kTraceBufferSize, format, args...);
     ASSERT(bytesWritten < kTraceBufferSize);
     __platform_debug_write(buffer);
 }
@@ -52,10 +47,14 @@ void FormatTrace(const char *format, Args... args)
 #define TRACE_FORMAT_DEBUG(message)    DEBUG_TAG " %zu " TRACE_FORMAT_LOCATION(message)
 #define TRACE_FORMAT_SUCCESS(message)  SUCCESS_TAG " %zu " TRACE_FORMAT_LOCATION(message)
 
-#define TRACE_ERROR(message, ...)   TRACE(TRACE_FORMAT_ERROR(message) __VA_OPT__(, ) __VA_ARGS__)
-#define TRACE_WARNING(message, ...) TRACE(TRACE_FORMAT_WARNING(message) __VA_OPT__(, ) __VA_ARGS__)
-#define TRACE_INFO(message, ...)    TRACE(TRACE_FORMAT_INFO(message) __VA_OPT__(, ) __VA_ARGS__)
-#define TRACE_DEBUG(message, ...)   TRACE(TRACE_FORMAT_DEBUG(message) __VA_OPT__(, ) __VA_ARGS__)
-#define TRACE_SUCCESS(message, ...) TRACE(TRACE_FORMAT_SUCCESS(message) __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_ERROR(message, ...) \
+    TRACE(TRACE_FORMAT_ERROR(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_WARNING(message, ...) \
+    TRACE(TRACE_FORMAT_WARNING(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_INFO(message, ...) TRACE(TRACE_FORMAT_INFO(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_DEBUG(message, ...) \
+    TRACE(TRACE_FORMAT_DEBUG(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
+#define TRACE_SUCCESS(message, ...) \
+    TRACE(TRACE_FORMAT_SUCCESS(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
 
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_

@@ -4,8 +4,12 @@
 #include <extensions/expected.hpp>
 #include <extensions/types.hpp>
 
+#include "hal/interrupt_params.hpp"
+#include "hal/spinlock.hpp"
+#include "interrupts/interrupt_types.hpp"
 #include "mem/error.hpp"
 #include "mem/types.hpp"
+#include "mem/virt/addr_space_iterator.hpp"
 #include "mem/virt/area.hpp"
 
 namespace Mem
@@ -24,17 +28,24 @@ class VirtualMemoryManager;
 class AddressSpace
 {
     public:
-    AddressSpace(PPtr<void> page_table_root) : page_table_root_{page_table_root} {}
+    AddressSpace(PPtr<void> page_table_root)
+        : page_table_root_{page_table_root}, area_list_head_{nullptr}
+    {
+    }
     ~AddressSpace();
     AddressSpace(const AddressSpace &)            = delete;
     AddressSpace &operator=(const AddressSpace &) = delete;
 
     PPtr<void> PageTableRoot() const { return page_table_root_; }
 
+    // Iterator
+    AddrSpIt begin() const { return AddrSpIt(area_list_head_); }
+    AddrSpIt end() const { return AddrSpIt(nullptr); }
+
     private:
     // This is orchestrated in VMM (For proper TLB management)
-    void AddArea(VMemArea vma);
-    void RmArea(VPtr<void> ptr);
+    Expected<void, MemError> AddArea(VMemArea vma);
+    Expected<void, MemError> RmArea(VPtr<void> ptr);
 
     // Helpers
     Expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
@@ -43,8 +54,12 @@ class AddressSpace
 
     PPtr<void> page_table_root_;
     VPtr<VMemArea> area_list_head_;
+    hal::Spinlock area_list_lock_;
 
     friend VirtualMemoryManager;
+    friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+
+    public:
 };
 using AddrSp = AddressSpace;
 

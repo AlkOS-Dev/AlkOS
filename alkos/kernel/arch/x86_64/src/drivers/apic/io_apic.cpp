@@ -43,11 +43,11 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
         static_cast<u8>(ReadRegister(kIoApicVerReg) >> 16) + 1; /* Access bits [16, 23] */
 
     TRACE_INFO(
-        "Got IO APIC (%lu) "
+        "Got IO APIC (%hhu) "
         "at address: 0x%llX, "
         "version: %hhu, "
         "number of entries: %hhu, "
-        "base: 0x%llX",
+        "base: 0x%X",
         id_, virtual_address_, version_, num_entries_, gsi_base_
     );
 }

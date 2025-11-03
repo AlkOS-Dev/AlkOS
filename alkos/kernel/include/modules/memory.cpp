@@ -7,31 +7,35 @@
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/types.hpp"
+#include "mem/virt/page_fault.hpp"
 
 using namespace Mem;
 
-static BitmapPmm InitBitMapPmm(const BootArguments &args)
-{
-    const size_t total_pages    = args.total_page_frames;
-    const VPtr<void> mem_bitmap = PhysToVirt(args.mem_bitmap);
-
-    return BitmapPmm{mem_bitmap, total_pages};
-}
-
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
-    : BitmapPmm_{InitBitMapPmm(args)}
+    : KernelAddressSpace_(args.root_page_table)
 {
     TRACE_INFO("MemoryModule::MemoryModule()");
 
+    // Initialize BitmapPmm
     const size_t total_pages    = args.total_page_frames;
-    const size_t required_size  = PageMetaTable::CalcRequiredSize(total_pages);
-    const size_t required_pages = required_size / hal::kPageSizeBytes;
+    const VPtr<void> mem_bitmap = PhysToVirt(args.mem_bitmap);
+    data_structures::BitMapView bmv{mem_bitmap, total_pages};
+    BitmapPmm_.Init(bmv);
 
-    TRACE_DEBUG("Total  : | %llu | pages", total_pages);
-    TRACE_DEBUG("Finding: | %llu | pages for page metadata table", required_pages);
-    auto res = BitmapPmm_.Alloc(BitmapPmm::AllocationRequest{.num_pages = required_pages});
-    R_ASSERT_TRUE(res, "Failed to allocate memory for page metadata table");
+    // Initialize PageMetaTable
+    PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    auto page_metas = reinterpret_cast<VPtr<PageMeta<Dummy>>>(PhysToVirt(*res));
-    PageMetaTable_  = PageMetaTable(page_metas, total_pages);
+    // Initialize BuddyPmm
+    // BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
+
+    // Initialize Vmm
+    Vmm_.Init(Tlb_, Mmu_);
+}
+
+void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)
+{
+    TRACE_INFO("Registering Page Fault handler...");
+    hw.GetInterrupts().GetLit().InstallInterruptHandler<intr::InterruptType::kException>(
+        hal::kPageFaultExcLirq, intr::ExcHandler{.handler = Mem::PageFaultHandler}
+    );
 }

@@ -16,7 +16,7 @@ void hardware::CoresController::AllocateTables(const size_t num_cores, const siz
     const auto result1 = core_arr_.Reallocate(num_cores);
     R_ASSERT_TRUE(static_cast<bool>(result1));
 
-    const auto result2 = hw_to_core_id_map_.Reallocate(max_hw_id);
+    const auto result2 = hw_to_core_id_map_.Reallocate(max_hw_id + 1);
     R_ASSERT_TRUE(static_cast<bool>(result2));
 
     const auto result3 = core_local_table_.Reallocate(num_cores);

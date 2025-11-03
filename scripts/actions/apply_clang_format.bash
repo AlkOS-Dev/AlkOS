@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
+APPLY_CLANG_FORMAT_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+APPLY_CLANG_FORMAT_FORMAT_FILE="${APPLY_CLANG_FORMAT_SCRIPT_DIR}/../../.clang-format"
+
 # ===============================
 # Configuration Variables
 # ===============================
 
 TARGET_FOLDER="."
 FILE_EXTENSIONS=("cpp" "cc" "c" "h" "hpp" "tpp")
-CLANG_FORMAT_STYLE="file"
+CLANG_FORMAT_STYLE="file:$APPLY_CLANG_FORMAT_FORMAT_FILE"
 
 # ===============================
 # Script Execution

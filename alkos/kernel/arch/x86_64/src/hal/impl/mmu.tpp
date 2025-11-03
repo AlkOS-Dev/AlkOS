@@ -24,6 +24,13 @@ u64 Mmu::PmeIdx(Mem::VPtr<void> vaddr)
     return (addr >> (kDefaultOffset + (kLevel - 1) * kBitOffsetPerLevel)) & kIndexMask;
 }
 
+template <size_t kLevel = 0>
+void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme)
+{
+    static_assert(kLevel > 0);
+    static_assert(kLevel <= 4);
+}
+
 template <size_t kLevel>
 Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, bool create_if_missing
