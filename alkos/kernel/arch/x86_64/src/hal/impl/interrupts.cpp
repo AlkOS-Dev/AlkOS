@@ -43,6 +43,7 @@ void Interrupts::FirstStageInit()
     InitPic8259(kIrq1Offset, kIrq2Offset);
     MapToLogicalInterrupts_();
     SetupPicAsDefaultDriver_();
+    trace::AdvanceTracingStage();
     InitializeDefaultIdt_();
 }
 

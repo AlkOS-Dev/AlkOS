@@ -7,16 +7,16 @@
 
 namespace internal
 {
-char* GetWorkspace();
+char *GetWorkspace();
 void CommitToLog(size_t trace_size);
 void CommitToDebugLog(size_t trace_size);
-size_t WriteTraceData(char* dst, trace::TraceModule module);
+int WriteTraceData(char *dst, trace::TraceModule module);
 }  // namespace internal
 
 namespace trace
 {
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
-FAST_CALL void Write(const char* format, Args... args)
+FAST_CALL void Write(const char *format, Args... args)
 {
     static_assert(type != TraceType::kShell, "Shell output for traces is not yet supported...");
     static constexpr size_t kWorkspaceSize = FeatureValue<FeatureFlag::kSingleTraceMaxSize>;
@@ -29,22 +29,33 @@ FAST_CALL void Write(const char* format, Args... args)
         return;
     }
 
-    char* workspace = internal::GetWorkspace();
+    char *workspace = internal::GetWorkspace();
 
     /* Write kernel trace info */
-    const size_t trace_info_size = internal::WriteTraceData(workspace, module);
+    const int trace_info = internal::WriteTraceData(workspace, module);
+    ASSERT_GE(trace_info, 0);
+    const size_t trace_info_size = trace_info;
 
     /* User message */
     [[maybe_unused]] const u64 bytesWritten =
         snprintf(workspace + trace_info_size, kWorkspaceSize - trace_info_size, format, args...);
-    ASSERT_LT(bytesWritten, kWorkspaceSize - trace_info_size);
+    ASSERT_LE(bytesWritten, kWorkspaceSize - trace_info_size);
+
+    /* Ensure to write eol */
+    if (bytesWritten + trace_info_size == kWorkspaceSize - 1) {
+        /* write to last char */
+        workspace[kWorkspaceSize - 2] = '\n';
+    } else {
+        workspace[bytesWritten + trace_info_size - 1] = '\n';
+        workspace[bytesWritten + trace_info_size]     = '\0';
+    }
 
     if constexpr (type == TraceType::kKernelLog) {
-        internal::CommitToLog(bytesWritten);
+        internal::CommitToLog(bytesWritten + trace_info_size + 1);
     }
 
     if constexpr (type == TraceType::kDebugOnly) {
-        internal::CommitToDebugLog(bytesWritten);
+        internal::CommitToDebugLog(bytesWritten + trace_info_size + 1);
     }
 }
 }  // namespace  trace
