@@ -15,8 +15,13 @@
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
+static void test() { hal::DebugStack(); }
+
 void KernelInit(const hal::RawBootArguments &raw_args)
 {
+    hal::DebugStack();
+    test();
+
     hal::TerminalInit();
     hal::ArchInit(raw_args);
 

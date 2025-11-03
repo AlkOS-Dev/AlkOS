@@ -50,7 +50,7 @@ void DumpAllBuffersOnFailure();
 
 /* MODULE TIME CORE PROC FILE LINE MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
-FAST_CALL void Write(const char *format, Args... args);
+PREVENT_INLINE static void Write(const char *format, Args... args);
 }  // namespace trace
 
 // ------------------------------

@@ -84,7 +84,7 @@ static constexpr size_t kUserMessageBuffSize   = 1024;
 using ErrorHandlerFn = void (*)(const char *);
 
 template <ErrorHandlerFn Handler>
-FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *line)
+PREVENT_INLINE static void VerboseAssertDump(const char *msg, const char *file, const char *line)
 {
     char full_msg[kFullAssertMsgBuffSize];
     [[maybe_unused]] const int bytes_written = snprintf(
@@ -102,7 +102,7 @@ FAST_CALL void VerboseAssertDump(const char *msg, const char *file, const char *
 template <
     ErrorHandlerFn Handler, class ExpectedT, class ValueT, class CheckerT, class MsgGetterT,
     class... Args>
-FAST_CALL void VerboseAssertTwoArgBase(
+PREVENT_INLINE static void VerboseAssertTwoArgBase(
     const ExpectedT &expected, const ValueT &value, CheckerT checker, MsgGetterT msg_getter,
     const char *expected_str, const char *value_str, const char *file, const char *line,
     Args... args
@@ -133,7 +133,7 @@ FAST_CALL void VerboseAssertTwoArgBase(
 }
 
 template <ErrorHandlerFn Handler, class ValueT, class CheckerT, class MsgGetterT, class... Args>
-FAST_CALL void VerboseAssertOneArgBase(
+PREVENT_INLINE static void VerboseAssertOneArgBase(
     const ValueT &value, CheckerT checker, MsgGetterT msg_getter, const char *value_str,
     const char *file, const char *line, Args... args
 )

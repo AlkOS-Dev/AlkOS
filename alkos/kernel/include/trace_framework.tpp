@@ -16,7 +16,7 @@ int WriteTraceData(char *dst, trace::TraceModule module, trace::TraceType type);
 namespace trace
 {
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
-FAST_CALL void Write(const char *format, Args... args)
+PREVENT_INLINE static void Write(const char *format, Args... args)
 {
     static_assert(type != TraceType::kShell, "Shell output for traces is not yet supported...");
     static constexpr size_t kWorkspaceSize = FeatureValue<FeatureFlag::kSingleTraceMaxSize>;

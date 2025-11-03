@@ -9,6 +9,8 @@
 #include <cpuid.h>
 #include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
+#include <hal/debug.hpp>
+
 #include "trace_framework.hpp"
 
 #include <modules/hardware.hpp>
@@ -62,6 +64,7 @@ void ArchInit(const RawBootArguments &)
     EnableSSE();
     EnableAVX();
 
+    hal::DebugStack();
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
 

@@ -10,12 +10,8 @@
 namespace arch
 {
 
-extern "C" void NO_RET KernelPanic(const char *msg)
+extern "C" void NO_RET KernelPanic()
 {
-    arch::TerminalWriteError("[ KERNEL PANIC ]\n");
-    arch::TerminalWriteError(msg);
-    arch::TerminalWriteError("\n");
-
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         test::OnKernelPanic();
     } else {

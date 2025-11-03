@@ -284,16 +284,16 @@ class SingletonInstanceCreator
         return *reinterpret_cast<T *>(instance_memory_);
     }
 
-    FORCE_INLINE_F void Destroy() noexcept
+    void Destroy() noexcept
     {
         Get().~T();
         is_instance_inited_ = false;
     }
 
-    FORCE_INLINE_F bool IsInited() noexcept { return is_instance_inited_; }
+    FORCE_INLINE_F bool IsInited() const noexcept { return is_instance_inited_; }
 
     template <class... Args>
-    FORCE_INLINE_F T &Init(Args &&...args) noexcept
+    T &Init(Args &&...args) noexcept
     {
         assert(!IsInited() && "Singleton instance already inited!");
         [[maybe_unused]] auto ptr =
@@ -324,12 +324,12 @@ class StaticSingleton
 
     FORCE_INLINE_F static T &Get() noexcept { return instance_creator_.Get(); }
 
-    FORCE_INLINE_F static void Destroy() noexcept { instance_creator_.Destroy(); }
+    static void Destroy() noexcept { instance_creator_.Destroy(); }
 
     FORCE_INLINE_F static bool IsInited() noexcept { return instance_creator_.IsInited(); }
 
     template <class... Args>
-    FORCE_INLINE_F static T &Init(Args &&...args) noexcept
+    static T &Init(Args &&...args) noexcept
     {
         return instance_creator_.Init(std::forward<Args>(args)...);
     }
