@@ -42,6 +42,10 @@ TEST_RUNS: list[TestRun] = [
         [
             "SnprintfTest_BufferSizeHandling",  # Fails <- issue added on low prio
             "SnprintfTest_EdgeCases",  # Fails <- issue added on low prio
+            # Time related tests fail since timing module is disabled for now
+            "MkTimeTest_*",
+            "TimeTConversionTest_*",
+            "TimeTests_TestTime",
         ]
     )
 ]

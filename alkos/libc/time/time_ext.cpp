@@ -45,7 +45,7 @@ u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone)
     if (date_time.tm_isdst < 0) {
         /* TODO: here we should try to determine if DST is in effect */
         TODO_BY_THE_END_OF_MILESTONE1
-        assert(false && "DST guess is not supported yet");
+        R_FAIL_ALWAYS("DST guess is not supported yet");
     }
 
     if (time < 0) {

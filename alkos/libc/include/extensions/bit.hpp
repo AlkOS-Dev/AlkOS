@@ -1,189 +1,177 @@
 #ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
 
-#include <stdint.h>
-#include <extensions/defines.hpp>
+#include <extensions/bits_ext.hpp>
+#include <extensions/concepts.hpp>
+#include <extensions/limits.hpp>
 #include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+
+namespace std
+{
 
 // ------------------------------
-// Various defines
+// internal
 // ------------------------------
 
-static constexpr u64 kBitMask4  = 0xF;
-static constexpr u64 kBitMask8  = 0xFF;
-static constexpr u64 kBitMask16 = kBitMask8 | (kBitMask8 << 8);
-static constexpr u64 kBitMask32 = kBitMask16 | (kBitMask16 << 16);
-static constexpr u64 kBitMask64 = kBitMask32 | (kBitMask32 << 32);
+namespace internal
+{
+// ------------------------------
+// countX implementations
+// ------------------------------
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kLsb = 1;
-
-template <typename NumT, u16 Bit>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kSingleBit = kLsb<NumT> << Bit;
-
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kMsb = kSingleBit<NumT, sizeof(NumT) * 8 - 1>;
-
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kFullMask = ~static_cast<NumT>(0);
-
-template <typename NumT, u16 Range>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kBitMaskLeft = kFullMask<NumT> << (sizeof(NumT) * 8 - Range);
-
-template <typename NumT, u16 Range>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kBitMaskRight = kFullMask<NumT> >> (sizeof(NumT) * 8 - Range);
-
-template <typename NumT, const u16 kBitStart, const u16 kBitLength>
-    requires std::is_unsigned_v<NumT>
-static constexpr NumT kBitMask = []() constexpr {
-    static_assert(kBitStart < sizeof(NumT) * 8, "bit start overflows given integer type...");
-    static_assert(
-        kBitStart + kBitLength <= sizeof(NumT) * 8, "bit length overflows given integer type..."
-    );
-
-    NumT mask{};
-    for (u16 bit = kBitStart; bit < kBitLength; ++bit) {
-        mask |= kLsb<NumT> << bit;
+template <std::unsigned_integral T>
+static constexpr int countl_one_constexpr(const T x) noexcept
+{
+    if (x == kFullMask<T>) {
+        return sizeof(T) * 8;
     }
-    return mask;
-}();
 
-template <typename NumT, const u16 kBitStart, const u16 kBitEnd>
-    requires(std::is_unsigned_v<NumT> && kBitStart < kBitEnd)
-static constexpr NumT kBitMaskRange = kBitMask<NumT, kBitStart, kBitEnd - kBitStart>;
+    T iter    = kMsb<T>;
+    int count = 0;
 
-template <size_t kSize = 0>
-struct UnsignedIntegral {
-    static_assert(false, "Provided wrong integral size");
-};
+    while (AreIntersecting(iter, x)) {
+        count++;
+        iter >>= 1;
+    }
 
-template <>
-struct UnsignedIntegral<1> {
-    using type = u8;
-};
-template <>
-struct UnsignedIntegral<2> {
-    using type = u16;
-};
-template <>
-struct UnsignedIntegral<4> {
-    using type = u32;
-};
-template <>
-struct UnsignedIntegral<8> {
-    using type = u64;
-};
+    return count;
+}
+
+template <std::unsigned_integral T>
+FAST_CALL constexpr int countl_zero_constexpr(const T x) noexcept
+{
+    return countl_one_constexpr(static_cast<T>(~x));
+}
+
+template <std::unsigned_integral T>
+static constexpr int countr_one_constexpr(const T x) noexcept
+{
+    if (x == kFullMask<T>) {
+        return sizeof(T) * 8;
+    }
+
+    T iter    = kLsb<T>;
+    int count = 0;
+
+    while (AreIntersecting(iter, x)) {
+        count++;
+        iter <<= 1;
+    }
+
+    return count;
+}
+
+template <std::unsigned_integral T>
+FAST_CALL constexpr int countr_zero_constexpr(const T x) noexcept
+{
+    return countr_one_constexpr(static_cast<T>(~x));
+}
 
 // ------------------------------
-// Functions
+// popcount implementation
 // ------------------------------
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL NumT &SetBit(NumT &num, const u16 bit)
+template <std::unsigned_integral T>
+constexpr int popcount_constexpr(const T x) noexcept
 {
-    return num |= kLsb<NumT> << bit;
+    if (x == 0) {
+        return 0;
+    }
+
+    T iter    = x;
+    int count = 0;
+
+    while (iter != 0) {
+        count += AreIntersecting(kLsb<T>, iter);
+        iter >>= 1;
+    }
+
+    return count;
 }
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL NumT &ClearBit(NumT &num, const u16 bit)
+}  // namespace internal
+
+// ------------------------------
+// countX implementations
+// ------------------------------
+
+#define DEFINE_PUBLIC_FUNCTION(func_name)              \
+    template <std::unsigned_integral T>                \
+    constexpr FAST_CALL int func_name(T x) noexcept    \
+    {                                                  \
+        if consteval {                                 \
+            return internal::func_name##_constexpr(x); \
+        } else {                                       \
+            TODO_OPTIMISE                              \
+            return internal::func_name##_constexpr(x); \
+        }                                              \
+    }
+
+DEFINE_PUBLIC_FUNCTION(countl_one)
+DEFINE_PUBLIC_FUNCTION(countl_zero)
+DEFINE_PUBLIC_FUNCTION(countr_one)
+DEFINE_PUBLIC_FUNCTION(countr_zero)
+
+// ------------------------------
+// popcount implementation
+// ------------------------------
+
+template <std::unsigned_integral T>
+constexpr FAST_CALL int popcount(T x) noexcept
 {
-    return num &= ~(kLsb<NumT> << bit);
+    if consteval {
+        return internal::popcount_constexpr(x);
+    } else {
+        TODO_OPTIMISE
+        return internal::popcount_constexpr(x);
+    }
 }
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL NumT &SwitchBit(NumT &num, const u16 bit)
+// ------------------------------
+// bit_width
+// ------------------------------
+
+template <unsigned_integral T>
+constexpr FAST_CALL int bit_width(const T x) noexcept
 {
-    return num ^= kLsb<NumT> << bit;
+    return std::numeric_limits<T>::digits - std::countl_zero(x);
 }
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL NumT &SetBitValue(NumT &num, const u16 bit, const bool val)
+// ------------------------------
+// bit_floor
+// ------------------------------
+
+template <std::unsigned_integral T>
+constexpr FAST_CALL T bit_floor(T x) noexcept
 {
-    return ClearBit(num, bit) |= static_cast<NumT>(val) << bit;
+    if (x != 0) {
+        return kLsb<T> << (std::bit_width(x) - 1);
+    }
+
+    return 0;
 }
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr bool IsAligned(const NumT num, const size_t alignment)
+// ------------------------------
+// bit_ceil
+// ------------------------------
+
+template <std::unsigned_integral T>
+constexpr FAST_CALL T bit_ceil(T x) noexcept
 {
-    return (num & (alignment - 1)) == 0;
+    TODO_LIBCPP_COMPLIANCE
+    // TODO: Implement code for overflows according to standard
+
+    if (x <= static_cast<T>(1)) {
+        return kLsb<T>;
+    }
+
+    return kLsb<T> << std::bit_width(T(x - static_cast<T>(1)));
 }
 
-// Overload for pointer types
-template <typename PtrT>
-    requires std::is_pointer_v<PtrT>
-FAST_CALL constexpr bool IsAligned(const PtrT ptr, const size_t alignment)
-{
-    return IsAligned(reinterpret_cast<uintptr_t>(ptr), alignment);
-}
+TODO_LIBCPP_COMPLIANCE
+// TODO: Implement other functions from standard
 
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr NumT AlignUp(const NumT num, const size_t alignment)
-{
-    return (num + alignment - 1) & ~(alignment - 1);
-}
-
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr NumT AlignDown(const NumT num, const size_t alignment)
-{
-    return num & ~(alignment - 1);
-}
-
-template <typename PtrT>
-    requires std::is_pointer_v<PtrT>
-FAST_CALL constexpr PtrT AlignUp(const PtrT ptr, const size_t alignment)
-{
-    return reinterpret_cast<PtrT>(AlignUp(reinterpret_cast<uintptr_t>(ptr), alignment));
-}
-
-template <typename PtrT>
-    requires std::is_pointer_v<PtrT>
-FAST_CALL constexpr PtrT AlignDown(const PtrT ptr, const size_t alignment)
-{
-    return reinterpret_cast<PtrT>(AlignDown(reinterpret_cast<uintptr_t>(ptr), alignment));
-}
-
-template <const u16 kBitStart, const u16 kBitLength, typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr bool AreBitsEnabled(const NumT num)
-{
-    return (num & kBitMask<NumT, kBitStart, kBitLength>) == kBitMask<NumT, kBitStart, kBitLength>;
-}
-
-template <const u16 kBitStart, const u16 kBitEnd, typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr bool AreBitsEnabledRanged(const NumT num)
-{
-    return (num & kBitMaskRange<NumT, kBitStart, kBitEnd>) ==
-           kBitMaskRange<NumT, kBitStart, kBitEnd>;
-}
-
-template <const u16 kBit, typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr bool IsBitEnabled(const NumT num)
-{
-    return (num & kSingleBit<NumT, kBit>) == kSingleBit<NumT, kBit>;
-}
-
-template <typename NumT>
-    requires std::is_unsigned_v<NumT>
-FAST_CALL constexpr bool AreBitsEnabled(const NumT num, const NumT mask)
-{
-    return (num & mask) == mask;
-}
+}  // namespace std
 
 template <typename NumT>
     requires std::is_unsigned_v<NumT>

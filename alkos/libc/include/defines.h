@@ -1,10 +1,6 @@
 #ifndef ALKOS_LIBC_INCLUDE_DEFINES_H_
 #define ALKOS_LIBC_INCLUDE_DEFINES_H_
 
-#if !defined(__ALKOS_LIBK__) && !__STDC_HOSTED__
-#error "Missing environment definition"
-#endif
-
 // ------------------------------
 // C++ defines
 // ------------------------------
@@ -31,6 +27,8 @@ static constexpr bool kIsKernel = false;
 
 /* Force the compiler to always inline the function */
 #define FORCE_INLINE_F inline __attribute__((always_inline))
+
+#define PREVENT_INLINE __attribute__((noinline))
 
 /* Force the compiler to always inline the lambda */
 #define FORCE_INLINE_L __attribute__((always_inline))

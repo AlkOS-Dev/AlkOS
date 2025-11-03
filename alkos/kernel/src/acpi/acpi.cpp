@@ -1,59 +1,59 @@
 #include <acpi/acpi.hpp>
 
-/* Internal includes */
-#include <multiboot2/multiboot2.h>
-#include <arch_utils.hpp>
-#include <definitions/loader64_data.hpp>
 #include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
-#include <multiboot2/multiboot_info.hpp>
+
+// TODO
+#include <include/multiboot2/multiboot2.h>
+#include <include/multiboot2/multiboot_info.hpp>
 
 /* External includes */
 #include <uacpi/event.h>
 #include <uacpi/uacpi.h>
 
-extern loader64::LoaderData* kLoaderData;
-
-static Multiboot::TagNewAcpi* FindAcpiTag(u64 multiboot_info_addr)
+static Multiboot::TagNewAcpi *FindAcpiTag(u64 multiboot_info_addr)
 {
     // TODO: 1. Multiboot Tags should be in both the arch and the kernel, so maybe move to libk?
     // TODO: 2. This should probably recieve a MultibootInfo object instead of an address.
     TRACE_INFO("Finding ACPI tag in multiboot tags...");
     Multiboot::MultibootInfo multiboot_info(multiboot_info_addr);
 
-    auto* new_acpi_tag = multiboot_info.FindTag<Multiboot::TagNewAcpi>();
+    auto *new_acpi_tag = multiboot_info.FindTag<Multiboot::TagNewAcpi>();
 
     if (new_acpi_tag == nullptr) {
         TRACE_INFO("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
-        auto* old_acpi_tag = multiboot_info.FindTag<Multiboot::TagOldAcpi>();
+        auto *old_acpi_tag = multiboot_info.FindTag<Multiboot::TagOldAcpi>();
 
-        new_acpi_tag = reinterpret_cast<Multiboot::TagNewAcpi*>(old_acpi_tag);
+        new_acpi_tag = reinterpret_cast<Multiboot::TagNewAcpi *>(old_acpi_tag);
     }
 
     return new_acpi_tag;
 }
-int ACPI::ACPIController::Init()
+
+int ACPI::ACPIController::Init(const BootArguments &args)
 {
+    TODO_WHEN_VMEM_WORKS
     TRACE_INFO("ACPI initialization...");
 
     TRACE_INFO("Finding RSDP...");
-    auto* acpi_tag = FindAcpiTag(kLoaderData->multiboot_info_addr);
+    auto *acpi_tag = FindAcpiTag(Mem::PtrToUptr(args.multiboot_info));
     R_ASSERT_NOT_NULL(
         acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
     );
 
     TRACE_SUCCESS(
-        "ACPI tag found at 0x%0*llX, size: %sB", 2 * sizeof(u64), reinterpret_cast<u64>(acpi_tag),
+        "ACPI tag found at 0x%016llX, size: %sB", reinterpret_cast<u64>(acpi_tag),
         FormatMetricUint(acpi_tag->size)
     );
 
-    RsdpAddress_ = reinterpret_cast<void*>(acpi_tag->rsdp);
-    TRACE_INFO("RSDP address: 0x%0*llX", 2 * sizeof(u64), RsdpAddress_);
+    RsdpAddress_ = reinterpret_cast<void *>(acpi_tag->rsdp);
+    TRACE_INFO("RSDP address: 0x%016p", RsdpAddress_);
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);
     R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
 
+    // TODO: When OSL finished
     // /* Load the AML namespace */
     // ret = uacpi_namespace_load();
     // if (uacpi_unlikely_error(ret)) {

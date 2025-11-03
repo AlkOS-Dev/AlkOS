@@ -9,7 +9,7 @@
 class StrfTimeWriter final
 {
     public:
-    StrfTimeWriter(char* buf, const size_t size, const char* format, const tm* time_ptr)
+    StrfTimeWriter(char *buf, const size_t size, const char *format, const tm *time_ptr)
         : buf_{buf}, format_{format}, size_{size}, written_{0}, time_ptr_{time_ptr}
     {
     }
@@ -195,7 +195,7 @@ class StrfTimeWriter final
     FORCE_INLINE_F void A_Format_()
     {
         TODO_LOCALE_SUPPORT
-        static constexpr const char* kWeekdays[] = {"Sunday",   "Monday", "Tuesday", "Wednesday",
+        static constexpr const char *kWeekdays[] = {"Sunday",   "Monday", "Tuesday", "Wednesday",
                                                     "Thursday", "Friday", "Saturday"};
 
         WriteString_(kWeekdays[time_ptr_->tm_wday]);
@@ -204,7 +204,7 @@ class StrfTimeWriter final
     FORCE_INLINE_F void a_Format_()
     {
         TODO_LOCALE_SUPPORT
-        static constexpr const char* kWeekdays[] = {"Sun", "Mon", "Tue", "Wed",
+        static constexpr const char *kWeekdays[] = {"Sun", "Mon", "Tue", "Wed",
                                                     "Thu", "Fri", "Sat"};
 
         WriteString_(kWeekdays[time_ptr_->tm_wday]);
@@ -213,7 +213,7 @@ class StrfTimeWriter final
     FORCE_INLINE_F void B_Format_()
     {
         TODO_LOCALE_SUPPORT
-        static constexpr const char* kMonths[] = {"January",   "February", "March",    "April",
+        static constexpr const char *kMonths[] = {"January",   "February", "March",    "April",
                                                   "May",       "June",     "July",     "August",
                                                   "September", "October",  "November", "December"};
 
@@ -223,7 +223,7 @@ class StrfTimeWriter final
     FORCE_INLINE_F void b_Format_()
     {
         TODO_LOCALE_SUPPORT
-        static constexpr const char* kMonths[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        static constexpr const char *kMonths[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
         WriteString_(kMonths[time_ptr_->tm_mon]);
@@ -266,7 +266,7 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void p_Format_()
     {
-        const char* am_pm = time_ptr_->tm_hour < 12 ? "AM" : "PM";
+        const char *am_pm = time_ptr_->tm_hour < 12 ? "AM" : "PM";
         WriteString_(am_pm);
     }
 
@@ -411,7 +411,7 @@ class StrfTimeWriter final
 
     FORCE_INLINE_F void WriteZeroBoundaryCheck_() { WriteChar_('0'); }
 
-    FORCE_INLINE_F void WriteString_(const char* str)
+    FORCE_INLINE_F void WriteString_(const char *str)
     {
         while (*str != '\0' && written_ < size_) {
             buf_[written_++] = *(str++);
@@ -427,14 +427,14 @@ class StrfTimeWriter final
         WriteUint_(num);
     }
 
-    char* const buf_;
-    const char* format_;
+    char *const buf_;
+    const char *format_;
     const size_t size_;
     size_t written_;
-    const tm* const time_ptr_;
+    const tm *const time_ptr_;
 };
 
-size_t strftime(char* s, const size_t max_size, const char* format, const tm* time_ptr)
+size_t strftime(char *s, const size_t max_size, const char *format, const tm *time_ptr)
 {
     StrfTimeWriter writer(s, max_size, format, time_ptr);
     const bool is_success = writer.Write();

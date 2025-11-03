@@ -1,10 +1,10 @@
 #include <extensions/array.hpp>
-#include <extensions/template_lib.hpp>
+#include <extensions/data_structures/data_structures.hpp>
 #include <test_module/test.hpp>
 #include "test_structs.hpp"
 
 using namespace std;
-using namespace template_lib;
+using namespace data_structures;
 
 // Test fixture for StaticStack
 class StaticStackTest : public TestGroupBase
@@ -123,7 +123,7 @@ TEST_F(SingleTypeStaticStackTest, PushPopInt)
     ArraySingleTypeStaticStack<int, 10> stack;
 
     stack.Push(42);
-    EXPECT_EQ(1, stack.Size());
+    EXPECT_EQ(1_size, stack.Size());
 
     int popped = stack.Pop();
     EXPECT_EQ(42, popped);
@@ -138,13 +138,13 @@ TEST_F(SingleTypeStaticStackTest, PushPopMultipleInts)
         stack.Push(i);
     }
 
-    EXPECT_EQ(10, stack.Size());
+    EXPECT_EQ(10_size, stack.Size());
 
     for (int i = 9; i >= 0; --i) {
         EXPECT_EQ(i, stack.Pop());
     }
 
-    EXPECT_EQ(0u, stack.Size());
+    EXPECT_EQ(0_size, stack.Size());
 }
 
 TEST_F(SingleTypeStaticStackTest, CustomAlignment)
@@ -161,7 +161,7 @@ TEST_F(SingleTypeStaticStackTest, CustomAlignment)
         stack.Push(temp);
     }
 
-    EXPECT_EQ(8, stack.Size());
+    EXPECT_EQ(8_size, stack.Size());
 
     AlignedStruct last = stack.Pop();
     EXPECT_EQ(6.0, last.x);
@@ -171,7 +171,7 @@ TEST_F(SingleTypeStaticStackTest, CustomAlignment)
         stack.Pop();
     }
 
-    EXPECT_EQ(0u, stack.Size());
+    EXPECT_EQ(0_size, stack.Size());
 }
 
 FAIL_TEST_F(SingleTypeStaticStackTest, CapacityLimit)
@@ -192,7 +192,7 @@ TEST_F(SingleTypeStaticStackTest, MoveSemantics)
     stack.Push(MoveOnlyInt(42));
     stack.Push(MoveOnlyInt(43));
 
-    EXPECT_EQ(2, stack.Size());
+    EXPECT_EQ(2_size, stack.Size());
 
     MoveOnlyInt popped = stack.Pop();
     EXPECT_EQ(43, popped.getValue());
@@ -253,13 +253,13 @@ TEST_F(StaticStackTest, CopyConstructor)
     ArrayStaticStack<1024> stack2 = stack1;
 
     EXPECT_EQ(stack1.Size(), stack2.Size());
-    EXPECT_EQ(3 * sizeof(int), stack2.Size());
+    EXPECT_EQ(3_size * sizeof(int), stack2.Size());
 
     EXPECT_EQ(3, stack2.Pop<int>());
     EXPECT_EQ(2, stack2.Pop<int>());
     EXPECT_EQ(1, stack2.Pop<int>());
 
-    EXPECT_EQ(3 * sizeof(int), stack1.Size());
+    EXPECT_EQ(3_size * sizeof(int), stack1.Size());
 }
 
 // ------------------------------
@@ -275,7 +275,7 @@ TEST_F(StaticVectorTest, FunctionalityTest)
     reg.Push(3);
 
     int idx{};
-    for (const auto& obj : reg) {
+    for (const auto &obj : reg) {
         EXPECT_EQ(obj, ++idx);
     }
 }

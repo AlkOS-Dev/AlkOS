@@ -16,8 +16,8 @@ source "${CROSS_COMPILE_BUILD_SCRIPT_DIR}/../utils/argparse.bash"
 parse_args() {
     argparse_init "${CROSS_COMPILE_BUILD_SCRIPT_PATH}" "Build cross-compiler toolchain"
     argparse_add_option "i|install" "Install the cross-compiler toolchain" true false "" "flag"
-    argparse_add_option "b|build_dir" "Directory to save build files" true "" "" "string"
-    argparse_add_option "t|tool_dir" "Directory to save toolchain files" true "" "" "string"
+    argparse_add_option "b|build_dir" "Directory to save build files" true "" "" "directory"
+    argparse_add_option "t|tool_dir" "Directory to save toolchain files" true "" "" "directory"
     argparse_add_option "c|custom_target" "Custom target to build cross-compiler for" false "x86_64-elf" "x86_64-elf|i386-elf" "string"
     argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
     argparse_parse "$@"
@@ -152,7 +152,7 @@ build_binutils() {
     prepare_directory "${binutils_dir}"
     cd "${binutils_dir}"
 
-    download_extract_gnu_source "binutils/${binutils_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "binutils/releases/${binutils_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring binutils"
     runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot --disable-nls --disable-werror
@@ -194,7 +194,7 @@ build_gcc() {
     prepare_directory "${gcc_dir}"
     cd "${gcc_dir}"
 
-    download_extract_gnu_source "gcc/${gcc_name}/${gcc_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
     runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers
@@ -232,7 +232,7 @@ build_gdb() {
     prepare_directory "${gdb_dir}"
     cd "${gdb_dir}"
 
-    download_extract_gnu_source "gdb/${gdb_name}.tar.gz" "https://ftpmirror.gnu.org"
+    download_extract_gnu_source "gdb/releases/${gdb_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GDB"
     runner "Failed to configure GDB" ${gdb_name}/configure --target=$(argparse_get "c|custom_target") --prefix="$(argparse_get "t|tool_dir")" --disable-werror

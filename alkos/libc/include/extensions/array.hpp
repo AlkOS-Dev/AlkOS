@@ -21,15 +21,15 @@ struct array {
     using value_type      = T;
     using size_type       = std::size_t;
     using difference_type = std::ptrdiff_t;
-    using reference       = value_type&;
-    using const_reference = const value_type&;
-    using pointer         = T*;
-    using const_pointer   = const T*;
+    using reference       = value_type &;
+    using const_reference = const value_type &;
+    using pointer         = T *;
+    using const_pointer   = const T *;
 
     // TODO: replace with real ones
     /* iterators */
-    using iterator       = value_type*;
-    using const_iterator = const value_type*;
+    using iterator       = value_type *;
+    using const_iterator = const value_type *;
 
     TODO_LIBCPP_COMPLIANCE
     using reverse_iterator       = iterator;
@@ -141,12 +141,12 @@ struct array {
 
     constexpr void fill(const_reference value)
     {
-        for (auto& ref : mem_) {
+        for (auto &ref : mem_) {
             ref = value;
         }
     }
 
-    constexpr void swap(array& other) TODO_LIBCPP_COMPLIANCE
+    constexpr void swap(array &other) TODO_LIBCPP_COMPLIANCE
     // noexcept(is_nothrow_swappable)
     {
         std::swap(mem_, other.mem_);
@@ -190,7 +190,7 @@ struct array {
 };
 
 template <class U, std::size_t M>
-NODISCARD constexpr bool operator==(const array<U, M>& a, const array<U, M>& b) noexcept
+NODISCARD constexpr bool operator==(const array<U, M> &a, const array<U, M> &b) noexcept
 {
     TODO_OPTIMISE
     /* TODO: here based if the type is easy comparable we can use memcmp otherwise not */
@@ -209,7 +209,7 @@ NODISCARD constexpr bool operator==(const array<U, M>& a, const array<U, M>& b) 
 // ------------------------------
 
 template <class U, std::size_t N>
-static void constexpr swap(array<U, N>& a, array<U, N>& b) TODO_LIBCPP_COMPLIANCE
+static void constexpr swap(array<U, N> &a, array<U, N> &b) TODO_LIBCPP_COMPLIANCE
     // TODO: noexcept(is_nothrow_swappable_v<U>)
     noexcept
 {
@@ -221,28 +221,28 @@ static void constexpr swap(array<U, N>& a, array<U, N>& b) TODO_LIBCPP_COMPLIANC
 // ------------------------------
 
 template <std::size_t I, class T, std::size_t N>
-NODISCARD FORCE_INLINE_F constexpr T& get(array<T, N>& arr) noexcept
+NODISCARD FORCE_INLINE_F constexpr T &get(array<T, N> &arr) noexcept
 {
     static_assert(I < N, "Index out of bounds in std::get<>");
     return arr[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
-NODISCARD FORCE_INLINE_F constexpr const T& get(const array<T, N>& arr) noexcept
+NODISCARD FORCE_INLINE_F constexpr const T &get(const array<T, N> &arr) noexcept
 {
     static_assert(I < N, "Index out of bounds in std::get<>");
     return arr[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
-NODISCARD FORCE_INLINE_F constexpr T&& get(array<T, N>&& arr) noexcept
+NODISCARD FORCE_INLINE_F constexpr T &&get(array<T, N> &&arr) noexcept
 {
     static_assert(I < N, "Index out of bounds in std::get<>");
     return std::move(arr[I]);
 }
 
 template <std::size_t I, class T, std::size_t N>
-NODISCARD FORCE_INLINE_F constexpr const T&& get(const array<T, N>&& arr) noexcept
+NODISCARD FORCE_INLINE_F constexpr const T &&get(const array<T, N> &&arr) noexcept
 {
     static_assert(I < N, "Index out of bounds in std::get<>");
     return std::move(arr[I]);

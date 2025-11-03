@@ -2,16 +2,17 @@
 #define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
 
 #include <uacpi/uacpi.h>
+#include <boot_args.hpp>
 #include <extensions/defines.hpp>
 
 #include "acpi_battery.hpp"
-#include "acpi_controller.hpp"
 #include "acpi_cpu.hpp"
 #include "acpi_device.hpp"
 #include "acpi_interrupt.hpp"
 #include "acpi_power.hpp"
 #include "acpi_tables.hpp"
 #include "acpi_thermal.hpp"
+#include "hal/acpi_controller.hpp"
 
 #define R_ASSERT_ACPI_SUCCESS(status, ...) \
     R_ASSERT_EQ(UACPI_STATUS_OK, status __VA_OPT__(, ) __VA_ARGS__)
@@ -26,7 +27,7 @@ namespace ACPI
 //         Structs          //
 //////////////////////////////
 
-class ACPIController final : public arch::AcpiController
+class ACPIController final : public hal::AcpiController
 {
     public:
     // ------------------------------
@@ -45,7 +46,7 @@ class ACPIController final : public arch::AcpiController
      * @brief Initialize the ACPI subsystem.
      * @return Status code
      */
-    int Init();
+    int Init(const BootArguments &args);
 
     /**
      * @brief Deinitialize the ACPI subsystem.

@@ -31,7 +31,7 @@ class optional
     void reset()
     {
         if (initialized_) {
-            T* ptr = reinterpret_cast<T*>(mem_.data);
+            T *ptr = reinterpret_cast<T *>(mem_.data);
 
             ptr->~T();
             initialized_ = false;
@@ -39,42 +39,42 @@ class optional
     }
 
     template <typename... Args>
-    T& emplace(Args&&... args)
+    T &emplace(Args &&...args)
     {
         reset();
 
-        new (reinterpret_cast<void*>(mem_.data)) T(std::forward<Args>(args)...);
+        new (reinterpret_cast<void *>(mem_.data)) T(std::forward<Args>(args)...);
         initialized_ = true;
 
-        return *reinterpret_cast<T*>(mem_.data);
+        return *reinterpret_cast<T *>(mem_.data);
     }
 
     NODISCARD bool has_value() const noexcept { return initialized_; }
 
     explicit operator bool() const noexcept { return initialized_; }
 
-    T& operator*() noexcept
+    T &operator*() noexcept
     {
         ASSERT_TRUE(initialized_);
-        return *reinterpret_cast<T*>(mem_.data);
+        return *reinterpret_cast<T *>(mem_.data);
     }
 
-    const T& operator*() const noexcept
+    const T &operator*() const noexcept
     {
         ASSERT_TRUE(initialized_);
-        return *reinterpret_cast<const T*>(mem_.data);
+        return *reinterpret_cast<const T *>(mem_.data);
     }
 
-    T* operator->() noexcept
+    T *operator->() noexcept
     {
         ASSERT_TRUE(initialized_);
-        return reinterpret_cast<T*>(mem_.data);
+        return reinterpret_cast<T *>(mem_.data);
     }
 
-    const T* operator->() const noexcept
+    const T *operator->() const noexcept
     {
         ASSERT_TRUE(initialized_);
-        return reinterpret_cast<const T*>(mem_.data);
+        return reinterpret_cast<const T *>(mem_.data);
     }
 
     // ------------------------------

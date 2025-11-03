@@ -35,7 +35,6 @@ declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
 )
 
 help_addition() {
-    echo ""
     echo "Supported build types:"
     for build in "${!CONFIGURE_BUILD_TYPES_DESC[@]}"; do
       echo "  ${build} - ${CONFIGURE_BUILD_TYPES_DESC[${build}]}"
@@ -50,10 +49,10 @@ help_addition() {
 
 parse_args() {
   argparse_init "${CONFIGURE_SCRIPT_PATH}" "Configure AlkOS build" help_addition
-  argparse_add_positional "arch" "Target architecture" true "x86_64"
-  argparse_add_positional "build" "Build type" true "debug|release"
-  argparse_add_option "b|build-dir" "Directory to store build files" false "${CONFIGURE_DIR}/../../build" "" "string"
-  argparse_add_option "t|tool" "Directory to store tool binaries" false "${CONFIGURE_DIR}/../../tools" "" "string"
+  argparse_add_positional "arch" "Target architecture" true "x86_64" "string"
+  argparse_add_positional "build" "Build type" true "debug|release" "string"
+  argparse_add_option "b|build-dir" "Directory to store build files" false "${CONFIGURE_DIR}/../../build" "" "directory"
+  argparse_add_option "t|tool" "Directory to store tool binaries" false "${CONFIGURE_DIR}/../../tools" "" "directory"
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "p|preset" "Feature flag preset to use" false "" "test_mode|default|regression_mode" "string"
   argparse_parse "$@"

@@ -90,16 +90,33 @@ TODO_LIBCPP_COMPLIANCE
 }
 
 // ------------------------------
-// std::monostate
+// std::in_place_t
 // ------------------------------
 
-struct monostate {
+// For tag dispatching to in-place construct an object.
+struct in_place_t {
+    explicit in_place_t() = default;
 };
-constexpr bool operator==(monostate, monostate) noexcept { return true; }
-constexpr strong_ordering operator<=>(monostate, monostate) noexcept
-{
-    return strong_ordering::equal;
-}
+
+inline constexpr in_place_t in_place{};
+
+// For tag dispatching to in-place construct an object of a specific type.
+template <class T>
+struct in_place_type_t {
+    explicit in_place_type_t() = default;
+};
+
+template <class T>
+inline constexpr in_place_type_t<T> in_place_type{};
+
+// For tag dispatching to in-place construct an object at a specific index.
+template <size_t I>
+struct in_place_index_t {
+    explicit in_place_index_t() = default;
+};
+
+template <size_t I>
+inline constexpr in_place_index_t<I> in_place_index{};
 
 }  // namespace std
 #endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_

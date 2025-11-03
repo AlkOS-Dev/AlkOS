@@ -10,6 +10,7 @@
 #include <extensions/type_traits.hpp>
 #include <extensions/types.hpp>
 #include <extensions/utility.hpp>
+#include "formats.hpp"
 
 // -------------------------------------
 // TODO: temporary print mechanism
@@ -20,58 +21,39 @@ TODO_BY_THE_END_OF_MILESTONE1
 static constexpr size_t kObjToHexBuffSize = 512;
 
 template <typename ObjT>
-void VerboseAssertDumpObjToHex(const ObjT &obj, char *buffer, size_t buffer_size)
+WRAP_CALL void VerboseAssertDumpObj(const ObjT &obj, char *buffer, size_t buffer_size)
 {
-    assert(buffer != nullptr);
-    assert(buffer_size > 0);
-
-    const auto obj_bytes = reinterpret_cast<const u8 *>(&obj);
-    for (size_t i = 0; i < sizeof(ObjT); ++i) {
-        const int bytes_written = snprintf(buffer, buffer_size, "%02X ", obj_bytes[i]);
-        assert(
-            bytes_written < static_cast<int>(buffer_size) &&
-            "VerboseAssertDumpObjToHex buffer fully used!"
-        );
-
-        buffer += bytes_written;
-        buffer_size -= bytes_written;
-    }
+    DumpObjToBufferHex(obj, buffer, buffer_size);
 }
 
-FAST_CALL void VerboseAssertDumpObjToHex(const bool &obj, char *buffer, const size_t)
+FAST_CALL void VerboseAssertDumpObj(const bool &obj, char *buffer, const size_t)
 {
     strcpy(buffer, obj ? "true" : "false");
 }
 
-FAST_CALL void VerboseAssertDumpObjToHex(const char *&obj, char *buffer, const size_t buffer_size)
+FAST_CALL void VerboseAssertDumpObj(const char *&obj, char *buffer, const size_t buffer_size)
 {
     strncpy(buffer, obj, buffer_size);
 }
 
-FAST_CALL void VerboseAssertDumpObjToHex(
-    const char *const &obj, char *buffer, const size_t buffer_size
-)
+FAST_CALL void VerboseAssertDumpObj(const char *const &obj, char *buffer, const size_t buffer_size)
 {
     strncpy(buffer, obj, buffer_size);
 }
 
 template <typename ObjT, const char *format>
-FAST_CALL void VerboseAssertDumpObjToHexSnprintf(
-    const ObjT &obj, char *buffer, const size_t buffer_size
-)
+FAST_CALL void VerboseAssertDumpObjSnprintf(const ObjT &obj, char *buffer, const size_t buffer_size)
 {
     assert(buffer != nullptr);
     assert(buffer_size > 0);
     snprintf(buffer, buffer_size, format, obj);
 }
 
-#define DEF_VERB_DUMP(type, format)                                                 \
-    FAST_CALL void VerboseAssertDumpObjToHex(                                       \
-        const type &obj, char *buffer, const size_t buffer_size                     \
-    )                                                                               \
-    {                                                                               \
-        static constexpr char kFormat[] = format;                                   \
-        VerboseAssertDumpObjToHexSnprintf<type, kFormat>(obj, buffer, buffer_size); \
+#define DEF_VERB_DUMP(type, format)                                                              \
+    FAST_CALL void VerboseAssertDumpObj(const type &obj, char *buffer, const size_t buffer_size) \
+    {                                                                                            \
+        static constexpr char kFormat[] = format;                                                \
+        VerboseAssertDumpObjSnprintf<type, kFormat>(obj, buffer, buffer_size);                   \
     }
 
 // Unsigned integers
@@ -142,8 +124,8 @@ FAST_CALL void VerboseAssertTwoArgBase(
             assert(offset < kFailMsgBuffSize && "VerboseAssertTwoArgBase buffer fully used!");
         }
 
-        VerboseAssertDumpObjToHex(expected, e_obj, kObjToHexBuffSize);
-        VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
+        VerboseAssertDumpObj(expected, e_obj, kObjToHexBuffSize);
+        VerboseAssertDumpObj(value, v_obj, kObjToHexBuffSize);
 
         msg_getter(msg_buff, msg_size, expected_str, value_str, e_obj, v_obj);
         VerboseAssertDump<Handler>(fail_msg, file, line);
@@ -171,7 +153,7 @@ FAST_CALL void VerboseAssertOneArgBase(
             assert(offset < kFailMsgBuffSize && "VerboseAssertOneArgBase buffer fully used!");
         }
 
-        VerboseAssertDumpObjToHex(value, v_obj, kObjToHexBuffSize);
+        VerboseAssertDumpObj(value, v_obj, kObjToHexBuffSize);
 
         msg_getter(msg_buff, msg_size, value_str, v_obj);
         VerboseAssertDump<Handler>(fail_msg, file, line);

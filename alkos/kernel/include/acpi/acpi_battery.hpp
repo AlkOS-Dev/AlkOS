@@ -30,14 +30,14 @@ enum class ChargeState {
  */
 struct PACK Battery {
     u32 id;            // Battery ID
-    const char* name;  // Battery name
+    const char *name;  // Battery name
     bool present;      // Is battery present?
 
     // Battery information
-    const char* model;         // Model number
-    const char* serialNumber;  // Serial number
-    const char* type;          // Chemistry type
-    const char* manufacturer;  // Manufacturer name
+    const char *model;         // Model number
+    const char *serialNumber;  // Serial number
+    const char *type;          // Chemistry type
+    const char *manufacturer;  // Manufacturer name
 
     // Battery capacity
     u32 designCapacity;      // Design capacity in mWh

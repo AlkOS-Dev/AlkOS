@@ -20,7 +20,7 @@ bool ACPI::Table<T>::IsValid() const
 template <ACPI::IsTable T>
 bool ACPI::Table<T>::ValidChecksum_() const
 {
-    const u8* bytes = static_cast<u8*>(table_.ptr);
+    const u8 *bytes = static_cast<u8 *>(table_.ptr);
     u8 checksum     = 0;
     for (size_t i = 0; i < table_.hdr->length; ++i) checksum += bytes[i];
     return checksum == 0;

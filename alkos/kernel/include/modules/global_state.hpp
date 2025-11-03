@@ -1,7 +1,10 @@
 #ifndef ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 #define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
 
+#include <extensions/data_structures/data_structures.hpp>
 #include <extensions/template_lib.hpp>
+
+#include "mem/virt/addr_space.hpp"
 #include "memory/cyclic_allocator.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"
@@ -27,7 +30,7 @@ class GlobalStateModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    using Settings = template_lib::Settings<
+    using Settings = data_structures::Settings<
         global_state_constants::GlobalSettingsTypes, global_state_constants::SettingsType>;
 
     using SpinlockAllocator =

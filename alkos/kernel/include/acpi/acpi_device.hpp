@@ -30,13 +30,13 @@ struct PACK PCIDevice {
  * @brief Represents a device in the ACPI namespace.
  */
 struct PACK Device {
-    const char* name;        // Device name
-    const char* hid;         // Hardware ID
+    const char *name;        // Device name
+    const char *hid;         // Hardware ID
     u32 address;             // Device address
-    PCIDevice* pci_context;  // PCI context (nullptr if not a PCI device)
-    Device* parent;          // Parent device
-    Device* child;           // First child device
-    Device* next;            // Next sibling device
+    PCIDevice *pci_context;  // PCI context (nullptr if not a PCI device)
+    Device *parent;          // Parent device
+    Device *child;           // First child device
+    Device *next;            // Next sibling device
 };
 
 //////////////////////////////

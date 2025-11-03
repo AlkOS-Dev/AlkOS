@@ -7,7 +7,7 @@
 #include "hardware/clock_infra.hpp"
 #include "hardware/cores.hpp"
 #include "hardware/event_clock_infra.hpp"
-#include "hardware/interupts.hpp"
+#include "interrupts/interupts.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -26,7 +26,7 @@ class HardwareModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     DEFINE_MODULE_FIELD(ACPI, ACPIController)
-    DEFINE_MODULE_FIELD(hardware, Interrupts)
+    DEFINE_MODULE_FIELD(intr, Interrupts)
     DEFINE_MODULE_FIELD(hardware, CoresController)
     DEFINE_MODULE_FIELD(hardware, ClockRegistry)
     DEFINE_MODULE_FIELD(hardware, EventClockRegistry)

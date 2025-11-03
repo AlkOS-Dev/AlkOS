@@ -5,7 +5,7 @@
 
 #include "modules/helpers.hpp"
 #include "modules/timing_constants.hpp"
-#include "time/daytime.hpp"
+#include "time/system_time.hpp"
 
 namespace internal
 {
@@ -23,13 +23,11 @@ class TimingModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     public:
-    static void OnIsUtcChanged() noexcept;
-
     // ------------------------------
     // Module fields
     // ------------------------------
 
-    DEFINE_MODULE_FIELD(timing, DayTime)
+    DEFINE_MODULE_FIELD(timing, SystemTime)
 };
 }  // namespace internal
 

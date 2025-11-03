@@ -2,7 +2,8 @@
 #define ALKOS_KERNEL_INCLUDE_MEMORY_CYCLIC_ALLOCATOR_HPP_
 
 #include <stddef.h>
-#include <extensions/bit_array.hpp>
+#include <extensions/compare.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <extensions/new.hpp>
 #include <todo.hpp>
 #include "sync/kernel/spinlock.hpp"
@@ -75,7 +76,7 @@ class CyclicAllocator final
     // ------------------------------
 
     private:
-    BitArray<kNumObjects> used_map_{};
+    data_structures::BitArray<kNumObjects> used_map_{};
     StorageT mem_[kNumObjects]{};
     Spinlock lock_{};
     size_t free_slots_ = kNumObjects;

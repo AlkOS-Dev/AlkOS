@@ -71,7 +71,7 @@ inline const char *FormatMetricUint(uintmax_t num)
 
     size_t i = 0;
     for (; i < kNumPrefixes && num >= static_cast<uintmax_t>(1e6); i++) {
-        num /= 1000;
+        num /= (1 << 10);
     }
 
     snprintf(buffer, sizeof(buffer), "%lld %s", num, kPrefixes[i]);
