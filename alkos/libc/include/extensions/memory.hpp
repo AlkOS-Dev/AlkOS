@@ -9,6 +9,24 @@ namespace std
 {
 
 // ------------------------------
+// std::to_address
+// ------------------------------
+
+template <class T>
+constexpr T *to_address(T *p) noexcept
+{
+    static_assert(!std::is_function_v<T>);
+    return p;
+}
+
+template <class T>
+constexpr auto to_address(const T &p) noexcept
+{
+    TODO_LIBCPP_COMPLIANCE
+    return to_address(p.operator->());
+}
+
+// ------------------------------
 // std::addressof
 // ------------------------------
 
@@ -20,24 +38,6 @@ NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
 
 template <class T>
 const T *addressof(const T &&) = delete;
-
-// ------------------------------
-// std::to_address
-// ------------------------------
-
-template <class T>
-constexpr T *to_address(T *p) noexcept
-{
-    static_assert(!is_function_v<T>);
-    return p;
-}
-
-template <class T>
-constexpr auto to_address(const T &p) noexcept
-{
-    TODO_LIBCPP_COMPLIANCE
-    return to_address(p.operator->());
-}
 
 // ------------------------------
 // std::construct_at
