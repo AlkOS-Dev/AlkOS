@@ -23,7 +23,7 @@ template <class T>
 constexpr auto to_address(const T &p) noexcept
 {
     TODO_LIBCPP_COMPLIANCE
-    return to_address(p.operator->());
+    return std::to_address(p.operator->());
 }
 
 // ------------------------------
