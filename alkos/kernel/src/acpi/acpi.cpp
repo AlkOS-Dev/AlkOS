@@ -1,7 +1,7 @@
 #include <acpi/acpi.hpp>
 
-#include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
+#include "trace_framework.hpp"
 
 // TODO
 #include <include/multiboot2/multiboot2.h>
@@ -15,13 +15,13 @@ static Multiboot::TagNewAcpi *FindAcpiTag(u64 multiboot_info_addr)
 {
     // TODO: 1. Multiboot Tags should be in both the arch and the kernel, so maybe move to libk?
     // TODO: 2. This should probably recieve a MultibootInfo object instead of an address.
-    TRACE_INFO("Finding ACPI tag in multiboot tags...");
+    DEBUG_INFO_GENERAL("Finding ACPI tag in multiboot tags...");
     Multiboot::MultibootInfo multiboot_info(multiboot_info_addr);
 
     auto *new_acpi_tag = multiboot_info.FindTag<Multiboot::TagNewAcpi>();
 
     if (new_acpi_tag == nullptr) {
-        TRACE_INFO("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
+        TRACE_WARN_GENERAL("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
         auto *old_acpi_tag = multiboot_info.FindTag<Multiboot::TagOldAcpi>();
 
         new_acpi_tag = reinterpret_cast<Multiboot::TagNewAcpi *>(old_acpi_tag);
@@ -33,21 +33,21 @@ static Multiboot::TagNewAcpi *FindAcpiTag(u64 multiboot_info_addr)
 int ACPI::ACPIController::Init(const BootArguments &args)
 {
     TODO_WHEN_VMEM_WORKS
-    TRACE_INFO("ACPI initialization...");
+    DEBUG_INFO_GENERAL("ACPI initialization...");
 
-    TRACE_INFO("Finding RSDP...");
+    DEBUG_INFO_GENERAL("Finding RSDP...");
     auto *acpi_tag = FindAcpiTag(Mem::PtrToUptr(args.multiboot_info));
     R_ASSERT_NOT_NULL(
         acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
     );
 
-    TRACE_SUCCESS(
+    DEBUG_INFO_GENERAL(
         "ACPI tag found at 0x%016llX, size: %sB", reinterpret_cast<u64>(acpi_tag),
         FormatMetricUint(acpi_tag->size)
     );
 
     RsdpAddress_ = reinterpret_cast<void *>(acpi_tag->rsdp);
-    TRACE_INFO("RSDP address: 0x%016p", RsdpAddress_);
+    DEBUG_INFO_GENERAL("RSDP address: 0x%016p", RsdpAddress_);
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);

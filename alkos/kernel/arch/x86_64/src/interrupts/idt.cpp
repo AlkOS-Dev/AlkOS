@@ -4,7 +4,6 @@
 #include <hal/debug.hpp>
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
 #include <modules/timing.hpp>
-#include <trace.hpp>
 
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
@@ -12,7 +11,7 @@
 
 #include <assert.h>
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
+#include "trace_framework.hpp"
 
 static constexpr u32 kStubTableSize = 64;
 
@@ -64,7 +63,6 @@ NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, c
     char state_buffer[kStateMsgSize];
     cpu_state.GetStateDesc(state_buffer, kStateMsgSize);
 
-    TRACE_DEBUG("what: %hhu", idt_idx);
     const char *exception_msg = GetExceptionMsg(idt_idx);
     R_ASSERT_NOT_NULL(exception_msg);
 
@@ -86,7 +84,7 @@ void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
 
 FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
 {
-    KernelTraceInfo("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
+    TRACE_FREQ_INFO_INTERRUPTS("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
 }
 
 void SimpleIrqHandler(intr::LitHwEntry &entry)
@@ -133,7 +131,7 @@ void TimerIsr(intr::LitHwEntry &entry)
             strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
         }
 
-        KernelTraceInfo(
+        TRACE_INFO_TIME(
             "Kernel time update: %s, have a nice day!",
             TimingModule::IsInited() ? buff : "Timing module is not initialized!"
         );
@@ -205,5 +203,5 @@ void arch::Interrupts::InitializeDefaultIdt_()
     /* load the new IDT */
     __asm__ volatile("lidt %0" : : "m"(idt_.idtr));
 
-    TRACE_SUCCESS("IDT initialized");
+    DEBUG_INFO_INTERRUPTS("IDT initialized");
 }

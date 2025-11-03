@@ -4,11 +4,11 @@
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
 #include <extensions/data_structures/bit_array.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/expected.hpp>
 #include <extensions/internal/formats.hpp>
 #include <extensions/optional.hpp>
 #include <extensions/utility.hpp>
+#include "debug_trace.hpp"
 
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"

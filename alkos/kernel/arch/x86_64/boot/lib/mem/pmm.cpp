@@ -7,7 +7,7 @@
 #include <extensions/internal/formats.hpp>
 #include <extensions/optional.hpp>
 
-#include <extensions/debug.hpp>
+#include "debug_trace.hpp"
 
 #include "mem/error.hpp"
 #include "mem/physical_ptr.hpp"

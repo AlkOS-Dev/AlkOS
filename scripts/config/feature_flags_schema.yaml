@@ -56,3 +56,10 @@ feature_flags:
     default: 2
     min: 0
     max: 3
+
+  - name: time_trace_level
+    description: Level of Time module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3

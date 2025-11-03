@@ -4,8 +4,7 @@
 #include <modules/hardware.hpp>
 
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
-#include <trace.hpp>
+#include "trace_framework.hpp"
 
 #include "drivers/hpet/hpet.hpp"
 #include "hardware/cores.hpp"
@@ -20,10 +19,10 @@ using MadtTable = ACPI::Table<acpi_madt>;
 NODISCARD static bool IsCoreUsable(const acpi_madt_lapic *table)
 {
     if (!IsBitEnabled<0>(table->flags)) {
-        TRACE_INFO("Core with id: %hhu is not enabled...", table->id);
+        DEBUG_INFO_INTERRUPTS("Core with id: %hhu is not enabled...", table->id);
 
         if (!IsBitEnabled<1>(table->flags)) {
-            TRACE_WARNING("Core with id: %hhu is not online capable...", table->id);
+            DEBUG_WARN_INTERRUPTS("Core with id: %hhu is not online capable...", table->id);
             return false;
         }
     }
@@ -57,7 +56,7 @@ static void InitializeCores_(MadtTable &table)
         max_hw_id = std::max(max_hw_id, static_cast<u32>(table_ptr->id));
     });
 
-    TRACE_INFO("Found %u cores, using: %u", total_cores, cores_to_use);
+    TRACE_INFO_INTERRUPTS("Found %u cores, using: %u", total_cores, cores_to_use);
 
     HardwareModule::Get().GetCoresController().AllocateTables(cores_to_use, max_hw_id);
 
@@ -94,7 +93,7 @@ static void PrepareIoApic_(MadtTable &table)
     table.ForEachTableEntry([&](const acpi_entry_hdr *entry) {
         num_apic += (ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry) != nullptr);
     });
-    TRACE_INFO("Detected %lu I/O APIC devices...", num_apic);
+    DEBUG_INFO_INTERRUPTS("Detected %lu I/O APIC devices...", num_apic);
 
     table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
         const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
@@ -130,17 +129,17 @@ static void PrepareApicRules_(MadtTable &table)
                 );
                 break;
             case ACPI::MADTEntryTypeID<acpi_madt_x2apic>::value:
-                TRACE_INFO("x2apic not supported yet...");
+                TRACE_WARN_INTERRUPTS("x2apic not supported yet...");
                 break;
             default:
-                KernelTraceWarning("Found unsupported MADT table. Skipping...");
+                TRACE_WARN_INTERRUPTS("Found unsupported MADT table. Skipping...");
         }
     });
 }
 
 static void ParseLApicAddress_(MadtTable &table)
 {
-    TRACE_INFO(
+    DEBUG_INFO_INTERRUPTS(
         "Local APIC physical address: %08X", table.GetNative()->local_interrupt_controller_address
     );
 
@@ -155,7 +154,7 @@ static void ParseLApicAddress_(MadtTable &table)
             return;
         }
 
-        TRACE_INFO(
+        DEBUG_INFO_INTERRUPTS(
             "Found LAPIC Address Override: "
             "address: %016llX, "
             "rsvd: %hu",
@@ -172,14 +171,14 @@ static void ParseLApicAddress_(MadtTable &table)
 
 void AcpiController::ParseTables()
 {
-    TRACE_INFO("Parsing ACPI Tables...");
+    DEBUG_INFO_INTERRUPTS("Parsing ACPI Tables...");
     ParseMadt_();
     ParseHpet_();
 }
 
 void AcpiController::ParseMadt_()
 {
-    TRACE_INFO("Parsing MADT table...");
+    DEBUG_INFO_INTERRUPTS("Parsing MADT table...");
 
     auto table = ACPI::GetTable<acpi_madt>();
     R_ASSERT_TRUE(table.IsValid(), "MADT table is not found, only platform with apic supported...");
@@ -199,11 +198,11 @@ void AcpiController::ParseMadt_()
 
 void AcpiController::ParseHpet_()
 {
-    TRACE_INFO("Parsing HPET table...");
+    DEBUG_INFO_TIME("Parsing HPET table...");
     const auto table = ACPI::GetTable<acpi_hpet>();
 
     if (!table.IsValid()) {
-        TRACE_INFO("HPET table not found...");
+        DEBUG_INFO_TIME("HPET table not found...");
         return;
     }
 

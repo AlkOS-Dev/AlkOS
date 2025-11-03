@@ -2,7 +2,7 @@
 #include "hardware/core_controller.hpp"
 
 #include <assert.h>
-#include <extensions/debug.hpp>
+#include "trace_framework.hpp"
 
 static constexpr size_t kMaxAllowedHwId = hal::kMaxCores * 4;
 
@@ -40,16 +40,18 @@ hardware::Core &hardware::CoresController::AllocateCore(const CoreConfig &config
 
 hardware::Core::Core(const CoreConfig &config) : config_(config)
 {
-    TRACE_INFO("Core with Hardware ID: %hu, Logical ID: %hu created", GetHwId(), GetLId());
+    DEBUG_INFO_INTERRUPTS(
+        "Core with Hardware ID: %hu, Logical ID: %hu created", GetHwId(), GetLId()
+    );
 }
 
 void hardware::CoresController::BootUpAllCores()
 {
-    TRACE_INFO("Booting up all cores...");
+    DEBUG_INFO_INTERRUPTS("Booting up all cores...");
 
     for (auto &core : core_arr_) {
         core.EnableCore();
     }
 
-    TRACE_INFO("Finished booting up all cores...");
+    DEBUG_INFO_INTERRUPTS("Finished booting up all cores...");
 }

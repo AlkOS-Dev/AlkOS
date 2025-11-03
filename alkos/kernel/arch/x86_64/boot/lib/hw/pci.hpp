@@ -2,9 +2,9 @@
 #define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
 
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/types.hpp>
 #include "hw/io.hpp"
+#include "trace_framework.hpp"
 
 namespace pci
 {

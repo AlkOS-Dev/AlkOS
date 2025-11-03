@@ -10,7 +10,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
-#include "trace.hpp"
+#include "trace_framework.hpp"
 
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
@@ -21,8 +21,8 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     hal::ArchInit(raw_args);
 
     BootArguments args = SanitizeBootArgs(raw_args);
-    KernelTraceInfo("Sanitized boot arguments received by kernel:");
-    KernelTrace(
+    DEBUG_INFO_BOOT("Sanitized boot arguments received by kernel:");
+    DEBUG_INFO_BOOT(
         "  Boot Arguments:\n"
         "    kernel_start:       0x%p\n"
         "    kernel_end:         0x%p\n"

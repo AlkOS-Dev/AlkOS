@@ -1,8 +1,8 @@
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include <extensions/memory.hpp>
 #include <extensions/types.hpp>
+#include "debug_trace.hpp"
 
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"

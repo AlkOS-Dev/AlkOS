@@ -4,7 +4,7 @@
  */
 
 #include <assert.h>
-#include <extensions/debug.hpp>
+#include "debug_trace.hpp"
 
 #include "hw/io.hpp"
 #include "hw/serial/qemu.hpp"

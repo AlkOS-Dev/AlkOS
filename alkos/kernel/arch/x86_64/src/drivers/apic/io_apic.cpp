@@ -2,9 +2,9 @@
 #include "drivers/apic/local_apic.hpp"
 
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <todo.hpp>
 #include "interrupts/idt.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // static functions
@@ -42,7 +42,7 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
     num_entries_ =
         static_cast<u8>(ReadRegister(kIoApicVerReg) >> 16) + 1; /* Access bits [16, 23] */
 
-    TRACE_INFO(
+    TRACE_INFO_INTERRUPTS(
         "Got IO APIC (%hhu) "
         "at address: 0x%llX, "
         "version: %hhu, "

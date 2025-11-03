@@ -1,8 +1,8 @@
 #include "modules/timing.hpp"
-#include <extensions/debug.hpp>
 #include "hal/timers.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
+#include "trace_framework.hpp"
 
 internal::TimingModule::TimingModule() noexcept
 {
@@ -18,5 +18,5 @@ internal::TimingModule::TimingModule() noexcept
     }
 
     GetSystemTime().SyncWithHardware();
-    TRACE_INFO("TimingModule::TimingModule()");
+    DEBUG_INFO_TIME("TimingModule::TimingModule()");
 }

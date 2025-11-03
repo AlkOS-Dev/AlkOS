@@ -34,7 +34,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
     const u64 numerator    = ebx;
     const u64 crystal_freq = ecx;
 
-    TRACE_DEBUG(
+    DEBUG_INFO_TIME(
         "denominator: %llu, numerator: %llu, crystal_freq: %llu", denominator, numerator,
         crystal_freq
     );
@@ -46,7 +46,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
     TODO_CLOCK_VALIDATION
     entry.ns_uncertainty_margin_per_sec = 0;  // Not known must be deduced in the future
 
-    TRACE_DEBUG("TSC frequency: %llu", tsc_freq_hz);
+    DEBUG_INFO_TIME("TSC frequency: %llu", tsc_freq_hz);
 }
 
 // ------------------------------
@@ -56,17 +56,17 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
 void tsc::Initialize()
 {
     if (!IsAvailable()) {
-        KernelTraceInfo("TSC is not available. Fallback to old technology...");
+        TRACE_WARN_TIME("TSC is not available. Fallback to old technology...");
         return;
     }
 
     // NOTE: disabled RDTSC in user space
     SetUserSpaceAccess(false);
 
-    TRACE_DEBUG("Detected TSC, current counter: %llu", Read());
+    DEBUG_INFO_TIME("Detected TSC, current counter: %llu", Read());
 
     if (!IsStable()) {
-        KernelTraceInfo("TSC is not stable. Fallback to old technology...");
+        TRACE_WARN_TIME("TSC is not stable. Fallback to old technology...");
         return;
     }
 

@@ -42,6 +42,7 @@ static struct TraceFramework {
             rv[static_cast<size_t>(TraceModule::kGeneral)]    = "GeneralModule";
             rv[static_cast<size_t>(TraceModule::kMemory)]     = "MemoryModule";
             rv[static_cast<size_t>(TraceModule::kInterrupts)] = "InterruptsModule";
+            rv[static_cast<size_t>(TraceModule::kTime)]       = "TimeModule";
 
             return rv;
         }();
@@ -326,6 +327,10 @@ static struct TraceFramework {
         /* Interrupts module */
         rv[static_cast<size_t>(TraceModule::kInterrupts)] =
             static_cast<TraceLevel>(FeatureValue<FeatureFlag::kInterruptsTraceLevel>);
+
+        /* Time module */
+        rv[static_cast<size_t>(TraceModule::kTime)] =
+            static_cast<TraceLevel>(FeatureValue<FeatureFlag::kTimeTraceLevel>);
 
         return rv;
     }();

@@ -1,8 +1,8 @@
 #include <string.h>
 #include <extensions/algorithm.hpp>
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/internal/formats.hpp>
+#include "debug_trace.hpp"
 
 #include "elf/elf_64.hpp"
 #include "elf/error.hpp"

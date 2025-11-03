@@ -5,7 +5,6 @@
 #include <extensions/array.hpp>
 #include <extensions/bits_ext.hpp>
 #include <extensions/concepts.hpp>
-#include <extensions/debug.hpp>
 
 namespace data_structures
 {

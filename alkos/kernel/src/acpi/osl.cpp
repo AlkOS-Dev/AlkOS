@@ -9,6 +9,7 @@
 #include <modules/timing.hpp>
 #include <todo.hpp>
 #include "todo.hpp"
+#include "trace_framework.hpp"
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
@@ -129,19 +130,19 @@ void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
 {
     switch (level) {
         case UACPI_LOG_ERROR:
-            TRACE(ERROR_TAG "%s", log);
+            TRACE_FATAL_GENERAL(log);
             break;
         case UACPI_LOG_WARN:
-            TRACE(WARNING_TAG "%s", log);
+            TRACE_WARN_GENERAL(log);
             break;
         case UACPI_LOG_INFO:
-            TRACE(INFO_TAG "%s", log);
+            TRACE_INFO_GENERAL(log);
             break;
         case UACPI_LOG_DEBUG:
-            TRACE(DEBUG_TAG "%s", log);
+            DEBUG_INFO_GENERAL(log);
             break;
         case UACPI_LOG_TRACE:
-            TRACE(TRACE_TAG "%s", log);
+            TRACE_INFO_GENERAL(log);
             break;
     }
 }

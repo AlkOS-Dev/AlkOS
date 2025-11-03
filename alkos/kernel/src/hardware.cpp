@@ -1,8 +1,8 @@
 #include "modules/hardware.hpp"
 
-#include <extensions/debug.hpp>
+#include "trace_framework.hpp"
 
 internal::HardwareModule::HardwareModule() noexcept
 {
-    TRACE_INFO("HardwareModule::HardwareModule()");
+    DEBUG_INFO_GENERAL("HardwareModule::HardwareModule()");
 }

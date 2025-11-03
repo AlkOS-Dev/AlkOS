@@ -6,8 +6,8 @@
 /* internal includes */
 #include "drivers/serial/qemu.hpp"
 #include <assert.h>
-#include <extensions/debug.hpp>
 #include "include/io.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // Port and Register Definitions
@@ -143,7 +143,7 @@ void QemuTerminalInit()
     /* Switch to normal operation mode with final modem configuration */
     outb(kModemControlReg, kModemConfFlags);
 
-    TRACE_SUCCESS("QemuTerminalInit() returned with success");
+    DEBUG_INFO_GENERAL("QemuTerminalInit() returned with success");
 }
 
 /**

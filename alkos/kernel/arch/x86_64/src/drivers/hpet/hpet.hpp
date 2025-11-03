@@ -4,11 +4,11 @@
 #include <uacpi/acpi.h>
 #include <extensions/array.hpp>
 #include <extensions/data_structures/bit_array.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/time.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
 #include "include/memory_io.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // Driver class
