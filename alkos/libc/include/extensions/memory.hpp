@@ -36,6 +36,9 @@ NODISCARD FORCE_INLINE_F constexpr T *addressof(T &arg) noexcept
     return __builtin_addressof(arg);
 }
 
+template <class T>
+const T *addressof(const T &&) = delete;
+
 // ------------------------------
 // std::construct_at
 // ------------------------------

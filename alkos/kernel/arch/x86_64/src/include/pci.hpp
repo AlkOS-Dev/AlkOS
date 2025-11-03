@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_PCI_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_PCI_HPP_
+#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_PCI_HPP_
+#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_PCI_HPP_
 
 #include <extensions/bit.hpp>
 #include <extensions/debug.hpp>
@@ -46,4 +46,4 @@ void write(u32 bus, u32 device, u32 function, u32 offset, T value)
 
 }  // namespace pci
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_COMMON_LOADER_ALL_PCI_HPP_
+#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_PCI_HPP_
