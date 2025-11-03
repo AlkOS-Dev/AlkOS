@@ -47,7 +47,7 @@ template <class T, class... Args>
     requires(!is_unbounded_array_v<T>) &&
             requires { ::new (static_cast<void *>(nullptr)) T(std::declval<Args>()...); }
 constexpr T *construct_at(T *location, Args &&...args) noexcept(
-    noexcept(::new(static_cast<void *>(nullptr)) T(std::declval<Args>()...))
+    noexcept(::new (static_cast<void *>(nullptr)) T(std::declval<Args>()...))
 )
 {
     if constexpr (is_array_v<T>) {

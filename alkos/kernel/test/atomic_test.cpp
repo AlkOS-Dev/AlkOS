@@ -29,34 +29,34 @@ namespace
 {
 
 template <typename T>
-concept has_fetch_add = requires(T& t) { t.fetch_add(typename T::difference_type{1}); };
+concept has_fetch_add = requires(T &t) { t.fetch_add(typename T::difference_type{1}); };
 
 template <typename T>
-concept has_fetch_and = requires(T& t) { t.fetch_and(typename T::value_type{1}); };
+concept has_fetch_and = requires(T &t) { t.fetch_and(typename T::value_type{1}); };
 
 template <typename T>
-concept has_fetch_or = requires(T& t) { t.fetch_or(typename T::value_type{1}); };
+concept has_fetch_or = requires(T &t) { t.fetch_or(typename T::value_type{1}); };
 
 template <typename T>
-concept has_fetch_xor = requires(T& t) { t.fetch_xor(typename T::value_type{1}); };
+concept has_fetch_xor = requires(T &t) { t.fetch_xor(typename T::value_type{1}); };
 
 template <typename T>
-concept has_compound_add = requires(T& t) { t += typename T::difference_type{1}; };
+concept has_compound_add = requires(T &t) { t += typename T::difference_type{1}; };
 
 template <typename T>
-concept has_compound_and = requires(T& t) { t &= typename T::value_type{1}; };
+concept has_compound_and = requires(T &t) { t &= typename T::value_type{1}; };
 
 template <typename T>
-concept has_increment = requires(T& t) { ++t; };
+concept has_increment = requires(T &t) { ++t; };
 
 template <typename T>
-concept has_store = requires(T& t) { t.store(typename T::value_type{}); };
+concept has_store = requires(T &t) { t.store(typename T::value_type{}); };
 
 template <typename T>
-concept has_exchange = requires(T& t) { t.exchange(typename T::value_type{}); };
+concept has_exchange = requires(T &t) { t.exchange(typename T::value_type{}); };
 
 template <typename T>
-concept has_address = requires(T& t) { t.address(); };
+concept has_address = requires(T &t) { t.address(); };
 
 }  // namespace
 
@@ -79,7 +79,7 @@ static_assert(std::internal::AtomicIntegral<unsigned long long>);
 static_assert(!std::internal::AtomicIntegral<bool>);
 static_assert(!std::internal::AtomicIntegral<float>);
 static_assert(!std::internal::AtomicIntegral<double>);
-static_assert(!std::internal::AtomicIntegral<void*>);
+static_assert(!std::internal::AtomicIntegral<void *>);
 
 // ------------------------------
 // IsAtomicObject trait tests
@@ -88,8 +88,8 @@ static_assert(!std::internal::AtomicIntegral<void*>);
 static_assert(!std::internal::IsAtomicObject<int>);
 static_assert(!std::internal::IsAtomicObject<float>);
 static_assert(!std::internal::IsAtomicObject<double>);
-static_assert(!std::internal::IsAtomicObject<void*>);
-static_assert(!std::internal::IsAtomicObject<int*>);
+static_assert(!std::internal::IsAtomicObject<void *>);
+static_assert(!std::internal::IsAtomicObject<int *>);
 
 static_assert(std::internal::IsAtomicObject<AtomicTest::PaddedStruct>);
 
@@ -111,9 +111,9 @@ static_assert(!has_fetch_or<std::atomic<float>>);
 static_assert(!has_compound_and<std::atomic<float>>);
 static_assert(!has_increment<std::atomic<float>>);
 
-static_assert(has_fetch_add<std::atomic<int*>>);
-static_assert(!has_fetch_and<std::atomic<int*>>);
-static_assert(has_increment<std::atomic<int*>>);
+static_assert(has_fetch_add<std::atomic<int *>>);
+static_assert(!has_fetch_and<std::atomic<int *>>);
+static_assert(has_increment<std::atomic<int *>>);
 
 static_assert(!has_fetch_add<std::atomic<bool>>);
 static_assert(!has_fetch_and<std::atomic<bool>>);
@@ -137,9 +137,9 @@ static_assert(!has_fetch_or<std::atomic_ref<float>>);
 static_assert(!has_compound_and<std::atomic_ref<float>>);
 static_assert(!has_increment<std::atomic_ref<float>>);
 
-static_assert(has_fetch_add<std::atomic_ref<int*>>);
-static_assert(!has_fetch_and<std::atomic_ref<int*>>);
-static_assert(has_increment<std::atomic_ref<int*>>);
+static_assert(has_fetch_add<std::atomic_ref<int *>>);
+static_assert(!has_fetch_and<std::atomic_ref<int *>>);
+static_assert(has_increment<std::atomic_ref<int *>>);
 
 // ------------------------------
 // IsAtomic concept tests
@@ -163,8 +163,8 @@ static_assert(!has_store<std::atomic_ref<const int>>);
 static_assert(!has_exchange<std::atomic_ref<const int>>);
 static_assert(!has_compound_add<std::atomic_ref<const int>>);
 
-static_assert(requires(std::atomic_ref<int>& r) { r.load(); });
-static_assert(requires(std::atomic_ref<const int>& r) { r.load(); });
+static_assert(requires(std::atomic_ref<int> &r) { r.load(); });
+static_assert(requires(std::atomic_ref<const int> &r) { r.load(); });
 static_assert(has_address<std::atomic_ref<int>>);
 static_assert(has_address<std::atomic_ref<const int>>);
 
@@ -178,8 +178,8 @@ static_assert(std::is_same_v<std::atomic<int>::difference_type, int>);
 static_assert(std::is_same_v<std::atomic<float>::value_type, float>);
 static_assert(std::is_same_v<std::atomic<float>::difference_type, float>);
 
-static_assert(std::is_same_v<std::atomic<int*>::value_type, int*>);
-static_assert(std::is_same_v<std::atomic<int*>::difference_type, ptrdiff_t>);
+static_assert(std::is_same_v<std::atomic<int *>::value_type, int *>);
+static_assert(std::is_same_v<std::atomic<int *>::difference_type, ptrdiff_t>);
 
 static_assert(std::is_same_v<std::atomic_ref<int>::value_type, int>);
 static_assert(std::is_same_v<std::atomic_ref<int>::difference_type, int>);
@@ -187,8 +187,8 @@ static_assert(std::is_same_v<std::atomic_ref<int>::difference_type, int>);
 static_assert(std::is_same_v<std::atomic_ref<float>::value_type, float>);
 static_assert(std::is_same_v<std::atomic_ref<float>::difference_type, float>);
 
-static_assert(std::is_same_v<std::atomic_ref<int*>::value_type, int*>);
-static_assert(std::is_same_v<std::atomic_ref<int*>::difference_type, ptrdiff_t>);
+static_assert(std::is_same_v<std::atomic_ref<int *>::value_type, int *>);
+static_assert(std::is_same_v<std::atomic_ref<int *>::difference_type, ptrdiff_t>);
 
 // ------------------------------
 // Runtime tests
@@ -272,7 +272,7 @@ TEST_F(AtomicTest, Atomic_BitwiseOperations)
 TEST_F(AtomicTest, Atomic_PointerArithmeticOperations)
 {
     int values[5] = {1, 2, 3, 4, 5};
-    std::atomic<int*> a{&values[2]};
+    std::atomic<int *> a{&values[2]};
 
     ASSERT_EQ(&values[2], a.fetch_add(1));
     ASSERT_EQ(&values[3], a.load());
@@ -343,7 +343,7 @@ TEST_F(AtomicTest, AtomicRef_CompareExchange_NonZeroPadding)
     }
 
     // Create atomic_ref to the value
-    alignas(std::atomic_ref<PaddedStruct>::required_alignment) PaddedStruct& aligned_value =
+    alignas(std::atomic_ref<PaddedStruct>::required_alignment) PaddedStruct &aligned_value =
         value.s;
     std::atomic_ref<PaddedStruct> ref{aligned_value};
 
