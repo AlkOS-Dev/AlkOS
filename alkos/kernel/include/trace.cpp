@@ -53,8 +53,8 @@ static struct TraceFramework {
 
     struct SmallTraceCyclicBuffer {
         static constexpr size_t kSize           = 65536;
-        static constexpr size_t kDumpSize       = kSize / 4;
-        static constexpr size_t kBatchSize      = 512;
+        static constexpr size_t kDumpSize       = kSize - kSize / 16;
+        static constexpr size_t kBatchSize      = 256;
         static constexpr size_t kBufferDumpDone = kSize - kSize / 8;
 
         hal::Atomic32 bytes_left{.value = kSize};
@@ -149,11 +149,14 @@ static struct TraceFramework {
         const char *end   = src + size;
 
         while (start != end) {
-            if constexpr (kIsDebug) {
-                hal::DebugTerminalPutChar(*src);
-            } else {
-                hal::TerminalPutChar(*src);
+            if (*start != '\0') {
+                if constexpr (kIsDebug) {
+                    hal::DebugTerminalPutChar(*start);
+                } else {
+                    hal::TerminalPutChar(*start);
+                }
             }
+
             ++start;
         }
     }
@@ -162,7 +165,7 @@ static struct TraceFramework {
     FORCE_INLINE_F void DumpBufferSingleThread(SmallTraceCyclicBuffer &buffer)
     {
         // 1. Save exact amount of bytes to write at entry level (IMPORTANT: to not write infinite)
-        const i32 bytes_left = hal::AtomicIncrement(&buffer.bytes_left);
+        const i32 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
         i32 bytes_to_write   = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - bytes_left;
 
         while (bytes_to_write > 0) {
@@ -181,7 +184,7 @@ static struct TraceFramework {
                 HardenSingleThread<kIsDebug>(buffer.buffer, static_cast<size_t>(second_write));
             } else {
                 HardenSingleThread<kIsDebug>(
-                    buffer.buffer + tail, static_cast<size_t>(bytes_to_write)
+                    buffer.buffer + tail, static_cast<size_t>(batch_write_size)
                 );
             }
 
@@ -212,7 +215,10 @@ static struct TraceFramework {
             do {
                 /* For main execution just empty the space and retry */
                 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
-                DumpBufferSingleThread<kIsDebug>(buffer);
+
+                if (bytes_left < trace_size) {
+                    DumpBufferSingleThread<kIsDebug>(buffer);
+                }
             } while (nested_intrs == 0 && bytes_left < trace_size);
 
             /* For interrupt traces, some information may be lost */
@@ -230,7 +236,7 @@ static struct TraceFramework {
             }
 
             /* Ensure EOS for interrupt traces */
-            src[available_bytes - 1] = '\0';
+            src[FeatureValue<FeatureFlag::kSingleTraceMaxSize> - 1] = '\0';
         }
 
         // 2. Adjust head ptr
@@ -244,14 +250,12 @@ static struct TraceFramework {
 
         // 3. Write the message
         if (new_head < old_head) {
-            // our message is not continuous
-            const i32 first_part  = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - old_head;
-            const i32 second_part = new_head;
-
-            strncpy(buffer.buffer + old_head, src, first_part);
-            strncpy(buffer.buffer, src + first_part, second_part);
+            const i32 first_part  = SmallTraceCyclicBuffer::kSize - old_head;
+            const i32 second_part = available_bytes - first_part;
+            memcpy(buffer.buffer + old_head, src, first_part);
+            memcpy(buffer.buffer, src + first_part, second_part);
         } else {
-            strcpy(buffer.buffer + old_head, src);
+            memcpy(buffer.buffer + old_head, src, available_bytes);
         }
 
         if (nested_intrs == 0 && buffer.bytes_left.value < SmallTraceCyclicBuffer::kDumpSize) {
@@ -303,6 +307,7 @@ static struct TraceFramework {
         .get_workspace_cb       = &TraceFramework::GetWorkspaceSingleThread,
         .commit_to_log_cb       = &TraceFramework::CommitToLogSingleThread,
         .commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogSingleThread,
+        .dump_all               = &TraceFramework::DumpAllSingleThread,
     };
 
     std::array<TraceLevel, static_cast<size_t>(TraceModule::kLast)> trace_levels = []() constexpr {
