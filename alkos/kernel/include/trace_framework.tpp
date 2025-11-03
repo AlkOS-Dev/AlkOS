@@ -10,7 +10,7 @@ namespace internal
 char *GetWorkspace();
 void CommitToLog(size_t trace_size);
 void CommitToDebugLog(size_t trace_size);
-int WriteTraceData(char *dst, trace::TraceModule module);
+int WriteTraceData(char *dst, trace::TraceModule module, trace::TraceType type);
 }  // namespace internal
 
 namespace trace
@@ -32,7 +32,7 @@ FAST_CALL void Write(const char *format, Args... args)
     char *workspace = internal::GetWorkspace();
 
     /* Write kernel trace info */
-    const int trace_info = internal::WriteTraceData(workspace, module);
+    const int trace_info = internal::WriteTraceData(workspace, module, type);
     ASSERT_GE(trace_info, 0);
     const size_t trace_info_size = trace_info;
 
@@ -42,20 +42,22 @@ FAST_CALL void Write(const char *format, Args... args)
     ASSERT_LE(bytesWritten, kWorkspaceSize - trace_info_size);
 
     /* Ensure to write eol */
+    bool extended = false;
     if (bytesWritten + trace_info_size == kWorkspaceSize - 1) {
         /* write to last char */
         workspace[kWorkspaceSize - 2] = '\n';
     } else {
-        workspace[bytesWritten + trace_info_size - 1] = '\n';
-        workspace[bytesWritten + trace_info_size]     = '\0';
+        workspace[bytesWritten + trace_info_size]     = '\n';
+        workspace[bytesWritten + trace_info_size + 1] = '\0';
+        extended                                      = true;
     }
 
     if constexpr (type == TraceType::kKernelLog) {
-        internal::CommitToLog(bytesWritten + trace_info_size + 1);
+        internal::CommitToLog(bytesWritten + trace_info_size + 1 + extended);
     }
 
     if constexpr (type == TraceType::kDebugOnly) {
-        internal::CommitToDebugLog(bytesWritten + trace_info_size + 1);
+        internal::CommitToDebugLog(bytesWritten + trace_info_size + 1 + extended);
     }
 }
 }  // namespace  trace

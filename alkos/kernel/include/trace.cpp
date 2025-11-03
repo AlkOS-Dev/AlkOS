@@ -370,8 +370,12 @@ void CommitToDebugLog(const size_t trace_size)
     return (g_TraceFramework.*g_TraceFramework.stage_callbacks.commit_to_debug_log_cb)(trace_size);
 }
 
-int WriteTraceData(char *dst, TraceModule module)
+int WriteTraceData(char *dst, TraceModule module, TraceType type)
 {
+    ASSERT_NOT_NULL(dst);
+    ASSERT_NEQ(type, TraceType::kShell);
+    ASSERT_NEQ(type, TraceType::kLast);
+
     const char *module_name = TraceFramework::kTraceModuleNames[static_cast<size_t>(module)];
 
     u64 system_time = 0;
@@ -387,11 +391,12 @@ int WriteTraceData(char *dst, TraceModule module)
 
     return snprintf(
         dst, FeatureValue<FeatureFlag::kSingleTraceMaxSize>,
+        "[%s] "
         "[MOD:%s] "     // Module name
         "[TIME:%llu] "  // Timestamp
         "[CORE:%u] "    // Core ID
         "[PROC:%u] ",   // Process ID
-        module_name, system_time, core_id,
+        type == TraceType::kKernelLog ? "LOG" : "DEBUG", module_name, system_time, core_id,
         0u  // TODO: process ID
     );
 }
