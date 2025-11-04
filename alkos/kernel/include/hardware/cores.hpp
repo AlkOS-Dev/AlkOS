@@ -5,7 +5,6 @@
 #include "hal/core.hpp"
 
 #include <extensions/cstddef.hpp>
-#include "mem/allocators.hpp"
 
 namespace hardware
 {
@@ -47,47 +46,7 @@ class alignas(hal::kCacheLineSizeBytes) Core final : public hal::Core
     // ------------------------------
 
     private:
-    CoreConfig config_;
-};
-
-class CoresController final
-{
-    public:
-    using CoreTable     = alloca::DynArray<Core>;
-    using HwToCoreIdMap = alloca::DynArray<u16>;
-
-    // ------------------------------
-    // Class creation
-    // ------------------------------
-
-    CoresController() = default;
-
-    ~CoresController() = default;
-
-    // ------------------------------
-    // Class interaction
-    // ------------------------------
-
-    void BootUpAllCores();
-
-    void AllocateTables(size_t num_cores, size_t max_hw_id);
-
-    Core &AllocateCore(const CoreConfig &config);
-
-    NODISCARD FORCE_INLINE_F Core &GetCoreByLid(const u16 lid) { return core_arr_[lid]; }
-
-    NODISCARD FORCE_INLINE_F Core &GetCoreByHw(const u16 hwid)
-    {
-        return core_arr_[hw_to_core_id_map_[hwid]];
-    }
-
-    // ------------------------------
-    // Class fields
-    // ------------------------------
-
-    private:
-    CoreTable core_arr_{};
-    HwToCoreIdMap hw_to_core_id_map_{};
+    CoreConfig config_{};
 };
 
 }  // namespace hardware

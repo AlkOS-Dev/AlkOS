@@ -17,6 +17,14 @@ WRAP_CALL void DebugTerminalWrite(const char *const buffer)
     QemuTerminalWriteString(buffer);
 }
 
+WRAP_CALL void DebugTerminalPutChar(const char c)
+{
+    /* verify if the usage is permitted */
+    ASSERT_TRUE(FeatureEnabled<FeatureFlag::kDebugOutput>);
+
+    QemuTerminalPutChar(c);
+}
+
 WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_size)
 {
     /* verify if the usage is permitted */

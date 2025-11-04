@@ -11,6 +11,8 @@ static constexpr bool kIsDebugBuild = false;
 static constexpr bool kIsDebugBuild = true;
 #endif  // NDEBUG
 
+#define COMPILER_FENCE __asm__ volatile("" ::: "memory");
+
 #define NODISCARD         [[nodiscard]]
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
 #define MAYBE_UNUSED      [[maybe_unused]]

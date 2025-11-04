@@ -5,15 +5,16 @@
 #include "drivers/pic8259/pic8259.hpp"
 #include "drivers/tsc/tsc.hpp"
 #include "interrupts/idt.hpp"
+#include "trace_framework.hpp"
 
-#include <extensions/debug.hpp>
 #include <modules/hardware.hpp>
+#include "trace_framework.hpp"
 
 using namespace arch;
 
 void Interrupts::Init()
 {
-    TRACE_INFO("Initialising interrupts system...");
+    DEBUG_INFO_INTERRUPTS("Initialising interrupts system...");
 
     BlockHardwareInterrupts();
 
@@ -32,16 +33,17 @@ void Interrupts::Init()
 
     EnableHardwareInterrupts();
 
-    TRACE_INFO("Interrupts system initialised...");
+    DEBUG_INFO_INTERRUPTS("Interrupts system initialised...");
 }
 
 void Interrupts::FirstStageInit()
 {
-    TRACE_INFO("Interrupts first stage init...");
+    DEBUG_INFO_INTERRUPTS("Interrupts first stage init...");
 
     InitPic8259(kIrq1Offset, kIrq2Offset);
     MapToLogicalInterrupts_();
     SetupPicAsDefaultDriver_();
+    trace::AdvanceTracingStage();
     InitializeDefaultIdt_();
 }
 
@@ -49,7 +51,7 @@ void Interrupts::ApplyIoApicOverride(const acpi_madt_interrupt_source_override *
 {
     ASSERT_NOT_NULL(override);
 
-    TRACE_INFO(
+    DEBUG_INFO_INTERRUPTS(
         "Got I/O APIC Interrupt Source Override: "
         "bus: %hhu, "
         "source: %hhu, "
@@ -65,7 +67,7 @@ void Interrupts::ApplyIoApicNmi(const acpi_madt_nmi_source *nmi_source)
 {
     ASSERT_NOT_NULL(nmi_source);
 
-    TRACE_INFO(
+    DEBUG_INFO_INTERRUPTS(
         "Got I/O APIC Non-maskable interrupt source: "
         "gsi: %u, "
         "flags: %04X",

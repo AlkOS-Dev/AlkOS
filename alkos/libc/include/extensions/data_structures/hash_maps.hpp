@@ -2,7 +2,6 @@
 #define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_HASH_MAPS_HPP_
 
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/string.hpp>
 #include <extensions/tuple.hpp>
 #include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
@@ -284,10 +283,6 @@ class Registry
         [[maybe_unused]] const bool result = entries_.Insert(entry.id, entry);
         ASSERT_TRUE(result, "Tried to register item twice with id: %llu", entry.id);
         key_vector_.Push(entry.id);
-
-        TRACE_DEBUG(
-            "Registered entry with id: %s", IntegralToStringArray(entry.id).GetSafeStr().GetCStr()
-        );
     }
 
     template <class K, class... Args>
@@ -297,10 +292,6 @@ class Registry
         [[maybe_unused]] const bool result = entries_.Emplace(id_u64, std::forward<Args>(args)...);
         ASSERT_TRUE(result, "Tried to register item twice with id: %llu", id_u64);
         key_vector_.Push(id_u64);
-
-        TRACE_DEBUG(
-            "Registered entry with id: %s", IntegralToStringArray(id_u64).GetSafeStr().GetCStr()
-        );
     }
 
     NODISCARD FORCE_INLINE_F bool IsSelectedPicked() const { return is_active_; }
@@ -333,10 +324,6 @@ class Registry
         );
         active_    = *entries_.Find(key_u64);
         is_active_ = true;
-
-        TRACE_DEBUG(
-            "Set active entry with id: %s", IntegralToStringArray(key_u64).GetSafeStr().GetCStr()
-        );
     }
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return entries_.Size(); }

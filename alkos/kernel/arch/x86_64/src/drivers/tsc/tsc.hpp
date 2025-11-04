@@ -3,12 +3,11 @@
 
 #include <cpuid.h>
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/types.hpp>
 #include <todo.hpp>
-#include <trace.hpp>
 #include "cpu/control_registers.hpp"
 #include "cpu/msrs.hpp"
+#include "trace_framework.hpp"
 
 TODO_WHEN_MULTITHREADING
 // TODO: Ensure TSC is synchronised across cores after launching using MSRs

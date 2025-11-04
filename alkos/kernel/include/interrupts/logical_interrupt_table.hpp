@@ -4,17 +4,13 @@
 #include <assert.h>
 #include <extensions/bit.hpp>
 #include <extensions/cstddef.hpp>
-#include <extensions/template_lib.hpp>
 #include <extensions/type_traits.hpp>
+#include "hal/sync.hpp"
+#include "hardware/core_local.hpp"
+#include "interrupts/interrupt_types.hpp"
 
 namespace intr
 {
-enum class InterruptType : uint8_t {
-    kException         = 0,
-    kHardwareInterrupt = 1,
-    kSoftwareInterrupt = 2,
-};
-
 template <
     std::size_t kNumExceptions, std::size_t kNumHardwareExceptions,
     std::size_t kNumSoftwareExceptions>
@@ -34,57 +30,10 @@ class LogicalInterruptTable
     );
 
     // ------------------------------
-    // class types
-    // ------------------------------
-
-    public:
-    template <InterruptType kInterruptType>
-    struct InterruptHandlerEntry {
-        /* Interrupt handler */
-        using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
-        using InterruptHandlerException =
-            void (*)(InterruptHandlerEntry &entry, hal::ExceptionData *data);
-        using HandlerType = std::conditional_t<
-            kInterruptType == InterruptType::kException, InterruptHandlerException,
-            InterruptHandler>;
-
-        /* Interrupt driver */
-        struct InterruptDriver {
-            struct callbacks {
-                void (*ack)(InterruptHandlerEntry &);
-            };
-
-            callbacks cbs{};
-            const char *name{};
-            void *data{};
-        };
-
-        struct HandlerData {
-            HandlerType handler{};
-            void *data{};
-        };
-
-        HandlerData handler_data{};
-        u16 logical_irq{};
-        u64 hardware_irq{};
-        template_lib::OptionalField<
-            kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *>
-            driver{};
-    };
-
-    template <InterruptType kInterruptType>
-    using HandlerData = typename InterruptHandlerEntry<kInterruptType>::HandlerData;
-
-    template <InterruptType kInterruptType>
-    using HandlerType = typename InterruptHandlerEntry<kInterruptType>::HandlerType;
-
-    using InterruptDriver =
-        typename InterruptHandlerEntry<InterruptType::kHardwareInterrupt>::InterruptDriver;
-
-    // ------------------------------
     // Class creation
     // ------------------------------
 
+    public:
     LogicalInterruptTable();
 
     // ------------------------------
@@ -93,18 +42,27 @@ class LogicalInterruptTable
 
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
+        hardware::GetCoreLocalData().nested_interrupts++;
+        hal::FullMemFence();
+
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
         ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
         auto &entry = GetTable_<InterruptType::kException>()[lirq];
 
         /* Exception MUST be handled */
         (*entry.handler_data.handler)(entry, data);
+
+        hal::FullMemFence();
+        hardware::GetCoreLocalData().nested_interrupts--;
     }
 
     template <InterruptType kInterruptType>
         requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
     {
+        hardware::GetCoreLocalData().nested_interrupts++;
+        hal::FullMemFence();
+
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
         auto &entry = GetTable_<kInterruptType>()[lirq];
@@ -117,6 +75,9 @@ class LogicalInterruptTable
             ASSERT_NOT_NULL(entry.driver, "Interrupt driver is not installed!");
             entry.driver->cbs.ack(entry);
         }
+
+        hal::FullMemFence();
+        hardware::GetCoreLocalData().nested_interrupts--;
     }
 
     template <InterruptType kInterruptType>
@@ -147,7 +108,7 @@ class LogicalInterruptTable
 
     private:
     template <InterruptType kInterruptType>
-    FORCE_INLINE_F NODISCARD InterruptHandlerEntry<kInterruptType> *GetTable_()
+    NODISCARD FORCE_INLINE_F InterruptHandlerEntry<kInterruptType> *GetTable_()
     {
         if constexpr (kInterruptType == InterruptType::kException) {
             return exception_table_;
@@ -191,6 +152,9 @@ class LogicalInterruptTable
     InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>
         software_exception_table_[kNumSoftwareExceptions];
 };
+
+using LitType = LogicalInterruptTable<
+    hal::kNumSoftwareInterrupts, hal::kNumHardwareInterrupts, hal::kNumSoftwareInterrupts>;
 }  // namespace intr
 
 #include "logical_interrupt_table.tpp"

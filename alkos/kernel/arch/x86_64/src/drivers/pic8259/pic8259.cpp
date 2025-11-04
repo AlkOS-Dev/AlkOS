@@ -1,8 +1,8 @@
 
 /* internal includes */
 #include "drivers/pic8259/pic8259.hpp"
-#include <extensions/debug.hpp>
 #include <extensions/types.hpp>
+#include "trace_framework.hpp"
 
 /**
  * @file pic8259.cpp
@@ -84,7 +84,7 @@ void InitPic8259(const byte pic1_offset, const byte pic2_offset)
     outb(kPic1Data, pic1Mask);
     outb(kPic2Data, pic2Mask);
 
-    TRACE_SUCCESS("PIC units correctly initialized...");
+    TRACE_INFO_INTERRUPTS("PIC units correctly initialized...");
 }
 
 // ------------------------------

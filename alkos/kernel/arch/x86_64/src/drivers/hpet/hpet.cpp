@@ -50,7 +50,7 @@ Hpet::Hpet(acpi_hpet *table)
     ASSERT_NOT_NULL(table);
     address_ = table->address;
 
-    TRACE_DEBUG(
+    DEBUG_INFO_INTERRUPTS(
         "HPET address: "
         "access_size: %hhu "
         "address_space_id: %hhu "
@@ -74,7 +74,7 @@ Hpet::Hpet(acpi_hpet *table)
     /* According to spec must not be 00h */
     ASSERT_NOT_ZERO(capabilities.revision_id);
 
-    TRACE_INFO(
+    DEBUG_INFO_INTERRUPTS(
         "Initialized driver for HPET: "
         "address: %016llX, "
         "vendor_id: %04X, "
@@ -102,7 +102,7 @@ Hpet::Hpet(acpi_hpet *table)
 
         comparators_allowed_irqs_[timer_idx] = conf_reg.route_capabilities;
 
-        TRACE_DEBUG(
+        DEBUG_INFO_INTERRUPTS(
             "Comp %u 64-bit capable: %u, periodic capable: %u, allowed irqs: %08X", timer_idx,
             static_cast<u32>(supports_64_bit), static_cast<u32>(supports_periodic),
             conf_reg.route_capabilities.ToU32()

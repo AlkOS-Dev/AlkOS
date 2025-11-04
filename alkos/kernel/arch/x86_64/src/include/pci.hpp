@@ -2,9 +2,9 @@
 #define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_PCI_HPP_
 
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/types.hpp>
 #include "include/io.hpp"
+#include "trace_framework.hpp"
 
 namespace pci
 {

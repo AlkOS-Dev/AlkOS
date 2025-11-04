@@ -5,6 +5,7 @@
 #include "mem/virt/page_fault.hpp"
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
+#include "trace_framework.hpp"
 
 namespace Mem
 {
@@ -76,7 +77,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             hal::KernelPanicFormat("Failed to map page for address 0x%p", f_ptr);
         }
 
-        TRACE_SUCCESS(
+        DEBUG_FREQ_INFO_MEMORY(
             "Handled page fault at 0x%p by mapping to physical page at 0x%p", f_ptr, map_to
         );
         return;

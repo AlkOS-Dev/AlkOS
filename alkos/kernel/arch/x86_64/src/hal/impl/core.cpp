@@ -1,6 +1,6 @@
 #include <hal/impl/core.hpp>
 
-#include <extensions/debug.hpp>
+#include "trace_framework.hpp"
 
 using namespace arch;
 

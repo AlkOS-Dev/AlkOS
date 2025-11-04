@@ -4,7 +4,6 @@
 #include <hal/api/spinlock.hpp>
 
 #include <autogen/feature_flags.h>
-#include <extensions/debug.hpp>
 #include <extensions/types.hpp>
 #include <hal/constants.hpp>
 #include "include/memory_io.hpp"

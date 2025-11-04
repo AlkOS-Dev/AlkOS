@@ -3,8 +3,8 @@
 
 #include <time.h>
 #include <extensions/time.hpp>
-#include <trace.hpp>
 #include "drivers/cmos/rtc.hpp"
+#include "trace_framework.hpp"
 
 namespace arch
 {
@@ -15,7 +15,7 @@ WRAP_CALL time_t QuerySystemTime(const timezone &tz)
 
     const tm rtcTime = ReadRtcTime();
 
-    TRACE_INFO("Time loaded from CMOS: %s", [&] {
+    TRACE_INFO_GENERAL("Time loaded from CMOS: %s", [&] {
         strftime(buffer, kBuffSize, "%Y-%m-%d %H:%M:%S", &rtcTime);
         return buffer;
     }());

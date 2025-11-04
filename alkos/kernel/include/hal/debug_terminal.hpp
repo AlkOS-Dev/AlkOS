@@ -13,6 +13,13 @@ WRAP_CALL void DebugTerminalWrite(const char *str)
     }
 }
 
+WRAP_CALL void DebugTerminalPutChar(const char c)
+{
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
+        arch::DebugTerminalPutChar(c);
+    }
+}
+
 WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_size)
 {
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {

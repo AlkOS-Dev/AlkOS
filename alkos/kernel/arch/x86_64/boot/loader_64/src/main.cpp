@@ -6,8 +6,8 @@
 #error "AlkOS needs to be compiled with a x86_64-elf compiler"
 #endif
 
-#include <extensions/debug.hpp>
 #include <extensions/expected.hpp>
+#include "debug_trace.hpp"
 
 #include "abi/transition_data.hpp"
 #include "cpu/utils.hpp"

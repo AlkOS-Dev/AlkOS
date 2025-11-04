@@ -2,7 +2,6 @@
 
 #include "extensions/data_structures/array_structures.hpp"
 #include "modules/hardware.hpp"
-#include "trace.hpp"
 
 // ------------------------------
 // static functions
@@ -12,7 +11,7 @@ NODISCARD FAST_CALL bool PickClock(arch::HardwareClockId clock_id)
 {
     if (HardwareModule::Get().GetClockRegistry().HasKey(clock_id)) {
         HardwareModule::Get().GetClockRegistry().SwitchSelected(clock_id);
-        KernelTraceSuccess(
+        TRACE_INFO_INTERRUPTS(
             "Picked %s clock source as active",
             data_structures::IntegralToStringArray(static_cast<u64>(clock_id))
                 .GetSafeStr()

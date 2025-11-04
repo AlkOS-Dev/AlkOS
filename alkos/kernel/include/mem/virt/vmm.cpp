@@ -1,10 +1,9 @@
-#include <extensions/debug.hpp>
-
+#include "mem/virt/vmm.hpp"
 #include "mem/heap.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/area.hpp"
-#include "mem/virt/vmm.hpp"
+#include "trace_framework.hpp"
 
 namespace Mem
 {
@@ -15,7 +14,7 @@ using AS  = AddressSpace;
 TODO_WHEN_MULTITHREADING
 void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu) noexcept
 {
-    TRACE_INFO("VirtualMemoryManager::Init()");
+    DEBUG_INFO_MEMORY("VirtualMemoryManager::Init()");
     tlb_ = &tlb;
     mmu_ = &mmu;
 }

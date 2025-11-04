@@ -2,6 +2,7 @@
 #define ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_
 
 #include <hal/impl/panic.hpp>
+#include "trace_framework.hpp"
 
 #include <stdio.h>
 
@@ -14,17 +15,21 @@ namespace hal
  *       to help diagnose the issue.
  * @param msg A message providing additional information about the panic.
  */
-WRAP_CALL void KernelPanic(const char *msg) { arch::KernelPanic(msg); }
+WRAP_CALL void KernelPanic(const char *msg)
+{
+    TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
+    TRACE_FATAL_GENERAL(msg);
+    TRACE_FATAL_GENERAL("\n");
+
+    arch::KernelPanic();
+}
 
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 {
-    static constexpr size_t kKernelPanicPrintBuffSize = 2048;
-    char buffer[kKernelPanicPrintBuffSize];
+    TRACE_FATAL_GENERAL(fmt, args...);
+    arch::KernelPanic();
 
-    snprintf(buffer, kKernelPanicPrintBuffSize, fmt, args...);
-
-    KernelPanic(buffer);
     __builtin_unreachable();
 }
 

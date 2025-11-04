@@ -1,5 +1,5 @@
-#include <extensions/debug.hpp>
 #include <hal/impl/debug.hpp>
+#include "trace_framework.hpp"
 
 extern "C" {
 extern char stack_top;
@@ -21,7 +21,7 @@ void DebugStack()
     u64 used  = top - rsp;
     u64 left  = rsp - bottom;
 
-    TRACE_DEBUG(
+    DEBUG_FREQ_INFO_GENERAL(
         "Stack [top=0x%016lx, "
         "bottom=0x%016lx, "
         "sp=0x%016lx, "

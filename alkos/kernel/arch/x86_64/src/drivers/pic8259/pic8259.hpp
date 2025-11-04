@@ -3,10 +3,10 @@
 
 /* internal includes */
 #include <extensions/bit.hpp>
-#include <extensions/debug.hpp>
 #include <extensions/defines.hpp>
 #include "include/io.hpp"
 #include "interrupts/interrupt_types.hpp"
+#include "trace_framework.hpp"
 
 #include <extensions/types.hpp>
 
@@ -94,7 +94,7 @@ FAST_CALL void Pic8259Disable()
     outb(kPic1Data, 0xff);
     outb(kPic2Data, 0xff);
 
-    TRACE_INFO("Pic8259 disabled...");
+    TRACE_INFO_INTERRUPTS("Pic8259 disabled...");
 }
 
 intr::InterruptDriver &Pic8259InterruptDriver();

@@ -1,9 +1,9 @@
 #include "time/system_time.hpp"
 
-#include <extensions/debug.hpp>
 #include "hal/timers.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // Implementations
@@ -25,7 +25,7 @@ void timing::SystemTime::SyncWithHardware()
     ConvertFromPosixToTm(boot_time_read_utc_, time, kUtcTimezone);
     boot_time_read_local_ = ConvertDateTimeToPosix(time, GetTimezone());
 
-    TRACE_INFO("Synced system time with hardware: %lu, %s", boot_time_read_utc_, [&] {
+    TRACE_INFO_GENERAL("Synced system time with hardware: %lu, %s", boot_time_read_utc_, [&] {
         strftime(
             buffer, kBuffSize, "%Y-%m-%d %H:%M:%S",
             ConvertFromPosixToTm(boot_time_read_utc_, time, kUtcTimezone)

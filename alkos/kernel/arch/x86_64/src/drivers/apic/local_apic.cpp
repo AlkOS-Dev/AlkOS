@@ -4,8 +4,8 @@
 #include "drivers/pic8259/pic8259.hpp"
 
 #include <assert.h>
-#include <extensions/debug.hpp>
 #include <todo.hpp>
+#include "trace_framework.hpp"
 
 // ------------------------------
 // Static functions
@@ -15,7 +15,7 @@ static void ApplyNmiSource_(const acpi_madt_lapic_nmi *nmi_source)
 {
     ASSERT_NOT_NULL(nmi_source);
 
-    TRACE_INFO(
+    TRACE_INFO_INTERRUPTS(
         "Got LAPIC NMI source: "
         "flags: %hu, "
         "lapic_id: %hhu, "
@@ -73,13 +73,13 @@ void LocalApic::Enable()
     /* Map local apic address to vmem */
     // TODO: currently: identity
 
-    TRACE_INFO("Assuming APIC address as: %016llX", local_apic_physical_address_);
+    DEBUG_INFO_INTERRUPTS("Assuming APIC address as: %016llX", local_apic_physical_address_);
 
     /* Enable Local Apic by ENABLE flag added to address (Might be enabled or might be not) */
     is_enabled_ = true;
     SetPhysicalAddressOnCore(local_apic_physical_address_);
 
-    TRACE_INFO("Configuring LAPIC for core with id: %u", GetCoreId());
+    DEBUG_INFO_INTERRUPTS("Configuring LAPIC for core with id: %u", GetCoreId());
 
     /* Configure apic based on MADT entries */
     ParseMadtRules_();
@@ -91,5 +91,5 @@ void LocalApic::Enable()
 
     WriteRegister(kSpuriousInterruptRegRW, reg);
 
-    TRACE_INFO("Local APIC enabled...");
+    DEBUG_INFO_INTERRUPTS("Local APIC enabled...");
 }
