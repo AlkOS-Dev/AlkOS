@@ -49,7 +49,7 @@ Expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
     }
 
     MarkAllocated(fbr.start_pfn, fbr.start_pfn + ar.num_pages);
-    last_alloc_idx_ = fbr.start_pfn == 0 ? total_pages - 1 : fbr.start_pfn - 1;
+    last_alloc_idx_ = fbr.start_pfn;
     return PageFrameAddr(fbr.start_pfn);
 }
 
