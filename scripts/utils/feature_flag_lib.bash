@@ -3,7 +3,7 @@
 FEATURE_FLAGS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 FEATURE_FLAGS_PATH="${FEATURE_FLAGS_DIR}/../../config/feature_flags_config.yaml"
 FEATURE_FLAGS_DEFS_PATH="${FEATURE_FLAGS_DIR}/../config/feature_flags_schema.yaml"
-FEATURE_FLAGS_CXX_PATH="${FEATURE_FLAGS_DIR}/../../alkos/generated/include/autogen/feature_flags.h"
+FEATURE_FLAGS_CXX_PATH="${FEATURE_FLAGS_DIR}/../../generated/include/autogen/feature_flags.h"
 
 source "${FEATURE_FLAGS_DIR}/helpers.bash"
 

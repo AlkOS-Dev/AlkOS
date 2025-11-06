@@ -24,7 +24,7 @@ include(RuntimeHelpers)
 
 add_library(alkos.target.properties.interface INTERFACE) # Populated by the toolchain file
 
-cmake_path(GET CMAKE_SOURCE_DIR PARENT_PATH CMAKE_ROOT_DIR)
+set(CMAKE_ROOT_DIR ${CMAKE_SOURCE_DIR})
 
 ################################################################################
 #                                   Conf file                                  #

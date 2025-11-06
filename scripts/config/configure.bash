@@ -2,8 +2,8 @@
 
 CONFIGURE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 CONFIGURE_SCRIPT_PATH="${CONFIGURE_DIR}/$(basename "$0")"
-CONFIGURE_CMAKE_PATH="${CONFIGURE_DIR}/../../alkos/CMakeLists.txt"
-CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../alkos/toolchains"
+CONFIGURE_CMAKE_PATH="${CONFIGURE_DIR}/../../CMakeLists.txt"
+CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../toolchains"
 
 source "${CONFIGURE_DIR}/../utils/pretty_print.bash"
 source "${CONFIGURE_DIR}/../utils/helpers.bash"

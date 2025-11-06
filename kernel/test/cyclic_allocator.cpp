@@ -1,4 +1,4 @@
-#include <memory/cyclic_allocator.hpp>
+#include <mem/cyclic_allocator.hpp>
 #include <test_module/test.hpp>
 
 class CyclicAllocatorTest : public TestGroupBase
