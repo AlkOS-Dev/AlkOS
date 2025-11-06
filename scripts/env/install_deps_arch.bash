@@ -40,7 +40,8 @@ enable_kvm() {
 
   # Check if virtualization is supported by hardware
   if ! grep -E 'vmx|svm' /proc/cpuinfo &> /dev/null; then
-    dump_error "Virtualization is not supported by your CPU or is disabled in BIOS"
+    pretty_warning "Virtualization is not supported by your CPU or is disabled in BIOS. Skipping KVM setup."
+    return 0
   fi
 
   local cpu_vendor
