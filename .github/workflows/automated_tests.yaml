@@ -3,31 +3,36 @@ name: Automated Tests
 on: [push, workflow_dispatch]
 
 jobs:
-  Tests:
+  build_environment:
+    name: Build Environment Image
+    uses: ./.github/workflows/build_image.yaml
+    permissions:
+      contents: read
+      packages: write # Required to push to GitHub Container Registry (GHCR)
+  run_automated_tests:
+    name: Run Automated Tests
+    needs: build_environment
     runs-on: ubuntu-latest
-
+    container:
+      image: ${{ needs.build_environment.outputs.image_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare environment for x86_64
-        uses: ./.github/actions/prepare_env
-        with:
-          arch: x86_64
-
       - name: Build AlkOS
-        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
+        run: "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
 
       - name: Run tests
-        run: sudo python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
+        run: python "$GITHUB_WORKSPACE/scripts/tests/runner.py"
 
       - name: Print build log on failure
         if: failure()
-        run: cat /tmp/alkOS_build.log
+        run: cat /tmp/alkOS_build.log || echo "Build log not found"
 
       - name: Print tests log on failure
         if: failure()
-        run: cat scripts/tests/test_framework_logs/*/failed_tests.log
+        run: |
+          cat scripts/tests/test_framework_logs/*/failed_tests.log || echo "Test framework log not found"
 
       - name: Upload build artifact
         if: always()
