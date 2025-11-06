@@ -25,3 +25,7 @@ target_include_directories(alkos.libcpp.interface INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/../libc/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../libc/abi"
 )
+
+target_link_libraries(alkos.libcpp.interface INTERFACE
+    alkos.libtemplate.interface
+)

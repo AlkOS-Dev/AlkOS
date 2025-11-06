@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBCPP_INCLUDE_ASSERT_BASE_HPP_
-#define LIBS_LIBCPP_INCLUDE_ASSERT_BASE_HPP_
+#ifndef LIBS_LIBC_INCLUDE_ASSERT_BASE_HPP_
+#define LIBS_LIBC_INCLUDE_ASSERT_BASE_HPP_
 
 #include <assert.h>
 #include <defines.h>
@@ -684,4 +684,4 @@ FAST_CALL void VerboseAssertStrNeq(
         TOSTRING(__LINE__) __VA_OPT__(, ) __VA_ARGS__           \
     )
 
-#endif  // LIBS_LIBCPP_INCLUDE_ASSERT_BASE_HPP_
+#endif  // LIBS_LIBC_INCLUDE_ASSERT_BASE_HPP_

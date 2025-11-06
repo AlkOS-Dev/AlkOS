@@ -60,6 +60,7 @@ target_link_libraries(c PUBLIC
 
 target_link_libraries(cpp PUBLIC
     alkos.libcpp.interface
+    alkos.libcontainers.interface
     alkos.target.properties.interface
     gcc
 )

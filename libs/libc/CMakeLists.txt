@@ -29,3 +29,7 @@ target_include_directories(alkos.libc.interface INTERFACE
 target_include_directories(alkos.libc.interface INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/internal"
 )
+
+target_link_libraries(alkos.libc.interface INTERFACE
+    alkos.libcpp.interface
+)
