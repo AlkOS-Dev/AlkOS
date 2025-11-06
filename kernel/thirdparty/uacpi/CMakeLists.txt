@@ -7,7 +7,7 @@ message(STATUS "    -> uACPI...")
 FetchContent_Declare(
         uacpi
         GIT_REPOSITORY https://github.com/UltraOS/uACPI.git
-        GIT_TAG 2.0.0
+        GIT_TAG 2.1.0
 )
 
 FetchContent_MakeAvailable(uacpi)
