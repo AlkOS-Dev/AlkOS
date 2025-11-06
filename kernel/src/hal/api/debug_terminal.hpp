@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_DEBUG_TERMINAL_HPP_
+#ifndef KERNEL_SRC_HAL_API_DEBUG_TERMINAL_HPP_
+#define KERNEL_SRC_HAL_API_DEBUG_TERMINAL_HPP_
 
 #include <autogen/feature_flags.h>
-#include <extensions/defines.hpp>
-#include "extensions/types.hpp"
+#include <defines.hpp>
+#include "types.hpp"
 
 namespace arch
 {
@@ -25,4 +25,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *buffer, size_t buffer_size);
 WRAP_CALL void DebugTerminalWrite(const char *buffer);
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_DEBUG_TERMINAL_HPP_
+#endif  // KERNEL_SRC_HAL_API_DEBUG_TERMINAL_HPP_

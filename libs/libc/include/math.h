@@ -1,9 +1,9 @@
-#ifndef ALKOS_LIBC_INCLUDE_MATH_H_
-#define ALKOS_LIBC_INCLUDE_MATH_H_
+#ifndef LIBS_LIBC_INCLUDE_MATH_H_
+#define LIBS_LIBC_INCLUDE_MATH_H_
 
 #include <defines.h>
 #include <stdint.h>
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 /**********************************************
  * Constants
@@ -40,4 +40,4 @@ union __DoubleBits {
 #include <math/checks.h>
 #include <math/operations.hpp>
 
-#endif  // ALKOS_LIBC_INCLUDE_MATH_H_
+#endif  // LIBS_LIBC_INCLUDE_MATH_H_

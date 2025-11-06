@@ -1,8 +1,8 @@
-#ifndef ALKOS_LIBC_ABI_PLATFORM_H_
-#define ALKOS_LIBC_ABI_PLATFORM_H_
+#ifndef LIBS_LIBC_ABI_PLATFORM_H_
+#define LIBS_LIBC_ABI_PLATFORM_H_
 
 #include <sys/time.h>
-#include <extensions/types.hpp>
+#include <types.hpp>
 #include "defines.h"
 
 BEGIN_DECL_C
@@ -21,4 +21,4 @@ size_t __platform_debug_read_line(char *buffer, size_t buffer_size);
 
 END_DECL_C
 
-#endif  // ALKOS_LIBC_ABI_PLATFORM_H_
+#endif  // LIBS_LIBC_ABI_PLATFORM_H_

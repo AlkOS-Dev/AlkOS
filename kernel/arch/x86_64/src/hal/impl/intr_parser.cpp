@@ -3,7 +3,7 @@
 
 #include "cpu/control_registers.hpp"
 
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include <mem/types.hpp>
 
 namespace arch

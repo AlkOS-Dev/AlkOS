@@ -1,7 +1,7 @@
 #include "drivers/apic/io_apic.hpp"
 #include "drivers/apic/local_apic.hpp"
 
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include <todo.hpp>
 #include "interrupts/idt.hpp"
 #include "trace_framework.hpp"

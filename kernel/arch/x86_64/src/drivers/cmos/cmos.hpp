@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 #include "include/io.hpp"
 
 static constexpr u64 kCmosAddressPort = 0x70;
@@ -16,4 +16,4 @@ FAST_CALL byte ReadCmosRegister(const byte reg)
     return inb(kCmosDataPort);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_CMOS_HPP_

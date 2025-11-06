@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
 
 #include <hal/api/interrupts.hpp>
 
-#include <extensions/data_structures/array_structures.hpp>
-#include <extensions/optional.hpp>
+#include <data_structures/array_structures.hpp>
+#include <optional.hpp>
 
 #include <todo.hpp>
 
@@ -87,4 +87,4 @@ class Interrupts : public InterruptsAPI
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_

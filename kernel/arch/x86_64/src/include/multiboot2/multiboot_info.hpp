@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#define KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/concepts.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <concepts.hpp>
+#include <types.hpp>
 
 #include <todo.hpp>
 #include "include/models/memory_span.hpp"
@@ -104,4 +104,4 @@ class MultibootInfo
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_

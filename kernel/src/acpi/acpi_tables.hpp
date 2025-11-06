@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_
+#ifndef KERNEL_SRC_ACPI_ACPI_TABLES_HPP_
+#define KERNEL_SRC_ACPI_ACPI_TABLES_HPP_
 
 #include <uacpi/acpi.h>
 #include <uacpi/tables.h>
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 #include "acpi.tpp"
 
 namespace ACPI
@@ -96,4 +96,4 @@ static Table<T> GetTable()
 #include "tables/acpi_madt.tpp"
 #include "tables/acpi_srat.tpp"
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_TABLES_HPP_
+#endif  // KERNEL_SRC_ACPI_ACPI_TABLES_HPP_

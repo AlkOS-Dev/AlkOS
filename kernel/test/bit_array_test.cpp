@@ -1,4 +1,4 @@
-#include <extensions/data_structures/bit_array.hpp>
+#include <data_structures/bit_array.hpp>
 #include <test_module/test.hpp>
 
 #include <string.h>

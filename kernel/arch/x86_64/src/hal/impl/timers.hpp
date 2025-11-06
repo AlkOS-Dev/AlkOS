@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
 
 #include <time.h>
-#include <extensions/time.hpp>
+#include <time.hpp>
 #include "drivers/cmos/rtc.hpp"
 #include "trace_framework.hpp"
 
@@ -27,4 +27,4 @@ void PickSystemClockSource();
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TIMERS_HPP_

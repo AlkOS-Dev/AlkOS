@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_MMU_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_MMU_HPP_
+#ifndef KERNEL_SRC_HAL_MMU_HPP_
+#define KERNEL_SRC_HAL_MMU_HPP_
 
 #include <hal/impl/mmu.hpp>
 
-#include <extensions/bits_ext.hpp>
+#include <bits_ext.hpp>
 #include "hal/constants.hpp"
 
 namespace hal
@@ -57,4 +57,4 @@ class Mmu : public arch::Mmu
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_MMU_HPP_
+#endif  // KERNEL_SRC_HAL_MMU_HPP_

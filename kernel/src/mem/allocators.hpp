@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_ALLOCATORS_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_ALLOCATORS_HPP_
+#ifndef KERNEL_SRC_MEM_ALLOCATORS_HPP_
+#define KERNEL_SRC_MEM_ALLOCATORS_HPP_
 
-#include "extensions/bits_ext.hpp"
+#include "bits_ext.hpp"
 #include "mem/heap.hpp"
 
 namespace alloca
@@ -120,4 +120,4 @@ class DynArray
 };
 }  // namespace alloca
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_ALLOCATORS_HPP_
+#endif  // KERNEL_SRC_MEM_ALLOCATORS_HPP_

@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
 
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 #include "hw/serial/qemu.hpp"
 
@@ -23,4 +23,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
     return QemuTerminalReadLine(buffer, buffer_size);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_SYS_DEBUG_TERMINAL_HPP_

@@ -1,8 +1,8 @@
 /* internal includes */
 #include <assert.h>
 #include <time.h>
-#include <extensions/time.hpp>
 #include <test_module/test.hpp>
+#include <time.hpp>
 
 class WeekCalculationTest : public TestGroupBase
 {

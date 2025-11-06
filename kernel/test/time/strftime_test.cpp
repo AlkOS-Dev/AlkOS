@@ -2,9 +2,9 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
-#include <extensions/array.hpp>
-#include <extensions/time.hpp>
+#include <array.hpp>
 #include <test_module/test.hpp>
+#include <time.hpp>
 
 class StrftimeTest : public TestGroupBase
 {

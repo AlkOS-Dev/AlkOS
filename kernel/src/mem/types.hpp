@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_TYPES_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_TYPES_HPP_
+#ifndef KERNEL_SRC_MEM_TYPES_HPP_
+#define KERNEL_SRC_MEM_TYPES_HPP_
 
-#include <extensions/expected.hpp>
-#include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+#include <expected.hpp>
+#include <type_traits.hpp>
+#include <types.hpp>
 #include "hal/constants.hpp"
 
 template <typename T, typename E>
@@ -64,4 +64,4 @@ T *UptrToPtr(uintptr_t uptr)
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_TYPES_HPP_
+#endif  // KERNEL_SRC_MEM_TYPES_HPP_

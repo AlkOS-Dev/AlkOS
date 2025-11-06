@@ -1,5 +1,5 @@
-#include <extensions/array.hpp>
-#include <extensions/span.hpp>
+#include <array.hpp>
+#include <span.hpp>
 #include <test_module/test.hpp>
 
 class SpanTest : public TestGroupBase

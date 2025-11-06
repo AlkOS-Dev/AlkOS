@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_
+#ifndef KERNEL_SRC_MEM_PHYS_MNGR_BITMAP_HPP_
+#define KERNEL_SRC_MEM_PHYS_MNGR_BITMAP_HPP_
 
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/expected.hpp>
+#include <data_structures/bit_array.hpp>
+#include <expected.hpp>
 
 #include "mem/error.hpp"
 #include "mem/page.hpp"
@@ -72,4 +72,4 @@ class BitmapPmm
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_PHYS_MNGR_BITMAP_HPP_
+#endif  // KERNEL_SRC_MEM_PHYS_MNGR_BITMAP_HPP_

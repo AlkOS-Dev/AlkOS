@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
+#define KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
 
 #include <assert.h>
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 FAST_CALL byte inb(const u16 port)
 {
@@ -56,7 +56,7 @@ FAST_CALL void IoWait() { outb(0x80, 0); }
 
 #ifdef __cplusplus
 
-#include <extensions/concepts_ext.hpp>
+#include <concepts_ext.hpp>
 
 namespace io
 {
@@ -95,4 +95,4 @@ WRAP_CALL void out(const u16 port, const T v)
 
 #endif  // __cplusplus
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_

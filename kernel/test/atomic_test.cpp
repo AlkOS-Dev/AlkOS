@@ -1,4 +1,4 @@
-#include <extensions/atomic.hpp>
+#include <atomic.hpp>
 #include <test_module/test.hpp>
 #include <todo.hpp>
 

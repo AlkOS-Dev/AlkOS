@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
+#ifndef KERNEL_SRC_ACPI_ACPI_HPP_
+#define KERNEL_SRC_ACPI_ACPI_HPP_
 
 #include <uacpi/uacpi.h>
 #include <boot_args.hpp>
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 #include "acpi_battery.hpp"
 #include "acpi_cpu.hpp"
@@ -74,4 +74,4 @@ class ACPIController final : public hal::AcpiController
 
 #include "acpi.tpp"
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_HPP_
+#endif  // KERNEL_SRC_ACPI_ACPI_HPP_

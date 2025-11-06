@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_SYNC_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_SYNC_HPP_
+#ifndef KERNEL_SRC_HAL_API_SYNC_HPP_
+#define KERNEL_SRC_HAL_API_SYNC_HPP_
 
-#include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+#include <type_traits.hpp>
+#include <types.hpp>
 
 namespace hal
 {
@@ -20,4 +20,4 @@ template <class T>
 concept AtomicT = std::is_same_v<T, Atomic32> || std::is_same_v<T, Atomic64>;
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_SYNC_HPP_
+#endif  // KERNEL_SRC_HAL_API_SYNC_HPP_

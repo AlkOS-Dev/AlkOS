@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
+#ifndef KERNEL_SRC_HAL_CONSTANTS_HPP_
+#define KERNEL_SRC_HAL_CONSTANTS_HPP_
 
-#include <extensions/bits_ext.hpp>
-#include <extensions/types.hpp>
+#include <bits_ext.hpp>
 #include <hal/impl/constants.hpp>
+#include <types.hpp>
 
 namespace hal
 {
@@ -22,4 +22,4 @@ using arch::HardwareClockId;
 using arch::HardwareEventClockId;
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_CONSTANTS_HPP_
+#endif  // KERNEL_SRC_HAL_CONSTANTS_HPP_

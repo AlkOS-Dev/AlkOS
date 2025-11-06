@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_TLB_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_TLB_HPP_
+#ifndef KERNEL_SRC_HAL_TLB_HPP_
+#define KERNEL_SRC_HAL_TLB_HPP_
 
 #include <hal/impl/tlb.hpp>
 
-#include <extensions/bits_ext.hpp>
+#include <bits_ext.hpp>
 #include "hal/constants.hpp"
 
 namespace hal
@@ -38,4 +38,4 @@ class Tlb : public arch::Tlb
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_TLB_HPP_
+#endif  // KERNEL_SRC_HAL_TLB_HPP_

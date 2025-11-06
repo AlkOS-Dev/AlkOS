@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_
 
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 #include <hal/api/sync.hpp>
 
 namespace arch
@@ -66,4 +66,4 @@ FAST_CALL typename T::BaseT AtomicDecrement(volatile T *ptr)
 }
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SYNC_HPP_

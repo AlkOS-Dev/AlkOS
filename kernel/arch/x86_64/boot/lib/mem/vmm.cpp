@@ -1,7 +1,7 @@
-#include <extensions/bit.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/memory.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <defines.hpp>
+#include <memory.hpp>
+#include <types.hpp>
 #include "debug_trace.hpp"
 
 #include "mem/error.hpp"

@@ -1,5 +1,5 @@
-#include <extensions/data_structures/data_structures.hpp>
-#include <extensions/template_lib.hpp>
+#include <data_structures/data_structures.hpp>
+#include <template_lib.hpp>
 #include <test_module/test.hpp>
 
 using namespace template_lib;

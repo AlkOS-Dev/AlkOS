@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
+#ifndef KERNEL_SRC_MEM_PAGE_META_HPP_
+#define KERNEL_SRC_MEM_PAGE_META_HPP_
 
 #include <defines.h>
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 #include "mem/types.hpp"
 
@@ -87,4 +87,4 @@ struct PageMeta {
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_HPP_
+#endif  // KERNEL_SRC_MEM_PAGE_META_HPP_

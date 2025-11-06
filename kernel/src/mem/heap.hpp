@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_HEAP_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_HEAP_HPP_
+#ifndef KERNEL_SRC_MEM_HEAP_HPP_
+#define KERNEL_SRC_MEM_HEAP_HPP_
 
-#include <extensions/expected.hpp>
+#include <expected.hpp>
 
 #include "mem/error.hpp"
 #include "mem/types.hpp"
@@ -39,4 +39,4 @@ void KFree(VPtr<T> ptr)
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_HEAP_HPP_
+#endif  // KERNEL_SRC_MEM_HEAP_HPP_

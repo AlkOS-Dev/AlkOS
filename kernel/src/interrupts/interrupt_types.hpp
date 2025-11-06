@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
-#define ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
+#ifndef KERNEL_SRC_INTERRUPTS_INTERRUPT_TYPES_HPP_
+#define KERNEL_SRC_INTERRUPTS_INTERRUPT_TYPES_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 #include "hal/interrupt_params.hpp"
 
 namespace intr
@@ -62,4 +62,4 @@ using LitHwEntry  = InterruptHandlerEntry<InterruptType::kHardwareInterrupt>;
 using LitSwEntry  = InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>;
 }  // namespace intr
 
-#endif  // ALKOS_KERNEL_INCLUDE_INTERRUPTS_INTERRUPT_TYPES_HPP_
+#endif  // KERNEL_SRC_INTERRUPTS_INTERRUPT_TYPES_HPP_

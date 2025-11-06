@@ -1,0 +1,36 @@
+#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+
+#include <concepts.hpp>
+
+/**
+ * Custom concepts library for ALKOS
+ */
+
+namespace concepts_ext
+{
+template <typename T>
+concept SwitchExpressionType = std::is_integral_v<T> || std::is_enum_v<T>;
+
+template <typename F, typename... Args>
+concept Callable = std::is_invocable_v<F, Args...>;
+
+template <typename FuncT, typename ExprT, typename... Args>
+concept RolledSwitchFunctor = requires(FuncT f, Args... args) {
+    { f.template operator()<static_cast<ExprT>(0)>(args...) };
+};
+
+template <typename T, typename... Args>
+concept OneOf = (std::is_same_v<T, Args> || ...);
+
+template <class T>
+concept IoT = (std::is_unsigned_v<T> && sizeof(T) <= 4);
+
+template <class T>
+concept LibCxxCompatibleMutex = requires(T m) {
+    { m.lock() } -> std::same_as<void>;
+    { m.unlock() } -> std::same_as<void>;
+};
+}  // namespace concepts_ext
+
+#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_

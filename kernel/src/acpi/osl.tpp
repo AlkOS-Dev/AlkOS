@@ -3,7 +3,7 @@
 
 #include <uacpi/status.h>
 #include <uacpi/types.h>
-#include <extensions/concepts_ext.hpp>
+#include <concepts_ext.hpp>
 
 // TODO SHOULD BE THROUGH HAL
 #include <include/io.hpp>

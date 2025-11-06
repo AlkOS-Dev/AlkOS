@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_DEVICE_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_DEVICE_HPP_
+#ifndef KERNEL_SRC_ACPI_ACPI_DEVICE_HPP_
+#define KERNEL_SRC_ACPI_ACPI_DEVICE_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 namespace ACPI
 {
@@ -45,4 +45,4 @@ struct PACK Device {
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_DEVICE_HPP_
+#endif  // KERNEL_SRC_ACPI_ACPI_DEVICE_HPP_

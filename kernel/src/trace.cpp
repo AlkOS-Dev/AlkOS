@@ -1,11 +1,11 @@
-#include <extensions/algorithm.hpp>
+#include <algorithm.hpp>
 
 #include "hardware/core_local.hpp"
 #include "modules/hardware.hpp"
 #include "modules/timing.hpp"
 #include "trace_framework.hpp"
 
-#include <extensions/array.hpp>
+#include <array.hpp>
 #include <hal/debug_terminal.hpp>
 #include <hal/terminal.hpp>
 

@@ -1,5 +1,5 @@
-#include <extensions/array.hpp>
-#include <extensions/data_structures/data_structures.hpp>
+#include <array.hpp>
+#include <data_structures/data_structures.hpp>
 #include <test_module/test.hpp>
 #include "test_structs.hpp"
 

@@ -1,4 +1,4 @@
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include <test_module/test.hpp>
 
 class BitManipTest : public TestGroupBase

@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
 
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 /**
  * @file vga.hpp
@@ -22,4 +22,4 @@ void VgaTerminalWriteString(const char *data);
 void VgaTerminalWriteError(const char *data);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_

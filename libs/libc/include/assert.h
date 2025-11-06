@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_ASSERT_H_
-#define ALKOS_LIBC_INCLUDE_ASSERT_H_
+#ifndef LIBS_LIBC_INCLUDE_ASSERT_H_
+#define LIBS_LIBC_INCLUDE_ASSERT_H_
 
 #include "platform.h"
 #include "todo.h"
@@ -38,8 +38,8 @@
 
 #ifdef __cplusplus
 
-#include "extensions/assert_base.hpp"
-#include "extensions/defines.hpp"
+#include "assert_base.hpp"
+#include "defines.hpp"
 
 /* usual C-style asserts */
 #define ASSERT_EQ(expected, value, ...) \
@@ -103,4 +103,4 @@
 
 #endif  // __cplusplus
 
-#endif  // ALKOS_LIBC_INCLUDE_ASSERT_H_
+#endif  // LIBS_LIBC_INCLUDE_ASSERT_H_

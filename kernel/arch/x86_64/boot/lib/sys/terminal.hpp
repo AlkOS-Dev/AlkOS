@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
 
 #include <autogen/feature_flags.h>
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 #include "hw/serial/qemu.hpp"
 #include "hw/vga.hpp"
@@ -70,4 +70,4 @@ WRAP_CALL void TerminalWriteError(const char *data)
 }
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_SYS_TERMINAL_HPP_

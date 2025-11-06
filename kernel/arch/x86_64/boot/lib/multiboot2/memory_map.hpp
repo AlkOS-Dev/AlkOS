@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/expected.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <expected.hpp>
+#include <types.hpp>
 
 #include "multiboot2/multiboot2.h"
 
@@ -102,4 +102,4 @@ class MemoryMap
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_MEMORY_MAP_HPP_

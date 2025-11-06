@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
 
-#include <extensions/memory.hpp>
+#include <memory.hpp>
 
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"
@@ -73,4 +73,4 @@ class VirtualMemoryManager
 
 #include "mem/vmm.tpp"
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MEM_VMM_HPP_

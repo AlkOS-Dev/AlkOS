@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
 
-#include <extensions/concepts.hpp>
-#include <extensions/concepts_ext.hpp>
-#include <extensions/types.hpp>
+#include <concepts.hpp>
+#include <concepts_ext.hpp>
+#include <types.hpp>
 
 /**
  * @file control_registers.hpp
@@ -116,4 +116,4 @@ void SetCR(T value)
 
 }  // namespace cpu
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_

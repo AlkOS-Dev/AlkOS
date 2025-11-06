@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_ADDR_SPACE_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_ADDR_SPACE_HPP_
+#ifndef KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
+#define KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
 
-#include <extensions/expected.hpp>
-#include <extensions/types.hpp>
+#include <expected.hpp>
+#include <types.hpp>
 
 #include "hal/interrupt_params.hpp"
 #include "hal/spinlock.hpp"
@@ -65,4 +65,4 @@ using AddrSp = AddressSpace;
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_ADDR_SPACE_HPP_
+#endif  // KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_

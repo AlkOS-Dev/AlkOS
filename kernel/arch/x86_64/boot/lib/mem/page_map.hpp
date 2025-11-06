@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 #include "mem/physical_ptr.hpp"
 
@@ -316,4 +316,4 @@ static_assert(sizeof(PageMapTable<3>) == 4096, "PDP table must be 4KB");
 static_assert(sizeof(PageMapTable<2>) == 4096, "PD table must be 4KB");
 static_assert(sizeof(PageMapTable<1>) == 4096, "PT table must be 4KB");
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PAGE_MAP_HPP_

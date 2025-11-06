@@ -1,4 +1,4 @@
-#include <extensions/limits.hpp>
+#include <limits.hpp>
 #include <test_module/test.hpp>
 
 class LimitsTest : public TestGroupBase

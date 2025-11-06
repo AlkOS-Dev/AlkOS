@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_INTERRUPT_DRIVER_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_INTERRUPT_DRIVER_HPP_
+#ifndef KERNEL_SRC_HARDWARE_INTERRUPT_DRIVER_HPP_
+#define KERNEL_SRC_HARDWARE_INTERRUPT_DRIVER_HPP_
 
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 namespace intr
 {
@@ -16,4 +16,4 @@ struct interrupt_driver {
 };
 }  // namespace intr
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_INTERRUPT_DRIVER_HPP_
+#endif  // KERNEL_SRC_HARDWARE_INTERRUPT_DRIVER_HPP_

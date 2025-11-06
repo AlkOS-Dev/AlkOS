@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_CORE_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_CORE_HPP_
+#ifndef KERNEL_SRC_HAL_API_CORE_HPP_
+#define KERNEL_SRC_HAL_API_CORE_HPP_
 
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 namespace arch
 {
@@ -17,4 +17,4 @@ NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_CORE_HPP_
+#endif  // KERNEL_SRC_HAL_API_CORE_HPP_

@@ -1,14 +1,14 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
+#define KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
 
 /* internal includes */
-#include <extensions/bit.hpp>
-#include <extensions/defines.hpp>
+#include <bit.hpp>
+#include <defines.hpp>
 #include "include/io.hpp"
 #include "interrupts/interrupt_types.hpp"
 #include "trace_framework.hpp"
 
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 /**
  * @file pic8259.hpp
@@ -99,4 +99,4 @@ FAST_CALL void Pic8259Disable()
 
 intr::InterruptDriver &Pic8259InterruptDriver();
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_PIC8259_PIC8259_HPP_

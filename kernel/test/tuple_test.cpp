@@ -1,6 +1,6 @@
-#include <extensions/tuple.hpp>
-#include <extensions/type_traits.hpp>
 #include <test_module/test.hpp>
+#include <tuple.hpp>
+#include <type_traits.hpp>
 
 class TupleTest : public TestGroupBase
 {

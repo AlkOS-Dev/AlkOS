@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_HARDWARE_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_HARDWARE_HPP_
+#ifndef KERNEL_SRC_MODULES_HARDWARE_HPP_
+#define KERNEL_SRC_MODULES_HARDWARE_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 
 #include "acpi/acpi.hpp"
 #include "hardware/clock_infra.hpp"
@@ -36,4 +36,4 @@ class HardwareModule : template_lib::StaticSingletonHelper
 
 using HardwareModule = template_lib::StaticSingleton<internal::HardwareModule>;
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_HARDWARE_HPP_
+#endif  // KERNEL_SRC_MODULES_HARDWARE_HPP_

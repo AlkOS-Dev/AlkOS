@@ -1,6 +1,6 @@
 #include <acpi/acpi.hpp>
 
-#include <extensions/internal/formats.hpp>
+#include <internal/formats.hpp>
 #include "trace_framework.hpp"
 
 // TODO

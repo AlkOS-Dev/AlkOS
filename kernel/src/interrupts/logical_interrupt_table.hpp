@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
-#define ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
+#ifndef KERNEL_SRC_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
+#define KERNEL_SRC_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
 
 #include <assert.h>
-#include <extensions/bit.hpp>
-#include <extensions/cstddef.hpp>
-#include <extensions/type_traits.hpp>
+#include <bit.hpp>
+#include <cstddef.hpp>
+#include <type_traits.hpp>
 #include "hal/sync.hpp"
 #include "hardware/core_local.hpp"
 #include "interrupts/interrupt_types.hpp"
@@ -159,4 +159,4 @@ using LitType = LogicalInterruptTable<
 
 #include "logical_interrupt_table.tpp"
 
-#endif  // ALKOS_KERNEL_INCLUDE_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_
+#endif  // KERNEL_SRC_INTERRUPTS_LOGICAL_INTERRUPT_TABLE_HPP_

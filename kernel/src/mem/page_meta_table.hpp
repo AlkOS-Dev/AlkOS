@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_TABLE_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_TABLE_HPP_
+#ifndef KERNEL_SRC_MEM_PAGE_META_TABLE_HPP_
+#define KERNEL_SRC_MEM_PAGE_META_TABLE_HPP_
 
-#include <extensions/span.hpp>
+#include <span.hpp>
 #include "hal/constants.hpp"
 #include "mem/page.hpp"
 #include "mem/page_meta.hpp"
@@ -66,4 +66,4 @@ class PageMetaTable
 };
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_META_TABLE_HPP_
+#endif  // KERNEL_SRC_MEM_PAGE_META_TABLE_HPP_

@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEMORY_CYCLIC_ALLOCATOR_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEMORY_CYCLIC_ALLOCATOR_HPP_
+#ifndef KERNEL_SRC_MEM_CYCLIC_ALLOCATOR_HPP_
+#define KERNEL_SRC_MEM_CYCLIC_ALLOCATOR_HPP_
 
 #include <stddef.h>
-#include <extensions/compare.hpp>
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/new.hpp>
+#include <compare.hpp>
+#include <data_structures/bit_array.hpp>
+#include <new.hpp>
 #include <todo.hpp>
 #include "sync/kernel/spinlock.hpp"
 
@@ -83,4 +83,4 @@ class CyclicAllocator final
     size_t cursor_{};
 };
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEMORY_CYCLIC_ALLOCATOR_HPP_
+#endif  // KERNEL_SRC_MEM_CYCLIC_ALLOCATOR_HPP_

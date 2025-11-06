@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_
 
 #include <autogen/feature_flags.h>
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 #include <todo.hpp>
 
@@ -71,4 +71,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, const size_t size)
 END_DECL_C
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TERMINAL_HPP_

@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
+#ifndef KERNEL_SRC_HARDWARE_CORES_HPP_
+#define KERNEL_SRC_HARDWARE_CORES_HPP_
 
 #include "hal/constants.hpp"
 #include "hal/core.hpp"
 
-#include <extensions/cstddef.hpp>
+#include <cstddef.hpp>
 
 namespace hardware
 {
@@ -51,4 +51,4 @@ class alignas(hal::kCacheLineSizeBytes) Core final : public hal::Core
 
 }  // namespace hardware
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CORES_HPP_
+#endif  // KERNEL_SRC_HARDWARE_CORES_HPP_

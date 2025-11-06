@@ -1,8 +1,8 @@
 /* internal includes */
 #include <assert.h>
 #include <string.h>
-#include <extensions/array.hpp>
-#include <extensions/data_structures/array_structures.hpp>
+#include <array.hpp>
+#include <data_structures/array_structures.hpp>
 #include <test_module/test.hpp>
 
 using namespace data_structures;

@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
+#ifndef KERNEL_SRC_MEM_VIRT_PTR_HPP_
+#define KERNEL_SRC_MEM_VIRT_PTR_HPP_
 
-#include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+#include <type_traits.hpp>
+#include <types.hpp>
 #include "hal/constants.hpp"
 
 namespace mem
@@ -13,4 +13,4 @@ using VirtualPtr = T *;
 
 }  // namespace mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_PTR_HPP_
+#endif  // KERNEL_SRC_MEM_VIRT_PTR_HPP_
