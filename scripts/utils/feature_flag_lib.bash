@@ -270,6 +270,7 @@ feature_flags_generate_cxx_files() {
   load_feature_flags_from_yaml
 
   # Remove old header
+  mkdir -p "$(dirname "${FEATURE_FLAGS_CXX_PATH}")"
   rm -f "${FEATURE_FLAGS_CXX_PATH}"
   touch "${FEATURE_FLAGS_CXX_PATH}"
 
