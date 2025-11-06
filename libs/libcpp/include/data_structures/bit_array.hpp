@@ -1,11 +1,11 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#define LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
 
 #include <stddef.h>
 #include "assert.h"
 #include "bit.hpp"
-#include "types.hpp"
 #include "string.h"
+#include "types.hpp"
 
 // TODO: Minimal changes would be required to make this
 // https://en.cppreference.com/w/cpp/utility/bitset.html
@@ -154,4 +154,4 @@ class PACK BitArray final
 
 }  // namespace data_structures
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_

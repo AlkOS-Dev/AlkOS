@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_ATOMIC_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_ATOMIC_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_ATOMIC_HPP_
+#define LIBS_LIBCPP_INCLUDE_ATOMIC_HPP_
 
 #include <assert.h>
 #include <stdint.h>
@@ -7,8 +7,8 @@
 #include <defines.hpp>
 #include <memory.hpp>
 #include <template_lib.hpp>
-#include <type_traits_ext.hpp>
 #include <todo.hpp>
+#include <type_traits_ext.hpp>
 
 TODO_WHEN_CPP_REFLECTION
 // TODO: Refactor to use compile-time reflection when available
@@ -1587,4 +1587,4 @@ struct atomic_ref<T *> : internal::AtomicRefBase<T *> {
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_ATOMIC_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_ATOMIC_HPP_
