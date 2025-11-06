@@ -1,11 +1,11 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#ifndef ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
+#define ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
 
 #include <extensions/data_structures/data_structures.hpp>
 #include <extensions/template_lib.hpp>
 
-#include "mem/virt/addr_space.hpp"
 #include "mem/cyclic_allocator.hpp"
+#include "mem/virt/addr_space.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"
 #include "sync/kernel/spinlock.hpp"
@@ -43,4 +43,4 @@ class GlobalStateModule : template_lib::StaticSingletonHelper
 
 using GlobalStateModule = template_lib::StaticSingleton<internal::GlobalStateModule>;
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_HPP_
+#endif  // ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
