@@ -1,5 +1,16 @@
 message(STATUS "      -> Configuring 32-bit bootloader")
 
+############################# Libc Instantiation #############################
+
+# Create a 32-bit version of libc for the bootloader.
+add_library(c.32 STATIC ${ALKOS_LIBC_SOURCES})
+target_link_libraries(c.32 PUBLIC
+    alkos.libc.interface
+    alkos.target.properties.interface.32
+    gcc
+)
+target_compile_definitions(c.32 PRIVATE __ALKOS_KERNEL_LIBC__)
+
 #################################### Exec ####################################
 
 add_executable(alkos.boot.loader.32)
@@ -19,7 +30,7 @@ target_link_libraries(alkos.boot.loader.32 PRIVATE
         alkos.target.properties.interface.32
         alkos.autogen.interface
         alkos.boot.lib.interface
-        c.core.32
+        c.32
 )
 
 ############################## Compile Definitions #############################

@@ -34,7 +34,10 @@ target_include_directories(uacpi PRIVATE .)
 
 ############################# Linking libraries ##############################
 
-target_link_libraries(uacpi PRIVATE c.core)
+target_link_libraries(uacpi PRIVATE
+    c
+    alkos.libc.interface
+)
 
 ######################### Setting Custom Properties ##########################
 
