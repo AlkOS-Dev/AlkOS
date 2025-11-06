@@ -90,7 +90,7 @@ file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/boot/grub)
 
 set(SYSTEM_LIB_TYPE k)
 
-add_subdirectory(libc)
+add_subdirectory(libs)
 add_subdirectory(generated)
 add_subdirectory(kernel)
 

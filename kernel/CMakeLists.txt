@@ -47,6 +47,18 @@ target_include_directories(alkos.kernel PUBLIC
     test
 )
 
+############################# Libc Instantiation #############################
+
+add_library(c STATIC ${ALKOS_LIBC_SOURCES})
+
+target_link_libraries(c PUBLIC
+    alkos.libc.interface
+    alkos.target.properties.interface
+    gcc
+)
+
+target_compile_definitions(c PRIVATE __ALKOS_KERNEL_LIBC__)
+
 ########################## Configure for given Arch ##########################
 
 add_subdirectory(arch/${ARCH})
@@ -66,7 +78,7 @@ target_link_libraries(alkos.kernel PRIVATE
     alkos.kernel.config
     alkos.kernel.thirdparty
     alkos.autogen.interface
-    c.core
+    c
 )
 
 ############## Linker Configuration for CXX Global Constructors ##############

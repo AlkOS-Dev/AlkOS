@@ -1,5 +1,17 @@
 message(STATUS "      -> Configuring 64-bit bootloader")
 
+############################# Libc Instantiation #############################
+
+# Create a PIC version of libc for the bootloader.
+add_library(c.pic STATIC ${ALKOS_LIBC_SOURCES})
+set_target_properties(c.pic PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(c.pic PUBLIC
+    alkos.libc.interface
+    alkos.target.properties.pic.interface
+    gcc
+)
+target_compile_definitions(c.pic PRIVATE __ALKOS_KERNEL_LIBC__)
+
 #################################### Exec ####################################
 
 add_executable(alkos.boot.loader.64)
@@ -28,6 +40,6 @@ target_link_libraries(alkos.boot.loader.64 PRIVATE
         alkos.target.properties.pic.interface
         alkos.autogen.interface
         alkos.boot.lib.interface
-        c.core.pic
+        c.pic
         gcc
 )
