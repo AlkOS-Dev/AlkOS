@@ -1,6 +1,7 @@
 #ifndef LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_ROLLED_SWITCH_HPP_
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_ROLLED_SWITCH_HPP_
 
+#include <assert.h>
 #include <concepts_ext.hpp>
 #include <defines.hpp>
 #include <types.hpp>
