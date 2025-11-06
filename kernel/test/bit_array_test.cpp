@@ -1,5 +1,7 @@
-#include <../../libc/include/extensions/data_structures/bit_array.hpp>
+#include <extensions/data_structures/bit_array.hpp>
 #include <test_module/test.hpp>
+
+#include <string.h>
 
 class BitArrayTest : public TestGroupBase
 {
