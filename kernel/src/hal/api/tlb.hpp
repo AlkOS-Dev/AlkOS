@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_TLB_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_TLB_HPP_
+#ifndef KERNEL_SRC_HAL_API_TLB_HPP_
+#define KERNEL_SRC_HAL_API_TLB_HPP_
 
-#include <extensions/expected.hpp>
+#include <expected.hpp>
 
 #include "mem/types.hpp"
 
@@ -30,4 +30,4 @@ struct TlbAPI {
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_TLB_HPP_
+#endif  // KERNEL_SRC_HAL_API_TLB_HPP_

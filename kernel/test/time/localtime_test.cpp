@@ -2,8 +2,8 @@
 #include <assert.h>
 #include <string.h>
 #include <time.h>
-#include <extensions/time.hpp>
 #include <test_module/test.hpp>
+#include <time.hpp>
 
 TODO_TIMEZONES
 /* TODO: Replace with changeable timezones when implemented */

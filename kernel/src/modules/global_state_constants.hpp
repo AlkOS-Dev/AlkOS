@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_CONSTANTS_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_CONSTANTS_HPP_
+#ifndef KERNEL_SRC_MODULES_GLOBAL_STATE_CONSTANTS_HPP_
+#define KERNEL_SRC_MODULES_GLOBAL_STATE_CONSTANTS_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 
 namespace global_state_constants
 {
@@ -24,4 +24,4 @@ static constexpr GlobalSettingsTuple kDefaultGlobalSettings{
 };
 }  // namespace global_state_constants
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_GLOBAL_STATE_CONSTANTS_HPP_
+#endif  // KERNEL_SRC_MODULES_GLOBAL_STATE_CONSTANTS_HPP_

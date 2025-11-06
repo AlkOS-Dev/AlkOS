@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
 
 /* internal includes */
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 #include "drivers/serial/qemu.hpp"
 
 namespace arch
@@ -34,4 +34,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
 }
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_DEBUG_TERMINAL_HPP_

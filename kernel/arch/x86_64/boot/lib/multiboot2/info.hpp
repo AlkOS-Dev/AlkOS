@@ -1,11 +1,11 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/concepts.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/expected.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <concepts.hpp>
+#include <defines.hpp>
+#include <expected.hpp>
+#include <types.hpp>
 
 #include "multiboot2/error.hpp"
 #include "multiboot2/multiboot2.h"
@@ -98,4 +98,4 @@ class MultibootInfo
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_

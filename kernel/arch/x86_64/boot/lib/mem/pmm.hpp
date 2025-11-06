@@ -1,13 +1,13 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
 
-#include <extensions/algorithm.hpp>
-#include <extensions/bit.hpp>
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/expected.hpp>
-#include <extensions/internal/formats.hpp>
-#include <extensions/optional.hpp>
-#include <extensions/utility.hpp>
+#include <algorithm.hpp>
+#include <bit.hpp>
+#include <data_structures/bit_array.hpp>
+#include <expected.hpp>
+#include <internal/formats.hpp>
+#include <optional.hpp>
+#include <utility.hpp>
 #include "debug_trace.hpp"
 
 #include "mem/error.hpp"
@@ -129,4 +129,4 @@ class PhysicalMemoryManager
     IterationState iteration_state_{};
 };
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_

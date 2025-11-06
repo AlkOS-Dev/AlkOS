@@ -1,6 +1,6 @@
 #include <sys/calls.h>
 #include <time.h>
-#include <extensions/time.hpp>
+#include <time.hpp>
 // ------------------------------
 // Implementation
 // ------------------------------

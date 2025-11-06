@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_
+#ifndef KERNEL_SRC_ACPI_ACPI_BATTERY_HPP_
+#define KERNEL_SRC_ACPI_ACPI_BATTERY_HPP_
 
 #include <uacpi/tables.h>
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 namespace ACPI
 {
@@ -64,4 +64,4 @@ struct PACK Battery {
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_BATTERY_HPP_
+#endif  // KERNEL_SRC_ACPI_ACPI_BATTERY_HPP_

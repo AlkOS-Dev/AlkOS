@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_MEMORY_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_MEMORY_HPP_
+#ifndef KERNEL_SRC_MODULES_MEMORY_HPP_
+#define KERNEL_SRC_MODULES_MEMORY_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
@@ -46,4 +46,4 @@ class MemoryModule : template_lib::StaticSingletonHelper
 
 using MemoryModule = template_lib::StaticSingleton<internal::MemoryModule>;
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_MEMORY_HPP_
+#endif  // KERNEL_SRC_MODULES_MEMORY_HPP_

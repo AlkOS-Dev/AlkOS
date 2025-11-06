@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
+#define KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/defines.hpp>
+#include <bit.hpp>
+#include <defines.hpp>
 
 #include "include/multiboot2/multiboot2.h"
 
@@ -53,4 +53,4 @@ DEFINE_TAG_METADATA(TagLoadBaseAddr, kMultibootTagTypeLoadBaseAddr);
 
 }  // namespace Multiboot
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_TAG_METADATA_HPP_

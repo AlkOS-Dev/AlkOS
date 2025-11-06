@@ -1,12 +1,12 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
+#define KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
 
 #include <assert.h>
 #include <cpuid.h>
-#include <extensions/bit.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <defines.hpp>
 #include <todo.hpp>
+#include <types.hpp>
 #include "cpu/msrs.hpp"
 #include "hal/impl/constants.hpp"
 #include "include/memory_io.hpp"
@@ -427,4 +427,4 @@ class LocalApic
     u64 local_apic_physical_address_{};
     intr::InterruptDriver driver_{};
 };
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_

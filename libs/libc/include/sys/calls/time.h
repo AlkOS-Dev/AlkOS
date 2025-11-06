@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
-#define ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#ifndef LIBS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#define LIBS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
 
 #include "defines.h"
 #include "platform.h"
@@ -31,7 +31,7 @@ END_DECL_C
 
 #ifdef __cplusplus
 
-#include <extensions/tuple.hpp>
+#include <tuple.hpp>
 
 WRAP_CALL Timezone GetTimezoneSysCall()
 {
@@ -58,4 +58,4 @@ WRAP_CALL std::tuple<TimeVal, Timezone> GetClockValueTimezoneSysCall(const Clock
 
 #endif  // __cplusplus
 
-#endif  // ALKOS_LIBC_INCLUDE_SYS_CALLS_TIME_H_
+#endif  // LIBS_LIBC_INCLUDE_SYS_CALLS_TIME_H_

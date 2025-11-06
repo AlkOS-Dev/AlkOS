@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
-#define ALKOS_KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
+#ifndef KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
+#define KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
 
 /* internal includes */
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 #include <test_module/test_group_base.hpp>
 
 namespace test
@@ -80,4 +80,4 @@ extern bool g_testStarted;
 
 }  // namespace test
 
-#endif  // ALKOS_KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_
+#endif  // KERNEL_TEST_TEST_MODULE_TEST_MODULE_HPP_

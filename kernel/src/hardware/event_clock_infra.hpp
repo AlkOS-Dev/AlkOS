@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
+#ifndef KERNEL_SRC_HARDWARE_EVENT_CLOCK_INFRA_HPP_
+#define KERNEL_SRC_HARDWARE_EVENT_CLOCK_INFRA_HPP_
 
 #include <time.h>
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/data_structures/hash_maps.hpp>
+#include <data_structures/bit_array.hpp>
+#include <data_structures/hash_maps.hpp>
 #include "hardware/core_mask.hpp"
 
 namespace hardware
@@ -55,4 +55,4 @@ class EventClockRegistry
 };
 }  // namespace hardware
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_EVENT_CLOCK_INFRA_HPP_
+#endif  // KERNEL_SRC_HARDWARE_EVENT_CLOCK_INFRA_HPP_

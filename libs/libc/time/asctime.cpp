@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <time.h>
-#include <extensions/time.hpp>
+#include <time.hpp>
 
 // ------------------------------
 // implementations

@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 #include "include/io.hpp"
 
 /**
@@ -106,4 +106,4 @@ struct PACK CpuState final {
 
 [[nodiscard]] CpuState DumpCpuState();
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_

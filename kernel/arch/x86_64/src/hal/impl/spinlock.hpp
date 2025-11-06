@@ -1,11 +1,11 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
 
 #include <hal/api/spinlock.hpp>
 
 #include <autogen/feature_flags.h>
-#include <extensions/types.hpp>
 #include <hal/constants.hpp>
+#include <types.hpp>
 #include "include/memory_io.hpp"
 
 #include "hal/core.hpp"
@@ -158,4 +158,4 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SPINLOCK_HPP_

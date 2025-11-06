@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TRACE_FRAMEWORK_HPP_
-#define ALKOS_KERNEL_INCLUDE_TRACE_FRAMEWORK_HPP_
+#ifndef KERNEL_SRC_TRACE_FRAMEWORK_HPP_
+#define KERNEL_SRC_TRACE_FRAMEWORK_HPP_
 
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 namespace trace
 {
@@ -101,4 +101,4 @@ CREATE_TRACE_HELPERS(kTime, TIME)
 
 #include "trace_framework.tpp"
 
-#endif  // ALKOS_KERNEL_INCLUDE_TRACE_FRAMEWORK_HPP_
+#endif  // KERNEL_SRC_TRACE_FRAMEWORK_HPP_

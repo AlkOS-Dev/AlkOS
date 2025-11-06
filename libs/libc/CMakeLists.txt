@@ -12,20 +12,24 @@
 
 message(STATUS "Configuring LibC interface...")
 
-# Discover all libc source files and cache the list.
 alkos_find_sources(ALKOS_LIBC_SOURCES)
 set(ALKOS_LIBC_SOURCES ${ALKOS_LIBC_SOURCES} CACHE INTERNAL "Source files for libc")
 
-# Define the interface library.
 add_library(alkos.libc.interface INTERFACE)
 
-# Expose public include directories.
 target_include_directories(alkos.libc.interface INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/abi"
+
+    # At the time of their making, both libc and libcpp were in the same directory
+    # Decoupling them now brings too little benefit and too much complexity to justify the effort
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libcpp/include"
 )
 
-# Expose private include directories for consumers that build the library.
 target_include_directories(alkos.libc.interface INTERFACE
     "${CMAKE_CURRENT_SOURCE_DIR}/internal"
+)
+
+target_link_libraries(alkos.libc.interface INTERFACE
+    alkos.libcpp.interface
 )

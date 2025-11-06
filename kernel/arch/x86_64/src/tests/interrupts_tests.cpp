@@ -1,6 +1,6 @@
 /* internal includes */
 #include <assert.h>
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include "cpu/utils.hpp"
 
 // ------------------------------

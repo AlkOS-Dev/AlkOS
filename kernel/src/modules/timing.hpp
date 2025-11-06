@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
+#ifndef KERNEL_SRC_MODULES_TIMING_HPP_
+#define KERNEL_SRC_MODULES_TIMING_HPP_
 
-#include <extensions/template_lib.hpp>
+#include <template_lib.hpp>
 
 #include "modules/helpers.hpp"
 #include "modules/timing_constants.hpp"
@@ -33,4 +33,4 @@ class TimingModule : template_lib::StaticSingletonHelper
 
 using TimingModule = template_lib::StaticSingleton<internal::TimingModule>;
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_TIMING_HPP_
+#endif  // KERNEL_SRC_MODULES_TIMING_HPP_

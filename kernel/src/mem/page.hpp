@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_PAGE_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_PAGE_HPP_
+#ifndef KERNEL_SRC_MEM_PAGE_HPP_
+#define KERNEL_SRC_MEM_PAGE_HPP_
 
 #include <assert.h>
-#include <extensions/bit.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <types.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/types.hpp"
@@ -31,4 +31,4 @@ FAST_CALL PPtr<Page> PageFrameAddr(size_t pfn)
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_PAGE_HPP_
+#endif  // KERNEL_SRC_MEM_PAGE_HPP_

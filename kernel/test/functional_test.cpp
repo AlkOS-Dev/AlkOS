@@ -1,4 +1,4 @@
-#include <extensions/functional.hpp>
+#include <functional.hpp>
 #include <test_module/test.hpp>
 
 class FunctionalTest : public TestGroupBase

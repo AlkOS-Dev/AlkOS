@@ -1,5 +1,5 @@
 #include "interrupts/idt.hpp"
-#include <extensions/defines.hpp>
+#include <defines.hpp>
 
 #include <hal/debug.hpp>
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
@@ -10,7 +10,7 @@
 #include "interrupts/interrupt_types.hpp"
 
 #include <assert.h>
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include "trace_framework.hpp"
 
 static constexpr u32 kStubTableSize = 64;

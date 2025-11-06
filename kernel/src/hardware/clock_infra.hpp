@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
+#ifndef KERNEL_SRC_HARDWARE_CLOCK_INFRA_HPP_
+#define KERNEL_SRC_HARDWARE_CLOCK_INFRA_HPP_
 
-#include <extensions/data_structures/data_structures.hpp>
+#include <data_structures/data_structures.hpp>
 #include <hal/constants.hpp>
 #include "trace_framework.hpp"
 
@@ -50,4 +50,4 @@ class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxC
 
 }  // namespace hardware
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CLOCK_INFRA_HPP_
+#endif  // KERNEL_SRC_HARDWARE_CLOCK_INFRA_HPP_

@@ -1,9 +1,9 @@
 // alkos/kernel/test/expected_test.cpp
 
-#include <extensions/defines.hpp>
-#include <extensions/expected.hpp>
-#include <extensions/utility.hpp>
+#include <defines.hpp>
+#include <expected.hpp>
 #include <test_module/test.hpp>
+#include <utility.hpp>
 
 // Note: Some of these tests may fail in Release mode, as optimizations may make
 // optimize away some lifecycle tracking. The expected number of constructions and

@@ -1,7 +1,7 @@
 #include "mem/phys/mngr/bitmap.hpp"
 
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/expected.hpp>
+#include <data_structures/bit_array.hpp>
+#include <expected.hpp>
 #include "hal/constants.hpp"
 #include "mem/page_meta.hpp"
 #include "mem/types.hpp"

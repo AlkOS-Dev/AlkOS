@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/data_structures/array_structures.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <data_structures/array_structures.hpp>
 #include <todo.hpp>
+#include <types.hpp>
 
 namespace arch
 {
@@ -40,4 +40,4 @@ enum class HardwareEventClockId : u64 {
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_

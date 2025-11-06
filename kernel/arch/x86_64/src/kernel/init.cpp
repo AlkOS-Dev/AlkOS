@@ -7,9 +7,9 @@
 #endif
 
 #include <cpuid.h>
-#include <extensions/expected.hpp>
-#include <extensions/internal/formats.hpp>
+#include <expected.hpp>
 #include <hal/debug.hpp>
+#include <internal/formats.hpp>
 
 #include "trace_framework.hpp"
 

@@ -11,6 +11,15 @@ target_link_libraries(c.32 PUBLIC
 )
 target_compile_definitions(c.32 PRIVATE __ALKOS_KERNEL_LIBC__)
 
+# Create a 32-bit version of libcpp for the bootloader.
+add_library(cpp.32 STATIC ${ALKOS_LIBCPP_SOURCES})
+target_link_libraries(cpp.32 PUBLIC
+    alkos.libcpp.interface
+    alkos.target.properties.interface.32
+    gcc
+)
+target_compile_definitions(cpp.32 PRIVATE __ALKOS_KERNEL_LIBCPP__)
+
 #################################### Exec ####################################
 
 add_executable(alkos.boot.loader.32)
@@ -31,6 +40,7 @@ target_link_libraries(alkos.boot.loader.32 PRIVATE
         alkos.autogen.interface
         alkos.boot.lib.interface
         c.32
+        cpp.32
 )
 
 ############################## Compile Definitions #############################

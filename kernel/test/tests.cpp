@@ -1,4 +1,4 @@
-#include <extensions/initializer_list.hpp>
+#include <initializer_list.hpp>
 #include <test_module/test.hpp>
 #include <trace_framework.hpp>
 

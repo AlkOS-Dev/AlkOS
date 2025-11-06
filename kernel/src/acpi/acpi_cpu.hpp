@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_ACPI_ACPI_CPU_HPP_
-#define ALKOS_KERNEL_INCLUDE_ACPI_ACPI_CPU_HPP_
+#ifndef KERNEL_SRC_ACPI_ACPI_CPU_HPP_
+#define KERNEL_SRC_ACPI_ACPI_CPU_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 namespace ACPI
 {
@@ -35,4 +35,4 @@ struct PACK Processor {
 
 }  // namespace ACPI
 
-#endif  // ALKOS_KERNEL_INCLUDE_ACPI_ACPI_CPU_HPP_
+#endif  // KERNEL_SRC_ACPI_ACPI_CPU_HPP_

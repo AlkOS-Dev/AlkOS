@@ -1,12 +1,12 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
+#define KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 
 #include <uacpi/acpi.h>
-#include <extensions/array.hpp>
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/time.hpp>
-#include <extensions/types.hpp>
+#include <array.hpp>
+#include <data_structures/bit_array.hpp>
+#include <time.hpp>
 #include <todo.hpp>
+#include <types.hpp>
 #include "include/memory_io.hpp"
 #include "trace_framework.hpp"
 
@@ -398,4 +398,4 @@ class Hpet final
     bool is_main_counter_enabled_{};
 };
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_

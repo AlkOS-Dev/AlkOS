@@ -3,8 +3,8 @@
 
 #include <sys/calls.h>
 
-#include <extensions/internal/formats.hpp>
-#include <extensions/time.hpp>
+#include <internal/formats.hpp>
+#include <time.hpp>
 
 class StrfTimeWriter final
 {

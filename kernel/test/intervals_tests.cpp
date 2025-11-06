@@ -1,4 +1,4 @@
-#include <extensions/internal/intervals.hpp>
+#include <internal/intervals.hpp>
 #include <test_module/test.hpp>
 
 class IntervalsTest : public TestGroupBase

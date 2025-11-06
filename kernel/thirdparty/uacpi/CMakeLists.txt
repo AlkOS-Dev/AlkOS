@@ -36,6 +36,7 @@ target_include_directories(uacpi PRIVATE .)
 
 target_link_libraries(uacpi PRIVATE
     c
+    cpp
     alkos.libc.interface
 )
 

@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
 
-#include <extensions/type_traits.hpp>
-#include <extensions/types.hpp>
+#include <type_traits.hpp>
+#include <types.hpp>
 
 template <class T>
 class PhysicalPtr
@@ -112,4 +112,4 @@ class PhysicalPtr<void>
 
 static_assert(sizeof(PhysicalPtr<void>) == sizeof(u64));  // Ensure no padding
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_

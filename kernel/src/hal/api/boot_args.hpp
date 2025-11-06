@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
+#ifndef KERNEL_SRC_HAL_API_BOOT_ARGS_HPP_
+#define KERNEL_SRC_HAL_API_BOOT_ARGS_HPP_
 
 #include <defines.h>
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 namespace arch
 {
@@ -18,4 +18,4 @@ struct PACK RawBootArgumentsAPI {
 };
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_BOOT_ARGS_HPP_
+#endif  // KERNEL_SRC_HAL_API_BOOT_ARGS_HPP_

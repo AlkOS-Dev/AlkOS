@@ -1,11 +1,11 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_
 
 #include <stdint.h>
 
-#include <extensions/expected.hpp>
-#include <extensions/tuple.hpp>
-#include <extensions/types.hpp>
+#include <expected.hpp>
+#include <tuple.hpp>
+#include <types.hpp>
 
 #include "elf/error.hpp"
 
@@ -78,4 +78,4 @@ bool GetProgramBounds(const byte *elf_ptr, u64 &out_start, u64 &out_end);
 
 }  // namespace Elf64
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_64_HPP_

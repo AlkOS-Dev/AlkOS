@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_MMU_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_MMU_HPP_
+#ifndef KERNEL_SRC_HAL_API_MMU_HPP_
+#define KERNEL_SRC_HAL_API_MMU_HPP_
 
-#include <extensions/expected.hpp>
+#include <expected.hpp>
 #include "mem/error.hpp"
 #include "mem/types.hpp"
 
@@ -78,4 +78,4 @@ struct MmuAPI {
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_MMU_HPP_
+#endif  // KERNEL_SRC_HAL_API_MMU_HPP_

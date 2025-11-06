@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_TEST_TEST_MODULE_MACROS_HPP_
-#define ALKOS_KERNEL_TEST_TEST_MODULE_MACROS_HPP_
+#ifndef KERNEL_TEST_TEST_MODULE_MACROS_HPP_
+#define KERNEL_TEST_TEST_MODULE_MACROS_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/new.hpp>
+#include <defines.hpp>
+#include <new.hpp>
 #include <test_module/test_group_base.hpp>
 #include <test_module/test_module.hpp>
 
@@ -78,4 +78,4 @@ using test::TestGroupBase;
 
 #define FAIL_MTEST_F(fixture, test_name) ___TEST_F(fixture, test_name, true, AddManualTest)
 
-#endif  // ALKOS_KERNEL_TEST_TEST_MODULE_MACROS_HPP_
+#endif  // KERNEL_TEST_TEST_MODULE_MACROS_HPP_

@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
 
-#include <extensions/bit.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
+#include <types.hpp>
 #include "hw/io.hpp"
 #include "trace_framework.hpp"
 
@@ -46,4 +46,4 @@ void write(u32 bus, u32 device, u32 function, u32 offset, T value)
 
 }  // namespace pci
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_

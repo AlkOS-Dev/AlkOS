@@ -2,8 +2,8 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-#include <extensions/internal/formats.hpp>
-#include <extensions/types.hpp>
+#include <internal/formats.hpp>
+#include <types.hpp>
 
 #include "defines.h"
 #include "math.h"

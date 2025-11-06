@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
 
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 #include "mem/pmm.hpp"
 #include "mem/vmm.hpp"
@@ -31,4 +31,4 @@ struct PACK alignas(64) KernelArguments {
     u64 multiboot_header_end_addr;
 };
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

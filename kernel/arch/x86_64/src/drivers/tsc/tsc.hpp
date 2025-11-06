@@ -1,10 +1,10 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
+#define KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
 
 #include <cpuid.h>
-#include <extensions/bit.hpp>
-#include <extensions/types.hpp>
+#include <bit.hpp>
 #include <todo.hpp>
+#include <types.hpp>
 #include "cpu/control_registers.hpp"
 #include "cpu/msrs.hpp"
 #include "trace_framework.hpp"
@@ -94,4 +94,4 @@ NODISCARD FAST_CALL bool IsStable()
 void Initialize();
 }  // namespace tsc
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_

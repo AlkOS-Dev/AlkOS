@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
-#define ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
+#ifndef KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
+#define KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
 
 #include <sys/time.h>
 #include <time.h>
-#include <extensions/time.hpp>
+#include <time.hpp>
 
 namespace timing
 {
@@ -54,4 +54,4 @@ class SystemTime
 };
 }  // namespace timing
 
-#endif  // ALKOS_KERNEL_INCLUDE_TIME_SYSTEM_TIME_HPP_
+#endif  // KERNEL_SRC_TIME_SYSTEM_TIME_HPP_

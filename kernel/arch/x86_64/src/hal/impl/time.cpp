@@ -1,6 +1,6 @@
 #include <hal/impl/timers.hpp>
 
-#include "extensions/data_structures/array_structures.hpp"
+#include "data_structures/array_structures.hpp"
 #include "modules/hardware.hpp"
 
 // ------------------------------

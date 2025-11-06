@@ -2,7 +2,7 @@
 #include <todo.hpp>
 #include "drivers/cmos/cmos.hpp"
 
-#include <extensions/time.hpp>
+#include <time.hpp>
 
 // ------------------------------
 // RTC registers

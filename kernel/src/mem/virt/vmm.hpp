@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_
+#ifndef KERNEL_SRC_MEM_VIRT_VMM_HPP_
+#define KERNEL_SRC_MEM_VIRT_VMM_HPP_
 
-#include <extensions/expected.hpp>
-#include <extensions/types.hpp>
+#include <expected.hpp>
+#include <types.hpp>
 
 #include "hal/mmu.hpp"
 #include "hal/tlb.hpp"
@@ -52,4 +52,4 @@ using Vmm = VirtualMemoryManager;
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_VMM_HPP_
+#endif  // KERNEL_SRC_MEM_VIRT_VMM_HPP_

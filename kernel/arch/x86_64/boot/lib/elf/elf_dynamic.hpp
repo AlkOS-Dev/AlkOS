@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
 
-#include <extensions/expected.hpp>
-#include <extensions/types.hpp>
+#include <expected.hpp>
+#include <types.hpp>
 
 #include "elf/error.hpp"
 
@@ -76,4 +76,4 @@ std::expected<void, Error> Relocate(byte *elf_ptr, u64 load_base_addr);
 
 }  // namespace Elf64
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_

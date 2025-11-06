@@ -1,8 +1,8 @@
 /* internal includes */
 #include "drivers/vga/vga.hpp"
 #include <string.h>
-#include <extensions/defines.hpp>
-#include <extensions/types.hpp>
+#include <defines.hpp>
+#include <types.hpp>
 
 /**
  * @file vga.cpp

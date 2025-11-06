@@ -6,10 +6,10 @@
 #error "loader_32 needs to be compiled with a i386-elf compiler"
 #endif
 
-#include <extensions/algorithm.hpp>
-#include <extensions/defines.hpp>
-#include <extensions/internal/formats.hpp>
-#include <extensions/new.hpp>
+#include <algorithm.hpp>
+#include <defines.hpp>
+#include <internal/formats.hpp>
+#include <new.hpp>
 #include "debug_trace.hpp"
 
 #include "abi/transition_data.hpp"

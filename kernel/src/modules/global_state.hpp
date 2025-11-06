@@ -1,8 +1,8 @@
-#ifndef ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
-#define ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
+#ifndef KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
+#define KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
 
-#include <extensions/data_structures/data_structures.hpp>
-#include <extensions/template_lib.hpp>
+#include <data_structures/data_structures.hpp>
+#include <template_lib.hpp>
 
 #include "mem/cyclic_allocator.hpp"
 #include "mem/virt/addr_space.hpp"
@@ -43,4 +43,4 @@ class GlobalStateModule : template_lib::StaticSingletonHelper
 
 using GlobalStateModule = template_lib::StaticSingleton<internal::GlobalStateModule>;
 
-#endif  // ALKOS_KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_
+#endif  // KERNEL_SRC_MODULES_GLOBAL_STATE_HPP_

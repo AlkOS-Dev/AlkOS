@@ -3,7 +3,7 @@
 #include <acpi/acpi_tables.hpp>
 #include <modules/hardware.hpp>
 
-#include <extensions/bit.hpp>
+#include <bit.hpp>
 #include "trace_framework.hpp"
 
 #include "drivers/hpet/hpet.hpp"

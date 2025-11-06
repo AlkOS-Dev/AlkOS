@@ -1,11 +1,11 @@
 #include "mem/pmm.hpp"
 
-#include <extensions/algorithm.hpp>
-#include <extensions/bit.hpp>
-#include <extensions/data_structures/bit_array.hpp>
-#include <extensions/expected.hpp>
-#include <extensions/internal/formats.hpp>
-#include <extensions/optional.hpp>
+#include <algorithm.hpp>
+#include <bit.hpp>
+#include <data_structures/bit_array.hpp>
+#include <expected.hpp>
+#include <internal/formats.hpp>
+#include <optional.hpp>
 
 #include "debug_trace.hpp"
 

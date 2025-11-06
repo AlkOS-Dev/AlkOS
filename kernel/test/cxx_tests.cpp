@@ -1,7 +1,7 @@
 #include <test_module/test.hpp>
 
-#include <extensions/defines.hpp>
-#include <extensions/optional.hpp>
+#include <defines.hpp>
+#include <optional.hpp>
 
 class TestClass
 {

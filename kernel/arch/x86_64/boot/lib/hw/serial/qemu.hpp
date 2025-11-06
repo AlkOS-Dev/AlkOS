@@ -1,7 +1,7 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_
 
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 /**
  * @file serial_qemu.hpp
@@ -20,4 +20,4 @@ char QemuTerminalGetChar();
 size_t QemuTerminalReadLine(char *buffer, size_t size);
 }
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_HW_SERIAL_QEMU_HPP_

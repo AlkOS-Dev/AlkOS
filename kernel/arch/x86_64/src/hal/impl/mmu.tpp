@@ -4,8 +4,8 @@
 #include "hal/impl/mmu.hpp"
 #include "mem/heap.hpp"
 
-#include <extensions/types.hpp>
 #include <mem/types.hpp>
+#include <types.hpp>
 
 namespace arch
 {

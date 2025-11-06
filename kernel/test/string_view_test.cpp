@@ -1,5 +1,5 @@
-#include <extensions/basic_string_view.hpp>
-#include <extensions/literals.hpp>
+#include <basic_string_view.hpp>
+#include <literals.hpp>
 #include <test_module/test.hpp>
 
 using namespace std;

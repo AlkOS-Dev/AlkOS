@@ -1,8 +1,8 @@
-#ifndef ALKOS_LIBC_INCLUDE_SYS_TIME_H_
-#define ALKOS_LIBC_INCLUDE_SYS_TIME_H_
+#ifndef LIBS_LIBC_INCLUDE_SYS_TIME_H_
+#define LIBS_LIBC_INCLUDE_SYS_TIME_H_
 
 #include <stdint.h>
-#include <extensions/types.hpp>
+#include <types.hpp>
 
 // ------------------------------
 // Known time types
@@ -31,4 +31,4 @@ typedef struct TimeVal {
     u64 remainder;
 } time_val;
 
-#endif  // ALKOS_LIBC_INCLUDE_SYS_TIME_H_
+#endif  // LIBS_LIBC_INCLUDE_SYS_TIME_H_

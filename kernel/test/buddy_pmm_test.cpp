@@ -1,9 +1,9 @@
 #include <test_module/test.hpp>
 
-#include <extensions/array.hpp>
-#include <extensions/data_structures/data_structures.hpp>
-#include <extensions/span.hpp>
-#include <extensions/tuple.hpp>
+#include <array.hpp>
+#include <data_structures/data_structures.hpp>
+#include <span.hpp>
+#include <tuple.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"

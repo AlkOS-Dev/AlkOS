@@ -1,9 +1,9 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
+#define KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
 
-#include <extensions/defines.hpp>
-#include "extensions/types.hpp"
+#include <defines.hpp>
 #include "interrupts/interrupt_types.hpp"
+#include "types.hpp"
 
 // ------------------------------
 // Crucial defines
@@ -105,4 +105,4 @@ void SimpleIrqHandler(intr::LitHwEntry &entry);
 void TestIsr(intr::LitSwEntry &entry);
 void TimerIsr(intr::LitHwEntry &entry);
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
