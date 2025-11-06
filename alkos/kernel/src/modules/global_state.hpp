@@ -5,7 +5,7 @@
 #include <extensions/template_lib.hpp>
 
 #include "mem/virt/addr_space.hpp"
-#include "memory/cyclic_allocator.hpp"
+#include "mem/cyclic_allocator.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"
 #include "sync/kernel/spinlock.hpp"

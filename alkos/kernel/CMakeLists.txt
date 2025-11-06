@@ -27,8 +27,6 @@ alkos_find_sources(KERNEL_SOURCES
     SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/*.c"
 )
 
 if (CMAKE_FEATURE_FLAG_RUN_TEST_MODE)
@@ -45,9 +43,8 @@ add_executable(alkos.kernel ${KERNEL_SOURCES})
 ############################### Adding Headers ###############################
 
 target_include_directories(alkos.kernel PUBLIC
-    include
+    src
     test
-    hal
 )
 
 ########################## Configure for given Arch ##########################
