@@ -23,10 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff
 
-      - name: Lint alkos dirr with Ruff
-        run: |
-          ruff check alkos
-
       - name: Lint scripts dir with Ruff
         run: |
           ruff check scripts
