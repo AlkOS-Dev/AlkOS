@@ -1,5 +1,5 @@
 # Start from a stable Ubuntu base image
-FROM ubuntu:24.10
+FROM ubuntu:24.04
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     bison \
     flex \
-    libgmp3-dev \
+    libgmp-dev \
     libmpc-dev \
     libmpfr-dev \
     texinfo \
@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
     libisoburn-dev \
+    libisoburn1t64 \
     cmake \
     clang-format \
     xorriso \
