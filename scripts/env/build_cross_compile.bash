@@ -202,6 +202,11 @@ build_gcc() {
     runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib
     pretty_success "GCC configured correctly"
 
+    # NOTE: This is a workaround for a bug in the GCC build process where it
+    # checks for the existence of the sysroot include directory even when
+    # --without-headers is specified.
+    mkdir -p "${sysroot_path}/usr/include"
+
     pretty_info "Building GCC with ${PROC_COUNT} threads"
     runner "Failed to build GCC" make -j "${PROC_COUNT}" all-gcc
     pretty_success "GCC built correctly"
@@ -254,7 +259,7 @@ build_gdb() {
 run_build() {
     pretty_info "Starting GCC cross-compiler build with build directory: $(argparse_get "b|build_dir") and target directory: $(argparse_get "t|tool_dir")"
 
-    local sysroot_path="$(argparse_get "t|tool_dir")/$(argparse_get "c|custom_target")/sysroot"
+    local sysroot_path="$(argparse_get "t|tool_dir")"
     check_is_in_env_path "$(argparse_get "t|tool_dir")/bin"
     local is_in_path=$?
 
