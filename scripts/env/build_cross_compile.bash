@@ -144,6 +144,7 @@ download_extract_gnu_source() {
 }
 
 build_binutils() {
+    local sysroot_path="$1"
     local binutils_dir="$(argparse_get "b|build_dir")/build_binutils"
     local binutils_name="binutils-${CROSS_COMPILE_BUILD_BIN_UTILS_VER}"
 
@@ -155,7 +156,7 @@ build_binutils() {
     download_extract_gnu_source "binutils/releases/${binutils_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring binutils"
-    runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot --disable-nls --disable-werror
+    runner "Failed to configure binutils" ${binutils_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --with-sysroot="${sysroot_path}" --disable-nls --disable-werror
     pretty_success "Binutils configured correctly"
 
     pretty_info "Building binutils with ${PROC_COUNT} threads"
@@ -186,6 +187,7 @@ build_libgcc_with_retry_x86_64_fix() {
 }
 
 build_gcc() {
+    local sysroot_path="$1"
     local gcc_dir="$(argparse_get "b|build_dir")/build_gcc"
     local gcc_name="gcc-${CROSS_COMPILE_BUILD_GCC_VER}"
 
@@ -197,7 +199,7 @@ build_gcc() {
     download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
-    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot --enable-multilib
+    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib
     pretty_success "GCC configured correctly"
 
     pretty_info "Building GCC with ${PROC_COUNT} threads"
@@ -252,15 +254,16 @@ build_gdb() {
 run_build() {
     pretty_info "Starting GCC cross-compiler build with build directory: $(argparse_get "b|build_dir") and target directory: $(argparse_get "t|tool_dir")"
 
+    local sysroot_path="$(argparse_get "t|tool_dir")/$(argparse_get "c|custom_target")/sysroot"
     check_is_in_env_path "$(argparse_get "t|tool_dir")/bin"
     local is_in_path=$?
 
     export PATH="$(argparse_get "t|tool_dir")/bin:${PATH}"
     export PREFIX="$(argparse_get "t|tool_dir")"
 
-    build_binutils
+    build_binutils "${sysroot_path}"
     build_gdb
-    build_gcc
+    build_gcc "${sysroot_path}"
 
     add_to_user_env_path "$(argparse_get "t|tool_dir")/bin" "${is_in_path}"
 
