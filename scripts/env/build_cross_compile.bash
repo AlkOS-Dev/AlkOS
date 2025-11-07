@@ -197,7 +197,7 @@ build_gcc() {
     download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
-    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers
+    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot --enable-multilib
     pretty_success "GCC configured correctly"
 
     pretty_info "Building GCC with ${PROC_COUNT} threads"
