@@ -199,7 +199,7 @@ build_gcc() {
     download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
-    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib --with-newlib
+    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib
     pretty_success "GCC configured correctly"
 
     # NOTE: This is a workaround for a bug in the GCC build process where it
@@ -215,7 +215,7 @@ build_gcc() {
     if [ "$(argparse_get "c|custom_target")" = "x86_64-elf" ]; then
             build_libgcc_with_retry_x86_64_fix
     else
-        runner "Failed to build libgcc" make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-mno-red-zone'
+        runner "Failed to build libgcc" make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -ffreestanding'
     fi
     pretty_success "libgcc built correctly"
 

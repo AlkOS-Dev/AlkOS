@@ -98,18 +98,31 @@ execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
     OUTPUT_VARIABLE CRTBEGIN_OBJ_PATH
     ERROR_VARIABLE CRTBEGIN_ERROR
+    RESULT_VARIABLE CRTBEGIN_RESULT
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 execute_process(
     COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
     OUTPUT_VARIABLE CRTEND_OBJ_PATH
     ERROR_VARIABLE CRTEND_ERROR
+    RESULT_VARIABLE CRTEND_RESULT
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+if(CRTBEGIN_RESULT OR CRTEND_RESULT)
+    message(FATAL_ERROR "Failed to find compiler's CRT files.\\n"
+        "crtbegin command: ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o\\n"
+        "crtbegin result: ${CRTBEGIN_RESULT}\\n"
+        "crtbegin stderr: ${CRTBEGIN_ERROR}\\n"
+        "crtend command: ${CMAKE_C_COMPILER} -print-file-name=crtend.o\\n"
+        "crtend result: ${CRTEND_RESULT}\\n"
+        "crtend stderr: ${CRTEND_ERROR}\\n"
+    )
+endif()
+
 alkos_ensure_defined(
     VARS CRTBEGIN_OBJ_PATH CRTEND_OBJ_PATH
-    MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
+    MESSAGE "Could not find compiler's crtbegin.o/crtend.o files (command succeeded but produced no output)."
 )
 
 message(STATUS "  [INFO] Found CRT Objects:")
