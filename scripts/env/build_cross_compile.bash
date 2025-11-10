@@ -177,10 +177,10 @@ build_libgcc_with_retry_x86_64_fix() {
     attempt_runner "Libgcc build failed due to PIC issues" "$(argparse_get "v|verbose")" \
         make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     if [ $? -ne 0 ]; then
-        pretty_info "Libgcc build failed due to PIC issues; applying sed fix."
+        pretty_warning "Failed to build libgcc, applying sed fix and retrying."
         sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "$(argparse_get "c|custom_target")/libgcc/Makefile"
         pretty_info "Retrying libgcc build after sed fix."
-        attempt_runner "Failed to build libgcc even after applying the sed fix" "$(argparse_get "v|verbose")" \
+        base_runner "Failed to build libgcc even after applying the sed fix" "$(argparse_get "v|verbose")" \
             make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
     fi
     pretty_success "libgcc built correctly"

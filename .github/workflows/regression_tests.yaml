@@ -20,6 +20,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure for debug
+        run: "$GITHUB_WORKSPACE/scripts/config/configure.bash" "x86_64" debug -p regression_mode -v
+
       - name: Run debug regression tests
         id: debug_tests
         run: >
@@ -43,9 +46,12 @@ jobs:
         with:
           name: debug-logs
           path: |
-            /tmp/alkOS_build.log
-            /tmp/alkOS_regression.log
+            ${{ env.BUILD_DIR }}/logs/alkos-logs-debug.tar.gz
+            ${{ env.BUILD_DIR }}/reports/
           retention-days: 7
+
+      - name: Configure for release
+        run: "$GITHUB_WORKSPACE/scripts/config/configure.bash" "x86_64" release -p regression_mode -v
 
       - name: Run release regression tests
         id: release_tests

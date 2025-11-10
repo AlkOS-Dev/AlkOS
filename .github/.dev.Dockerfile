@@ -19,8 +19,8 @@ RUN /app/scripts/env/install_toolchain.bash "/tools" "/build_toolchain" "x86_64"
 # Permanently add the toolchain binaries to the PATH
 ENV PATH="/tools/i386-elf/bin:/tools/x86_64-elf/bin:${PATH}"
 
-# Run the initial debug configuration for the environment
-RUN /app/scripts/config/configure.bash "x86_64" debug -p test_mode -v
-
 # Set the final working directory for GitHub Actions
 WORKDIR /github/workspace
+
+# Set a default command to keep the container running if needed
+CMD ["/bin/bash"]

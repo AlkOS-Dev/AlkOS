@@ -19,6 +19,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure environment
+        run: "$GITHUB_WORKSPACE/scripts/config/configure.bash" "x86_64" debug -p test_mode -v
+
       - name: Build AlkOS
         run: "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
 
