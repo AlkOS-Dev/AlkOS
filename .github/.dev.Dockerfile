@@ -7,7 +7,9 @@ RUN pacman -Syu --noconfirm && \
 
 # Set the working directory and copy the entire project context into the image
 WORKDIR /app
-COPY . .
+
+COPY scripts/env ./scripts/env
+COPY scripts/utils ./scripts/utils
 
 # Install project-specific dependencies using the existing script.
 # The script was modified to not fail if virtualization is not present (e.g. in CI).

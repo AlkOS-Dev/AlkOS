@@ -175,13 +175,13 @@ build_libgcc_with_retry_x86_64_fix() {
     pretty_info "Building libgcc with retry logic"
 
     attempt_runner "Libgcc build failed due to PIC issues" "$(argparse_get "v|verbose")" \
-        make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
+        make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone -ffreestanding'
     if [ $? -ne 0 ]; then
-        pretty_warning "Failed to build libgcc, applying sed fix and retrying."
+        pretty_warn "Failed to build libgcc, applying sed fix and retrying."
         sed -i 's/PICFLAG/DISABLED_PICFLAG/g' "$(argparse_get "c|custom_target")/libgcc/Makefile"
         pretty_info "Retrying libgcc build after sed fix."
         base_runner "Failed to build libgcc even after applying the sed fix" "$(argparse_get "v|verbose")" \
-            make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone'
+            make -j "${PROC_COUNT}" all-target-libgcc CFLAGS_FOR_TARGET='-g -O2 -mcmodel=kernel -mno-red-zone -ffreestanding'
     fi
     pretty_success "libgcc built correctly"
 }
@@ -199,7 +199,7 @@ build_gcc() {
     download_extract_gnu_source "gcc/releases/${gcc_name}/${gcc_name}.tar.gz" "https://sourceware.org/pub/"
 
     pretty_info "Configuring GCC"
-    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib
+    runner "Failed to configure GCC" ${gcc_name}/configure --target="$(argparse_get "c|custom_target")" --prefix="$(argparse_get "t|tool_dir")" --disable-nls --enable-languages=c,c++ --without-headers --with-sysroot="${sysroot_path}" --enable-multilib --with-newlib
     pretty_success "GCC configured correctly"
 
     # NOTE: This is a workaround for a bug in the GCC build process where it
