@@ -15,7 +15,13 @@ readonly ALK_OS_CLI_SETUP_HOOKS_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/git-hooks/
 
 # Import utilities
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/pretty_print.bash"
-source "${ALK_OS_CLI_SCRIPT_DIR}/utils/helpers.bash"
+#
+# ##############################################################################
+
+# CI trigger
+
+# shellcheck source=./utils/helpers.bash
+source "$(dirname "${BASH_SOURCE[0]}")/utils/helpers.bash"
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/argparse.bash"
 
 ALK_OS_CLI_VERBOSE_FLAG=""
