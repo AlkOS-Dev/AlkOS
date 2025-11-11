@@ -1,6 +1,8 @@
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_SLAB_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_SLAB_HPP_
 
+#include <assert.h>
+#include <limits>
 #include <span.hpp>
 
 #include "hal/constants.hpp"
@@ -40,29 +42,39 @@ class Slab
 template <class T>
 class Slab<T, kOnSlabFreelist>
 {
+    // This slab implementation allocates a block of memory from the buddy
+    // allocator and partitions it into two main sections:
+    //
+    // 1. Freelist Metadata: An array of `FreeListItem` (u16) indices that
+    //    forms a linked list of available object slots. This metadata is
+    //    stored at the beginning of the block.
+    //
+    // 2. Object Storage: The remaining space in the block is used to store
+    //    the actual objects of type T. This area is located at the end of
+    //    the block.
+    //
+    // Memory Layout:
+    // [ Freelist Metadata | Object Storage | Padding (if any) ]
+    //   ^-- block_start
+
     public:
-    using StoredType   = T;
-    using FreeListItem = u16;
-
-    static constexpr size_t kStoredObjSize          = sizeof(StoredType);
-    static constexpr size_t kSizeOfMetadataPerObj   = sizeof(FreeListItem);
-    static constexpr size_t kTotalStoredBytesPerObj = kStoredObjSize + kSizeOfMetadataPerObj;
-    static constexpr FreeListItem kFreelistSentiel  = -1;
-
+    using StoredType                               = T;
+    static constexpr size_t kStoredObjSize         = sizeof(StoredType);
     static constexpr f64 kTolerableSpaceEfficiency = 0.95F;
 
-    static constexpr size_t FindBestBlockOrder()
-    {
-        u8 found_order = 0;
-        for (u8 order = 0; order < BuddyPmm::kMaxOrder; order++) {
-            found_order = order;
-            if (CalcSpaceEfficiency(order) >= kTolerableSpaceEfficiency) {
-                break;
-            }
-        }
-        return found_order;
-    };
     static constexpr u8 kBlockOrder = FindBestBlockOrder();
+
+    using BestFitInfo  = BestFit<kBlockOrder>;
+    using FreeListItem = typename BestFitInfo::FreeListItemType;
+
+    static constexpr size_t kSizeOfMetadataPerObj   = BestFitInfo::kSizeOfMetadataPerObj;
+    static constexpr size_t kTotalStoredBytesPerObj = BestFitInfo::kTotalStoredBytesPerObj;
+    static constexpr FreeListItem kFreelistSentiel  = -1;
+
+    static_assert(
+        BestFitInfo::kCapacity < kFreelistSentiel,
+        "Number of objects in slab exceeds FreeListItem capacity"
+    );
 
     Slab(BuddyPmm &b_pmm)
     {
@@ -71,14 +83,13 @@ class Slab<T, kOnSlabFreelist>
         PPtr<Page> p1 = *res;
         VPtr<Page> p2 = PhysToVirt(p1);
 
-        VPtr<u8> block_start = reinterpret_cast<VPtr<u8>>(p2);
-        num_objects          = CalcCapacity(kBlockOrder);
+        VPtr<u8> block_start     = reinterpret_cast<VPtr<u8>>(p2);
+        const size_t num_objects = BestFitInfo::kCapacity;
 
         VPtr<FreeListItem> freelist_start = reinterpret_cast<VPtr<FreeListItem>>(block_start);
         freelist_table                    = std::span(freelist_start, num_objects);
 
-        size_t bas                     = BuddyPmm::BuddyAreaSize(kBlockOrder);
-        VPtr<u8> obj_start_as_byte_ptr = block_start + bas - (num_objects * kStoredObjSize);
+        VPtr<u8> obj_start_as_byte_ptr = block_start + (num_objects * kSizeOfMetadataPerObj);
         VPtr<T> obj_start              = reinterpret_cast<VPtr<T>>(obj_start_as_byte_ptr);
         object_table                   = std::span(obj_start, num_objects);
 
@@ -86,28 +97,78 @@ class Slab<T, kOnSlabFreelist>
             freelist_table[i] = i + 1;
         }
         freelist_table.back() = kFreelistSentiel;
+        freelist_head         = 0;
     };
+
+    Expected<VPtr<StoredType>, MemError> Alloc()
+    {
+        if (freelist_head == kFreelistSentiel) {
+            return MemError::kOutOfMemory;
+        }
+
+        FreeListItem current_idx = freelist_head;
+        freelist_head            = freelist_table[current_idx];
+
+        return &object_table[current_idx];
+    }
+
+    void Free(VPtr<StoredType> obj_ptr)
+    {
+        ptrdiff_t idx = obj_ptr - object_table.data();
+
+        ASSERT_GE(idx, 0, "Freeing invalid object");
+        ASSERT_LT(idx, num_objects, "Freeing invalid object");
+
+        freelist_table[idx] = freelist_head;
+        freelist_head       = idx;
+    }
 
     private:
-    static constexpr size_t CalcCapacity(u8 block_order)
+    template <u8 Order>
+    static constexpr u8 FindBestOrderHelper()
     {
-        size_t buddy_area_size = BuddyPmm::BuddyAreaSize(block_order);
-        size_t capacity        = buddy_area_size / (kTotalStoredBytesPerObj);
-        return capacity;
-    };
+        if constexpr (Order >= BuddyPmm::kMaxOrder) {
+            return BuddyPmm::kMaxOrder - 1;
+        } else if constexpr (BestFit<Order>::kSpaceEfficiency >= kTolerableSpaceEfficiency) {
+            return Order;
+        } else {
+            return FindBestOrderHelper<Order + 1>();
+        }
+    }
 
-    static constexpr f64 CalcSpaceEfficiency(u8 block_order)
-    {
-        size_t capacity        = CalcCapacity(block_order);
-        size_t buddy_area_size = BuddyPmm::BuddyAreaSize(block_order);
-        f64 efficiency = static_cast<f64>(capacity * kTotalStoredBytesPerObj) / (buddy_area_size);
-        return efficiency;
+    static constexpr u8 FindBestBlockOrder() { return FindBestOrderHelper<0>(); };
+
+    template <u8 BlockOrder>
+    struct BestFit {
+        static constexpr size_t kBlockSize = BuddyPmm::BuddyAreaSize(BlockOrder);
+
+        using FreeListItemType = decltype([] {
+            constexpr size_t capacity_u8 = kBlockSize / (kStoredObjSize + sizeof(u8));
+            if constexpr (capacity_u8 < std::numeric_limits<u8>::max()) {
+                return u8{};
+            }
+            constexpr size_t capacity_u16 = kBlockSize / (kStoredObjSize + sizeof(u16));
+            if constexpr (capacity_u16 < std::numeric_limits<u16>::max()) {
+                return u16{};
+            }
+            constexpr size_t capacity_u32 = kBlockSize / (kStoredObjSize + sizeof(u32));
+            if constexpr (capacity_u32 < std::numeric_limits<u32>::max()) {
+                return u32{};
+            }
+            return u64{};
+        }());
+
+        static constexpr size_t kSizeOfMetadataPerObj   = sizeof(FreeListItemType);
+        static constexpr size_t kTotalStoredBytesPerObj = kStoredObjSize + kSizeOfMetadataPerObj;
+
+        static constexpr size_t kCapacity = kBlockSize / kTotalStoredBytesPerObj;
+        static constexpr f64 kSpaceEfficiency =
+            static_cast<f64>(kCapacity * kTotalStoredBytesPerObj) / kBlockSize;
     };
 
     std::span<T> object_table{};
     std::span<FreeListItem> freelist_table{};
     FreeListItem freelist_head = kFreelistSentiel;
-    size_t num_objects{};
 };
 
 template <class T>

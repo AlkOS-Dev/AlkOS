@@ -37,8 +37,8 @@ class BuddyPmm
 
     static constexpr size_t BuddyAreaSize(u8 order)
     {
-        // PageSize * 2 ^ (order + 1)
-        return static_cast<size_t>(hal::kPageSizeBytes) << (order + 1);
+        // PageSize * 2 ^ order
+        return static_cast<size_t>(hal::kPageSizeBytes) << order;
     }
 
     private:
