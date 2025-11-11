@@ -15,7 +15,7 @@ static Multiboot::TagNewAcpi *FindAcpiTag(u64 multiboot_info_addr)
 {
     // TODO: 1. Multiboot Tags should be in both the arch and the kernel, so maybe move to libk?
     // TODO: 2. This should probably recieve a MultibootInfo object instead of an address.
-    DEBUG_INFO_GENERAL("Finding ACPI tag in multiboot tags...");
+    DEBUG_INFO_BOOT("Finding ACPI tag in multiboot tags...");
     Multiboot::MultibootInfo multiboot_info(multiboot_info_addr);
 
     auto *new_acpi_tag = multiboot_info.FindTag<Multiboot::TagNewAcpi>();
@@ -33,38 +33,37 @@ static Multiboot::TagNewAcpi *FindAcpiTag(u64 multiboot_info_addr)
 int ACPI::ACPIController::Init(const BootArguments &args)
 {
     TODO_WHEN_VMEM_WORKS
-    DEBUG_INFO_GENERAL("ACPI initialization...");
+    DEBUG_INFO_BOOT("ACPI initialization...");
 
-    DEBUG_INFO_GENERAL("Finding RSDP...");
+    DEBUG_INFO_BOOT("Finding RSDP...");
     auto *acpi_tag = FindAcpiTag(Mem::PtrToUptr(args.multiboot_info));
     R_ASSERT_NOT_NULL(
         acpi_tag, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
     );
 
-    DEBUG_INFO_GENERAL(
+    DEBUG_INFO_BOOT(
         "ACPI tag found at 0x%016llX, size: %sB", reinterpret_cast<u64>(acpi_tag),
         FormatMetricUint(acpi_tag->size)
     );
 
     RsdpAddress_ = reinterpret_cast<void *>(acpi_tag->rsdp);
-    DEBUG_INFO_GENERAL("RSDP address: 0x%016p", RsdpAddress_);
+    DEBUG_INFO_BOOT("RSDP address: 0x%016p", RsdpAddress_);
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);
     R_ASSERT_ACPI_SUCCESS(ret, "uacpi_initialize error: %s", uacpi_status_to_string(ret));
 
-    // TODO: When OSL finished
-    // /* Load the AML namespace */
+    /* Load the AML namespace */
     // ret = uacpi_namespace_load();
     // if (uacpi_unlikely_error(ret)) {
-    //     TRACE_ERROR("uacpi_namespace_load error: %s", uacpi_status_to_string(ret));
+    //     DEBUG_FATAL_BOOT("uacpi_namespace_load error: %s", uacpi_status_to_string(ret));
     //     return -1;
     // }
     //
     // /* Initialize the namespace */
     // ret = uacpi_namespace_initialize();
     // if (uacpi_unlikely_error(ret)) {
-    //     TRACE_ERROR("uacpi_namespace_initialize error: %s", uacpi_status_to_string(ret));
+    //     DEBUG_FATAL_BOOT("uacpi_namespace_initialize error: %s", uacpi_status_to_string(ret));
     //     return -1;
     // }
     //
@@ -74,7 +73,7 @@ int ACPI::ACPIController::Init(const BootArguments &args)
     //  */
     // ret = uacpi_finalize_gpe_initialization();
     // if (uacpi_unlikely_error(ret)) {
-    //     TRACE_ERROR("uACPI GPE initialization error: %s", uacpi_status_to_string(ret));
+    //     DEBUG_FATAL_BOOT("uACPI GPE initialization error: %s", uacpi_status_to_string(ret));
     //     return -1;
     // }
 

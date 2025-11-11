@@ -102,6 +102,20 @@ class LogicalInterruptTable
         GetTable_<InterruptType::kHardwareInterrupt>()[lirq].driver = driver;
     }
 
+    template <InterruptType kInterruptType>
+    FORCE_INLINE_F InterruptHandlerEntry<kInterruptType> &GetEntry(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        return GetTable_<kInterruptType>()[lirq];
+    }
+
+    template <InterruptType kInterruptType>
+    FORCE_INLINE_F void UninstallEntry(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        GetTable_<kInterruptType>()[lirq].handler_data.handler = nullptr;
+    }
+
     // ------------------------------
     // Implementation
     // ------------------------------

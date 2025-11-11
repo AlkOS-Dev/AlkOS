@@ -118,8 +118,6 @@ void TimerIsr(intr::LitHwEntry &entry)
     (void)entry;  // Unused parameter
     // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 
-    hal::DebugStack();
-
     // TODO: Temporary code
     static u64 counter = 0;
     if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {

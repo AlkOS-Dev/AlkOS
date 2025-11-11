@@ -53,7 +53,7 @@ static struct TraceFramework {
 
     struct SmallTraceCyclicBuffer {
         static constexpr size_t kSize           = 65536;
-        static constexpr size_t kDumpSize       = kSize - kSize / 16;
+        static constexpr size_t kDumpSize       = kSize - kSize / 32;
         static constexpr size_t kBatchSize      = 256;
         static constexpr size_t kBufferDumpDone = kSize - kSize / 8;
 
@@ -110,6 +110,7 @@ static struct TraceFramework {
 
     FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage()
     {
+        DEBUG_INFO_GENERAL("Updating tracing stage to stage 1 (Single thread with interrupts)");
         stage_callbacks.get_workspace_cb = &TraceFramework::GetWorkspaceSingleThreadInterrupts;
         stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleThreadInterrupts;
         stage_callbacks.commit_to_debug_log_cb =

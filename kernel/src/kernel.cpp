@@ -17,7 +17,16 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
-    trace::DumpAllBuffersOnFailure();
+
+    while (true) {
+        for (size_t i = 0; i < 1'000'000; i++) {
+            hal::Noop();
+            hal::Noop();
+            hal::Noop();
+            hal::Noop();
+        }
+        trace::DumpAllBuffersOnFailure();
+    }
     TODO_MMU_MINIMAL
     // static constexpr size_t kBuffSize = 256;
     // char buff[kBuffSize];

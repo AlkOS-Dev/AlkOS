@@ -176,22 +176,73 @@ uacpi_status uacpi_kernel_handle_firmware_request(uacpi_firmware_request *)
     return UACPI_STATUS_UNIMPLEMENTED;
 }
 
+struct UacpiInterrupt {
+    uacpi_interrupt_handler uacpi_handler;
+    uacpi_handle ctx;
+};
+
+static void UacpiHander(intr::LitHwEntry &handler)
+{
+    auto *uacpi_interrupt = static_cast<UacpiInterrupt *>(handler.handler_data.data);
+    uacpi_interrupt->uacpi_handler(uacpi_interrupt->ctx);
+}
+
 uacpi_status uacpi_kernel_install_interrupt_handler(
-    uacpi_u32 irq, uacpi_interrupt_handler, uacpi_handle ctx, uacpi_handle *out_irq_handle
+    uacpi_u32 irq, uacpi_interrupt_handler uacpi_handler, uacpi_handle ctx,
+    uacpi_handle *out_irq_handle
 )
 {
-    (void)irq;
-    (void)ctx;
-    (void)out_irq_handle;
-    return UACPI_STATUS_UNIMPLEMENTED;
+    DEBUG_INFO_BOOT(
+        "Installing uacpi irq: %u with handler: %p", irq, reinterpret_cast<void *>(uacpi_handler)
+    );
+
+    auto ptr_or_error = Mem::KMalloc({.size = sizeof(UacpiInterrupt)});
+    ASSERT_TRUE(static_cast<bool>(ptr_or_error));
+    auto *intr_ptr          = static_cast<UacpiInterrupt *>(ptr_or_error.value());
+    intr_ptr->ctx           = ctx;
+    intr_ptr->uacpi_handler = uacpi_handler;
+
+    const intr::HwHandler handler{
+        .handler = UacpiHander,
+        .data    = intr_ptr,
+    };
+
+    /* Note: on x86_64 irq == lirq for hardware requests */
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(irq, handler);
+
+    auto &entry = HardwareModule::Get()
+                      .GetInterrupts()
+                      .GetLit()
+                      .GetEntry<intr::InterruptType::kHardwareInterrupt>(irq);
+    *out_irq_handle = reinterpret_cast<void *>(&entry);
+    return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_uninstall_interrupt_handler(
-    uacpi_interrupt_handler, uacpi_handle irq_handle
+    uacpi_interrupt_handler handler, uacpi_handle irq_handle
 )
 {
-    (void)irq_handle;
-    return UACPI_STATUS_UNIMPLEMENTED;
+    DEBUG_INFO_BOOT("Uninstalling uacpi irq: %p", handler);
+
+    auto entry = static_cast<intr::LitHwEntry *>(irq_handle);
+    ASSERT_NOT_NULL(irq_handle);
+    ASSERT_EQ(
+        reinterpret_cast<void *>(handler),
+        reinterpret_cast<void *>(
+            static_cast<UacpiInterrupt *>(entry->handler_data.data)->uacpi_handler
+        )
+    );
+
+    Mem::KFree(entry->handler_data.data);
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .UninstallEntry<intr::InterruptType::kHardwareInterrupt>(entry->logical_irq);
+
+    return UACPI_STATUS_OK;
 }
 
 uacpi_status uacpi_kernel_schedule_work(uacpi_work_type, uacpi_work_handler, uacpi_handle ctx)

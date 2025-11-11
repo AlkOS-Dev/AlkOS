@@ -45,8 +45,10 @@ PREVENT_INLINE static void Write(const char *format, Args... args)
     bool extended = false;
     if (bytesWritten + trace_info_size == kWorkspaceSize - 1) {
         /* write to last char */
-        workspace[kWorkspaceSize - 2] = '\n';
-    } else {
+        if (workspace[kWorkspaceSize - 2] != '\n') {
+            workspace[kWorkspaceSize - 2] = '\n';
+        }
+    } else if (workspace[bytesWritten + trace_info_size - 1] != '\n') {
         workspace[bytesWritten + trace_info_size]     = '\n';
         workspace[bytesWritten + trace_info_size + 1] = '\0';
         extended                                      = true;

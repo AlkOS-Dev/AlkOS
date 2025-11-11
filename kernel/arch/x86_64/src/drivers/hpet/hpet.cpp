@@ -119,8 +119,6 @@ Hpet::Hpet(acpi_hpet *table)
     hpet_entry.id            = static_cast<u64>(arch::HardwareClockId::kHpet);
     hpet_entry.frequency_kHz = (kFemtoSecondsPerSecond / clock_period_) / 1000;
 
-    BlockHardwareInterrupts();
-
     /* Callbacks */
     hpet_entry.read           = ReadCb;
     hpet_entry.enable_device  = EnableDeviceCb;

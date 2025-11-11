@@ -51,18 +51,17 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     GlobalStateModule::Init();
 
     /* Initialize ACPI */
-    // HardwareModule::Get().GetACPIController().Init(args);
+    const int status = HardwareModule::Get().GetACPIController().Init(args);
+    R_ASSERT_ZERO(status, "Failed to initialize ACPI subsystem...");
 
     /* Extract all necessary data from ACPI tables */
-    // HardwareModule::Get().GetACPIController().ParseTables();
+    HardwareModule::Get().GetACPIController().ParseTables();
 
     /* Allow hardware to fully initialise interrupt system */
-    // HardwareModule::Get().GetInterrupts().Init();
-
-    /* Setup core local data */
+    HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
-    // TimingModule::Init();
+    TimingModule::Init();
 
-    MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+    // MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
 }
