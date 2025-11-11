@@ -42,12 +42,12 @@ class Slab<T, kOnSlabFreelist>
 {
     public:
     using StoredType   = T;
-    using FreeListItem = u8;
+    using FreeListItem = u16;
 
     static constexpr size_t kStoredObjSize          = sizeof(StoredType);
     static constexpr size_t kSizeOfMetadataPerObj   = sizeof(FreeListItem);
     static constexpr size_t kTotalStoredBytesPerObj = kStoredObjSize + kSizeOfMetadataPerObj;
-    static constexpr u8 kFreelistSentiel            = -1;
+    static constexpr FreeListItem kFreelistSentiel  = -1;
 
     static constexpr f64 kTolerableSpaceEfficiency = 0.95F;
 
@@ -75,7 +75,7 @@ class Slab<T, kOnSlabFreelist>
         num_objects          = CalcCapacity(kBlockOrder);
 
         VPtr<FreeListItem> freelist_start = reinterpret_cast<VPtr<FreeListItem>>(block_start);
-        free_list_table                   = std::span(freelist_start, num_objects);
+        freelist_table                    = std::span(freelist_start, num_objects);
 
         size_t bas                     = BuddyPmm::BuddyAreaSize(kBlockOrder);
         VPtr<u8> obj_start_as_byte_ptr = block_start + bas - (num_objects * kStoredObjSize);
@@ -83,9 +83,9 @@ class Slab<T, kOnSlabFreelist>
         object_table                   = std::span(obj_start, num_objects);
 
         for (size_t i = 0; i < num_objects; i++) {
-            free_list_table[i] = i + 1;
+            freelist_table[i] = i + 1;
         }
-        free_list_table.back() = kFreelistSentiel;
+        freelist_table.back() = kFreelistSentiel;
     };
 
     private:
@@ -100,12 +100,13 @@ class Slab<T, kOnSlabFreelist>
     {
         size_t capacity        = CalcCapacity(block_order);
         size_t buddy_area_size = BuddyPmm::BuddyAreaSize(block_order);
-        f64 efficiency = static_cast<f64>(buddy_area_size) / (capacity * kTotalStoredBytesPerObj);
+        f64 efficiency = static_cast<f64>(capacity * kTotalStoredBytesPerObj) / (buddy_area_size);
         return efficiency;
     };
 
     std::span<T> object_table{};
-    std::span<FreeListItem> free_list_table{};
+    std::span<FreeListItem> freelist_table{};
+    FreeListItem freelist_head = kFreelistSentiel;
     size_t num_objects{};
 };
 
