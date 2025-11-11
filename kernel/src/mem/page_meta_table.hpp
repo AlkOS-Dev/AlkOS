@@ -49,6 +49,13 @@ class PageMetaTable
         return page_frames_metas_[pfn];
     }
 
+    template <typename T>
+    PageMeta &GetPageMeta(PPtr<T> ptr)
+    {
+        size_t pfn = PageFrameNumber(ptr);
+        return page_frames_metas_[pfn];
+    }
+
     size_t GetPageFrameNumber(const PageMeta *meta) const
     {
         ASSERT_TRUE(

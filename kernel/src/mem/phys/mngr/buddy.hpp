@@ -21,7 +21,7 @@ class BitmapPmm;
 class BuddyPmm
 {
     public:
-    /// MaxPageOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
+    /// MaxOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
     /// and system will try to merge into continous areas as such
     static constexpr u8 kMaxOrder = 10;
     struct AllocationRequest {
@@ -34,6 +34,12 @@ class BuddyPmm
 
     Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PPtr<Page> page);
+
+    static constexpr size_t BuddyAreaSize(u8 order)
+    {
+        // PageSize * 2 ^ (order + 1)
+        return static_cast<size_t>(hal::kPageSizeBytes) << (order + 1);
+    }
 
     private:
     void ListRemove(PageMeta *meta);

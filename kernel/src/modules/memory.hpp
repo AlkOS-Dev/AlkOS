@@ -10,6 +10,7 @@
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/phys/mngr/buddy.hpp"
+#include "mem/phys/mngr/slab.hpp"
 #include "mem/virt/vmm.hpp"
 #include "modules/hardware.hpp"
 #include "modules/helpers.hpp"
