@@ -1,7 +1,7 @@
 #ifndef LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_TRAITS_HPP_
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_TRAITS_HPP_
 
-#include <limits>
+#include <limits.hpp>
 #include <types.hpp>
 
 namespace template_lib
