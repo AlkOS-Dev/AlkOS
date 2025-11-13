@@ -49,12 +49,12 @@ class Slab<T, BlockOrder, kOnSlabFreelist>
         const size_t num_objects = EfficiencyInfo::kCapacity;
 
         VPtr<FreeListItem> freelist_start = reinterpret_cast<VPtr<FreeListItem>>(block_start);
-        freelist_table                    = std::span(freelist_start, num_objects);
+        freelist_table                    = std::span<FreeListItem>(freelist_start, num_objects);
 
         VPtr<u8> obj_start_as_byte_ptr =
             block_start + (num_objects * EfficiencyInfo::kSizeOfMetadataPerObj);
         VPtr<T> obj_start = reinterpret_cast<VPtr<T>>(obj_start_as_byte_ptr);
-        object_table      = std::span(obj_start, num_objects);
+        object_table      = std::span<T>(obj_start, num_objects);
 
         for (size_t i = 0; i < num_objects; i++) {
             freelist_table[i] = i + 1;
@@ -66,7 +66,7 @@ class Slab<T, BlockOrder, kOnSlabFreelist>
     Expected<VPtr<StoredType>, MemError> Alloc()
     {
         if (freelist_head == kFreelistSentiel) {
-            return MemError::OutOfMemory;
+            return Unexpected(MemError::OutOfMemory);
         }
 
         FreeListItem current_idx = freelist_head;

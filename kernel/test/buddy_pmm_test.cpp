@@ -304,3 +304,32 @@ TEST_F(BuddyPmmTest, Boundary_AllocateMaximumOrder)
     auto res3 = buddy_pmm_.Alloc({.order = 0});
     EXPECT_FALSE(res3.has_value());
 }
+
+// ------------------------------
+// Compile time tests
+// ------------------------------
+
+TEST_F(BuddyPmmTest, BuddyAreaSize_WithOrderZero_ReturnsSinglePageSize)
+{
+    constexpr size_t size = BuddyPmm::BuddyAreaSize(0);
+    static_assert(size == kPageSizeBytes);
+    EXPECT_EQ(kPageSizeBytes, size);
+}
+
+TEST_F(BuddyPmmTest, BuddyAreaSize_WithPositiveOrder_ReturnsCorrectMultipleOfPageSize)
+{
+    constexpr u8 order             = 5;
+    constexpr size_t size          = BuddyPmm::BuddyAreaSize(order);
+    constexpr size_t expected_size = (1 << order) * kPageSizeBytes;
+    static_assert(size == expected_size);
+    EXPECT_EQ(expected_size, size);
+}
+
+TEST_F(BuddyPmmTest, BuddyAreaSize_WithMaxOrder_ReturnsCorrectSize)
+{
+    constexpr u8 order             = BuddyPmm::kMaxOrder;
+    constexpr size_t size          = BuddyPmm::BuddyAreaSize(order);
+    constexpr size_t expected_size = (1 << order) * kPageSizeBytes;
+    static_assert(size == expected_size);
+    EXPECT_EQ(expected_size, size);
+}
