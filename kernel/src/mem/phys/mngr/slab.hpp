@@ -8,6 +8,7 @@
 #include "hal/constants.hpp"
 #include "mem/phys/mngr/buddy.hpp"
 #include "mem/phys/mngr/slab_efficiency.hpp"
+#include "mem/types.hpp"
 
 namespace Mem
 {
@@ -77,10 +78,16 @@ class Slab<T, BlockOrder, kOnSlabFreelist>
 
     void Free(VPtr<StoredType> obj_ptr)
     {
-        ptrdiff_t idx = obj_ptr - object_table.data();
+        const auto obj_uptr         = PtrToUptr(obj_ptr);
+        const auto table_start_uptr = PtrToUptr(object_table.data());
 
-        ASSERT_GE(idx, 0, "Freeing invalid object");
-        ASSERT_LT(idx, EfficiencyInfo::kCapacity, "Freeing invalid object");
+        ASSERT_GE(obj_uptr, table_start_uptr, "Freeing invalid object (out of bounds low)");
+
+        const size_t offset = obj_uptr - table_start_uptr;
+        ASSERT_EQ(offset % sizeof(StoredType), 0, "Freeing object with invalid alignment");
+
+        const size_t idx = offset / sizeof(StoredType);
+        ASSERT_LT(idx, object_table.size(), "Freeing invalid object (out of bounds high)");
 
         freelist_table[idx] = freelist_head;
         freelist_head       = idx;
