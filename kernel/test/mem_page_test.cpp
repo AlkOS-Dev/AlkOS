@@ -13,7 +13,6 @@ using namespace hal;
 TEST(PageFrameAddr_GivenZeroPfn_ReturnsPointerToStartOfPhysicalMemory)
 {
     const auto ptr = PageFrameAddr(0);
-    R_ASSERT_NOT_NULL(ptr);
     R_ASSERT_EQ(PtrToUptr(ptr), 0);
 }
 

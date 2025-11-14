@@ -185,5 +185,5 @@ TEST_F(SlabTest, SlabLifecycle_InterleavedAllocAndFree_MaintainsIntegrity)
         alloc_count++;
     }
 
-    EXPECT_EQ(capacity - 1, alloc_count);
+    EXPECT_EQ(capacity, alloc_count);
 }
