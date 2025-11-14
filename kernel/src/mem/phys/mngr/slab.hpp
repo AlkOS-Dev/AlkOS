@@ -86,6 +86,8 @@ class Slab<T, BlockOrder, kOnSlabFreelist>
         freelist_head       = idx;
     }
 
+    // TODO: Deconstructor & Destroy method
+
     private:
     std::span<T> object_table{};
     std::span<FreeListItem> freelist_table{};
