@@ -32,7 +32,7 @@ class KmemCache
 
     void Init(
         size_t size, u8 order, size_t num_objs, MetadataSize meta_size, bool off_slab,
-        KmemCache *meta_cache, BuddyPmm *buddy
+        VPtr<KmemCache> meta_cache, VPtr<BuddyPmm> buddy
     );
 
     VPtr<void> Alloc();
@@ -47,8 +47,8 @@ class KmemCache
     bool is_off_slab_{false};
 
     // Pointer to the cache used for off-slab freelist arrays
-    KmemCache *meta_cache_{nullptr};
-    BuddyPmm *buddy_pmm_{nullptr};
+    VPtr<KmemCache> meta_cache_{nullptr};
+    VPtr<BuddyPmm> buddy_pmm_{nullptr};
 
     // Lists of slabs (PageMeta acting as slab descriptors)
     VPtr<PageMeta> slabs_partial_{nullptr};
@@ -61,17 +61,17 @@ class KmemCache
     size_t num_slabs_free_{0};
 
     Expected<VPtr<void>, MemError> AllocSlab();
-    void FreeSlab(PageMeta *slab);
+    void FreeSlab(VPtr<PageMeta> slab);
     bool Grow();
 
     // List management helpers
-    void AddToPartial(PageMeta *slab);
-    void AddToFull(PageMeta *slab);
-    void AddToFree(PageMeta *slab);
-    void RemoveFromList(PageMeta *slab);
-    void MoveToPartial(PageMeta *slab);
-    void MoveToFull(PageMeta *slab);
-    void MoveToFree(PageMeta *slab);
+    void AddToPartial(VPtr<PageMeta> slab);
+    void AddToFull(VPtr<PageMeta> slab);
+    void AddToFree(VPtr<PageMeta> slab);
+    void RemoveFromList(VPtr<PageMeta> slab);
+    void MoveToPartial(VPtr<PageMeta> slab);
+    void MoveToFull(VPtr<PageMeta> slab);
+    void MoveToFree(VPtr<PageMeta> slab);
 
     // Freelist helpers
     size_t GetNextFreeIdx(VPtr<void> base, size_t current_idx) const;
@@ -90,8 +90,8 @@ class SlabAllocator
 
     void Init(BuddyPmm &buddy);
 
-    KmemCache *GetCache(size_t size);
-    KmemCache *GetCacheFromIndex(size_t index);
+    VPtr<KmemCache> GetCache(size_t size);
+    VPtr<KmemCache> GetCacheFromIndex(size_t index);
 
     private:
     std::array<KmemCache, kNumSizeClasses> caches_;

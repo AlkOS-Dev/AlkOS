@@ -35,7 +35,7 @@ struct BuddyMeta {
 struct SlabMeta {
     VPtr<PageMeta> next;
     VPtr<PageMeta> prev;
-    KmemCache *cache;
+    VPtr<KmemCache> cache;
     VPtr<void> freelist;
     u16 inuse;
 } PACK;
@@ -71,7 +71,7 @@ struct PageMeta {
         data.buddy.prev = nullptr;
     }
 
-    void InitSlab(u8 order, KmemCache *cache, VPtr<void> freelist, u16 inuse = 0)
+    void InitSlab(u8 order, VPtr<KmemCache> cache, VPtr<void> freelist, u16 inuse = 0)
     {
         type               = PageMetaType::Slab;
         this->order        = order;

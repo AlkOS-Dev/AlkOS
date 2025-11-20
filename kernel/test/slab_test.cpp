@@ -172,16 +172,24 @@ TEST_F(SlabTest, AllocAndFreeCycle_MaintainsStableState)
     VPtr<void> ptrs[10];
 
     // Fill
-    for (int i = 0; i < 10; ++i) ptrs[i] = cache.Alloc();
+    for (int i = 0; i < 10; ++i) {
+        ptrs[i] = cache.Alloc();
+    }
 
     // Free half
-    for (int i = 0; i < 5; ++i) cache.Free(ptrs[i]);
+    for (int i = 0; i < 5; ++i) {
+        cache.Free(ptrs[i]);
+    }
 
     // Refill
-    for (int i = 0; i < 5; ++i) ptrs[i] = cache.Alloc();
+    for (int i = 0; i < 5; ++i) {
+        ptrs[i] = cache.Alloc();
+    }
 
     // Validate all are valid
-    for (int i = 0; i < 10; ++i) EXPECT_NOT_NULL(ptrs[i]);
+    for (int i = 0; i < 10; ++i) {
+        EXPECT_NOT_NULL(ptrs[i]);
+    }
 }
 
 // ------------------------------
@@ -193,7 +201,7 @@ TEST_F(SlabTest, Init_WithValidBuddyPmm_PreparesAllocatorForUse)
     SlabAllocator allocator;
     allocator.Init(GetGlobalBuddy());
 
-    KmemCache *cache = allocator.GetCache(64);
+    VPtr<KmemCache> cache = allocator.GetCache(64);
     EXPECT_NOT_NULL(cache);
 
     VPtr<void> ptr = cache->Alloc();
@@ -215,8 +223,8 @@ TEST_F(SlabTest, GetCache_ForSizesInSameBucket_ReturnsSameCacheInstance)
     allocator.Init(GetGlobalBuddy());
 
     // 16 byte bucket covers 9..16
-    KmemCache *c1 = allocator.GetCache(9);
-    KmemCache *c2 = allocator.GetCache(15);
+    VPtr<KmemCache> c1 = allocator.GetCache(9);
+    VPtr<KmemCache> c2 = allocator.GetCache(15);
 
     EXPECT_EQ(c1, c2);
 }
@@ -226,8 +234,8 @@ TEST_F(SlabTest, GetCache_ForSizesInDifferentBuckets_ReturnsDifferentCacheInstan
     SlabAllocator allocator;
     allocator.Init(GetGlobalBuddy());
 
-    KmemCache *c1 = allocator.GetCache(16);
-    KmemCache *c2 = allocator.GetCache(17);  // Goes to 32 bucket
+    VPtr<KmemCache> c1 = allocator.GetCache(16);
+    VPtr<KmemCache> c2 = allocator.GetCache(17);  // Goes to 32 bucket
 
     EXPECT_NEQ(c1, c2);
 }
@@ -296,7 +304,7 @@ TEST_F(SlabTest, GetCacheFromIndex_ForLastValidIndex_ReturnsLastCache)
     SlabAllocator allocator;
     allocator.Init(GetGlobalBuddy());
 
-    KmemCache *last    = allocator.GetCacheFromIndex(SlabAllocator::kNumSizeClasses - 1);
-    KmemCache *sizeMax = allocator.GetCache(4096);
+    VPtr<KmemCache> last    = allocator.GetCacheFromIndex(SlabAllocator::kNumSizeClasses - 1);
+    VPtr<KmemCache> sizeMax = allocator.GetCache(4096);
     EXPECT_EQ(last, sizeMax);
 }

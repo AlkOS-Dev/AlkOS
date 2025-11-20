@@ -15,7 +15,7 @@ namespace Mem
 
 void KmemCache::Init(
     size_t size, u8 order, size_t num_objs, MetadataSize meta_size, bool off_slab,
-    KmemCache *m_cache, BuddyPmm *buddy
+    VPtr<KmemCache> m_cache, VPtr<BuddyPmm> buddy
 )
 {
     ASSERT_NOT_ZERO(size);
@@ -50,26 +50,30 @@ size_t KmemCache::GetNextFreeIdx(VPtr<void> base, size_t current_idx) const
     switch (metadata_size_) {
         case MetadataSize::Byte: {
             u8 val = byte_base[current_idx];
-            if (val == static_cast<u8>(-1))
+            if (val == static_cast<u8>(-1)) {
                 return kFreelistSentinel;
+            }
             return static_cast<size_t>(val);
         }
         case MetadataSize::Word: {
             u16 val = reinterpret_cast<VPtr<u16>>(byte_base)[current_idx];
-            if (val == static_cast<u16>(-1))
+            if (val == static_cast<u16>(-1)) {
                 return kFreelistSentinel;
+            }
             return static_cast<size_t>(val);
         }
         case MetadataSize::DWord: {
             u32 val = reinterpret_cast<VPtr<u32>>(byte_base)[current_idx];
-            if (val == static_cast<u32>(-1))
+            if (val == static_cast<u32>(-1)) {
                 return kFreelistSentinel;
+            }
             return static_cast<size_t>(val);
         }
         case MetadataSize::QWord: {
             u64 val = reinterpret_cast<VPtr<u64>>(byte_base)[current_idx];
-            if (val == static_cast<u64>(-1))
+            if (val == static_cast<u64>(-1)) {
                 return kFreelistSentinel;
+            }
             return static_cast<size_t>(val);
         }
         default:
@@ -159,7 +163,7 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
         meta.InitSlab(block_order_, this, freelist_val, 0);
     }
 
-    PageMeta *slab_meta = &pmt.GetPageMeta(start_pfn);
+    VPtr<PageMeta> slab_meta = &pmt.GetPageMeta(start_pfn);
 
     AddToPartial(slab_meta);
     num_slabs_total_++;
@@ -168,7 +172,7 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
     return slab_base;
 }
 
-void KmemCache::FreeSlab(PageMeta *slab)
+void KmemCache::FreeSlab(VPtr<PageMeta> slab)
 {
     if (is_off_slab_ && meta_cache_) {
         meta_cache_->Free(slab->data.slab.freelist);
@@ -195,7 +199,7 @@ VPtr<void> KmemCache::Alloc()
 
     if (!slabs_partial_) {
         if (slabs_free_) {
-            PageMeta *slab = slabs_free_;
+            VPtr<PageMeta> slab = slabs_free_;
             MoveToPartial(slab);
             num_slabs_free_--;
             num_slabs_partial_++;
@@ -206,7 +210,7 @@ VPtr<void> KmemCache::Alloc()
         }
     }
 
-    PageMeta *slab = slabs_partial_;
+    VPtr<PageMeta> slab = slabs_partial_;
     ASSERT_NOT_NULL(slab, "Must have a partial slab after Grow/Move");
 
     size_t current_idx   = kFreelistSentinel;
@@ -308,44 +312,48 @@ void KmemCache::Free(VPtr<void> ptr)
     }
 }
 
-void KmemCache::AddToPartial(PageMeta *slab)
+void KmemCache::AddToPartial(VPtr<PageMeta> slab)
 {
     slab->data.slab.next = slabs_partial_;
     slab->data.slab.prev = nullptr;
-    if (slabs_partial_)
+    if (slabs_partial_) {
         slabs_partial_->data.slab.prev = slab;
+    }
     slabs_partial_ = slab;
 }
 
-void KmemCache::AddToFull(PageMeta *slab)
+void KmemCache::AddToFull(VPtr<PageMeta> slab)
 {
     slab->data.slab.next = slabs_full_;
     slab->data.slab.prev = nullptr;
-    if (slabs_full_)
+    if (slabs_full_) {
         slabs_full_->data.slab.prev = slab;
+    }
     slabs_full_ = slab;
 }
 
-void KmemCache::AddToFree(PageMeta *slab)
+void KmemCache::AddToFree(VPtr<PageMeta> slab)
 {
     slab->data.slab.next = slabs_free_;
     slab->data.slab.prev = nullptr;
-    if (slabs_free_)
+    if (slabs_free_) {
         slabs_free_->data.slab.prev = slab;
+    }
     slabs_free_ = slab;
 }
 
-void KmemCache::RemoveFromList(PageMeta *slab)
+void KmemCache::RemoveFromList(VPtr<PageMeta> slab)
 {
     if (slab->data.slab.prev) {
         slab->data.slab.prev->data.slab.next = slab->data.slab.next;
     } else {
-        if (slabs_partial_ == slab)
+        if (slabs_partial_ == slab) {
             slabs_partial_ = slab->data.slab.next;
-        else if (slabs_full_ == slab)
+        } else if (slabs_full_ == slab) {
             slabs_full_ = slab->data.slab.next;
-        else if (slabs_free_ == slab)
+        } else if (slabs_free_ == slab) {
             slabs_free_ = slab->data.slab.next;
+        }
     }
 
     if (slab->data.slab.next) {
@@ -356,17 +364,17 @@ void KmemCache::RemoveFromList(PageMeta *slab)
     slab->data.slab.prev = nullptr;
 }
 
-void KmemCache::MoveToPartial(PageMeta *slab)
+void KmemCache::MoveToPartial(VPtr<PageMeta> slab)
 {
     RemoveFromList(slab);
     AddToPartial(slab);
 }
-void KmemCache::MoveToFull(PageMeta *slab)
+void KmemCache::MoveToFull(VPtr<PageMeta> slab)
 {
     RemoveFromList(slab);
     AddToFull(slab);
 }
-void KmemCache::MoveToFree(PageMeta *slab)
+void KmemCache::MoveToFree(VPtr<PageMeta> slab)
 {
     RemoveFromList(slab);
     AddToFree(slab);
@@ -392,17 +400,18 @@ void SlabAllocator::InitCacheHelper(KmemCache &cache, BuddyPmm &buddy)
     using MetaSize     = KmemCache::MetadataSize;
     MetaSize meta_size = MetaSize::Byte;
 
-    KmemCache *meta_cache = nullptr;
+    VPtr<KmemCache> meta_cache = nullptr;
 
     if (off_slab) {
         num_objs = block_size / ObjSize;
 
-        if (num_objs < 256)
+        if (num_objs < 256) {
             meta_size = MetaSize::Byte;
-        else if (num_objs < 65536)
+        } else if (num_objs < 65536) {
             meta_size = MetaSize::Word;
-        else
+        } else {
             meta_size = MetaSize::DWord;
+        }
 
         size_t meta_bytes = static_cast<size_t>(meta_size);
         size_t array_size = (num_objs + 1) * meta_bytes;
@@ -412,14 +421,15 @@ void SlabAllocator::InitCacheHelper(KmemCache &cache, BuddyPmm &buddy)
         num_objs             = Info::kCapacity;
         size_t raw_meta_size = Info::kSizeOfMetadataPerObj;
 
-        if (raw_meta_size == 1)
+        if (raw_meta_size == 1) {
             meta_size = MetaSize::Byte;
-        else if (raw_meta_size == 2)
+        } else if (raw_meta_size == 2) {
             meta_size = MetaSize::Word;
-        else if (raw_meta_size == 4)
+        } else if (raw_meta_size == 4) {
             meta_size = MetaSize::DWord;
-        else
+        } else {
             meta_size = MetaSize::QWord;
+        }
     }
 
     cache.Init(ObjSize, Order, num_objs, meta_size, off_slab, meta_cache, &buddy);
@@ -436,10 +446,11 @@ void SlabAllocator::Init(BuddyPmm &buddy)
     InitCaches(std::make_index_sequence<kNumSizeClasses>{}, buddy);
 }
 
-KmemCache *SlabAllocator::GetCache(size_t size)
+VPtr<KmemCache> SlabAllocator::GetCache(size_t size)
 {
-    if (size == 0)
+    if (size == 0) {
         return nullptr;
+    }
 
     size_t idx = 0;
     size_t s   = 8;
@@ -448,16 +459,18 @@ KmemCache *SlabAllocator::GetCache(size_t size)
         idx++;
     }
 
-    if (idx >= kNumSizeClasses)
+    if (idx >= kNumSizeClasses) {
         return nullptr;
+    }
 
     return &caches_[idx];
 }
 
-KmemCache *SlabAllocator::GetCacheFromIndex(size_t index)
+VPtr<KmemCache> SlabAllocator::GetCacheFromIndex(size_t index)
 {
-    if (index >= kNumSizeClasses)
+    if (index >= kNumSizeClasses) {
         return nullptr;
+    }
     return &caches_[index];
 }
 
