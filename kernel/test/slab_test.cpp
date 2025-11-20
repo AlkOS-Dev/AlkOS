@@ -1,9 +1,8 @@
-== = kernel / test / slab_test.cpp == =
 #include "mem/phys/mngr/slab.hpp"
 #include <test_module/test.hpp>
 #include "modules/memory.hpp"
 
-                                          using namespace Mem;
+using namespace Mem;
 
 class SlabTest : public TestGroupBase
 {
