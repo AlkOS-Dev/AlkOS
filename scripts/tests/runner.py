@@ -46,6 +46,7 @@ TEST_RUNS: list[TestRun] = [
             "MkTimeTest_*",
             "TimeTConversionTest_*",
             "TimeTests_TestTime",
+            "PageFaultHandlerTest_*",
         ]
     )
 ]
