@@ -112,7 +112,7 @@ PageMeta *B::MergeBlock(PageMeta *block_to_merge)
 
 B::BuddyPmm() = default;
 
-void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
+void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit)
 {
     pmt_ = &pmt;
 
@@ -127,9 +127,11 @@ void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
     }
 
     // Works because of merging strat
-    for (size_t i = 0; i < pmt.TotalPages(); i++) {
+    size_t pages_freed = 0;
+    for (size_t i = 0; i < pmt.TotalPages() && pages_freed < page_limit; i++) {
         if (b_pmm.IsFree(i)) {
             Free(PageFrameAddr(i));
+            pages_freed++;
         }
     }
 }

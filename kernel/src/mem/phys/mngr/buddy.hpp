@@ -30,7 +30,8 @@ class BuddyPmm
 
     BuddyPmm();
 
-    void Init(BitmapPmm &b_pmm, PageMetaTable &pmt);
+    static constexpr size_t kNoPageLimit = -1;
+    void Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit = kNoPageLimit);
 
     Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PPtr<Page> page);

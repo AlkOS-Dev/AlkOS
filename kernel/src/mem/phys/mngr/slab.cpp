@@ -264,6 +264,9 @@ void KmemCache::Free(VPtr<void> ptr)
 
     std::lock_guard guard{lock_};
 
+    R_ASSERT_EQ(slab.type, PageMetaType::Slab, "Page must be a slab");
+    R_ASSERT_EQ(slab.data.slab.cache, this, "Pointer does not belong to this cache");
+
     VPtr<void> slab_base = reinterpret_cast<VPtr<void>>(PhysToVirt(PageFrameAddr(head_pfn)));
     size_t offset        = reinterpret_cast<uptr>(ptr) - reinterpret_cast<uptr>(slab_base);
     size_t obj_idx       = offset / obj_size_;
@@ -273,6 +276,8 @@ void KmemCache::Free(VPtr<void> ptr)
         meta_base       = slab.data.slab.freelist;
         size_t old_head = GetNextFreeIdx(meta_base, 0);
 
+        R_ASSERT_NEQ(obj_idx, old_head, "Double free detected");
+
         SetNextFreeIdx(meta_base, obj_idx + 1, old_head);
         SetNextFreeIdx(meta_base, 0, obj_idx);
     } else {
@@ -280,6 +285,9 @@ void KmemCache::Free(VPtr<void> ptr)
         meta_base      = reinterpret_cast<VPtr<void>>(bytes + (num_objects_ * obj_size_));
 
         size_t old_head = reinterpret_cast<size_t>(slab.data.slab.freelist);
+
+        R_ASSERT_NEQ(obj_idx, old_head, "Double free detected");
+
         SetNextFreeIdx(meta_base, obj_idx, old_head);
         slab.data.slab.freelist = reinterpret_cast<VPtr<void>>(obj_idx);
     }

@@ -25,7 +25,8 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
+    constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
+    BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
     SlabAllocator_.Init(BuddyPmm_);
 
