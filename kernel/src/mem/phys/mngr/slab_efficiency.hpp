@@ -133,7 +133,7 @@ inline void PrintSlabEfficiencyTable()
         int offset = snprintf(buffer, sizeof(buffer), "  Obj size: %4zu | Orders: ", object_size);
 
         for (size_t j = 0; j < kNumBlockOrders; ++j) {
-            if (offset >= sizeof(buffer)) {
+            if (static_cast<size_t>(offset) >= sizeof(buffer)) {
                 break;
             }
             offset += snprintf(

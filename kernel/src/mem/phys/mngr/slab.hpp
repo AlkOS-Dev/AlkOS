@@ -6,104 +6,101 @@
 #include <span.hpp>
 
 #include "hal/constants.hpp"
+#include "mem/page_meta.hpp"
 #include "mem/phys/mngr/buddy.hpp"
-#include "mem/phys/mngr/slab_efficiency.hpp"
 #include "mem/types.hpp"
+#include "sync/kernel/spinlock.hpp"
 
 namespace Mem
 {
 
-static constexpr bool kOnSlabFreelist  = true;
-static constexpr bool kOffSlabFreelist = false;
+class SlabAllocator;
 
-template <class T, u8 BlockOrder, bool OnSlabFreeList = true>
-class Slab
+class KmemCache
 {
-};
-
-template <class T, u8 BlockOrder>
-class Slab<T, BlockOrder, kOnSlabFreelist>
-{
-    private:
-    using EfficiencyInfo = SlabEfficiency::SlabEfficiencyInfo<sizeof(T), BlockOrder>;
-
     public:
-    using StoredType = T;
-
-    using FreeListItem = typename EfficiencyInfo::FreeListItemType;
-
-    static constexpr FreeListItem kFreelistSentiel = static_cast<FreeListItem>(-1);
-
-    static_assert(
-        EfficiencyInfo::kCapacity < kFreelistSentiel,
-        "Number of objects in slab exceeds FreeListItem capacity"
-    );
-
-    Slab(BuddyPmm &b_pmm)
-    {
-        Expected<PPtr<Page>, MemError> res = b_pmm.Alloc({.order = BlockOrder});
-        R_ASSERT_TRUE(res, "Not enough mem for slab");
-        PPtr<Page> p1 = *res;
-        VPtr<Page> p2 = PhysToVirt(p1);
-
-        VPtr<u8> block_start     = reinterpret_cast<VPtr<u8>>(p2);
-        const size_t num_objects = EfficiencyInfo::kCapacity;
-
-        VPtr<FreeListItem> freelist_start = reinterpret_cast<VPtr<FreeListItem>>(block_start);
-        freelist_table                    = std::span<FreeListItem>(freelist_start, num_objects);
-
-        VPtr<u8> obj_start_as_byte_ptr =
-            block_start + (num_objects * EfficiencyInfo::kSizeOfMetadataPerObj);
-        VPtr<T> obj_start = reinterpret_cast<VPtr<T>>(obj_start_as_byte_ptr);
-        object_table      = std::span<T>(obj_start, num_objects);
-
-        for (size_t i = 0; i < num_objects; i++) {
-            freelist_table[i] = i + 1;
-        }
-        freelist_table.back() = kFreelistSentiel;
-        freelist_head         = 0;
+    enum class MetadataSize : size_t {
+        Byte  = 1,
+        Word  = 2,
+        DWord = 4,
+        QWord = 8,
     };
 
-    Expected<VPtr<StoredType>, MemError> Alloc()
-    {
-        if (freelist_head == kFreelistSentiel) {
-            return Unexpected(MemError::OutOfMemory);
-        }
+    static constexpr size_t kFreelistSentinel = static_cast<size_t>(-1);
 
-        FreeListItem current_idx = freelist_head;
-        freelist_head            = freelist_table[current_idx];
+    KmemCache() = default;
 
-        return &object_table[current_idx];
-    }
+    void Init(
+        size_t size, u8 order, size_t num_objs, MetadataSize meta_size, bool off_slab,
+        KmemCache *meta_cache, BuddyPmm *buddy
+    );
 
-    void Free(VPtr<StoredType> obj_ptr)
-    {
-        const auto obj_uptr         = PtrToUptr(obj_ptr);
-        const auto table_start_uptr = PtrToUptr(object_table.data());
-
-        ASSERT_GE(obj_uptr, table_start_uptr, "Freeing invalid object (out of bounds low)");
-
-        const size_t offset = obj_uptr - table_start_uptr;
-        ASSERT_EQ(offset % sizeof(StoredType), 0, "Freeing object with invalid alignment");
-
-        const size_t idx = offset / sizeof(StoredType);
-        ASSERT_LT(idx, object_table.size(), "Freeing invalid object (out of bounds high)");
-
-        freelist_table[idx] = freelist_head;
-        freelist_head       = idx;
-    }
-
-    // TODO: Deconstructor & Destroy method
+    VPtr<void> Alloc();
+    void Free(VPtr<void> ptr);
 
     private:
-    std::span<T> object_table{};
-    std::span<FreeListItem> freelist_table{};
-    FreeListItem freelist_head = kFreelistSentiel;
+    Spinlock lock_;
+    size_t obj_size_{0};
+    size_t num_objects_{0};
+    MetadataSize metadata_size_{MetadataSize::Byte};
+    u8 block_order_{0};
+    bool is_off_slab_{false};
+
+    // Pointer to the cache used for off-slab freelist arrays
+    KmemCache *meta_cache_{nullptr};
+    BuddyPmm *buddy_pmm_{nullptr};
+
+    // Lists of slabs (PageMeta acting as slab descriptors)
+    VPtr<PageMeta> slabs_partial_{nullptr};
+    VPtr<PageMeta> slabs_full_{nullptr};
+    VPtr<PageMeta> slabs_free_{nullptr};
+
+    // Stats
+    size_t num_slabs_total_{0};
+    size_t num_slabs_partial_{0};
+    size_t num_slabs_free_{0};
+
+    Expected<VPtr<void>, MemError> AllocSlab();
+    void FreeSlab(PageMeta *slab);
+    bool Grow();
+
+    // List management helpers
+    void AddToPartial(PageMeta *slab);
+    void AddToFull(PageMeta *slab);
+    void AddToFree(PageMeta *slab);
+    void RemoveFromList(PageMeta *slab);
+    void MoveToPartial(PageMeta *slab);
+    void MoveToFull(PageMeta *slab);
+    void MoveToFree(PageMeta *slab);
+
+    // Freelist helpers
+    size_t GetNextFreeIdx(VPtr<void> base, size_t current_idx) const;
+    void SetNextFreeIdx(VPtr<void> base, size_t current_idx, size_t next_idx);
+
+    friend class SlabAllocator;
 };
 
-template <class T, u8 BlockOrder>
-class Slab<T, BlockOrder, kOffSlabFreelist>
+class SlabAllocator
 {
+    public:
+    static constexpr size_t kNumSizeClasses = 10;  // 8 to 4096
+    // Size classes: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
+
+    SlabAllocator() = default;
+
+    void Init(BuddyPmm &buddy);
+
+    KmemCache *GetCache(size_t size);
+    KmemCache *GetCacheFromIndex(size_t index);
+
+    private:
+    std::array<KmemCache, kNumSizeClasses> caches_;
+
+    template <size_t Index>
+    void InitCacheHelper(KmemCache &cache, BuddyPmm &buddy);
+
+    template <size_t... Is>
+    void InitCaches(std::index_sequence<Is...>, BuddyPmm &buddy);
 };
 
 }  // namespace Mem

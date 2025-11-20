@@ -15,19 +15,20 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 {
     DEBUG_INFO_MEMORY("MemoryModule::MemoryModule()");
 
-    // Initialize BitmapPmm
+    // Prepare
     const size_t total_pages    = args.total_page_frames;
     const VPtr<void> mem_bitmap = PhysToVirt(args.mem_bitmap);
     data_structures::BitMapView bmv{mem_bitmap, total_pages};
+
+    // Init
     BitmapPmm_.Init(bmv);
 
-    // Initialize PageMetaTable
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    // Initialize BuddyPmm
-    // BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
+    BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
 
-    // Initialize Vmm
+    SlabAllocator_.Init(BuddyPmm_);
+
     Vmm_.Init(Tlb_, Mmu_);
 }
 

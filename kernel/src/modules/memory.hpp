@@ -35,6 +35,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Mem, PageMetaTable);
     DEFINE_MODULE_FIELD(Mem, BitmapPmm);
     DEFINE_MODULE_FIELD(Mem, BuddyPmm);
+    DEFINE_MODULE_FIELD(Mem, SlabAllocator);
     DEFINE_MODULE_FIELD(Mem, Vmm);
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);

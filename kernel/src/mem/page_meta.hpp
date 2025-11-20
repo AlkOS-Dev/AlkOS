@@ -16,10 +16,12 @@
 namespace Mem
 {
 struct PageMeta;
+class KmemCache;
 
 enum class PageMetaType : u8 {
     Buddy,
     Allocated,
+    Slab,
     Dummy,
 };
 
@@ -28,6 +30,14 @@ using enum PageMetaType;
 struct BuddyMeta {
     VPtr<PageMeta> next;
     VPtr<PageMeta> prev;
+} PACK;
+
+struct SlabMeta {
+    VPtr<PageMeta> next;
+    VPtr<PageMeta> prev;
+    KmemCache *cache;
+    VPtr<void> freelist;
+    u16 inuse;
 } PACK;
 
 struct AllocatedMeta {
@@ -41,6 +51,7 @@ struct DummyMeta {
 struct PageMeta {
     union {
         BuddyMeta buddy;
+        SlabMeta slab;
         AllocatedMeta allocated;
         DummyMeta dummy;
     } data;
@@ -48,9 +59,9 @@ struct PageMeta {
     PageMetaType type;
     u8 order;
 
-    // Padding to make the struct size 24 bytes, ensuring 8-byte alignment for
+    // Padding to make the struct size 40 bytes, ensuring 8-byte alignment for
     // the data union.
-    u8 _padding[6];
+    u8 _padding[4];
 
     void InitBuddy(u8 order)
     {
@@ -58,6 +69,17 @@ struct PageMeta {
         this->order     = order;
         data.buddy.next = nullptr;
         data.buddy.prev = nullptr;
+    }
+
+    void InitSlab(u8 order, KmemCache *cache, VPtr<void> freelist, u16 inuse = 0)
+    {
+        type               = PageMetaType::Slab;
+        this->order        = order;
+        data.slab.next     = nullptr;
+        data.slab.prev     = nullptr;
+        data.slab.cache    = cache;
+        data.slab.freelist = freelist;
+        data.slab.inuse    = inuse;
     }
 
     void InitAllocated(u8 order)
@@ -70,6 +92,12 @@ struct PageMeta {
     {
         ASSERT_EQ(meta.type, PageMetaType::Buddy);
         return meta.data.buddy;
+    }
+
+    static SlabMeta &AsSlab(PageMeta &meta)
+    {
+        ASSERT_EQ(meta.type, PageMetaType::Slab);
+        return meta.data.slab;
     }
 
     static AllocatedMeta &AsAllocated(PageMeta &meta)
