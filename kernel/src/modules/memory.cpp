@@ -26,6 +26,10 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
+    // Note: Initializing buddy with all pages is a slow operation.
+    // This limit is for speed of boot. This operation should have
+    // a follow up once kernel is booted, and we have another CPU, we
+    // could offload this operation to.
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
     SlabAllocator_.Init(BuddyPmm_);
