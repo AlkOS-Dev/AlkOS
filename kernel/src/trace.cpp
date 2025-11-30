@@ -174,7 +174,7 @@ static struct TraceFramework {
             const i32 batch_write_size =
                 std::min(bytes_to_write, static_cast<i32>(SmallTraceCyclicBuffer::kBatchSize));
 
-            if (tail + batch_write_size > SmallTraceCyclicBuffer::kSize) {
+            if (tail + batch_write_size > static_cast<i32>(SmallTraceCyclicBuffer::kSize)) {
                 // We cross the boundary
                 const size_t first_write  = SmallTraceCyclicBuffer::kSize - buffer.tail.value;
                 const size_t second_write = batch_write_size - first_write;
@@ -216,10 +216,10 @@ static struct TraceFramework {
                 /* For main execution just empty the space and retry */
                 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
 
-                if (bytes_left < trace_size) {
+                if (bytes_left < static_cast<i32>(trace_size)) {
                     DumpBufferSingleThread<kIsDebug>(buffer);
                 }
-            } while (nested_intrs == 0 && bytes_left < trace_size);
+            } while (nested_intrs == 0 && bytes_left < static_cast<i32>(trace_size));
 
             /* For interrupt traces, some information may be lost */
 
@@ -258,7 +258,8 @@ static struct TraceFramework {
             memcpy(buffer.buffer + old_head, src, available_bytes);
         }
 
-        if (nested_intrs == 0 && buffer.bytes_left.value < SmallTraceCyclicBuffer::kDumpSize) {
+        if (nested_intrs == 0 &&
+            buffer.bytes_left.value < static_cast<i32>(SmallTraceCyclicBuffer::kDumpSize)) {
             // Dump the content
             DumpBufferSingleThread<kIsDebug>(buffer);
         }

@@ -33,7 +33,7 @@ TEST_F(IntegerSequenceTest, IntegerSequenceSize_ForGivenSequence_ReturnsCorrectC
     static_assert(seq_3::size() == 3);
     static_assert(seq_empty::size() == 0);
 
-    EXPECT_EQ(0, seq_0::size());
-    EXPECT_EQ(3, seq_3::size());
-    EXPECT_EQ(0, seq_empty::size());
+    EXPECT_EQ(0UL, seq_0::size());
+    EXPECT_EQ(3UL, seq_3::size());
+    EXPECT_EQ(0UL, seq_empty::size());
 }

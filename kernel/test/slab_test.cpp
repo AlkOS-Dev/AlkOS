@@ -23,7 +23,6 @@ TEST_F(SlabTest, Init_GivenValidParameters_PreparesCacheForAllocation)
 
     auto res = cache.Alloc();
     EXPECT_TRUE(res.has_value());
-    VPtr<void> ptr = res.value();
 
     // Cleanup not fully possible without FreeAll, leaking slab for test
 }
@@ -41,7 +40,6 @@ TEST_F(SlabTest, Init_GivenValidOffSlabParameters_PreparesCacheForAllocation)
 
     auto res = cache.Alloc();
     EXPECT_TRUE(res.has_value());
-    VPtr<void> ptr = res.value();
 }
 
 FAIL_TEST_F(SlabTest, Init_GivenNullBuddyPmm_Asserts)
@@ -73,7 +71,6 @@ TEST_F(SlabTest, Alloc_OnEmptyCache_ReturnsNonNullPointer)
 
     auto res = cache.Alloc();
     EXPECT_TRUE(res.has_value());
-    VPtr<void> ptr = res.value();
 }
 
 TEST_F(SlabTest, Alloc_MultipleTimes_ReturnsUniquePointers)
@@ -117,14 +114,11 @@ TEST_F(SlabTest, Alloc_ExhaustingInitialSlab_SuccessfullyAllocatesFromNewSlab)
     auto res2 = cache.Alloc();
     EXPECT_TRUE(res1.has_value());
     EXPECT_TRUE(res2.has_value());
-    VPtr<void> p1 = res1.value();
-    VPtr<void> p2 = res2.value();
 
     // One of these should trigger a new slab allocation
     for (int i = 0; i < 5; i++) {
         auto res = cache.Alloc();
         EXPECT_TRUE(res.has_value());
-        VPtr<void> p = res.value();
     }
 }
 
@@ -145,7 +139,6 @@ TEST_F(SlabTest, Free_ValidPointer_AllowsPointerToBeReallocated)
     // Should not crash and allow alloc
     auto res2 = cache.Alloc();
     EXPECT_TRUE(res2.has_value());
-    VPtr<void> ptr2 = res2.value();
 }
 
 FAIL_TEST_F(SlabTest, Free_NullPointer_Asserts)
@@ -227,7 +220,6 @@ TEST_F(SlabTest, Init_WithValidBuddyPmm_PreparesAllocatorForUse)
 
     auto res = cache->Alloc();
     EXPECT_TRUE(res.has_value());
-    VPtr<void> ptr = res.value();
 }
 
 TEST_F(SlabTest, GetCache_ForSizeWithinRange_ReturnsNonNullCache)
