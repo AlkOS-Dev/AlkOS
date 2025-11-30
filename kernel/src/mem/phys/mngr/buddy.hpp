@@ -36,6 +36,19 @@ class BuddyPmm
     Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PPtr<Page> page);
 
+    static constexpr u8 SizeToPageOrder(size_t size_bytes)
+    {
+        if (size_bytes <= hal::kPageSizeBytes) {
+            return 0;
+        }
+
+        // Calculate log2 using CLZ (Count Leading Zeros)
+        // __builtin_clzll returns the number of zero bits before the first '1'.
+        // sizeof(long long) * 8 is the total width (usually 64).
+        size_t pages_needed = (size_bytes - 1) >> hal::kPageShift;
+        return static_cast<u8>((sizeof(long long) * 8) - __builtin_clzll(pages_needed));
+    }
+
     static constexpr size_t BuddyAreaSize(u8 order)
     {
         // PageSize * 2 ^ order

@@ -85,6 +85,8 @@ class SlabAllocator
     public:
     static constexpr size_t kNumSizeClasses = 10;  // 8 to 4096
     // Size classes: 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096
+    static constexpr size_t kMinSize = 8;
+    static constexpr size_t kMaxSize = kMinSize << (kNumSizeClasses - 1);
 
     SlabAllocator() = default;
 
