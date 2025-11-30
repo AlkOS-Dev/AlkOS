@@ -87,7 +87,7 @@ class DynArray
             KFreeAligned(mem_);
         }
         auto alloc = KMallocAligned({.size = size * sizeof(T), .alignment = kAlign});
-        UNEXPETED_RET_IF_ERR(alloc);
+        UNEXPECTED_RET_IF_ERR(alloc);
 
         mem_  = static_cast<T *>(alloc.value());
         size_ = size;

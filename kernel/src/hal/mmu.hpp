@@ -31,7 +31,7 @@ class Mmu : public arch::Mmu
 
         for (auto v = vaddr, p = paddr; v < end; v += kPageSizeBytes, p += kPageSizeBytes) {
             auto map_res = Map(as, UptrToPtr<void>(v), UptrToPtr<void>(p), flags);
-            UNEXPETED_RET_IF_ERR(map_res);
+            UNEXPECTED_RET_IF_ERR(map_res);
         }
         return {};
     }
