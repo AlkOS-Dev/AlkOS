@@ -1,5 +1,6 @@
 #include "mem/phys/mngr/slab.hpp"
 
+#include <limits.hpp>
 #include <mutex.hpp>
 
 #include "mem/page_meta_table.hpp"
@@ -151,15 +152,15 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
     size_t num_pages = 1 << block_order_;
     auto &pmt        = MemoryModule::Get().GetPageMetaTable();
 
-    for (size_t i = 0; i < num_pages; ++i) {
-        PageMeta &meta          = pmt.GetPageMeta(start_pfn + i);
-        VPtr<void> freelist_val = nullptr;
-        if (is_off_slab_) {
-            freelist_val = meta_base;
-        } else {
-            freelist_val = reinterpret_cast<VPtr<void>>(0);
-        }
+    VPtr<void> freelist_val = nullptr;
+    if (is_off_slab_) {
+        freelist_val = meta_base;
+    } else {
+        freelist_val = reinterpret_cast<VPtr<void>>(0);
+    }
 
+    for (size_t i = 0; i < num_pages; ++i) {
+        PageMeta &meta = pmt.GetPageMeta(start_pfn + i);
         meta.InitSlab(block_order_, this, freelist_val, 0);
     }
 
@@ -174,8 +175,11 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
 
 void KmemCache::FreeSlab(VPtr<PageMeta> slab)
 {
+    ASSERT_NOT_NULL(slab);
+
     if (is_off_slab_ && meta_cache_) {
-        meta_cache_->Free(slab->data.slab.freelist);
+        SlabMeta &sm = PageMeta::AsSlab(*slab);
+        meta_cache_->Free(sm.freelist);
     }
 
     auto &pmt  = MemoryModule::Get().GetPageMetaTable();
@@ -197,8 +201,8 @@ VPtr<void> KmemCache::Alloc()
 {
     std::lock_guard guard{lock_};
 
-    if (!slabs_partial_) {
-        if (slabs_free_) {
+    if (slabs_partial_ == nullptr) {
+        if (slabs_free_ != nullptr) {
             VPtr<PageMeta> slab = slabs_free_;
             MoveToPartial(slab);
             num_slabs_free_--;
@@ -217,15 +221,16 @@ VPtr<void> KmemCache::Alloc()
     VPtr<void> meta_base = nullptr;
 
     auto &pmt            = MemoryModule::Get().GetPageMetaTable();
+    SlabMeta &sm         = PageMeta::AsSlab(*slab);
     size_t pfn           = pmt.GetPageFrameNumber(slab);
     VPtr<void> slab_base = reinterpret_cast<VPtr<void>>(PhysToVirt(PageFrameAddr(pfn)));
 
     if (is_off_slab_) {
-        meta_base   = slab->data.slab.freelist;
+        meta_base   = sm.freelist;
         current_idx = GetNextFreeIdx(meta_base, 0);
     } else {
         // For on-slab, freelist in PageMeta stores the head index directly
-        current_idx = reinterpret_cast<size_t>(slab->data.slab.freelist);
+        current_idx = reinterpret_cast<size_t>(sm.freelist);
 
         VPtr<u8> bytes = reinterpret_cast<VPtr<u8>>(slab_base);
         meta_base      = reinterpret_cast<VPtr<void>>(bytes + (num_objects_ * obj_size_));
@@ -242,12 +247,12 @@ VPtr<void> KmemCache::Alloc()
         next_idx = GetNextFreeIdx(meta_base, current_idx + 1);
         SetNextFreeIdx(meta_base, 0, next_idx);
     } else {
-        next_idx                 = GetNextFreeIdx(meta_base, current_idx);
-        slab->data.slab.freelist = reinterpret_cast<VPtr<void>>(next_idx);
+        next_idx    = GetNextFreeIdx(meta_base, current_idx);
+        sm.freelist = reinterpret_cast<VPtr<void>>(next_idx);
     }
 
-    slab->data.slab.inuse++;
-    if (slab->data.slab.inuse == num_objects_) {
+    sm.inuse++;
+    if (sm.inuse == num_objects_) {
         MoveToFull(slab);
         num_slabs_partial_--;
     }
@@ -265,11 +270,12 @@ void KmemCache::Free(VPtr<void> ptr)
 
     size_t head_pfn = pfn & ~((1ULL << meta.order) - 1);
     PageMeta &slab  = pmt.GetPageMeta(head_pfn);
+    SlabMeta &sm    = PageMeta::AsSlab(slab);
 
     std::lock_guard guard{lock_};
 
     R_ASSERT_EQ(slab.type, PageMetaType::Slab, "Page must be a slab");
-    R_ASSERT_EQ(slab.data.slab.cache, this, "Pointer does not belong to this cache");
+    R_ASSERT_EQ(sm.cache, this, "Pointer does not belong to this cache");
 
     VPtr<void> slab_base = reinterpret_cast<VPtr<void>>(PhysToVirt(PageFrameAddr(head_pfn)));
     size_t offset        = reinterpret_cast<uptr>(ptr) - reinterpret_cast<uptr>(slab_base);
@@ -277,7 +283,7 @@ void KmemCache::Free(VPtr<void> ptr)
 
     VPtr<void> meta_base = nullptr;
     if (is_off_slab_) {
-        meta_base       = slab.data.slab.freelist;
+        meta_base       = sm.freelist;
         size_t old_head = GetNextFreeIdx(meta_base, 0);
 
         R_ASSERT_NEQ(obj_idx, old_head, "Double free detected");
@@ -288,17 +294,17 @@ void KmemCache::Free(VPtr<void> ptr)
         VPtr<u8> bytes = reinterpret_cast<VPtr<u8>>(slab_base);
         meta_base      = reinterpret_cast<VPtr<void>>(bytes + (num_objects_ * obj_size_));
 
-        size_t old_head = reinterpret_cast<size_t>(slab.data.slab.freelist);
+        size_t old_head = reinterpret_cast<size_t>(sm.freelist);
 
         R_ASSERT_NEQ(obj_idx, old_head, "Double free detected");
 
         SetNextFreeIdx(meta_base, obj_idx, old_head);
-        slab.data.slab.freelist = reinterpret_cast<VPtr<void>>(obj_idx);
+        sm.freelist = reinterpret_cast<VPtr<void>>(obj_idx);
     }
 
-    slab.data.slab.inuse--;
+    sm.inuse--;
 
-    if (slab.data.slab.inuse == 0) {
+    if (sm.inuse == 0) {
         MoveToFree(&slab);
         // It was either Partial (if it had > 1 inuse before) or Full (if it had 1 inuse and
         // num_objs=1) But typically it comes from Partial.
@@ -306,7 +312,7 @@ void KmemCache::Free(VPtr<void> ptr)
             num_slabs_partial_--;
         }
         num_slabs_free_++;
-    } else if (slab.data.slab.inuse == num_objects_ - 1) {
+    } else if (sm.inuse == num_objects_ - 1) {
         MoveToPartial(&slab);
         num_slabs_partial_++;
     }
@@ -314,54 +320,71 @@ void KmemCache::Free(VPtr<void> ptr)
 
 void KmemCache::AddToPartial(VPtr<PageMeta> slab)
 {
-    slab->data.slab.next = slabs_partial_;
-    slab->data.slab.prev = nullptr;
-    if (slabs_partial_) {
-        slabs_partial_->data.slab.prev = slab;
+    ASSERT_NOT_NULL(slab);
+    SlabMeta &sm = PageMeta::AsSlab(*slab);
+
+    sm.next = slabs_partial_;
+    sm.prev = nullptr;
+    if (slabs_partial_ != nullptr) {
+        SlabMeta &smp = PageMeta::AsSlab(*slabs_partial_);
+        smp.prev      = slab;
     }
     slabs_partial_ = slab;
 }
 
 void KmemCache::AddToFull(VPtr<PageMeta> slab)
 {
-    slab->data.slab.next = slabs_full_;
-    slab->data.slab.prev = nullptr;
-    if (slabs_full_) {
-        slabs_full_->data.slab.prev = slab;
+    ASSERT_NOT_NULL(slab);
+    SlabMeta &sm = PageMeta::AsSlab(*slab);
+
+    sm.next = slabs_full_;
+    sm.prev = nullptr;
+    if (slabs_full_ != nullptr) {
+        SlabMeta &smf = PageMeta::AsSlab(*slabs_full_);
+        smf.prev      = slab;
     }
     slabs_full_ = slab;
 }
 
 void KmemCache::AddToFree(VPtr<PageMeta> slab)
 {
-    slab->data.slab.next = slabs_free_;
-    slab->data.slab.prev = nullptr;
-    if (slabs_free_) {
-        slabs_free_->data.slab.prev = slab;
+    ASSERT_NOT_NULL(slab);
+    SlabMeta &sm = PageMeta::AsSlab(*slab);
+
+    sm.next = slabs_free_;
+    sm.prev = nullptr;
+    if (slabs_free_ != nullptr) {
+        SlabMeta &smf = PageMeta::AsSlab(*slabs_free_);
+        smf.prev      = slab;
     }
     slabs_free_ = slab;
 }
 
 void KmemCache::RemoveFromList(VPtr<PageMeta> slab)
 {
-    if (slab->data.slab.prev) {
-        slab->data.slab.prev->data.slab.next = slab->data.slab.next;
+    ASSERT_NOT_NULL(slab);
+    SlabMeta &sm = PageMeta::AsSlab(*slab);
+
+    if (sm.prev != nullptr) {
+        SlabMeta &sm_prev = PageMeta::AsSlab(*sm.prev);
+        sm_prev.next      = sm.next;
     } else {
         if (slabs_partial_ == slab) {
-            slabs_partial_ = slab->data.slab.next;
+            slabs_partial_ = sm.next;
         } else if (slabs_full_ == slab) {
-            slabs_full_ = slab->data.slab.next;
+            slabs_full_ = sm.next;
         } else if (slabs_free_ == slab) {
-            slabs_free_ = slab->data.slab.next;
+            slabs_free_ = sm.next;
         }
     }
 
-    if (slab->data.slab.next) {
-        slab->data.slab.next->data.slab.prev = slab->data.slab.prev;
+    if (sm.next != nullptr) {
+        SlabMeta &sm_next = PageMeta::AsSlab(*sm.next);
+        sm_next.prev      = sm.prev;
     }
 
-    slab->data.slab.next = nullptr;
-    slab->data.slab.prev = nullptr;
+    sm.next = nullptr;
+    sm.prev = nullptr;
 }
 
 void KmemCache::MoveToPartial(VPtr<PageMeta> slab)
@@ -387,14 +410,14 @@ void KmemCache::MoveToFree(VPtr<PageMeta> slab)
 template <size_t Index>
 void SlabAllocator::InitCacheHelper(KmemCache &cache, BuddyPmm &buddy)
 {
-    constexpr size_t ObjSize = 1ULL << (Index + SlabEfficiency::kMinObjectSizeLog2);
-    constexpr u8 Order       = SlabEfficiency::kSlabEfficiencyTable[Index][0];
+    constexpr size_t kObjSize = 1ULL << (Index + SlabEfficiency::kMinObjectSizeLog2);
+    constexpr u8 kOrder       = SlabEfficiency::kSlabEfficiencyTable[Index][0];
 
     constexpr size_t kSmallObjectLimit = 512;
-    constexpr bool ForceOffSlab        = (ObjSize >= kSmallObjectLimit);
-    bool off_slab                      = ForceOffSlab;
+    constexpr bool kForceOffSlab       = (kObjSize >= kSmallObjectLimit);
+    bool off_slab                      = kForceOffSlab;
 
-    size_t block_size = BuddyPmm::BuddyAreaSize(Order);
+    size_t block_size = BuddyPmm::BuddyAreaSize(kOrder);
     size_t num_objs   = 0;
 
     using MetaSize     = KmemCache::MetadataSize;
@@ -403,21 +426,23 @@ void SlabAllocator::InitCacheHelper(KmemCache &cache, BuddyPmm &buddy)
     VPtr<KmemCache> meta_cache = nullptr;
 
     if (off_slab) {
-        num_objs = block_size / ObjSize;
+        num_objs = block_size / kObjSize;
 
-        if (num_objs < 256) {
+        if (num_objs <= std::numeric_limits<u8>::max()) {
             meta_size = MetaSize::Byte;
-        } else if (num_objs < 65536) {
+        } else if (num_objs <= std::numeric_limits<u16>::max()) {
             meta_size = MetaSize::Word;
-        } else {
+        } else if (num_objs <= std::numeric_limits<u32>::max()) {
             meta_size = MetaSize::DWord;
+        } else {
+            meta_size = MetaSize::QWord;
         }
 
         size_t meta_bytes = static_cast<size_t>(meta_size);
         size_t array_size = (num_objs + 1) * meta_bytes;
         meta_cache        = GetCache(array_size);
     } else {
-        using Info           = SlabEfficiency::SlabEfficiencyInfo<ObjSize, Order>;
+        using Info           = SlabEfficiency::SlabEfficiencyInfo<kObjSize, kOrder>;
         num_objs             = Info::kCapacity;
         size_t raw_meta_size = Info::kSizeOfMetadataPerObj;
 
@@ -432,7 +457,7 @@ void SlabAllocator::InitCacheHelper(KmemCache &cache, BuddyPmm &buddy)
         }
     }
 
-    cache.Init(ObjSize, Order, num_objs, meta_size, off_slab, meta_cache, &buddy);
+    cache.Init(kObjSize, kOrder, num_objs, meta_size, off_slab, meta_cache, &buddy);
 }
 
 template <size_t... Is>
