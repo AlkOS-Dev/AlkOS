@@ -1,7 +1,9 @@
 #include "mem/heap.hpp"
 
 #include "hal/constants.hpp"
-#include "mem/phys/mngr/bitmap.hpp"
+#include "mem/page_meta_table.hpp"
+#include "mem/phys/mngr/buddy.hpp"
+#include "mem/phys/mngr/slab.hpp"
 #include "modules/memory.hpp"
 
 namespace Mem
@@ -13,21 +15,25 @@ struct AllocationHeader {
 };
 
 // ---------------------------------------------------------------------------
-// Standard Allocator Implementation
+// Heap Class Implementation
 // ---------------------------------------------------------------------------
 
-Expected<VPtr<void>, MemError> KMalloc(size_t size)
+void Heap::Init(PageMetaTable &pmt, BuddyPmm &pmm, SlabAllocator &slab)
 {
-    auto &pmm  = MemoryModule::Get().GetBuddyPmm();
-    auto &slab = MemoryModule::Get().GetSlabAllocator();
+    pmt_  = &pmt;
+    pmm_  = &pmm;
+    slab_ = &slab;
+}
 
+Expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
+{
     if (size == 0) {
         return Unexpected(MemError::InvalidArgument);
     }
 
     // Small Allocations -> Slab Allocator
     if (size < hal::kPageSizeBytes) {
-        auto *cache = slab.GetCache(size);
+        auto *cache = slab_->GetCache(size);
         if (!cache) {
             // Size is small but no cache fits? Likely a bug
             FAIL_ALWAYS("KMalloc called with small size but no cache fits");
@@ -39,25 +45,21 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size)
     }
 
     // Large Allocations -> Buddy Allocator
-    auto res = pmm.Alloc({.order = BuddyPmm::SizeToPageOrder(size)});
+    auto res = pmm_->Alloc({.order = BuddyPmm::SizeToPageOrder(size)});
     UNEXPECTED_RET_IF_ERR(res);
 
     return PhysToVirt(*res);
 }
 
-template <>
-void KFree(VPtr<void> ptr)
+void Heap::Free(VPtr<void> ptr)
 {
     if (ptr == nullptr)
         return;
 
-    auto &pmt = MemoryModule::Get().GetPageMetaTable();
-    auto &pmm = MemoryModule::Get().GetBuddyPmm();
-
     // Look up page metadata to determine who owns this pointer
     PPtr<Page> pptr = reinterpret_cast<PPtr<Page>>(VirtToPhys(ptr));
     // Align down to page size to get the Page struct start for metadata lookup
-    auto &page_meta = pmt.GetPageMeta(AlignDown(pptr, hal::kPageSizeBytes));
+    auto &page_meta = pmt_->GetPageMeta(AlignDown(pptr, hal::kPageSizeBytes));
 
     if (page_meta.type == PageMetaType::Slab) {
         SlabMeta &sm = PageMeta::AsSlab(page_meta);
@@ -66,18 +68,14 @@ void KFree(VPtr<void> ptr)
     }
 
     if (page_meta.type == PageMetaType::Allocated) {
-        pmm.Free(pptr);
+        pmm_->Free(pptr);
         return;
     }
 
     FAIL_ALWAYS("KFree called on pointer with corrupted or invalid PageMetaType");
 }
 
-// ---------------------------------------------------------------------------
-// Aligned Allocator Implementation
-// ---------------------------------------------------------------------------
-
-Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
+Expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
 {
     size_t alignment = r.alignment;
     size_t size      = r.size;
@@ -90,7 +88,7 @@ Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
 
     size_t alloc_size = size + alignment + sizeof(AllocationHeader);
 
-    auto res = KMalloc(alloc_size);
+    auto res = Malloc(alloc_size);
     UNEXPECTED_RET_IF_ERR(res);
 
     VPtr<void> raw_ptr = *res;
@@ -108,8 +106,7 @@ Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
     return reinterpret_cast<VPtr<void>>(aligned_addr);
 }
 
-template <>
-void KFreeAligned(VPtr<void> ptr)
+void Heap::FreeAligned(VPtr<void> ptr)
 {
     if (ptr == nullptr)
         return;
@@ -119,7 +116,37 @@ void KFreeAligned(VPtr<void> ptr)
     auto *header = reinterpret_cast<AllocationHeader *>(aligned_addr - sizeof(AllocationHeader));
 
     VPtr<void> raw_ptr = header->original_ptr;
-    KFree(raw_ptr);
+    Free(raw_ptr);
+}
+
+// ---------------------------------------------------------------------------
+// Standard Allocator Implementation Wrappers
+// ---------------------------------------------------------------------------
+
+Expected<VPtr<void>, MemError> KMalloc(size_t size)
+{
+    return MemoryModule::Get().GetHeap().Malloc(size);
+}
+
+template <>
+void KFree(VPtr<void> ptr)
+{
+    MemoryModule::Get().GetHeap().Free(ptr);
+}
+
+// ---------------------------------------------------------------------------
+// Aligned Allocator Implementation Wrappers
+// ---------------------------------------------------------------------------
+
+Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
+{
+    return MemoryModule::Get().GetHeap().MallocAligned(r);
+}
+
+template <>
+void KFreeAligned(VPtr<void> ptr)
+{
+    MemoryModule::Get().GetHeap().FreeAligned(ptr);
 }
 
 }  // namespace Mem

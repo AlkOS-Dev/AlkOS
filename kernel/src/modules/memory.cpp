@@ -34,6 +34,8 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     SlabAllocator_.Init(BuddyPmm_);
 
+    Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
+
     Vmm_.Init(Tlb_, Mmu_);
 }
 

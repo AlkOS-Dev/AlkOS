@@ -8,6 +8,40 @@
 namespace Mem
 {
 
+class PageMetaTable;
+class BuddyPmm;
+class SlabAllocator;
+
+// ---------------------------------------------------------------------------
+// Aligned Heap API types
+// ---------------------------------------------------------------------------
+
+struct KMallocRequest {
+    size_t size;
+    size_t alignment;
+};
+
+// ---------------------------------------------------------------------------
+// Heap Class
+// ---------------------------------------------------------------------------
+
+class Heap
+{
+    public:
+    void Init(PageMetaTable &pmt, BuddyPmm &pmm, SlabAllocator &slab);
+
+    Expected<VPtr<void>, MemError> Malloc(size_t size);
+    void Free(VPtr<void> ptr);
+
+    Expected<VPtr<void>, MemError> MallocAligned(KMallocRequest request);
+    void FreeAligned(VPtr<void> ptr);
+
+    private:
+    PageMetaTable *pmt_  = nullptr;
+    BuddyPmm *pmm_       = nullptr;
+    SlabAllocator *slab_ = nullptr;
+};
+
 // ---------------------------------------------------------------------------
 // Standard Heap API
 // Low overhead. Returns memory naturally aligned by the allocator
@@ -32,11 +66,6 @@ void KFree(VPtr<T> ptr);
 // Higher overhead. Guarantees specific alignment.
 // pointer returned MUST be freed using KFreeAligned.
 // ---------------------------------------------------------------------------
-
-struct KMallocRequest {
-    size_t size;
-    size_t alignment;
-};
 
 Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest request);
 
