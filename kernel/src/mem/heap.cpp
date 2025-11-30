@@ -33,11 +33,9 @@ Expected<VPtr<void>, MemError> KMalloc(size_t size)
             FAIL_ALWAYS("KMalloc called with small size but no cache fits");
         }
 
-        VPtr<void> ptr = cache->Alloc();
-        if (ptr == nullptr) {
-            return Unexpected(MemError::OutOfMemory);
-        }
-        return ptr;
+        auto res = cache->Alloc();
+        UNEXPETED_RET_IF_ERR(res);
+        return *res;
     }
 
     // Large Allocations -> Buddy Allocator

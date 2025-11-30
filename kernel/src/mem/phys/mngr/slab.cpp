@@ -123,11 +123,12 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
     if (is_off_slab_) {
         ASSERT_NOT_NULL(meta_cache_, "Off-slab cache must be initialized");
 
-        meta_base = meta_cache_->Alloc();
-        if (!meta_base) {
+        auto meta_res = meta_cache_->Alloc();
+        if (!meta_res) {
             buddy_pmm_->Free(phys_page);
-            return Unexpected(MemError::OutOfMemory);
+            return Unexpected(meta_res.error());
         }
+        meta_base = *meta_res;
     } else {
         VPtr<u8> bytes = reinterpret_cast<VPtr<u8>>(slab_base);
         meta_base      = reinterpret_cast<VPtr<void>>(bytes + (num_objects_ * obj_size_));
@@ -197,7 +198,7 @@ bool KmemCache::Grow()
     return res.has_value();
 }
 
-VPtr<void> KmemCache::Alloc()
+Expected<VPtr<void>, MemError> KmemCache::Alloc()
 {
     std::lock_guard guard{lock_};
 
@@ -209,7 +210,7 @@ VPtr<void> KmemCache::Alloc()
             num_slabs_partial_++;
         } else {
             if (!Grow()) {
-                return nullptr;
+                return Unexpected(MemError::OutOfMemory);
             }
         }
     }

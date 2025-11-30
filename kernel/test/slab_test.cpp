@@ -21,8 +21,9 @@ TEST_F(SlabTest, Init_GivenValidParameters_PreparesCacheForAllocation)
     // Capacity approx PageSize / 32
     cache.Init(32, 0, 120, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptr = cache.Alloc();
-    EXPECT_NOT_NULL(ptr);
+    auto res = cache.Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
 
     // Cleanup not fully possible without FreeAll, leaking slab for test
 }
@@ -38,8 +39,9 @@ TEST_F(SlabTest, Init_GivenValidOffSlabParameters_PreparesCacheForAllocation)
     // Large objects, off-slab
     cache.Init(2048, 0, 2, KmemCache::MetadataSize::Byte, true, &meta_cache, &GetGlobalBuddy());
 
-    VPtr<void> ptr = cache.Alloc();
-    EXPECT_NOT_NULL(ptr);
+    auto res = cache.Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
 }
 
 FAIL_TEST_F(SlabTest, Init_GivenNullBuddyPmm_Asserts)
@@ -69,8 +71,9 @@ TEST_F(SlabTest, Alloc_OnEmptyCache_ReturnsNonNullPointer)
     KmemCache cache;
     cache.Init(64, 0, 60, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptr = cache.Alloc();
-    EXPECT_NOT_NULL(ptr);
+    auto res = cache.Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
 }
 
 TEST_F(SlabTest, Alloc_MultipleTimes_ReturnsUniquePointers)
@@ -78,13 +81,17 @@ TEST_F(SlabTest, Alloc_MultipleTimes_ReturnsUniquePointers)
     KmemCache cache;
     cache.Init(64, 0, 60, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptr1 = cache.Alloc();
-    VPtr<void> ptr2 = cache.Alloc();
-    VPtr<void> ptr3 = cache.Alloc();
+    auto res1 = cache.Alloc();
+    auto res2 = cache.Alloc();
+    auto res3 = cache.Alloc();
 
-    EXPECT_NOT_NULL(ptr1);
-    EXPECT_NOT_NULL(ptr2);
-    EXPECT_NOT_NULL(ptr3);
+    EXPECT_TRUE(res1.has_value());
+    EXPECT_TRUE(res2.has_value());
+    EXPECT_TRUE(res3.has_value());
+
+    VPtr<void> ptr1 = res1.value();
+    VPtr<void> ptr2 = res2.value();
+    VPtr<void> ptr3 = res3.value();
 
     EXPECT_NEQ(ptr1, ptr2);
     EXPECT_NEQ(ptr2, ptr3);
@@ -106,15 +113,18 @@ TEST_F(SlabTest, Alloc_ExhaustingInitialSlab_SuccessfullyAllocatesFromNewSlab)
     KmemCache cache;
     cache.Init(2000, 0, 2, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> p1 = cache.Alloc();
-    VPtr<void> p2 = cache.Alloc();
-    EXPECT_NOT_NULL(p1);
-    EXPECT_NOT_NULL(p2);
+    auto res1 = cache.Alloc();
+    auto res2 = cache.Alloc();
+    EXPECT_TRUE(res1.has_value());
+    EXPECT_TRUE(res2.has_value());
+    VPtr<void> p1 = res1.value();
+    VPtr<void> p2 = res2.value();
 
     // One of these should trigger a new slab allocation
     for (int i = 0; i < 5; i++) {
-        VPtr<void> p = cache.Alloc();
-        EXPECT_NOT_NULL(p);
+        auto res = cache.Alloc();
+        EXPECT_TRUE(res.has_value());
+        VPtr<void> p = res.value();
     }
 }
 
@@ -127,12 +137,15 @@ TEST_F(SlabTest, Free_ValidPointer_AllowsPointerToBeReallocated)
     KmemCache cache;
     cache.Init(64, 0, 60, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptr = cache.Alloc();
+    auto res = cache.Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
     cache.Free(ptr);
 
     // Should not crash and allow alloc
-    VPtr<void> ptr2 = cache.Alloc();
-    EXPECT_NOT_NULL(ptr2);
+    auto res2 = cache.Alloc();
+    EXPECT_TRUE(res2.has_value());
+    VPtr<void> ptr2 = res2.value();
 }
 
 FAIL_TEST_F(SlabTest, Free_NullPointer_Asserts)
@@ -150,7 +163,9 @@ FAIL_TEST_F(SlabTest, Free_PointerNotFromThisCache_Asserts)
     KmemCache cacheB;
     cacheB.Init(64, 0, 60, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptrB = cacheB.Alloc();
+    auto resB = cacheB.Alloc();
+    EXPECT_TRUE(resB.has_value());
+    VPtr<void> ptrB = resB.value();
     cacheA.Free(ptrB);
 }
 
@@ -159,7 +174,9 @@ FAIL_TEST_F(SlabTest, Free_DoubleFree_Asserts)
     KmemCache cache;
     cache.Init(64, 0, 60, KmemCache::MetadataSize::Byte, false, nullptr, &GetGlobalBuddy());
 
-    VPtr<void> ptr = cache.Alloc();
+    auto res = cache.Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
     cache.Free(ptr);
     cache.Free(ptr);
 }
@@ -173,7 +190,9 @@ TEST_F(SlabTest, AllocAndFreeCycle_MaintainsStableState)
 
     // Fill
     for (int i = 0; i < 10; ++i) {
-        ptrs[i] = cache.Alloc();
+        auto res = cache.Alloc();
+        EXPECT_TRUE(res.has_value());
+        ptrs[i] = res.value();
     }
 
     // Free half
@@ -183,7 +202,9 @@ TEST_F(SlabTest, AllocAndFreeCycle_MaintainsStableState)
 
     // Refill
     for (int i = 0; i < 5; ++i) {
-        ptrs[i] = cache.Alloc();
+        auto res = cache.Alloc();
+        EXPECT_TRUE(res.has_value());
+        ptrs[i] = res.value();
     }
 
     // Validate all are valid
@@ -204,8 +225,9 @@ TEST_F(SlabTest, Init_WithValidBuddyPmm_PreparesAllocatorForUse)
     VPtr<KmemCache> cache = allocator.GetCache(64);
     EXPECT_NOT_NULL(cache);
 
-    VPtr<void> ptr = cache->Alloc();
-    EXPECT_NOT_NULL(ptr);
+    auto res = cache->Alloc();
+    EXPECT_TRUE(res.has_value());
+    VPtr<void> ptr = res.value();
 }
 
 TEST_F(SlabTest, GetCache_ForSizeWithinRange_ReturnsNonNullCache)

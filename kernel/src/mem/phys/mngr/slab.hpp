@@ -35,7 +35,7 @@ class KmemCache
         VPtr<KmemCache> meta_cache, VPtr<BuddyPmm> buddy
     );
 
-    VPtr<void> Alloc();
+    Expected<VPtr<void>, MemError> Alloc();
     void Free(VPtr<void> ptr);
 
     private:
