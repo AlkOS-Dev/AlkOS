@@ -4,19 +4,13 @@
 #include <expected.hpp>
 #include <span.hpp>
 
+#include "io/error.hpp"
 #include "mem/types.hpp"
-#include "types.hpp"
 
 namespace IO
 {
 
-enum class Error {
-    None,
-    Retry,        // Resource busy/buffer full (Non-blocking)
-    EndOfFile,    // Connection closed
-    DeviceError,  // Hardware fault
-    InvalidInput
-};
+using IoResult = Expected<size_t, Error>;
 
 /**
  * @brief Abstract interface for reading bytes.
@@ -70,7 +64,9 @@ class IWriter
     {
         size_t len    = 0;
         const char *s = str;
-        while (*s++) len++;
+        while (*s++ != 0) {
+            len++;
+        }
         return Write(std::span<const byte>(reinterpret_cast<const byte *>(str), len));
     }
 };

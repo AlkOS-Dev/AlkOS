@@ -1,9 +1,7 @@
-#ifndef KERNEL_SRC_IO_TYPES_HPP_
-#define KERNEL_SRC_IO_TYPES_HPP_
+#ifndef KERNEL_SRC_IO_ERROR_HPP_
+#define KERNEL_SRC_IO_ERROR_HPP_
 
-#include "types.hpp"
-
-namespace IO
+namespace Io
 {
 
 enum class Error {
@@ -14,8 +12,6 @@ enum class Error {
     InvalidInput
 };
 
-using std::expected;
+}
 
-}  // namespace IO
-
-#endif /* KERNEL_SRC_IO_TYPES_HPP_ */
+#endif /* KERNEL_SRC_IO_ERROR_HPP_ */
