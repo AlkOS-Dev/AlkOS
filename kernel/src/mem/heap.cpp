@@ -1,5 +1,7 @@
 #include "mem/heap.hpp"
 
+#include <macros.hpp>
+
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/buddy.hpp"
@@ -25,10 +27,10 @@ void Heap::Init(PageMetaTable &pmt, BuddyPmm &pmm, SlabAllocator &slab)
     slab_ = &slab;
 }
 
-Expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
+expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
 {
     if (size == 0) {
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     // Small Allocations -> Slab Allocator
@@ -75,7 +77,7 @@ void Heap::Free(VPtr<void> ptr)
     FAIL_ALWAYS("KFree called on pointer with corrupted or invalid PageMetaType");
 }
 
-Expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
+expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
 {
     size_t alignment = r.alignment;
     size_t size      = r.size;
@@ -83,7 +85,7 @@ Expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
     // Sanity checks
     if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
         // Alignment must be power of 2
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     size_t alloc_size = size + alignment + sizeof(AllocationHeader);
@@ -123,7 +125,7 @@ void Heap::FreeAligned(VPtr<void> ptr)
 // Standard Allocator Implementation Wrappers
 // ---------------------------------------------------------------------------
 
-Expected<VPtr<void>, MemError> KMalloc(size_t size)
+expected<VPtr<void>, MemError> KMalloc(size_t size)
 {
     return MemoryModule::Get().GetHeap().Malloc(size);
 }
@@ -138,7 +140,7 @@ void KFree(VPtr<void> ptr)
 // Aligned Allocator Implementation Wrappers
 // ---------------------------------------------------------------------------
 
-Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
+expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
 {
     return MemoryModule::Get().GetHeap().MallocAligned(r);
 }

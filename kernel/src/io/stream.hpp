@@ -10,7 +10,10 @@
 namespace IO
 {
 
-using IoResult = Expected<size_t, Error>;
+using std::expected;
+using std::unexpected;
+
+using IoResult = expected<size_t, Error>;
 
 /**
  * @brief Abstract interface for reading bytes.
@@ -26,7 +29,7 @@ class IReader
 
     /// Helper for single char (convenience)
     /// Returns error if buffer empty
-    virtual Expected<char, Error> GetChar()
+    virtual expected<char, Error> GetChar()
     {
         byte c;
         auto res = Read(std::span<byte>(&c, 1));
@@ -34,7 +37,7 @@ class IReader
             return std::unexpected(res.error());
         }
         if (*res == 0) {
-            return Unexpected(Error::Retry);
+            return unexpected(Error::Retry);
         }
         return static_cast<char>(c);
     }

@@ -136,13 +136,13 @@ void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit)
     }
 }
 
-Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
+expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
 {
     std::lock_guard guard{lock_};
     u8 order = ar.order;
 
     if (order > kMaxOrder) {
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     // Find the smallest available block that is large enough
@@ -160,7 +160,7 @@ Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
         }
     }
 
-    return Unexpected(MemError::OutOfMemory);
+    return unexpected(MemError::OutOfMemory);
 }
 
 void B::Free(PPtr<Page> page)

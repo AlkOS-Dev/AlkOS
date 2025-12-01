@@ -8,6 +8,9 @@
 
 using namespace Mem;
 
+using std::expected;
+using std::unexpected;
+
 void BitmapPmm::Init(data_structures::BitMapView bmv)
 {
     ASSERT_GT(bmv.Size(), 0UL);
@@ -15,10 +18,10 @@ void BitmapPmm::Init(data_structures::BitMapView bmv)
     last_alloc_idx_ = bmv.Size() - 1;
 };
 
-Expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
+expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 {
     if (ar.num_pages == 0) {
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
     const u64 total_pages = bitmap_view_.Size();
 
@@ -45,7 +48,7 @@ Expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
     }
 
     if (!found) {
-        return Unexpected(MemError::OutOfMemory);
+        return unexpected(MemError::OutOfMemory);
     }
 
     MarkAllocated(fbr.start_pfn, fbr.start_pfn + ar.num_pages);
@@ -62,7 +65,7 @@ void BitmapPmm::Free(PPtr<Page> page, size_t num_pages)
     }
 }
 
-Expected<BitmapPmm::FindBlockResult, MemError> BitmapPmm::FindContiguousBlock(
+expected<BitmapPmm::FindBlockResult, MemError> BitmapPmm::FindContiguousBlock(
     size_t range_start_pfn, size_t range_end_pfn, u64 num_pages
 )
 {
@@ -84,5 +87,5 @@ Expected<BitmapPmm::FindBlockResult, MemError> BitmapPmm::FindContiguousBlock(
 
     } while (current_pfn-- > range_start_pfn);
 
-    return Unexpected(MemError::OutOfMemory);
+    return unexpected(MemError::OutOfMemory);
 }

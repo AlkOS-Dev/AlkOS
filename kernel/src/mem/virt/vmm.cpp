@@ -1,4 +1,5 @@
 #include "mem/virt/vmm.hpp"
+#include <macros.hpp>
 #include "mem/heap.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
@@ -7,6 +8,9 @@
 
 namespace Mem
 {
+
+using std::expected;
+using std::unexpected;
 
 using Vmm = VirtualMemoryManager;
 using AS  = AddressSpace;
@@ -19,12 +23,12 @@ void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu) noexcept
     mmu_ = &mmu;
 }
 
-Expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
+expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
     return KMalloc<AddressSpace>();
 }
 
-Expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
+expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 {
     for (const VMemArea &vma : *as) {
         // Unmap all pages in the VMA
@@ -41,7 +45,7 @@ void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
     tlb_->FlushAll();
 }
 
-Expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
+expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 {
     auto res = as->AddArea(vma);
     UNEXPECTED_RET_IF_ERR(res);
@@ -49,7 +53,7 @@ Expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
     return vma.start;
 }
 
-Expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
+expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 {
     // Get area start/end
     auto a_or_err = as->FindArea(region_start);

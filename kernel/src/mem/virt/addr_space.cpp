@@ -1,4 +1,5 @@
 #include "mem/virt/addr_space.hpp"
+#include <macros.hpp>
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
 #include "mem/types.hpp"
@@ -16,7 +17,7 @@ AS::~AddressSpace()
     }
 }
 
-Expected<void, MemError> AS::AddArea(VMemArea vma)
+expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
     UNEXPECTED_RET_IF_ERR(res);
@@ -32,7 +33,7 @@ Expected<void, MemError> AS::AddArea(VMemArea vma)
         if (AreasOverlap(it, n_area)) {
             area_list_lock_.Unlock();
             KFree(n_area);
-            return Unexpected(MemError::InvalidArgument);
+            return unexpected(MemError::InvalidArgument);
         }
     }
 
@@ -53,7 +54,7 @@ bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
     return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
 }
 
-Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
+expected<void, MemError> AS::RmArea(VPtr<void> ptr)
 {
     area_list_lock_.Lock();
 
@@ -85,10 +86,10 @@ Expected<void, MemError> AS::RmArea(VPtr<void> ptr)
     }
 
     area_list_lock_.Unlock();
-    return Unexpected(MemError::InvalidArgument);
+    return unexpected(MemError::InvalidArgument);
 }
 
-Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
+expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
 {
     area_list_lock_.Lock();
 
@@ -102,7 +103,7 @@ Expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
     }
 
     area_list_lock_.Unlock();
-    return Unexpected(MemError::NotFound);
+    return unexpected(MemError::NotFound);
 }
 
 bool AS::IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr)

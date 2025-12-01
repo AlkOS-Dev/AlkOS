@@ -1,6 +1,7 @@
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 
+#include <expected.hpp>
 #include <types.hpp>
 
 #include "mem/error.hpp"
@@ -15,6 +16,9 @@ class BuddyPmmTest;
 
 namespace Mem
 {
+
+using std::expected;
+using std::unexpected;
 
 class BitmapPmm;
 
@@ -33,7 +37,7 @@ class BuddyPmm
     static constexpr size_t kNoPageLimit = -1;
     void Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit = kNoPageLimit);
 
-    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
+    expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PPtr<Page> page);
 
     static constexpr u8 SizeToPageOrder(size_t size_bytes)
