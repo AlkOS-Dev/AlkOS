@@ -10,7 +10,7 @@ using namespace Mem;
 
 void BitmapPmm::Init(data_structures::BitMapView bmv)
 {
-    ASSERT_GT(bmv.Size(), 0);
+    ASSERT_GT(bmv.Size(), 0UL);
     bitmap_view_    = bmv;
     last_alloc_idx_ = bmv.Size() - 1;
 };

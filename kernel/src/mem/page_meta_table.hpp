@@ -49,6 +49,14 @@ class PageMetaTable
         return page_frames_metas_[pfn];
     }
 
+    template <typename T>
+    PageMeta &GetPageMeta(PPtr<T> ptr)
+    {
+        size_t pfn = PageFrameNumber(ptr);
+        ASSERT_TRUE(pfn < num_page_frames_, "Page frame number is out of bounds");
+        return page_frames_metas_[pfn];
+    }
+
     size_t GetPageFrameNumber(const PageMeta *meta) const
     {
         ASSERT_TRUE(

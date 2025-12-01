@@ -21,7 +21,7 @@ class BitmapPmm;
 class BuddyPmm
 {
     public:
-    /// MaxPageOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
+    /// MaxOrder of 10 means that 2^0 num pages are allowed up to 2^10 (order 10)
     /// and system will try to merge into continous areas as such
     static constexpr u8 kMaxOrder = 10;
     struct AllocationRequest {
@@ -30,14 +30,34 @@ class BuddyPmm
 
     BuddyPmm();
 
-    void Init(BitmapPmm &b_pmm, PageMetaTable &pmt);
+    static constexpr size_t kNoPageLimit = -1;
+    void Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit = kNoPageLimit);
 
     Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar);
     void Free(PPtr<Page> page);
 
+    static constexpr u8 SizeToPageOrder(size_t size_bytes)
+    {
+        if (size_bytes <= hal::kPageSizeBytes) {
+            return 0;
+        }
+
+        // Calculate log2 using CLZ (Count Leading Zeros)
+        // __builtin_clzll returns the number of zero bits before the first '1'.
+        // sizeof(long long) * 8 is the total width (usually 64).
+        size_t pages_needed = (size_bytes - 1) >> hal::kPageShift;
+        return static_cast<u8>((sizeof(long long) * 8) - __builtin_clzll(pages_needed));
+    }
+
+    static constexpr size_t BuddyAreaSize(u8 order)
+    {
+        // PageSize * 2 ^ order
+        return static_cast<size_t>(hal::kPageSizeBytes) << order;
+    }
+
     private:
-    void ListRemove(PageMeta *meta);
-    void ListPush(PageMeta *meta);
+    void ListRemove(VPtr<PageMeta> meta);
+    void ListPush(VPtr<PageMeta> meta);
     static size_t GetBuddyPfn(size_t pfn, u8 order);
 
     /**
@@ -46,14 +66,14 @@ class BuddyPmm
      * @param target_order The desired final order.
      * @return A pointer to the final, correctly-sized block.
      */
-    PageMeta *SplitBlock(PageMeta *block_to_split, u8 target_order);
+    VPtr<PageMeta> SplitBlock(VPtr<PageMeta> block_to_split, u8 target_order);
 
     /**
      * @brief Coalesces a free block with its buddies recursively.
      * @param block_to_merge Block to merge. MUST NOT be on a freelist.
      * @return A pointer to the final, largest possible merged block.
      */
-    PageMeta *MergeBlock(PageMeta *block_to_merge);
+    VPtr<PageMeta> MergeBlock(VPtr<PageMeta> block_to_merge);
 
     /**
      * @brief Private accessor for test/debug use.
@@ -66,7 +86,7 @@ class BuddyPmm
     Spinlock lock_{};
 
     /// Dependencies
-    PageMetaTable *pmt_{nullptr};
+    VPtr<PageMetaTable> pmt_{nullptr};
 
     /// Friends
     friend ::BuddyPmmTest;

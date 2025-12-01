@@ -19,7 +19,7 @@ AS::~AddressSpace()
 Expected<void, MemError> AS::AddArea(VMemArea vma)
 {
     auto res = KMalloc<VMemArea>();
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     VPtr<VMemArea> n_area = *res;
     *n_area               = vma;

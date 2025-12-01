@@ -39,7 +39,7 @@ class DynArray
     ~DynArray()
     {
         if (mem_) {
-            KFree(mem_);
+            KFreeAligned(mem_);
         }
     }
 
@@ -84,10 +84,10 @@ class DynArray
     FORCE_INLINE_F Expected<void, MemError> Reallocate(const size_t size)
     {
         if (mem_) {
-            KFree(mem_);
+            KFreeAligned(mem_);
         }
-        auto alloc = KMalloc({.size = size * sizeof(T), .alignment = kAlign});
-        UNEXPETED_RET_IF_ERR(alloc);
+        auto alloc = KMallocAligned({.size = size * sizeof(T), .alignment = kAlign});
+        UNEXPECTED_RET_IF_ERR(alloc);
 
         mem_  = static_cast<T *>(alloc.value());
         size_ = size;

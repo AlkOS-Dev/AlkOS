@@ -92,7 +92,8 @@ TEST_F(SpanTest, FromStdArray)
 
 TEST_F(SpanTest, FromInitializerList)
 {
-    std::span<const int> span({1, 2, 3, 4, 5});
+    std::initializer_list<int> il = {1, 2, 3, 4, 5};
+    std::span<const int> span(il);
 
     EXPECT_EQ(5_size, span.size());
     EXPECT_EQ(1, span[0]);

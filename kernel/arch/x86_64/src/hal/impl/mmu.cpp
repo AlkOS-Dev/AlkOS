@@ -38,7 +38,7 @@ Expected<void, MemError> Mmu::Map(
 )
 {
     auto res = WalkToEntry<1>(as, vaddr, true);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (pme_l1->IsPresent()) {
@@ -56,7 +56,7 @@ Expected<void, MemError> Mmu::Map(
 Expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
 {
     auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (!pme_l1->IsPresent()) {
@@ -74,7 +74,7 @@ Expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
 Expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> vaddr)
 {
     auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (!pme_l1->IsPresent()) {
