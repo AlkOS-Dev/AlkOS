@@ -32,6 +32,12 @@ extern "C" void __cxa_guard_abort(__guard *)
 extern "C" void __cxa_atexit(void) {}
 
 // -----------------------------------
+// Virtual function handler
+// -----------------------------------
+
+extern "C" void __cxa_pure_virtual() { __platform_panic("Pure virtual function called!"); }
+
+// -----------------------------------
 // New and delete implementation
 // -----------------------------------
 
