@@ -25,7 +25,6 @@ class MultiplexerWriter : public IWriter
 
     /**
      * @brief Attaches a new writer to the multiplexer.
-     * @return true if added, false if the multiplexer is full.
      */
     expected<void> AddOutput(IWriter &writer)
     {

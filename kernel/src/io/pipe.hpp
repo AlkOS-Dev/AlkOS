@@ -10,6 +10,10 @@ namespace IO
 {
 
 /// Assumes Single Producer - Single Consumer
+/// Because it uses atomics and not locks
+///
+/// under the hood, it's IRQ safe
+/// (Can connect eg. a Keyboard IRQ as a writer)
 template <size_t Size>
 class Pipe : public IStream
 {
