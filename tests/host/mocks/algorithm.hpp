@@ -1,0 +1,6 @@
+#ifndef TESTS_HOST_MOCKS_ALGORITHM_HPP_
+#define TESTS_HOST_MOCKS_ALGORITHM_HPP_
+
+#include <algorithm>
+
+#endif  // TESTS_HOST_MOCKS_ALGORITHM_HPP_

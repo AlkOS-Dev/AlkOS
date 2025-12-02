@@ -1,0 +1,6 @@
+#ifndef TESTS_HOST_MOCKS_ARRAY_HPP_
+#define TESTS_HOST_MOCKS_ARRAY_HPP_
+
+#include <array>
+
+#endif  // TESTS_HOST_MOCKS_ARRAY_HPP_
