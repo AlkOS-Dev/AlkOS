@@ -1,0 +1,6 @@
+#ifndef TESTS_HOST_MOCKS_ATOMIC_HPP_
+#define TESTS_HOST_MOCKS_ATOMIC_HPP_
+
+#include <atomic>
+
+#endif  // TESTS_HOST_MOCKS_ATOMIC_HPP_

@@ -43,6 +43,8 @@ out
 
 # build files
 build
+build-test
+build-tests
 
 # tools
 tools
