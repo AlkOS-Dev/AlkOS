@@ -9,6 +9,10 @@
 2.  **Include Priority:** CMake is configured to search `mocks/` *before* `libs/libcontainers/include`, effectively intercepting kernel dependencies.
 3.  **Standalone:** Builds with the host compiler (g++/clang++), ignoring the kernel cross-compiler toolchain.
 
+## Where to find them
+
+Host tests (if present) are defined in `host` subfolder of `test` or `tests` folder in kernel / libs
+
 ## Usage
 
 **Warning:** Run this in a separate build directory. Do not mix with the main kernel build.
@@ -16,13 +20,8 @@
 ```bash
 mkdir build-test
 cd build-test
-cmake ../tests/host
+cmake ..
 make
-./container_tests
+./${WhateverTheNameOfTheSpecificExeIs}
 ```
 
-## Directory Layout
-
-*   `mocks/` - Shim headers mapping kernel APIs (`hal::kcachelinesizebytes`, `u64`) to host equivalents.
-*   `CMakeLists.txt` - Configures include paths and links `GTest` + `pthread`.
-*   `*.cpp` - Unit tests.

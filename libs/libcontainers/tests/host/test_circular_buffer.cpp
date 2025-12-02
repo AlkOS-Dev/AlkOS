@@ -1,15 +1,14 @@
 #include <gtest/gtest.h>
-#include <atomic>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 // This will pull the data_structure, but use the mocked <atomic.hpp>, <hal/constants.hpp> etc.
 #include <data_structures/atomic_cyclic_buffer.hpp>
 
 using namespace data_structures;
 
-TEST(AtomicCyclicBuffer, SingleProducerSingleConsumer)
-{
+TEST(AtomicCyclicBuffer, SingleProducerSingleConsumer) {
     // 64 byte buffer (must be power of 2 based on your code)
     AtomicCyclicBuffer<int, 64> buffer;
     const int kNumItems = 100000;
@@ -42,3 +41,4 @@ TEST(AtomicCyclicBuffer, SingleProducerSingleConsumer)
     producer.join();
     consumer.join();
 }
+
