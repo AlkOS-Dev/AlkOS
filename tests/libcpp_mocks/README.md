@@ -1,2 +1,8 @@
-## Purpose
-This mock library defines a target to which host related tests can link against, so that the tested library links against **host** `libcpp` & `libc` and **not** `kernel libcpp`
+# Host LibC/LibCpp Mocks
+
+**Purpose:**
+Provides CMake targets (`alkos.libcpp.interface`, `alkos.libc.interface`) that force kernel code to link against **Host** STL/LibC.
+
+**Mechanism:**
+- Exposes header search paths that shadow kernel headers.
+- Enables reliable concurrency testing (ASan/TSan) by using the host's threaded runtime.
