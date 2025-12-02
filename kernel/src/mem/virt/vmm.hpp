@@ -13,6 +13,9 @@
 namespace Mem
 {
 
+using std::expected;
+using std::unexpected;
+
 //==============================================================================
 // VMM
 //==============================================================================
@@ -31,13 +34,13 @@ class VirtualMemoryManager
     // Class interaction
     // ------------------------------
 
-    Expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
-    Expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
+    expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
+    expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
     void SwitchAddrSpace(VPtr<AddressSpace> as);
 
-    Expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
-    Expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
-    // Expected<void, MemError> UpdateAreaFlags(
+    expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
+    expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
+    // expected<void, MemError> UpdateAreaFlags(
     //     VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
     // );
 

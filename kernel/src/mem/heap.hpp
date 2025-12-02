@@ -8,6 +8,9 @@
 namespace Mem
 {
 
+using std::expected;
+using std::unexpected;
+
 class PageMetaTable;
 class BuddyPmm;
 class SlabAllocator;
@@ -30,10 +33,10 @@ class Heap
     public:
     void Init(PageMetaTable &pmt, BuddyPmm &pmm, SlabAllocator &slab);
 
-    Expected<VPtr<void>, MemError> Malloc(size_t size);
+    expected<VPtr<void>, MemError> Malloc(size_t size);
     void Free(VPtr<void> ptr);
 
-    Expected<VPtr<void>, MemError> MallocAligned(KMallocRequest request);
+    expected<VPtr<void>, MemError> MallocAligned(KMallocRequest request);
     void FreeAligned(VPtr<void> ptr);
 
     private:
@@ -48,10 +51,10 @@ class Heap
 // (usually 8 or 16 bytes depending on size).
 // ---------------------------------------------------------------------------
 
-Expected<VPtr<void>, MemError> KMalloc(size_t size);
+expected<VPtr<void>, MemError> KMalloc(size_t size);
 
 template <typename T>
-Expected<VPtr<T>, MemError> KMalloc()
+expected<VPtr<T>, MemError> KMalloc()
 {
     return KMalloc(sizeof(T)).transform([](VPtr<void> ptr) {
         return reinterpret_cast<VPtr<T>>(ptr);
@@ -67,7 +70,7 @@ void KFree(VPtr<T> ptr);
 // pointer returned MUST be freed using KFreeAligned.
 // ---------------------------------------------------------------------------
 
-Expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest request);
+expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest request);
 
 template <typename T>
 void KFreeAligned(VPtr<T> ptr);

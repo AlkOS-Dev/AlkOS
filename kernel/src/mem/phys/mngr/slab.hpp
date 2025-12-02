@@ -2,6 +2,7 @@
 #define KERNEL_SRC_MEM_PHYS_MNGR_SLAB_HPP_
 
 #include <assert.h>
+#include <expected.hpp>
 #include <limits.hpp>
 #include <span.hpp>
 
@@ -13,6 +14,9 @@
 
 namespace Mem
 {
+
+using std::expected;
+using std::unexpected;
 
 class SlabAllocator;
 
@@ -35,7 +39,7 @@ class KmemCache
         VPtr<KmemCache> meta_cache, VPtr<BuddyPmm> buddy
     );
 
-    Expected<VPtr<void>, MemError> Alloc();
+    expected<VPtr<void>, MemError> Alloc();
     void Free(VPtr<void> ptr);
 
     private:
@@ -60,7 +64,7 @@ class KmemCache
     size_t num_slabs_partial_{0};
     size_t num_slabs_free_{0};
 
-    Expected<VPtr<void>, MemError> AllocSlab();
+    expected<VPtr<void>, MemError> AllocSlab();
     void FreeSlab(VPtr<PageMeta> slab);
     bool Grow();
 

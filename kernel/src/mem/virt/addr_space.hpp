@@ -15,6 +15,9 @@
 namespace Mem
 {
 
+using std::expected;
+using std::unexpected;
+
 //==============================================================================
 // Forward Declarations
 //==============================================================================
@@ -44,11 +47,11 @@ class AddressSpace
 
     private:
     // This is orchestrated in VMM (For proper TLB management)
-    Expected<void, MemError> AddArea(VMemArea vma);
-    Expected<void, MemError> RmArea(VPtr<void> ptr);
+    expected<void, MemError> AddArea(VMemArea vma);
+    expected<void, MemError> RmArea(VPtr<void> ptr);
 
     // Helpers
-    Expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
+    expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
     bool IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr);
     bool AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b);
 

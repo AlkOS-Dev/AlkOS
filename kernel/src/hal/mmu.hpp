@@ -2,12 +2,16 @@
 #define KERNEL_SRC_HAL_MMU_HPP_
 
 #include <hal/impl/mmu.hpp>
+#include <macros.hpp>
 
 #include <bits_ext.hpp>
 #include "hal/constants.hpp"
 
 namespace hal
 {
+
+using std::expected;
+using std::unexpected;
 
 using PageFlags = arch::PageFlags;
 
@@ -18,7 +22,7 @@ class Mmu : public arch::Mmu
     public:
     /// Maps a range of virtual memory to physical memory
     /// The range is treated as half-open: [start, start + size)
-    Expected<void, Mem::MemError> MapRange(
+    expected<void, Mem::MemError> MapRange(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr_start, Mem::PPtr<void> paddr_start,
         size_t size, PageFlags flags
     )
@@ -38,7 +42,7 @@ class Mmu : public arch::Mmu
 
     /// Unmaps a range of virtual memory
     /// The range is treated as half-open: [start, start + size)
-    Expected<void, Mem::MemError> UnMapRange(
+    expected<void, Mem::MemError> UnMapRange(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> start, size_t size
     )
     {

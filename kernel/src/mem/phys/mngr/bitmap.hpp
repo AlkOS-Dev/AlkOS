@@ -11,6 +11,9 @@
 namespace Mem
 {
 
+using std::expected;
+using std::unexpected;
+
 class BuddyPmm;
 
 class BitmapPmm
@@ -28,7 +31,7 @@ class BitmapPmm
     BitmapPmm() = default;
     void Init(data_structures::BitMapView bmv);
 
-    Expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar = {.num_pages = 1});
+    expected<PPtr<Page>, MemError> Alloc(AllocationRequest ar = {.num_pages = 1});
     void Free(PPtr<Page> page, size_t num_pages = 1);
 
     size_t BitMapSize() const { return bitmap_view_.Size(); }
@@ -38,7 +41,7 @@ class BitmapPmm
         size_t start_pfn;
     };
 
-    Expected<FindBlockResult, MemError> FindContiguousBlock(
+    expected<FindBlockResult, MemError> FindContiguousBlock(
         size_t start_range_pfn, size_t end_range_pfn, u64 num_pages
     );
     bool IsFree(size_t pfn) const { return bitmap_view_.Get(pfn) == BitMapFree; }

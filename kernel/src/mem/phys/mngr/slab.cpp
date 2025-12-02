@@ -10,6 +10,9 @@
 namespace Mem
 {
 
+using std::expected;
+using std::unexpected;
+
 //==============================================================================
 // KmemCache Implementation
 //==============================================================================
@@ -105,13 +108,13 @@ void KmemCache::SetNextFreeIdx(VPtr<void> base, size_t current_idx, size_t next_
     }
 }
 
-Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
+expected<VPtr<void>, MemError> KmemCache::AllocSlab()
 {
     ASSERT_NOT_NULL(buddy_pmm_, "BuddyPmm must be initialized");
 
     auto res = buddy_pmm_->Alloc({.order = block_order_});
     if (!res) {
-        return Unexpected(res.error());
+        return unexpected(res.error());
     }
 
     PPtr<Page> phys_page = *res;
@@ -126,7 +129,7 @@ Expected<VPtr<void>, MemError> KmemCache::AllocSlab()
         auto meta_res = meta_cache_->Alloc();
         if (!meta_res) {
             buddy_pmm_->Free(phys_page);
-            return Unexpected(meta_res.error());
+            return unexpected(meta_res.error());
         }
         meta_base = *meta_res;
     } else {
@@ -198,7 +201,7 @@ bool KmemCache::Grow()
     return res.has_value();
 }
 
-Expected<VPtr<void>, MemError> KmemCache::Alloc()
+expected<VPtr<void>, MemError> KmemCache::Alloc()
 {
     std::lock_guard guard{lock_};
 
@@ -210,7 +213,7 @@ Expected<VPtr<void>, MemError> KmemCache::Alloc()
             num_slabs_partial_++;
         } else {
             if (!Grow()) {
-                return Unexpected(MemError::OutOfMemory);
+                return unexpected(MemError::OutOfMemory);
             }
         }
     }

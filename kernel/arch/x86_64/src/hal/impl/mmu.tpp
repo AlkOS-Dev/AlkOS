@@ -10,6 +10,9 @@
 namespace arch
 {
 
+using std::expected;
+using std::unexpected;
+
 template <size_t kLevel>
 u64 Mmu::PmeIdx(Mem::VPtr<void> vaddr)
 {
@@ -32,7 +35,7 @@ void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme)
 }
 
 template <size_t kLevel>
-Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
+expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, bool create_if_missing
 )
 {
@@ -47,12 +50,12 @@ Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     auto pme_l4 = Mem::PhysToVirt(pmt_l4[PmeIdx<4>(vaddr)]);
     if (!pme_l4->IsPresent()) {
         if (!create_if_missing) {
-            return Unexpected(Mem::MemError::NotFound);
+            return unexpected(Mem::MemError::NotFound);
         }
 
         auto res = Mem::KMalloc<PageMapTable<3>>();
         if (!res) {
-            return Unexpected(res.error());
+            return unexpected(res.error());
         }
 
         pme_l4->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
@@ -64,12 +67,12 @@ Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     auto pme_l3 = Mem::PhysToVirt(pmt_l3[PmeIdx<3>(vaddr)]);
     if (!pme_l3->IsPresent()) {
         if (!create_if_missing) {
-            return Unexpected(Mem::MemError::NotFound);
+            return unexpected(Mem::MemError::NotFound);
         }
 
         auto res = Mem::KMalloc<PageMapTable<2>>();
         if (!res) {
-            return Unexpected(res.error());
+            return unexpected(res.error());
         }
 
         pme_l3->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
@@ -81,12 +84,12 @@ Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     auto pme_l2 = Mem::PhysToVirt(pmt_l2[PmeIdx<2>(vaddr)]);
     if (!pme_l2->IsPresent()) {
         if (!create_if_missing) {
-            return Unexpected(Mem::MemError::NotFound);
+            return unexpected(Mem::MemError::NotFound);
         }
 
         auto res = Mem::KMalloc<PageMapTable<1>>();
         if (!res) {
-            return Unexpected(res.error());
+            return unexpected(res.error());
         }
 
         pme_l2->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
@@ -99,7 +102,7 @@ Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     if constexpr (kLevel == 1)
         return pme_l1;
 
-    return Unexpected(Mem::MemError::InvalidArgument);
+    return unexpected(Mem::MemError::InvalidArgument);
 }
 
 }  // namespace arch

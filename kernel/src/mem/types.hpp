@@ -6,16 +6,6 @@
 #include <types.hpp>
 #include "hal/constants.hpp"
 
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-
-template <typename E>
-using Unexpected = std::unexpected<E>;
-
-#define UNEXPECTED_RET_IF_ERR(res) \
-    if (!res)                      \
-    return Unexpected(res.error())
-
 namespace Mem
 {
 

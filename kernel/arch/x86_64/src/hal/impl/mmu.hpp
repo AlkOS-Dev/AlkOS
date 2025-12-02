@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
 
 #include <hal/api/mmu.hpp>
 #include <mem/virt/addr_space.hpp>
@@ -9,16 +9,19 @@
 namespace arch
 {
 
+using std::expected;
+using std::unexpected;
+
 class Mmu : public MmuAPI
 {
     public:
-    Expected<void, Mem::MemError> Map(
+    expected<void, Mem::MemError> Map(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, Mem::PPtr<void> paddr, PageFlags
     );
 
-    Expected<void, Mem::MemError> UnMap(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
+    expected<void, Mem::MemError> UnMap(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
 
-    Expected<Mem::PPtr<void>, Mem::MemError> Translate(
+    expected<Mem::PPtr<void>, Mem::MemError> Translate(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
     );
 
@@ -41,7 +44,7 @@ class Mmu : public MmuAPI
     void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme);
 
     template <size_t kLevel = 0>
-    Expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> WalkToEntry(
+    expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> WalkToEntry(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, bool create_if_missing = false
     );
 };
@@ -50,4 +53,4 @@ class Mmu : public MmuAPI
 
 #include "hal/impl/mmu.tpp"
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_
