@@ -1,6 +1,7 @@
 #ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ATOMIC_CYCLIC_BUFFER_HPP_
 #define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ATOMIC_CYCLIC_BUFFER_HPP_
 
+#include <algorithm.hpp>
 #include <array.hpp>
 #include <atomic.hpp>
 #include <defines.hpp>
@@ -41,8 +42,7 @@ class AtomicCyclicBuffer
         const auto read_idx = read_index_.load(std::memory_order_acquire);
         auto write_idx      = write_index_.load(std::memory_order_relaxed);
 
-        const auto size  = data.size();
-        SizeType written = 0;
+        const auto size = data.size();
 
         // Since indices grow indefinitely, capacity - (write - read) is free space.
         const auto count      = write_idx - read_idx;
@@ -81,8 +81,7 @@ class AtomicCyclicBuffer
         const auto read_idx = read_index_.load(std::memory_order_acquire);
         auto write_idx      = write_index_.load(std::memory_order_relaxed);
 
-        const auto size  = data.size();
-        SizeType written = 0;
+        const auto size = data.size();
 
         // Since indices grow indefinitely, capacity - (write - read) is free space.
         const auto count      = write_idx - read_idx;
