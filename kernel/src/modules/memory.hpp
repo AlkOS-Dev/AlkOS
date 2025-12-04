@@ -5,6 +5,7 @@
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
+#include "hal/io.hpp"
 #include "hal/mmu.hpp"
 #include "hal/tlb.hpp"
 #include "mem/heap.hpp"
