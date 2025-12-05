@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_IO_ERROR_HPP_
 #define KERNEL_SRC_IO_ERROR_HPP_
 
-namespace Io
+namespace IO
 {
 
 enum class Error {
@@ -14,4 +14,4 @@ enum class Error {
 
 }
 
-#endif /* KERNEL_SRC_IO_ERROR_HPP_ */
+#endif  // KERNEL_SRC_IO_ERROR_HPP_
