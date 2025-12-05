@@ -34,22 +34,22 @@ class Uart16550 final : public IO::IStream
     // ------------------------------
 
     // Read/Write Data (DLAB=0) or Divisor Low (DLAB=1)
-    Io::Register data_reg_;
+    IO::Register data_reg_;
 
     // Interrupt Enable (DLAB=0) or Divisor High (DLAB=1)
-    Io::Register int_enable_reg_;
+    IO::Register int_enable_reg_;
 
     // FIFO Control (Write) / ISR (Read)
-    Io::Register fifo_ctrl_reg_;
+    IO::Register fifo_ctrl_reg_;
 
     // Line Control Register
-    Io::Register line_ctrl_reg_;
+    IO::Register line_ctrl_reg_;
 
     // Modem Control Register
-    Io::Register modem_ctrl_reg_;
+    IO::Register modem_ctrl_reg_;
 
     // Line Status Register
-    Io::Register line_status_reg_;
+    IO::Register line_status_reg_;
 
     // ------------------------------
     // Helpers
