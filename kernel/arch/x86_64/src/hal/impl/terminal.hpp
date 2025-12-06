@@ -7,7 +7,6 @@
 #include <todo.hpp>
 
 #include "drivers/serial/qemu.hpp"
-#include "drivers/vga/vga.hpp"
 
 namespace arch
 {

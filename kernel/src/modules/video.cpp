@@ -18,12 +18,12 @@ internal::VideoModule::VideoModule(const BootArguments &args) noexcept
 
     auto s  = Surface(Mem::PhysToVirt(fb_pptr), fb_args.width, fb_args.height, fb_args.pitch);
     auto pf = PixelFormat{
-        .red_pos    = fb_args.red_pos,
-        .red_mask   = fb_args.red_mask,
-        .green_pos  = fb_args.green_pos,
-        .green_mask = fb_args.green_mask,
-        .blue_pos   = fb_args.blue_pos,
-        .blue_mask  = fb_args.blue_mask,
+        .red_pos         = fb_args.red_pos,
+        .red_mask_size   = fb_args.red_mask_size,
+        .green_pos       = fb_args.green_pos,
+        .green_mask_size = fb_args.green_mask_size,
+        .blue_pos        = fb_args.blue_pos,
+        .blue_mask_size  = fb_args.blue_mask_size,
     };
 
     Framebuffer_.Init(s, pf);

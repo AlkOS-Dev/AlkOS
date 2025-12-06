@@ -21,17 +21,17 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
     R_ASSERT_GT(raw_args.mem_info_total_pages, 0UL, "Total memory pages is zero.");
 
     FramebufferArgs fb_args{
-        .base_address = UptrToPtr<void>(raw_args.fb_addr),
-        .width        = raw_args.fb_width,
-        .height       = raw_args.fb_height,
-        .pitch        = raw_args.fb_pitch,
-        .bpp          = raw_args.fb_bpp,
-        .red_pos      = raw_args.fb_red_pos,
-        .red_mask     = raw_args.fb_red_mask,
-        .green_pos    = raw_args.fb_green_pos,
-        .green_mask   = raw_args.fb_green_mask,
-        .blue_pos     = raw_args.fb_blue_pos,
-        .blue_mask    = raw_args.fb_blue_mask,
+        .base_address    = UptrToPtr<void>(raw_args.fb_addr),
+        .width           = raw_args.fb_width,
+        .height          = raw_args.fb_height,
+        .pitch           = raw_args.fb_pitch,
+        .bpp             = raw_args.fb_bpp,
+        .red_pos         = raw_args.fb_red_pos,
+        .red_mask_size   = raw_args.fb_red_mask,
+        .green_pos       = raw_args.fb_green_pos,
+        .green_mask_size = raw_args.fb_green_mask,
+        .blue_pos        = raw_args.fb_blue_pos,
+        .blue_mask_size  = raw_args.fb_blue_mask,
     };
 
     BootArguments sanitized_k_args{
@@ -60,20 +60,20 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         "    pitch:              %u\n"
         "    bpp:                %u\n"
         "    red_pos:            %hhu\n"
-        "    red_mask:           %hhu\n"
+        "    red_mask_size:      %hhu\n"
         "    green_pos:          %hhu\n"
-        "    green_mask:         %hhu\n"
+        "    green_mask_size:    %hhu\n"
         "    blue_pos:           %hhu\n"
-        "    blue_mask:          %hhu\n",
+        "    blue_mask_size:     %hhu\n",
         sanitized_k_args.kernel_start, sanitized_k_args.kernel_end,
         sanitized_k_args.root_page_table, sanitized_k_args.mem_bitmap,
         sanitized_k_args.total_page_frames, sanitized_k_args.multiboot_info,
         sanitized_k_args.fb_args.base_address, sanitized_k_args.fb_args.width,
         sanitized_k_args.fb_args.height, sanitized_k_args.fb_args.pitch,
         sanitized_k_args.fb_args.bpp, sanitized_k_args.fb_args.red_pos,
-        sanitized_k_args.fb_args.red_mask, sanitized_k_args.fb_args.green_pos,
-        sanitized_k_args.fb_args.green_mask, sanitized_k_args.fb_args.blue_pos,
-        sanitized_k_args.fb_args.blue_mask
+        sanitized_k_args.fb_args.red_mask_size, sanitized_k_args.fb_args.green_pos,
+        sanitized_k_args.fb_args.green_mask_size, sanitized_k_args.fb_args.blue_pos,
+        sanitized_k_args.fb_args.blue_mask_size
     );
 
     return sanitized_k_args;

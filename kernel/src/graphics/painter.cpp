@@ -1,4 +1,5 @@
 #include "graphics/painter.hpp"
+#include <string.h>
 #include <algorithm.hpp>
 
 namespace Graphics
@@ -14,10 +15,13 @@ void Painter::SetColor(Color color) { packed_color_ = PackColor(color); }
 
 u32 Painter::PackColor(Color c) const
 {
-    // TODO: masks should be used to clear bits before ORing.
-    return (static_cast<u32>(c.r) << format_.red_pos) |
-           (static_cast<u32>(c.g) << format_.green_pos) |
-           (static_cast<u32>(c.b) << format_.blue_pos);
+    const u32 r_mask = (1 << format_.red_mask_size) - 1;
+    const u32 g_mask = (1 << format_.green_mask_size) - 1;
+    const u32 b_mask = (1 << format_.blue_mask_size) - 1;
+
+    return (static_cast<u32>(c.r & r_mask) << format_.red_pos) |
+           (static_cast<u32>(c.g & g_mask) << format_.green_pos) |
+           (static_cast<u32>(c.b & b_mask) << format_.blue_pos);
 }
 
 void Painter::DrawPixel(i32 x, i32 y)
@@ -29,17 +33,35 @@ void Painter::DrawPixel(i32 x, i32 y)
     target_.Pixel(static_cast<u32>(x), static_cast<u32>(y)) = packed_color_;
 }
 
+void Painter::FillScanline(u32 *dest, u32 count, u32 color)
+{
+    // Check for byte-repeating pattern for memset optimization
+    // e.g. 0x00000000, 0xFFFFFFFF, 0xABABABAB
+    if ((color & 0xFF) == ((color >> 8) & 0xFF) && (color & 0xFF) == ((color >> 16) & 0xFF) &&
+        (color & 0xFF) == ((color >> 24) & 0xFF)) {
+        memset(dest, color & 0xFF, count * sizeof(u32));
+    } else {
+        // Compiler auto-vectorization usually handles this loop well
+        for (u32 i = 0; i < count; ++i) {
+            dest[i] = color;
+        }
+    }
+}
+
 void Painter::Clear(Color color)
 {
     u32 raw    = PackColor(color);
     u32 height = target_.GetHeight();
     u32 width  = target_.GetWidth();
+    u32 pitch  = target_.GetPitch();
 
-    // Naive implementation. TODO: memset
-    for (u32 y = 0; y < height; ++y) {
-        u32 *line = target_.GetScanline(y);
-        for (u32 x = 0; x < width; ++x) {
-            line[x] = raw;
+    // Optimization: if buffer is contiguous (pitch == width * 4 for 32bpp)
+    // we can clear it in one go.
+    if (pitch == width * sizeof(u32)) {
+        FillScanline(target_.GetScanline(0), width * height, raw);
+    } else {
+        for (u32 y = 0; y < height; ++y) {
+            FillScanline(target_.GetScanline(y), width, raw);
         }
     }
 }
@@ -75,12 +97,9 @@ void Painter::FillRect(i32 x, i32 y, i32 w, i32 h)
         return;
     }
 
-    // TODO: Memset?
     for (i32 row = 0; row < h; ++row) {
         u32 *line = target_.GetScanline(static_cast<u32>(y + row));
-        for (i32 col = 0; col < w; ++col) {
-            line[x + col] = packed_color_;
-        }
+        FillScanline(line + x, static_cast<u32>(w), packed_color_);
     }
 }
 

@@ -26,6 +26,7 @@ class Painter
     void FillRect(i32 x, i32 y, i32 w, i32 h);
 
     private:
+    void FillScanline(u32 *dest, u32 count, u32 color);
     NODISCARD FORCE_INLINE_F u32 PackColor(Color c) const;
 
     Surface &target_;
