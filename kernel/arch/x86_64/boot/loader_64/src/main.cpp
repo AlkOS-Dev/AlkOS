@@ -199,19 +199,40 @@ static void PrepareKernelArgs(
     // Framebuffer
     auto fb_tag_res = multiboot_info.FindTag<TagFramebuffer>();
     if (fb_tag_res) {
-        const auto *fb_tag             = fb_tag_res.value();
-        gKernelInitialParams.fb_addr   = fb_tag->framebuffer_addr;
-        gKernelInitialParams.fb_width  = fb_tag->framebuffer_width;
-        gKernelInitialParams.fb_height = fb_tag->framebuffer_height;
-        gKernelInitialParams.fb_pitch  = fb_tag->framebuffer_pitch;
-        gKernelInitialParams.fb_bpp    = fb_tag->framebuffer_bpp;
-        gKernelInitialParams.fb_type   = fb_tag->framebuffer_type;
+        const auto *fb_tag = fb_tag_res.value();
+        bool is_rgb        = fb_tag->framebuffer_type == TagFramebufferCommon::kFramebufferTypeRgb;
+        bool is_32bpp      = fb_tag->framebuffer_bpp == 32;
 
-        TRACE_INFO(
-            "Framebuffer found: addr=0x%llX, res=%dx%d, bpp=%d", gKernelInitialParams.fb_addr,
-            gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
-            gKernelInitialParams.fb_bpp
-        );
+        if (is_rgb && is_32bpp) {
+            gKernelInitialParams.fb_addr   = fb_tag->framebuffer_addr;
+            gKernelInitialParams.fb_width  = fb_tag->framebuffer_width;
+            gKernelInitialParams.fb_height = fb_tag->framebuffer_height;
+            gKernelInitialParams.fb_pitch  = fb_tag->framebuffer_pitch;
+            gKernelInitialParams.fb_bpp    = fb_tag->framebuffer_bpp;
+
+            gKernelInitialParams.fb_red_pos    = fb_tag->framebuffer_red_field_position;
+            gKernelInitialParams.fb_red_mask   = fb_tag->framebuffer_red_mask_size;
+            gKernelInitialParams.fb_green_pos  = fb_tag->framebuffer_green_field_position;
+            gKernelInitialParams.fb_green_mask = fb_tag->framebuffer_green_mask_size;
+            gKernelInitialParams.fb_blue_pos   = fb_tag->framebuffer_blue_field_position;
+            gKernelInitialParams.fb_blue_mask  = fb_tag->framebuffer_blue_mask_size;
+
+            TRACE_INFO(
+                "Framebuffer found: addr=0x%llX, res=%dx%d, bpp=%d", gKernelInitialParams.fb_addr,
+                gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+                gKernelInitialParams.fb_bpp
+            );
+        } else {
+            TRACE_WARNING(
+                "Framebuffer found but not RGB 32-bit (type=%d, bpp=%d). Ignoring.",
+                fb_tag->framebuffer_type, fb_tag->framebuffer_bpp
+            );
+            gKernelInitialParams.fb_addr   = 0;
+            gKernelInitialParams.fb_width  = 0;
+            gKernelInitialParams.fb_height = 0;
+            gKernelInitialParams.fb_pitch  = 0;
+            gKernelInitialParams.fb_bpp    = 0;
+        }
     } else {
         TRACE_WARNING(
             "No framebuffer tag found in multiboot info, framebuffer will not be available"
@@ -221,7 +242,6 @@ static void PrepareKernelArgs(
         gKernelInitialParams.fb_height = 0;
         gKernelInitialParams.fb_pitch  = 0;
         gKernelInitialParams.fb_bpp    = 0;
-        gKernelInitialParams.fb_type   = 0;
     }
 }
 

@@ -25,7 +25,13 @@ struct PACK RawBootArgumentsAPI {
     u32 fb_height;
     u32 fb_pitch;
     u32 fb_bpp;
-    u8 fb_type;
+
+    u8 fb_red_pos;
+    u8 fb_red_mask;
+    u8 fb_green_pos;
+    u8 fb_green_mask;
+    u8 fb_blue_pos;
+    u8 fb_blue_mask;
 };
 }  // namespace arch
 

@@ -40,7 +40,14 @@ struct PACK alignas(64) KernelArguments {
     u32 fb_height;
     u32 fb_pitch;
     u32 fb_bpp;  // Bits per pixel
-    u8 fb_type;  // indexed = 0, RGB = 1, Text = 2
+
+    // RGB Format
+    u8 fb_red_pos;
+    u8 fb_red_mask;
+    u8 fb_green_pos;
+    u8 fb_green_mask;
+    u8 fb_blue_pos;
+    u8 fb_blue_mask;
 };
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

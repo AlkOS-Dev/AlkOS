@@ -25,7 +25,12 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         .height       = raw_args.fb_height,
         .pitch        = raw_args.fb_pitch,
         .bpp          = raw_args.fb_bpp,
-        .type         = raw_args.fb_type,
+        .red_pos      = raw_args.fb_red_pos,
+        .red_mask     = raw_args.fb_red_mask,
+        .green_pos    = raw_args.fb_green_pos,
+        .green_mask   = raw_args.fb_green_mask,
+        .blue_pos     = raw_args.fb_blue_pos,
+        .blue_mask    = raw_args.fb_blue_mask,
     };
 
     BootArguments sanitized_k_args{

@@ -10,7 +10,12 @@ struct FramebufferArgs {
     u32 height;
     u32 pitch;
     u32 bpp;
-    u8 type;
+    u8 red_pos;
+    u8 red_mask;
+    u8 green_pos;
+    u8 green_mask;
+    u8 blue_pos;
+    u8 blue_mask;
 };
 
 struct BootArguments {
