@@ -26,6 +26,8 @@ internal::VideoModule::VideoModule(const BootArguments &args) noexcept
         .blue_mask  = fb_args.blue_mask,
     };
 
+    Framebuffer_.Init(s, pf);
+
     // Quick visual test: Draw a blue square in top left to confirm it works
     Graphics::Surface &screen = Framebuffer_.GetSurface();
 

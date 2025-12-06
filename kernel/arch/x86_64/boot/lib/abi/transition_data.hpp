@@ -29,11 +29,6 @@ struct PACK alignas(64) KernelArguments {
     u64 mem_info_bitmap_addr;
     u64 mem_info_total_pages;
 
-    /// Multiboot
-    u64 multiboot_info_addr;
-    u64 multiboot_header_start_addr;
-    u64 multiboot_header_end_addr;
-
     /// Framebuffer
     u64 fb_addr;
     u32 fb_width;
@@ -48,6 +43,11 @@ struct PACK alignas(64) KernelArguments {
     u8 fb_green_mask;
     u8 fb_blue_pos;
     u8 fb_blue_mask;
+
+    /// Multiboot
+    u64 multiboot_info_addr;
+    u64 multiboot_header_start_addr;
+    u64 multiboot_header_end_addr;
 };
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

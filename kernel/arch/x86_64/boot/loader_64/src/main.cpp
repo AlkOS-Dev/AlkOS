@@ -271,12 +271,28 @@ NO_RET static void TransitionToKernel(
         "    multiboot_info_addr:         0x%llX\n"
         "    multiboot_header_start_addr: 0x%llX\n"
         "    multiboot_header_end_addr:   0x%llX\n"
-        "    fb_addr:                     0x%llX\n",
+        "  Framebuffer Arguments:\n"
+        "    fb_addr:                     0x%llX\n"
+        "    fb_width:                    %u\n"
+        "    fb_height:                   %u\n"
+        "    fb_pitch:                    %u\n"
+        "    fb_bpp:                      %u\n"
+        "    fb_red_pos:                  %hhu\n"
+        "    fb_red_mask:                 %hhu\n"
+        "    fb_green_pos:                %hhu\n"
+        "    fb_green_mask:               %hhu\n"
+        "    fb_blue_pos:                 %hhu\n"
+        "    fb_blue_mask:                %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
         gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
         gKernelInitialParams.multiboot_header_start_addr,
-        gKernelInitialParams.multiboot_header_end_addr, gKernelInitialParams.fb_addr
+        gKernelInitialParams.multiboot_header_end_addr, gKernelInitialParams.fb_addr,
+        gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+        gKernelInitialParams.fb_pitch, gKernelInitialParams.fb_bpp, gKernelInitialParams.fb_red_pos,
+        gKernelInitialParams.fb_red_mask, gKernelInitialParams.fb_green_pos,
+        gKernelInitialParams.fb_green_mask, gKernelInitialParams.fb_blue_pos,
+        gKernelInitialParams.fb_blue_mask
     );
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);

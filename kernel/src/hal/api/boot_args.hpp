@@ -7,7 +7,7 @@
 namespace arch
 {
 struct RawBootArguments;
-struct PACK RawBootArgumentsAPI {
+struct RawBootArgumentsAPI {
     /// Mem Layout
     u64 kernel_start_addr;
     u64 kernel_end_addr;
