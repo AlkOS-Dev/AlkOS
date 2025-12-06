@@ -21,9 +21,6 @@ WRAP_CALL void TerminalInit()
 
 WRAP_CALL void TerminalPutChar(const char c)
 {
-    /* Put char to VGA terminal -> when multiboot allows: TODO */
-    // VgaTerminalPutChar(c);
-
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         QemuTerminalPutChar(c);
     }
@@ -31,9 +28,6 @@ WRAP_CALL void TerminalPutChar(const char c)
 
 WRAP_CALL void TerminalWriteString(const char *data)
 {
-    /* Write string to VGA terminal -> when multiboot allows: TODO */
-    // VgaTerminalWriteString(data);
-
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         QemuTerminalWriteString(data);
     }
@@ -41,9 +35,6 @@ WRAP_CALL void TerminalWriteString(const char *data)
 
 WRAP_CALL void TerminalWriteError(const char *data)
 {
-    /* Write error string to VGA terminal -> when multiboot allows: TODO */
-    // VgaTerminalWriteError(data);
-
     if constexpr (FeatureEnabled<FeatureFlag::kDebugOutput>) {
         QemuTerminalWriteString(data);
     }
