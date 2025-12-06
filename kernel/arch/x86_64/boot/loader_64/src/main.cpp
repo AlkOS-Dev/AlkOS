@@ -175,15 +175,15 @@ static void EstablishDirectMemMapping(MemoryManagers &mms)
     );
 }
 
-NO_RET static void TransitionToKernel(
-    u64 kernel_entry_point, const TransitionData *transition_data,
-    const KernelModuleInfo &kernel_info, MemoryManagers mem_managers
+static void PrepareKernelArgs(
+    const TransitionData *transition_data, const KernelModuleInfo &kernel_info,
+    MemoryManagers mem_managers, MultibootInfo &multiboot_info
 )
 {
     auto &pmm = mem_managers.pmm;
     auto &vmm = mem_managers.vmm;
 
-    TRACE_INFO("Preparing to transition to kernel...");
+    TRACE_INFO("Preparing kernel arguments...");
 
     // Prepare parameters for the kernel
     gKernelInitialParams.kernel_start_addr           = kernel_info.lower_bound;
@@ -195,6 +195,64 @@ NO_RET static void TransitionToKernel(
     gKernelInitialParams.mem_info_bitmap_addr  = pmm.GetBitmapAddress().Value();
     gKernelInitialParams.mem_info_total_pages  = pmm.GetTotalPages();
     gKernelInitialParams.pml_4_table_phys_addr = vmm.GetPml4Table().Value();
+
+    // Framebuffer
+    auto fb_tag_res = multiboot_info.FindTag<TagFramebuffer>();
+    if (fb_tag_res) {
+        const auto *fb_tag = fb_tag_res.value();
+        bool is_rgb        = fb_tag->framebuffer_type == TagFramebufferCommon::kFramebufferTypeRgb;
+        bool is_32bpp      = fb_tag->framebuffer_bpp == 32;
+
+        if (is_rgb && is_32bpp) {
+            gKernelInitialParams.fb_addr   = fb_tag->framebuffer_addr;
+            gKernelInitialParams.fb_width  = fb_tag->framebuffer_width;
+            gKernelInitialParams.fb_height = fb_tag->framebuffer_height;
+            gKernelInitialParams.fb_pitch  = fb_tag->framebuffer_pitch;
+            gKernelInitialParams.fb_bpp    = fb_tag->framebuffer_bpp;
+
+            gKernelInitialParams.fb_red_pos    = fb_tag->framebuffer_red_field_position;
+            gKernelInitialParams.fb_red_mask   = fb_tag->framebuffer_red_mask_size;
+            gKernelInitialParams.fb_green_pos  = fb_tag->framebuffer_green_field_position;
+            gKernelInitialParams.fb_green_mask = fb_tag->framebuffer_green_mask_size;
+            gKernelInitialParams.fb_blue_pos   = fb_tag->framebuffer_blue_field_position;
+            gKernelInitialParams.fb_blue_mask  = fb_tag->framebuffer_blue_mask_size;
+
+            TRACE_INFO(
+                "Framebuffer found: addr=0x%llX, res=%dx%d, bpp=%d", gKernelInitialParams.fb_addr,
+                gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+                gKernelInitialParams.fb_bpp
+            );
+        } else {
+            TRACE_WARNING(
+                "Framebuffer found but not RGB 32-bit (type=%d, bpp=%d). Ignoring.",
+                fb_tag->framebuffer_type, fb_tag->framebuffer_bpp
+            );
+            gKernelInitialParams.fb_addr   = 0;
+            gKernelInitialParams.fb_width  = 0;
+            gKernelInitialParams.fb_height = 0;
+            gKernelInitialParams.fb_pitch  = 0;
+            gKernelInitialParams.fb_bpp    = 0;
+        }
+    } else {
+        TRACE_WARNING(
+            "No framebuffer tag found in multiboot info, framebuffer will not be available"
+        );
+        gKernelInitialParams.fb_addr   = 0;
+        gKernelInitialParams.fb_width  = 0;
+        gKernelInitialParams.fb_height = 0;
+        gKernelInitialParams.fb_pitch  = 0;
+        gKernelInitialParams.fb_bpp    = 0;
+    }
+}
+
+NO_RET static void TransitionToKernel(
+    u64 kernel_entry_point, const TransitionData *transition_data,
+    const KernelModuleInfo &kernel_info, MemoryManagers mem_managers
+)
+{
+    auto &pmm = mem_managers.pmm;
+
+    TRACE_INFO("Preparing to transition to kernel...");
 
     const u64 ld_start_addr    = reinterpret_cast<u64>(loader_64_start);
     const u64 ld_end_addr      = reinterpret_cast<u64>(loader_64_end);
@@ -212,12 +270,29 @@ NO_RET static void TransitionToKernel(
         "    mem_info_total_pages:        %llu\n"
         "    multiboot_info_addr:         0x%llX\n"
         "    multiboot_header_start_addr: 0x%llX\n"
-        "    multiboot_header_end_addr:   0x%llX\n",
+        "    multiboot_header_end_addr:   0x%llX\n"
+        "  Framebuffer Arguments:\n"
+        "    fb_addr:                     0x%llX\n"
+        "    fb_width:                    %u\n"
+        "    fb_height:                   %u\n"
+        "    fb_pitch:                    %u\n"
+        "    fb_bpp:                      %u\n"
+        "    fb_red_pos:                  %hhu\n"
+        "    fb_red_mask:                 %hhu\n"
+        "    fb_green_pos:                %hhu\n"
+        "    fb_green_mask:               %hhu\n"
+        "    fb_blue_pos:                 %hhu\n"
+        "    fb_blue_mask:                %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
         gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
         gKernelInitialParams.multiboot_header_start_addr,
-        gKernelInitialParams.multiboot_header_end_addr
+        gKernelInitialParams.multiboot_header_end_addr, gKernelInitialParams.fb_addr,
+        gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+        gKernelInitialParams.fb_pitch, gKernelInitialParams.fb_bpp, gKernelInitialParams.fb_red_pos,
+        gKernelInitialParams.fb_red_mask, gKernelInitialParams.fb_green_pos,
+        gKernelInitialParams.fb_green_mask, gKernelInitialParams.fb_blue_pos,
+        gKernelInitialParams.fb_blue_mask
     );
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);
@@ -239,6 +314,8 @@ extern "C" void MainLoader64(TransitionData *transition_data)
     u64 kernel_entry_point = LoadKernelIntoMemory(multiboot_info, kernel_info, mms);
 
     EstablishDirectMemMapping(mms);
+
+    PrepareKernelArgs(transition_data, kernel_info, mms, multiboot_info);
 
     TransitionToKernel(kernel_entry_point, transition_data, kernel_info, mms);
 }

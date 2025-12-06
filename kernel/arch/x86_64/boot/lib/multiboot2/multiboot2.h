@@ -271,9 +271,7 @@ struct TagFramebufferCommon {
     static constexpr u8 kFramebufferTypeEgaText = 2;
 };
 
-struct TagFramebuffer {
-    struct TagFramebufferCommon common;
-
+struct TagFramebuffer : public TagFramebufferCommon {
     union {
         struct {
             u16 framebuffer_palette_num_colors;

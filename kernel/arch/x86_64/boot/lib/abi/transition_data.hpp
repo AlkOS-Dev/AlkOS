@@ -18,14 +18,33 @@ struct alignas(64) TransitionData {
 };
 
 struct PACK alignas(64) KernelArguments {
+    /// Kernel Mem Layout
     u64 kernel_start_addr;
     u64 kernel_end_addr;
 
+    /// VMem
     u64 pml_4_table_phys_addr;
 
+    /// Memory Bitmap
     u64 mem_info_bitmap_addr;
     u64 mem_info_total_pages;
 
+    /// Framebuffer
+    u64 fb_addr;
+    u32 fb_width;
+    u32 fb_height;
+    u32 fb_pitch;
+    u32 fb_bpp;  // Bits per pixel
+
+    // RGB Format
+    u8 fb_red_pos;
+    u8 fb_red_mask;
+    u8 fb_green_pos;
+    u8 fb_green_mask;
+    u8 fb_blue_pos;
+    u8 fb_blue_mask;
+
+    /// Multiboot
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;
     u64 multiboot_header_end_addr;

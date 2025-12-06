@@ -10,6 +10,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
+#include "modules/video.hpp"
 #include "trace_framework.hpp"
 
 /* GCC CXX provided function initializing global constructors */
@@ -26,18 +27,6 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     hal::ArchInit(raw_args);
 
     BootArguments args = SanitizeBootArgs(raw_args);
-    DEBUG_INFO_BOOT("Sanitized boot arguments received by kernel:");
-    DEBUG_INFO_BOOT(
-        "  Boot Arguments:\n"
-        "    kernel_start:       0x%p\n"
-        "    kernel_end:         0x%p\n"
-        "    root_page_table:    0x%p\n"
-        "    mem_bitmap:         0x%p\n"
-        "    total_page_frames:  %zu\n"
-        "    multiboot_info:     0x%p\n",
-        args.kernel_start, args.kernel_end, args.root_page_table, args.mem_bitmap,
-        args.total_page_frames, args.multiboot_info
-    );
 
     MemoryModule::Init(args);
 
@@ -65,4 +54,6 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     // TimingModule::Init();
 
     MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+
+    VideoModule::Init(args, MemoryModule::Get().GetHeap());
 }
