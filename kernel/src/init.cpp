@@ -10,6 +10,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
+#include "modules/video.hpp"
 #include "trace_framework.hpp"
 
 /* GCC CXX provided function initializing global constructors */
@@ -65,4 +66,6 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     // TimingModule::Init();
 
     MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+
+    VideoModule::Init(args);
 }
