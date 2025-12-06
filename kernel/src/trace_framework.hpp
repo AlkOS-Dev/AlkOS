@@ -38,6 +38,7 @@ enum class TraceModule {
     kGeneral,
     kTime,
     kLast,
+    kVideo,
 };
 
 // ------------------------------
@@ -98,6 +99,10 @@ CREATE_TRACE_HELPERS(kGeneral, GENERAL)
 // TIME
 CREATE_DEBUG_HELPERS(kTime, TIME)
 CREATE_TRACE_HELPERS(kTime, TIME)
+
+// VIDEO
+CREATE_DEBUG_HELPERS(kVideo, VIDEO)
+CREATE_TRACE_HELPERS(kVideo, VIDEO)
 
 #include "trace_framework.tpp"
 

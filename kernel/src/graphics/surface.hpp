@@ -27,6 +27,26 @@ class Surface
     }
 
     // -------------------------------------------------------------------------
+    // Methods
+    // -------------------------------------------------------------------------
+
+    void CopyFrom(const Surface &src)
+    {
+        // TODO: support clipping/scaling
+        ASSERT_EQ(width_, src.width_);
+        ASSERT_EQ(height_, src.height_);
+
+        for (u32 y = 0; y < height_; ++y) {
+            u32 *dest_row      = GetScanline(y);
+            const u32 *src_row = src.GetScanline(y);
+
+            // We use the width for the copy size, not the pitch,
+            // to handle stride differences correctly.
+            memcpy(dest_row, src_row, width_ * sizeof(u32));
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Fast Accessors
     // -------------------------------------------------------------------------
 

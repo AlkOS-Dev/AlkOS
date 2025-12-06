@@ -7,7 +7,7 @@ using namespace Graphics;
 using namespace Drivers;
 using namespace Mem;
 
-internal::VideoModule::VideoModule(const BootArguments &args) noexcept
+internal::VideoModule::VideoModule(const BootArguments &args, Heap &hp) noexcept
 {
     DEBUG_INFO_GENERAL("VideoModule::VideoModule()");
 
@@ -26,23 +26,11 @@ internal::VideoModule::VideoModule(const BootArguments &args) noexcept
         .blue_mask_size  = fb_args.blue_mask_size,
     };
 
-    Framebuffer_.Init(s, pf);
+    Framebuffer_.Init(s, pf, hp);
+    Graphics::Surface &screen = GetScreen();
+    R_ASSERT_TRUE(screen.IsValid());
 
-    // Quick visual test: Draw a blue square in top left to confirm it works
-    Graphics::Surface &screen = Framebuffer_.GetSurface();
-
-    if (screen.IsValid()) {
-        Graphics::Painter p(screen, Framebuffer_.GetFormat());
-
-        // Clear to black
-        p.Clear(Graphics::Color::Black());
-
-        // Draw Blue Rect
-        p.SetColor(Graphics::Color::Blue());
-        p.FillRect(100, 100, 200, 200);
-
-        // Draw Green Border
-        p.SetColor(Graphics::Color::Green());
-        p.DrawRect(50, 50, 300, 300);
-    }
+    Graphics::Painter p(screen, Framebuffer_.GetFormat());
+    p.Clear(Graphics::Color::Black());
+    Flush();
 }

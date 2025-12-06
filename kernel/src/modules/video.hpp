@@ -13,7 +13,7 @@ namespace internal
 class VideoModule : template_lib::StaticSingletonHelper
 {
     protected:
-    explicit VideoModule(const BootArguments &args) noexcept;
+    explicit VideoModule(const BootArguments &args, Mem::Heap &hp) noexcept;
 
     DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
 
@@ -23,6 +23,8 @@ class VideoModule : template_lib::StaticSingletonHelper
 
     /// Returns the format required by the hardware (used to init Painters)
     const Graphics::PixelFormat &GetFormat() const { return Framebuffer_.GetFormat(); }
+
+    void Flush() { Framebuffer_.Flush(); }
 };
 
 }  // namespace internal

@@ -55,5 +55,5 @@ void KernelInit(const hal::RawBootArguments &raw_args)
 
     MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
 
-    VideoModule::Init(args);
+    VideoModule::Init(args, MemoryModule::Get().GetHeap());
 }
