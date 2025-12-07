@@ -2,7 +2,6 @@
 #define LIBS_LIBCPP_INCLUDE_INTERNAL_DEBUG_HPP_
 
 #include <autogen/feature_flags.h>
-#include <todo.hpp>
 
 #include "platform.h"
 
@@ -33,12 +32,12 @@ void FormatTrace(const char *format, Args... args)
 
 #endif  // __USE_DEBUG_TRACES__
 
-#define ERROR_TAG   "[ERROR]     "
-#define WARNING_TAG "[WARNING]   "
-#define INFO_TAG    "[INFO]      "
-#define SUCCESS_TAG "[SUCCESS]   "
-#define DEBUG_TAG   "[DEBUG]     "
-#define TRACE_TAG   "[TRACE]     "
+#define ERROR_TAG   "[LIBC] [ERROR]     "
+#define WARNING_TAG "[LIBC] [WARNING]   "
+#define INFO_TAG    "[LIBC] [INFO]      "
+#define SUCCESS_TAG "[LIBC] [SUCCESS]   "
+#define DEBUG_TAG   "[LIBC] [DEBUG]     "
+#define TRACE_TAG   "[LIBC] [TRACE]     "
 
 #define TRACE_FORMAT_LOCATION(message) __FILE__ " " TOSTRING(__LINE__) " " message "\n"
 #define TRACE_FORMAT_ERROR(message)    ERROR_TAG " %zu " TRACE_FORMAT_LOCATION(message)

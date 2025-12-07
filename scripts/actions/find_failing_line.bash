@@ -15,4 +15,10 @@ if [ $# -ne 1 ]; then
 fi
 
 RIP_ADDR="$1"
-addr2line -e "${FIND_FAILING_LINE_KERNEL_ELF}" "${RIP_ADDR}"
+STOP_ADDR=$((${RIP_ADDR} + 0x10))
+STOP_ADDR_HEX=$(printf "0x%x" $STOP_ADDR)
+
+addr2line -e "${FIND_FAILING_LINE_KERNEL_ELF}" -C "${RIP_ADDR}"
+objdump -d -M intel "${FIND_FAILING_LINE_KERNEL_ELF}" \
+    --start-address="${RIP_ADDR}" \
+    --stop-address="${STOP_ADDR_HEX}"

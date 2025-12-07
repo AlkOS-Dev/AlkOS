@@ -16,6 +16,7 @@ uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
     *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(
         HardwareModule::Get().GetACPIController().GetRsdpAddress()
     );
+    TRACE_FATAL_BOOT("Rsdp address: %p", *out_rsdp_address);
     return UACPI_STATUS_OK;
 }
 

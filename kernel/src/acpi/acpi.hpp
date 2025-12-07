@@ -57,7 +57,7 @@ class ACPIController final : public hal::AcpiController
     // Getters
     // ------------------------------
 
-    FORCE_INLINE_F void *GetRsdpAddress() const { return rsdp_struct_; }
+    FORCE_INLINE_F void *GetRsdpAddress() { return rsdp_struct_; }
 
     // ------------------------------
     // Class fields
@@ -65,7 +65,7 @@ class ACPIController final : public hal::AcpiController
 
     private:
     static constexpr size_t kMaxRsdpStructSize = 36;
-    mutable u8 rsdp_struct_[kMaxRsdpStructSize];
+    u8 rsdp_struct_[kMaxRsdpStructSize];
 };
 
 //////////////////////////////
