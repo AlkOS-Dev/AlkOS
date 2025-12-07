@@ -44,10 +44,8 @@ struct PACK alignas(64) KernelArguments {
     u8 fb_blue_pos;
     u8 fb_blue_mask;
 
-    /// Multiboot
-    u64 multiboot_info_addr;
-    u64 multiboot_header_start_addr;
-    u64 multiboot_header_end_addr;
+    // ACPI
+    u64 rsdp_address;
 };
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

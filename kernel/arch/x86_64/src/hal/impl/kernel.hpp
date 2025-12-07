@@ -8,9 +8,7 @@
 namespace arch
 {
 struct PACK alignas(64) RawBootArguments : RawBootArgumentsAPI {
-    u64 multiboot_info_phys_addr;
-    u64 multiboot_header_start_phys_addr;
-    u64 multiboot_header_end_phys_addr;
+    u64 rsdp_address;
 };
 
 void ArchInit(const RawBootArguments &args);

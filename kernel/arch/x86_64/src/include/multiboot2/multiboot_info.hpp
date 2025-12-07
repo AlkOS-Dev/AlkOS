@@ -72,8 +72,6 @@ class MultibootInfo
         [[maybe_unused]] const char *kName = TagMetadata<Tag>::kTagName;
         static_assert(kType != kInvalidTagNumber);
 
-        DEBUG_FATAL_GENERAL("ADDR: %p", reinterpret_cast<void *>(multiboot_info_addr_));
-
         for (auto *tag_ptr = reinterpret_cast<Multiboot::Tag *>(multiboot_info_addr_ + 8);
              tag_ptr->type != kMultibootTagTypeEnd;
              tag_ptr = reinterpret_cast<Multiboot::Tag *>(

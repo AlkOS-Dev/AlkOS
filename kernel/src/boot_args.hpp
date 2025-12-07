@@ -18,13 +18,13 @@ struct FramebufferArgs {
     u8 blue_mask_size;
 };
 
-struct BootArguments {
+struct PACK alignas(64) BootArguments {
+    hal::RawBootArguments raw_args;
     Mem::VPtr<void> kernel_start;
     Mem::VPtr<void> kernel_end;
     Mem::PPtr<void> root_page_table;
     Mem::PPtr<void> mem_bitmap;
     size_t total_page_frames;
-    Mem::PPtr<void> multiboot_info;
     FramebufferArgs fb_args;
 };
 

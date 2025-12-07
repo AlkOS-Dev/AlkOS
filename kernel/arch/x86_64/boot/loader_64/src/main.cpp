@@ -175,6 +175,40 @@ static void EstablishDirectMemMapping(MemoryManagers &mms)
     );
 }
 
+static u64 FindACPIAddress(MultibootInfo &multiboot_info)
+{
+    TRACE_DEBUG("Finding RSDP...");
+    TagNewAcpi *tag_ptr{};
+
+    if (auto new_acpi_tag = multiboot_info.FindTag<TagNewAcpi>(); !new_acpi_tag) {
+        TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
+        auto old_acpi_tag = multiboot_info.FindTag<TagOldAcpi>();
+        R_ASSERT_TRUE(static_cast<bool>(old_acpi_tag), "Failed to find ACPI tag");
+
+        tag_ptr = reinterpret_cast<TagNewAcpi *>(old_acpi_tag.value());
+    } else {
+        tag_ptr = new_acpi_tag.value();
+    }
+
+    ASSERT_NOT_NULL(
+        tag_ptr, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
+    );
+
+    TRACE_DEBUG(
+        "ACPI tag found at 0x%016llX, size: %sB", reinterpret_cast<u64>(tag_ptr),
+        FormatMetricUint(tag_ptr->size)
+    );
+
+    u8 rsdp[8]{};
+    for (size_t offset = 0; offset < tag_ptr->size; ++offset) {
+        rsdp[offset] = tag_ptr->rsdp[offset];
+    }
+
+    const u64 rsdp_addr = reinterpret_cast<u64>(rsdp);
+    TRACE_DEBUG("Found RSDP address: 0x%016llX", rsdp_addr);
+    return rsdp_addr;
+}
+
 static void PrepareKernelArgs(
     const TransitionData *transition_data, const KernelModuleInfo &kernel_info,
     MemoryManagers mem_managers, MultibootInfo &multiboot_info
@@ -186,11 +220,8 @@ static void PrepareKernelArgs(
     TRACE_INFO("Preparing kernel arguments...");
 
     // Prepare parameters for the kernel
-    gKernelInitialParams.kernel_start_addr           = kernel_info.lower_bound;
-    gKernelInitialParams.kernel_end_addr             = kernel_info.upper_bound;
-    gKernelInitialParams.multiboot_info_addr         = transition_data->multiboot_info_addr;
-    gKernelInitialParams.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
-    gKernelInitialParams.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
+    gKernelInitialParams.kernel_start_addr = kernel_info.lower_bound;
+    gKernelInitialParams.kernel_end_addr   = kernel_info.upper_bound;
 
     gKernelInitialParams.mem_info_bitmap_addr  = pmm.GetBitmapAddress().Value();
     gKernelInitialParams.mem_info_total_pages  = pmm.GetTotalPages();
@@ -243,6 +274,8 @@ static void PrepareKernelArgs(
         gKernelInitialParams.fb_pitch  = 0;
         gKernelInitialParams.fb_bpp    = 0;
     }
+
+    gKernelInitialParams.rsdp_address = FindACPIAddress(multiboot_info);
 }
 
 NO_RET static void TransitionToKernel(
@@ -268,9 +301,7 @@ NO_RET static void TransitionToKernel(
         "    pml_4_table_phys_addr:       0x%llX\n"
         "    mem_info_bitmap_addr:        0x%llX\n"
         "    mem_info_total_pages:        %llu\n"
-        "    multiboot_info_addr:         0x%llX\n"
-        "    multiboot_header_start_addr: 0x%llX\n"
-        "    multiboot_header_end_addr:   0x%llX\n"
+        "    rsdp_address:         0x%llX\n"
         "  Framebuffer Arguments:\n"
         "    fb_addr:                     0x%llX\n"
         "    fb_width:                    %u\n"
@@ -285,10 +316,8 @@ NO_RET static void TransitionToKernel(
         "    fb_blue_mask:                %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
-        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
-        gKernelInitialParams.multiboot_header_start_addr,
-        gKernelInitialParams.multiboot_header_end_addr, gKernelInitialParams.fb_addr,
-        gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.rsdp_address,
+        gKernelInitialParams.fb_addr, gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
         gKernelInitialParams.fb_pitch, gKernelInitialParams.fb_bpp, gKernelInitialParams.fb_red_pos,
         gKernelInitialParams.fb_red_mask, gKernelInitialParams.fb_green_pos,
         gKernelInitialParams.fb_green_mask, gKernelInitialParams.fb_blue_pos,
