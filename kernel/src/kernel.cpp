@@ -38,7 +38,7 @@ static void KernelRun()
     auto fmt     = video.GetFormat();
 
     Graphics::Painter p(screen, fmt);
-    Graphics::Psf2Font system_font(drdos8x8_psfu, drdos8x8_psfu_len);
+    Graphics::Psf2Font system_font(drdos8x8_psfu);
 
     if (!system_font.IsValid()) {
         TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");

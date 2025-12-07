@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <defines.hpp>
+#include <span.hpp>
 #include <types.hpp>
 #include "graphics/font/glyph.hpp"
 
@@ -32,7 +33,7 @@ class Psf2Font
     public:
     static constexpr u32 kPsf2Magic = 0x864ab572;
 
-    constexpr Psf2Font(const u8 *data, size_t size) : data_(data), size_(size)
+    constexpr Psf2Font(std::span<const u8> data) : data_(data)
     {
         // TODO: In a constexpr context, static assert
         // TODO: Runtime checks can be added if instantiated dynamically.
@@ -40,12 +41,12 @@ class Psf2Font
 
     [[nodiscard]] FORCE_INLINE_F const Psf2Header &Header() const
     {
-        return *reinterpret_cast<const Psf2Header *>(data_);
+        return *reinterpret_cast<const Psf2Header *>(data_.data());
     }
 
     [[nodiscard]] bool IsValid() const
     {
-        if (size_ < sizeof(Psf2Header)) {
+        if (data_.size() < sizeof(Psf2Header)) {
             return false;
         }
         return Header().magic == kPsf2Magic;
@@ -69,7 +70,7 @@ class Psf2Font
             index = 0;
         }
 
-        const u8 *glyph_start = data_ + hdr.header_size + (index * hdr.char_size);
+        const u8 *glyph_start = data_.data() + hdr.header_size + (index * hdr.char_size);
 
         // PSF2 rows are byte-aligned.
         // Stride = ceil(width / 8)
@@ -85,8 +86,7 @@ class Psf2Font
     }
 
     private:
-    const u8 *data_;
-    size_t size_;
+    std::span<const u8> data_;
 };
 
 }  // namespace Graphics

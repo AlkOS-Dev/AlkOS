@@ -58,9 +58,9 @@ void Painter::DrawChar(i32 x, i32 y, char c, const FontT &font)
 }
 
 template <FontType FontT>
-void Painter::DrawString(i32 x, i32 y, const char *str, const FontT &font)
+void Painter::DrawString(i32 x, i32 y, std::string_view str, const FontT &font)
 {
-    if (!str) {
+    if (str.empty()) {
         return;
     }
 
@@ -68,9 +68,7 @@ void Painter::DrawString(i32 x, i32 y, const char *str, const FontT &font)
     i32 cursor_y          = y;
     const u32 line_height = font.GetHeight();
 
-    while (*str) {
-        char c = *str++;
-
+    for (char c : str) {
         if (c == '\n') {
             cursor_x = x;
             cursor_y += static_cast<i32>(line_height);

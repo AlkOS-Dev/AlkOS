@@ -1,10 +1,11 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
+#ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
+#define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
 
 #include <string.h>
 #include <array.hpp>
 #include <bits_ext.hpp>
 #include <concepts.hpp>
+#include <string.hpp>
 
 namespace data_structures
 {
@@ -342,6 +343,15 @@ struct StringArray : public std::array<char, kSize> {
     }
 
     NODISCARD FORCE_INLINE_F const char *GetCStr() const noexcept { return this->data(); }
+
+    NODISCARD constexpr operator std::string_view() const noexcept
+    {
+        size_t len = 0;
+        while (len < kSize && (*this)[len] != '\0') {
+            len++;
+        }
+        return std::string_view(this->data(), len);
+    }
 };
 
 template <size_t kSize>
@@ -377,4 +387,4 @@ NODISCARD FAST_CALL constexpr StringArray<sizeof(T)> IntegralToStringArray(const
 
 }  // namespace data_structures
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_
+#endif  // LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ARRAY_STRUCTURES_HPP_

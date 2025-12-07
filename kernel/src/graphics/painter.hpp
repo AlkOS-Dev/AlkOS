@@ -2,6 +2,7 @@
 #define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
 
 #include <concepts.hpp>
+#include <string.hpp>
 #include "graphics/color.hpp"
 #include "graphics/font/glyph.hpp"
 #include "graphics/surface.hpp"
@@ -53,7 +54,7 @@ class Painter
      * @tparam FontT A type satisfying the FontType concept.
      */
     template <FontType FontT>
-    void DrawString(i32 x, i32 y, const char *str, const FontT &font);
+    void DrawString(i32 x, i32 y, std::string_view str, const FontT &font);
 
     private:
     void FillScanline(u32 *dest, u32 count, u32 color);
