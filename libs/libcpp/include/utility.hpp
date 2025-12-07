@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_UTILITY_HPP_
+#define LIBS_LIBCPP_INCLUDE_UTILITY_HPP_
 
 #include <compare.hpp>
 #include <defines.hpp>
@@ -117,5 +117,30 @@ struct in_place_index_t {
 template <size_t I>
 inline constexpr in_place_index_t<I> in_place_index{};
 
+// ------------------------------
+// std::integer_sequence
+// ------------------------------
+
+template <typename T, T... Ints>
+struct integer_sequence {
+    using value_type = T;
+    static constexpr size_t size() noexcept { return sizeof...(Ints); }
+};
+
+template <size_t... Ints>
+using index_sequence = integer_sequence<size_t, Ints...>;
+
+template <typename T, T N>
+using make_integer_sequence
+#if __has_builtin(__make_integer_seq)
+    = __make_integer_seq<integer_sequence, T, N>;
+#else
+    = integer_sequence<T, __integer_pack(N)...>;
+#endif
+;
+
+template <size_t N>
+using make_index_sequence = make_integer_sequence<size_t, N>;
+
 }  // namespace std
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_UTILITY_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_UTILITY_HPP_

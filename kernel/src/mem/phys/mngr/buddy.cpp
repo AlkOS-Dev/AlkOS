@@ -19,7 +19,7 @@ size_t B::GetBuddyPfn(size_t pfn, u8 order)
     return pfn ^ (1 << order);
 }
 
-void B::ListRemove(PageMeta *meta)
+void B::ListRemove(VPtr<PageMeta> meta)
 {
     auto &buddy_meta = PageMeta::AsBuddy(*meta);
 
@@ -38,7 +38,7 @@ void B::ListRemove(PageMeta *meta)
     buddy_meta.prev = nullptr;
 }
 
-void B::ListPush(PageMeta *meta)
+void B::ListPush(VPtr<PageMeta> meta)
 {
     auto &head       = freelist_table_[meta->order];
     auto &buddy_meta = PageMeta::AsBuddy(*meta);
@@ -51,7 +51,7 @@ void B::ListPush(PageMeta *meta)
     head            = meta;
 }
 
-PageMeta *B::SplitBlock(PageMeta *block_to_split, u8 target_order)
+VPtr<PageMeta> B::SplitBlock(VPtr<PageMeta> block_to_split, u8 target_order)
 {
     u8 current_order = block_to_split->order;
     size_t pfn       = pmt_->GetPageFrameNumber(block_to_split);
@@ -73,7 +73,7 @@ PageMeta *B::SplitBlock(PageMeta *block_to_split, u8 target_order)
     return &final_block;
 }
 
-PageMeta *B::MergeBlock(PageMeta *block_to_merge)
+VPtr<PageMeta> B::MergeBlock(VPtr<PageMeta> block_to_merge)
 {
     u8 order   = block_to_merge->order;
     size_t pfn = pmt_->GetPageFrameNumber(block_to_merge);
@@ -112,7 +112,7 @@ PageMeta *B::MergeBlock(PageMeta *block_to_merge)
 
 B::BuddyPmm() = default;
 
-void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
+void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt, size_t page_limit)
 {
     pmt_ = &pmt;
 
@@ -127,26 +127,28 @@ void B::Init(BitmapPmm &b_pmm, PageMetaTable &pmt)
     }
 
     // Works because of merging strat
-    for (size_t i = 0; i < pmt.TotalPages(); i++) {
+    size_t pages_freed = 0;
+    for (size_t i = 0; i < pmt.TotalPages() && pages_freed < page_limit; i++) {
         if (b_pmm.IsFree(i)) {
             Free(PageFrameAddr(i));
+            pages_freed++;
         }
     }
 }
 
-Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
+expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
 {
     std::lock_guard guard{lock_};
     u8 order = ar.order;
 
     if (order > kMaxOrder) {
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     // Find the smallest available block that is large enough
     for (u8 current_order = order; current_order <= kMaxOrder; current_order++) {
         if (freelist_table_[current_order] != nullptr) {
-            PageMeta *block_to_alloc = freelist_table_[current_order];
+            VPtr<PageMeta> block_to_alloc = freelist_table_[current_order];
             ListRemove(block_to_alloc);
 
             if (current_order > order) {
@@ -158,7 +160,7 @@ Expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
         }
     }
 
-    return Unexpected(MemError::OutOfMemory);
+    return unexpected(MemError::OutOfMemory);
 }
 
 void B::Free(PPtr<Page> page)
@@ -171,7 +173,7 @@ void B::Free(PPtr<Page> page)
         meta.type, PageMetaType::Allocated, "Double free detected or freeing an invalid page!"
     );
 
-    PageMeta *merged_block = MergeBlock(&meta);
+    VPtr<PageMeta> merged_block = MergeBlock(&meta);
     merged_block->InitBuddy(merged_block->order);
     ListPush(merged_block);
 }

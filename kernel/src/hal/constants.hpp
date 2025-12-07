@@ -14,6 +14,7 @@ static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
 
 static constexpr size_t kCacheLineSizeBytes = arch::kCacheLineSizeBytes;
 static constexpr size_t kPageSizeBytes      = arch::kPageSizeBytes;
+static constexpr size_t kPageShift          = arch::kPageShift;
 
 static constexpr u32 kMaxCores = arch::kMaxCores;
 static_assert(kMaxCores <= kBitMask16);  // Must fit in u16

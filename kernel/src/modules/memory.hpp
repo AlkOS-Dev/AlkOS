@@ -5,11 +5,14 @@
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
+#include "hal/io.hpp"
 #include "hal/mmu.hpp"
 #include "hal/tlb.hpp"
+#include "mem/heap.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/phys/mngr/buddy.hpp"
+#include "mem/phys/mngr/slab.hpp"
 #include "mem/virt/vmm.hpp"
 #include "modules/hardware.hpp"
 #include "modules/helpers.hpp"
@@ -34,6 +37,8 @@ class MemoryModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Mem, PageMetaTable);
     DEFINE_MODULE_FIELD(Mem, BitmapPmm);
     DEFINE_MODULE_FIELD(Mem, BuddyPmm);
+    DEFINE_MODULE_FIELD(Mem, SlabAllocator);
+    DEFINE_MODULE_FIELD(Mem, Heap);
     DEFINE_MODULE_FIELD(Mem, Vmm);
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);

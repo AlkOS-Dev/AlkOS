@@ -1,0 +1,6 @@
+#ifndef TESTS_LIBCPP_MOCKS_ARRAY_HPP_
+#define TESTS_LIBCPP_MOCKS_ARRAY_HPP_
+
+#include <array>
+
+#endif  // TESTS_LIBCPP_MOCKS_ARRAY_HPP_

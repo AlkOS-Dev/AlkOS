@@ -53,6 +53,8 @@
           MULTIBOOT_CONSOLE_FLAGS_CONSOLE_REQUIRED equ 1
           MULTIBOOT_CONSOLE_FLAGS_EGA_TEXT_SUPPORTED equ 2
 
+          FRAMEBUFFER_REQUIRED_DEPTH equ 32
+
 ; Multiboot header
           section   .multiboot
           align 8
@@ -80,7 +82,7 @@ multiboot_start:
           dd (.framebuffer_tag_end - .framebuffer_tag_start)
           dd 0 ; width  - no preference
           dd 0 ; height - no preference
-          dd 0 ; depth  - no preference
+          dd FRAMEBUFFER_REQUIRED_DEPTH ; depth
 .framebuffer_tag_end:
 
           ; End tag (required)

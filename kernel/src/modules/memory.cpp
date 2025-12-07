@@ -15,19 +15,27 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 {
     DEBUG_INFO_MEMORY("MemoryModule::MemoryModule()");
 
-    // Initialize BitmapPmm
+    // Prepare
     const size_t total_pages    = args.total_page_frames;
     const VPtr<void> mem_bitmap = PhysToVirt(args.mem_bitmap);
     data_structures::BitMapView bmv{mem_bitmap, total_pages};
+
+    // Init
     BitmapPmm_.Init(bmv);
 
-    // Initialize PageMetaTable
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    // Initialize BuddyPmm
-    // BuddyPmm_.Init(BitmapPmm_, PageMetaTable_);
+    constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
+    // Note: Initializing buddy with all pages is a slow operation.
+    // This limit is for speed of boot. This operation should have
+    // a follow up once kernel is booted, and we have another CPU, we
+    // could offload this operation to.
+    BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
-    // Initialize Vmm
+    SlabAllocator_.Init(BuddyPmm_);
+
+    Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
+
     Vmm_.Init(Tlb_, Mmu_);
 }
 

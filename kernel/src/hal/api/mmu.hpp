@@ -15,6 +15,9 @@ class AddressSpace;
 namespace arch
 {
 
+using std::expected;
+using std::unexpected;
+
 /**
  * @brief Architecture-independent page mapping flags.
  */
@@ -39,7 +42,7 @@ struct MmuAPI {
      * @param flags Page protection and control flags.
      * @return Success or a memory error.
      */
-    Expected<void, Mem::MemError> Map(
+    expected<void, Mem::MemError> Map(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, Mem::PPtr<void> paddr, PageFlags
     );
 
@@ -51,7 +54,7 @@ struct MmuAPI {
      * @param vaddr The virtual address to unmap.
      * @return Success or a memory error if the page is not mapped.
      */
-    Expected<void, Mem::MemError> UnMap(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
+    expected<void, Mem::MemError> UnMap(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
 
     /**
      * @brief Translates a virtual address to its corresponding physical address.
@@ -59,7 +62,7 @@ struct MmuAPI {
      * @param vaddr The virtual address to translate.
      * @return The physical address, or a memory error if the address is not mapped.
      */
-    Expected<Mem::PPtr<void>, Mem::MemError> Translate(
+    expected<Mem::PPtr<void>, Mem::MemError> Translate(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
     );
 

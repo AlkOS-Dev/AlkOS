@@ -17,6 +17,7 @@ static constexpr u64 kDirectMemMapSizeGb        = 512;
 
 static constexpr size_t kCacheLineSizeBytes = 64;
 static constexpr size_t kPageSizeBytes      = 4096;
+static constexpr size_t kPageShift          = 12;
 static constexpr u32 kMaxCores              = 512;
 
 // ------------------------------

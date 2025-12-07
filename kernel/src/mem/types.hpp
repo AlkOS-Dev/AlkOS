@@ -6,16 +6,6 @@
 #include <types.hpp>
 #include "hal/constants.hpp"
 
-template <typename T, typename E>
-using Expected = std::expected<T, E>;
-
-template <typename E>
-using Unexpected = std::unexpected<E>;
-
-#define UNEXPETED_RET_IF_ERR(res) \
-    if (!res)                     \
-    return Unexpected(res.error())
-
 namespace Mem
 {
 
@@ -51,13 +41,13 @@ PPtr<T> VirtToPhys(VPtr<T> virtAddr)
 }
 
 template <typename T>
-uintptr_t PtrToUptr(T *ptr)
+uptr PtrToUptr(T *ptr)
 {
-    return reinterpret_cast<uintptr_t>(ptr);
+    return reinterpret_cast<uptr>(ptr);
 }
 
 template <typename T>
-T *UptrToPtr(uintptr_t uptr)
+T *UptrToPtr(uptr uptr)
 {
     return reinterpret_cast<T *>(uptr);
 }

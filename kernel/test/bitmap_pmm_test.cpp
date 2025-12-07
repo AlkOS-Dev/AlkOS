@@ -36,7 +36,7 @@ TEST_F(BitmapPmmTest, InitialStateIsCorrect)
     // Attempting to allocate all pages should succeed.
     auto page = pmm_.Alloc({.num_pages = kNumPages});
     EXPECT_TRUE(page.has_value());
-    EXPECT_EQ(Mem::PageFrameNumber(page.value()), 0);  // Should allocate from the start
+    EXPECT_EQ(Mem::PageFrameNumber(page.value()), 0UL);  // Should allocate from the start
 }
 
 FAIL_TEST_F(BitmapPmmTest, InitWithZeroPages)
@@ -140,7 +140,7 @@ TEST_F(BitmapPmmTest, AllocAllMemoryAsOneBlock)
 {
     auto block = pmm_.Alloc({.num_pages = kNumPages});
     ASSERT_TRUE(block.has_value());
-    EXPECT_EQ(Mem::PageFrameNumber(block.value()), 0);
+    EXPECT_EQ(Mem::PageFrameNumber(block.value()), 0UL);
 
     auto final_page = pmm_.Alloc();
     EXPECT_FALSE(final_page.has_value());

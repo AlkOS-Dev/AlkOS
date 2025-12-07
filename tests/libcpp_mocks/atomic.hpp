@@ -1,0 +1,6 @@
+#ifndef TESTS_LIBCPP_MOCKS_ATOMIC_HPP_
+#define TESTS_LIBCPP_MOCKS_ATOMIC_HPP_
+
+#include <atomic>
+
+#endif  // TESTS_LIBCPP_MOCKS_ATOMIC_HPP_

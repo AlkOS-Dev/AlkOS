@@ -365,7 +365,7 @@ struct AtomicImpl {
                         // written by another thread (whether via store, exchange or
                         // compare_exchange) will have had its padding cleared.
                         ++i;
-                        ASSERT_LT(i, 3, "Loop shouldn't iterate more than 3 times");
+                        ASSERT_LT(i, 3UL, "Loop shouldn't iterate more than 3 times");
                     }
                 }
             }

@@ -1,12 +1,16 @@
 #ifndef KERNEL_SRC_MEM_ALLOCATORS_HPP_
 #define KERNEL_SRC_MEM_ALLOCATORS_HPP_
 
+#include <macros.hpp>
 #include "bits_ext.hpp"
 #include "mem/heap.hpp"
 
 namespace alloca
 {
 using namespace Mem;
+
+using std::expected;
+using std::unexpected;
 
 template <class T, size_t kAlign = alignof(T)>
 class DynArray
@@ -39,7 +43,7 @@ class DynArray
     ~DynArray()
     {
         if (mem_) {
-            KFree(mem_);
+            KFreeAligned(mem_);
         }
     }
 
@@ -81,13 +85,13 @@ class DynArray
     NODISCARD FORCE_INLINE_F size_t size() const { return size_; }
     NODISCARD FORCE_INLINE_F bool empty() const { return size_ == 0; }
 
-    FORCE_INLINE_F Expected<void, MemError> Reallocate(const size_t size)
+    FORCE_INLINE_F expected<void, MemError> Reallocate(const size_t size)
     {
         if (mem_) {
-            KFree(mem_);
+            KFreeAligned(mem_);
         }
-        auto alloc = KMalloc({.size = size * sizeof(T), .alignment = kAlign});
-        UNEXPETED_RET_IF_ERR(alloc);
+        auto alloc = KMallocAligned({.size = size * sizeof(T), .alignment = kAlign});
+        UNEXPECTED_RET_IF_ERR(alloc);
 
         mem_  = static_cast<T *>(alloc.value());
         size_ = size;

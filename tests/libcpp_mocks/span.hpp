@@ -1,0 +1,6 @@
+#ifndef TESTS_LIBCPP_MOCKS_SPAN_HPP_
+#define TESTS_LIBCPP_MOCKS_SPAN_HPP_
+
+#include <span>
+
+#endif  // TESTS_LIBCPP_MOCKS_SPAN_HPP_

@@ -1,10 +1,14 @@
 #include "hal/impl/mmu.hpp"
+#include <macros.hpp>
 
 #include <modules/memory.hpp>
 #include "mem/page_map.hpp"
 
 using namespace arch;
 using namespace Mem;
+
+using std::expected;
+using std::unexpected;
 
 u64 Mmu::ToArchFlags(PageFlags flags)
 {
@@ -33,17 +37,17 @@ u64 Mmu::ToArchFlags(PageFlags flags)
     return arch_flags;
 }
 
-Expected<void, MemError> Mmu::Map(
+expected<void, MemError> Mmu::Map(
     VPtr<AddressSpace> as, VPtr<void> vaddr, PPtr<void> paddr, PageFlags flags
 )
 {
     auto res = WalkToEntry<1>(as, vaddr, true);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (pme_l1->IsPresent()) {
         // Page is already mapped, unmap first
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
@@ -53,10 +57,10 @@ Expected<void, MemError> Mmu::Map(
     return {};
 }
 
-Expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
+expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
 {
     auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (!pme_l1->IsPresent()) {
@@ -71,14 +75,14 @@ Expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     return {};
 }
 
-Expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> vaddr)
+expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> vaddr)
 {
     auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPETED_RET_IF_ERR(res);
+    UNEXPECTED_RET_IF_ERR(res);
 
     auto pme_l1 = *res;
     if (!pme_l1->IsPresent()) {
-        return Unexpected(MemError::InvalidArgument);
+        return unexpected(MemError::InvalidArgument);
     }
 
     return pme_l1->GetFrameAddress();

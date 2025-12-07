@@ -43,6 +43,7 @@ bool ACPI::SystemShutdown()
     }
 
     hal::KernelPanic("Shutdown failed");
+    return false;
 }
 
 bool ACPI::SystemReboot()
@@ -75,4 +76,5 @@ bool ACPI::SystemReboot()
     }
 
     hal::KernelPanic("Reboot failed");
+    return false;
 }
