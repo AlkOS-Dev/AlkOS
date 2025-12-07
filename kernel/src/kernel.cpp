@@ -7,8 +7,11 @@
 /* internal includes */
 #include <hal/debug.hpp>
 
-#include "boot_args.hpp"
+#include "graphics/font/psf2_font.hpp"
+#include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
+
+#include "boot_args.hpp"
 #include "hal/boot_args.hpp"
 #include "mem/heap.hpp"
 #include "modules/video.hpp"
@@ -35,17 +38,39 @@ static void KernelRun()
     auto fmt     = video.GetFormat();
 
     Graphics::Painter p(screen, fmt);
+    Graphics::Psf2Font system_font(drdos8x8_psfu);
+
+    if (!system_font.IsValid()) {
+        TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
+    }
 
     // Animation Loop
     i32 x     = 0;
     i32 y     = 0;
     u16 speed = 1;
+
     while (true) {
         p.Clear(Graphics::Color::Black());
+
+        // Shape drawing
         p.SetColor(Graphics::Color::Green());
-        p.FillRect(x, 100, 50, 50);
+        p.FillRect({.x = x, .y = 100, .w = 50, .h = 50});
         p.SetColor(Graphics::Color::Blue());
-        p.FillRect(100, y, 70, 70);
+        p.FillRect({.x = 100, .y = y, .w = 70, .h = 70});
+
+        // Text drawing
+        p.SetColor(Graphics::Color::White());
+        p.DrawString({.x = 40, .y = 20, .text = "AlkOS Kernel", .scale = 3}, system_font);
+
+        p.SetColor(Graphics::Color::Red());
+        p.DrawString(
+            {.x = 40, .y = 50, .text = "Graphics Subsystem Online.", .scale = 3}, system_font
+        );
+
+        // Dynamic Text Position
+        p.SetColor(Graphics::Color::Green());
+        p.DrawString({.x = x, .y = y + 80, .text = "Moving Text!", .scale = 2}, system_font);
+
         video.Flush();
 
         x += (speed / 255) + 1;
@@ -55,7 +80,7 @@ static void KernelRun()
 
         // crude delay
         for (volatile int i = 0; i < 1000000; i++);
-        speed = speed + 80;
+        speed = speed + 10;
     }
 }
 

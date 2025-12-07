@@ -11,16 +11,8 @@ namespace IO
  * @brief Abstraction for a specific hardware I/O register or port.
  *
  * This class encapsulates the address of a hardware register (e.g., an I/O port number
- * on x86 or a physical memory address on MMIO architectures) and provides a type-safe
- * interface for data access.
+ * on x86 or a physical memory address on MMIO architectures)
  *
- * It acts as a wrapper around the Hardware Abstraction Layer (HAL), delegating
- * specific read/write instructions (like `inb`/`outb` or volatile pointer access)
- * to `hal::IoRead` and `hal::IoWrite`. This allows device drivers to remain
- * architecture-agnostic.
- *
- * @note Operations are restricted to valid I/O types (u8, u16, u32) via the
- *       `hal::IoT` concept.
  */
 class Register
 {
