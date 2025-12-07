@@ -26,6 +26,13 @@ struct TextCmd {
     u8 scale = 1;
 };
 
+struct CharCmd {
+    i32 x;
+    i32 y;
+    char c;
+    u8 scale = 1;
+};
+
 }  // namespace Graphics
 
 #endif  // KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_

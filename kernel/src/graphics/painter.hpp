@@ -46,7 +46,7 @@ class Painter
      * @tparam FontT A type satisfying the FontType concept (e.g., Psf2Font).
      */
     template <FontType FontT>
-    void DrawChar(i32 x, i32 y, char c, const FontT &font, u8 scale = 1);
+    void DrawChar(const CharCmd &cmd, const FontT &font);
 
     /**
      * @brief Draws a null-terminated string.

@@ -7,16 +7,17 @@ namespace Graphics
 {
 
 template <FontType FontT>
-void Painter::DrawChar(i32 x, i32 y, char c, const FontT &font, u8 scale)
+void Painter::DrawChar(const CharCmd &cmd, const FontT &font)
 {
-    Glyph glyph = font.GetGlyph(c);
+    Glyph glyph = font.GetGlyph(cmd.c);
 
-    i32 scaled_width  = static_cast<i32>(glyph.width) * scale;
-    i32 scaled_height = static_cast<i32>(glyph.height) * scale;
+    i32 scaled_width  = static_cast<i32>(glyph.width) * cmd.scale;
+    i32 scaled_height = static_cast<i32>(glyph.height) * cmd.scale;
 
     // Skip if character is off-screen
-    if (x >= static_cast<i32>(target_.GetWidth()) || y >= static_cast<i32>(target_.GetHeight()) ||
-        x + scaled_width <= 0 || y + scaled_height <= 0) {
+    if (cmd.x >= static_cast<i32>(target_.GetWidth()) ||
+        cmd.y >= static_cast<i32>(target_.GetHeight()) || cmd.x + scaled_width <= 0 ||
+        cmd.y + scaled_height <= 0) {
         return;
     }
 
@@ -32,8 +33,8 @@ void Painter::DrawChar(i32 x, i32 y, char c, const FontT &font, u8 scale)
 
             if (is_set) {
                 FillRect(
-                    {static_cast<i32>(x + (col * scale)), static_cast<i32>(y + (row * scale)),
-                     scale, scale}
+                    {static_cast<i32>(cmd.x + (col * cmd.scale)),
+                     static_cast<i32>(cmd.y + (row * cmd.scale)), cmd.scale, cmd.scale}
                 );
             }
         }
@@ -58,7 +59,7 @@ void Painter::DrawString(const TextCmd &cmd, const FontT &font)
         } else if (c == '\r') {
             cursor_x = cmd.x;
         } else {
-            DrawChar(cursor_x, cursor_y, c, font, cmd.scale);
+            DrawChar({.x = cursor_x, .y = cursor_y, .c = c, .scale = cmd.scale}, font);
             cursor_x += static_cast<i32>(font.GetGlyph(c).advance * cmd.scale);
         }
     }
