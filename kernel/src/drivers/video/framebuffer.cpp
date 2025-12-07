@@ -1,5 +1,6 @@
 #include "drivers/video/framebuffer.hpp"
 #include "defines.hpp"
+#include "graphics/native_pixel.hpp"
 #include "mem/heap.hpp"
 #include "trace_framework.hpp"
 
@@ -13,7 +14,7 @@ void Framebuffer::Init(Graphics::Surface s, Graphics::PixelFormat pf, Mem::Heap 
     // Backbuffer allocation
     size_t width       = front_surface_.GetWidth();
     size_t height      = front_surface_.GetHeight();
-    size_t buffer_size = width * height * sizeof(u32);
+    size_t buffer_size = width * height * sizeof(Graphics::NativePixel);
 
     auto alloc_res = hp.Malloc(buffer_size);
     if (!alloc_res) {
@@ -21,8 +22,9 @@ void Framebuffer::Init(Graphics::Surface s, Graphics::PixelFormat pf, Mem::Heap 
         return;
     }
 
-    backbuffer_mem_ = static_cast<Mem::VPtr<u32>>(*alloc_res);
-    back_surface_   = Graphics::Surface(backbuffer_mem_, width, height, width * sizeof(u32));
+    backbuffer_mem_ = static_cast<Mem::VPtr<Graphics::NativePixel>>(*alloc_res);
+    back_surface_ =
+        Graphics::Surface(backbuffer_mem_, width, height, width * sizeof(Graphics::NativePixel));
 }
 
 void Framebuffer::Flush()

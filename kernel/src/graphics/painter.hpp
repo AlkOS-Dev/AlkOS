@@ -2,10 +2,12 @@
 #define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
 
 #include <concepts.hpp>
+#include <span.hpp>
 #include <string.hpp>
 #include "graphics/color.hpp"
 #include "graphics/font/glyph.hpp"
 #include "graphics/geometry.hpp"
+#include "graphics/native_pixel.hpp"
 #include "graphics/surface.hpp"
 
 namespace Graphics
@@ -57,12 +59,12 @@ class Painter
     void DrawString(const TextCmd &cmd, const FontT &font);
 
     private:
-    void FillScanline(u32 *dest, u32 count, u32 color);
-    NODISCARD FORCE_INLINE_F u32 PackColor(Color c) const;
+    void FillScanline(std::span<NativePixel> dest, NativePixel color);
+    NODISCARD FORCE_INLINE_F NativePixel PackColor(Color c) const;
 
     Surface &target_;
     PixelFormat format_;
-    u32 packed_color_;
+    NativePixel packed_color_;
 };
 
 }  // namespace Graphics
