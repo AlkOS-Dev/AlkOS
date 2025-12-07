@@ -39,7 +39,7 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Initialize the global state module */
     GlobalStateModule::Init();
 
-    /* Initialize ACPI */
+    // /* Initialize ACPI */
     const int status = HardwareModule::Get().GetACPIController().Init(args);
     R_ASSERT_ZERO(status, "Failed to initialize ACPI subsystem...");
 

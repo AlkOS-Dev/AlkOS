@@ -113,9 +113,8 @@ void TestIsr(intr::LitSwEntry &entry)
     __asm__ volatile("movq $-1, %%r15" : : : "r15");
 }
 
-void TimerIsr(intr::LitHwEntry &entry)
+void TimerIsr(intr::LitHwEntry &)
 {
-    (void)entry;  // Unused parameter
     // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 
     // TODO: Temporary code
