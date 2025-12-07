@@ -59,7 +59,7 @@ isr_wrapper_%+%1:
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _reg_size + 8] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space + _reg_size] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_regs                    ; Restore registers.
@@ -77,12 +77,11 @@ isr_wrapper_%+%1:
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _reg_size + 8] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space + _reg_size] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_regs                    ; Restore registers.
     add rsp, _reg_size          ; Deallocate register save space.
-    add rsp, 8                  ; Pop real error code.
     iretq
 %endmacro
 

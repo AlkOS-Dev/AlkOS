@@ -116,8 +116,11 @@ Hpet::Hpet(acpi_hpet *table)
     hardware::ClockRegistryEntry hpet_entry = {};
 
     /* Clock data */
-    hpet_entry.id            = static_cast<u64>(arch::HardwareClockId::kHpet);
-    hpet_entry.frequency_kHz = (kFemtoSecondsPerSecond / clock_period_) / 1000;
+    hpet_entry.id                            = static_cast<u64>(arch::HardwareClockId::kHpet);
+    hpet_entry.frequency_kHz                 = (kFemtoSecondsPerSecond / clock_period_) / 1000;
+    hpet_entry.ns_uncertainty_margin_per_sec = 0;
+    hpet_entry.clock_denominator             = clock_period_;
+    hpet_entry.clock_numerator               = 1'000'000;
 
     /* Callbacks */
     hpet_entry.read           = ReadCb;
