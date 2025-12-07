@@ -196,7 +196,7 @@ uacpi_status uacpi_kernel_install_interrupt_handler(
         "Installing uacpi irq: %u with handler: %p", irq, reinterpret_cast<void *>(uacpi_handler)
     );
 
-    auto ptr_or_error = Mem::KMalloc({.size = sizeof(UacpiInterrupt)});
+    auto ptr_or_error = Mem::KMalloc(sizeof(UacpiInterrupt));
     ASSERT_TRUE(static_cast<bool>(ptr_or_error));
     auto *intr_ptr          = static_cast<UacpiInterrupt *>(ptr_or_error.value());
     intr_ptr->ctx           = ctx;
