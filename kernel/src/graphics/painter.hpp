@@ -5,6 +5,7 @@
 #include <string.hpp>
 #include "graphics/color.hpp"
 #include "graphics/font/glyph.hpp"
+#include "graphics/geometry.hpp"
 #include "graphics/surface.hpp"
 
 namespace Graphics
@@ -12,7 +13,6 @@ namespace Graphics
 
 /**
  * @brief Concept ensuring a type acts like a Font.
- * Must provide GetHeight() and GetGlyph(char).
  */
 template <typename T>
 concept FontType = requires(const T &t, char c) {
@@ -33,12 +33,12 @@ class Painter
 
     void Clear(Color color);
 
-    void DrawPixel(i32 x, i32 y);
-    void DrawRect(i32 x, i32 y, i32 w, i32 h);
-    void FillRect(i32 x, i32 y, i32 w, i32 h);
+    void DrawPixel(Point p);
+    void DrawRect(Rect r);
+    void FillRect(Rect r);
 
     // -------------------------------------------------------------------------
-    // Text Rendering (Templates)
+    // Text Rendering
     // -------------------------------------------------------------------------
 
     /**
@@ -46,7 +46,7 @@ class Painter
      * @tparam FontT A type satisfying the FontType concept (e.g., Psf2Font).
      */
     template <FontType FontT>
-    void DrawChar(i32 x, i32 y, char c, const FontT &font);
+    void DrawChar(i32 x, i32 y, char c, const FontT &font, u8 scale = 1);
 
     /**
      * @brief Draws a null-terminated string.
@@ -54,7 +54,7 @@ class Painter
      * @tparam FontT A type satisfying the FontType concept.
      */
     template <FontType FontT>
-    void DrawString(i32 x, i32 y, std::string_view str, const FontT &font);
+    void DrawString(const TextCmd &cmd, const FontT &font);
 
     private:
     void FillScanline(u32 *dest, u32 count, u32 color);

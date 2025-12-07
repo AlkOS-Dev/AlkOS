@@ -54,20 +54,22 @@ static void KernelRun()
 
         // Shape drawing
         p.SetColor(Graphics::Color::Green());
-        p.FillRect(x, 100, 50, 50);
+        p.FillRect({.x = x, .y = 100, .w = 50, .h = 50});
         p.SetColor(Graphics::Color::Blue());
-        p.FillRect(100, y, 70, 70);
+        p.FillRect({.x = 100, .y = y, .w = 70, .h = 70});
 
         // Text drawing
         p.SetColor(Graphics::Color::White());
-        p.DrawString(40, 20, "AlkOS Kernel", system_font);
+        p.DrawString({.x = 40, .y = 20, .text = "AlkOS Kernel", .scale = 3}, system_font);
 
         p.SetColor(Graphics::Color::Red());
-        p.DrawString(40, 35, "Graphics Subsystem Online.", system_font);
+        p.DrawString(
+            {.x = 40, .y = 50, .text = "Graphics Subsystem Online.", .scale = 3}, system_font
+        );
 
         // Dynamic Text Position
         p.SetColor(Graphics::Color::Green());
-        p.DrawString(x, y + 80, "Moving Text!", system_font);
+        p.DrawString({.x = x, .y = y + 80, .text = "Moving Text!", .scale = 2}, system_font);
 
         video.Flush();
 
