@@ -24,8 +24,10 @@ u32 Painter::PackColor(Color c) const
            (static_cast<u32>(c.b & b_mask) << format_.blue_pos);
 }
 
-void Painter::DrawPixel(i32 x, i32 y)
+void Painter::DrawPixel(Point p)
 {
+    i32 x = p.x;
+    i32 y = p.y;
     if (x < 0 || y < 0 || static_cast<u32>(x) >= target_.GetWidth() ||
         static_cast<u32>(y) >= target_.GetHeight()) {
         return;
@@ -41,7 +43,6 @@ void Painter::FillScanline(u32 *dest, u32 count, u32 color)
         (color & 0xFF) == ((color >> 24) & 0xFF)) {
         memset(dest, color & 0xFF, count * sizeof(u32));
     } else {
-        // Compiler auto-vectorization usually handles this loop well
         for (u32 i = 0; i < count; ++i) {
             dest[i] = color;
         }
@@ -55,7 +56,7 @@ void Painter::Clear(Color color)
     u32 width  = target_.GetWidth();
     u32 pitch  = target_.GetPitch();
 
-    // Optimization: if buffer is contiguous (pitch == width * 4 for 32bpp)
+    // If buffer is contiguous (pitch == width * 4 for 32bpp)
     // we can clear it in one go.
     if (pitch == width * sizeof(u32)) {
         FillScanline(target_.GetScanline(0), width * height, raw);
@@ -66,8 +67,13 @@ void Painter::Clear(Color color)
     }
 }
 
-void Painter::FillRect(i32 x, i32 y, i32 w, i32 h)
+void Painter::FillRect(Rect r)
 {
+    i32 x = r.x;
+    i32 y = r.y;
+    i32 w = r.w;
+    i32 h = r.h;
+
     // Clipping Logic
     if (x < 0) {
         w += x;
@@ -103,16 +109,21 @@ void Painter::FillRect(i32 x, i32 y, i32 w, i32 h)
     }
 }
 
-void Painter::DrawRect(i32 x, i32 y, i32 w, i32 h)
+void Painter::DrawRect(Rect r)
 {
+    i32 x = r.x;
+    i32 y = r.y;
+    i32 w = r.w;
+    i32 h = r.h;
+
     // Top
-    FillRect(x, y, w, 1);
+    FillRect({x, y, w, 1});
     // Bottom
-    FillRect(x, y + h - 1, w, 1);
+    FillRect({x, y + h - 1, w, 1});
     // Left
-    FillRect(x, y, 1, h);
+    FillRect({x, y, 1, h});
     // Right
-    FillRect(x + w - 1, y, 1, h);
+    FillRect({x + w - 1, y, 1, h});
 }
 
 }  // namespace Graphics
