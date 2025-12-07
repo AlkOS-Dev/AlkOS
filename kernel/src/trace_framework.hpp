@@ -49,7 +49,7 @@ void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 void DumpAllBuffersOnFailure();
 
-/* MODULE TIME CORE PROC FILE LINE MSG */
+/* MODULE TIME CORE PROC MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
 PREVENT_INLINE static void Write(const char *format, Args... args);
 }  // namespace trace

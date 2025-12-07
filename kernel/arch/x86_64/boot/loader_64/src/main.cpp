@@ -175,17 +175,19 @@ static void EstablishDirectMemMapping(MemoryManagers &mms)
     );
 }
 
-static u64 FindACPIAddress(MultibootInfo &multiboot_info)
+static void ProcessACPITables(MultibootInfo &multiboot_info)
 {
     TRACE_DEBUG("Finding RSDP...");
     TagNewAcpi *tag_ptr{};
+    bool is_acpi1{};
 
     if (auto new_acpi_tag = multiboot_info.FindTag<TagNewAcpi>(); !new_acpi_tag) {
         TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
         auto old_acpi_tag = multiboot_info.FindTag<TagOldAcpi>();
         R_ASSERT_TRUE(static_cast<bool>(old_acpi_tag), "Failed to find ACPI tag");
 
-        tag_ptr = reinterpret_cast<TagNewAcpi *>(old_acpi_tag.value());
+        tag_ptr  = reinterpret_cast<TagNewAcpi *>(old_acpi_tag.value());
+        is_acpi1 = true;
     } else {
         tag_ptr = new_acpi_tag.value();
     }
@@ -199,14 +201,10 @@ static u64 FindACPIAddress(MultibootInfo &multiboot_info)
         FormatMetricUint(tag_ptr->size)
     );
 
-    u8 rsdp[8]{};
-    for (size_t offset = 0; offset < tag_ptr->size; ++offset) {
-        rsdp[offset] = tag_ptr->rsdp[offset];
+    for (size_t offset = 0; offset < (tag_ptr->size - 8); ++offset) {
+        gKernelInitialParams.rsdp_struct[offset] = tag_ptr->rsdp[offset];
     }
-
-    const u64 rsdp_addr = reinterpret_cast<u64>(rsdp);
-    TRACE_DEBUG("Found RSDP address: 0x%016llX", rsdp_addr);
-    return rsdp_addr;
+    gKernelInitialParams.is_acpi1 = is_acpi1;
 }
 
 static void PrepareKernelArgs(
@@ -275,7 +273,7 @@ static void PrepareKernelArgs(
         gKernelInitialParams.fb_bpp    = 0;
     }
 
-    gKernelInitialParams.rsdp_address = FindACPIAddress(multiboot_info);
+    ProcessACPITables(multiboot_info);
 }
 
 NO_RET static void TransitionToKernel(
@@ -301,7 +299,6 @@ NO_RET static void TransitionToKernel(
         "    pml_4_table_phys_addr:       0x%llX\n"
         "    mem_info_bitmap_addr:        0x%llX\n"
         "    mem_info_total_pages:        %llu\n"
-        "    rsdp_address:         0x%llX\n"
         "  Framebuffer Arguments:\n"
         "    fb_addr:                     0x%llX\n"
         "    fb_width:                    %u\n"
@@ -313,15 +310,16 @@ NO_RET static void TransitionToKernel(
         "    fb_green_pos:                %hhu\n"
         "    fb_green_mask:               %hhu\n"
         "    fb_blue_pos:                 %hhu\n"
-        "    fb_blue_mask:                %hhu\n",
+        "    fb_blue_mask:                %hhu\n"
+        "    is_acpi1:                    %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
-        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.rsdp_address,
-        gKernelInitialParams.fb_addr, gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
+        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.fb_addr,
+        gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
         gKernelInitialParams.fb_pitch, gKernelInitialParams.fb_bpp, gKernelInitialParams.fb_red_pos,
         gKernelInitialParams.fb_red_mask, gKernelInitialParams.fb_green_pos,
         gKernelInitialParams.fb_green_mask, gKernelInitialParams.fb_blue_pos,
-        gKernelInitialParams.fb_blue_mask
+        gKernelInitialParams.fb_blue_mask, gKernelInitialParams.is_acpi1
     );
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);

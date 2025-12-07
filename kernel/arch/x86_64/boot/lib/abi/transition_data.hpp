@@ -45,7 +45,9 @@ struct PACK alignas(64) KernelArguments {
     u8 fb_blue_mask;
 
     // ACPI
-    u64 rsdp_address;
+    static constexpr size_t kMaxRsdpStructSize = 36;
+    u8 rsdp_struct[kMaxRsdpStructSize];
+    bool is_acpi1;
 };
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
