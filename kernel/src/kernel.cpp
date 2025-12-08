@@ -1,12 +1,14 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
 #include <time.h>
+#include <string.hpp>
 #include <test_module/test_module.hpp>
 #include "trace_framework.hpp"
 
 /* internal includes */
 #include <hal/debug.hpp>
 
+#include "graphics/donut/donut.hpp"
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
@@ -44,43 +46,35 @@ static void KernelRun()
         TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
     }
 
-    // Animation Loop
-    i32 x     = 0;
-    i32 y     = 0;
-    u16 speed = 1;
+    SpinningDonut donut;
+    donut.Init(screen.GetWidth(), screen.GetHeight());
 
+    u64 frame_count = 0;
+    char text_buffer[100];
     while (true) {
-        p.Clear(Graphics::Color::Black());
+        donut.Render(screen, p);
 
-        // Shape drawing
-        p.SetColor(Graphics::Color::Green());
-        p.FillRect({.x = x, .y = 100, .w = 50, .h = 50});
-        p.SetColor(Graphics::Color::Blue());
-        p.FillRect({.x = 100, .y = y, .w = 70, .h = 70});
-
-        // Text drawing
         p.SetColor(Graphics::Color::White());
-        p.DrawString({.x = 40, .y = 20, .text = "AlkOS Kernel", .scale = 3}, system_font);
-
-        p.SetColor(Graphics::Color::Red());
         p.DrawString(
-            {.x = 40, .y = 50, .text = "Graphics Subsystem Online.", .scale = 3}, system_font
+            {.x = 10, .y = 10, .text = "AlkOS Kernel - Graphics Module ON", .scale = 2}, system_font
         );
-
-        // Dynamic Text Position
-        p.SetColor(Graphics::Color::Green());
-        p.DrawString({.x = x, .y = y + 80, .text = "Moving Text!", .scale = 2}, system_font);
-
+        int ret = snprintf(text_buffer, 100, "Frame %lli", frame_count);
+        p.DrawString(
+            {.x     = (static_cast<i32>(
+                 screen.GetWidth() - system_font.MeasureString(text_buffer).width * 2
+             )),
+             .y     = 10,
+             .text  = text_buffer,
+             .scale = 2},
+            system_font
+        );
         video.Flush();
 
-        x += (speed / 255) + 1;
-        y += (speed / 255) + 1;
-        x = x % screen.GetWidth();
-        y = y % screen.GetHeight();
+        for (volatile int i = 0; i < 10000000; i++) {
+            ;
+        }
 
-        // crude delay
-        for (volatile int i = 0; i < 1000000; i++);
-        speed = speed + 10;
+        frame_count++;
     }
 }
 
