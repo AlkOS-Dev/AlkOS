@@ -49,7 +49,7 @@ class Surface
     }
 
     // -------------------------------------------------------------------------
-    // Fast Accessors
+    // Accessors
     // -------------------------------------------------------------------------
 
     NODISCARD FORCE_INLINE_F std::span<NativePixel> GetScanline(u32 y)
@@ -74,6 +74,12 @@ class Surface
         ASSERT_LT(x, width_);
         return GetScanline(y)[x];
     }
+
+    /**
+     * @brief Gets the unsafe raw buffer pointer.
+     * @warning Use only for high-performance code where bounds are checked manually.
+     */
+    NODISCARD FORCE_INLINE_F Mem::VPtr<NativePixel> GetRawBuffer() { return buffer_; }
 
     // -------------------------------------------------------------------------
     // Properties

@@ -11,20 +11,7 @@ Painter::Painter(Surface &target, const PixelFormat &format) : target_(target), 
     SetColor(Color::White());
 }
 
-void Painter::SetColor(Color color) { packed_color_ = PackColor(color); }
-
-NativePixel Painter::PackColor(Color c) const
-{
-    const u32 r_mask = (1 << format_.red_mask_size) - 1;
-    const u32 g_mask = (1 << format_.green_mask_size) - 1;
-    const u32 b_mask = (1 << format_.blue_mask_size) - 1;
-
-    u32 raw = (static_cast<u32>(c.r & r_mask) << format_.red_pos) |
-              (static_cast<u32>(c.g & g_mask) << format_.green_pos) |
-              (static_cast<u32>(c.b & b_mask) << format_.blue_pos);
-
-    return NativePixel(raw);
-}
+void Painter::SetColor(Color color) { packed_color_ = NativePixel::FromColor(color, format_); }
 
 void Painter::DrawPixel(Point p)
 {
@@ -39,10 +26,9 @@ void Painter::DrawPixel(Point p)
 
 void Painter::FillScanline(std::span<NativePixel> dest, NativePixel color)
 {
-    // Check for byte-repeating pattern for memset optimization
-    // e.g. 0x00000000, 0xFFFFFFFF, 0xABABABAB
     u32 raw = color.value;
 
+    // Optimization: If byte pattern is repeating, use memset
     if ((raw & 0xFF) == ((raw >> 8) & 0xFF) && (raw & 0xFF) == ((raw >> 16) & 0xFF) &&
         (raw & 0xFF) == ((raw >> 24) & 0xFF)) {
         memset(dest.data(), raw & 0xFF, dest.size_bytes());
@@ -55,13 +41,11 @@ void Painter::FillScanline(std::span<NativePixel> dest, NativePixel color)
 
 void Painter::Clear(Color color)
 {
-    NativePixel raw = PackColor(color);
+    NativePixel raw = NativePixel::FromColor(color, format_);
     u32 height      = target_.GetHeight();
     u32 width       = target_.GetWidth();
     u32 pitch       = target_.GetPitch();
 
-    // If buffer is contiguous (pitch == width * 4 for 32bpp)
-    // we can clear it in one go.
     if (pitch == width * sizeof(NativePixel)) {
         std::span<NativePixel> first_line = target_.GetScanline(0);
         std::span<NativePixel> full_buffer(first_line.data(), width * height);
@@ -80,7 +64,6 @@ void Painter::FillRect(Rect r)
     i32 w = r.w;
     i32 h = r.h;
 
-    // Clipping Logic
     if (x < 0) {
         w += x;
         x = 0;
@@ -90,14 +73,10 @@ void Painter::FillRect(Rect r)
         y = 0;
     }
 
-    if (static_cast<u32>(x) >= target_.GetWidth()) {
-        return;
-    }
-    if (static_cast<u32>(y) >= target_.GetHeight()) {
+    if (static_cast<u32>(x) >= target_.GetWidth() || static_cast<u32>(y) >= target_.GetHeight()) {
         return;
     }
 
-    // Clamp width/height to edges
     if (static_cast<u32>(x + w) > target_.GetWidth()) {
         w = target_.GetWidth() - x;
     }
@@ -122,13 +101,9 @@ void Painter::DrawRect(Rect r)
     i32 w = r.w;
     i32 h = r.h;
 
-    // Top
     FillRect({x, y, w, 1});
-    // Bottom
     FillRect({x, y + h - 1, w, 1});
-    // Left
     FillRect({x, y, 1, h});
-    // Right
     FillRect({x + w - 1, y, 1, h});
 }
 

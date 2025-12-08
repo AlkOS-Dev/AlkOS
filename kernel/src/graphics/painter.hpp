@@ -43,24 +43,21 @@ class Painter
     // Text Rendering
     // -------------------------------------------------------------------------
 
-    /**
-     * @brief Draws a single character using the provided font.
-     * @tparam FontT A type satisfying the FontType concept (e.g., Psf2Font).
-     */
     template <FontType FontT>
     void DrawChar(const CharCmd &cmd, const FontT &font);
 
-    /**
-     * @brief Draws a null-terminated string.
-     * Handles newlines (\n) and carriage returns (\r).
-     * @tparam FontT A type satisfying the FontType concept.
-     */
     template <FontType FontT>
     void DrawString(const TextCmd &cmd, const FontT &font);
 
+    // -------------------------------------------------------------------------
+    // Accessors
+    // -------------------------------------------------------------------------
+
+    NODISCARD Surface &GetTarget() { return target_; }
+    NODISCARD const PixelFormat &GetFormat() const { return format_; }
+
     private:
     void FillScanline(std::span<NativePixel> dest, NativePixel color);
-    NODISCARD FORCE_INLINE_F NativePixel PackColor(Color c) const;
 
     Surface &target_;
     PixelFormat format_;

@@ -8,7 +8,7 @@
 /* internal includes */
 #include <hal/debug.hpp>
 
-#include "graphics/donut/donut.hpp"
+#include "demos/donut.hpp"
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
@@ -46,13 +46,13 @@ static void KernelRun()
         TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
     }
 
-    SpinningDonut donut;
-    donut.Init(screen.GetWidth(), screen.GetHeight());
+    Demos::SpinningDonut donut;
+    donut.Init(screen.GetWidth(), screen.GetHeight(), fmt);
 
     u64 frame_count = 0;
     char text_buffer[100];
     while (true) {
-        donut.Render(screen, p);
+        donut.Render(p);
 
         p.SetColor(Graphics::Color::White());
         p.DrawString(
