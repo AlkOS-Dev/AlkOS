@@ -9,21 +9,38 @@
 namespace System
 {
 
+// --------------------------------------------------------------------------------
+// GraphicsConsole
+// --------------------------------------------------------------------------------
+
 class GraphicsConsole : public IO::IWriter
 {
     public:
     GraphicsConsole(Graphics::Painter &painter, const Graphics::Psf2Font &font);
 
-    // IWriter implementation for generic printf support
+    // -------------------------------------------------------------------------
+    // IWriter Interface
+    // -------------------------------------------------------------------------
+
     IO::IoResult Write(std::span<const byte> buffer) override;
 
-    // Direct character handling
+    // -------------------------------------------------------------------------
+    // Console Operations
+    // -------------------------------------------------------------------------
+
     void Clear();
 
+    // -------------------------------------------------------------------------
     // Configuration
+    // -------------------------------------------------------------------------
+
     void SetColors(Graphics::Color fg, Graphics::Color bg);
 
     private:
+    // -------------------------------------------------------------------------
+    // Internal Helpers
+    // -------------------------------------------------------------------------
+
     void InternalPutChar(char c);
     void NewLine();
     void ScrollUp();

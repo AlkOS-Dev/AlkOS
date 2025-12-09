@@ -1,6 +1,7 @@
 #ifndef KERNEL_SRC_DEMOS_DONUT_HPP_
 #define KERNEL_SRC_DEMOS_DONUT_HPP_
 
+#include <stdio.h>
 #include <algorithm.hpp>
 #include <memory.hpp>
 #include <span.hpp>
@@ -16,6 +17,9 @@
 #include "mem/heap.hpp"
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
+
+namespace Demos
+{
 
 // --------------------------------------------------------------------------------
 // Minimal Math for donut Implementation
@@ -40,7 +44,7 @@ f32 sin(f32 x)
     f32 res  = 0;
     f32 term = x;
     f32 k    = 1;
-    for (int i = 0; i < 5; ++i) {  // 5 iterations is plenty for visual
+    for (i32 i = 0; i < 5; ++i) {  // 5 iterations is plenty for visual
         res += term;
         term *= -1 * x * x / ((k + 1) * (k + 2));
         k += 2;
@@ -50,9 +54,6 @@ f32 sin(f32 x)
 
 f32 cos(f32 x) { return sin(x + (PI / 2.0F)); }
 }  // namespace Math
-
-namespace Demos
-{
 
 class SpinningDonut
 {
@@ -69,11 +70,11 @@ class SpinningDonut
         }
 
         // Pre-calculate luminance palette to avoid color packing in the render loop.
-        for (int i = 0; i < 13; ++i) {
-            float intensity = i / 12.0f;
-            u8 r            = static_cast<u8>(255 * intensity);
-            u8 g            = static_cast<u8>(150 * intensity);
-            u8 b            = static_cast<u8>(50 * intensity);
+        for (i32 i = 0; i < 13; ++i) {
+            f32 intensity = i / 12.0f;
+            u8 r          = static_cast<u8>(255 * intensity);
+            u8 g          = static_cast<u8>(150 * intensity);
+            u8 b          = static_cast<u8>(50 * intensity);
 
             luminance_palette_[i] = Graphics::NativePixel::FromColor({r, g, b}, format);
         }
@@ -123,20 +124,20 @@ class SpinningDonut
                 f32 ooz = 1.0F / z;
 
                 // Screen projection
-                int xp = (int)((width_ / 2) + (K1 * ooz * x));
-                int yp = (int)((height_ / 2) - (K1 * ooz * y));
+                i32 xp = (i32)((width_ / 2) + (K1 * ooz * x));
+                i32 yp = (i32)((height_ / 2) - (K1 * ooz * y));
 
                 // Luminance
                 f32 L =
                     (cp * ct * sB) - (cA * ct * sp) - (sA * st) + (cB * (cA * st - ct * sA * sp));
 
-                if (L > 0 && xp >= 0 && xp < (int)width_ && yp >= 0 && yp < (int)height_) {
-                    int idx = xp + (yp * width_);
+                if (L > 0 && xp >= 0 && xp < (i32)width_ && yp >= 0 && yp < (i32)height_) {
+                    i32 idx = xp + (yp * width_);
 
                     if (ooz > z_buffer_[idx]) {
                         z_buffer_[idx] = ooz;
 
-                        int luminance_idx = (int)(L * 8.0F);
+                        i32 luminance_idx = (i32)(L * 8.0F);
                         if (luminance_idx > 12)
                             luminance_idx = 12;
                         else if (luminance_idx < 0)
@@ -195,7 +196,8 @@ void RunDonutDemo()
         p.DrawString(
             {.x = 10, .y = 10, .text = "AlkOS Kernel - Graphics Module ON", .scale = 2}, system_font
         );
-        int ret = snprintf(text_buffer, 100, "Frame %lli", frame_count);
+        i32 ret = snprintf(text_buffer, 100, "Frame %lli", frame_count);
+        (void)ret;
         p.DrawString(
             {.x     = (static_cast<i32>(
                  screen.GetWidth() - system_font.MeasureString(text_buffer).width * 2
@@ -207,7 +209,7 @@ void RunDonutDemo()
         );
         video.Flush();
 
-        for (volatile int i = 0; i < 10000000; i++) {
+        for (volatile i32 i = 0; i < 10000000; i++) {
             ;
         }
 

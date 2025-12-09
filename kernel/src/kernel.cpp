@@ -49,7 +49,7 @@ static void KernelRun()
         video.Flush();
 
         // Don't burn CPU 100%
-        for (volatile int i = 0; i < 10000; ++i) {
+        for (volatile i32 i = 0; i < 10000; ++i) {
         }
     }
 }
