@@ -8,15 +8,16 @@
 /* internal includes */
 #include <hal/debug.hpp>
 
-#include "demos/donut.hpp"
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
+#include "hal/terminal.hpp"
+#include "modules/video.hpp"
+#include "sys/shell.hpp"
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
 #include "mem/heap.hpp"
-#include "modules/video.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::RawBootArguments &);
@@ -27,54 +28,29 @@ static void KernelRun()
     trace::DumpAllBuffersOnFailure();
     TODO_MMU_MINIMAL
 
-    // static constexpr size_t kBuffSize = 256;
-    // char buff[kBuffSize];
-    //
-    // const auto t = time(nullptr);
-    // strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-    //
-    // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
+    auto &video = VideoModule::Get();
+    Graphics::Painter painter(video.GetScreen(), video.GetFormat());
+    Graphics::Psf2Font font(drdos8x8_psfu);
 
-    auto &video  = VideoModule::Get();
-    auto &screen = video.GetScreen();
-    auto fmt     = video.GetFormat();
-
-    Graphics::Painter p(screen, fmt);
-    Graphics::Psf2Font system_font(drdos8x8_psfu);
-
-    if (!system_font.IsValid()) {
-        TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
+    if (!font.IsValid()) {
+        TRACE_WARN_VIDEO("Invalid font");
     }
 
-    Demos::SpinningDonut donut;
-    donut.Init(screen.GetWidth(), screen.GetHeight(), fmt);
+    System::GraphicsConsole console(painter, font);
+    System::Shell shell(console);
 
-    u64 frame_count = 0;
-    char text_buffer[100];
+    shell.Init();
+    video.Flush();
+
     while (true) {
-        donut.Render(p);
-
-        p.SetColor(Graphics::Color::White());
-        p.DrawString(
-            {.x = 10, .y = 10, .text = "AlkOS Kernel - Graphics Module ON", .scale = 2}, system_font
-        );
-        int ret = snprintf(text_buffer, 100, "Frame %lli", frame_count);
-        p.DrawString(
-            {.x     = (static_cast<i32>(
-                 screen.GetWidth() - system_font.MeasureString(text_buffer).width * 2
-             )),
-             .y     = 10,
-             .text  = text_buffer,
-             .scale = 2},
-            system_font
-        );
+        // Poll Serial Port for input (temporary until IRQ is hooked)
+        char c = hal::TerminalGetChar();
+        shell.OnInput(c);
         video.Flush();
 
-        for (volatile int i = 0; i < 10000000; i++) {
-            ;
+        // Don't burn CPU 100%
+        for (volatile int i = 0; i < 10000; ++i) {
         }
-
-        frame_count++;
     }
 }
 

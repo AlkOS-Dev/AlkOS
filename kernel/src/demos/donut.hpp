@@ -3,13 +3,19 @@
 
 #include <algorithm.hpp>
 #include <memory.hpp>
+#include <span.hpp>
+#include <string.hpp>
 #include <types.hpp>
 
 #include "graphics/color.hpp"
+#include "graphics/font/psf2_font.hpp"
+#include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/native_pixel.hpp"
 #include "graphics/painter.hpp"
 #include "graphics/surface.hpp"
 #include "mem/heap.hpp"
+#include "modules/video.hpp"
+#include "trace_framework.hpp"
 
 // --------------------------------------------------------------------------------
 // Minimal Math for donut Implementation
@@ -163,6 +169,51 @@ class SpinningDonut
 
     Graphics::NativePixel luminance_palette_[13];
 };
+
+void RunDonutDemo()
+{
+    auto &video  = VideoModule::Get();
+    auto &screen = video.GetScreen();
+    auto fmt     = video.GetFormat();
+
+    Graphics::Painter p(screen, fmt);
+    Graphics::Psf2Font system_font(std::span<const u8>(drdos8x8_psfu, drdos8x8_psfu_len));
+
+    if (!system_font.IsValid()) {
+        TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
+    }
+
+    SpinningDonut donut;
+    donut.Init(screen.GetWidth(), screen.GetHeight(), fmt);
+
+    u64 frame_count = 0;
+    char text_buffer[100];
+    while (true) {
+        donut.Render(p);
+
+        p.SetColor(Graphics::Color::White());
+        p.DrawString(
+            {.x = 10, .y = 10, .text = "AlkOS Kernel - Graphics Module ON", .scale = 2}, system_font
+        );
+        int ret = snprintf(text_buffer, 100, "Frame %lli", frame_count);
+        p.DrawString(
+            {.x     = (static_cast<i32>(
+                 screen.GetWidth() - system_font.MeasureString(text_buffer).width * 2
+             )),
+             .y     = 10,
+             .text  = text_buffer,
+             .scale = 2},
+            system_font
+        );
+        video.Flush();
+
+        for (volatile int i = 0; i < 10000000; i++) {
+            ;
+        }
+
+        frame_count++;
+    }
+}
 
 }  // namespace Demos
 
