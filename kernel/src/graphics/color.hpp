@@ -8,13 +8,10 @@ namespace Graphics
 {
 
 struct PACK Color {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-
-    constexpr Color(u8 r, u8 g, u8 b, u8 a = 255) : r(r), g(g), b(b), a(a) {}
-    constexpr Color() : r(0), g(0), b(0), a(255) {}
+    u8 r = 0;
+    u8 g = 0;
+    u8 b = 0;
+    u8 a = 255;
 
     static constexpr Color Red() { return {255, 0, 0, 255}; }
     static constexpr Color Green() { return {0, 255, 0, 255}; }

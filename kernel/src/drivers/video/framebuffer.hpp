@@ -3,6 +3,7 @@
 
 #include <expected.hpp>
 #include "graphics/color.hpp"
+#include "graphics/native_pixel.hpp"
 #include "graphics/surface.hpp"
 #include "mem/heap.hpp"
 
@@ -33,7 +34,7 @@ class Framebuffer
     Graphics::PixelFormat format_{};
 
     // We own the backbuffer memory
-    Mem::VPtr<u32> backbuffer_mem_{nullptr};
+    Mem::VPtr<Graphics::NativePixel> backbuffer_mem_{nullptr};
 };
 
 }  // namespace Drivers::Video

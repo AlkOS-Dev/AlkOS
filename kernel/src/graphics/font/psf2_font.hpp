@@ -4,8 +4,11 @@
 #include <assert.h>
 #include <defines.hpp>
 #include <span.hpp>
+#include <string.hpp>
 #include <types.hpp>
+
 #include "graphics/font/glyph.hpp"
+#include "graphics/geometry.hpp"
 
 namespace Graphics
 {
@@ -81,8 +84,45 @@ class Psf2Font
             .width   = hdr.width,
             .height  = hdr.height,
             .stride  = stride,
-            .advance = hdr.width  // PSF2 is fundamentally a fixed-width format
+            .advance = hdr.width
         };
+    }
+
+    /**
+     * @brief Calculates the bounding box size of the text if it were drawn.
+     * @param text The string to measure.
+     * @param scale The scaling factor used for drawing.
+     * @return The width and height in pixels.
+     */
+    NODISCARD Size MeasureString(std::string_view text, u8 scale = 1) const
+    {
+        if (text.empty()) {
+            return {0, 0};
+        }
+
+        const auto &hdr = Header();
+        u32 cursor_x    = 0;
+        u32 cursor_y    = 0;
+        u32 max_width   = 0;
+
+        u32 total_height = hdr.height * scale;
+
+        for (char c : text) {
+            if (c == '\n') {
+                max_width = std::max(max_width, cursor_x);
+                cursor_x  = 0;
+                cursor_y += hdr.height * scale;
+                total_height = std::max(total_height, cursor_y + (hdr.height * scale));
+            } else if (c == '\r') {
+                cursor_x = 0;
+            } else {
+                cursor_x += hdr.width * scale;
+            }
+        }
+
+        max_width = std::max(max_width, cursor_x);
+
+        return {max_width, total_height};
     }
 
     private:
