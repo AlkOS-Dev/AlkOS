@@ -52,11 +52,10 @@ void Shell::OnInput(char c)
 
 void Shell::ProcessCommand()
 {
-    if (input_buffer_.Size() == 0)
+    if (input_buffer_.Size() == 0) {
         return;
+    }
 
-    // Create a null-terminated view for easier parsing (or just string_view)
-    // Since input_buffer_ isn't null terminated, we need to be careful.
     std::string_view line(static_cast<const char *>(input_buffer_.Data()), input_buffer_.Size());
 
     // Split command and args
@@ -64,16 +63,12 @@ void Shell::ProcessCommand()
     std::string_view cmd = (space_pos == std::string_view::npos) ? line : line.substr(0, space_pos);
     std::string_view args = (space_pos == std::string_view::npos) ? "" : line.substr(space_pos + 1);
 
-    // Simple Dispatch
-    // In a real OS, use a Map or Trie.
     if (cmd == "help") {
         CmdHelp();
     } else if (cmd == "clear") {
         CmdClear();
     } else if (cmd == "echo") {
         CmdEcho(args);
-    } else if (cmd == "mem") {
-        CmdMem();
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -91,8 +86,7 @@ void Shell::CmdHelp()
         "Available commands:\n"
         "  help   - Show this message\n"
         "  clear  - Clear the screen\n"
-        "  echo   - Print arguments\n"
-        "  mem    - Show memory statistics\n";
+        "  echo   - Print arguments\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
@@ -102,14 +96,6 @@ void Shell::CmdEcho(std::string_view args)
 {
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size()));
     console_.PutChar('\n');
-}
-
-void Shell::CmdMem()
-{
-    // Example: hooking into internal modules
-    // This requires exposing some stats from MemoryModule
-    const char *msg = "Memory stats not yet exposed via API.\n";
-    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
 }  // namespace System

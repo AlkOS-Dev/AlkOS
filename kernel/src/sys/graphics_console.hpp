@@ -40,6 +40,7 @@ class GraphicsConsole : public IO::IWriter
     u32 max_rows_{0};
     u32 glyph_w_{0};
     u32 glyph_h_{0};
+    u8 scale_{1};
 
     Graphics::Color fg_color_{Graphics::Color::White()};
     Graphics::Color bg_color_{Graphics::Color::Black()};

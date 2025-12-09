@@ -33,7 +33,6 @@ class Shell
     // Data
     GraphicsConsole &console_;
 
-    // Static buffer to avoid heap fragmentation/usage in interrupt context if moved there
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;
 };

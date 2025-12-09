@@ -9,8 +9,11 @@ namespace System
 GraphicsConsole::GraphicsConsole(Graphics::Painter &painter, const Graphics::Psf2Font &font)
     : painter_(painter), font_(font)
 {
-    glyph_w_ = font_.GetWidth();
-    glyph_h_ = font_.GetHeight();
+    // Auto-scale based on resolution
+    scale_ = static_cast<u8>(std::max(1u, painter_.GetTarget().GetWidth() / 400));
+
+    glyph_w_ = font_.GetWidth() * scale_;
+    glyph_h_ = font_.GetHeight() * scale_;
 
     // Calculate grid size
     max_cols_ = painter_.GetTarget().GetWidth() / glyph_w_;
@@ -34,20 +37,21 @@ void GraphicsConsole::Clear()
 
 void GraphicsConsole::ScrollUp()
 {
-    // We scroll by one line height
+    // Scroll by one line height
     auto &surface      = painter_.GetTarget();
     u32 pitch          = surface.GetPitch();
     u32 bytes_per_line = pitch * glyph_h_;
     u32 total_height   = surface.GetHeight();
 
-    // Get raw buffer
     u8 *raw_buf = reinterpret_cast<u8 *>(surface.GetRawBuffer());
 
     // Move memory up
     // Dest: Start of buffer
     // Src: Start of buffer + one line of pixels
     // Size: Total size - one line of pixels
-    memmove(raw_buf, raw_buf + bytes_per_line, pitch * (total_height - glyph_h_));
+    memmove(
+        raw_buf, raw_buf + bytes_per_line, static_cast<size_t>(pitch * (total_height - glyph_h_))
+    );
 
     // Clear bottom area using the painter to ensure correct color format
     painter_.SetColor(bg_color_);
@@ -98,7 +102,7 @@ void GraphicsConsole::InternalPutChar(char c)
         .x     = static_cast<i32>(cursor_x_ * glyph_w_),
         .y     = static_cast<i32>(cursor_y_ * glyph_h_),
         .c     = c,
-        .scale = 1
+        .scale = scale_
     };
 
     // Clear background for char
