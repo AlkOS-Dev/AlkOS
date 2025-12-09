@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
 #include <time.h>
+#include <string.hpp>
 #include <test_module/test_module.hpp>
 #include "trace_framework.hpp"
 
@@ -10,11 +11,13 @@
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
+#include "hal/terminal.hpp"
+#include "modules/video.hpp"
+#include "sys/shell.hpp"
 
 #include "boot_args.hpp"
 #include "hal/boot_args.hpp"
 #include "mem/heap.hpp"
-#include "modules/video.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::RawBootArguments &);
@@ -25,62 +28,29 @@ static void KernelRun()
     trace::DumpAllBuffersOnFailure();
     TODO_MMU_MINIMAL
 
-    // static constexpr size_t kBuffSize = 256;
-    // char buff[kBuffSize];
-    //
-    // const auto t = time(nullptr);
-    // strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-    //
-    // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
+    auto &video = VideoModule::Get();
+    Graphics::Painter painter(video.GetScreen(), video.GetFormat());
+    Graphics::Psf2Font font(drdos8x8_psfu);
 
-    auto &video  = VideoModule::Get();
-    auto &screen = video.GetScreen();
-    auto fmt     = video.GetFormat();
-
-    Graphics::Painter p(screen, fmt);
-    Graphics::Psf2Font system_font(drdos8x8_psfu);
-
-    if (!system_font.IsValid()) {
-        TRACE_WARN_VIDEO("System font magic invalid! Rendering might be corrupted.");
+    if (!font.IsValid()) {
+        TRACE_WARN_VIDEO("Invalid font");
     }
 
-    // Animation Loop
-    i32 x     = 0;
-    i32 y     = 0;
-    u16 speed = 1;
+    System::GraphicsConsole console(painter, font);
+    System::Shell shell(console);
+
+    shell.Init();
+    video.Flush();
 
     while (true) {
-        p.Clear(Graphics::Color::Black());
-
-        // Shape drawing
-        p.SetColor(Graphics::Color::Green());
-        p.FillRect({.x = x, .y = 100, .w = 50, .h = 50});
-        p.SetColor(Graphics::Color::Blue());
-        p.FillRect({.x = 100, .y = y, .w = 70, .h = 70});
-
-        // Text drawing
-        p.SetColor(Graphics::Color::White());
-        p.DrawString({.x = 40, .y = 20, .text = "AlkOS Kernel", .scale = 3}, system_font);
-
-        p.SetColor(Graphics::Color::Red());
-        p.DrawString(
-            {.x = 40, .y = 50, .text = "Graphics Subsystem Online.", .scale = 3}, system_font
-        );
-
-        // Dynamic Text Position
-        p.SetColor(Graphics::Color::Green());
-        p.DrawString({.x = x, .y = y + 80, .text = "Moving Text!", .scale = 2}, system_font);
-
+        // Poll Serial Port for input (temporary until IRQ is hooked)
+        char c = hal::TerminalGetChar();
+        shell.OnInput(c);
         video.Flush();
 
-        x += (speed / 255) + 1;
-        y += (speed / 255) + 1;
-        x = x % screen.GetWidth();
-        y = y % screen.GetHeight();
-
-        // crude delay
-        for (volatile int i = 0; i < 1000000; i++);
-        speed = speed + 10;
+        // Don't burn CPU 100%
+        for (volatile i32 i = 0; i < 10000; ++i) {
+        }
     }
 }
 

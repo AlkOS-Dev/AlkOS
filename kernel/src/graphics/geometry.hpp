@@ -33,6 +33,11 @@ struct CharCmd {
     u8 scale = 1;
 };
 
+struct Size {
+    u32 width;
+    u32 height;
+};
+
 }  // namespace Graphics
 
 #endif  // KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_

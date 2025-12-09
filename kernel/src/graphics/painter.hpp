@@ -2,10 +2,12 @@
 #define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
 
 #include <concepts.hpp>
+#include <span.hpp>
 #include <string.hpp>
 #include "graphics/color.hpp"
 #include "graphics/font/glyph.hpp"
 #include "graphics/geometry.hpp"
+#include "graphics/native_pixel.hpp"
 #include "graphics/surface.hpp"
 
 namespace Graphics
@@ -41,28 +43,25 @@ class Painter
     // Text Rendering
     // -------------------------------------------------------------------------
 
-    /**
-     * @brief Draws a single character using the provided font.
-     * @tparam FontT A type satisfying the FontType concept (e.g., Psf2Font).
-     */
     template <FontType FontT>
     void DrawChar(const CharCmd &cmd, const FontT &font);
 
-    /**
-     * @brief Draws a null-terminated string.
-     * Handles newlines (\n) and carriage returns (\r).
-     * @tparam FontT A type satisfying the FontType concept.
-     */
     template <FontType FontT>
     void DrawString(const TextCmd &cmd, const FontT &font);
 
+    // -------------------------------------------------------------------------
+    // Accessors
+    // -------------------------------------------------------------------------
+
+    NODISCARD Surface &GetTarget() { return target_; }
+    NODISCARD const PixelFormat &GetFormat() const { return format_; }
+
     private:
-    void FillScanline(u32 *dest, u32 count, u32 color);
-    NODISCARD FORCE_INLINE_F u32 PackColor(Color c) const;
+    void FillScanline(std::span<NativePixel> dest, NativePixel color);
 
     Surface &target_;
     PixelFormat format_;
-    u32 packed_color_;
+    NativePixel packed_color_;
 };
 
 }  // namespace Graphics
