@@ -21,6 +21,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(ValidationHelpers)
 include(SourceHelpers)
 include(RuntimeHelpers)
+include(BashConfigHelpers)
 
 add_library(alkos.target.properties.interface INTERFACE) # Populated by the toolchain file
 
@@ -29,6 +30,9 @@ set(CMAKE_ROOT_DIR ${CMAKE_SOURCE_DIR})
 ################################################################################
 #                                   Conf file                                  #
 ################################################################################
+
+set(BASH_CONF_FILE "${CMAKE_ROOT_DIR}/config/conf.generated.bash")
+alkos_init_bash_config()
 
 set(CMAKE_CONF_FILE "${CMAKE_ROOT_DIR}/config/conf.generated.cmake")
 
@@ -93,6 +97,7 @@ set(SYSTEM_LIB_TYPE k)
 add_subdirectory(libs)
 add_subdirectory(generated)
 add_subdirectory(kernel)
+add_subdirectory(rootfs)
 
 ################################################################################
 #                                   Aliases                                    #
