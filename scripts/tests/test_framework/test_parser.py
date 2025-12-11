@@ -163,11 +163,11 @@ def _filter_tests(tests: list[TestInfo], filters: list[str], blocks: list[str]) 
         is_filtered = False
 
         for test_filter in filters:
-            if not fnmatch.fnmatch(test.test_name, test_filter):
+            if fnmatch.fnmatch(test.test_name, test_filter):
                 is_filtered = True
                 break
 
-        if is_filtered:
+        if not is_filtered:
             continue
 
         filtered_tests.append(test)
