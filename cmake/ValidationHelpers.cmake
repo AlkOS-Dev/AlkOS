@@ -168,3 +168,67 @@ function(alkos_ensure_path_exists)
         message(FATAL_ERROR "${error_message}")
     endif()
 endfunction()
+
+#===============================================================================
+# alkos_ensure_feature_flag_enabled
+#===============================================================================
+#
+# Checks if a specified feature flag is enabled and halts with a
+# fatal error if it is not.
+#
+# Parameters:
+#   FLAG <flag>            The name of the feature flag variable to check.
+#   MESSAGE <message>      (Optional) A supplementary message to append to the
+#                          standard error output. This is useful for providing
+#                          additional context or instructions to the user.
+#
+# Example:
+#   # Assume CMAKE_FEATURE_FLAG_DEBUG_OUTPUT must be enabled.
+#   alkos_ensure_feature_flag_enabled(
+#       FLAG CMAKE_FEATURE_FLAG_DEBUG_OUTPUT
+#       MESSAGE "Debug output must be enabled for this build."
+#   )
+#
+function(alkos_ensure_feature_enabled)
+    set(options)
+    set(oneValueArgs FLAG MESSAGE)
+    set(multiValueArgs)
+
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(NOT ARG_FLAG)
+        message(FATAL_ERROR "alkos_ensure_feature_enabled() called without a feature to check.")
+    endif()
+
+    if(NOT DEFINED ${ARG_FLAG} OR NOT ${ARG_FLAG})
+        set(error_message "The feature flag '${ARG_FLAG}' must be enabled.")
+
+        if(ARG_MESSAGE)
+            string(APPEND error_message "\n${ARG_MESSAGE}")
+        endif()
+
+        message(FATAL_ERROR "${error_message}")
+    endif()
+endfunction()
+
+#===============================================================================
+# alkos_ensure_called_once
+#===============================================================================
+function(alkos_ensure_called_once)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs)
+
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(NOT ARG_NAME)
+        message(FATAL_ERROR "alkos_ensure_called_once() called without a NAME to check.")
+    endif()
+
+    get_property(already_called GLOBAL PROPERTY ALKOS_CALLED_${ARG_NAME})
+    if(already_called)
+        message(FATAL_ERROR "The function '${ARG_NAME}' has already been called. It can only be called once.")
+    endif()
+
+    set_property(GLOBAL PROPERTY ALKOS_CALLED_${ARG_NAME} TRUE)
+endfunction()
