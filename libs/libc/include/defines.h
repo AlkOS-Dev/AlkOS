@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_DEFINES_H_
-#define ALKOS_LIBC_INCLUDE_DEFINES_H_
+#ifndef LIBS_LIBC_INCLUDE_DEFINES_H_
+#define LIBS_LIBC_INCLUDE_DEFINES_H_
 
 // ------------------------------
 // C++ defines
@@ -42,6 +42,9 @@ static constexpr bool kIsKernel = false;
 /* Marks a function for a compiler to prevent any optimizations */
 #define NO_OPT __attribute__((optimize("O0")))
 
+/* Marks a function or variable as unused */
+#define UNUSED __attribute__((unused))
+
 // ------------------------------
 // Useful macros
 // ------------------------------
@@ -52,8 +55,17 @@ static constexpr bool kIsKernel = false;
 /* Apply STRINGIFY to expand macros before conversion */
 #define TOSTRING(x) STRINGIFY(x)
 
+/* Concatenate two tokens */
+#define CONCAT_IMPL(a, b) a##b
+
+/* Apply CONCAT_IMPL to expand macros before concatenation */
+#define CONCAT(a, b) CONCAT_IMPL(a, b)
+
 /* Creates a COMPILER LEVEL memory barrier forcing optimizer to not re-order memory accesses */
 #define BARRIER() __asm__ volatile("" : : : "memory")
+
+/* Create reserved structure member */
+#define RESERVED(size) byte CONCAT(__reserved_, __COUNTER__)[size] UNUSED
 
 // ------------------------------
 // Lang specific defines
@@ -75,4 +87,4 @@ static constexpr bool kIsKernel = false;
 #define CONSTEXPR static inline
 #endif  // __cplusplus
 
-#endif  // ALKOS_LIBC_INCLUDE_DEFINES_H_
+#endif  // LIBS_LIBC_INCLUDE_DEFINES_H_
