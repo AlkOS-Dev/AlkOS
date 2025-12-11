@@ -3,6 +3,7 @@
 
 #include <template_lib.hpp>
 #include <vfs/types.hpp>
+#include "boot_args.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -14,7 +15,7 @@ class VfsModule : template_lib::StaticSingletonHelper
     // -------------------------------------
 
     protected:
-    VfsModule() noexcept;
+    explicit VfsModule(const BootArguments &args) noexcept;
 
     // ------------------------------
     // Module fields

@@ -18,6 +18,11 @@ struct FramebufferArgs {
     u8 blue_mask_size;
 };
 
+struct RamdiskArgs {
+    Mem::PPtr<void> start;
+    Mem::PPtr<void> end;
+};
+
 struct BootArguments {
     Mem::VPtr<void> kernel_start;
     Mem::VPtr<void> kernel_end;
@@ -26,6 +31,7 @@ struct BootArguments {
     size_t total_page_frames;
     Mem::PPtr<void> multiboot_info;
     FramebufferArgs fb_args;
+    RamdiskArgs ramdisk_args;
 };
 
 BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args);

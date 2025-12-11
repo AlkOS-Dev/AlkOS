@@ -1,12 +1,14 @@
 #include "sys/shell.hpp"
 #include <string.h>
 #include <modules/memory.hpp>
+#include <modules/vfs.hpp>
 #include <string.hpp>
+#include <vfs/path.hpp>
 
 namespace System
 {
 
-Shell::Shell(GraphicsConsole &console) : console_(console) {}
+Shell::Shell(GraphicsConsole &console) : console_(console), current_dir_(vfs::Path::kRoot) {}
 
 void Shell::Init()
 {
@@ -69,6 +71,14 @@ void Shell::ProcessCommand()
         CmdClear();
     } else if (cmd == "echo") {
         CmdEcho(args);
+    } else if (cmd == "cd") {
+        CmdCd(args);
+    } else if (cmd == "ls") {
+        CmdLs(args);
+    } else if (cmd == "cat") {
+        CmdCat(args);
+    } else if (cmd == "pwd") {
+        CmdPwd();
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -84,9 +94,13 @@ void Shell::CmdHelp()
 {
     const char *msg =
         "Available commands:\n"
-        "  help   - Show this message\n"
-        "  clear  - Clear the screen\n"
-        "  echo   - Print arguments\n";
+        "  help        - Show this message\n"
+        "  clear       - Clear the screen\n"
+        "  echo <text> - Print arguments\n"
+        "  pwd         - Print working directory\n"
+        "  cd <path>   - Change directory\n"
+        "  ls [path]   - List directory contents\n"
+        "  cat <file>  - Display file contents\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
@@ -95,6 +109,187 @@ void Shell::CmdClear() { console_.Clear(); }
 void Shell::CmdEcho(std::string_view args)
 {
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size()));
+    console_.PutChar('\n');
+}
+
+vfs::Path Shell::ResolvePath(std::string_view path_str)
+{
+    if (path_str.empty()) {
+        return current_dir_;
+    }
+
+    vfs::Path path(path_str);
+    if (path.IsAbsolute()) {
+        return path.GetNormalized();
+    }
+
+    // Relative path - combine with current directory
+    return (current_dir_ / path).GetNormalized();
+}
+
+void Shell::CmdPwd()
+{
+    const char *path = current_dir_.CString();
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(path), strlen(path)));
+    console_.PutChar('\n');
+}
+
+void Shell::CmdCd(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    if (args.empty()) {
+        // cd with no args goes to root
+        current_dir_ = vfs::Path::kRoot;
+        return;
+    }
+
+    vfs::Path new_path = ResolvePath(args);
+
+    // Check if path exists and is a directory
+    auto &vfs         = VfsModule::Get();
+    auto exists_check = vfs.DirectoryExists(new_path);
+
+    if (!exists_check.has_value()) {
+        const char *err = "cd: path not found: ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+        );
+        console_.PutChar('\n');
+        return;
+    }
+
+    if (!exists_check.value()) {
+        const char *err = "cd: not a directory: ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+        );
+        console_.PutChar('\n');
+        return;
+    }
+
+    current_dir_ = new_path;
+}
+
+void Shell::CmdLs(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    vfs::Path path = args.empty() ? current_dir_ : ResolvePath(args);
+
+    auto &vfs = VfsModule::Get();
+
+    // Check if the path exists
+    auto exists_check = vfs.DirectoryExists(path);
+    if (!exists_check.has_value() || !exists_check.value()) {
+        const char *err = "ls: cannot access '";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        const char *p = path.CString();
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
+        const char *err2 = "': No such directory\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
+        return;
+    }
+
+    // List directory contents
+    vfs.ListDirectory(path, [this](const char *name, bool is_dir) {
+        if (is_dir) {
+            console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
+        }
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(name), strlen(name)));
+        if (is_dir) {
+            console_.PutChar('/');
+            console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+        }
+        console_.PutChar('\n');
+    });
+}
+
+void Shell::CmdCat(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    if (args.empty()) {
+        const char *err = "cat: missing file operand\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    vfs::Path path = ResolvePath(args);
+
+    auto &vfs = VfsModule::Get();
+
+    // Check if file exists
+    auto exists_check = vfs.FileExists(path);
+    if (!exists_check.has_value() || !exists_check.value()) {
+        const char *err = "cat: ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+        );
+        const char *err2 = ": No such file\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
+        return;
+    }
+
+    // Get file size
+    auto size_result = vfs.GetFileSize(path);
+    if (!size_result.has_value()) {
+        const char *err = "cat: cannot read file size\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    size_t file_size = size_result.value();
+    if (file_size == 0) {
+        return;  // Empty file, nothing to print
+    }
+
+    // Read and display file contents in chunks
+    static constexpr size_t kBufferSize = 512;
+    char buffer[kBufferSize];
+    size_t offset = 0;
+
+    while (offset < file_size) {
+        size_t to_read   = (file_size - offset) < kBufferSize ? (file_size - offset) : kBufferSize;
+        auto read_result = vfs.ReadFile(path, buffer, to_read, offset);
+
+        if (!read_result.has_value()) {
+            const char *err = "\ncat: error reading file\n";
+            console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+            return;
+        }
+
+        size_t bytes_read = read_result.value();
+        if (bytes_read == 0) {
+            break;
+        }
+
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buffer), bytes_read));
+        offset += bytes_read;
+    }
+
+    // Ensure we end with a newline
     console_.PutChar('\n');
 }
 

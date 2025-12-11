@@ -32,14 +32,14 @@ enum class TraceType {
 };
 
 enum class TraceModule {
-    kVfs = 0,
+    kBoot = 0,
     kMemory,
     kInterrupts,
-    kBoot,
     kGeneral,
     kTime,
-    kLast,
+    kVfs,
     kVideo,
+    kLast,
 };
 
 // ------------------------------

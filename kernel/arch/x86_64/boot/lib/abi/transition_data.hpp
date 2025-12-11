@@ -17,7 +17,7 @@ struct alignas(64) TransitionData {
     alignas(64) VirtualMemoryManager::VmmState vmm_state;
 };
 
-struct PACK alignas(64) KernelArguments {
+struct alignas(64) KernelArguments {
     /// Kernel Mem Layout
     u64 kernel_start_addr;
     u64 kernel_end_addr;
@@ -43,6 +43,10 @@ struct PACK alignas(64) KernelArguments {
     u8 fb_green_mask;
     u8 fb_blue_pos;
     u8 fb_blue_mask;
+
+    /// Ramdisk
+    u64 ramdisk_start;
+    u64 ramdisk_end;
 
     /// Multiboot
     u64 multiboot_info_addr;

@@ -43,6 +43,8 @@ static struct TraceFramework {
             rv[static_cast<size_t>(TraceModule::kMemory)]     = "MemoryModule";
             rv[static_cast<size_t>(TraceModule::kInterrupts)] = "InterruptsModule";
             rv[static_cast<size_t>(TraceModule::kTime)]       = "TimeModule";
+            rv[static_cast<size_t>(TraceModule::kVfs)]        = "VFSModule";
+            rv[static_cast<size_t>(TraceModule::kVideo)]      = "VideoModule";
 
             return rv;
         }();

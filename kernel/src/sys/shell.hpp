@@ -4,6 +4,7 @@
 #include <data_structures/array_structures.hpp>
 #include <span.hpp>
 #include <string.hpp>
+#include <vfs/path.hpp>
 
 #include "sys/graphics_console.hpp"
 
@@ -44,9 +45,20 @@ class Shell
     void CmdClear();
     void CmdEcho(std::string_view args);
     void CmdMem();
+    void CmdCd(std::string_view args);
+    void CmdLs(std::string_view args);
+    void CmdCat(std::string_view args);
+    void CmdPwd();
+
+    // -------------------------------------------------------------------------
+    // Path utilities
+    // -------------------------------------------------------------------------
+
+    vfs::Path ResolvePath(std::string_view path_str);
 
     // Data
     GraphicsConsole &console_;
+    vfs::Path current_dir_;
 
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;
