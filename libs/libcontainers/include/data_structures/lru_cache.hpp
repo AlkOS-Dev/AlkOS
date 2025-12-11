@@ -6,6 +6,10 @@
 
 #include <data_structures/hash_maps.hpp>
 #include <data_structures/linked_list.hpp>
+#include <todo.hpp>
+
+TODO_WHEN_MULTITHREADING
+// TODO: Make thread-safe
 
 namespace data_structures
 {
@@ -48,7 +52,6 @@ class LruCache
         }
 
         ListNode *node = *node_ptr;
-        const_cast<decltype(list_) &>(list_).MoveToFront(node);
         return &std::get<1>(node->data);
     }
 
@@ -62,7 +65,7 @@ class LruCache
         }
 
         if (list_.Size() == kCapacity) {
-            Evict_();
+            Evict();
         }
 
         if (ListNode *new_node = list_.EmplaceFront(key, std::move(value))) {
@@ -90,7 +93,7 @@ class LruCache
     }
 
     private:
-    void Evict_()
+    void Evict()
     {
         ListNode *tail = list_.GetTail();
         if (!tail) {

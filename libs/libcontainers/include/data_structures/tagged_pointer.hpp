@@ -36,15 +36,7 @@ class TaggedPointer
 
     explicit TaggedPointer(BaseT tagged_ptr) : tagged_ptr_(tagged_ptr) {}
 
-    ~TaggedPointer()
-    {
-        if (IsValid()) {
-            size_t tag           = GetTag();
-            size_t current_index = 0;
-
-            (void)((current_index++ == tag ? (Destroy<TaggedTypes>(), true) : false) || ...);
-        }
-    }
+    ~TaggedPointer() { Destroy(); }
 
     TaggedPointer(const TaggedPointer &)            = delete;
     TaggedPointer &operator=(const TaggedPointer &) = delete;
@@ -57,6 +49,7 @@ class TaggedPointer
     TaggedPointer &operator=(TaggedPointer &&other) noexcept
     {
         if (this != &other) {
+            Destroy();
             tagged_ptr_       = other.tagged_ptr_;
             other.tagged_ptr_ = 0;
         }
@@ -75,7 +68,8 @@ class TaggedPointer
         );
 
         auto mem = Mem::KMallocAligned(
-            {.size = sizeof(T), .alignment = alignof(T) > kTagBits ? alignof(T) : 1ULL << kTagBits}
+            {.size      = sizeof(T),
+             .alignment = alignof(T) > (1ULL << kTagBits) ? alignof(T) : (1ULL << kTagBits)}
         );
         if (!mem) {
             return {};
@@ -145,6 +139,16 @@ class TaggedPointer
     }
 
     private:
+    FORCE_INLINE_F void Destroy()
+    {
+        if (IsValid()) {
+            size_t tag           = GetTag();
+            size_t current_index = 0;
+
+            (void)((current_index++ == tag ? (DestroyType<TaggedTypes>(), true) : false) || ...);
+        }
+    }
+
     template <typename T>
     static constexpr size_t GetTypeIndex()
     {
@@ -166,7 +170,7 @@ class TaggedPointer
     NODISCARD FORCE_INLINE_F size_t GetTag() const { return tagged_ptr_ & kTagMask; }
 
     template <typename T>
-    void Destroy()
+    void DestroyType()
     {
         T *ptr = static_cast<T *>(UntagPtr());
         ptr->~T();
