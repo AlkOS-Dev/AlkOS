@@ -10,6 +10,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
+#include "modules/vfs.hpp"
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
@@ -54,6 +55,8 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     // TimingModule::Init();
 
     MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+
+    VfsModule::Init();
 
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
 }
