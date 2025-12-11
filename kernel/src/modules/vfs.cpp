@@ -29,11 +29,8 @@ internal::VfsModule::VfsModule(const BootArguments &args) noexcept
     // Mount ramdisk if available
     if constexpr (FeatureEnabled<FeatureFlag::kRamdisk>) {
         if (args.ramdisk_args.start != nullptr && args.ramdisk_args.end > args.ramdisk_args.start) {
-            // Convert physical address to virtual address
             auto *ramdisk_virt = Mem::PhysToVirt(args.ramdisk_args.start);
-
-            // Create InMemory IO device using placement new
-            auto *io_ptr = new (gRamdiskIoStorage) io::InMemory(ramdisk_virt);
+            auto *io_ptr       = new (gRamdiskIoStorage) io::InMemory(ramdisk_virt);
 
             // Validate and create Fat12 filesystem
             if (Fat12<io::InMemory>::IsValid(*io_ptr)) {
