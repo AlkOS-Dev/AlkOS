@@ -32,7 +32,7 @@ class CustomAllocatorWrapper : decltype(AllocateFunc), decltype(DeallocateFunc)
 
 template <typename T>
 using KMallocAllocator = CustomAllocatorWrapper<
-    []<typename... Args>(this auto &self, Args &&...args) FORCE_INLINE_L {
+    []<typename... Args>(this auto &, Args &&...args) FORCE_INLINE_L {
         auto mem = Mem::KMalloc<T>();
         if (!mem) {
             return static_cast<T *>(nullptr);
@@ -40,7 +40,7 @@ using KMallocAllocator = CustomAllocatorWrapper<
 
         return new (*mem) T(std::forward<Args>(args)...);
     },
-    []<typename U>(this auto &self, U *ptr) FORCE_INLINE_L {
+    []<typename U>(this auto &, U *ptr) FORCE_INLINE_L {
         if (ptr) {
             ptr->~U();
             Mem::KFree(ptr);

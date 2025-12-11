@@ -160,6 +160,10 @@ def _filter_tests(tests: list[TestInfo], filters: list[str], blocks: list[str]) 
         if is_blocked:
             continue
 
+        if not filters:
+            filtered_tests.append(test)
+            continue
+
         is_filtered = False
 
         for test_filter in filters:
