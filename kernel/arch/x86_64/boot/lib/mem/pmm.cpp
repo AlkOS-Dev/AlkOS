@@ -5,6 +5,7 @@
 #include <data_structures/bit_array.hpp>
 #include <expected.hpp>
 #include <internal/formats.hpp>
+#include <internal/math.hpp>
 #include <optional.hpp>
 
 #include "debug_trace.hpp"
@@ -274,6 +275,7 @@ std::expected<void, MemError> PhysicalMemoryManager::IterateToNextFreePage32()
 std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap &mem_map)
 {
     using namespace Multiboot;
+    using namespace internal;
 
     u64 maximum_physical_address = 0;
     for (MmapEntry &entry : mem_map) {
@@ -283,9 +285,8 @@ std::tuple<u64, u64> PhysicalMemoryManager::CalcBitmapSize(Multiboot::MemoryMap 
         maximum_physical_address = std::max(maximum_physical_address, entry.addr + entry.len);
     }
 
-    // Round up division TODO Add to libc
-    const u64 total_pages = static_cast<u64>(maximum_physical_address + kPageSize - 1) / kPageSize;
-    const u64 bitmap_size = (static_cast<u64>(total_pages) + 7) / 8;
+    const u64 total_pages = DivRoundUp(maximum_physical_address, kPageSize);
+    const u64 bitmap_size = DivRoundUp(total_pages, 8);
 
     TRACE_DEBUG(
         "Max avaliable physical address: %#018llx, total pages: %llu, bitmap size: %sB",
