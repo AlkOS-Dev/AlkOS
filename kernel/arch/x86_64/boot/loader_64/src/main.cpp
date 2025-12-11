@@ -160,6 +160,27 @@ static u64 LoadKernelIntoMemory(
     return entry_point_res.value();
 }
 
+void FindRamdiskInMemory(MultibootInfo &multiboot_info, MemoryManagers &mms)
+{
+    auto &pmm = mms.pmm;
+
+    auto ramdisk_module_res = multiboot_info.FindTag<TagModule>([](TagModule *tag) {
+        return strcmp(tag->cmdline, kInitrdModuleCmdline) == 0;
+    });
+    ASSERT_TRUE(ramdisk_module_res, "Failed to find the ramdisk module");
+    const TagModule *ramdisk_tag = ramdisk_module_res.value();
+
+    const size_t ramdisk_size = ramdisk_tag->mod_end - ramdisk_tag->mod_start;
+    TRACE_DEBUG(
+        "Ramdisk located at 0x%llX - 0x%llX (size: %sB)", ramdisk_tag->mod_start,
+        ramdisk_tag->mod_end, FormatMetricUint(ramdisk_size)
+    );
+    pmm.Reserve(PhysicalPtr<void>(ramdisk_tag->mod_start), ramdisk_size);
+
+    gKernelInitialParams.ramdisk_start = ramdisk_tag->mod_start;
+    gKernelInitialParams.ramdisk_end   = ramdisk_tag->mod_end;
+}
+
 static void EstablishDirectMemMapping(MemoryManagers &mms)
 {
     auto &vmm = mms.vmm;
@@ -243,6 +264,15 @@ static void PrepareKernelArgs(
         gKernelInitialParams.fb_pitch  = 0;
         gKernelInitialParams.fb_bpp    = 0;
     }
+
+    // Ramdisk
+    if constexpr (FeatureEnabled<FeatureFlag::kRamdisk>) {
+        FindRamdiskInMemory(multiboot_info, mem_managers);
+    } else {
+        TRACE_INFO("Ramdisk feature disabled, skipping ramdisk setup");
+        gKernelInitialParams.ramdisk_start = 0;
+        gKernelInitialParams.ramdisk_end   = 0;
+    }
 }
 
 NO_RET static void TransitionToKernel(
@@ -265,6 +295,8 @@ NO_RET static void TransitionToKernel(
         "  Kernel Arguments:\n"
         "    kernel_start_addr:           0x%llX\n"
         "    kernel_end_addr:             0x%llX\n"
+        "    ramdisk_start_addr           0x%llX\n"
+        "    ramdisk_end_addr:            0x%llX\n"
         "    pml_4_table_phys_addr:       0x%llX\n"
         "    mem_info_bitmap_addr:        0x%llX\n"
         "    mem_info_total_pages:        %llu\n"
@@ -284,6 +316,7 @@ NO_RET static void TransitionToKernel(
         "    fb_blue_pos:                 %hhu\n"
         "    fb_blue_mask:                %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
+        gKernelInitialParams.ramdisk_start, gKernelInitialParams.ramdisk_end,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
         gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
         gKernelInitialParams.multiboot_header_start_addr,

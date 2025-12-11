@@ -32,6 +32,10 @@ struct RawBootArgumentsAPI {
     u8 fb_green_mask;
     u8 fb_blue_pos;
     u8 fb_blue_mask;
+
+    // Ramdisk
+    u64 ramdisk_start;
+    u64 ramdisk_end;
 };
 }  // namespace arch
 

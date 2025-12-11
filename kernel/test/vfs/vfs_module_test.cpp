@@ -100,6 +100,8 @@ class VfsModuleTest : public TestGroupBase
         fat12_ = Mem::KMalloc<vfs::Fat12<vfs::io::InMemory>>().value_or(nullptr);
         EXPECT_NOT_NULL(fat12_);
         std::construct_at<vfs::Fat12<vfs::io::InMemory>>(fat12_, *io_);
+
+        vfs::Unmount(vfs::Path("/"));
     }
 
     void TearDown_() override
