@@ -1,6 +1,7 @@
 #ifndef LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_LIB_HPP_
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_LIB_HPP_
 
+#include <template/array_utils.hpp>
 #include <template/rolled_switch.hpp>
 #include <template/special_members.hpp>
 #include <template/static_singleton.hpp>

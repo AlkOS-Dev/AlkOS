@@ -32,7 +32,8 @@ enum class TraceType {
 };
 
 enum class TraceModule {
-    kMemory = 0,
+    kVfs = 0,
+    kMemory,
     kInterrupts,
     kBoot,
     kGeneral,
@@ -79,6 +80,10 @@ PREVENT_INLINE static void Write(const char *format, Args... args);
     CREATE_HELPER(kKernelLog, module, kWarnings, TRACE_WARN_##module_name)   \
     CREATE_HELPER(kKernelLog, module, kInfo, TRACE_INFO_##module_name)       \
     CREATE_HELPER(kKernelLog, module, kFrequentInfo, TRACE_FREQ_INFO_##module_name)
+
+// VFS
+CREATE_DEBUG_HELPERS(kVfs, VFS)
+CREATE_TRACE_HELPERS(kVfs, VFS)
 
 // MEMORY
 CREATE_DEBUG_HELPERS(kMemory, MEMORY)

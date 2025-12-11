@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_SPAN_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_SPAN_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_SPAN_HPP_
+#define LIBS_LIBCPP_INCLUDE_SPAN_HPP_
 
 #include <assert.h>
 #include <stdint.h>
@@ -363,7 +363,7 @@ class span
     // ------------------------------
     // Data members
     // ------------------------------
-    NO_UNIQUE_ADDRESS pointer data_;
+    pointer data_;
     NO_UNIQUE_ADDRESS std::conditional_t<is_dynamic_extent_, size_type, UNIQUE_EMPTY> size_;
 };
 
@@ -392,4 +392,4 @@ FORCE_INLINE_F constexpr auto as_writable_bytes(std::span<T, N> s) noexcept
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_SPAN_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_SPAN_HPP_
