@@ -102,7 +102,7 @@ class CritBitTree
      */
     NODISCARD FORCE_INLINE_F bool Contains(std::string_view key) const
     {
-        const ExternalNode *match = GetBestMatch_(key);
+        const ExternalNode *match = GetBestMatch(key);
         if (!match) {
             return false;
         }
@@ -116,7 +116,7 @@ class CritBitTree
      */
     NODISCARD FORCE_INLINE_F std::optional<pointer> Get(std::string_view key)
     {
-        ExternalNode *match = GetBestMatch_(key);
+        ExternalNode *match = GetBestMatch(key);
         if (!match) {
             return {};
         }
@@ -136,7 +136,7 @@ class CritBitTree
      */
     NODISCARD FORCE_INLINE_F std::optional<const_pointer> Get(std::string_view key) const
     {
-        const ExternalNode *match = GetBestMatch_(key);
+        const ExternalNode *match = GetBestMatch(key);
         if (!match) {
             return {};
         }
@@ -167,7 +167,7 @@ class CritBitTree
      */
     NODISCARD FORCE_INLINE_F std::optional<pointer> GetLongestPrefixMatch(std::string_view key)
     {
-        ExternalNode *match = GetBestMatch_(key);
+        ExternalNode *match = GetBestMatch(key);
         if (!match) {
             return {};
         }
@@ -180,10 +180,7 @@ class CritBitTree
     /**
      * @brief Inserts a key-value pair into the tree.
      *
-     * @param key A NUL-terminated string allocated with Mem::KMalloc.
-     *            The tree takes ownership of this pointer.
-     *            If insertion fails (e.g., key exists and overwrite is false),
-     *            the key is freed by this function.
+     * @param key A NUL-terminated string.
      * @param args Arguments to construct the value T.
      *
      * @tparam overwrite If true, overwrites the value if the key already exists.
@@ -203,7 +200,7 @@ class CritBitTree
         }
 
         // 2. Walk tree for best member
-        ExternalNode *best_match = GetBestMatch_(key);
+        ExternalNode *best_match = GetBestMatch(key);
 
         // 3. Check for successful membership (exact match)
         // Find the first differing byte
@@ -262,7 +259,7 @@ class CritBitTree
         internal_ref.child[1 - dir] = std::move(new_ext_node);
 
         // 6. Insert new node into the tree
-        InsertInternalNode_(new_int_node, newbyte, mask, dir, key);
+        InsertInternalNode(new_int_node, newbyte, mask, dir, key);
 
         return true;
     }
@@ -306,7 +303,7 @@ class CritBitTree
             return true;
         }
 
-        *parent = std::move(q->child[1 - dir]);
+        *parent = NodePtr(q->child[1 - dir].Release());
         return true;
     }
 
@@ -315,7 +312,7 @@ class CritBitTree
     // -----------------------------------------------------------------------------
 
     private:
-    ExternalNode *GetBestMatch_(std::string_view key) const
+    ExternalNode *GetBestMatch(std::string_view key) const
     {
         if (!root_.IsValid()) {
             return nullptr;
@@ -336,7 +333,7 @@ class CritBitTree
         return &const_cast<NodePtr *>(p)->template As<ExternalNode>();
     }
 
-    void InsertInternalNode_(
+    void InsertInternalNode(
         NodePtr &new_node_ptr, u32 newbyte, u8 newmask, int newdir, const char *key
     )
     {

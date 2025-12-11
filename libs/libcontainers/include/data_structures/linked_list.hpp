@@ -211,7 +211,7 @@ class LinkedList
     template <typename... Args>
     Node *EmplaceFront(Args &&...args)
     {
-        Node *node = AllocateNode_(std::forward<Args>(args)...);
+        Node *node = AllocateNode(std::forward<Args>(args)...);
         if (!node) {
             return nullptr;
         }
@@ -243,7 +243,7 @@ class LinkedList
     Node *PushBack(Args &&...args)
         requires(kIsDoubleLinked)
     {
-        Node *node = AllocateNode_(std::forward<Args>(args)...);
+        Node *node = AllocateNode(std::forward<Args>(args)...);
         if (!node) {
             return nullptr;
         }
@@ -275,7 +275,7 @@ class LinkedList
             return nullptr;
         }
 
-        Node *node = AllocateNode_(std::forward<Args>(args)...);
+        Node *node = AllocateNode(std::forward<Args>(args)...);
         if (!node) {
             return nullptr;
         }
@@ -313,7 +313,7 @@ class LinkedList
             }
         }
 
-        DeallocateNode_(node);
+        DeallocateNode(node);
         --size_;
     }
 
@@ -333,7 +333,7 @@ class LinkedList
             head_ = nullptr;
         }
 
-        DeallocateNode_(node);
+        DeallocateNode(node);
         --size_;
     }
 
@@ -359,7 +359,7 @@ class LinkedList
         node->prev = nullptr;
         node->next = nullptr;
 
-        DeallocateNode_(node);
+        DeallocateNode(node);
         --size_;
     }
 
@@ -434,7 +434,7 @@ class LinkedList
         Node *node = head_;
         while (node != nullptr) {
             Node *next = node->next;
-            DeallocateNode_(node);
+            DeallocateNode(node);
             node = next;
         }
 
@@ -459,12 +459,12 @@ class LinkedList
 
     private:
     template <typename... Args>
-    Node *AllocateNode_(Args &&...args)
+    Node *AllocateNode(Args &&...args)
     {
         return allocator_.template Allocate<Node>(std::forward<Args>(args)...);
     }
 
-    void DeallocateNode_(Node *node)
+    void DeallocateNode(Node *node)
     {
         if (node) {
             node->~Node();
