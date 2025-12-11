@@ -10,5 +10,6 @@ static constexpr u64 kDirectMemMapSizeGb        = 512;
 
 static constexpr const char *kKernelModuleCmdline   = "kernel";
 static constexpr const char *kLoader64ModuleCmdline = "loader64";
+static constexpr const char *kInitrdModuleCmdline   = "initrd";
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_SETTINGS_SETTINGS_HPP_

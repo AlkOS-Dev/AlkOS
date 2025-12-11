@@ -51,7 +51,7 @@ std::expected<u64, Error> Load(const byte *elf_ptr, u64 destination_addr)
             const u64 segment_source_size = program_header_entry->size_in_file_bytes;
 
             TRACE_INFO(
-                "Segment %d: dest=0x%llX, dest_size=0x%sB, source=0x%llX, source_size=0x%sB", i + 1,
+                "Segment %d: dest=0x%llX, dest_size=%sB, source=0x%llX, source_size=%sB", i + 1,
                 segment_dest, FormatMetricUint(segment_dest_size), segment_source,
                 FormatMetricUint(segment_source_size)
             );
