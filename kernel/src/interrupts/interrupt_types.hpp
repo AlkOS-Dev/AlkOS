@@ -40,9 +40,7 @@ struct InterruptHandlerEntry {
     HandlerData handler_data{};
     u16 logical_irq{};
     u64 hardware_irq{};
-    template_lib::OptionalField<
-        kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *>
-        driver{};
+    OPTIONAL_FIELD(kInterruptType == InterruptType::kHardwareInterrupt, InterruptDriver *) driver{};
 };
 
 template <InterruptType kInterruptType>
