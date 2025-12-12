@@ -36,6 +36,9 @@ struct RawBootArgumentsAPI {
     // Ramdisk
     u64 ramdisk_start;
     u64 ramdisk_end;
+
+    // ACPI
+    u64 acpi_rsdp_phys_addr;
 };
 }  // namespace arch
 
