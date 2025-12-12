@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include <time.h>
 #include <string.hpp>
 #include <test_module/test_module.hpp>
 #include "trace_framework.hpp"
@@ -11,13 +10,13 @@
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
-#include "hal/terminal.hpp"
+#include "modules/hardware.hpp"
 #include "modules/video.hpp"
 #include "sys/shell.hpp"
 
-#include "boot_args.hpp"
+#include "drivers/apic/local_apic.hpp"
 #include "hal/boot_args.hpp"
-#include "mem/heap.hpp"
+#include "modules/hardware.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::RawBootArguments &);
@@ -25,8 +24,7 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
-    trace::DumpAllBuffersOnFailure();
-    TODO_MMU_MINIMAL
+    trace::Flush();
 
     auto &video = VideoModule::Get();
     Graphics::Painter painter(video.GetScreen(), video.GetFormat());
@@ -37,20 +35,19 @@ static void KernelRun()
     }
 
     System::GraphicsConsole console(painter, font);
-    System::Shell shell(console);
+    System::Shell shell(console, HardwareModule::Get().GetPs2Keyboard());
 
     shell.Init();
     video.Flush();
 
     while (true) {
-        // Poll Serial Port for input (temporary until IRQ is hooked)
-        char c = hal::TerminalGetChar();
-        shell.OnInput(c);
+        shell.Update();
         video.Flush();
 
-        // Don't burn CPU 100%
+        // TODO: Replace with CpuHalt or smth like scheduler sleep.
         for (volatile i32 i = 0; i < 10000; ++i) {
         }
+        trace::Flush();
     }
 }
 

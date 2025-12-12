@@ -39,6 +39,7 @@ enum class TraceModule {
     kTime,
     kVfs,
     kVideo,
+    kHardware,
     kLast,
 };
 
@@ -49,6 +50,7 @@ enum class TraceModule {
 void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 void DumpAllBuffersOnFailure();
+void Flush();
 
 /* MODULE TIME CORE PROC FILE LINE MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
@@ -108,6 +110,10 @@ CREATE_TRACE_HELPERS(kTime, TIME)
 // VIDEO
 CREATE_DEBUG_HELPERS(kVideo, VIDEO)
 CREATE_TRACE_HELPERS(kVideo, VIDEO)
+
+// HARDWARE
+CREATE_DEBUG_HELPERS(kHardware, HARDWARE)
+CREATE_TRACE_HELPERS(kHardware, HARDWARE)
 
 #include "trace_framework.tpp"
 

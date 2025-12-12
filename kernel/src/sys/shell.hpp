@@ -4,9 +4,10 @@
 #include <data_structures/array_structures.hpp>
 #include <span.hpp>
 #include <string.hpp>
-#include <vfs/path.hpp>
 
+#include "io/stream.hpp"
 #include "sys/graphics_console.hpp"
+#include "vfs/path.hpp"
 
 namespace System
 {
@@ -18,7 +19,7 @@ namespace System
 class Shell
 {
     public:
-    explicit Shell(GraphicsConsole &console);
+    explicit Shell(GraphicsConsole &console, IO::IReader &input_reader);
 
     // -------------------------------------------------------------------------
     // Public Interface
@@ -26,8 +27,11 @@ class Shell
 
     void Init();
 
-    // Call this when hardware receives a keystroke
-    void OnInput(char c);
+    /**
+     * @brief Polling function to check for new input and process it.
+     * Should be called inside the main kernel loop.
+     */
+    void Update();
 
     private:
     // -------------------------------------------------------------------------
@@ -56,8 +60,15 @@ class Shell
 
     vfs::Path ResolvePath(std::string_view path_str);
 
+    // -------------------------------------------------------------------------
+    // Internal Helpers
+    // -------------------------------------------------------------------------
+
+    void OnInput(char c);
+
     // Data
     GraphicsConsole &console_;
+    IO::IReader &input_reader_;
     vfs::Path current_dir_;
 
     static constexpr size_t kMaxInput = 128;
