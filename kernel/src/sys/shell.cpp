@@ -8,7 +8,10 @@
 namespace System
 {
 
-Shell::Shell(GraphicsConsole &console) : console_(console), current_dir_(vfs::Path::kRoot) {}
+Shell::Shell(GraphicsConsole &console, IO::IReader &input_reader)
+    : console_(console), input_reader_(input_reader), current_dir_(vfs::Path::kRoot)
+{
+}
 
 void Shell::Init()
 {
@@ -24,6 +27,14 @@ void Shell::PrintPrompt()
     const char *p = "AlkOS> ";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
     console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+}
+
+void Shell::Update()
+{
+    auto result = input_reader_.GetChar();
+    if (result.has_value()) {
+        OnInput(result.value());
+    }
 }
 
 void Shell::OnInput(char c)

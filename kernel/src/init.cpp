@@ -54,9 +54,11 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Initialize the timing system */
     TimingModule::Init();
 
-    MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
-
     VfsModule::Init(args);
 
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
+
+    // Register Interrupts
+    MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+    HardwareModule::Get().RegisterInterruptHandlers();
 }

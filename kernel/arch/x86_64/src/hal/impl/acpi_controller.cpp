@@ -96,16 +96,20 @@ static void PrepareIoApic_(MadtTable &table)
     DEBUG_INFO_INTERRUPTS("Detected %lu I/O APIC devices...", num_apic);
 
     table.ForEachTableEntry([](const acpi_entry_hdr *entry) {
-        const auto table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
+        const auto *const table_ptr = ACPI::TryToAccessTheTable<acpi_madt_ioapic>(entry);
 
         if (!table_ptr) {
             return;
         }
 
-        HardwareModule::Get().GetInterrupts().GetIoApicTable().PushEmplace(
+        auto &io_apic_table = HardwareModule::Get().GetInterrupts().GetIoApicTable();
+        io_apic_table.PushEmplace(
             static_cast<u8>(table_ptr->id), static_cast<u32>(table_ptr->address),
             static_cast<u32>(table_ptr->gsi_base)
         );
+
+        // Initialize default configuration immediately so overrides can apply on top later
+        io_apic_table[io_apic_table.Size() - 1].PrepareDefaultConfig();
     });
 }
 
