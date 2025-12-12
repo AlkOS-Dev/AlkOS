@@ -18,6 +18,39 @@ class Ps2Keyboard final : public Keyboard
     static constexpr size_t kDefaultDataPort   = 0x60;
     static constexpr size_t kDefaultStatusPort = 0x64;
 
+    // PS/2 Controller Commands
+    static constexpr u8 kCmdDisableKeyboard = 0xAD;
+    static constexpr u8 kCmdDisableMouse    = 0xA7;
+    static constexpr u8 kCmdEnableKeyboard  = 0xAE;
+    static constexpr u8 kCmdReadConfig      = 0x20;
+    static constexpr u8 kCmdWriteConfig     = 0x60;
+
+    // PS/2 Keyboard Device Commands
+    static constexpr u8 kCmdResetDevice    = 0xFF;
+    static constexpr u8 kCmdEnableScanning = 0xF4;
+
+    // Status Register Bits
+    static constexpr u8 kStatusOutputBufferFull = 1 << 0;
+    static constexpr u8 kStatusInputBufferFull  = 1 << 1;
+
+    // Configuration Byte Bits
+    static constexpr u8 kConfigIrq1Enable      = 1 << 0;
+    static constexpr u8 kConfigDisableKeyboard = 1 << 4;
+    static constexpr u8 kConfigTranslation     = 1 << 6;
+
+    // Device Responses
+    static constexpr u8 kResponseAck          = 0xFA;
+    static constexpr u8 kResponseResetSuccess = 0xAA;
+
+    // Scancodes (Set 1)
+    static constexpr u8 kScancodeExtendedPrefix = 0xE0;
+    static constexpr u8 kScancodeBreakMask      = 0x80;
+    static constexpr u8 kScancodeLeftShift      = 0x2A;
+    static constexpr u8 kScancodeRightShift     = 0x36;
+    static constexpr u8 kScancodeCapsLock       = 0x3A;
+
+    static constexpr int kResetTimeout = 1000000;
+
     /**
      * @brief Construct a new Ps2 Keyboard driver.
      * @param data_addr I/O address of the data register.

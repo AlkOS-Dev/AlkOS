@@ -67,8 +67,7 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
-    trace::DumpAllBuffersOnFailure();
-    TODO_MMU_MINIMAL
+    trace::Flush();
 
     auto &video = VideoModule::Get();
     Graphics::Painter painter(video.GetScreen(), video.GetFormat());
@@ -79,34 +78,10 @@ static void KernelRun()
     }
 
     System::GraphicsConsole console(painter, font);
-
     System::Shell shell(console, HardwareModule::Get().GetPs2Keyboard());
 
     shell.Init();
     video.Flush();
-
-    // TRACE_INFO_GENERAL("Starting Polling Mode Debug...");
-
-    //     trace::DumpAllBuffersOnFailure();
-    // while (true) {
-    //     // Read Status Register
-    //     u8 status = arch::IoRead<u8>(0x64);
-    //
-    //     // Check Output Buffer Full (Bit 0)
-    //     if (status & 0x01) {
-    //         u8 scancode = arch::IoRead<u8>(0x60);
-    //         TRACE_INFO_GENERAL("POLLING: Got scancode 0x%02x", scancode);
-    //
-    //         // Pass to shell manually to see visual feedback
-    //         HardwareModule::Get().GetPs2Keyboard().OnInterrupt();
-    //     }
-    //
-    //     // Slow down the loop slightly to not flood logs if broken
-    //     for (volatile i32 i = 0; i < 100000; ++i) {}
-    //
-    //     video.Flush();
-    //     trace::DumpAllBuffersOnFailure();
-    // }
 
     while (true) {
         shell.Update();
@@ -114,7 +89,7 @@ static void KernelRun()
 
         for (volatile i32 i = 0; i < 10000; ++i) {
         }
-        trace::DumpAllBuffersOnFailure();
+        trace::Flush();
     }
 }
 

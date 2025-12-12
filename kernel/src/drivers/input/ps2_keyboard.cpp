@@ -40,43 +40,42 @@ void Ps2Keyboard::Init()
 {
     TRACE_INFO_GENERAL("Initializing PS/2 Keyboard...");
 
-    // 1. Disable Devices (prevent IRQs while we configure)
-    status_reg_.Write<u8>(0xAD);  // Disable Keyboard
-    status_reg_.Write<u8>(0xA7);  // Disable Mouse
+    // Disable Devices (prevent IRQs while we configure)
+    status_reg_.Write<u8>(kCmdDisableKeyboard);  // Disable Keyboard
+    status_reg_.Write<u8>(kCmdDisableMouse);     // Disable Mouse
 
-    // 2. Flush Output Buffer (Read garbage)
-    while ((status_reg_.Read<u8>() & 1) != 0) {
+    // Flush Output Buffer (Read garbage)
+    while ((status_reg_.Read<u8>() & kStatusOutputBufferFull) != 0) {
         (void)data_reg_.Read<u8>();
     }
 
-    // 3. Set Controller Configuration
-    status_reg_.Write<u8>(0x20);  // Read Config
-    while ((status_reg_.Read<u8>() & 1) == 0);
+    // Set Controller Configuration
+    status_reg_.Write<u8>(kCmdReadConfig);  // Read Config
+    while ((status_reg_.Read<u8>() & kStatusOutputBufferFull) == 0);
     u8 config = data_reg_.Read<u8>();
 
-    config |= 0x01;     // Enable IRQ1
-    config |= 0x40;     // Enable Translation
-    config &= ~(0x10);  // Clear Disable Keyboard bit
+    config |= kConfigIrq1Enable;        // Enable IRQ1
+    config |= kConfigTranslation;       // Enable Translation
+    config &= ~kConfigDisableKeyboard;  // Clear Disable Keyboard bit
 
-    status_reg_.Write<u8>(0x60);  // Write Config
-    while ((status_reg_.Read<u8>() & 2) != 0);
+    status_reg_.Write<u8>(kCmdWriteConfig);  // Write Config
+    while ((status_reg_.Read<u8>() & kStatusInputBufferFull) != 0);
     data_reg_.Write<u8>(config);
 
-    // 4. Enable Keyboard Interface
-    status_reg_.Write<u8>(0xAE);
+    // Enable Keyboard Interface
+    status_reg_.Write<u8>(kCmdEnableKeyboard);
 
-    // 5. Reset Keyboard Device (Send 0xFF)
-    // This ensures the keyboard is in a known state and clears its internal buffer
-    while ((status_reg_.Read<u8>() & 2) != 0);  // Wait for input empty
-    data_reg_.Write<u8>(0xFF);
+    // Reset Keyboard Device (Send 0xFF)
+    while ((status_reg_.Read<u8>() & kStatusInputBufferFull) != 0);  // Wait for input empty
+    data_reg_.Write<u8>(kCmdResetDevice);
 
-    // 6. Wait for Reset Response (ACK 0xFA + Success 0xAA)
-    // We must consume these bytes so they don't stick the IRQ line High!
+    // Wait for Reset Response (ACK 0xFA + Success 0xAA)
+    // We must consume these bytes so they don't stick the IRQ line as High
     int bytes_expected = 2;
-    int timeout        = 1000000;
+    int timeout        = kResetTimeout;
     while (bytes_expected > 0 && timeout > 0) {
         u8 status = status_reg_.Read<u8>();
-        if (status & 1) {
+        if ((status & kStatusOutputBufferFull) != 0) {
             u8 byte = data_reg_.Read<u8>();
             TRACE_INFO_GENERAL("PS/2 Init: Consumed byte 0x%02x", byte);
             bytes_expected--;
@@ -88,47 +87,48 @@ void Ps2Keyboard::Init()
         TRACE_WARN_GENERAL("PS/2 Reset Timed Out - Keyboard might be unresponsive");
     }
 
-    // 7. Enable Scanning (Send 0xF4)
-    while ((status_reg_.Read<u8>() & 2) != 0);
-    data_reg_.Write<u8>(0xF4);
+    // Enable Scanning (Send 0xF4)
+    while ((status_reg_.Read<u8>() & kStatusInputBufferFull) != 0);
+    data_reg_.Write<u8>(kCmdEnableScanning);
 
-    // 8. Wait for ACK (0xFA)
-    timeout = 1000000;
+    // Wait for ACK (0xFA)
+    timeout = kResetTimeout;
     while (timeout > 0) {
-        if (status_reg_.Read<u8>() & 1) {
+        if ((status_reg_.Read<u8>() & kStatusOutputBufferFull) != 0) {
             u8 byte = data_reg_.Read<u8>();
-            if (byte == 0xFA)
+            if (byte == kResponseAck) {
                 break;
+            }
         }
         timeout--;
     }
 
     TRACE_INFO_GENERAL("PS/2 Keyboard Initialized & Drained");
-    trace::DumpAllBuffersOnFailure();
+    trace::Flush();
 }
 
 void Ps2Keyboard::OnInterrupt()
 {
-    DEBUG_INFO_GENERAL("PS/2 Interrupt fired!");
+    TRACE_INFO_HARDWARE("PS/2 Interrupt fired");
     const u8 status = status_reg_.Read<u8>();
 
     // Check Output Buffer Full (Bit 0)
-    if ((status & 0x01) != 0) {
+    if ((status & kStatusOutputBufferFull) != 0) {
         const u8 scancode = data_reg_.Read<u8>();
 
         // Handle Extended byte (0xE0)
         // This indicates the next byte is part of an extended sequence (e.g., arrow keys)
-        if (scancode == 0xE0) {
+        if (scancode == kScancodeExtendedPrefix) {
             is_e0_prefix_ = true;
             return;
         }
 
         // Check for Break Code (Key Release). Bit 7 is set.
-        if ((scancode & 0x80) != 0) {
-            const u8 released_code = scancode & 0x7F;
+        if ((scancode & kScancodeBreakMask) != 0) {
+            const u8 released_code = scancode & ~kScancodeBreakMask;
 
             // Handle Shift Release (Left: 0x2A, Right: 0x36)
-            if (released_code == 0x2A || released_code == 0x36) {
+            if (released_code == kScancodeLeftShift || released_code == kScancodeRightShift) {
                 shift_pressed_ = false;
             }
 
@@ -138,9 +138,9 @@ void Ps2Keyboard::OnInterrupt()
         }
 
         // Handle Make Code (Key Press)
-        if (scancode == 0x2A || scancode == 0x36) {  // Shifts
+        if (scancode == kScancodeLeftShift || scancode == kScancodeRightShift) {  // Shifts
             shift_pressed_ = true;
-        } else if (scancode == 0x3A) {  // Caps Lock
+        } else if (scancode == kScancodeCapsLock) {  // Caps Lock
             caps_lock_ = !caps_lock_;
         } else {
             // Translate and push regular characters
