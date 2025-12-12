@@ -40,6 +40,7 @@ enum class TraceModule {
     kVfs,
     kVideo,
     kLast,
+    kHardware,
 };
 
 // ------------------------------
@@ -108,6 +109,10 @@ CREATE_TRACE_HELPERS(kTime, TIME)
 // VIDEO
 CREATE_DEBUG_HELPERS(kVideo, VIDEO)
 CREATE_TRACE_HELPERS(kVideo, VIDEO)
+
+// HARDWARE
+CREATE_DEBUG_HELPERS(kHardware, HARDWARE)
+CREATE_TRACE_HELPERS(kHardware, HARDWARE)
 
 #include "trace_framework.tpp"
 

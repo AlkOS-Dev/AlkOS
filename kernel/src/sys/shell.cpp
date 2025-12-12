@@ -29,6 +29,14 @@ void Shell::PrintPrompt()
     console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
 }
 
+void Shell::Update()
+{
+    auto result = input_reader_.GetChar();
+    if (result.has_value()) {
+        OnInput(result.value());
+    }
+}
+
 void Shell::OnInput(char c)
 {
     // Handle Special Keys

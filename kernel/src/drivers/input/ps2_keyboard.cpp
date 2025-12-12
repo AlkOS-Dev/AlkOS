@@ -1,4 +1,5 @@
 #include "drivers/input/ps2_keyboard.hpp"
+#include "trace_framework.hpp"
 
 namespace Drivers::Input
 {
@@ -37,14 +38,78 @@ Ps2Keyboard::Ps2Keyboard(size_t data_addr, size_t status_addr)
 
 void Ps2Keyboard::Init()
 {
-    // Drain any pending data in the controller's buffer to start clean.
+    TRACE_INFO_GENERAL("Initializing PS/2 Keyboard...");
+
+    // 1. Disable Devices (prevent IRQs while we configure)
+    status_reg_.Write<u8>(0xAD);  // Disable Keyboard
+    status_reg_.Write<u8>(0xA7);  // Disable Mouse
+
+    // 2. Flush Output Buffer (Read garbage)
     while ((status_reg_.Read<u8>() & 1) != 0) {
         (void)data_reg_.Read<u8>();
     }
+
+    // 3. Set Controller Configuration
+    status_reg_.Write<u8>(0x20);  // Read Config
+    while ((status_reg_.Read<u8>() & 1) == 0);
+    u8 config = data_reg_.Read<u8>();
+
+    config |= 0x01;     // Enable IRQ1
+    config |= 0x40;     // Enable Translation
+    config &= ~(0x10);  // Clear Disable Keyboard bit
+
+    status_reg_.Write<u8>(0x60);  // Write Config
+    while ((status_reg_.Read<u8>() & 2) != 0);
+    data_reg_.Write<u8>(config);
+
+    // 4. Enable Keyboard Interface
+    status_reg_.Write<u8>(0xAE);
+
+    // 5. Reset Keyboard Device (Send 0xFF)
+    // This ensures the keyboard is in a known state and clears its internal buffer
+    while ((status_reg_.Read<u8>() & 2) != 0);  // Wait for input empty
+    data_reg_.Write<u8>(0xFF);
+
+    // 6. Wait for Reset Response (ACK 0xFA + Success 0xAA)
+    // We must consume these bytes so they don't stick the IRQ line High!
+    int bytes_expected = 2;
+    int timeout        = 1000000;
+    while (bytes_expected > 0 && timeout > 0) {
+        u8 status = status_reg_.Read<u8>();
+        if (status & 1) {
+            u8 byte = data_reg_.Read<u8>();
+            TRACE_INFO_GENERAL("PS/2 Init: Consumed byte 0x%02x", byte);
+            bytes_expected--;
+        }
+        timeout--;
+    }
+
+    if (timeout == 0) {
+        TRACE_WARN_GENERAL("PS/2 Reset Timed Out - Keyboard might be unresponsive");
+    }
+
+    // 7. Enable Scanning (Send 0xF4)
+    while ((status_reg_.Read<u8>() & 2) != 0);
+    data_reg_.Write<u8>(0xF4);
+
+    // 8. Wait for ACK (0xFA)
+    timeout = 1000000;
+    while (timeout > 0) {
+        if (status_reg_.Read<u8>() & 1) {
+            u8 byte = data_reg_.Read<u8>();
+            if (byte == 0xFA)
+                break;
+        }
+        timeout--;
+    }
+
+    TRACE_INFO_GENERAL("PS/2 Keyboard Initialized & Drained");
+    trace::DumpAllBuffersOnFailure();
 }
 
 void Ps2Keyboard::OnInterrupt()
 {
+    DEBUG_INFO_GENERAL("PS/2 Interrupt fired!");
     const u8 status = status_reg_.Read<u8>();
 
     // Check Output Buffer Full (Bit 0)

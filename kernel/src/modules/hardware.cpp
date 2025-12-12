@@ -11,11 +11,12 @@ internal::HardwareModule::HardwareModule() noexcept
 {
     DEBUG_INFO_GENERAL("HardwareModule::HardwareModule()");
 
-    // Initialize the generic PS/2 driver
     Ps2Keyboard_.Init();
+}
 
-    // Map Logical IRQ 1 (Standard Keyboard IRQ) to the driver
-    // Note: Interrupts::Init() must enable the hardware controller (IOAPIC/PIC)
+void internal::HardwareModule::RegisterInterruptHandlers()
+{
+    DEBUG_INFO_HARDWARE("Registering Ps2 Keyboard Handler");
     GetInterrupts().GetLit().InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
         1, intr::HwHandler{.handler = Ps2KeyboardHandler}
     );

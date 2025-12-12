@@ -90,6 +90,7 @@ void LocalApic::Enable()
     reg.vector  = kSpuriousVector;
 
     WriteRegister(kSpuriousInterruptRegRW, reg);
+    WriteRegister(kTaskPriorityRegRW, 0);
 
     DEBUG_INFO_INTERRUPTS("Local APIC enabled...");
 }

@@ -27,8 +27,11 @@ class Shell
 
     void Init();
 
-    // Call this when hardware receives a keystroke
-    void OnInput(char c);
+    /**
+     * @brief Polling function to check for new input and process it.
+     * Should be called inside the main kernel loop.
+     */
+    void Update();
 
     private:
     // -------------------------------------------------------------------------
@@ -56,6 +59,12 @@ class Shell
     // -------------------------------------------------------------------------
 
     vfs::Path ResolvePath(std::string_view path_str);
+
+    // -------------------------------------------------------------------------
+    // Internal Helpers
+    // -------------------------------------------------------------------------
+
+    void OnInput(char c);
 
     // Data
     GraphicsConsole &console_;

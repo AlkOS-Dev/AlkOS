@@ -178,6 +178,13 @@ class IoApic final
         WriteRegister(IoApicTableReg(reg_idx), ToRawRegister(reg_low));
     }
 
+    FORCE_INLINE_F void WriteHigherTableRegister(
+        const u32 reg_idx, const HigherTableRegister &reg_high
+    ) const
+    {
+        WriteRegister(IoApicTableReg(reg_idx) + 1, ToRawRegister(reg_high));
+    }
+
     // ------------------------------
     // Status and Configuration Methods
     // ------------------------------

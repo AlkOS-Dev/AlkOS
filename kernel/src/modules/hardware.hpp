@@ -33,6 +33,9 @@ class HardwareModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(hardware, ClockRegistry)
     DEFINE_MODULE_FIELD(hardware, EventClockRegistry)
     DEFINE_MODULE_FIELD(Drivers::Input, Ps2Keyboard)
+
+    public:
+    void RegisterInterruptHandlers();
 };
 }  // namespace internal
 
