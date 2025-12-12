@@ -8,7 +8,10 @@
 namespace System
 {
 
-Shell::Shell(GraphicsConsole &console) : console_(console), current_dir_(vfs::Path::kRoot) {}
+Shell::Shell(GraphicsConsole &console, IO::IReader &input_reader)
+    : console_(console), input_reader_(input_reader), current_dir_(vfs::Path::kRoot)
+{
+}
 
 void Shell::Init()
 {

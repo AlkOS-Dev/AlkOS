@@ -4,9 +4,10 @@
 #include <data_structures/array_structures.hpp>
 #include <span.hpp>
 #include <string.hpp>
-#include <vfs/path.hpp>
 
+#include "io/stream.hpp"
 #include "sys/graphics_console.hpp"
+#include "vfs/path.hpp"
 
 namespace System
 {
@@ -18,7 +19,7 @@ namespace System
 class Shell
 {
     public:
-    explicit Shell(GraphicsConsole &console);
+    explicit Shell(GraphicsConsole &console, IO::IReader &input_reader);
 
     // -------------------------------------------------------------------------
     // Public Interface
@@ -58,6 +59,7 @@ class Shell
 
     // Data
     GraphicsConsole &console_;
+    IO::IReader &input_reader_;
     vfs::Path current_dir_;
 
     static constexpr size_t kMaxInput = 128;
