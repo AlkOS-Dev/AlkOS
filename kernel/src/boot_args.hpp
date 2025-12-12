@@ -32,6 +32,7 @@ struct BootArguments {
     Mem::PPtr<void> multiboot_info;
     FramebufferArgs fb_args;
     RamdiskArgs ramdisk_args;
+    Mem::PPtr<void> rsdp;
 };
 
 BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args);

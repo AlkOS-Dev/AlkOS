@@ -57,14 +57,14 @@ class ACPIController final : public hal::AcpiController
     // Getters
     // ------------------------------
 
-    FORCE_INLINE_F void *GetRsdpAddress() const { return RsdpAddress_; }
+    FORCE_INLINE_F Mem::PPtr<void> GetRsdpAddress() const { return RsdpAddress_; }
 
     // ------------------------------
     // Class fields
     // ------------------------------
 
     private:
-    void *RsdpAddress_{};
+    Mem::PPtr<void> RsdpAddress_{};
 };
 
 //////////////////////////////

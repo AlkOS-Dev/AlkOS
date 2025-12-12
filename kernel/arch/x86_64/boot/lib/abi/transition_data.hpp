@@ -48,6 +48,9 @@ struct alignas(64) KernelArguments {
     u64 ramdisk_start;
     u64 ramdisk_end;
 
+    /// ACPI
+    u64 acpi_rsdp_phys_addr;
+
     /// Multiboot
     u64 multiboot_info_addr;
     u64 multiboot_header_start_addr;

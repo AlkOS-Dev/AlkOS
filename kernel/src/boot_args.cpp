@@ -48,6 +48,7 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         .multiboot_info    = UptrToPtr<void>(raw_args.multiboot_info_phys_addr),
         .fb_args           = fb_args,
         .ramdisk_args      = ramdisk_args,
+        .rsdp              = UptrToPtr<void>(raw_args.acpi_rsdp_phys_addr),
     };
 
     DEBUG_INFO_BOOT("Sanitized boot arguments:");
@@ -61,6 +62,7 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         "    mem_bitmap:         %p\n"
         "    total_page_frames:  %zu\n"
         "    multiboot_info:     %p\n"
+        "    rsdp:               %p\n"
         "  Framebuffer Arguments:\n"
         "    base_address:       %p\n"
         "    width:              %u\n"
@@ -76,7 +78,7 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         sanitized_k_args.kernel_start, sanitized_k_args.kernel_end,
         sanitized_k_args.ramdisk_args.start, sanitized_k_args.ramdisk_args.end,
         sanitized_k_args.root_page_table, sanitized_k_args.mem_bitmap,
-        sanitized_k_args.total_page_frames, sanitized_k_args.multiboot_info,
+        sanitized_k_args.total_page_frames, sanitized_k_args.multiboot_info, sanitized_k_args.rsdp,
         sanitized_k_args.fb_args.base_address, sanitized_k_args.fb_args.width,
         sanitized_k_args.fb_args.height, sanitized_k_args.fb_args.pitch,
         sanitized_k_args.fb_args.bpp, sanitized_k_args.fb_args.red_pos,
