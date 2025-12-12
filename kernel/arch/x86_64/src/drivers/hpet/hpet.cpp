@@ -128,6 +128,10 @@ Hpet::Hpet(acpi_hpet *table)
     hpet_entry.stop_counter   = StopCounterCb;
     hpet_entry.resume_counter = ResumeCounterCb;
 
+    hpet_entry.clock_numerator = clock_period_;
+    hpet_entry.clock_denominator =
+        1'000'000;  // Convert femtoseconds (10^-15) to nanoseconds (10^-9)
+
     /* Own data */
     hpet_entry.own_data = this;
 

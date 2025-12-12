@@ -223,7 +223,7 @@ uacpi_cpu_flags uacpi_kernel_lock_spinlock(uacpi_handle handle)
 {
     ASSERT_NOT_NULL(handle);
 
-    const auto spinlock = static_cast<Spinlock *>(handle);
+    auto *const spinlock = static_cast<Spinlock *>(handle);
     spinlock->Lock();
 
     return 0;
@@ -233,7 +233,7 @@ void uacpi_kernel_unlock_spinlock(uacpi_handle handle, uacpi_cpu_flags)
 {
     ASSERT_NOT_NULL(handle);
 
-    const auto spinlock = static_cast<Spinlock *>(handle);
+    auto *const spinlock = static_cast<Spinlock *>(handle);
     spinlock->Unlock();
 }
 
@@ -242,7 +242,7 @@ TODO_WHEN_MUTEX_IMPLEMENTED
 uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 {
     ASSERT_NOT_NULL(handle);
-    const auto spinlock = static_cast<Spinlock *>(handle);
+    auto *const spinlock = static_cast<Spinlock *>(handle);
     spinlock->Lock();
 
     return UACPI_STATUS_OK;
@@ -251,7 +251,7 @@ uacpi_status uacpi_kernel_acquire_mutex(uacpi_handle handle, uacpi_u16)
 void uacpi_kernel_release_mutex(uacpi_handle handle)
 {
     ASSERT_NOT_NULL(handle);
-    const auto spinlock = static_cast<Spinlock *>(handle);
+    auto *const spinlock = static_cast<Spinlock *>(handle);
     spinlock->Unlock();
 }
 

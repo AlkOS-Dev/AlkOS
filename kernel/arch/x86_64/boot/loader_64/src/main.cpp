@@ -273,6 +273,24 @@ static void PrepareKernelArgs(
         gKernelInitialParams.ramdisk_start = 0;
         gKernelInitialParams.ramdisk_end   = 0;
     }
+
+    // ACPI
+    auto acpi_new_tag_res = multiboot_info.FindTag<TagNewAcpi>();
+    if (acpi_new_tag_res) {
+        const auto *tag                          = acpi_new_tag_res.value();
+        gKernelInitialParams.acpi_rsdp_phys_addr = reinterpret_cast<u64>(tag->rsdp);
+        TRACE_INFO("ACPI RSDP (v2) found at: 0x%llX", gKernelInitialParams.acpi_rsdp_phys_addr);
+    } else {
+        auto acpi_old_tag_res = multiboot_info.FindTag<TagOldAcpi>();
+        if (acpi_old_tag_res) {
+            const auto *tag                          = acpi_old_tag_res.value();
+            gKernelInitialParams.acpi_rsdp_phys_addr = reinterpret_cast<u64>(tag->rsdp);
+            TRACE_INFO("ACPI RSDP (v1) found at: 0x%llX", gKernelInitialParams.acpi_rsdp_phys_addr);
+        } else {
+            TRACE_WARNING("No ACPI RSDP tag found!");
+            gKernelInitialParams.acpi_rsdp_phys_addr = 0;
+        }
+    }
 }
 
 NO_RET static void TransitionToKernel(
