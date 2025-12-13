@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include "internal/debug.hpp"
 #include "string.h"
 
 void *memcpy(void *dest, const void *src, const size_t n)
@@ -55,10 +54,6 @@ void *memset(void *dest, const int c, const size_t n)
 
 int memcmp(const void *s1, const void *s2, const size_t n)
 {
-    TRACE_DEBUG("memcmp s1: %p", s1);
-    TRACE_DEBUG("memcmp s2: %p", s2);
-    TRACE_DEBUG("memcmp n: %zu", n);
-
     if (!s1 || !s2) {
         return 0;
     }
