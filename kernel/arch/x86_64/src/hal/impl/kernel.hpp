@@ -8,9 +8,9 @@
 namespace arch
 {
 struct PACK alignas(64) RawBootArguments : RawBootArgumentsAPI {
-    static constexpr size_t kMaxRsdpStructSize = 36;
-    u8 rsdp_struct[kMaxRsdpStructSize];
-    bool is_acpi1;
+    u64 multiboot_info_phys_addr;
+    u64 multiboot_header_start_phys_addr;
+    u64 multiboot_header_end_phys_addr;
 };
 
 void ArchInit(const RawBootArguments &args);
