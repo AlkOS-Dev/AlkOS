@@ -43,6 +43,9 @@ static struct TraceFramework {
             rv[static_cast<size_t>(TraceModule::kMemory)]     = "MemoryModule";
             rv[static_cast<size_t>(TraceModule::kInterrupts)] = "InterruptsModule";
             rv[static_cast<size_t>(TraceModule::kTime)]       = "TimeModule";
+            rv[static_cast<size_t>(TraceModule::kVfs)]        = "VFSModule";
+            rv[static_cast<size_t>(TraceModule::kVideo)]      = "VideoModule";
+            rv[static_cast<size_t>(TraceModule::kHardware)]   = "HardwareModule";
 
             return rv;
         }();
@@ -419,5 +422,6 @@ NODISCARD TraceLevel GetTraceLevel(TraceModule module)
     return g_TraceFramework.trace_levels[static_cast<size_t>(module)];
 }
 
-void DumpAllBuffersOnFailure() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
+void Flush() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
+void DumpAllBuffersOnFailure() { Flush(); }
 }  // namespace trace

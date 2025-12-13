@@ -44,10 +44,17 @@ struct PACK alignas(64) KernelArguments {
     u8 fb_blue_pos;
     u8 fb_blue_mask;
 
-    // ACPI
-    static constexpr size_t kMaxRsdpStructSize = 36;
-    u8 rsdp_struct[kMaxRsdpStructSize];
-    bool is_acpi1;
+    /// Ramdisk
+    u64 ramdisk_start;
+    u64 ramdisk_end;
+
+    /// ACPI
+    u64 acpi_rsdp_phys_addr;
+
+    /// Multiboot
+    u64 multiboot_info_addr;
+    u64 multiboot_header_start_addr;
+    u64 multiboot_header_end_addr;
 };
 
 #endif  // KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_

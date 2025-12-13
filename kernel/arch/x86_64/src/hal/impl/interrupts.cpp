@@ -21,15 +21,10 @@ void Interrupts::Init()
     /* Disable PIC unit */
     Pic8259Disable();
 
-    ReplacePicDriverWithLapic_();
-
-    /* Enable IO apics */
-    for (IoApic &io_apic : GetIoApicTable()) {
-        io_apic.PrepareDefaultConfig();
-    }
-
     /* Replace first stage PIC with new APIC chip on startup Core */
     local_apic_.Enable();
+
+    ReplacePicDriverWithLapic_();
 
     tsc::Initialize();
 

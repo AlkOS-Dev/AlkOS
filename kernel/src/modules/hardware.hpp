@@ -4,6 +4,7 @@
 #include <template_lib.hpp>
 
 #include "acpi/acpi.hpp"
+#include "drivers/input/ps2_keyboard.hpp"
 #include "hardware/clock_infra.hpp"
 #include "hardware/core_controller.hpp"
 #include "hardware/cores.hpp"
@@ -31,6 +32,10 @@ class HardwareModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(hardware, CoresController)
     DEFINE_MODULE_FIELD(hardware, ClockRegistry)
     DEFINE_MODULE_FIELD(hardware, EventClockRegistry)
+    DEFINE_MODULE_FIELD(Drivers::Input, Ps2Keyboard)
+
+    public:
+    void RegisterInterruptHandlers();
 };
 }  // namespace internal
 

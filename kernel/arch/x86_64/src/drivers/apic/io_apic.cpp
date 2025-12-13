@@ -3,6 +3,7 @@
 
 #include <bit.hpp>
 #include <todo.hpp>
+
 #include "interrupts/idt.hpp"
 #include "trace_framework.hpp"
 
@@ -54,15 +55,30 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
 
 void IoApic::PrepareDefaultConfig() const
 {
+    // Get the APIC ID of the running processor (BSP) to route interrupts to it
+    const u32 bsp_apic_id = LocalApic::GetCoreId();
+
     for (u32 idx = 0; idx < num_entries_; ++idx) {
         auto reg_low = ReadLowerTableRegister(idx);
+        // Prepare the Destination Register
+        HigherTableRegister reg_high{};
+        reg_high.destination = bsp_apic_id;
 
-        /* Note: vector not initialized */
+        /* Set defaults */
         reg_low.delivery_mode    = LowerTableRegister::DeliveryMode::kFixed;
         reg_low.destination_mode = LowerTableRegister::DestinationMode::kPhysical;
         reg_low.pin_polarity     = LowerTableRegister::PinPolarity::kActiveHigh;
         reg_low.trigger_mode     = LowerTableRegister::TriggerMode::kEdge;
-        reg_low.mask             = LowerTableRegister::EnabledFlag::kEnabled;
+
+        /* Map ISA interrupts (GSI 0-15) to IDT vectors */
+        const u32 current_gsi = gsi_base_ + idx;
+        if (current_gsi < 16) {
+            reg_low.vector = kIrq1Offset + current_gsi;
+            reg_low.mask   = LowerTableRegister::EnabledFlag::kEnabled;
+        } else {
+            reg_low.vector = 0;
+            reg_low.mask   = LowerTableRegister::EnabledFlag::kDisabled;
+        }
 
         WriteLowerTableRegister(idx, reg_low);
     }

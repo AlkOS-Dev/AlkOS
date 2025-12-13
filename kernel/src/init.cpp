@@ -10,6 +10,7 @@
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "modules/timing.hpp"
+#include "modules/vfs.hpp"
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
@@ -34,20 +35,23 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Initialize the global state module */
     GlobalStateModule::Init();
 
-    // /* Initialize ACPI */
-    const int status = HardwareModule::Get().GetACPIController().Init(args);
-    R_ASSERT_ZERO(status, "Failed to initialize ACPI subsystem...");
+    /* Initialize ACPI */
+    HardwareModule::Get().GetACPIController().Init(args);
 
     /* Extract all necessary data from ACPI tables */
-    // HardwareModule::Get().GetACPIController().ParseTables();
+    HardwareModule::Get().GetACPIController().ParseTables();
 
     /* Allow hardware to fully initialise interrupt system */
-    // HardwareModule::Get().GetInterrupts().Init();
+    HardwareModule::Get().GetInterrupts().Init();
 
     /* Initialize the timing system */
-    // TimingModule::Init();
+    TimingModule::Init();
 
-    // MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+    VfsModule::Init(args);
 
-    // VideoModule::Init(args, MemoryModule::Get().GetHeap());
+    VideoModule::Init(args, MemoryModule::Get().GetHeap());
+
+    // Register Interrupts
+    MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
+    HardwareModule::Get().RegisterInterruptHandlers();
 }

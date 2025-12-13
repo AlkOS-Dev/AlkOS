@@ -63,3 +63,7 @@ feature_flags:
     default: 2
     min: 0
     max: 3
+
+  - name: ramdisk
+    description: Load root filesystem from ramdisk instead of block device.
+    default: true

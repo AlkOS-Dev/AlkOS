@@ -3,7 +3,9 @@
 
 #include <assert.h>
 #include <mem/types.hpp>
+#include <span.hpp>
 #include <types.hpp>
+#include "graphics/native_pixel.hpp"
 
 namespace Graphics
 {
@@ -17,7 +19,7 @@ class Surface
     public:
     Surface() = default;
 
-    Surface(Mem::VPtr<u32> buffer, u32 width, u32 height, u32 pitch_bytes)
+    Surface(Mem::VPtr<NativePixel> buffer, u32 width, u32 height, u32 pitch_bytes)
         : buffer_(buffer), width_(width), height_(height), pitch_bytes_(pitch_bytes)
     {
         R_ASSERT_NOT_NULL(buffer_);
@@ -37,39 +39,47 @@ class Surface
         ASSERT_EQ(height_, src.height_);
 
         for (u32 y = 0; y < height_; ++y) {
-            u32 *dest_row      = GetScanline(y);
-            const u32 *src_row = src.GetScanline(y);
+            std::span<NativePixel> dest_row      = GetScanline(y);
+            std::span<const NativePixel> src_row = src.GetScanline(y);
 
             // We use the width for the copy size, not the pitch,
             // to handle stride differences correctly.
-            memcpy(dest_row, src_row, width_ * sizeof(u32));
+            memcpy(dest_row.data(), src_row.data(), width_ * sizeof(NativePixel));
         }
     }
 
     // -------------------------------------------------------------------------
-    // Fast Accessors
+    // Accessors
     // -------------------------------------------------------------------------
 
-    NODISCARD FORCE_INLINE_F Mem::VPtr<u32> GetScanline(u32 y)
+    NODISCARD FORCE_INLINE_F std::span<NativePixel> GetScanline(u32 y)
     {
         ASSERT_LT(y, height_);
         // Pointer arithmetic on byte level for pitch
         uptr addr = Mem::PtrToUptr(buffer_) + (static_cast<size_t>(y) * pitch_bytes_);
-        return Mem::UptrToPtr<u32>(addr);
+        Mem::VPtr<NativePixel> ptr = Mem::UptrToPtr<NativePixel>(addr);
+        return std::span<NativePixel>(ptr, width_);
     }
 
-    NODISCARD FORCE_INLINE_F const Mem::VPtr<u32> GetScanline(u32 y) const
+    NODISCARD FORCE_INLINE_F std::span<const NativePixel> GetScanline(u32 y) const
     {
         ASSERT_LT(y, height_);
         uptr addr = Mem::PtrToUptr(buffer_) + (static_cast<size_t>(y) * pitch_bytes_);
-        return Mem::UptrToPtr<u32>(addr);
+        Mem::VPtr<NativePixel> ptr = Mem::UptrToPtr<NativePixel>(addr);
+        return std::span<const NativePixel>(ptr, width_);
     }
 
-    FORCE_INLINE_F u32 &Pixel(u32 x, u32 y)
+    FORCE_INLINE_F NativePixel &Pixel(u32 x, u32 y)
     {
         ASSERT_LT(x, width_);
         return GetScanline(y)[x];
     }
+
+    /**
+     * @brief Gets the unsafe raw buffer pointer.
+     * @warning Use only for high-performance code where bounds are checked manually.
+     */
+    NODISCARD FORCE_INLINE_F Mem::VPtr<NativePixel> GetRawBuffer() { return buffer_; }
 
     // -------------------------------------------------------------------------
     // Properties
@@ -81,7 +91,7 @@ class Surface
     NODISCARD FORCE_INLINE_F bool IsValid() const { return buffer_ != nullptr; }
 
     private:
-    Mem::VPtr<u32> buffer_{nullptr};
+    Mem::VPtr<NativePixel> buffer_{nullptr};
     u32 width_{0};
     u32 height_{0};
     u32 pitch_bytes_{0};  // Stride in bytes

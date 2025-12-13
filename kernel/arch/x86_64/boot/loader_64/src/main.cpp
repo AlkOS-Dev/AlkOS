@@ -160,6 +160,27 @@ static u64 LoadKernelIntoMemory(
     return entry_point_res.value();
 }
 
+void FindRamdiskInMemory(MultibootInfo &multiboot_info, MemoryManagers &mms)
+{
+    auto &pmm = mms.pmm;
+
+    auto ramdisk_module_res = multiboot_info.FindTag<TagModule>([](TagModule *tag) {
+        return strcmp(tag->cmdline, kInitrdModuleCmdline) == 0;
+    });
+    ASSERT_TRUE(ramdisk_module_res, "Failed to find the ramdisk module");
+    const TagModule *ramdisk_tag = ramdisk_module_res.value();
+
+    const size_t ramdisk_size = ramdisk_tag->mod_end - ramdisk_tag->mod_start;
+    TRACE_DEBUG(
+        "Ramdisk located at 0x%llX - 0x%llX (size: %sB)", ramdisk_tag->mod_start,
+        ramdisk_tag->mod_end, FormatMetricUint(ramdisk_size)
+    );
+    pmm.Reserve(PhysicalPtr<void>(ramdisk_tag->mod_start), ramdisk_size);
+
+    gKernelInitialParams.ramdisk_start = ramdisk_tag->mod_start;
+    gKernelInitialParams.ramdisk_end   = ramdisk_tag->mod_end;
+}
+
 static void EstablishDirectMemMapping(MemoryManagers &mms)
 {
     auto &vmm = mms.vmm;
@@ -175,38 +196,6 @@ static void EstablishDirectMemMapping(MemoryManagers &mms)
     );
 }
 
-static void ProcessACPITables(MultibootInfo &multiboot_info)
-{
-    TRACE_DEBUG("Finding RSDP...");
-    TagNewAcpi *tag_ptr{};
-    bool is_acpi1{};
-
-    if (auto new_acpi_tag = multiboot_info.FindTag<TagNewAcpi>(); !new_acpi_tag) {
-        TRACE_WARNING("ACPI2.0 tag not found in multiboot tags, trying ACPI1.0 tag...");
-        auto old_acpi_tag = multiboot_info.FindTag<TagOldAcpi>();
-        R_ASSERT_TRUE(static_cast<bool>(old_acpi_tag), "Failed to find ACPI tag");
-
-        tag_ptr  = reinterpret_cast<TagNewAcpi *>(old_acpi_tag.value());
-        is_acpi1 = true;
-    } else {
-        tag_ptr = new_acpi_tag.value();
-    }
-
-    ASSERT_NOT_NULL(
-        tag_ptr, "ACPI tag not found in multiboot tags, only platforms with ACPI supported..."
-    );
-
-    TRACE_DEBUG(
-        "ACPI tag found at 0x%016llX, size: %sB", reinterpret_cast<u64>(tag_ptr),
-        FormatMetricUint(tag_ptr->size)
-    );
-
-    for (size_t offset = 0; offset < (tag_ptr->size - 8); ++offset) {
-        gKernelInitialParams.rsdp_struct[offset] = tag_ptr->rsdp[offset];
-    }
-    gKernelInitialParams.is_acpi1 = is_acpi1;
-}
-
 static void PrepareKernelArgs(
     const TransitionData *transition_data, const KernelModuleInfo &kernel_info,
     MemoryManagers mem_managers, MultibootInfo &multiboot_info
@@ -218,8 +207,11 @@ static void PrepareKernelArgs(
     TRACE_INFO("Preparing kernel arguments...");
 
     // Prepare parameters for the kernel
-    gKernelInitialParams.kernel_start_addr = kernel_info.lower_bound;
-    gKernelInitialParams.kernel_end_addr   = kernel_info.upper_bound;
+    gKernelInitialParams.kernel_start_addr           = kernel_info.lower_bound;
+    gKernelInitialParams.kernel_end_addr             = kernel_info.upper_bound;
+    gKernelInitialParams.multiboot_info_addr         = transition_data->multiboot_info_addr;
+    gKernelInitialParams.multiboot_header_start_addr = transition_data->multiboot_header_start_addr;
+    gKernelInitialParams.multiboot_header_end_addr   = transition_data->multiboot_header_end_addr;
 
     gKernelInitialParams.mem_info_bitmap_addr  = pmm.GetBitmapAddress().Value();
     gKernelInitialParams.mem_info_total_pages  = pmm.GetTotalPages();
@@ -273,7 +265,32 @@ static void PrepareKernelArgs(
         gKernelInitialParams.fb_bpp    = 0;
     }
 
-    ProcessACPITables(multiboot_info);
+    // Ramdisk
+    if constexpr (FeatureEnabled<FeatureFlag::kRamdisk>) {
+        FindRamdiskInMemory(multiboot_info, mem_managers);
+    } else {
+        TRACE_INFO("Ramdisk feature disabled, skipping ramdisk setup");
+        gKernelInitialParams.ramdisk_start = 0;
+        gKernelInitialParams.ramdisk_end   = 0;
+    }
+
+    // ACPI
+    auto acpi_new_tag_res = multiboot_info.FindTag<TagNewAcpi>();
+    if (acpi_new_tag_res) {
+        const auto *tag                          = acpi_new_tag_res.value();
+        gKernelInitialParams.acpi_rsdp_phys_addr = reinterpret_cast<u64>(tag->rsdp);
+        TRACE_INFO("ACPI RSDP (v2) found at: 0x%llX", gKernelInitialParams.acpi_rsdp_phys_addr);
+    } else {
+        auto acpi_old_tag_res = multiboot_info.FindTag<TagOldAcpi>();
+        if (acpi_old_tag_res) {
+            const auto *tag                          = acpi_old_tag_res.value();
+            gKernelInitialParams.acpi_rsdp_phys_addr = reinterpret_cast<u64>(tag->rsdp);
+            TRACE_INFO("ACPI RSDP (v1) found at: 0x%llX", gKernelInitialParams.acpi_rsdp_phys_addr);
+        } else {
+            TRACE_WARNING("No ACPI RSDP tag found!");
+            gKernelInitialParams.acpi_rsdp_phys_addr = 0;
+        }
+    }
 }
 
 NO_RET static void TransitionToKernel(
@@ -296,9 +313,14 @@ NO_RET static void TransitionToKernel(
         "  Kernel Arguments:\n"
         "    kernel_start_addr:           0x%llX\n"
         "    kernel_end_addr:             0x%llX\n"
+        "    ramdisk_start_addr           0x%llX\n"
+        "    ramdisk_end_addr:            0x%llX\n"
         "    pml_4_table_phys_addr:       0x%llX\n"
         "    mem_info_bitmap_addr:        0x%llX\n"
         "    mem_info_total_pages:        %llu\n"
+        "    multiboot_info_addr:         0x%llX\n"
+        "    multiboot_header_start_addr: 0x%llX\n"
+        "    multiboot_header_end_addr:   0x%llX\n"
         "  Framebuffer Arguments:\n"
         "    fb_addr:                     0x%llX\n"
         "    fb_width:                    %u\n"
@@ -310,16 +332,18 @@ NO_RET static void TransitionToKernel(
         "    fb_green_pos:                %hhu\n"
         "    fb_green_mask:               %hhu\n"
         "    fb_blue_pos:                 %hhu\n"
-        "    fb_blue_mask:                %hhu\n"
-        "    is_acpi1:                    %hhu\n",
+        "    fb_blue_mask:                %hhu\n",
         gKernelInitialParams.kernel_start_addr, gKernelInitialParams.kernel_end_addr,
+        gKernelInitialParams.ramdisk_start, gKernelInitialParams.ramdisk_end,
         gKernelInitialParams.pml_4_table_phys_addr, gKernelInitialParams.mem_info_bitmap_addr,
-        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.fb_addr,
+        gKernelInitialParams.mem_info_total_pages, gKernelInitialParams.multiboot_info_addr,
+        gKernelInitialParams.multiboot_header_start_addr,
+        gKernelInitialParams.multiboot_header_end_addr, gKernelInitialParams.fb_addr,
         gKernelInitialParams.fb_width, gKernelInitialParams.fb_height,
         gKernelInitialParams.fb_pitch, gKernelInitialParams.fb_bpp, gKernelInitialParams.fb_red_pos,
         gKernelInitialParams.fb_red_mask, gKernelInitialParams.fb_green_pos,
         gKernelInitialParams.fb_green_mask, gKernelInitialParams.fb_blue_pos,
-        gKernelInitialParams.fb_blue_mask, gKernelInitialParams.is_acpi1
+        gKernelInitialParams.fb_blue_mask
     );
 
     TRACE_INFO("Jumping to kernel at entry point: 0x%llX", kernel_entry_point);

@@ -10,6 +10,9 @@ using namespace Mem;
 
 BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
 {
+    R_ASSERT_NOT_ZERO(
+        raw_args.multiboot_info_phys_addr, "Multiboot info physical address is null."
+    );
     R_ASSERT_NOT_ZERO(raw_args.kernel_start_addr, "Kernel start physical address is null.");
     R_ASSERT_NOT_ZERO(raw_args.kernel_end_addr, "Kernel end physical address is null.");
     R_ASSERT_NOT_ZERO(
@@ -31,14 +34,21 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         .blue_mask_size  = raw_args.fb_blue_mask,
     };
 
+    RamdiskArgs ramdisk_args{
+        .start = UptrToPtr<void>(raw_args.ramdisk_start),
+        .end   = UptrToPtr<void>(raw_args.ramdisk_end),
+    };
+
     BootArguments sanitized_k_args{
-        .raw_args          = raw_args,
         .kernel_start      = UptrToPtr<void>(raw_args.kernel_start_addr),
         .kernel_end        = UptrToPtr<void>(raw_args.kernel_end_addr),
         .root_page_table   = UptrToPtr<void>(raw_args.page_table_phys_addr),
         .mem_bitmap        = UptrToPtr<void>(raw_args.mem_info_bitmap_phys_addr),
         .total_page_frames = static_cast<size_t>(raw_args.mem_info_total_pages),
+        .multiboot_info    = UptrToPtr<void>(raw_args.multiboot_info_phys_addr),
         .fb_args           = fb_args,
+        .ramdisk_args      = ramdisk_args,
+        .rsdp              = UptrToPtr<void>(raw_args.acpi_rsdp_phys_addr),
     };
 
     DEBUG_INFO_BOOT("Sanitized boot arguments:");
@@ -46,9 +56,13 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         "  Boot Arguments:\n"
         "    kernel_start:       %p\n"
         "    kernel_end:         %p\n"
+        "    ramdisk_start:      %p\n"
+        "    ramdisk_end:        %p\n"
         "    root_page_table:    %p\n"
         "    mem_bitmap:         %p\n"
         "    total_page_frames:  %zu\n"
+        "    multiboot_info:     %p\n"
+        "    rsdp:               %p\n"
         "  Framebuffer Arguments:\n"
         "    base_address:       %p\n"
         "    width:              %u\n"
@@ -62,13 +76,15 @@ BootArguments SanitizeBootArgs(const hal::RawBootArguments &raw_args)
         "    blue_pos:           %hhu\n"
         "    blue_mask_size:     %hhu\n",
         sanitized_k_args.kernel_start, sanitized_k_args.kernel_end,
+        sanitized_k_args.ramdisk_args.start, sanitized_k_args.ramdisk_args.end,
         sanitized_k_args.root_page_table, sanitized_k_args.mem_bitmap,
-        sanitized_k_args.total_page_frames, sanitized_k_args.fb_args.base_address,
-        sanitized_k_args.fb_args.width, sanitized_k_args.fb_args.height,
-        sanitized_k_args.fb_args.pitch, sanitized_k_args.fb_args.bpp,
-        sanitized_k_args.fb_args.red_pos, sanitized_k_args.fb_args.red_mask_size,
-        sanitized_k_args.fb_args.green_pos, sanitized_k_args.fb_args.green_mask_size,
-        sanitized_k_args.fb_args.blue_pos, sanitized_k_args.fb_args.blue_mask_size
+        sanitized_k_args.total_page_frames, sanitized_k_args.multiboot_info, sanitized_k_args.rsdp,
+        sanitized_k_args.fb_args.base_address, sanitized_k_args.fb_args.width,
+        sanitized_k_args.fb_args.height, sanitized_k_args.fb_args.pitch,
+        sanitized_k_args.fb_args.bpp, sanitized_k_args.fb_args.red_pos,
+        sanitized_k_args.fb_args.red_mask_size, sanitized_k_args.fb_args.green_pos,
+        sanitized_k_args.fb_args.green_mask_size, sanitized_k_args.fb_args.blue_pos,
+        sanitized_k_args.fb_args.blue_mask_size
     );
 
     return sanitized_k_args;

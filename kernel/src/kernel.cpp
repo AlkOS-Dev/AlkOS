@@ -1,17 +1,22 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include <time.h>
+#include <string.hpp>
 #include <test_module/test_module.hpp>
 #include "trace_framework.hpp"
 
 /* internal includes */
 #include <hal/debug.hpp>
 
-#include "boot_args.hpp"
+#include "graphics/font/psf2_font.hpp"
+#include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
-#include "hal/boot_args.hpp"
-#include "mem/heap.hpp"
+#include "modules/hardware.hpp"
 #include "modules/video.hpp"
+#include "sys/shell.hpp"
+
+#include "drivers/apic/local_apic.hpp"
+#include "hal/boot_args.hpp"
+#include "modules/hardware.hpp"
 #include "todo.hpp"
 
 extern void KernelInit(const hal::RawBootArguments &);
@@ -19,52 +24,30 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
+    trace::Flush();
 
-    while (true) {
-        for (size_t i = 0; i < 1'000'000; i++) {
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-        }
-        trace::DumpAllBuffersOnFailure();
+    auto &video = VideoModule::Get();
+    Graphics::Painter painter(video.GetScreen(), video.GetFormat());
+    Graphics::Psf2Font font(drdos8x8_psfu);
+
+    if (!font.IsValid()) {
+        TRACE_WARN_VIDEO("Invalid font");
     }
-    TODO_MMU_MINIMAL
 
-    // static constexpr size_t kBuffSize = 256;
-    // char buff[kBuffSize];
-    //
-    // const auto t = time(nullptr);
-    // strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-    //
-    // KernelTraceSuccess("Hello from AlkOS! Today we have: %s", buff);
+    System::GraphicsConsole console(painter, font);
+    System::Shell shell(console, HardwareModule::Get().GetPs2Keyboard());
 
-    auto &video  = VideoModule::Get();
-    auto &screen = video.GetScreen();
-    auto fmt     = video.GetFormat();
+    shell.Init();
+    video.Flush();
 
-    Graphics::Painter p(screen, fmt);
-
-    // Animation Loop
-    i32 x     = 0;
-    i32 y     = 0;
-    u16 speed = 1;
     while (true) {
-        p.Clear(Graphics::Color::Black());
-        p.SetColor(Graphics::Color::Green());
-        p.FillRect(x, 100, 50, 50);
-        p.SetColor(Graphics::Color::Blue());
-        p.FillRect(100, y, 70, 70);
+        shell.Update();
         video.Flush();
 
-        x += (speed / 255) + 1;
-        y += (speed / 255) + 1;
-        x = x % screen.GetWidth();
-        y = y % screen.GetHeight();
-
-        // crude delay
-        for (volatile int i = 0; i < 1000000; i++);
-        speed = speed + 80;
+        // TODO: Replace with CpuHalt or smth like scheduler sleep.
+        for (volatile i32 i = 0; i < 10000; ++i) {
+        }
+        trace::Flush();
     }
 }
 

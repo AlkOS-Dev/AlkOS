@@ -1,4 +1,5 @@
 #include "modules/video.hpp"
+#include "graphics/native_pixel.hpp"
 #include "graphics/painter.hpp"
 #include "mem/types.hpp"
 #include "trace_framework.hpp"
@@ -12,7 +13,7 @@ internal::VideoModule::VideoModule(const BootArguments &args, Heap &hp) noexcept
     DEBUG_INFO_GENERAL("VideoModule::VideoModule()");
 
     const auto &fb_args = args.fb_args;
-    auto *fb_pptr       = static_cast<PPtr<u32>>(fb_args.base_address);
+    auto *fb_pptr       = static_cast<PPtr<Graphics::NativePixel>>(fb_args.base_address);
 
     R_ASSERT_NOT_NULL(fb_pptr, "VideoModule: Framebuffer is null");
 

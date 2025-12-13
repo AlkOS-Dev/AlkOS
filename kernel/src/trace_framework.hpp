@@ -32,13 +32,15 @@ enum class TraceType {
 };
 
 enum class TraceModule {
-    kMemory = 0,
+    kBoot = 0,
+    kMemory,
     kInterrupts,
-    kBoot,
     kGeneral,
     kTime,
-    kLast,
+    kVfs,
     kVideo,
+    kHardware,
+    kLast,
 };
 
 // ------------------------------
@@ -48,6 +50,7 @@ enum class TraceModule {
 void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 void DumpAllBuffersOnFailure();
+void Flush();
 
 /* MODULE TIME CORE PROC MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>
@@ -80,6 +83,10 @@ PREVENT_INLINE static void Write(const char *format, Args... args);
     CREATE_HELPER(kKernelLog, module, kInfo, TRACE_INFO_##module_name)       \
     CREATE_HELPER(kKernelLog, module, kFrequentInfo, TRACE_FREQ_INFO_##module_name)
 
+// VFS
+CREATE_DEBUG_HELPERS(kVfs, VFS)
+CREATE_TRACE_HELPERS(kVfs, VFS)
+
 // MEMORY
 CREATE_DEBUG_HELPERS(kMemory, MEMORY)
 CREATE_TRACE_HELPERS(kMemory, MEMORY)
@@ -103,6 +110,10 @@ CREATE_TRACE_HELPERS(kTime, TIME)
 // VIDEO
 CREATE_DEBUG_HELPERS(kVideo, VIDEO)
 CREATE_TRACE_HELPERS(kVideo, VIDEO)
+
+// HARDWARE
+CREATE_DEBUG_HELPERS(kHardware, HARDWARE)
+CREATE_TRACE_HELPERS(kHardware, HARDWARE)
 
 #include "trace_framework.tpp"
 

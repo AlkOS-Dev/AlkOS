@@ -1,11 +1,26 @@
 #ifndef KERNEL_SRC_GRAPHICS_PAINTER_HPP_
 #define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
 
+#include <concepts.hpp>
+#include <span.hpp>
+#include <string.hpp>
 #include "graphics/color.hpp"
+#include "graphics/font/glyph.hpp"
+#include "graphics/geometry.hpp"
+#include "graphics/native_pixel.hpp"
 #include "graphics/surface.hpp"
 
 namespace Graphics
 {
+
+/**
+ * @brief Concept ensuring a type acts like a Font.
+ */
+template <typename T>
+concept FontType = requires(const T &t, char c) {
+    { t.GetGlyph(c) } -> std::same_as<Glyph>;
+    { t.GetHeight() } -> std::convertible_to<u32>;
+};
 
 class Painter
 {
@@ -20,20 +35,37 @@ class Painter
 
     void Clear(Color color);
 
-    // Safe drawing with clipping
-    void DrawPixel(i32 x, i32 y);
-    void DrawRect(i32 x, i32 y, i32 w, i32 h);
-    void FillRect(i32 x, i32 y, i32 w, i32 h);
+    void DrawPixel(Point p);
+    void DrawRect(Rect r);
+    void FillRect(Rect r);
+
+    // -------------------------------------------------------------------------
+    // Text Rendering
+    // -------------------------------------------------------------------------
+
+    template <FontType FontT>
+    void DrawChar(const CharCmd &cmd, const FontT &font);
+
+    template <FontType FontT>
+    void DrawString(const TextCmd &cmd, const FontT &font);
+
+    // -------------------------------------------------------------------------
+    // Accessors
+    // -------------------------------------------------------------------------
+
+    NODISCARD Surface &GetTarget() { return target_; }
+    NODISCARD const PixelFormat &GetFormat() const { return format_; }
 
     private:
-    void FillScanline(u32 *dest, u32 count, u32 color);
-    NODISCARD FORCE_INLINE_F u32 PackColor(Color c) const;
+    void FillScanline(std::span<NativePixel> dest, NativePixel color);
 
     Surface &target_;
     PixelFormat format_;
-    u32 packed_color_;
+    NativePixel packed_color_;
 };
 
 }  // namespace Graphics
+
+#include "graphics/painter.tpp"
 
 #endif  // KERNEL_SRC_GRAPHICS_PAINTER_HPP_
