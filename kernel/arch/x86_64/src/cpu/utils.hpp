@@ -71,39 +71,4 @@ FAST_CALL void OsHangNoInterrupts()
  */
 FAST_CALL void InvokeInterrupt(const u8 idx) { __asm__ volatile("int %0" : : "N"(idx)); }
 
-/**
- * @brief CPU state container structure
- *
- * Holds values of all general-purpose registers for x86_64 CPU.
- */
-struct PACK CpuState final {
-    enum GeneralPurposeRegisters {
-        kRax,
-        kRbx,
-        kRcx,
-        kRdx,
-        kRsi,
-        kRdi,
-        kRbp,
-        kRsp,
-        kR8,
-        kR9,
-        kR10,
-        kR11,
-        kR12,
-        kR13,
-        kR14,
-        kR15,
-        kGprLast,
-    };
-
-    u64 general_purpose_registers[kGprLast];
-
-    void GetStateDesc(char *buff, size_t buff_size) const;
-
-    void DumpStateDesc() const;
-};
-
-[[nodiscard]] CpuState DumpCpuState();
-
 #endif  // KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_

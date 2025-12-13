@@ -14,14 +14,14 @@ _r10 equ 56
 _r11 equ 64
 _rbp equ 72
 
-; Size needed to save the registers on the stack
-_reg_size equ 8*10
+; Size needed to save the sysv registers on the stack
+_sysv_reg_size equ 8*10
 
 ; Shadow space required for C++ function calls
 _shadow_space equ 8*4
 
 ; Macro to save all volatile registers (SysV ABI) onto the stack.
-%macro push_regs 0
+%macro push_sysv_regs 0
     mov qword [rsp + _rax], rax
     mov qword [rsp + _rcx], rcx
     mov qword [rsp + _rdx], rdx
@@ -35,7 +35,7 @@ _shadow_space equ 8*4
 %endmacro
 
 ; Macro to restore all volatile registers (SysV ABI) from the stack.
-%macro pop_regs 0
+%macro pop_sysv_regs 0
     mov rax, qword [rsp + _rax]
     mov rcx, qword [rsp + _rcx]
     mov rdx, qword [rsp + _rdx]
@@ -48,22 +48,65 @@ _shadow_space equ 8*4
     mov rbp, qword [rsp + _rbp]
 %endmacro
 
+; Size needed to save the registers on the stack
+_all_reg_size equ 8*15
+
+; Macro to save ALL general purpose registers onto the stack.
+; Useful for Interrupt Service Routines (ISRs) or kernel panic dumps.
+%macro push_all_regs 0
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+%endmacro
+
+; Macro to restore ALL general purpose registers from the stack.
+; Must be called in the reverse order of push_all_regs.
+%macro pop_all_regs 0
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+%endmacro
+
 ; Macro for CPU exceptions that DO NOT push an error code.
 ; A dummy error code is pushed to create a consistent stack frame.
 ; Calls 'HandleException(u16 lirq, ExceptionData* data)'.
 %macro exception_wrapper 1
 isr_wrapper_%+%1:
     push 0                      ; Push a dummy error code for alignment.
-    sub rsp, _reg_size          ; Allocate space for saving registers.
-    push_regs                   ; Save registers.
+    sub rsp, _all_reg_size          ; Allocate space for saving registers.
+    push_all_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _reg_size] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space + _all_reg_size] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
-    pop_regs                    ; Restore registers.
-    add rsp, _reg_size          ; Deallocate register save space.
+    pop_all_regs                    ; Restore registers.
+    add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                  ; Pop dummy error code.
     iretq
 %endmacro
@@ -72,16 +115,16 @@ isr_wrapper_%+%1:
 ; Calls 'HandleException(u16 lirq, ExceptionData* data)'.
 %macro exception_error_wrapper 1
 isr_wrapper_%+%1:
-    sub rsp, _reg_size          ; Allocate space for saving registers.
-    push_regs                   ; Save registers.
+    sub rsp, _all_reg_size          ; Allocate space for saving registers.
+    push_sysv_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _reg_size] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space + _all_reg_size] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
-    pop_regs                    ; Restore registers.
-    add rsp, _reg_size          ; Deallocate register save space.
+    pop_all_regs                    ; Restore registers.
+    add rsp, _all_reg_size          ; Deallocate register save space.
     iretq
 %endmacro
 
@@ -89,15 +132,15 @@ isr_wrapper_%+%1:
 ; Calls a handler with the signature 'void handler(u16 lirq)'.
 %macro interrupt_wrapper 3 ; %1: Logical IRQ, %2: idt idx %3: C handler function
 isr_wrapper_%+%2:
-    sub rsp, _reg_size          ; Allocate space for saving registers.
-    push_regs                   ; Save registers.
+    sub rsp, _sysv_reg_size          ; Allocate space for saving registers.
+    push_sysv_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space for function calls.
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
     call %3                     ; Call the specific ISR handler.
     add rsp, _shadow_space      ; Deallocate shadow space.
-    pop_regs                    ; Restore registers.
-    add rsp, _reg_size          ; Deallocate register save space.
+    pop_sysv_regs                    ; Restore registers.
+    add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                       ; Return from interrupt.
 %endmacro
 

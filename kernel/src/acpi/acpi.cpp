@@ -21,9 +21,6 @@ static void SanitizeRsdp_(const BootArguments &args)
             uint8_t Revision;
             uint32_t RsdtAddress;
         };
-
-        TRACE_FATAL_BOOT("XDD: %llu", *reinterpret_cast<const u64 *>(args.raw_args.rsdp_struct));
-
         R_ASSERT_NOT_ZERO(reinterpret_cast<const RSDP_t *>(args.raw_args.rsdp_struct)->RsdtAddress);
         return;
     }
@@ -38,7 +35,7 @@ static void SanitizeRsdp_(const BootArguments &args)
         uint64_t XsdtAddress;
         uint8_t ExtendedChecksum;
         uint8_t reserved[3];
-    } __attribute__((packed));
+    };
 
     R_ASSERT_NOT_ZERO(reinterpret_cast<const XSDP_t *>(args.raw_args.rsdp_struct)->XsdtAddress);
 }

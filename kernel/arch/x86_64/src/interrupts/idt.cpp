@@ -47,21 +47,55 @@ NO_RET void DefaultInterruptHandler(const u8 idt_idx)
     hal::KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
 }
 
-NO_RET FAST_CALL void DefaultExceptionHandler(IsrErrorStackFrame *stack_frame, const u8 idt_idx)
+static void FormatIsrRegisters(
+    const IsrErrorStackFrame *stack_frame, char *buff, const size_t buff_size
+)
+{
+    static constexpr const char *kRegNames[] = {"rip", "rflags", "rsp", "rax", "rbx", "rcx",
+                                                "rdx", "rsi",    "rdi", "rbp", "r8",  "r9",
+                                                "r10", "r11",    "r12", "r13", "r14", "r15"};
+
+    const uint64_t reg_values[] = {
+        stack_frame->isr_stack_frame.rip, stack_frame->isr_stack_frame.rflags,
+        stack_frame->isr_stack_frame.rsp, stack_frame->registers.rax,
+        stack_frame->registers.rbx,       stack_frame->registers.rcx,
+        stack_frame->registers.rdx,       stack_frame->registers.rsi,
+        stack_frame->registers.rdi,       stack_frame->registers.rbp,
+        stack_frame->registers.r8,        stack_frame->registers.r9,
+        stack_frame->registers.r10,       stack_frame->registers.r11,
+        stack_frame->registers.r12,       stack_frame->registers.r13,
+        stack_frame->registers.r14,       stack_frame->registers.r15
+    };
+
+    size_t offset         = 0;
+    const size_t num_regs = sizeof(reg_values) / sizeof(reg_values[0]);
+
+    for (size_t i = 0; i < num_regs && offset < buff_size; ++i) {
+        int written = snprintf(
+            buff + offset, buff_size - offset, "%s: 0x%016llx\n", kRegNames[i],
+            static_cast<unsigned long long>(reg_values[i])
+        );
+
+        if (written < 0) {
+            break;
+        }
+
+        if (offset + written >= buff_size) {
+            break;
+        }
+
+        offset += written;
+    }
+}
+
+NO_RET FAST_CALL void DefaultExceptionHandler(
+    const IsrErrorStackFrame *stack_frame, const u8 idt_idx
+)
 {
     static constexpr size_t kStateMsgSize = 1024;
 
-    CpuState cpu_state = DumpCpuState();
-
-    /* restore relevant registers to the state before printing msg */
-    cpu_state.general_purpose_registers[CpuState::kRdi] =
-        *(reinterpret_cast<u64 *>(stack_frame) - 1);
-    cpu_state.general_purpose_registers[CpuState::kRsi] =
-        *(reinterpret_cast<u64 *>(stack_frame) - 2);
-    cpu_state.general_purpose_registers[CpuState::kRsp] = stack_frame->isr_stack_frame.rsp;
-
     char state_buffer[kStateMsgSize];
-    cpu_state.GetStateDesc(state_buffer, kStateMsgSize);
+    FormatIsrRegisters(stack_frame, state_buffer, kStateMsgSize);
 
     const char *exception_msg = GetExceptionMsg(idt_idx);
     R_ASSERT_NOT_NULL(exception_msg);
