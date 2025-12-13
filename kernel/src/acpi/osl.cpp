@@ -6,21 +6,15 @@
 #include <hal/constants.hpp>
 #include <modules/global_state.hpp>
 #include <modules/hardware.hpp>
-#include <modules/memory.hpp>
 #include <modules/timing.hpp>
 #include <todo.hpp>
 #include "trace_framework.hpp"
 
 uacpi_status uacpi_kernel_get_rsdp(uacpi_phys_addr *out_rsdp_address)
 {
-    const auto phys = MemoryModule::Get().GetMmu().Translate(
-        &MemoryModule::Get().GetKernelAddressSpace(),
+    *out_rsdp_address = reinterpret_cast<uacpi_phys_addr>(
         HardwareModule::Get().GetACPIController().GetRsdpAddress()
     );
-    ASSERT_TRUE(static_cast<bool>(phys));
-
-    *out_rsdp_address = reinterpret_cast<u64>(phys.value());
-    TRACE_FATAL_BOOT("Rsdp address: %p", *out_rsdp_address);
     return UACPI_STATUS_OK;
 }
 
