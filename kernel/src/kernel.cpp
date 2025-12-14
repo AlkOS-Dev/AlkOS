@@ -6,6 +6,7 @@
 
 /* internal includes */
 #include <hal/debug.hpp>
+#include <hal/terminal.hpp>
 
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
