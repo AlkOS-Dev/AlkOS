@@ -86,7 +86,6 @@ NO_RET FAST_CALL void DefaultExceptionHandler(
     const IsrErrorStackFrame *stack_frame, const u8 idt_idx
 )
 {
-    hal::TerminalWriteString("XDXD\n");
     static constexpr size_t kStateMsgSize = 1024;
 
     char state_buffer[kStateMsgSize];
