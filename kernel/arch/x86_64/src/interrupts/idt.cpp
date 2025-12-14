@@ -126,27 +126,6 @@ void SimpleIrqHandler(intr::LitHwEntry &entry)
     LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 }
 
-void TestIsr(intr::LitSwEntry &entry)
-{
-    LogIrqReceived(entry.hardware_irq, entry.logical_irq);
-
-    /* pollute all registers possible */
-    __asm__ volatile("movq $-1, %%rax" : : : "rax");
-    __asm__ volatile("movq $-1, %%rbx" : : : "rbx");
-    __asm__ volatile("movq $-1, %%rcx" : : : "rcx");
-    __asm__ volatile("movq $-1, %%rdx" : : : "rdx");
-    __asm__ volatile("movq $-1, %%rsi" : : : "rsi");
-    __asm__ volatile("movq $-1, %%rdi" : : : "rdi");
-    __asm__ volatile("movq $-1, %%r8" : : : "r8");
-    __asm__ volatile("movq $-1, %%r9" : : : "r9");
-    __asm__ volatile("movq $-1, %%r10" : : : "r10");
-    __asm__ volatile("movq $-1, %%r11" : : : "r11");
-    __asm__ volatile("movq $-1, %%r12" : : : "r12");
-    __asm__ volatile("movq $-1, %%r13" : : : "r13");
-    __asm__ volatile("movq $-1, %%r14" : : : "r14");
-    __asm__ volatile("movq $-1, %%r15" : : : "r15");
-}
-
 void TimerIsr(intr::LitHwEntry &)
 {
     // LogIrqReceived(entry.hardware_irq, entry.logical_irq);

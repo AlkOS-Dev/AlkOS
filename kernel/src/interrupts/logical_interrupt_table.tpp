@@ -18,12 +18,12 @@ LogicalInterruptTable<
     }
 
     for (u16 irq = 0; irq < kNumHardwareExceptions; irq++) {
-        hardware_exception_table_[irq].logical_irq = irq;
+        hardware_interrupt_table_[irq].logical_irq = irq;
         exception_table_[irq].hardware_irq         = kUnmappedIrq;
     }
 
     for (u16 irq = 0; irq < kNumSoftwareExceptions; irq++) {
-        software_exception_table_[irq].logical_irq = irq;
+        software_interrupt_table_[irq].logical_irq = irq;
         exception_table_[irq].hardware_irq         = kUnmappedIrq;
     }
 }

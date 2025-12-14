@@ -13,6 +13,11 @@ _r9  equ 48
 _r10 equ 56
 _r11 equ 64
 _rbp equ 72
+_rbx equ 80
+_r12 equ 88
+_r13 equ 96
+_r14 equ 104
+_r15 equ 112
 
 ; Size needed to save the sysv registers on the stack
 _sysv_reg_size equ 8*10
@@ -54,41 +59,41 @@ _all_reg_size equ 8*15
 ; Macro to save ALL general purpose registers onto the stack.
 ; Useful for Interrupt Service Routines (ISRs) or kernel panic dumps.
 %macro push_all_regs 0
-    push rax
-    push rbx
-    push rcx
-    push rdx
-    push rsi
-    push rdi
-    push rbp
-    push r8
-    push r9
-    push r10
-    push r11
-    push r12
-    push r13
-    push r14
-    push r15
+    mov qword [rsp + _rax], rax
+    mov qword [rsp + _rcx], rcx
+    mov qword [rsp + _rdx], rdx
+    mov qword [rsp + _rsi], rsi
+    mov qword [rsp + _rdi], rdi
+    mov qword [rsp + _r8], r8
+    mov qword [rsp + _r9], r9
+    mov qword [rsp + _r10], r10
+    mov qword [rsp + _r11], r11
+    mov qword [rsp + _rbp], rbp
+    mov qword [rsp + _rbx], rbx
+    mov qword [rsp + _r12], r12
+    mov qword [rsp + _r13], r13
+    mov qword [rsp + _r14], r14
+    mov qword [rsp + _r15], r15
 %endmacro
 
 ; Macro to restore ALL general purpose registers from the stack.
 ; Must be called in the reverse order of push_all_regs.
 %macro pop_all_regs 0
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    pop r11
-    pop r10
-    pop r9
-    pop r8
-    pop rbp
-    pop rdi
-    pop rsi
-    pop rdx
-    pop rcx
-    pop rbx
-    pop rax
+    mov rax, qword [rsp + _rax]
+    mov rcx, qword [rsp + _rcx]
+    mov rdx, qword [rsp + _rdx]
+    mov rsi, qword [rsp + _rsi]
+    mov rdi, qword [rsp + _rdi]
+    mov r8, qword [rsp + _r8]
+    mov r9, qword [rsp + _r9]
+    mov r10, qword [rsp + _r10]
+    mov r11, qword [rsp + _r11]
+    mov rbp, qword [rsp + _rbp]
+    mov rbx, qword [rsp + _rbx]
+    mov r12, qword [rsp + _r12]
+    mov r13, qword [rsp + _r13]
+    mov r14, qword [rsp + _r14]
+    mov r15, qword [rsp + _r15]
 %endmacro
 
 ; Macro for CPU exceptions that DO NOT push an error code.
@@ -116,7 +121,7 @@ isr_wrapper_%+%1:
 %macro exception_error_wrapper 1
 isr_wrapper_%+%1:
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
-    push_sysv_regs                   ; Save registers.
+    push_all_regs                   ; Save registers.
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.

@@ -6,21 +6,21 @@
 #include <types.hpp>
 
 struct PACK IsrRegisters {
-    uint64_t r15;
-    uint64_t r14;
-    uint64_t r13;
-    uint64_t r12;
-    uint64_t r11;
-    uint64_t r10;
-    uint64_t r9;
-    uint64_t r8;
-    uint64_t rbp;
-    uint64_t rdi;
-    uint64_t rsi;
-    uint64_t rdx;
-    uint64_t rcx;
-    uint64_t rbx;
     uint64_t rax;
+    uint64_t rcx;
+    uint64_t rdx;
+    uint64_t rsi;
+    uint64_t rdi;
+    uint64_t r8;
+    uint64_t r9;
+    uint64_t r10;
+    uint64_t r11;
+    uint64_t rbp;
+    uint64_t rbx;
+    uint64_t r12;
+    uint64_t r13;
+    uint64_t r14;
+    uint64_t r15;
 };
 
 struct PACK IsrStackFrame {
@@ -28,6 +28,7 @@ struct PACK IsrStackFrame {
     u64 cs;
     u64 rflags;
     u64 rsp;
+    u64 ss;
 };
 
 struct PACK IsrErrorStackFrame {
@@ -44,7 +45,7 @@ static constexpr size_t kNumSoftwareInterrupts  = 32;
 static constexpr size_t kNumX86_64CpuExceptions = 32;
 static constexpr size_t kNumX86_64Irqs          = 16;
 
-struct ExceptionData : public IsrErrorStackFrame {
+struct ExceptionData : IsrErrorStackFrame {
 };
 
 /* Mapping params */
