@@ -1,5 +1,5 @@
-#ifndef TESTS_HOST_MOCKS_DEFINES_HPP_
-#define TESTS_HOST_MOCKS_DEFINES_HPP_
+#ifndef TESTS_LIBCPP_MOCKS_DEFINES_HPP_
+#define TESTS_LIBCPP_MOCKS_DEFINES_HPP_
 
 #include <cassert>
 #include <cstddef>
@@ -139,4 +139,4 @@ struct empty_t {
 };
 #define UNIQUE_EMPTY empty_t<__COUNTER__>
 
-#endif  // TESTS_HOST_MOCKS_DEFINES_HPP_
+#endif  // TESTS_LIBCPP_MOCKS_DEFINES_HPP_

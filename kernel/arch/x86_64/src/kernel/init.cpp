@@ -64,7 +64,6 @@ void ArchInit(const RawBootArguments &)
     EnableSSE();
     EnableAVX();
 
-    hal::DebugStack();
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
 

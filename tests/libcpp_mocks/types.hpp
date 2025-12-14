@@ -1,5 +1,5 @@
-#ifndef TESTS_HOST_MOCKS_TYPES_HPP_
-#define TESTS_HOST_MOCKS_TYPES_HPP_
+#ifndef TESTS_LIBCPP_MOCKS_TYPES_HPP_
+#define TESTS_LIBCPP_MOCKS_TYPES_HPP_
 
 #include <cstddef>
 #include <cstdint>
@@ -21,4 +21,4 @@ using iptr = intptr_t;
 using f32 = float;
 using f64 = double;
 
-#endif  // TESTS_HOST_MOCKS_TYPES_HPP_
+#endif  // TESTS_LIBCPP_MOCKS_TYPES_HPP_

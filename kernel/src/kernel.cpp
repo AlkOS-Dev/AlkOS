@@ -6,6 +6,7 @@
 
 /* internal includes */
 #include <hal/debug.hpp>
+#include <hal/terminal.hpp>
 
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
@@ -56,7 +57,6 @@ extern "C" void KernelMain(const hal::RawBootArguments *raw_args)
     ASSERT_NOT_NULL(raw_args, "Raw boot arguments are null");
     TRACE_INFO_GENERAL("Running kernel initialization...");
 
-    hal::DebugStack();
     KernelInit(*raw_args);
 
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {

@@ -17,7 +17,7 @@ struct alignas(64) TransitionData {
     alignas(64) VirtualMemoryManager::VmmState vmm_state;
 };
 
-struct alignas(64) KernelArguments {
+struct PACK alignas(64) KernelArguments {
     /// Kernel Mem Layout
     u64 kernel_start_addr;
     u64 kernel_end_addr;

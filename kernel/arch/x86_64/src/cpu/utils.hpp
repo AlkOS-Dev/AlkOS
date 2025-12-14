@@ -2,7 +2,10 @@
 #define KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 
 #include <defines.hpp>
+#include <template/rolled_switch.hpp>
 #include <types.hpp>
+
+#include "array.hpp"
 #include "include/io.hpp"
 
 /**
@@ -69,41 +72,133 @@ FAST_CALL void OsHangNoInterrupts()
  *
  * Executes INT instruction with specified vector number.
  */
-FAST_CALL void InvokeInterrupt(const u8 idx) { __asm__ volatile("int %0" : : "N"(idx)); }
+template <const u8 idx>
+FAST_CALL void InvokeInterrupt()
+{
+    __asm__ volatile("int %0" : : "N"(idx));
+}
 
-/**
- * @brief CPU state container structure
- *
- * Holds values of all general-purpose registers for x86_64 CPU.
- */
-struct PACK CpuState final {
-    enum GeneralPurposeRegisters {
-        kRax,
-        kRbx,
-        kRcx,
-        kRdx,
-        kRsi,
-        kRdi,
-        kRbp,
-        kRsp,
-        kR8,
-        kR9,
-        kR10,
-        kR11,
-        kR12,
-        kR13,
-        kR14,
-        kR15,
-        kGprLast,
-    };
+FAST_CALL void InvokeInterruptDynamic(const u8 idx)
+{
+    template_lib::RolledSwitch<u8, 64, 1>(
+        []<const u64 idx> {
+            return InvokeInterrupt<idx>();
+        },
+        idx
+    );
+}
 
-    u64 general_purpose_registers[kGprLast];
-
-    void GetStateDesc(char *buff, size_t buff_size) const;
-
-    void DumpStateDesc() const;
+enum RegisterIdx : size_t {
+    kRegRax = 0,
+    kRegRbx,
+    kRegRcx,
+    kRegRdx,
+    kRegRsi,
+    kRegRdi,
+    kRegRbp,
+    kRegRsp,
+    kRegR8,
+    kRegR9,
+    kRegR10,
+    kRegR11,
+    kRegR12,
+    kRegR13,
+    kRegR14,
+    kRegR15,
+    kRegRip,
+    kRegRflags,
+    kRegCr0,
+    kRegCr2,
+    kRegCr3,
+    kRegCr4,
+    kRegCount
 };
 
-[[nodiscard]] CpuState DumpCpuState();
+union DumpedRegisters {
+    struct {
+        u64 rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp;
+        u64 r8, r9, r10, r11, r12, r13, r14, r15;
+        u64 rip;
+        u64 rflags;
+        u64 cr0, cr2, cr3, cr4;
+    };
+
+    std::array<u64, 22> flat;
+};
+
+FAST_CALL void DumpRegisters(DumpedRegisters *regs)
+{
+    __asm__ volatile(
+        "movq %%rax, 0x00(%0) \n"
+        "movq %%rbx, 0x08(%0) \n"
+        "movq %%rcx, 0x10(%0) \n"
+        "movq %%rdx, 0x18(%0) \n"
+        "movq %%rsi, 0x20(%0) \n"
+        "movq %%rdi, 0x28(%0) \n"
+        "movq %%rbp, 0x30(%0) \n"
+        "movq %%rsp, 0x38(%0) \n"
+
+        "movq %%r8,  0x40(%0) \n"
+        "movq %%r9,  0x48(%0) \n"
+        "movq %%r10, 0x50(%0) \n"
+        "movq %%r11, 0x58(%0) \n"
+        "movq %%r12, 0x60(%0) \n"
+        "movq %%r13, 0x68(%0) \n"
+        "movq %%r14, 0x70(%0) \n"
+        "movq %%r15, 0x78(%0) \n"
+
+        "lea (%%rip), %%rax   \n"
+        "movq %%rax, 0x80(%0) \n"
+
+        "pushfq               \n"
+        "popq %%rax           \n"
+        "movq %%rax, 0x88(%0) \n"
+
+        "movq %%cr0, %%rax    \n"
+        "movq %%rax, 0x90(%0) \n"
+
+        "movq %%cr2, %%rax    \n"
+        "movq %%rax, 0x98(%0) \n"
+
+        "movq %%cr3, %%rax    \n"
+        "movq %%rax, 0xA0(%0) \n"
+
+        "movq %%cr4, %%rax    \n"
+        "movq %%rax, 0xA8(%0) \n"
+
+        :
+        : "r"(regs)
+        : "rax", "memory"
+    );
+}
+
+FAST_CALL void DumpGeneralRegisters(DumpedRegisters *regs)
+{
+    __asm__ volatile(
+        "movq %%rax, 0x00(%0) \n"
+        "movq %%rbx, 0x08(%0) \n"
+        "movq %%rcx, 0x10(%0) \n"
+        "movq %%rdx, 0x18(%0) \n"
+        "movq %%rsi, 0x20(%0) \n"
+        "movq %%rdi, 0x28(%0) \n"
+        "movq %%rbp, 0x30(%0) \n"
+        "movq %%rsp, 0x38(%0) \n"
+
+        "movq %%r8,  0x40(%0) \n"
+        "movq %%r9,  0x48(%0) \n"
+        "movq %%r10, 0x50(%0) \n"
+        "movq %%r11, 0x58(%0) \n"
+        "movq %%r12, 0x60(%0) \n"
+        "movq %%r13, 0x68(%0) \n"
+        "movq %%r14, 0x70(%0) \n"
+        "movq %%r15, 0x78(%0) \n"
+
+        :
+        : "r"(regs)
+        : "rax", "memory"
+    );
+}
+
+void TraceDumpedRegisters(const DumpedRegisters *regs);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_

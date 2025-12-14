@@ -9,9 +9,6 @@
           ; GCC compiler global destructor support
           extern _fini
 
-          ; Pre-Kernel Initialization that couldn't be in loaders
-          extern PreKernelInit
-
           ; Kernel Entry Point
           extern KernelMain
 
