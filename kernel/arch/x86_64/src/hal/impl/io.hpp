@@ -26,4 +26,4 @@ T IoRead(size_t addr)
 
 }  // namespace arch
 
-#endif /* KERNEL_ARCH_X86_64_SRC_HAL_IMPL_IO_HPP_ */
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_IO_HPP_

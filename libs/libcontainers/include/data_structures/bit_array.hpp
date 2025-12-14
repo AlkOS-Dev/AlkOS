@@ -1,7 +1,8 @@
-#ifndef LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
-#define LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
 
 #include <stddef.h>
+#include <optional.hpp>
 #include "assert.h"
 #include "bit.hpp"
 #include "string.h"
@@ -144,6 +145,35 @@ class PACK BitArray final
         return *reinterpret_cast<const u32 *>(storage_);
     }
 
+    // std::numeric_limits<size_t>::max() for failure
+    template <bool value = false>
+    NODISCARD FORCE_INLINE_F size_t FindFirst()
+    {
+        const StorageT empty_unit =
+            value ? std::numeric_limits<StorageT>::min() : std::numeric_limits<StorageT>::max();
+
+        for (size_t i = 0; i < kNumStorageT; ++i) {
+            if (storage_[i] == empty_unit) {
+                continue;
+            }
+
+            const size_t start = i * kStorageTBits;
+            const size_t local_offset =
+                value ? std::countr_zero(storage_[i]) : std::countr_one(storage_[i]);
+            return start + local_offset;
+        }
+
+        return std::numeric_limits<size_t>::max();
+    }
+
+    NODISCARD FORCE_INLINE_F size_t FindFirst(const bool value = false)
+    {
+        if (value) {
+            return FindFirst<true>();
+        }
+        return FindFirst<false>();
+    }
+
     // ------------------------------
     // Class fields
     // ------------------------------
@@ -154,4 +184,4 @@ class PACK BitArray final
 
 }  // namespace data_structures
 
-#endif  // LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_
+#endif  // LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_BIT_ARRAY_HPP_

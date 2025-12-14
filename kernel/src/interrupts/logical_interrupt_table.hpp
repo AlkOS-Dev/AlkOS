@@ -87,6 +87,22 @@ class LogicalInterruptTable
     {
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         GetTable_<kInterruptType>()[lirq].handler_data = handler;
+
+        if constexpr (kInterruptType == InterruptType::kSoftwareInterrupt) {
+            software_interrupt_occupied_map_.SetTrue(lirq);
+        }
+    }
+
+    // std::numeric_limits<u16>::max() on fail
+    FORCE_INLINE_F u16 InstallSwIntrFirstFree(const SwHandler &handler)
+    {
+        const size_t lirq = software_interrupt_occupied_map_.FindFirst();
+        if (lirq == std::numeric_limits<size_t>::max()) {
+            return std::numeric_limits<u16>::max();
+        }
+
+        InstallInterruptHandler<InterruptType::kSoftwareInterrupt>(static_cast<u16>(lirq), handler);
+        return static_cast<u16>(lirq);
     }
 
     template <InterruptType kInterruptType>
@@ -102,6 +118,24 @@ class LogicalInterruptTable
         GetTable_<InterruptType::kHardwareInterrupt>()[lirq].driver = driver;
     }
 
+    template <InterruptType kInterruptType>
+    FORCE_INLINE_F InterruptHandlerEntry<kInterruptType> &GetEntry(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        return GetTable_<kInterruptType>()[lirq];
+    }
+
+    template <InterruptType kInterruptType>
+    FORCE_INLINE_F void UninstallEntry(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        GetTable_<kInterruptType>()[lirq].handler_data.handler = nullptr;
+
+        if constexpr (kInterruptType == InterruptType::kSoftwareInterrupt) {
+            software_interrupt_occupied_map_.SetFalse(lirq);
+        }
+    }
+
     // ------------------------------
     // Implementation
     // ------------------------------
@@ -113,9 +147,9 @@ class LogicalInterruptTable
         if constexpr (kInterruptType == InterruptType::kException) {
             return exception_table_;
         } else if constexpr (kInterruptType == InterruptType::kHardwareInterrupt) {
-            return hardware_exception_table_;
+            return hardware_interrupt_table_;
         } else if constexpr (kInterruptType == InterruptType::kSoftwareInterrupt) {
-            return software_exception_table_;
+            return software_interrupt_table_;
         } else {
             R_FAIL_ALWAYS("Invalid type provided");
         }
@@ -148,9 +182,10 @@ class LogicalInterruptTable
 
     InterruptHandlerEntry<InterruptType::kException> exception_table_[kNumExceptions];
     InterruptHandlerEntry<InterruptType::kHardwareInterrupt>
-        hardware_exception_table_[kNumHardwareExceptions];
+        hardware_interrupt_table_[kNumHardwareExceptions];
     InterruptHandlerEntry<InterruptType::kSoftwareInterrupt>
-        software_exception_table_[kNumSoftwareExceptions];
+        software_interrupt_table_[kNumSoftwareExceptions];
+    data_structures::BitArray<kNumSoftwareExceptions> software_interrupt_occupied_map_;
 };
 
 using LitType = LogicalInterruptTable<

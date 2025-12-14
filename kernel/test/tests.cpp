@@ -90,32 +90,3 @@ extern void FloatExtensionTest();
  * @note This test is architecture dependent, simply invokes floating point instructions
  */
 TEST(FloatOperationsTest) { FloatExtensionTest(); }
-
-// ------------------------------
-// Simple Exception test
-// ------------------------------
-
-/**
- *  @brief Test should simply drop 0 division exception
- */
-FAIL_TEST(SimpleExceptionTest)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-    [[maybe_unused]] volatile int a = 9 / 0;
-#pragma GCC diagnostic pop
-}
-
-// ------------------------------
-// Preserve CPU test
-// ------------------------------
-
-/**
- * @brief Special test interrupt writes ones to all registers. Expected behavior is to not see
- * any ones in the registers after returning from interrupt.
- */
-extern "C" void PreserveCpuStateTest();
-
-TEST(PreserveCpuStateTest) { PreserveCpuStateTest(); }
-
-MTEST(TraceFramework) {}

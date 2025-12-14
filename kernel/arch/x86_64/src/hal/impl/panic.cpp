@@ -1,7 +1,6 @@
 #include <autogen/feature_flags.h>
 #include <test_module/test_module.hpp>
 
-#include <hal/impl/terminal.hpp>
 #include "hal/impl/panic.hpp"
 
 #include "cpu/utils.hpp"

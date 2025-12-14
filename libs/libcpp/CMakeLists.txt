@@ -28,4 +28,5 @@ target_include_directories(alkos.libcpp.interface INTERFACE
 
 target_link_libraries(alkos.libcpp.interface INTERFACE
     alkos.libtemplate.interface
+    alkos.autogen.interface
 )

@@ -8,6 +8,7 @@ extern char stack_bottom;
 
 namespace arch
 {
+void Noop() { asm volatile("nop"); }
 
 void DebugStack()
 {
