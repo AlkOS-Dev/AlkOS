@@ -11,6 +11,8 @@
 
 #include <assert.h>
 #include <bit.hpp>
+#include <hal/terminal.hpp>
+
 #include "trace_framework.hpp"
 
 static constexpr u32 kStubTableSize = 64;
@@ -84,6 +86,7 @@ NO_RET FAST_CALL void DefaultExceptionHandler(
     const IsrErrorStackFrame *stack_frame, const u8 idt_idx
 )
 {
+    hal::TerminalWriteString("XDXD\n");
     static constexpr size_t kStateMsgSize = 1024;
 
     char state_buffer[kStateMsgSize];
