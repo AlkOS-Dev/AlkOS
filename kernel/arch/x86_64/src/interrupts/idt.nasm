@@ -107,7 +107,7 @@ isr_wrapper_%+%1:
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _all_reg_size] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_all_regs                    ; Restore registers.
@@ -125,7 +125,7 @@ isr_wrapper_%+%1:
     sub rsp, _shadow_space      ; Allocate shadow space.
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space + _all_reg_size] ; Arg2: pointer to stack frame.
+    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
     call HandleException
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_all_regs                    ; Restore registers.

@@ -67,23 +67,15 @@ static void FormatIsrRegisters(
         stack_frame->registers.r14,       stack_frame->registers.r15
     };
 
-    size_t offset         = 0;
-    const size_t num_regs = sizeof(reg_values) / sizeof(reg_values[0]);
-
+    size_t offset             = 0;
+    constexpr size_t num_regs = sizeof(reg_values) / sizeof(reg_values[0]);
     for (size_t i = 0; i < num_regs && offset < buff_size; ++i) {
         int written = snprintf(
             buff + offset, buff_size - offset, "%s: 0x%016llx\n", kRegNames[i],
             static_cast<unsigned long long>(reg_values[i])
         );
-
-        if (written < 0) {
-            break;
-        }
-
-        if (offset + written >= buff_size) {
-            break;
-        }
-
+        ASSERT_GT(written, 0);
+        ASSERT_LT(offset + written, buff_size);
         offset += written;
     }
 }

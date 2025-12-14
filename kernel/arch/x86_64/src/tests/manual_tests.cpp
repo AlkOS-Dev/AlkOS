@@ -6,6 +6,8 @@
  */
 MTEST(VerifyDefaultExceptionMsg)
 {
-    const auto ptr = reinterpret_cast<u64 *>(~static_cast<u64>(0));
-    ++(*ptr);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdiv-by-zero"
+    [[maybe_unused]] volatile int a = 9 / 0;
+#pragma GCC diagnostic pop
 }

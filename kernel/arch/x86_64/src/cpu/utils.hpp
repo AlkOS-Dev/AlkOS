@@ -172,4 +172,33 @@ FAST_CALL void DumpRegisters(DumpedRegisters *regs)
     );
 }
 
+FAST_CALL void DumpGeneralRegisters(DumpedRegisters *regs)
+{
+    __asm__ volatile(
+        "movq %%rax, 0x00(%0) \n"
+        "movq %%rbx, 0x08(%0) \n"
+        "movq %%rcx, 0x10(%0) \n"
+        "movq %%rdx, 0x18(%0) \n"
+        "movq %%rsi, 0x20(%0) \n"
+        "movq %%rdi, 0x28(%0) \n"
+        "movq %%rbp, 0x30(%0) \n"
+        "movq %%rsp, 0x38(%0) \n"
+
+        "movq %%r8,  0x40(%0) \n"
+        "movq %%r9,  0x48(%0) \n"
+        "movq %%r10, 0x50(%0) \n"
+        "movq %%r11, 0x58(%0) \n"
+        "movq %%r12, 0x60(%0) \n"
+        "movq %%r13, 0x68(%0) \n"
+        "movq %%r14, 0x70(%0) \n"
+        "movq %%r15, 0x78(%0) \n"
+
+        :
+        : "r"(regs)
+        : "rax", "memory"
+    );
+}
+
+void TraceDumpedRegisters(const DumpedRegisters *regs);
+
 #endif  // KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
