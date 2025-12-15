@@ -318,4 +318,4 @@ static constexpr unsigned char drdos8x8_psfu[] = {
 };
 static constexpr unsigned int drdos8x8_psfu_len = 4983;
 
-#endif /* KERNEL_SRC_GRAPHICS_FONTS_DRDOS8X8_HPP_ */
+#endif  // KERNEL_SRC_GRAPHICS_FONTS_DRDOS8X8_HPP_

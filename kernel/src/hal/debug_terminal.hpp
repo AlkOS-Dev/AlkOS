@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_
+#ifndef KERNEL_SRC_HAL_DEBUG_TERMINAL_HPP_
+#define KERNEL_SRC_HAL_DEBUG_TERMINAL_HPP_
 
 #include <hal/impl/debug_terminal.hpp>
 
@@ -31,4 +31,4 @@ WRAP_CALL size_t DebugTerminalReadLine(char *const buffer, const size_t buffer_s
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_DEBUG_TERMINAL_HPP_
+#endif  // KERNEL_SRC_HAL_DEBUG_TERMINAL_HPP_

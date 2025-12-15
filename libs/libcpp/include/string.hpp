@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_STRING_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_STRING_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_STRING_HPP_
+#define LIBS_LIBCPP_INCLUDE_STRING_HPP_
 
 // #include <basic_string.hpp>
 #include <basic_string_view.hpp>
@@ -21,4 +21,4 @@ using u32string_view = basic_string_view<char32_t>;
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_STRING_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_STRING_HPP_

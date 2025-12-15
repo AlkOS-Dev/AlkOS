@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_LOCAL_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_LOCAL_HPP_
+#ifndef KERNEL_SRC_HARDWARE_CORE_LOCAL_HPP_
+#define KERNEL_SRC_HARDWARE_CORE_LOCAL_HPP_
 
 #include "hal/constants.hpp"
 #include "hal/core.hpp"
@@ -17,4 +17,4 @@ FAST_CALL CoreLocal &GetCoreLocalData()
 }
 }  // namespace hardware
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_LOCAL_HPP_
+#endif  // KERNEL_SRC_HARDWARE_CORE_LOCAL_HPP_

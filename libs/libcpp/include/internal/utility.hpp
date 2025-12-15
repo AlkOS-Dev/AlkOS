@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_UTILITY_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_UTILITY_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_INTERNAL_UTILITY_HPP_
+#define LIBS_LIBCPP_INCLUDE_INTERNAL_UTILITY_HPP_
 
 #include <initializer_list.hpp>
 
@@ -35,4 +35,4 @@ constexpr const E *data(std::initializer_list<E> il) noexcept
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INTERNAL_UTILITY_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_INTERNAL_UTILITY_HPP_

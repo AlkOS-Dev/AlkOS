@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_
-#define LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_
+#ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_
+#define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_
 
 #include <bit.hpp>
 #include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
@@ -341,4 +341,4 @@ class Registry
 
 }  // namespace data_structures
 
-#endif  // LIBS_LIBCPP_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_
+#endif  // LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_HASH_MAPS_HPP_

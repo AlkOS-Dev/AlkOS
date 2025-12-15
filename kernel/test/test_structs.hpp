@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_TEST_TEST_STRUCTS_HPP_
-#define ALKOS_KERNEL_TEST_TEST_STRUCTS_HPP_
+#ifndef KERNEL_TEST_TEST_STRUCTS_HPP_
+#define KERNEL_TEST_TEST_STRUCTS_HPP_
 
 class MoveOnlyInt
 {
@@ -87,4 +87,4 @@ struct ComplexType {
     }
 };
 
-#endif  // ALKOS_KERNEL_TEST_TEST_STRUCTS_HPP_
+#endif  // KERNEL_TEST_TEST_STRUCTS_HPP_

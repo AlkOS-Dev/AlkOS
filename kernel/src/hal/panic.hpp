@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_
+#ifndef KERNEL_SRC_HAL_PANIC_HPP_
+#define KERNEL_SRC_HAL_PANIC_HPP_
 
 #include <hal/impl/panic.hpp>
 #include "trace_framework.hpp"
@@ -35,4 +35,4 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_PANIC_HPP_
+#endif  // KERNEL_SRC_HAL_PANIC_HPP_

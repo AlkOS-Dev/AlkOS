@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_LITERALS_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_LITERALS_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_LITERALS_HPP_
+#define LIBS_LIBCPP_INCLUDE_LITERALS_HPP_
 
 #include <string.hpp>
 
@@ -44,4 +44,4 @@ NODISCARD constexpr wstring_view operator""sv(const wchar_t *str, size_t len) no
 
 }  // namespace std::literals
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_LITERALS_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_LITERALS_HPP_

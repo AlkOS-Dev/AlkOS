@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_INTR_PARSER_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_INTR_PARSER_HPP_
+#ifndef KERNEL_SRC_HAL_INTR_PARSER_HPP_
+#define KERNEL_SRC_HAL_INTR_PARSER_HPP_
 
 #include "hal/impl/intr_parser.hpp"
 
@@ -10,4 +10,4 @@ using arch::ParsePageFaultData;
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_INTR_PARSER_HPP_
+#endif  // KERNEL_SRC_HAL_INTR_PARSER_HPP_

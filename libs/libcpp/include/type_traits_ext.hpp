@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_EXT_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_EXT_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_EXT_HPP_
+#define LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_EXT_HPP_
 
 #include <type_traits.hpp>
 
@@ -15,4 +15,4 @@ using conditional_const_t = typename conditional_const<B, T>::type;
 
 }  // namespace type_traits_ext
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_EXT_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_EXT_HPP_

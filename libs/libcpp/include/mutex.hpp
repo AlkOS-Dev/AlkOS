@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_MUTEX_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_MUTEX_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_MUTEX_HPP_
+#define LIBS_LIBCPP_INCLUDE_MUTEX_HPP_
 
 #include "concepts_ext.hpp"
 #include "template_lib.hpp"
@@ -38,4 +38,4 @@ class lock_guard final : template_lib::NoCopy
 };
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_MUTEX_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_MUTEX_HPP_

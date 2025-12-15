@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_INTERRUPT_PARAMS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_INTERRUPT_PARAMS_HPP_
+#ifndef KERNEL_SRC_HAL_INTERRUPT_PARAMS_HPP_
+#define KERNEL_SRC_HAL_INTERRUPT_PARAMS_HPP_
 
 #include <hal/impl/interrupt_params.hpp>
 
@@ -17,4 +17,4 @@ static constexpr u16 kPageFaultExcLirq = arch::kPageFaultExcLirq;
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_INTERRUPT_PARAMS_HPP_
+#endif  // KERNEL_SRC_HAL_INTERRUPT_PARAMS_HPP_

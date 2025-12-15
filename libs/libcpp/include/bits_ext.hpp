@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_BITS_EXT_HPP_
+#define LIBS_LIBCPP_INCLUDE_BITS_EXT_HPP_
 
 #include <stdint.h>
 #include "assert.h"
@@ -214,4 +214,4 @@ FAST_CALL constexpr bool IsPowerOfTwo(const NumT n)
     return n > 0 && (n & (n - 1)) == 0;
 }
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BITS_EXT_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_BITS_EXT_HPP_

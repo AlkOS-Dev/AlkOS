@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_API_INTR_PARSER_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_API_INTR_PARSER_HPP_
+#ifndef KERNEL_SRC_HAL_API_INTR_PARSER_HPP_
+#define KERNEL_SRC_HAL_API_INTR_PARSER_HPP_
 
 /*
  * This file contains functions that parse/translate data given
@@ -26,4 +26,4 @@ Mem::PageFaultData ParsePageFaultData(const ExceptionData &ed);
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_API_INTR_PARSER_HPP_
+#endif  // KERNEL_SRC_HAL_API_INTR_PARSER_HPP_

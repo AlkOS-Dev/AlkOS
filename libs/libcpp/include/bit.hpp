@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_BIT_HPP_
+#define LIBS_LIBCPP_INCLUDE_BIT_HPP_
 
 #include <bits_ext.hpp>
 #include <concepts.hpp>
@@ -173,4 +173,4 @@ TODO_LIBCPP_COMPLIANCE
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_BIT_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_BIT_HPP_

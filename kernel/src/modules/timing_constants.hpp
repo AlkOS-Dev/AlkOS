@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MODULES_TIMING_CONSTANTS_HPP_
-#define ALKOS_KERNEL_INCLUDE_MODULES_TIMING_CONSTANTS_HPP_
+#ifndef KERNEL_SRC_MODULES_TIMING_CONSTANTS_HPP_
+#define KERNEL_SRC_MODULES_TIMING_CONSTANTS_HPP_
 
 #include <sys/time.h>
 
@@ -16,4 +16,4 @@ static_assert(kClockTicksInSecondSize == static_cast<size_t>(ClockType::kLastClo
 
 }  // namespace timing_constants
 
-#endif  // ALKOS_KERNEL_INCLUDE_MODULES_TIMING_CONSTANTS_HPP_
+#endif  // KERNEL_SRC_MODULES_TIMING_CONSTANTS_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_CONCEPTS_EXT_HPP_
+#define LIBS_LIBCPP_INCLUDE_CONCEPTS_EXT_HPP_
 
 #include <concepts.hpp>
 
@@ -33,4 +33,4 @@ concept LibCxxCompatibleMutex = requires(T m) {
 };
 }  // namespace concepts_ext
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_EXT_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_CONCEPTS_EXT_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_QEMU_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_QEMU_HPP_
+#ifndef KERNEL_SRC_HAL_QEMU_HPP_
+#define KERNEL_SRC_HAL_QEMU_HPP_
 
 #include <hal/impl/qemu.hpp>
 
@@ -10,4 +10,4 @@ namespace hal
 WRAP_CALL void QemuShutdown() { arch::QemuShutdown(); }
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_QEMU_HPP_
+#endif  // KERNEL_SRC_HAL_QEMU_HPP_
