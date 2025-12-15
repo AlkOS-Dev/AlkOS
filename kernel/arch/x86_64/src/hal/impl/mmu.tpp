@@ -44,10 +44,10 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
 
     static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
 
-    auto pmt_l4 =
-        reinterpret_cast<Mem::VPtr<PageMapTable<4>>>(Mem::PhysToVirt(as->PageTableRoot()));
+    // PML4
+    auto *pmt_l4 = reinterpret_cast<PageMapEntry<4> *>(Mem::PhysToVirt(as->PageTableRoot()));
+    auto *pme_l4 = &pmt_l4[PmeIdx<4>(vaddr)];
 
-    auto pme_l4 = Mem::PhysToVirt(pmt_l4[PmeIdx<4>(vaddr)]);
     if (!pme_l4->IsPresent()) {
         if (!create_if_missing) {
             return unexpected(Mem::MemError::NotFound);
@@ -58,13 +58,17 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
             return unexpected(res.error());
         }
 
+        memset(*res, 0, sizeof(PageMapTable<3>));
         pme_l4->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
     }
     if constexpr (kLevel == 4)
         return pme_l4;
 
-    auto pmt_l3 = Mem::PhysToVirt(pme_l4->GetNextLevelTable());
-    auto pme_l3 = Mem::PhysToVirt(pmt_l3[PmeIdx<3>(vaddr)]);
+    // PDP (L3)
+    auto *pmt_l3 =
+        reinterpret_cast<PageMapEntry<3> *>(Mem::PhysToVirt(pme_l4->GetNextLevelTable()));
+    auto *pme_l3 = &pmt_l3[PmeIdx<3>(vaddr)];
+
     if (!pme_l3->IsPresent()) {
         if (!create_if_missing) {
             return unexpected(Mem::MemError::NotFound);
@@ -75,13 +79,17 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
             return unexpected(res.error());
         }
 
+        memset(*res, 0, sizeof(PageMapTable<2>));
         pme_l3->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
     }
     if constexpr (kLevel == 3)
         return pme_l3;
 
-    auto pmt_l2 = Mem::PhysToVirt(pme_l3->GetNextLevelTable());
-    auto pme_l2 = Mem::PhysToVirt(pmt_l2[PmeIdx<2>(vaddr)]);
+    // PD (L2)
+    auto *pmt_l2 =
+        reinterpret_cast<PageMapEntry<2> *>(Mem::PhysToVirt(pme_l3->GetNextLevelTable()));
+    auto *pme_l2 = &pmt_l2[PmeIdx<2>(vaddr)];
+
     if (!pme_l2->IsPresent()) {
         if (!create_if_missing) {
             return unexpected(Mem::MemError::NotFound);
@@ -92,13 +100,17 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
             return unexpected(res.error());
         }
 
+        memset(*res, 0, sizeof(PageMapTable<1>));
         pme_l2->SetNextLevelTable(Mem::VirtToPhys(*res), kDefFlags);
     }
     if constexpr (kLevel == 2)
         return pme_l2;
 
-    auto pmt_l1 = Mem::PhysToVirt(pme_l2->GetNextLevelTable());
-    auto pme_l1 = Mem::PhysToVirt(pmt_l1[PmeIdx<1>(vaddr)]);
+    // PT (L1)
+    auto *pmt_l1 =
+        reinterpret_cast<PageMapEntry<1> *>(Mem::PhysToVirt(pme_l2->GetNextLevelTable()));
+    auto *pme_l1 = &pmt_l1[PmeIdx<1>(vaddr)];
+
     if constexpr (kLevel == 1)
         return pme_l1;
 

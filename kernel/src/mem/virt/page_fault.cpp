@@ -12,6 +12,8 @@ namespace Mem
 
 void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
+    TRACE_INFO_MEMORY("Running PageFaultHandler");
+    trace::Flush();
     using namespace hal;
     ASSERT_NOT_NULL(data);
 

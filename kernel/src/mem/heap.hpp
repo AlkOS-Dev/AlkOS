@@ -2,6 +2,9 @@
 #define KERNEL_SRC_MEM_HEAP_HPP_
 
 #include <expected.hpp>
+#include <new.hpp>
+#include <utility.hpp>
+
 #include "mem/error.hpp"
 #include "mem/types.hpp"
 
@@ -96,6 +99,31 @@ void KFreeAligned(VPtr<T> ptr)
 
 template <>
 void KFreeAligned(VPtr<void> ptr);
+
+// ---------------------------------------------------------------------------
+// Object Lifecycle API (new/delete equivalents)
+// ---------------------------------------------------------------------------
+
+/// KNew: Allocates memory and constructs the object T
+template <typename T, typename... Args>
+expected<VPtr<T>, MemError> KNew(Args &&...args)
+{
+    return KMalloc(sizeof(T)).transform([&](VPtr<void> ptr) {
+        new (reinterpret_cast<void *>(ptr)) T(std::forward<Args>(args)...);
+        return reinterpret_cast<VPtr<T>>(ptr);
+    });
+}
+
+/// KDelete: Destructs the object T and frees memory
+template <typename T>
+void KDelete(VPtr<T> ptr)
+{
+    if (!ptr) {
+        return;
+    }
+    reinterpret_cast<T *>(ptr)->~T();
+    KFree(reinterpret_cast<VPtr<void>>(ptr));
+}
 
 }  // namespace Mem
 
