@@ -234,12 +234,12 @@ class PACK BitArray final
         const StorageT empty_unit =
             value ? std::numeric_limits<StorageT>::min() : std::numeric_limits<StorageT>::max();
 
-        for (size_t i = 0; i < kNumStorageT; ++i) {
+        for (size_t i = 0; i < kNumStorage; ++i) {
             if (storage_[i] == empty_unit) {
                 continue;
             }
 
-            const size_t start = i * kStorageTBits;
+            const size_t start = i * kStorageBits;
             const size_t local_offset =
                 value ? std::countr_zero(storage_[i]) : std::countr_one(storage_[i]);
             return start + local_offset;
