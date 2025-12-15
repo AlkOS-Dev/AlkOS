@@ -80,8 +80,8 @@ multiboot_start:
           dw MULTIBOOT_HEADER_TAG_FRAMEBUFFER
           dw MULTIBOOT_HEADER_TAG_OPTIONAL
           dd (.framebuffer_tag_end - .framebuffer_tag_start)
-          dd 0 ; width  - no preference
-          dd 0 ; height - no preference
+          dd 800 ; width  - no preference
+          dd 600 ; height - no preference
           dd FRAMEBUFFER_REQUIRED_DEPTH ; depth
 .framebuffer_tag_end:
 
