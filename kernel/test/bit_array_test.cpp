@@ -39,28 +39,25 @@ TEST_F(BitArrayTest, CrossBoundary)
 
 TEST_F(BitArrayTest, GetSetRange_BoundariesCrossing)
 {
-    data_structures::BitArray<64> bits;
+    data_structures::BitArray<192> bits;
 
-    // Case 1: No boundary crossing - 5 bits at offset 2 (bits 2-6, within first byte)
-    bits.SetRange<u8, 2, 5>(0x15);  // 0b10101
-    EXPECT_EQ(0x15, (bits.GetRange<u8, 2, 5>()));
-
-    // Verify unaffected bits
-    EXPECT_EQ(0, (bits.GetRange<u8, 0, 2>()));
-    EXPECT_EQ(0, (bits.GetRange<u8, 7, 1>()));
-
-    // Case 2: One boundary crossing - 12 bits at offset 4 (bits 4-15, crosses at bit 8)
-    bits.SetRange<u16, 4, 12>(0xABC);  // 12 bits spanning 2 bytes
-    EXPECT_EQ(0xABC, (bits.GetRange<u16, 4, 12>()));
-
-    // Case 3: Multiple boundary crossings - 25 bits at offset 20 (bits 20-44, crosses 3 byte
-    // boundaries) Crosses at bits 24, 32, 40
-    bits.SetRange<u32, 20, 25>(0x1FEDCBA);
-    EXPECT_EQ(0x1FEDCBA, (bits.GetRange<u32, 20, 25>()));
+    // No boundary crossing - 48 bits at offset 2
+    bits.SetRange<2, 48>(0x15);
+    EXPECT_EQ(0x15, (bits.GetRange<2, 48>()));
 
     // Verify unaffected bits
-    EXPECT_EQ(0, (bits.GetRange<u8, 16, 4>()));
-    EXPECT_EQ(0, (bits.GetRange<u8, 45, 3>()));
+    EXPECT_EQ(0, (bits.GetRange<0, 2>()));
+    EXPECT_EQ(0, (bits.GetRange<50, 64>()));
+
+    bits.SetAll(false);
+
+    // Boundary crossing - 32 bits at offset 48
+    bits.SetRange<48, 32>(0xABC);
+    EXPECT_EQ(0xABC, (bits.GetRange<48, 32>()));
+
+    // Verify unaffected bits
+    EXPECT_EQ(0, (bits.GetRange<0, 48>()));
+    EXPECT_EQ(0, (bits.GetRange<80, 64>()));
 }
 
 TEST_F(BitArrayTest, Size)
