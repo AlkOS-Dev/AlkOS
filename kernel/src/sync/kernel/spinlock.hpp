@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_SYNC_KERNEL_SPINLOCK_HPP_
-#define ALKOS_KERNEL_INCLUDE_SYNC_KERNEL_SPINLOCK_HPP_
+#ifndef KERNEL_SRC_SYNC_KERNEL_SPINLOCK_HPP_
+#define KERNEL_SRC_SYNC_KERNEL_SPINLOCK_HPP_
 
 #include <hal/spinlock.hpp>
 
@@ -12,4 +12,4 @@ struct Spinlock : arch::Spinlock {
     FORCE_INLINE_F void unlock() { hal::Spinlock::Unlock(); }
 };
 
-#endif  // ALKOS_KERNEL_INCLUDE_SYNC_KERNEL_SPINLOCK_HPP_
+#endif  // KERNEL_SRC_SYNC_KERNEL_SPINLOCK_HPP_

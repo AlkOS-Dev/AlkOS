@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_MEM_VIRT_PAGE_FAULT_HPP_
-#define ALKOS_KERNEL_INCLUDE_MEM_VIRT_PAGE_FAULT_HPP_
+#ifndef KERNEL_SRC_MEM_VIRT_PAGE_FAULT_HPP_
+#define KERNEL_SRC_MEM_VIRT_PAGE_FAULT_HPP_
 
 #include "hal/interrupt_params.hpp"
 #include "interrupts/interrupt_types.hpp"
@@ -11,4 +11,4 @@ void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
 }  // namespace Mem
 
-#endif  // ALKOS_KERNEL_INCLUDE_MEM_VIRT_PAGE_FAULT_HPP_
+#endif  // KERNEL_SRC_MEM_VIRT_PAGE_FAULT_HPP_

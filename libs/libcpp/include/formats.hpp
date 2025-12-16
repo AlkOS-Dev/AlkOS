@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_FORMATS_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_FORMATS_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_FORMATS_HPP_
+#define LIBS_LIBCPP_INCLUDE_FORMATS_HPP_
 
 template <typename ObjT>
 char *DumpObjToBufferHex(const ObjT &obj, char *buffer, size_t buffer_size)
@@ -71,4 +71,4 @@ void DumpObjHexWithSep(FuncT func, const ObjT &obj)
     func(buffer);
 }
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_FORMATS_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_FORMATS_HPP_

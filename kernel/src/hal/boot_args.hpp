@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_BOOT_ARGS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_BOOT_ARGS_HPP_
+#ifndef KERNEL_SRC_HAL_BOOT_ARGS_HPP_
+#define KERNEL_SRC_HAL_BOOT_ARGS_HPP_
 
 #include <hal/impl/kernel.hpp>
 
@@ -10,4 +10,4 @@ using arch::RawBootArguments;
 WRAP_CALL void ArchInit(const RawBootArguments &args) { arch::ArchInit(args); }
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_BOOT_ARGS_HPP_
+#endif  // KERNEL_SRC_HAL_BOOT_ARGS_HPP_

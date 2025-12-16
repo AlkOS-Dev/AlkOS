@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_OPTIONAL_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_OPTIONAL_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_OPTIONAL_HPP_
+#define LIBS_LIBCPP_INCLUDE_OPTIONAL_HPP_
 
 #include <assert.h>
 #include <todo.h>
@@ -88,4 +88,4 @@ class optional
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_OPTIONAL_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_OPTIONAL_HPP_

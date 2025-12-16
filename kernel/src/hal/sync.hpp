@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
+#ifndef KERNEL_SRC_HAL_SYNC_HPP_
+#define KERNEL_SRC_HAL_SYNC_HPP_
 
 #include <hal/impl/sync.hpp>
 
@@ -62,4 +62,4 @@ WRAP_CALL typename T::BaseT AtomicDecrement(volatile T *ptr)
 
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_SYNC_HPP_
+#endif  // KERNEL_SRC_HAL_SYNC_HPP_

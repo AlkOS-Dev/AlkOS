@@ -54,5 +54,3 @@ tools
 __pycache__
 logs
 test_framework_logs
-
-generated

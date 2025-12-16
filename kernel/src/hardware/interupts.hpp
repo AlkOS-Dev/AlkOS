@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_INTERUPTS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_INTERUPTS_HPP_
+#ifndef KERNEL_SRC_HARDWARE_INTERUPTS_HPP_
+#define KERNEL_SRC_HARDWARE_INTERUPTS_HPP_
 
 #include <hal/interrupts.hpp>
 #include <hal/spinlock.hpp>
@@ -80,4 +80,4 @@ class Interrupts final : public arch::Interrupts
 };
 }  // namespace intr
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_INTERUPTS_HPP_
+#endif  // KERNEL_SRC_HARDWARE_INTERUPTS_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_INITIALIZER_LIST_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_INITIALIZER_LIST_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_INITIALIZER_LIST_HPP_
+#define LIBS_LIBCPP_INCLUDE_INITIALIZER_LIST_HPP_
 
 #include <cstddef.hpp>
 #include <defines.hpp>
@@ -66,4 +66,4 @@ constexpr const T *end(initializer_list<T> list) noexcept
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_INITIALIZER_LIST_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_INITIALIZER_LIST_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_CONTROLLER_HPP_
-#define ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_CONTROLLER_HPP_
+#ifndef KERNEL_SRC_HARDWARE_CORE_CONTROLLER_HPP_
+#define KERNEL_SRC_HARDWARE_CORE_CONTROLLER_HPP_
 
 #include "hardware/core_local.hpp"
 #include "hardware/cores.hpp"
@@ -71,4 +71,4 @@ class CoresController final
 
 }  // namespace hardware
 
-#endif  // ALKOS_KERNEL_INCLUDE_HARDWARE_CORE_CONTROLLER_HPP_
+#endif  // KERNEL_SRC_HARDWARE_CORE_CONTROLLER_HPP_
