@@ -15,6 +15,8 @@ menuentry \"AlkOS\" {
   ${MAKE_ISO_SCRIPT_MODULES_TOKEN}
   boot
 }
+insmod all_video
+set gfxpayload=1024x768x32,1024x768,800x600x32,800x600,keep
 "
 MAKE_ISO_SCRIPT_GRUB_PATH_IN_ISO="boot/grub/grub.cfg"
 
