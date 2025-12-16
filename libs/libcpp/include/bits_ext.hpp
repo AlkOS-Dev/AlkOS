@@ -98,6 +98,12 @@ FAST_CALL NumT &SetBit(NumT &num, const u16 bit)
     return num |= kLsb<NumT> << bit;
 }
 
+template <u16 kBit, std::unsigned_integral NumT>
+FAST_CALL constexpr bool GetBit(const NumT num)
+{
+    return num & kSingleBit<NumT, kBit>;
+}
+
 template <std::unsigned_integral NumT>
 FAST_CALL NumT &ClearBit(NumT &num, const u16 bit)
 {

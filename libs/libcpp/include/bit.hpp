@@ -168,6 +168,18 @@ constexpr FAST_CALL T bit_ceil(T x) noexcept
     return kLsb<T> << std::bit_width(T(x - static_cast<T>(1)));
 }
 
+// ------------------------------
+// std::bit_cast
+// ------------------------------
+
+template <class To, class From>
+constexpr To bit_cast(const From &from) noexcept
+    requires(sizeof(To) == sizeof(From)) && std::is_trivially_copyable_v<To> &&
+            std::is_trivially_copyable_v<From>
+{
+    return __builtin_bit_cast(To, from);
+}
+
 TODO_LIBCPP_COMPLIANCE
 // TODO: Implement other functions from standard
 
