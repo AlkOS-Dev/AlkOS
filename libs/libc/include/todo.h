@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_TODO_H_
-#define ALKOS_LIBC_INCLUDE_TODO_H_
+#ifndef LIBS_LIBC_INCLUDE_TODO_H_
+#define LIBS_LIBC_INCLUDE_TODO_H_
 
 /* Should be adjusted when userspace version of libc is implemented */
 #define TODO_USERSPACE
@@ -33,4 +33,4 @@
 
 #define TODO_RANDOM
 
-#endif  // ALKOS_LIBC_INCLUDE_TODO_H_
+#endif  // LIBS_LIBC_INCLUDE_TODO_H_

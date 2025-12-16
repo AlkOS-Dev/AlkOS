@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_STRING_H_
-#define ALKOS_LIBC_INCLUDE_STRING_H_
+#ifndef LIBS_LIBC_INCLUDE_STRING_H_
+#define LIBS_LIBC_INCLUDE_STRING_H_
 
 #include <defines.h>
 #include <stddef.h>
@@ -110,4 +110,4 @@ int memcmp(const void *s1, const void *s2, size_t n);
 
 END_DECL_C
 
-#endif  // ALKOS_LIBC_INCLUDE_STRING_H_
+#endif  // LIBS_LIBC_INCLUDE_STRING_H_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CHAR_TRAITS_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CHAR_TRAITS_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_CHAR_TRAITS_HPP_
+#define LIBS_LIBCPP_INCLUDE_CHAR_TRAITS_HPP_
 
 #include <string.h>
 #include <compare.hpp>
@@ -202,4 +202,4 @@ class char_traits
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CHAR_TRAITS_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_CHAR_TRAITS_HPP_

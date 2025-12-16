@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_FUNCTIONAL_HPP_
+#define LIBS_LIBCPP_INCLUDE_FUNCTIONAL_HPP_
 
 #include <internal/invoke.hpp>
 #include "utility.hpp"
@@ -91,4 +91,4 @@ constexpr R invoke_r(F &&f, Args &&...args) noexcept(std::is_nothrow_invocable_r
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_FUNCTIONAL_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_FUNCTIONAL_HPP_

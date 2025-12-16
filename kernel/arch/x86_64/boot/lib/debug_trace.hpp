@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#ifndef KERNEL_ARCH_X86_64_BOOT_LIB_DEBUG_TRACE_HPP_
+#define KERNEL_ARCH_X86_64_BOOT_LIB_DEBUG_TRACE_HPP_
 
 #include <autogen/feature_flags.h>
 #include <todo.hpp>
@@ -57,4 +57,4 @@ void FormatTrace(const char *format, Args... args)
 #define TRACE_SUCCESS(message, ...) \
     TRACE(TRACE_FORMAT_SUCCESS(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_DEBUG_HPP_
+#endif  // KERNEL_ARCH_X86_64_BOOT_LIB_DEBUG_TRACE_HPP_

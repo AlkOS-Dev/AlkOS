@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_
+#ifndef KERNEL_SRC_HAL_TERMINAL_HPP_
+#define KERNEL_SRC_HAL_TERMINAL_HPP_
 
 #include <hal/impl/terminal.hpp>
 
@@ -52,4 +52,4 @@ WRAP_CALL size_t TerminalReadLine(char *buffer, size_t size)
 }
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_TERMINAL_HPP_
+#endif  // KERNEL_SRC_HAL_TERMINAL_HPP_

@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_HPP_
+#define LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_HPP_
 
 #include <todo.h>
 #include <cstddef.hpp>
@@ -2073,4 +2073,4 @@ constexpr bool is_nothrow_destructible_v = is_nothrow_destructible<T>::value;
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_TYPE_TRAITS_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_HPP_

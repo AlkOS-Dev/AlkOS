@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_TIMERS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_TIMERS_HPP_
+#ifndef KERNEL_SRC_HAL_TIMERS_HPP_
+#define KERNEL_SRC_HAL_TIMERS_HPP_
 
 #include <hal/impl/timers.hpp>
 
@@ -21,4 +21,4 @@ WRAP_CALL time_t QuerySystemTime(const timezone &tz) { return arch::QuerySystemT
 WRAP_CALL void PickSystemClockSource() { return arch::PickSystemClockSource(); }
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_TIMERS_HPP_
+#endif  // KERNEL_SRC_HAL_TIMERS_HPP_
