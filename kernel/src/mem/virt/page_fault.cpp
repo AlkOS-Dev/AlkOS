@@ -12,6 +12,8 @@ namespace Mem
 
 void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
+    TRACE_INFO_GENERAL("PageFaultHandler: Handling Anonymous VMA");
+    trace::Flush();
     using namespace hal;
     ASSERT_NOT_NULL(data);
 
@@ -39,6 +41,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 
         PPtr<void> map_to = nullptr;
         if (vma.type == VirtualMemAreaT::Anonymous) {
+            TRACE_INFO_GENERAL("PageFaultHandler: Handling Anonymous VMA");
             auto new_page_or_error = pmm.Alloc();
             if (!new_page_or_error) {
                 hal::KernelPanic("Out of memory during page fault handling");
@@ -50,6 +53,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 
             map_to = new_page_phys;
         } else if (vma.type == VirtualMemAreaT::DirectMapping) {
+            TRACE_INFO_GENERAL("PageFaultHandler: Handling DirectMapping VMA");
             const auto offset = PtrToUptr(f_ptr) - PtrToUptr(vma.start);
             map_to            = UptrToPtr<void>(
                 AlignDown(PtrToUptr(vma.direct_mapping_start) + offset, kPageSizeBytes)
@@ -77,7 +81,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             hal::KernelPanicFormat("Failed to map page for address 0x%p", f_ptr);
         }
 
-        DEBUG_FREQ_INFO_MEMORY(
+        TRACE_INFO_GENERAL(
             "Handled page fault at 0x%p by mapping to physical page at 0x%p", f_ptr, map_to
         );
         return;
