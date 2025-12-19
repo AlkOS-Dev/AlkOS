@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
-#define ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
+#ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
+#define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
 
 #include <hal/api/core.hpp>
 #include "cpu/msrs.hpp"
@@ -51,4 +51,4 @@ FAST_CALL void *GetCoreLocalData() { return reinterpret_cast<void *>(cpu::GetMSR
 
 }  // namespace arch
 
-#endif  // ALKOS_KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
+#endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_

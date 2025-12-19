@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_COMPARE_HPP_
+#define LIBS_LIBCPP_INCLUDE_COMPARE_HPP_
 
 #include <defines.hpp>
 #include <types.hpp>
@@ -387,4 +387,4 @@ NODISCARD constexpr bool is_gteq(partial_ordering order) noexcept { return order
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_COMPARE_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_COMPARE_HPP_

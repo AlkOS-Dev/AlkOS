@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
-#define ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_CONCEPTS_HPP_
+#define LIBS_LIBCPP_INCLUDE_CONCEPTS_HPP_
 
 #include <type_traits.hpp>
 #include "utility.hpp"
@@ -28,4 +28,4 @@ concept floating_point = is_floating_point_v<T>;
 
 }  // namespace std
 
-#endif  // ALKOS_LIBC_INCLUDE_EXTENSIONS_CONCEPTS_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_CONCEPTS_HPP_

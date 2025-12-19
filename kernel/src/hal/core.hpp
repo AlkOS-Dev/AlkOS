@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_CORE_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_CORE_HPP_
+#ifndef KERNEL_SRC_HAL_CORE_HPP_
+#define KERNEL_SRC_HAL_CORE_HPP_
 
 #include <hal/impl/core.hpp>
 
@@ -13,4 +13,4 @@ WRAP_CALL void SetCoreLocalData(void *data) { arch::SetCoreLocalData(data); }
 NODISCARD WRAP_CALL void *GetCoreLocalData() { return arch::GetCoreLocalData(); }
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_CORE_HPP_
+#endif  // KERNEL_SRC_HAL_CORE_HPP_

@@ -37,6 +37,29 @@ TEST_F(BitArrayTest, CrossBoundary)
     EXPECT_FALSE(bits.Get(33));
 }
 
+TEST_F(BitArrayTest, GetSetRange_BoundariesCrossing)
+{
+    data_structures::BitArray<192> bits;
+
+    // No boundary crossing - 48 bits at offset 2
+    bits.SetRange<2, 48>(0x15);
+    EXPECT_EQ(0x15, (bits.GetRange<2, 48>()));
+
+    // Verify unaffected bits
+    EXPECT_EQ(0, (bits.GetRange<0, 2>()));
+    EXPECT_EQ(0, (bits.GetRange<50, 64>()));
+
+    bits.SetAll(false);
+
+    // Boundary crossing - 32 bits at offset 48
+    bits.SetRange<48, 32>(0xABC);
+    EXPECT_EQ(0xABC, (bits.GetRange<48, 32>()));
+
+    // Verify unaffected bits
+    EXPECT_EQ(0, (bits.GetRange<0, 48>()));
+    EXPECT_EQ(0, (bits.GetRange<80, 64>()));
+}
+
 TEST_F(BitArrayTest, Size)
 {
     data_structures::BitArray<100> bits;

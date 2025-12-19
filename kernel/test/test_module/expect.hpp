@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
-#define ALKOS_KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
+#ifndef KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
+#define KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
 
 #include <assert.h>
 #include <hal/terminal.hpp>
@@ -44,4 +44,4 @@ inline void ExpectHandler(const char *msg)
 #define EXPECT_STRNEQ(val1, val2, ...) \
     BASE_ASSERT_STRNEQ(true, val1, val2, ExpectHandler __VA_OPT__(, ) __VA_ARGS__)
 
-#endif  // ALKOS_KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
+#endif  // KERNEL_TEST_TEST_MODULE_EXPECT_HPP_

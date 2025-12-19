@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_STDLIB_H_
-#define ALKOS_LIBC_INCLUDE_STDLIB_H_
+#ifndef LIBS_LIBC_INCLUDE_STDLIB_H_
+#define LIBS_LIBC_INCLUDE_STDLIB_H_
 
 #include <defines.h>
 #include <stddef.h>
@@ -16,4 +16,4 @@ CONSTEXPR intmax_t imaxabs(const intmax_t n) { return n < 0 ? -n : n; }
 
 END_DECL_C
 
-#endif  // ALKOS_LIBC_INCLUDE_STDLIB_H_
+#endif  // LIBS_LIBC_INCLUDE_STDLIB_H_

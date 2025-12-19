@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_TODO_HPP_
-#define ALKOS_KERNEL_INCLUDE_TODO_HPP_
+#ifndef KERNEL_SRC_TODO_HPP_
+#define KERNEL_SRC_TODO_HPP_
 
 /**
  * @brief This file's purpose is to define a set of macros used as placeholders
@@ -32,4 +32,4 @@
 
 #define TODO_WHEN_CPP_REFLECTION
 
-#endif  // ALKOS_KERNEL_INCLUDE_TODO_HPP_
+#endif  // KERNEL_SRC_TODO_HPP_

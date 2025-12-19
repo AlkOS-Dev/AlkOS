@@ -82,9 +82,8 @@ class BitMapView final
 template <size_t kNumBits>
 class PACK BitArray final
 {
-    using StorageT                        = u8;
-    static constexpr size_t kStorageTBits = sizeof(StorageT) * 8;
-    static constexpr size_t kNumStorageT  = (kNumBits + kStorageTBits - 1) / kStorageTBits;
+    using StorageT                       = u8;
+    static constexpr size_t kStorageBits = sizeof(StorageT) * 8;
 
     public:
     // ------------------------------
@@ -102,14 +101,14 @@ class PACK BitArray final
     {
         ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
 
-        storage_[index / kStorageTBits] |= (kLsb<StorageT> << (index % kStorageTBits));
+        storage_[index / kStorageBits] |= (kLsb<StorageT> << (index % kStorageBits));
     }
 
     FORCE_INLINE_F void SetFalse(const size_t index)
     {
         ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
 
-        storage_[index / kStorageTBits] &= ~(kLsb<StorageT> << (index % kStorageTBits));
+        storage_[index / kStorageBits] &= ~(kLsb<StorageT> << (index % kStorageBits));
     }
 
     FORCE_INLINE_F void Set(const size_t index, const bool value)
@@ -117,20 +116,108 @@ class PACK BitArray final
         ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
 
         SetFalse(index);
-        storage_[index / kStorageTBits] |= (static_cast<u32>(value) << (index % kStorageTBits));
+        storage_[index / kStorageBits] |= (static_cast<u32>(value) << (index % kStorageBits));
     }
 
     NODISCARD FORCE_INLINE_F bool Get(const size_t index) const
     {
         ASSERT_LT(index, kNumBits, "Index out of bounds in BitArray");
-        return (storage_[index / kStorageTBits] >> (index % kStorageTBits)) & kLsb<StorageT>;
+        return (storage_[index / kStorageBits] >> (index % kStorageBits)) & kLsb<StorageT>;
+    }
+
+    template <size_t kOffset, size_t kWidth>
+    NODISCARD FORCE_INLINE_F size_t GetRange() const
+    {
+        constexpr size_t kSizeTBits = sizeof(size_t) * 8;
+        static_assert(kOffset + kWidth <= kNumBits, "Range exceeds BitArray size");
+        static_assert(kWidth <= kSizeTBits, "Width exceeds size_t size");
+
+        constexpr size_t kByteOffset = kOffset / 8;
+        constexpr size_t kBitOffset  = kOffset % 8;
+
+        if constexpr (kBitOffset + kWidth <= kSizeTBits) {
+            size_t raw = *reinterpret_cast<const size_t *>(storage_ + kByteOffset);
+
+            // Shift right to align, then mask
+            constexpr size_t kMask = kBitMaskRight<size_t, kWidth>;
+            return (raw >> kBitOffset) & kMask;
+        } else {
+            // Spans two register-sized words
+            constexpr size_t kFirstWidth  = kSizeTBits - kBitOffset;
+            constexpr size_t kSecondWidth = kWidth - kFirstWidth;
+
+            // Read first word
+            size_t raw1             = *reinterpret_cast<const size_t *>(storage_ + kByteOffset);
+            constexpr size_t kMask1 = kBitMaskRight<size_t, kFirstWidth>;
+            size_t result           = (raw1 >> kBitOffset) & kMask1;
+
+            // Read second word
+            size_t raw2 =
+                *reinterpret_cast<const size_t *>(storage_ + kByteOffset + sizeof(size_t));
+            constexpr size_t kMask2 = kBitMaskRight<size_t, kSecondWidth>;
+            result |= (raw2 & kMask2) << kFirstWidth;
+
+            return result;
+        }
+    }
+
+    template <size_t kOffset, size_t kWidth>
+    FORCE_INLINE_F void SetRange(size_t value)
+    {
+        constexpr size_t kSizeTBits = sizeof(size_t) * 8;
+        static_assert(kOffset + kWidth <= kNumBits, "Range exceeds BitArray size");
+        static_assert(kWidth <= kSizeTBits, "Width exceeds size_t size");
+
+        // Mask value to width
+        constexpr size_t kValueMask = kBitMaskRight<size_t, kWidth>;
+        value &= kValueMask;
+
+        constexpr size_t kByteOffset = kOffset / 8;
+        constexpr size_t kBitOffset  = kOffset % 8;
+
+        if constexpr (kBitOffset + kWidth <= kSizeTBits) {
+            auto *raw_ptr = reinterpret_cast<size_t *>(storage_ + kByteOffset);
+            size_t raw    = *raw_ptr;
+
+            // Create clear mask at the correct position
+            constexpr size_t kClearMask = kBitMaskRight<size_t, kWidth> << kBitOffset;
+
+            // Clear bits: use ~mask & raw
+            raw &= ~kClearMask;
+
+            // Set new bits: shift value and OR
+            raw |= (value << kBitOffset);
+
+            // Write back
+            *raw_ptr = raw;
+        } else {
+            // Spans two register-sized words - split the operation
+            constexpr size_t kFirstWidth  = kSizeTBits - kBitOffset;
+            constexpr size_t kSecondWidth = kWidth - kFirstWidth;
+
+            // First word: clear and set lower bits
+            auto *raw_ptr1               = reinterpret_cast<size_t *>(storage_ + kByteOffset);
+            size_t raw1                  = *raw_ptr1;
+            constexpr size_t kClearMask1 = kBitMaskRight<size_t, kFirstWidth> << kBitOffset;
+            raw1 &= ~kClearMask1;
+            raw1 |= (value << kBitOffset);
+            *raw_ptr1 = raw1;
+
+            // Second word: clear and set upper bits
+            auto *raw_ptr2 = reinterpret_cast<size_t *>(storage_ + kByteOffset + sizeof(size_t));
+            size_t raw2    = *raw_ptr2;
+            constexpr size_t kClearMask2 = kBitMaskRight<size_t, kSecondWidth>;
+            raw2 &= ~kClearMask2;
+            raw2 |= (value >> kFirstWidth);
+            *raw_ptr2 = raw2;
+        }
     }
 
     NODISCARD FORCE_INLINE_F size_t Size() const { return kNumBits; }
 
     FORCE_INLINE_F void SetAll(const bool value)
     {
-        memset(storage_, value ? UINT8_MAX : 0, kNumStorageT * sizeof(StorageT));
+        memset(storage_, value ? UINT8_MAX : 0, kNumStorage * sizeof(StorageT));
     }
 
     FORCE_INLINE_F u64 ToU64() const
@@ -152,12 +239,12 @@ class PACK BitArray final
         const StorageT empty_unit =
             value ? std::numeric_limits<StorageT>::min() : std::numeric_limits<StorageT>::max();
 
-        for (size_t i = 0; i < kNumStorageT; ++i) {
+        for (size_t i = 0; i < kNumStorage; ++i) {
             if (storage_[i] == empty_unit) {
                 continue;
             }
 
-            const size_t start = i * kStorageTBits;
+            const size_t start = i * kStorageBits;
             const size_t local_offset =
                 value ? std::countr_zero(storage_[i]) : std::countr_one(storage_[i]);
             return start + local_offset;
@@ -178,8 +265,10 @@ class PACK BitArray final
     // Class fields
     // ------------------------------
 
+    static constexpr size_t kNumStorage = (kNumBits + kStorageBits - 1) / kStorageBits;
+
     private:
-    StorageT storage_[kNumStorageT]{};
+    StorageT storage_[kNumStorage]{};
 };
 
 }  // namespace data_structures

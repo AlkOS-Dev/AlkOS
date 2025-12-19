@@ -1,5 +1,5 @@
-#ifndef ALKOS_KERNEL_INCLUDE_HAL_INTERRUPTS_HPP_
-#define ALKOS_KERNEL_INCLUDE_HAL_INTERRUPTS_HPP_
+#ifndef KERNEL_SRC_HAL_INTERRUPTS_HPP_
+#define KERNEL_SRC_HAL_INTERRUPTS_HPP_
 
 #include <hal/impl/interrupts.hpp>
 
@@ -9,4 +9,4 @@ using arch::Interrupts;
 static constexpr size_t kMaxInterruptsSupported = arch::kMaxInterruptsSupported;
 }  // namespace hal
 
-#endif  // ALKOS_KERNEL_INCLUDE_HAL_INTERRUPTS_HPP_
+#endif  // KERNEL_SRC_HAL_INTERRUPTS_HPP_

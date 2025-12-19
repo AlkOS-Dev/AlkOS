@@ -1,5 +1,5 @@
-#ifndef ALKOS_LIBC_INCLUDE_SYS_CALLS_H_
-#define ALKOS_LIBC_INCLUDE_SYS_CALLS_H_
+#ifndef LIBS_LIBC_INCLUDE_SYS_CALLS_H_
+#define LIBS_LIBC_INCLUDE_SYS_CALLS_H_
 
 /**
  * @brief This file collects all the system calls that are used by the libc.
@@ -9,4 +9,4 @@
 
 #include <sys/calls/time.h>
 
-#endif  // ALKOS_LIBC_INCLUDE_SYS_CALLS_H_
+#endif  // LIBS_LIBC_INCLUDE_SYS_CALLS_H_
