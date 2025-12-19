@@ -137,15 +137,18 @@ void TestModule::RunTest_(const TestSpec *test)
         arch::TerminalWriteError(
             "[TEST] [FAIL] Test was supposed to fail but all checks passed correctly...\n"
         );
+        trace::Flush();
         return;
     }
 
     if (g_testCheckFailed) {
         arch::TerminalWriteError("[TEST] [FAIL] Test failed on some EXPECT_* checks...\n");
+        trace::Flush();
         return;
     }
 
     arch::TerminalWriteString("[TEST] [SUCCESS] Test passed...\n");
+    trace::Flush();
 }
 
 void AddTest(const char *name, const test_factory_t factory)
