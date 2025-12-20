@@ -13,7 +13,6 @@ namespace Mem
 void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     TRACE_INFO_GENERAL("PageFaultHandler: Handling Anonymous VMA");
-    trace::Flush();
     using namespace hal;
     ASSERT_NOT_NULL(data);
 
