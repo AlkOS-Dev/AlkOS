@@ -3,6 +3,8 @@
 
 #include <data_structures/data_structures.hpp>
 #include <hal/constants.hpp>
+#include <hal/terminal.hpp>
+
 #include "trace_framework.hpp"
 
 namespace hardware
@@ -33,13 +35,9 @@ class ClockRegistry : public data_structures::Registry<ClockRegistryEntry, kMaxC
     /* Not safe for concurrent access */
     NODISCARD FORCE_INLINE_F u64 ReadTimeNsUnsafe()
     {
-        const u64 timer_val = GetSelected().read(&GetSelected());
-        DEBUG_FREQ_INFO_TIME("Timer value read: %llu", timer_val);
-        DEBUG_FREQ_INFO_TIME(
-            "Numerator: %llu, Denominator: %llu", GetSelected().clock_numerator,
-            GetSelected().clock_denominator
-        );
+        /* Note: cannot trace here!! */
 
+        const u64 timer_val = GetSelected().read(&GetSelected());
         const __uint128_t intermediate_value =
             static_cast<__uint128_t>(timer_val) * GetSelected().clock_numerator;
         const u64 time_ns = static_cast<u64>(intermediate_value / GetSelected().clock_denominator);

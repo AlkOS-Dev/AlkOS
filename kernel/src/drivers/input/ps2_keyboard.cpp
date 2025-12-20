@@ -100,7 +100,6 @@ void Ps2Keyboard::Init()
     }
 
     TRACE_INFO_GENERAL("PS/2 Keyboard Initialized & Drained");
-    trace::Flush();
 }
 
 void Ps2Keyboard::OnInterrupt()

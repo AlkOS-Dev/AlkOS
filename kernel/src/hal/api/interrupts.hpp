@@ -10,6 +10,10 @@ class Interrupts;
 struct InterruptsAPI {
     /* Should perform full initialisation of interrupt system */
     void Init();
+
+    /* Safety methods */
+    void BlockHardwareInterrupts();
+    void EnableHardwareInterrupts();
 };
 
 }  // namespace arch

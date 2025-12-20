@@ -55,10 +55,9 @@ static struct TraceFramework {
     // ------------------------------
 
     struct SmallTraceCyclicBuffer {
-        static constexpr size_t kSize           = 65536;
-        static constexpr size_t kDumpSize       = kSize - kSize / 32;
-        static constexpr size_t kBatchSize      = 256;
-        static constexpr size_t kBufferDumpDone = kSize - kSize / 8;
+        static constexpr size_t kSize      = 65536;
+        static constexpr size_t kDumpSize  = kSize - (kSize / 16);
+        static constexpr size_t kBatchSize = 256;
 
         hal::Atomic32 bytes_left{.value = kSize};
         hal::Atomic32 head{};
@@ -67,9 +66,12 @@ static struct TraceFramework {
     };
 
     struct MultithreadTraceCyclicBuffer {
-        u32 head;
-        u32 tail;
-        char *buffer;
+        static constexpr size_t kSize = FeatureValue<FeatureFlag::kTraceBufferSize>;
+
+        hal::Atomic32 bytes_left{.value = kSize};
+        hal::Atomic32 head{};
+        hal::Atomic32 tail{};
+        char buffer[kSize]{};
     };
 
     struct CoreTraceData {
@@ -113,6 +115,8 @@ static struct TraceFramework {
 
     FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage()
     {
+        /* Should be executed before interrupts are enabled */
+
         DEBUG_INFO_GENERAL("Updating tracing stage to stage 1 (Single thread with interrupts)");
         stage_callbacks.get_workspace_cb = &TraceFramework::GetWorkspaceSingleThreadInterrupts;
         stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleThreadInterrupts;
@@ -121,7 +125,20 @@ static struct TraceFramework {
         stage_callbacks.dump_all = &TraceFramework::DumpAllSingleThreadInterrupts;
     }
 
-    FORCE_INLINE_F void AdvanceToMultiThreadStage() { R_FAIL_ALWAYS("Not implemented"); }
+    FORCE_INLINE_F void AdvanceToMultiThreadStage()
+    {
+        /* Should be executed before another cores are enabled!!! */
+
+        DEBUG_INFO_GENERAL("Updating tracing stage to stage 2 (Multithreaded environment)");
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+        stage_callbacks.get_workspace_cb       = &TraceFramework::GetWorkspaceMultithreaded;
+        stage_callbacks.commit_to_log_cb       = &TraceFramework::CommitToLogMultithreaded;
+        stage_callbacks.commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogMultithreaded;
+        stage_callbacks.dump_all               = &TraceFramework::DumpAllMultithreaded;
+
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+    }
 
     // --------------------------------------
     // Single thread env implementation
@@ -168,19 +185,31 @@ static struct TraceFramework {
     template <bool kIsDebug>
     FORCE_INLINE_F void DumpBufferSingleThread(SmallTraceCyclicBuffer &buffer)
     {
+        // Assumptions:
+        // 1) bytes_left (1 thread, only main execution writes out) -> bytes_left may only decrement
+        // by interrupts, so
+        //    in worst case we will not write the most recent message from interrupts incoming
+        //    during dumping the buffer
+        // 2) tail is only moved by this function and only main execution can write out so we are
+        // safe to modify
+        //    it without atomics and any constraints
+        //
+        // Based on those two assumptions this function operates
+
         // 1. Save exact amount of bytes to write at entry level (IMPORTANT: to not write infinite)
         const i32 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
         i32 bytes_to_write   = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - bytes_left;
 
+        // 1. Write out the content
         while (bytes_to_write > 0) {
-            // 1. Write out the content
+            // 1. Prepare old tail and write_size
             const i32 tail = buffer.tail.value;
             const i32 batch_write_size =
                 std::min(bytes_to_write, static_cast<i32>(SmallTraceCyclicBuffer::kBatchSize));
 
             if (tail + batch_write_size > static_cast<i32>(SmallTraceCyclicBuffer::kSize)) {
                 // We cross the boundary
-                const size_t first_write  = SmallTraceCyclicBuffer::kSize - buffer.tail.value;
+                const size_t first_write  = SmallTraceCyclicBuffer::kSize - tail;
                 const size_t second_write = batch_write_size - first_write;
                 HardenSingleThread<kIsDebug>(
                     buffer.buffer + tail, static_cast<size_t>(first_write)
@@ -193,8 +222,10 @@ static struct TraceFramework {
             }
 
             // 2. Push the tail
-            buffer.tail.value = (buffer.tail.value + batch_write_size) %
-                                static_cast<i32>(SmallTraceCyclicBuffer::kSize);
+            hal::AtomicStore(
+                &buffer.tail,
+                (tail + batch_write_size) % static_cast<i32>(SmallTraceCyclicBuffer::kSize)
+            );
 
             // 3. Release space
             hal::AtomicAdd(&buffer.bytes_left, batch_write_size);
@@ -209,62 +240,60 @@ static struct TraceFramework {
         SmallTraceCyclicBuffer &buffer, const size_t trace_size
     )
     {
+        // Assumptions:
+        // 1) Interrupt message will be dropped when there is no space left in the buffer
+        // 2) Main execution will try to immediately dump the buffers if there is no space
+        // 3) Only main execution may write the buffer out -> (interrupt writes -> no buffer dumps),
+        // (main exec writes ->
+        //    no buffer dumps) -> no buffer dumps during writing traces (it is safe to operate on
+        //    bytes_left)
+        // 4) Only full traces can be written out
+
         const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
-        i32 available_bytes;
-        i32 bytes_left;
-        i32 new_value;
 
-        // 1. Allocate space for the trait
-        do {
-            do {
-                /* For main execution just empty the space and retry */
-                bytes_left = hal::AtomicLoad(&buffer.bytes_left);
+        // 1. Allocate space for the trace
+        while (true) {
+            if (hal::AtomicSub(&buffer.bytes_left, static_cast<i32>(trace_size)) < 0) {
+                hal::AtomicAdd(&buffer.bytes_left, static_cast<i32>(trace_size));
 
-                if (bytes_left < static_cast<i32>(trace_size)) {
+                if (nested_intrs == 0) {
                     DumpBufferSingleThread<kIsDebug>(buffer);
+                } else {
+                    /* No space for trace coming from this interrupt, we are dropping it */
+                    return;
                 }
-            } while (nested_intrs == 0 && bytes_left < static_cast<i32>(trace_size));
-
-            /* For interrupt traces, some information may be lost */
-
-            available_bytes = std::min(bytes_left, static_cast<i32>(trace_size));
-            new_value       = bytes_left - available_bytes;
-        } while (hal::AtomicCompareExchange(&buffer.bytes_left, bytes_left, new_value) !=
-                 bytes_left);
+            } else {
+                break;
+            }
+        }
 
         char *src = nested_intrs == 0 ? single_thread_env.main_execution_workspace
                                       : single_thread_env.interrupt_workspace[nested_intrs - 1];
-        if (nested_intrs != 0) {
-            if (available_bytes == 0) {
-                return;
-            }
-
-            /* Ensure EOS for interrupt traces */
-            src[FeatureValue<FeatureFlag::kSingleTraceMaxSize> - 1] = '\0';
-        }
 
         // 2. Adjust head ptr
         i32 old_head;
         i32 new_head;
         do {
             old_head = hal::AtomicLoad(&buffer.head);
-            new_head =
-                (old_head + available_bytes) % static_cast<i32>(SmallTraceCyclicBuffer::kSize);
+            new_head = (old_head + static_cast<i32>(trace_size)) %
+                       static_cast<i32>(SmallTraceCyclicBuffer::kSize);
         } while (hal::AtomicCompareExchange(&buffer.head, old_head, new_head) != old_head);
 
         // 3. Write the message
         if (new_head < old_head) {
-            const i32 first_part  = SmallTraceCyclicBuffer::kSize - old_head;
-            const i32 second_part = available_bytes - first_part;
+            // We cross the boundary
+
+            const i32 first_part  = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - old_head;
+            const i32 second_part = static_cast<i32>(trace_size) - first_part;
             memcpy(buffer.buffer + old_head, src, first_part);
             memcpy(buffer.buffer, src + first_part, second_part);
         } else {
-            memcpy(buffer.buffer + old_head, src, available_bytes);
+            memcpy(buffer.buffer + old_head, src, static_cast<i32>(trace_size));
         }
 
         if (nested_intrs == 0 &&
             buffer.bytes_left.value < static_cast<i32>(SmallTraceCyclicBuffer::kDumpSize)) {
-            // Dump the content
+            // Dump the content on main execution if we used enough space
             DumpBufferSingleThread<kIsDebug>(buffer);
         }
     }
@@ -301,6 +330,14 @@ static struct TraceFramework {
     // ------------------------------------
     // Multithread env implementation
     // ------------------------------------
+
+    char *GetWorkspaceMultithreaded() { return nullptr; }
+
+    void CommitToLogMultithreaded(const size_t trace_size) {}
+
+    void CommitToDebugLogMultithreaded(const size_t trace_size) {}
+
+    void DumpAllMultithreaded() {}
 
     // ------------------------------
     // Global fields
@@ -380,7 +417,7 @@ void CommitToDebugLog(const size_t trace_size)
     return (g_TraceFramework.*g_TraceFramework.stage_callbacks.commit_to_debug_log_cb)(trace_size);
 }
 
-int WriteTraceData(char *dst, TraceModule module, TraceType type)
+int WriteTraceData(char *dst, TraceModule module, const TraceType type)
 {
     ASSERT_NOT_NULL(dst);
     ASSERT_NEQ(type, TraceType::kShell);

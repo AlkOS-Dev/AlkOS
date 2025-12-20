@@ -6,6 +6,7 @@
 #include <data_structures/array_structures.hpp>
 #include <optional.hpp>
 
+#include <cpu/utils.hpp>
 #include <todo.hpp>
 
 #include "drivers/apic/io_apic.hpp"
@@ -34,6 +35,10 @@ class Interrupts : public InterruptsAPI
     // ------------------------------
 
     void Init();
+
+    FORCE_INLINE_F void BlockHardwareInterrupts() { ::BlockHardwareInterrupts(); }
+
+    FORCE_INLINE_F void EnableHardwareInterrupts() { ::EnableHardwareInterrupts(); }
 
     // ------------------------------
     // Class methods
