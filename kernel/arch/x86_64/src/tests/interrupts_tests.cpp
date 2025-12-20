@@ -99,7 +99,6 @@ void ExceptionTestSavesAllRegisters()
     DumpGeneralRegisters(&exc_registers);
     InvokeInterrupt<0>();
     TraceDumpedRegisters(&exc_registers);
-    trace::Flush();
 
     for (size_t idx = 0; idx <= RegisterIdx::kRegR15; ++idx) {
         R_ASSERT_EQ(
