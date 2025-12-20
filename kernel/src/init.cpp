@@ -9,6 +9,7 @@
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
 #include "modules/memory.hpp"
+#include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
 #include "modules/vfs.hpp"
 #include "modules/video.hpp"
@@ -54,4 +55,6 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     // Register Interrupts
     MemoryModule::Get().RegisterPageFault(HardwareModule::Get());
     HardwareModule::Get().RegisterInterruptHandlers();
+
+    SchedulingModule::Init();
 }
