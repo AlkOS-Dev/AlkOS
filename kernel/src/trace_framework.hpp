@@ -3,6 +3,11 @@
 
 #include <defines.hpp>
 
+/* FUTURE PLANS:
+ * - get rid of dumping -> introduce user space program dumping traces
+ * - remove flush() function
+ */
+
 namespace trace
 {
 // ------------------------------

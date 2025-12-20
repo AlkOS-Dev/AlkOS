@@ -55,10 +55,9 @@ static struct TraceFramework {
     // ------------------------------
 
     struct SmallTraceCyclicBuffer {
-        static constexpr size_t kSize           = 65536;
-        static constexpr size_t kDumpSize       = kSize - (kSize / 32);
-        static constexpr size_t kBatchSize      = 256;
-        static constexpr size_t kBufferDumpDone = kSize - (kSize / 8);
+        static constexpr size_t kSize      = 65536;
+        static constexpr size_t kDumpSize  = kSize - (kSize / 16);
+        static constexpr size_t kBatchSize = 256;
 
         hal::Atomic32 bytes_left{.value = kSize};
         hal::Atomic32 head{};
@@ -67,9 +66,12 @@ static struct TraceFramework {
     };
 
     struct MultithreadTraceCyclicBuffer {
-        u32 head;
-        u32 tail;
-        char *buffer;
+        static constexpr size_t kSize = FeatureValue<FeatureFlag::kTraceBufferSize>;
+
+        hal::Atomic32 bytes_left{.value = kSize};
+        hal::Atomic32 head{};
+        hal::Atomic32 tail{};
+        char buffer[kSize]{};
     };
 
     struct CoreTraceData {
@@ -123,7 +125,20 @@ static struct TraceFramework {
         stage_callbacks.dump_all = &TraceFramework::DumpAllSingleThreadInterrupts;
     }
 
-    FORCE_INLINE_F void AdvanceToMultiThreadStage() { R_FAIL_ALWAYS("Not implemented"); }
+    FORCE_INLINE_F void AdvanceToMultiThreadStage()
+    {
+        /* Should be executed before another cores are enabled!!! */
+
+        DEBUG_INFO_GENERAL("Updating tracing stage to stage 2 (Multithreaded environment)");
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+        stage_callbacks.get_workspace_cb       = &TraceFramework::GetWorkspaceMultithreaded;
+        stage_callbacks.commit_to_log_cb       = &TraceFramework::CommitToLogMultithreaded;
+        stage_callbacks.commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogMultithreaded;
+        stage_callbacks.dump_all               = &TraceFramework::DumpAllMultithreaded;
+
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+    }
 
     // --------------------------------------
     // Single thread env implementation
@@ -315,6 +330,14 @@ static struct TraceFramework {
     // ------------------------------------
     // Multithread env implementation
     // ------------------------------------
+
+    char *GetWorkspaceMultithreaded() { return nullptr; }
+
+    void CommitToLogMultithreaded(const size_t trace_size) {}
+
+    void CommitToDebugLogMultithreaded(const size_t trace_size) {}
+
+    void DumpAllMultithreaded() {}
 
     // ------------------------------
     // Global fields
