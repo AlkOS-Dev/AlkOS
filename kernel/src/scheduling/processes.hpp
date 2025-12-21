@@ -3,6 +3,7 @@
 
 #include <data_structures/hash_maps.hpp>
 #include <expected.hpp>
+#include <todo.hpp>
 
 #include "constants.hpp"
 #include "hal/sync.hpp"
@@ -25,7 +26,12 @@ class Processes
     // Class interaction
     // ------------------------------
 
-    std::expected<Process *, Error> PrepareProcess();
+    NODISCARD std::expected<Process *, Error> PrepareProcess();
+
+    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
+    {
+        const u16 id = pid.id;
+    }
 
     // ------------------------------
     // Private methods

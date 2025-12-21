@@ -8,6 +8,7 @@
 #include <tuple.hpp>
 #include "array_structures.hpp"
 #include "atomic_stack.hpp"
+#include "bit_array.hpp"
 #include "mem/heap.hpp"
 
 namespace data_structures
