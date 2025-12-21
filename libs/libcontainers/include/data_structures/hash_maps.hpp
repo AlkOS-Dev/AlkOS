@@ -388,6 +388,10 @@ class PooledHashMap
     /* Does not initialize the memory!! */
     NODISCARD FORCE_INLINE_F size_t Allocate()
     {
+        if (SlotsLeft() == 0) {
+            return std::numeric_limits<size_t>::max();
+        }
+
         const size_t idx = pool_.Pop();
 
         auto mem = Mem::KMalloc(sizeof(T));

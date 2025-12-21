@@ -5,6 +5,7 @@
 #include <expected.hpp>
 
 #include "constants.hpp"
+#include "hal/sync.hpp"
 #include "scheduling/error.hpp"
 #include "scheduling/process.hpp"
 
@@ -27,11 +28,25 @@ class Processes
     std::expected<Process *, Error> PrepareProcess();
 
     // ------------------------------
-    // Class fields
+    // Private methods
     // ------------------------------
 
     protected:
+    NODISCARD FORCE_INLINE_F Pid AssignNewPid(const u16 id)
+    {
+        Pid pid{};
+        pid.id    = id;
+        pid.count = hal::AtomicIncrement(&process_counter_);
+
+        return pid;
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
     data_structures::PooledHashMap<Process, kMaxProcesses> processes_{};
+    hal::Atomic64 process_counter_{};
 };
 }  // namespace Sched
 
