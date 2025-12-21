@@ -7,6 +7,8 @@
 #include <template/integral_storage.hpp>
 #include <tuple.hpp>
 #include "array_structures.hpp"
+#include "atomic_stack.hpp"
+#include "mem/heap.hpp"
 
 namespace data_structures
 {
@@ -383,12 +385,27 @@ class PooledHashMap
         return map_[idx];
     }
 
-    NODISCARD FORCE_INLINE_F size_t Allocate() {}
+    /* Does not initialize the memory!! */
+    NODISCARD FORCE_INLINE_F size_t Allocate()
+    {
+        const size_t idx = pool_.Pop();
+
+        auto mem = Mem::KMalloc(sizeof(T));
+        R_ASSERT_TRUE(static_cast<bool>(mem));
+        map_[idx] = mem.value();
+
+        return idx;
+    }
 
     NODISCARD FORCE_INLINE_F void Free(const size_t idx)
     {
         ASSERT_LT(idx, kSize);
         ASSERT_NOT_NULL(Get(idx));
+
+        Mem::KFree(Get(idx));
+        map_[idx] = nullptr;
+
+        pool_.Push(static_cast<Idx_t>(idx));
     }
 
     // ------------------------------
@@ -397,7 +414,7 @@ class PooledHashMap
 
     protected:
     T *map_[kSize]{};
-    ArraySingleTypeStaticStack<Idx_t, kSize> pool_{};
+    AtomicArraySingleTypeStaticStack<Idx_t, kSize> pool_{};
 };
 
 }  // namespace data_structures
