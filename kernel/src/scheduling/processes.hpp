@@ -2,7 +2,10 @@
 #define KERNEL_SRC_SCHEDULING_PROCESSES_HPP_
 
 #include <data_structures/hash_maps.hpp>
+#include <expected.hpp>
+
 #include "constants.hpp"
+#include "scheduling/error.hpp"
 #include "scheduling/process.hpp"
 
 namespace Sched
@@ -20,6 +23,8 @@ class Processes
     // ------------------------------
     // Class interaction
     // ------------------------------
+
+    std::expected<Process *, Error> PrepareProcess();
 
     // ------------------------------
     // Class fields

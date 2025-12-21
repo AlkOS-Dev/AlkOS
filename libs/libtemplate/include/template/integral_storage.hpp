@@ -6,8 +6,7 @@
 namespace template_lib
 {
 template <size_t kNum>
-using MinimalUnsignedStorage_t = UnsignedIntegral_t<
-    std::bit_width(kNum) / 8 == 0 ? 1 : std::bit_ceil(static_cast<u32>(std::bit_width(kNum)) / 8)>;
+using MinimalUnsignedStorage_t = UnsignedIntegral_t<(std::bit_width(kNum) + 7) / 8>;
 
 }  // namespace template_lib
 

@@ -1,8 +1,11 @@
 #ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ATOMIC_STACK_HPP_
 #define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_ATOMIC_STACK_HPP_
 
+#include <assert.h>
 #include <defines.hpp>
 #include <type_traits.hpp>
+#include <utility.hpp>
+
 #include "hal/sync.hpp"
 
 template <size_t kSizeBytes, size_t kAlignment = 8>
@@ -56,7 +59,7 @@ class AtomicArrayStaticStack
     template <class T>
     FORCE_INLINE_F clean_type<T> Pop()
     {
-        ASSERT_LE(sizeof(T), hal::AtomicLoad(&top_), "Stack underflow!!");
+        ASSERT_LE(sizeof(T), static_cast<size_t>(hal::AtomicLoad(&top_)), "Stack underflow!!");
         const auto top = hal::AtomicSub(&top_, sizeof(T));
 
         auto ptr = reinterpret_cast<clean_type<T> *>(stack_.data + top);
@@ -78,7 +81,7 @@ class AtomicArrayStaticStack
         const size_t start = hal::AtomicLoad(&top_);
         hal::AtomicAdd(&top_, sizeof(T));
 
-        ASSERT_LE(hal::AtomicLoad(&top_), kSizeBytes, "Stack overflow!");
+        ASSERT_LE(static_cast<size_t>(hal::AtomicLoad(&top_)), kSizeBytes, "Stack overflow!");
         return reinterpret_cast<clean_type<T> *>(stack_.data + start);
     }
 

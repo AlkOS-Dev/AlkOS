@@ -333,9 +333,9 @@ static struct TraceFramework {
 
     char *GetWorkspaceMultithreaded() { return nullptr; }
 
-    void CommitToLogMultithreaded(const size_t trace_size) {}
+    void CommitToLogMultithreaded(const size_t) {}
 
-    void CommitToDebugLogMultithreaded(const size_t trace_size) {}
+    void CommitToDebugLogMultithreaded(const size_t) {}
 
     void DumpAllMultithreaded() {}
 

@@ -15,6 +15,12 @@ class RegistryTest : public TestGroupBase
 {
 };
 
+class PooledHashMapTest : public TestGroupBase
+{
+    protected:
+    static constexpr size_t kPoolSize = 8;
+};
+
 // ------------------------------
 // Hashmap Insert Tests
 // ------------------------------
@@ -387,4 +393,228 @@ TEST_F(RegistryTest, IteratorAccess)
     }
 
     EXPECT_EQ(3_size, count);
+}
+
+struct PooledTestType {
+    int value;
+    char data[16];
+
+    PooledTestType() : value(0) { data[0] = '\0'; }
+    explicit PooledTestType(int v) : value(v)
+    {
+        for (size_t i = 0; i < 16; ++i) {
+            data[i] = static_cast<char>(v + i);
+        }
+    }
+};
+
+TEST_F(PooledHashMapTest, Constructor_GivenDefault_InitializesEmptyPool)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    EXPECT_EQ(0_size, pool.Size());
+    EXPECT_EQ(kPoolSize, pool.SlotsLeft());
+}
+
+TEST_F(PooledHashMapTest, Allocate_GivenEmptyPool_ReturnsValidIndex)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx = pool.Allocate();
+
+    EXPECT_LT(idx, kPoolSize);
+    EXPECT_NOT_NULL(pool.Get(idx));
+    EXPECT_EQ(1_size, pool.Size());
+    EXPECT_EQ(kPoolSize - 1, pool.SlotsLeft());
+}
+
+TEST_F(PooledHashMapTest, Allocate_GivenMultipleAllocations_ReturnsDifferentIndices)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx1 = pool.Allocate();
+    size_t idx2 = pool.Allocate();
+    size_t idx3 = pool.Allocate();
+
+    EXPECT_NEQ(idx1, idx2);
+    EXPECT_NEQ(idx2, idx3);
+    EXPECT_NEQ(idx1, idx3);
+
+    EXPECT_NOT_NULL(pool.Get(idx1));
+    EXPECT_NOT_NULL(pool.Get(idx2));
+    EXPECT_NOT_NULL(pool.Get(idx3));
+
+    EXPECT_EQ(3_size, pool.Size());
+    EXPECT_EQ(kPoolSize - 3, pool.SlotsLeft());
+}
+
+TEST_F(PooledHashMapTest, Allocate_GivenFullPool_AllocatesAllSlots)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t indices[kPoolSize];
+    for (size_t i = 0; i < kPoolSize; ++i) {
+        indices[i] = pool.Allocate();
+        EXPECT_NOT_NULL(pool.Get(indices[i]));
+    }
+
+    EXPECT_EQ(kPoolSize, pool.Size());
+    EXPECT_EQ(0_size, pool.SlotsLeft());
+
+    for (size_t i = 0; i < kPoolSize; ++i) {
+        for (size_t j = i + 1; j < kPoolSize; ++j) {
+            EXPECT_NEQ(indices[i], indices[j]);
+        }
+    }
+}
+
+TEST_F(PooledHashMapTest, Get_GivenAllocatedIndex_ReturnsValidPointer)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx          = pool.Allocate();
+    PooledTestType *ptr = pool.Get(idx);
+
+    EXPECT_NOT_NULL(ptr);
+    ptr->value = 42;
+    EXPECT_EQ(42, ptr->value);
+}
+
+TEST_F(PooledHashMapTest, Get_GivenConstPool_ReturnsConstPointer)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+    size_t idx = pool.Allocate();
+
+    const PooledHashMap<PooledTestType, kPoolSize> &const_pool = pool;
+    const PooledTestType *ptr                                  = const_pool.Get(idx);
+
+    EXPECT_NOT_NULL(ptr);
+}
+
+TEST_F(PooledHashMapTest, Free_GivenAllocatedIndex_FreesSlotAndReturnsToPool)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx = pool.Allocate();
+    EXPECT_EQ(1_size, pool.Size());
+    EXPECT_EQ(kPoolSize - 1, pool.SlotsLeft());
+
+    pool.Free(idx);
+
+    EXPECT_EQ(0_size, pool.Size());
+    EXPECT_EQ(kPoolSize, pool.SlotsLeft());
+    EXPECT_NULL(pool.Get(idx));
+}
+
+TEST_F(PooledHashMapTest, Free_GivenMultipleAllocations_FreesCorrectly)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx1 = pool.Allocate();
+    size_t idx2 = pool.Allocate();
+    size_t idx3 = pool.Allocate();
+
+    EXPECT_EQ(3_size, pool.Size());
+
+    pool.Free(idx2);
+
+    EXPECT_EQ(2_size, pool.Size());
+    EXPECT_EQ(kPoolSize - 2, pool.SlotsLeft());
+    EXPECT_NULL(pool.Get(idx2));
+    EXPECT_NOT_NULL(pool.Get(idx1));
+    EXPECT_NOT_NULL(pool.Get(idx3));
+}
+
+TEST_F(PooledHashMapTest, FreeAndReallocate_GivenFreedSlot_ReusesIndex)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    [[maybe_unused]] size_t idx1 = pool.Allocate();
+    size_t idx2                  = pool.Allocate();
+    [[maybe_unused]] size_t idx3 = pool.Allocate();
+
+    pool.Free(idx2);
+
+    size_t idx4 = pool.Allocate();
+
+    EXPECT_EQ(idx2, idx4);
+    EXPECT_EQ(3_size, pool.Size());
+    EXPECT_NOT_NULL(pool.Get(idx4));
+}
+
+TEST_F(PooledHashMapTest, AllocateFreeSequence_GivenRepeatedOperations_MaintainsCorrectness)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t indices[kPoolSize];
+    for (size_t i = 0; i < kPoolSize; ++i) {
+        indices[i] = pool.Allocate();
+    }
+
+    EXPECT_EQ(kPoolSize, pool.Size());
+    EXPECT_EQ(0_size, pool.SlotsLeft());
+
+    for (size_t i = 0; i < kPoolSize / 2; ++i) {
+        pool.Free(indices[i]);
+    }
+
+    EXPECT_EQ(kPoolSize / 2, pool.Size());
+    EXPECT_EQ(kPoolSize / 2, pool.SlotsLeft());
+
+    for (size_t i = 0; i < kPoolSize / 2; ++i) {
+        size_t new_idx = pool.Allocate();
+        EXPECT_NOT_NULL(pool.Get(new_idx));
+    }
+
+    EXPECT_EQ(kPoolSize, pool.Size());
+    EXPECT_EQ(0_size, pool.SlotsLeft());
+}
+
+TEST_F(PooledHashMapTest, Size_GivenAllocateAndFree_UpdatesCorrectly)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    EXPECT_EQ(0_size, pool.Size());
+
+    size_t idx1 = pool.Allocate();
+    EXPECT_EQ(1_size, pool.Size());
+
+    size_t idx2 = pool.Allocate();
+    EXPECT_EQ(2_size, pool.Size());
+
+    pool.Free(idx1);
+    EXPECT_EQ(1_size, pool.Size());
+
+    pool.Free(idx2);
+    EXPECT_EQ(0_size, pool.Size());
+}
+
+TEST_F(PooledHashMapTest, SlotsLeft_GivenAllocateAndFree_UpdatesCorrectly)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    EXPECT_EQ(kPoolSize, pool.SlotsLeft());
+
+    size_t idx1 = pool.Allocate();
+    EXPECT_EQ(kPoolSize - 1, pool.SlotsLeft());
+
+    size_t idx2 = pool.Allocate();
+    EXPECT_EQ(kPoolSize - 2, pool.SlotsLeft());
+
+    pool.Free(idx1);
+    EXPECT_EQ(kPoolSize - 1, pool.SlotsLeft());
+
+    pool.Free(idx2);
+    EXPECT_EQ(kPoolSize, pool.SlotsLeft());
+}
+
+TEST_F(PooledHashMapTest, Get_GivenFreedIndex_ReturnsNull)
+{
+    PooledHashMap<PooledTestType, kPoolSize> pool;
+
+    size_t idx = pool.Allocate();
+    EXPECT_NOT_NULL(pool.Get(idx));
+
+    pool.Free(idx);
+    EXPECT_NULL(pool.Get(idx));
 }

@@ -174,12 +174,14 @@ NO_RET void OnKernelPanic()
     if (!g_testStarted) {
         /* test not started yet, but we received failure -> some critical bug -> abort execution */
         arch::TerminalWriteError("[TEST] [FAIL] Kernel panic received before test started...\n");
+        trace::DumpAllBuffersOnFailure();
         hal::QemuShutdown();
     }
 
     if (g_expectFail) {
         /* fail was expected we are good */
         arch::TerminalWriteString("[TEST] [SUCCESS] Test failed successfully...\n");
+        trace::DumpAllBuffersOnFailure();
         hal::QemuShutdown();
     }
 

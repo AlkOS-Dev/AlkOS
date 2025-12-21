@@ -359,7 +359,7 @@ class PooledHashMap
 
     PooledHashMap()
     {
-        for (Idx_t i = 0; i < kSize; ++i) {
+        for (Idx_t i = 0; i < static_cast<Idx_t>(kSize); ++i) {
             pool_.Push(i);
         }
         ASSERT_EQ(pool_.Size(), kSize);
@@ -392,7 +392,7 @@ class PooledHashMap
 
         auto mem = Mem::KMalloc(sizeof(T));
         R_ASSERT_TRUE(static_cast<bool>(mem));
-        map_[idx] = mem.value();
+        map_[idx] = static_cast<T *>(mem.value());
 
         return idx;
     }
