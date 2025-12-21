@@ -4,6 +4,8 @@
 #include <defines.hpp>
 #include <types.hpp>
 
+#include "process.hpp"
+
 namespace Sched
 {
 
@@ -14,6 +16,9 @@ struct PACK Tid {
 
 struct Thread {
     Tid tid;
+    Pid owner;
+
+    Thread *next;
 };
 }  // namespace Sched
 
