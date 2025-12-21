@@ -13,7 +13,7 @@
 //==============================================================================
 
 template <std::unsigned_integral NumT>
-FAST_CALL constexpr bool IsPowerOfTwo(const NumT n);
+FAST_CALL constexpr bool IsPowerOfTwo(NumT n);
 
 // ------------------------------
 // Various defines
@@ -87,6 +87,12 @@ template <>
 struct UnsignedIntegral<8> {
     using type = u64;
 };
+
+template <size_t kSize>
+using UnsignedIntegral_t = typename UnsignedIntegral<kSize>::type;
+
+template <size_t kNum>
+using MinimalUnsignedStorage_t = typename UnsignedIntegral<std::>::type;
 
 // ------------------------------
 // Functions

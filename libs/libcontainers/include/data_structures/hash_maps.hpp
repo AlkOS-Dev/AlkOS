@@ -5,6 +5,7 @@
 #include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
 #include <string.hpp>
 #include <tuple.hpp>
+#include "array_structures.hpp"
 
 namespace data_structures
 {
@@ -337,6 +338,29 @@ class Registry
     StaticVector<u64, kSize> key_vector_{};
     T active_;  // Uninitialized intentionally
     bool is_active_{false};
+};
+
+// ------------------------------
+// PooledHashMap
+// ------------------------------
+
+template <class T, size_t kSize>
+class PooledHashMap
+{
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    PooledHashMap() {}
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    T *map_[kSize]{};
+    ArraySingleTypeStaticStack<u32, kSize> pool_{};
 };
 
 }  // namespace data_structures
