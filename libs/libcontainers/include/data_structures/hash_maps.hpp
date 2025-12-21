@@ -4,6 +4,7 @@
 #include <bit.hpp>
 #include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
 #include <string.hpp>
+#include <template/integral_storage.hpp>
 #include <tuple.hpp>
 #include "array_structures.hpp"
 
@@ -347,12 +348,48 @@ class Registry
 template <class T, size_t kSize>
 class PooledHashMap
 {
+    using Idx_t = template_lib::MinimalUnsignedStorage_t<kSize>;
+
     public:
     // ------------------------------
     // Class creation
     // ------------------------------
 
-    PooledHashMap() {}
+    PooledHashMap()
+    {
+        for (Idx_t i = 0; i < kSize; ++i) {
+            pool_.Push(i);
+        }
+        ASSERT_EQ(pool_.Size(), kSize);
+    }
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return kSize - pool_.Size(); }
+
+    NODISCARD FORCE_INLINE_F size_t SlotsLeft() const { return pool_.Size(); }
+
+    NODISCARD FORCE_INLINE_F T *Get(const size_t idx)
+    {
+        ASSERT_LT(idx, kSize);
+        return map_[idx];
+    }
+
+    NODISCARD FORCE_INLINE_F T *Get(const size_t idx) const
+    {
+        ASSERT_LT(idx, kSize);
+        return map_[idx];
+    }
+
+    NODISCARD FORCE_INLINE_F size_t Allocate() {}
+
+    NODISCARD FORCE_INLINE_F void Free(const size_t idx)
+    {
+        ASSERT_LT(idx, kSize);
+        ASSERT_NOT_NULL(Get(idx));
+    }
 
     // ------------------------------
     // Class fields
@@ -360,7 +397,7 @@ class PooledHashMap
 
     protected:
     T *map_[kSize]{};
-    ArraySingleTypeStaticStack<u32, kSize> pool_{};
+    ArraySingleTypeStaticStack<Idx_t, kSize> pool_{};
 };
 
 }  // namespace data_structures
