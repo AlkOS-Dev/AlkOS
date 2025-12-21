@@ -397,7 +397,7 @@ class PooledHashMap
         return idx;
     }
 
-    NODISCARD FORCE_INLINE_F void Free(const size_t idx)
+    FORCE_INLINE_F void Free(const size_t idx)
     {
         ASSERT_LT(idx, kSize);
         ASSERT_NOT_NULL(Get(idx));
