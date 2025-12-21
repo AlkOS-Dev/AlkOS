@@ -31,6 +31,13 @@ class Processes
     NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
     {
         const u16 id = pid.id;
+        auto ptr     = processes_.Get(id);
+
+        if (ptr == nullptr) {
+            return std::unexpected(Error::ProcessNotFound);
+        }
+
+        return ptr;
     }
 
     // ------------------------------

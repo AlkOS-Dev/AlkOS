@@ -28,6 +28,18 @@ class Threads
 
     std::expected<Thread *, Error> PrepareThread();
 
+    NODISCARD FORCE_INLINE_F std::expected<Thread *, Error> GetThread(const Tid tid)
+    {
+        const u16 id = tid.id;
+        auto ptr     = threads_.Get(id);
+
+        if (ptr == nullptr) {
+            return std::unexpected(Error::ThreadNotFound);
+        }
+
+        return ptr;
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------

@@ -7,6 +7,8 @@ namespace Sched
 enum class Error {
     OutOfMemory,
     ExceededMaxAllowedInstances,
+    ProcessNotFound,
+    ThreadNotFound,
 };
 }  // namespace Sched
 
