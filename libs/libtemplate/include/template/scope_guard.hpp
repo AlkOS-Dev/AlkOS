@@ -58,7 +58,6 @@ class BatchedScopeGuard
     explicit BatchedScopeGuard(bool &dismissed, F &&f)
         : f_(std::forward<F>(f)), dismissed_(dismissed)
     {
-        ASSERT_NOT_NULL(dismissed);
     }
 
     BatchedScopeGuard(BatchedScopeGuard &&)            = delete;

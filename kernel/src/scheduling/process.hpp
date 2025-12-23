@@ -18,7 +18,7 @@ struct Process {
     Pid pid;
 
     /* Process resources */
-    Mem::AddressSpace *address_space;
+    Mem::VirtualPtr<Mem::AddressSpace> address_space;
 };
 }  // namespace Sched
 

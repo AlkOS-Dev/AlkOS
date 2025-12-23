@@ -1,6 +1,7 @@
+#include <template/enum_name.hpp>
 #include <template/scope_guard.hpp>
 
-#include "macros.hpp"
+#include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "task_mgr.hpp"
 #include "trace_framework.hpp"
@@ -24,6 +25,10 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     // 1. Prepare internal structure for the process
     auto process = SchedulingModule::Get().GetProcesses().PrepareProcess();
     if (!process) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to create process. Failed on struct allocation: %s",
+            template_lib::to_string(process.error()).data()
+        );
         return std::unexpected(process.error());
     }
     template_lib::BatchedScopeGuard process_guard(dismiss, [&]() {
@@ -32,13 +37,28 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
         ASSERT_TRUE(static_cast<bool>(result));
     });
 
-    // 2. Fill process data and resources - TODO
+    // 2. Fill process data and resources
+    auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
+    if (!addr_space) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to create process. Failed on AddressSpace creation: %s",
+            template_lib::to_string(addr_space.error()).data()
+        );
+        return std::unexpected(Error::OutOfMemory);
+    }
+    process.value()->address_space = addr_space.value();
+    template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
+        [[maybe_unused]] const auto result =
+            MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
+        ASSERT_TRUE(static_cast<bool>(result));
+    });
 
     // 3. Spawn first thread
     const auto tid = SpawnThread(process.value()->pid);
     if (!tid) {
         DEBUG_WARN_SCHEDULING(
-
+            "Failed to create process. Failed on initial thread creation: %s",
+            template_lib::to_string(tid.error()).data()
         );
         return std::unexpected(tid.error());
     }
