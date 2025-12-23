@@ -40,6 +40,18 @@ class Processes
         return ptr;
     }
 
+    FORCE_INLINE_F std::expected<void, Error> Free(const Pid pid)
+    {
+        const u16 id = pid.id;
+
+        if (processes_.Get(id) == nullptr) {
+            return std::unexpected(Error::ProcessNotFound);
+        }
+
+        processes_.Free(id);
+        return {};
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------

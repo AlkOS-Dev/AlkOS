@@ -4,6 +4,7 @@
 #include <expected.hpp>
 #include "error.hpp"
 #include "process.hpp"
+#include "thread.hpp"
 
 namespace Sched
 {
@@ -23,7 +24,9 @@ class TaskMgr
 
     void InitializeMultitasking();
 
-    NODISCARD std::expected<Process *, Error> SpawnProcess();
+    NODISCARD std::expected<Pid, Error> SpawnProcess();
+
+    NODISCARD std::expected<Tid, Error> SpawnThread(Pid pid);
 
     // ------------------------------
     // Private methods

@@ -40,6 +40,18 @@ class Threads
         return ptr;
     }
 
+    FORCE_INLINE_F std::expected<void, Error> Free(const Tid tid)
+    {
+        const u16 id = tid.id;
+
+        if (threads_.Get(id) == nullptr) {
+            return std::unexpected(Error::ThreadNotFound);
+        }
+
+        threads_.Free(id);
+        return {};
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------
