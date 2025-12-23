@@ -15,10 +15,16 @@ struct PACK Tid {
 };
 
 struct Thread {
+    /* Management */
     Tid tid;
     Pid owner;
 
+    /* Scheduler data */
     Thread *next;
+
+    /* Thread resources */
+    void *kernel_stack;
+    void *user_stack;
 };
 }  // namespace Sched
 

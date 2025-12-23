@@ -4,6 +4,8 @@
 #include <defines.hpp>
 #include <types.hpp>
 
+#include "mem/virt/addr_space.hpp"
+
 namespace Sched
 {
 struct PACK Pid {
@@ -12,7 +14,11 @@ struct PACK Pid {
 };
 
 struct Process {
+    /* Management */
     Pid pid;
+
+    /* Process resources */
+    Mem::AddressSpace *address_space;
 };
 }  // namespace Sched
 
