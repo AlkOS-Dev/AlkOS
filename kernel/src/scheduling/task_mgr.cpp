@@ -37,10 +37,18 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     // 3. Spawn first thread
     const auto tid = SpawnThread(process.value()->pid);
     if (!tid) {
+        DEBUG_WARN_SCHEDULING(
+
+        );
         return std::unexpected(tid.error());
     }
 
     // 4. Add to scheduler - TODO
+
+    DEBUG_INFO_SCHEDULING(
+        "Created process with pid: %llu, and initial thread with tid: %llu", process.value()->pid,
+        tid.value()
+    );
 
     dismiss = true;
     return process.value()->pid;
