@@ -16,7 +16,10 @@
 
 namespace Sched
 {
-void TaskMgr::InitializeMultitasking() {}
+void TaskMgr::InitializeMultitasking()
+{
+    // Spawn 3 Kernel Workers
+}
 
 std::expected<Pid, Error> TaskMgr::SpawnProcess()
 {
@@ -37,21 +40,23 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
         ASSERT_TRUE(static_cast<bool>(result));
     });
 
-    // 2. Fill process data and resources
-    auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
-    if (!addr_space) {
-        DEBUG_WARN_SCHEDULING(
-            "Failed to create process. Failed on AddressSpace creation: %s",
-            template_lib::to_string(addr_space.error()).data()
-        );
-        return std::unexpected(Error::OutOfMemory);
-    }
-    process.value()->address_space = addr_space.value();
-    template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
-        [[maybe_unused]] const auto result =
-            MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
-        ASSERT_TRUE(static_cast<bool>(result));
-    });
+    // 2. Fill process data and resources - TODO: replace with proper one
+    TODO_WHEN_VMEM_WORKS
+    process.value()->address_space = &MemoryModule::Get().GetKernelAddressSpace();
+    // auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
+    // if (!addr_space) {
+    //     DEBUG_WARN_SCHEDULING(
+    //         "Failed to create process. Failed on AddressSpace creation: %s",
+    //         template_lib::to_string(addr_space.error()).data()
+    //     );
+    //     return std::unexpected(Error::OutOfMemory);
+    // }
+    // process.value()->address_space = addr_space.value();
+    // template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
+    //     [[maybe_unused]] const auto result =
+    //         MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
+    //     ASSERT_TRUE(static_cast<bool>(result));
+    // });
 
     // 3. Spawn first thread
     const auto tid = SpawnThread(process.value()->pid);
