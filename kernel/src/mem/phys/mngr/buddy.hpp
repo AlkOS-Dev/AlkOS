@@ -1,6 +1,7 @@
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 
+#include <bit.hpp>
 #include <expected.hpp>
 #include <types.hpp>
 
@@ -50,7 +51,7 @@ class BuddyPmm
         // __builtin_clzll returns the number of zero bits before the first '1'.
         // sizeof(long long) * 8 is the total width (usually 64).
         size_t pages_needed = (size_bytes - 1) >> hal::kPageShift;
-        return static_cast<u8>((sizeof(long long) * 8) - __builtin_clzll(pages_needed));
+        return static_cast<u8>((sizeof(size_t) * 8) - std::countl_zero(pages_needed));
     }
 
     static constexpr size_t BuddyAreaSize(u8 order)
