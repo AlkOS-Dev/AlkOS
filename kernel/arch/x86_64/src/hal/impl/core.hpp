@@ -41,10 +41,9 @@ class Core : public CoreAPI
 NODISCARD WRAP_CALL u32 GetCurrentCoreId() { return LocalApic::GetCoreId(); }
 
 FAST_CALL void SetCoreLocalData(void *data)
+// note: Caller is responsible for disabling irqs during this function
 {
-    BlockHardwareInterrupts();
     cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(data));
-    EnableHardwareInterrupts();
 }
 
 FAST_CALL void *GetCoreLocalData() { return reinterpret_cast<void *>(cpu::GetMSR(kIa32GsBase)); }

@@ -67,7 +67,7 @@ void ArchInit(const RawBootArguments &)
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
 
-    cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(&g_CoreLocal));
+    hal::SetCoreLocalData(&g_CoreLocal);
     EnableHardwareInterrupts();
 
     DEBUG_INFO_BOOT("Leaving ArchInit");
