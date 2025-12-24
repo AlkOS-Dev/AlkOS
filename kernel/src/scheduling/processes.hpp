@@ -10,6 +10,8 @@
 #include "scheduling/error.hpp"
 #include "scheduling/process.hpp"
 
+#include <trace_framework.hpp>
+
 namespace Sched
 {
 class Processes
@@ -61,7 +63,7 @@ class Processes
     {
         Pid pid{};
         pid.id    = id;
-        pid.count = hal::AtomicIncrement(&process_counter_);
+        pid.count = hal::AtomicIncrement(&process_counter_) - 1;
 
         return pid;
     }

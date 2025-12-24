@@ -57,4 +57,5 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().RegisterInterruptHandlers();
 
     SchedulingModule::Init();
+    SchedulingModule::Get().GetTaskMgr().InitializeMultitasking();
 }

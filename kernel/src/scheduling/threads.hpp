@@ -61,7 +61,7 @@ class Threads
     {
         Tid tid{};
         tid.id    = id;
-        tid.count = hal::AtomicIncrement(&thread_counter_);
+        tid.count = hal::AtomicIncrement(&thread_counter_) - 1;
 
         return tid;
     }

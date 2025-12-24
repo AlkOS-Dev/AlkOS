@@ -1,10 +1,11 @@
-#include <template/enum_name.hpp>
 #include <template/scope_guard.hpp>
 
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "task_mgr.hpp"
 #include "trace_framework.hpp"
+
+#include "hal/scheduling.hpp"
 
 // ------------------------------
 // statics
@@ -19,6 +20,18 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
+    static constexpr size_t kNumKWorkers = 3;
+    for (size_t i = 0; i < kNumKWorkers; ++i) {
+        auto result = SpawnProcess();
+        R_ASSERT_TRUE(
+            static_cast<bool>(result),
+            "Failed to spawn kernel workers. Not enough resources for the system"
+        );
+
+        TRACE_INFO_SCHEDULING(
+            "Created initial Kernel Worker process with Pid: %llu", result.value()
+        );
+    }
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnProcess()
@@ -29,8 +42,7 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     auto process = SchedulingModule::Get().GetProcesses().PrepareProcess();
     if (!process) {
         DEBUG_WARN_SCHEDULING(
-            "Failed to create process. Failed on struct allocation: %s",
-            template_lib::to_string(process.error()).data()
+            "Failed to create process. Failed on struct allocation: %s", to_string(process.error())
         );
         return std::unexpected(process.error());
     }
@@ -63,7 +75,7 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     if (!tid) {
         DEBUG_WARN_SCHEDULING(
             "Failed to create process. Failed on initial thread creation: %s",
-            template_lib::to_string(tid.error()).data()
+            to_string(tid.error())
         );
         return std::unexpected(tid.error());
     }
@@ -83,9 +95,14 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid)
 {
     bool dismiss = false;
 
-    // 2. Prepare internal structure for execution unit - thread:
+    // 1. Prepare internal structure for execution unit - thread:
     auto thread = SchedulingModule::Get().GetThreads().PrepareThread();
     if (!thread) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to create thread for %llu. Failed on struct allocation: %s", pid,
+            to_string(thread.error())
+        );
+
         return std::unexpected(thread.error());
     }
     template_lib::BatchedScopeGuard thread_guard(dismiss, [&]() {
@@ -94,12 +111,17 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid)
         ASSERT_TRUE(static_cast<bool>(result));
     });
 
-    // 3. Allocate process resources and prepare the struct
+    // 2. Allocate process resources and prepare the struct
     thread.value()->owner = pid;
 
-    // 3.1 Kernel Stack
+    // 2.1 Kernel Stack
     const auto kernel_stack = Mem::KMallocAligned({kKernelStackSize, kStackAlignment});
     if (!kernel_stack) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to create thread for %llu. Failed on kernel stack allocation: %s", pid,
+            to_string(kernel_stack.error())
+        );
+
         return std::unexpected(Error::OutOfMemory);
     }
     template_lib::BatchedScopeGuard esp0_guard(dismiss, [&]() {
@@ -107,9 +129,14 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid)
     });
     thread.value()->kernel_stack = kernel_stack.value();
 
-    // 3.2 Thread Stack
+    // 2.2 Thread Stack
     const auto thread_stack = Mem::KMallocAligned({kStackSize, kStackAlignment});
     if (!thread_stack) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to create thread for %llu. Failed on thread stack allocation: %s", pid,
+            to_string(thread_stack.error())
+        );
+
         return std::unexpected(Error::OutOfMemory);
     }
     thread.value()->user_stack = thread_stack.value();

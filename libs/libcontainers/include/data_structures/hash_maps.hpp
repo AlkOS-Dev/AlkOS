@@ -11,6 +11,8 @@
 #include "bit_array.hpp"
 #include "mem/heap.hpp"
 
+#include <trace_framework.hpp>
+
 namespace data_structures
 {
 
@@ -361,7 +363,7 @@ class PooledHashMap
     PooledHashMap()
     {
         for (Idx_t i = 0; i < static_cast<Idx_t>(kSize); ++i) {
-            pool_.Push(i);
+            pool_.Push(static_cast<Idx_t>(kSize) - i - 1);
         }
         ASSERT_EQ(pool_.Size(), kSize);
     }
