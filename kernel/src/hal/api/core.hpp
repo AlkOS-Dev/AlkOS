@@ -13,6 +13,9 @@ struct CoreAPI {
     void EnableCore();
 };
 
+struct CoreControllerAPI {
+};
+
 NODISCARD WRAP_CALL u32 GetCurrentCoreId();
 
 }  // namespace arch

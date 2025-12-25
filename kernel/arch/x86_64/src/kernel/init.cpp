@@ -68,6 +68,8 @@ void ArchInit(const RawBootArguments &)
     HardwareModule::Get().GetInterrupts().FirstStageInit();
 
     hal::SetCoreLocalData(&g_CoreLocal);
+    InitializeCoreLocal();
+
     EnableHardwareInterrupts();
 
     DEBUG_INFO_BOOT("Leaving ArchInit");

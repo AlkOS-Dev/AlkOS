@@ -116,6 +116,13 @@ struct PACK GdtEntry {
         kPageGranularity = 1,
     };
 
+    struct PACK Flags {
+        u8 reserved : 1;
+        LongModeFlag long_mode_flag : 1;
+        SizeFlag size_flag : 1;
+        GranularityFlag granularity_flag : 1;
+    };
+
     u16 limit;
     u16 base;
     u8 base_mid;
@@ -141,6 +148,31 @@ struct PACK Gdtr {
     u16 limit;
     u64 base;
 };
+
+struct alignas(16) PACK GDT {
+    GdtEntry<> null_entry;
+    GdtEntry<> kernel_code;
+    GdtEntry<> kernel_data;
+    GdtEntry<> user_code;
+    GdtEntry<> user_data;
+    GdtSystemSegmentDescriptor tss_descriptor;
+};
+
+struct PACK TSS {
+    u32 reserved0;
+    u64 rsp0;
+    u64 rsp1;
+    u64 rsp2;
+    u64 reserved1;
+    u64 ist[7];
+    u64 reserved2;
+    u16 reserved3;
+    u16 iopb_offset;
+};
+
+void DefaultEntryInit(GdtEntry<> &entry, AccessByte access, GdtEntry<>::Flags flags);
+void DefaultTssEntryInit(GdtSystemSegmentDescriptor &entry, u64 tss_address);
+void DefaultGdtInit(GDT &gdt, u64 tss_address);
 
 }  // namespace cpu
 

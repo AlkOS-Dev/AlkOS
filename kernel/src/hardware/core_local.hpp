@@ -7,11 +7,11 @@
 
 namespace hardware
 {
-struct alignas(hal::kCacheLineSizeBytes) CoreLocal {
-    u8 nested_interrupts{};
-    u16 lid{};
+struct alignas(hal::kCacheLineSizeBytes) CoreLocal : hal::CoreLocal {
+    u8 nested_interrupts;
+    u16 lid;
 
-    Sched::Thread *thread_control_block{};
+    Sched::Thread *thread_control_block;
 };
 
 FAST_CALL CoreLocal &GetCoreLocalData()

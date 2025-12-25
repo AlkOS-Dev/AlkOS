@@ -51,7 +51,7 @@ class Core : public CoreAPI
 // arch::CoreController
 // ------------------------------
 
-class CoreController
+class CoreController : public CoreControllerAPI
 {
     public:
     // ------------------------------
@@ -65,13 +65,21 @@ class CoreController
     // Class interaction
     // ------------------------------
 
-    void InitializeFullGdt();
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
     protected:
+};
+
+// ------------------------------
+// arch::CoreLocal
+// ------------------------------
+
+struct CoreLocal {
+    cpu::GDT gdt;
+    cpu::Gdtr gdtr;
+    cpu::TSS tss;
 };
 
 // ------------------------------
@@ -87,6 +95,8 @@ FAST_CALL void SetCoreLocalData(void *data)
 }
 
 FAST_CALL void *GetCoreLocalData() { return reinterpret_cast<void *>(cpu::GetMSR(kIa32GsBase)); }
+
+void InitializeCoreLocal();
 
 }  // namespace arch
 
