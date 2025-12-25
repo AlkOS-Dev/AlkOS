@@ -8,7 +8,7 @@
 namespace hardware
 {
 
-class CoresController final
+class CoresController final : public hal::CoreController
 {
     public:
     using CoreTable      = alloca::DynArray<Core>;

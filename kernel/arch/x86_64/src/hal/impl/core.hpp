@@ -9,11 +9,19 @@
 namespace arch
 {
 
+// ------------------------------
+// defines
+// ------------------------------
+
 static constexpr u32 kIa32GsBase = 0xC0000101;
 
 struct CoreConfig {
     u16 acpi_id;
 };
+
+// ------------------------------
+// arch::Core
+// ------------------------------
 
 class Core : public CoreAPI
 {
@@ -37,6 +45,37 @@ class Core : public CoreAPI
 
     protected:
 };
+
+// ------------------------------
+// arch::CoreController
+// ------------------------------
+
+class CoreController
+{
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    CoreController()  = default;
+    ~CoreController() = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    void InitializeFullGdt();
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+};
+
+// ------------------------------
+// Helpers
+// ------------------------------
 
 NODISCARD WRAP_CALL u32 GetCurrentCoreId() { return LocalApic::GetCoreId(); }
 

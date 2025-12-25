@@ -7,6 +7,7 @@ namespace hal
 {
 using arch::Core;
 using arch::CoreConfig;
+using arch::CoreController;
 
 NODISCARD WRAP_CALL u32 GetCurrentCoreId() { return arch::GetCurrentCoreId(); }
 WRAP_CALL void SetCoreLocalData(void *data) { arch::SetCoreLocalData(data); }
