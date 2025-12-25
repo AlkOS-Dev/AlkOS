@@ -2,6 +2,7 @@
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
 
 #include <hal/api/core.hpp>
+#include "cpu/gdt.hpp"
 #include "cpu/msrs.hpp"
 #include "cpu/utils.hpp"
 #include "drivers/apic/local_apic.hpp"
