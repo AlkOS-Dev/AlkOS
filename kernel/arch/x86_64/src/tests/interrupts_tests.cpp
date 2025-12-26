@@ -27,7 +27,7 @@ static void PolluteAllRegistersSw(intr::LitSwEntry &)
 
 static DumpedRegisters g_DumpedRegisters{};
 
-static void DivZeroExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
+static void DivZeroExceptionHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     g_DumpedRegisters.rax = data->registers.rax;
     g_DumpedRegisters.rbx = data->registers.rbx;

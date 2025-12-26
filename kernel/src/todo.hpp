@@ -32,4 +32,6 @@
 
 #define TODO_WHEN_CPP_REFLECTION
 
+#define TODO_WHEN_MULTICORE
+
 #endif  // KERNEL_SRC_TODO_HPP_

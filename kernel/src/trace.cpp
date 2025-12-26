@@ -46,6 +46,7 @@ static struct TraceFramework {
             rv[static_cast<size_t>(TraceModule::kVfs)]        = "VFSModule";
             rv[static_cast<size_t>(TraceModule::kVideo)]      = "VideoModule";
             rv[static_cast<size_t>(TraceModule::kHardware)]   = "HardwareModule";
+            rv[static_cast<size_t>(TraceModule::kScheduling)] = "SchedulingModule";
 
             return rv;
         }();
@@ -333,9 +334,9 @@ static struct TraceFramework {
 
     char *GetWorkspaceMultithreaded() { return nullptr; }
 
-    void CommitToLogMultithreaded(const size_t trace_size) {}
+    void CommitToLogMultithreaded(const size_t) {}
 
-    void CommitToDebugLogMultithreaded(const size_t trace_size) {}
+    void CommitToDebugLogMultithreaded(const size_t) {}
 
     void DumpAllMultithreaded() {}
 
