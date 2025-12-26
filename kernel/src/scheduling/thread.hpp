@@ -24,7 +24,9 @@ struct PACK Thread {
 
     /* Thread resources */
     void *kernel_stack;
+    void *kernel_stack_bottom;
     void *user_stack;
+    void *user_stack_bottom;
 };
 }  // namespace Sched
 

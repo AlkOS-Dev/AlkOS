@@ -19,9 +19,14 @@ FAST_CALL CoreLocal &GetCoreLocalData()
     return *static_cast<CoreLocal *>(hal::GetCoreLocalData());
 }
 
-FAST_CALL Sched::Thread *GetCurrentTCB() { return GetCoreLocalData().thread_control_block; }
+NODISCARD FAST_CALL Sched::Thread *GetCurrentTCB()
+{
+    return GetCoreLocalData().thread_control_block;
+}
 
 FAST_CALL void SetCurrentTCB(Sched::Thread *tcb) { GetCoreLocalData().thread_control_block = tcb; }
+
+NODISCARD FAST_CALL Sched::Pid GetRunningPid() { return GetCurrentTCB()->owner; }
 
 }  // namespace hardware
 

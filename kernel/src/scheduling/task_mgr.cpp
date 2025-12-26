@@ -2,6 +2,7 @@
 
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
+#include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 #include "trace_framework.hpp"
 
@@ -22,7 +23,7 @@ void TaskMgr::InitializeMultitasking()
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 0;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
-        auto result = SpawnProcess();
+        auto result = SpawnProcess(KWorkerMain, true);
         R_ASSERT_TRUE(
             static_cast<bool>(result),
             "Failed to spawn kernel workers. Not enough resources for the system"
@@ -37,6 +38,10 @@ void TaskMgr::InitializeMultitasking()
 std::expected<Pid, Error> TaskMgr::SpawnProcess(void (*f)(), const bool kernel_only)
 {
     bool dismiss = false;
+
+    if (kernel_only) {
+        ASSERT_TRUE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
+    }
 
     // 1. Prepare internal structure for the process
     auto process = SchedulingModule::Get().GetProcesses().PrepareProcess();
@@ -100,6 +105,9 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 {
     bool dismiss = false;
 
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    ASSERT_TRUE(static_cast<bool>(process));
+
     // 1. Prepare internal structure for execution unit - thread:
     auto thread = SchedulingModule::Get().GetThreads().PrepareThread();
     if (!thread) {
@@ -132,19 +140,26 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
     template_lib::BatchedScopeGuard esp0_guard(dismiss, [&]() {
         Mem::KFreeAligned(kernel_stack.value());
     });
-    thread.value()->kernel_stack = kernel_stack.value();
+    thread.value()->kernel_stack        = kernel_stack.value();
+    thread.value()->kernel_stack_bottom = kernel_stack.value();
 
     // 2.2 Thread Stack
-    const auto thread_stack = Mem::KMallocAligned({kStackSize, kStackAlignment});
-    if (!thread_stack) {
-        DEBUG_WARN_SCHEDULING(
-            "Failed to create thread for %llu. Failed on thread stack allocation: %s", pid,
-            to_string(thread_stack.error())
-        );
+    if (!process.value()->flags.KernelSpaceOnly) {
+        const auto thread_stack = Mem::KMallocAligned({kStackSize, kStackAlignment});
+        if (!thread_stack) {
+            DEBUG_WARN_SCHEDULING(
+                "Failed to create thread for %llu. Failed on thread stack allocation: %s", pid,
+                to_string(thread_stack.error())
+            );
 
-        return std::unexpected(Error::OutOfMemory);
+            return std::unexpected(Error::OutOfMemory);
+        }
+        thread.value()->user_stack        = thread_stack.value();
+        thread.value()->user_stack_bottom = thread_stack.value();
+    } else {
+        thread.value()->user_stack        = nullptr;
+        thread.value()->user_stack_bottom = nullptr;
     }
-    thread.value()->user_stack = thread_stack.value();
 
     dismiss = true;
     return thread.value()->tid;

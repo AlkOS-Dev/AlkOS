@@ -53,6 +53,8 @@ namespace arch
 {
 void ArchInit(const RawBootArguments &)
 {
+    hal::SetCoreLocalData(nullptr);
+
     DEBUG_INFO_BOOT("In ArchInit...");
     DEBUG_INFO_BOOT("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
 
@@ -66,6 +68,9 @@ void ArchInit(const RawBootArguments &)
 
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
+
+    /* Zero mem core local as no global constructors available yet */
+    memset(&g_CoreLocal, 0, sizeof(hardware::CoreLocal));
 
     hal::SetCoreLocalData(&g_CoreLocal);
     InitializeCoreLocal();

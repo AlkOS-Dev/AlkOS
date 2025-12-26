@@ -33,14 +33,14 @@ SwitchToTask:
 
     mov r12, rdi                     ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
 
-    call cdecl_GetCurrentTCB         ; RAX = pointer to TCB
-    mov [rax+Thread.user_stack], rsp ; Save ESP for previous task's kernel stack in the thread's TCB
+    call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
+    mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
 
     ; ------------------------
     ; Setup next task state
 
-    mov rdi, r12                     ; Restore next TCB pointer to RDI for the next call
-    call cdecl_SetCurrentTCB           ; Next task TCB already in RDI
+    mov rdi, r12                       ; Restore next TCB pointer to RDI for the next call
+    call cdecl_SetCurrentTCB
     mov rsp, [r12+Thread.user_stack]   ; Change the stack
 
     mov rdi, r12                     ; Set RDI for GetThreadsPageTable
@@ -59,4 +59,4 @@ SwitchToTask:
     pop_all_regs                    ; Restore registers of NEW thread's stack
     add rsp, _all_reg_size          ; Deallocate register save space.
 
-    ret ; Load next thread's EIP from its kernel stack
+    ret ; Load next thread's RIP from its stack
