@@ -4,7 +4,14 @@
 #include <bit.hpp>
 #include <hal/constants.hpp>  // < TODO: This should not be here. Make kCacheLineSizeBytes a template param
 #include <string.hpp>
+#include <template/integral_storage.hpp>
 #include <tuple.hpp>
+#include "array_structures.hpp"
+#include "atomic_stack.hpp"
+#include "bit_array.hpp"
+#include "mem/heap.hpp"
+
+#include <trace_framework.hpp>
 
 namespace data_structures
 {
@@ -337,6 +344,84 @@ class Registry
     StaticVector<u64, kSize> key_vector_{};
     T active_;  // Uninitialized intentionally
     bool is_active_{false};
+};
+
+// ------------------------------
+// PooledHashMap
+// ------------------------------
+
+template <class T, size_t kSize>
+class PooledHashMap
+{
+    using Idx_t = template_lib::MinimalUnsignedStorage_t<kSize>;
+
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    PooledHashMap()
+    {
+        for (Idx_t i = 0; i < static_cast<Idx_t>(kSize); ++i) {
+            pool_.Push(static_cast<Idx_t>(kSize) - i - 1);
+        }
+        ASSERT_EQ(pool_.Size(), kSize);
+    }
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F size_t Size() const { return kSize - pool_.Size(); }
+
+    NODISCARD FORCE_INLINE_F size_t SlotsLeft() const { return pool_.Size(); }
+
+    NODISCARD FORCE_INLINE_F T *Get(const size_t idx)
+    {
+        ASSERT_LT(idx, kSize);
+        return map_[idx];
+    }
+
+    NODISCARD FORCE_INLINE_F T *Get(const size_t idx) const
+    {
+        ASSERT_LT(idx, kSize);
+        return map_[idx];
+    }
+
+    /* Does not initialize the memory!! */
+    NODISCARD FORCE_INLINE_F size_t Allocate()
+    {
+        if (SlotsLeft() == 0) {
+            return std::numeric_limits<size_t>::max();
+        }
+
+        const size_t idx = pool_.Pop();
+
+        auto mem = Mem::KMalloc(sizeof(T));
+        R_ASSERT_TRUE(static_cast<bool>(mem));
+        map_[idx] = static_cast<T *>(mem.value());
+
+        return idx;
+    }
+
+    FORCE_INLINE_F void Free(const size_t idx)
+    {
+        ASSERT_LT(idx, kSize);
+        ASSERT_NOT_NULL(Get(idx));
+
+        Mem::KFree(Get(idx));
+        map_[idx] = nullptr;
+
+        pool_.Push(static_cast<Idx_t>(idx));
+    }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    protected:
+    T *map_[kSize]{};
+    AtomicArraySingleTypeStaticStack<Idx_t, kSize> pool_{};
 };
 
 }  // namespace data_structures

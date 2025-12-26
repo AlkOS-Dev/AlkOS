@@ -50,6 +50,13 @@ void hardware::CoresController::BootUpAllCores()
     DEBUG_INFO_INTERRUPTS("Booting up all cores...");
 
     for (auto &core : core_arr_) {
+        if (core.IsEnabled()) {
+            DEBUG_INFO_BOOT(
+                "Core with id: %hu is alreday enabled. Skipping init...", core.GetLId()
+            );
+            continue;
+        }
+
         core.EnableCore();
     }
 

@@ -1,4 +1,5 @@
 #include "modules/hardware.hpp"
+#include "modules/memory.hpp"
 
 #include "trace_framework.hpp"
 
@@ -20,4 +21,6 @@ void internal::HardwareModule::RegisterInterruptHandlers()
     GetInterrupts().GetLit().InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
         1, intr::HwHandler{.handler = Ps2KeyboardHandler}
     );
+
+    ::MemoryModule::Get().RegisterPageFault(::HardwareModule::Get());
 }
