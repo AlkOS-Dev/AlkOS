@@ -13,9 +13,15 @@ struct PACK Pid {
     u64 count : 48;
 };
 
+struct PACK ProcessFlags {
+    bool KernelSpaceOnly : 1;
+};
+static_assert(sizeof(ProcessFlags) == 1);
+
 struct Process {
     /* Management */
     Pid pid;
+    ProcessFlags flags;
 
     /* Process resources */
     Mem::VirtualPtr<Mem::AddressSpace> address_space;

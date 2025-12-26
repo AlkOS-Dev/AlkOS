@@ -20,7 +20,7 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
+    static constexpr size_t kNumKWorkers = 0;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         auto result = SpawnProcess();
         R_ASSERT_TRUE(
@@ -34,7 +34,7 @@ void TaskMgr::InitializeMultitasking()
     }
 }
 
-std::expected<Pid, Error> TaskMgr::SpawnProcess()
+std::expected<Pid, Error> TaskMgr::SpawnProcess(void (*f)(), const bool kernel_only)
 {
     bool dismiss = false;
 
@@ -53,25 +53,30 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     });
 
     // 2. Fill process data and resources - TODO: replace with proper one
-    TODO_WHEN_VMEM_WORKS
-    process.value()->address_space = &MemoryModule::Get().GetKernelAddressSpace();
-    // auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
-    // if (!addr_space) {
-    //     DEBUG_WARN_SCHEDULING(
-    //         "Failed to create process. Failed on AddressSpace creation: %s",
-    //         template_lib::to_string(addr_space.error()).data()
-    //     );
-    //     return std::unexpected(Error::OutOfMemory);
-    // }
-    // process.value()->address_space = addr_space.value();
-    // template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
-    //     [[maybe_unused]] const auto result =
-    //         MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
-    //     ASSERT_TRUE(static_cast<bool>(result));
-    // });
+    if (kernel_only) {
+        process.value()->address_space = &MemoryModule::Get().GetKernelAddressSpace();
+    } else {
+        R_FAIL_ALWAYS("User space tasks not supported!");
+
+        TODO_WHEN_VMEM_WORKS
+        // auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
+        // if (!addr_space) {
+        //     DEBUG_WARN_SCHEDULING(
+        //         "Failed to create process. Failed on AddressSpace creation: %s",
+        //         template_lib::to_string(addr_space.error()).data()
+        //     );
+        //     return std::unexpected(Error::OutOfMemory);
+        // }
+        // process.value()->address_space = addr_space.value();
+        // template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
+        //     [[maybe_unused]] const auto result =
+        //         MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
+        //     ASSERT_TRUE(static_cast<bool>(result));
+        // });
+    }
 
     // 3. Spawn first thread
-    const auto tid = SpawnThread(process.value()->pid);
+    const auto tid = SpawnThread(process.value()->pid, f);
     if (!tid) {
         DEBUG_WARN_SCHEDULING(
             "Failed to create process. Failed on initial thread creation: %s",
@@ -91,7 +96,7 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess()
     return process.value()->pid;
 }
 
-std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid)
+std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 {
     bool dismiss = false;
 
