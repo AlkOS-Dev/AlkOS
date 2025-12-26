@@ -6,14 +6,14 @@
 
 extern "C" void GdtFlush(cpu::Gdtr *gdtr, u64 kernel_code_offset, u64 kernel_data_offset);
 
-using namespace arch;
-
+namespace arch
+{
 void Core::EnableCore()
 {
     // TODO:
 }
 
-void arch::InitializeCoreLocal()
+void InitializeCoreLocal()
 {
     auto core_local = static_cast<hardware::CoreLocal *>(GetCoreLocalData());
 
@@ -28,3 +28,6 @@ void arch::InitializeCoreLocal()
         "Successfully initialized GDT and TSS for core with id %hu", core_local->lid
     );
 }
+}  // namespace arch
+
+void cdecl_SetTssRsp0(const u64 rsp0) { arch::SetTssRsp0(rsp0); }

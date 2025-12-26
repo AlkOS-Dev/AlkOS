@@ -96,8 +96,16 @@ FAST_CALL void SetCoreLocalData(void *data)
 
 FAST_CALL void *GetCoreLocalData() { return reinterpret_cast<void *>(cpu::GetMSR(kIa32GsBase)); }
 
+FAST_CALL void SetTssRsp0(const u64 rsp0)
+{
+    const auto core_local = static_cast<CoreLocal *>(GetCoreLocalData());
+    core_local->tss.rsp0  = rsp0;
+}
+
 void InitializeCoreLocal();
 
 }  // namespace arch
+
+extern "C" void cdecl_SetTssRsp0(u64 rsp0);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_
