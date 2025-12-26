@@ -5,6 +5,8 @@
 #include <type_traits.hpp>
 #include <types.hpp>
 
+#include "tss.hpp"
+
 namespace cpu
 {
 struct PACK AccessByte {
@@ -162,18 +164,6 @@ struct alignas(16) PACK GDT {
     GdtEntry<> user_code;
     GdtEntry<> user_data;
     GdtSystemSegmentDescriptor tss_descriptor;
-};
-
-struct PACK TSS {
-    u32 reserved0;
-    u64 rsp0;
-    u64 rsp1;
-    u64 rsp2;
-    u64 reserved1;
-    u64 ist[7];
-    u64 reserved2;
-    u16 reserved3;
-    u16 iopb_offset;
 };
 
 void DefaultEntryInit(GdtEntry<> &entry, AccessByte access, GdtEntry<>::Flags flags);

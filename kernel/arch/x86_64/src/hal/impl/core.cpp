@@ -22,6 +22,7 @@ void arch::InitializeCoreLocal()
     core_local->gdtr.base  = reinterpret_cast<u64>(&core_local->gdt);
 
     GdtFlush(&core_local->gdtr, cpu::GDT::kKernelCodeSelector, cpu::GDT::kKernelDataSelector);
+    cpu::LoadTss(cpu::GDT::kTssSelector);
 
     DEBUG_INFO_HARDWARE(
         "Successfully initialized GDT and TSS for core with id %hu", core_local->lid
