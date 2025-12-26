@@ -15,6 +15,32 @@ extern cdecl_SetTssRsp0
 section .text
 global SwitchToKernelTask
 global SwitchToUserTask
+global ConvertToKernelTask
+
+; c_decl
+; void ConvertToKernelTask(Thread* thread)
+;   RDI = thread
+; Note: Caller is responsible for ensuring proper environment before calling (disabling IRQs)
+ConvertToKernelTask:
+    mov r12, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
+
+    call cdecl_SetCurrentTCB
+    mov  rsp, [r12+Thread.kernel_stack]   ; Change the stack
+
+    mov rdi, r12                       ; Set RDI for GetThreadsPageTable
+    call cdecl_GetThreadsPageTable     ; RAX = next cr3
+    mov r11, cr3                       ; R11 = current cr3
+
+    cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
+    je .done
+    mov cr3, rax                       ; Load next task's virtual address space
+
+.done:
+
+    pop_all_regs                    ; Restore registers of NEW thread's stack
+    add rsp, _all_reg_size          ; Deallocate register save space.
+
+    ret                             ; Load next thread's RIP from its stack
 
 ; c_decl
 ; void SwitchToKernelTask(Thread* thread)
