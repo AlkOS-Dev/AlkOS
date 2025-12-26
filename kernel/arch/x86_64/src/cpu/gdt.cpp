@@ -26,7 +26,7 @@ void cpu::DefaultTssEntryInit(GdtSystemSegmentDescriptor &entry, const u64 tss_a
 
     // encode limit
     entry.low.limit      = kLimit & kBitMask16;
-    entry.low.limit_high = (entry.low.limit >> 16) & kBitMask4;
+    entry.low.limit_high = (kLimit >> 16) & kBitMask4;
 
     // encode base
     entry.low.base      = tss_address & kBitMask16;
@@ -59,8 +59,8 @@ void cpu::DefaultGdtInit(GDT &gdt, const u64 tss_address)
     AccessByte access_kernel_data{};
     access_kernel_data.present_bit = AccessByte::PresentBit::kPresent;
     access_kernel_data.type_bit    = AccessByte::DescriptorTypeBit::kUsualSegment;
-    access_kernel_code.rw_bit      = AccessByte::RWBit::kAllowed;
-    access_kernel_code.dpl_bit     = AccessByte::DescriptorPrivilegeLevel::kKernel;
+    access_kernel_data.rw_bit      = AccessByte::RWBit::kAllowed;
+    access_kernel_data.dpl_bit     = AccessByte::DescriptorPrivilegeLevel::kKernel;
 
     DefaultEntryInit(gdt.kernel_data, access_kernel_data, {});
 

@@ -29,8 +29,8 @@ struct PACK AccessByte {
     };
 
     enum class ExecutableBit : u8 {
-        kExecutable    = 0,
-        kNonExecutable = 1,
+        kNonExecutable = 0,
+        kExecutable    = 1,
     };
 
     enum class DescriptorTypeBit : u8 {
@@ -150,6 +150,12 @@ struct PACK Gdtr {
 };
 
 struct alignas(16) PACK GDT {
+    static constexpr u16 kKernelCodeSelector = 0x08;
+    static constexpr u16 kKernelDataSelector = 0x10;
+    static constexpr u16 kUserCodeSelector   = 0x18;
+    static constexpr u16 kUserDataSelector   = 0x20;
+    static constexpr u16 kTssSelector        = 0x28;
+
     GdtEntry<> null_entry;
     GdtEntry<> kernel_code;
     GdtEntry<> kernel_data;
