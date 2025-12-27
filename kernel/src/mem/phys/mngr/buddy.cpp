@@ -6,8 +6,6 @@
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 
-#include "trace_framework.hpp"
-
 using namespace Mem;
 using B = BuddyPmm;
 

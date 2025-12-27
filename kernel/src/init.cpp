@@ -23,12 +23,8 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     hal::TerminalInit();
     hal::ArchInit(raw_args);
 
-    TRACE_INFO_GENERAL("Sanitizing Boot Args");
-    trace::Flush();
     BootArguments args = SanitizeBootArgs(raw_args);
 
-    TRACE_INFO_GENERAL("MemoryModule Init");
-    trace::Flush();
     MemoryModule::Init(args);
 
     /* GCC CXX provided function initializing global constructors */

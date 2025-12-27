@@ -17,7 +17,6 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     : KernelAddressSpace_(args.root_page_table)
 {
     DEBUG_INFO_MEMORY("MemoryModule::MemoryModule()");
-    trace::Flush();
 
     // Prepare
     const size_t total_pages    = args.total_page_frames;
@@ -25,21 +24,14 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     data_structures::BitMapView bmv{mem_bitmap, total_pages};
 
     // Init
-    TRACE_INFO_MEMORY("Bitmap");
-    trace::Flush();
     BitmapPmm_.Init(bmv);
 
-    TRACE_INFO_MEMORY("Pmt");
-    trace::Flush();
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
     // Prune whatever bootloader had left over
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
-    trace::Flush();
     {
-        QemuTerminalWriteString("test1\n");
         Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_, Tlb_);
-        QemuTerminalWriteString("test2\n");
     }
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
@@ -47,21 +39,12 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     // This limit is for speed of boot. This operation should have
     // a follow up once kernel is booted, and we have another CPU, we
     // could offload this operation to.
-    QemuTerminalWriteString("test3.1\n");
-    TRACE_INFO_MEMORY("Buddy Init");
-    QemuTerminalWriteString("test3.2\n");
-    trace::Flush();
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
-    TRACE_INFO_MEMORY("Buddy End");
-    QemuTerminalWriteString("test4\n");
-    trace::Flush();
 
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
-    trace::Flush();
     // Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
 
     SlabAllocator_.Init(BuddyPmm_);
-    QemuTerminalWriteString("test5\n");
 
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
