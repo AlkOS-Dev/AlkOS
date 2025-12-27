@@ -141,12 +141,14 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     static_assert(kLevel > 0);
     static_assert(kLevel <= 4);
 
-    static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
+    // static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
 
     // Helper lambda to process each level
     auto ProcessLevel = [&]<size_t L>(
                             Mem::VPtr<PageMapEntry<L>> pme, bool create
                         ) -> expected<Mem::VPtr<PageMapEntry<L - 1>>, Mem::MemError> {
+        constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
+
         if (pme->IsPresent()) {
             return reinterpret_cast<PageMapEntry<L - 1> *>(
                 Mem::PhysToVirt(pme->GetNextLevelTable())
@@ -357,7 +359,6 @@ void Mmu::UnmapLowerHalf(
 )
 {
     auto *pml4_virt = reinterpret_cast<PageMapTable<4> *>(PhysToVirt(root_page_table));
-    auto &pml4_meta = GetPageMeta(root_page_table, pmt);
 
     constexpr size_t kLowerHalfLimit = 256;
     for (size_t i = 0; i < kLowerHalfLimit; ++i) {
