@@ -39,7 +39,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
-    // Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
+    Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
 
     SlabAllocator_.Init(BuddyPmm_);
 
