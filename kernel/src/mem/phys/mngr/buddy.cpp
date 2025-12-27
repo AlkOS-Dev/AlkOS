@@ -6,6 +6,8 @@
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 
+#include "trace_framework.hpp"
+
 using namespace Mem;
 using B = BuddyPmm;
 
@@ -169,7 +171,7 @@ void B::Free(PPtr<Page> page)
     size_t pfn     = PageFrameNumber(page);
     PageMeta &meta = pmt_->GetPageMeta(pfn);
 
-    ASSERT_EQ(
+    R_ASSERT_EQ(
         meta.type, PageMetaType::Allocated, "Double free detected or freeing an invalid page!"
     );
 
