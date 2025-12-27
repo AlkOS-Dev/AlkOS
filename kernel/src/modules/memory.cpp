@@ -8,9 +8,6 @@
 #include "mem/virt/page_fault.hpp"
 #include "trace_framework.hpp"
 
-// TMP
-#include "drivers/serial/qemu.hpp"
-
 using namespace Mem;
 
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept

@@ -75,6 +75,5 @@ void ArchInit(const RawBootArguments &)
     EnableHardwareInterrupts();
 
     DEBUG_INFO_BOOT("Leaving ArchInit");
-    trace::Flush();
 }
 }  // namespace arch
