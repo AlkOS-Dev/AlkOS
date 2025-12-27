@@ -44,10 +44,7 @@ void FreeTableRecursive(PPtr<void> table_phys, PageMetaTable &pmt, BitmapPmm &pm
 
     for (auto &entry : *table_virt) {
         if (entry.IsPresent()) {
-            bool is_huge = false;
-            if constexpr (kLevel > 1) {
-                is_huge = entry.page_size;
-            }
+            bool is_huge = entry.IsHuge();
 
             if constexpr (kLevel > 1) {
                 if (!is_huge) {
@@ -82,7 +79,7 @@ void ReconstructRecursive(PPtr<void> table_phys, PageMeta *parent, PageMetaTable
         if (entry.IsPresent()) {
             ref_count++;
             if constexpr (kLevel > 1) {
-                if (!entry.page_size) {
+                if (!entry.IsHuge()) {
                     PPtr<void> child_phys = reinterpret_cast<PPtr<void>>(entry.GetNextLevelTable());
                     ReconstructRecursive<kLevel - 1>(child_phys, &meta, pmt);
                 }
