@@ -28,7 +28,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     // Prune whatever bootloader had left over
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
     {
-        Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_, Tlb_);
+        // Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_, Tlb_);
     }
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
