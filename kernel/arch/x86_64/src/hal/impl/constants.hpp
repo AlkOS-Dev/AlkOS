@@ -19,6 +19,7 @@ static constexpr size_t kCacheLineSizeBytes = 64;
 static constexpr size_t kPageSizeBytes      = 4096;
 static constexpr size_t kPageShift          = 12;
 static constexpr u32 kMaxCores              = 512;
+static constexpr u16 kElfMachineType        = 0x3E;
 
 // ------------------------------
 // Enums

@@ -118,11 +118,11 @@ void Shell::ProcessCommand()
         vfs::Path programPath = ResolvePath(cmd.substr(2));  // Remove ./
 
         auto &as       = MemoryModule::Get().GetKernelAddressSpace();
-        auto entry_res = sys::ElfLoader::Load(programPath, as);
+        auto entry_res = ElfLoader::Load(programPath, as);
 
         if (entry_res) {
-            u64 entry_addr = entry_res.value();
-            auto user_main = reinterpret_cast<UserEntry>(entry_addr);
+            Mem::VPtr<void> entry_addr = entry_res.value();
+            auto user_main             = reinterpret_cast<UserEntry>(entry_addr);
 
             console_.Write(
                 std::span<const byte>(

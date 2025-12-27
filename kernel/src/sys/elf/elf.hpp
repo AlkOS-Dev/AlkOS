@@ -4,7 +4,7 @@
 #include <defines.hpp>
 #include <types.hpp>
 
-namespace sys::elf
+namespace System::Elf
 {
 
 // ELF-64 Structures based on System V ABI
@@ -46,6 +46,6 @@ struct ProgramHeader {
     static constexpr u32 kFlagRead  = 4;
 } PACK;
 
-}  // namespace sys::elf
+}  // namespace System::Elf
 
 #endif  // KERNEL_SRC_SYS_ELF_ELF_HPP_

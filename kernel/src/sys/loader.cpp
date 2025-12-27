@@ -1,6 +1,5 @@
 #include "sys/loader.hpp"
 #include <string.h>
-#include <cstddef>
 #include <template/scope_guard.hpp>
 #include "bits_ext.hpp"
 #include "hal/constants.hpp"
@@ -9,14 +8,35 @@
 #include "sys/elf/elf.hpp"
 #include "trace_framework.hpp"
 
-namespace sys
+namespace System
 {
 
 using namespace Mem;
 using std::expected;
 using std::unexpected;
 
-expected<u64, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpace &as)
+namespace
+{
+bool ValidateElfHeader(const Elf::Header &header)
+{
+    if (memcmp(header.identifier, Elf::Header::kMagic, 4) != 0) {
+        TRACE_WARN_GENERAL("Invalid ELF magic");
+        return false;
+    }
+
+    if (header.machine != hal::kElfMachineType) {
+        TRACE_WARN_GENERAL(
+            "Invalid ELF machine type: expected 0x%X, got 0x%X", hal::kElfMachineType,
+            header.machine
+        );
+        return false;
+    }
+
+    return true;
+}
+}  // namespace
+
+expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpace &as)
 {
     auto &vfs = VfsModule::Get();
 
@@ -27,16 +47,14 @@ expected<u64, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpac
     }
 
     // 2. Read ELF Header
-    elf::Header header;
+    Elf::Header header;
     auto read_res = vfs.ReadFile(path, &header, sizeof(header), 0);
     if (!read_res.has_value() || read_res.value() != sizeof(header)) {
         return unexpected(LoadError::IoError);
     }
 
     // 3. Validate ELF
-    if (memcmp(header.identifier, elf::Header::kMagic, 4) != 0 ||
-        header.machine != elf::Header::kMachineX86_64) {
-        TRACE_WARN_GENERAL("Invalid ELF magic or machine type");
+    if (!ValidateElfHeader(header)) {
         return unexpected(LoadError::InvalidElf);
     }
 
@@ -58,12 +76,12 @@ expected<u64, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpac
         return unexpected(LoadError::IoError);
     }
 
-    auto *ph_table = reinterpret_cast<elf::ProgramHeader *>(ph_raw);
+    auto *ph_table = reinterpret_cast<Elf::ProgramHeader *>(ph_raw);
 
     // 5. Load Segments
     for (u16 i = 0; i < header.phnum; ++i) {
         auto &ph = ph_table[i];
-        if (ph.type != elf::ProgramHeader::kTypeLoad) {
+        if (ph.type != Elf::ProgramHeader::kTypeLoad) {
             continue;
         }
         if (ph.memsz == 0) {
@@ -76,9 +94,9 @@ expected<u64, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpac
 
         // Permissions
         VirtualMemAreaFlags flags = {};
-        flags.readable            = (ph.flags & elf::ProgramHeader::kFlagRead) != 0U;
-        flags.writable            = (ph.flags & elf::ProgramHeader::kFlagWrite) != 0U;
-        flags.executable          = (ph.flags & elf::ProgramHeader::kFlagExec) != 0U;
+        flags.readable            = (ph.flags & Elf::ProgramHeader::kFlagRead) != 0U;
+        flags.writable            = (ph.flags & Elf::ProgramHeader::kFlagWrite) != 0U;
+        flags.executable          = (ph.flags & Elf::ProgramHeader::kFlagExec) != 0U;
 
         // Add VMA to Address Space
         VMemArea vma{
@@ -116,7 +134,7 @@ expected<u64, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpac
     }
 
     u64 entry_point = header.entry;
-    return entry_point;
+    return UptrToPtr<void>(entry_point);
 }
 
-}  // namespace sys
+}  // namespace System

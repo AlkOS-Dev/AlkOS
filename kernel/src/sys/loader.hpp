@@ -20,7 +20,7 @@ class ElfLoader
      * @param as The target address space to load into.
      * @return The entry point address or an error.
      */
-    static expected<u64, LoadError> Load(const vfs::Path &path, Mem::AddressSpace &as);
+    static expected<Mem::VPtr<void>, LoadError> Load(const vfs::Path &path, Mem::AddressSpace &as);
 };
 
 }  // namespace System
