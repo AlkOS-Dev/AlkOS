@@ -44,6 +44,16 @@ copy_overlay_files() {
     fi
 }
 
+copy_userspace_files() {
+    local userspace_dir="${CONF_USERSPACE_BIN_DIR}"
+    local target_dir="${CONF_ROOTFS_DIR}/bin"
+
+    if [[ -n "${userspace_dir}" && -d "${userspace_dir}" ]]; then
+        mkdir -p "${target_dir}"
+        cp -v "${userspace_dir}"/* "${target_dir}/" || true
+    fi
+}
+
 run_delegate() {
     local fs_type="$(argparse_get "filesystem")"
     local fs_script="${MAKE_ROOTFS_IMPL_DIR}/make_${fs_type}.bash"
@@ -61,6 +71,7 @@ run_delegate() {
 main() {
     parse_args "$@"
     copy_overlay_files
+    copy_userspace_files
     run_delegate
 }
 
