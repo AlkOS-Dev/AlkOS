@@ -104,6 +104,9 @@ struct MmuAPI {
      * It recursively frees the page tables used for this mapping but does NOT
      * free the underlying physical frames (leaf nodes) mapped by them.
      *
+     * @note THIS IS TO BE USED DIRECTLY AFTER RECONSTRUCTING BITMAP PMM, BEFORE BUDDY PMM
+     * IS INITIALIZED
+     *
      * @param root_page_table Physical pointer to the top-level page table.
      * @param pmt Reference to the PageMetaTable instance.
      * @param pmm Reference to the BitmapPmm instance (for freeing tables).
