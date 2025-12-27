@@ -1,10 +1,12 @@
 #include "sys/shell.hpp"
+
 #include <string.h>
-#include <modules/memory.hpp>
-#include <modules/vfs.hpp>
 #include <string.hpp>
-#include <vfs/path.hpp>
+
+#include "modules/memory.hpp"
+#include "modules/vfs.hpp"
 #include "sys/loader.hpp"
+#include "vfs/path.hpp"
 
 // !!! TEMPORARY !!!
 using UserEntry = void (*)(void (*)(const char *));

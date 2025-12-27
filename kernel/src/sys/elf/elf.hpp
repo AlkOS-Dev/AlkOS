@@ -26,7 +26,6 @@ struct Header {
     u16 shstrndx;
 
     static constexpr unsigned char kMagic[4] = {0x7F, 'E', 'L', 'F'};
-    static constexpr u16 kMachineX86_64      = 0x3E;
     static constexpr u16 kTypeExec           = 2;
 } PACK;
 
