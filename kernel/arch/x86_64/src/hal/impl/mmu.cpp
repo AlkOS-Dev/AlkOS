@@ -324,6 +324,29 @@ expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> 
     return pme_l1->GetFrameAddress();
 }
 
+expected<void, MemError> Mmu::SetPageFlags(VPtr<AddressSpace> as, VPtr<void> vaddr, PageFlags flags)
+{
+    auto res = WalkToEntry<1>(as, vaddr, false);
+    if (!res) {
+        return unexpected(MemError::NotFound);
+    }
+
+    auto *pme_l1 = *res;
+    if (!pme_l1->IsPresent()) {
+        return unexpected(MemError::NotFound);
+    }
+
+    // Preserve address, update flags
+    auto paddr = pme_l1->GetFrameAddress();
+
+    // We need to clear the entry before setting it again to avoid ORing flags
+    *reinterpret_cast<u64 *>(pme_l1) = 0;
+
+    pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
+
+    return {};
+}
+
 void Mmu::ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt)
 {
     ReconstructRecursive<4>(root_page_table, nullptr, pmt);

@@ -95,16 +95,19 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         u64 size       = virt_end - virt_start;
 
         // Permissions
-        VirtualMemAreaFlags flags = {};
-        flags.readable            = (ph.flags & Elf::ProgramHeader::kFlagRead) != 0U;
-        flags.writable            = (ph.flags & Elf::ProgramHeader::kFlagWrite) != 0U;
-        flags.executable          = (ph.flags & Elf::ProgramHeader::kFlagExec) != 0U;
+        VirtualMemAreaFlags original_flags = {};
+        original_flags.readable            = (ph.flags & Elf::ProgramHeader::kFlagRead) != 0U;
+        original_flags.writable            = (ph.flags & Elf::ProgramHeader::kFlagWrite) != 0U;
+        original_flags.executable          = (ph.flags & Elf::ProgramHeader::kFlagExec) != 0U;
+
+        VirtualMemAreaFlags loading_flags = original_flags;
+        loading_flags.writable            = true;
 
         // Add VMA to Address Space
         VMemArea vma{
             .start                = UptrToPtr<void>(virt_start),
             .size                 = size,
-            .flags                = flags,
+            .flags                = loading_flags,
             .type                 = VirtualMemAreaT::Anonymous,
             .direct_mapping_start = nullptr,
         };
@@ -130,6 +133,16 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         if (ph.memsz > ph.filesz) {
             void *bss_dest = reinterpret_cast<void *>(ph.vaddr + ph.filesz);
             memset(bss_dest, 0, ph.memsz - ph.filesz);
+        }
+
+        // Restore flags
+        if (loading_flags.writable != original_flags.writable) {
+            if (auto res =
+                    MemoryModule::Get().GetVmm().UpdateAreaFlags(&as, vma.start, original_flags);
+                !res) {
+                TRACE_WARN_GENERAL("Failed to restore flags for segment %d", i);
+                return unexpected(LoadError::MemoryError);
+            }
         }
 
         TRACE_INFO_GENERAL("Loaded segment %d: [0x%llX - 0x%llX]", i, virt_start, virt_end);

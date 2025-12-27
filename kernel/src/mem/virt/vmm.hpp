@@ -40,9 +40,9 @@ class VirtualMemoryManager
 
     expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
     expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
-    // expected<void, MemError> UpdateAreaFlags(
-    //     VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
-    // );
+    expected<void, MemError> UpdateAreaFlags(
+        VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
+    );
 
     private:
     // ------------------------------
