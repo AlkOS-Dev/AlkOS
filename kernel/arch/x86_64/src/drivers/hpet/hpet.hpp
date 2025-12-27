@@ -4,6 +4,7 @@
 #include <uacpi/acpi.h>
 #include <array.hpp>
 #include <data_structures/bit_array.hpp>
+#include <mem/types.hpp>
 #include <time.hpp>
 #include <todo.hpp>
 #include <types.hpp>
@@ -215,17 +216,17 @@ class Hpet final
     template <class InputT>
     FORCE_INLINE_F void WriteRegister(const u32 offset, const InputT value)
     {
-        TODO_WHEN_VMEM_WORKS
-        // TODO : REPLACE WITH VIRTUAL ADDRESS
-        WriteMemoryIo<u64>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset, value);
+        WriteMemoryIo<u64>(
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddress())), offset, value
+        );
     }
 
     template <class RetT>
     FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
     {
-        TODO_WHEN_VMEM_WORKS
-        // TODO : REPLACE WITH VIRTUAL ADDRESS
-        return ReadMemoryIo<u64, RetT>(reinterpret_cast<byte *>(GetPhysicalAddress()), offset);
+        return ReadMemoryIo<u64, RetT>(
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddress())), offset
+        );
     }
 
     // ------------------------------

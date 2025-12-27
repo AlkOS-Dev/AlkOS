@@ -15,6 +15,7 @@ namespace
 {
 
 // Helper to get PageMeta from a physical pointer to a table/page
+// Used by Map/UnMap where MemoryModule is fully initialized
 PageMeta &GetPageMeta(PPtr<void> phys_ptr)
 {
     auto *aligned_phys = AlignDown(phys_ptr, hal::kPageSizeBytes);
@@ -26,6 +27,67 @@ PageMeta &GetPageMetaFromVirt(VPtr<void> virt_ptr)
 {
     auto *phys_ptr = VirtToPhys(virt_ptr);
     return GetPageMeta(phys_ptr);
+}
+
+// Helper to get PageMeta using explicit PageMetaTable (safe during initialization)
+PageMeta &GetPageMeta(PPtr<void> phys_ptr, PageMetaTable &pmt)
+{
+    auto *aligned_phys = AlignDown(phys_ptr, hal::kPageSizeBytes);
+    return pmt.GetPageMeta(aligned_phys);
+}
+
+// Helper to recursively free page table frames
+template <size_t kLevel>
+void FreeTableRecursive(PPtr<void> table_phys, PageMetaTable &pmt, BitmapPmm &pmm)
+{
+    auto *table_virt = reinterpret_cast<PageMapTable<kLevel> *>(PhysToVirt(table_phys));
+
+    for (auto &entry : *table_virt) {
+        if (entry.IsPresent()) {
+            bool is_huge = entry.IsHuge();
+
+            if constexpr (kLevel > 1) {
+                if (!is_huge) {
+                    PPtr<void> child_phys = reinterpret_cast<PPtr<void>>(entry.GetNextLevelTable());
+                    FreeTableRecursive<kLevel - 1>(child_phys, pmt, pmm);
+                }
+            }
+            // If it is a leaf (Level 1, or Huge Level 2/3), we do NOTHING.
+            // We are only destroying the mapping structure, not the memory it points to.
+        }
+    }
+
+    // Now free the table frame itself
+    pmm.Free(reinterpret_cast<PPtr<Page>>(table_phys));
+
+    // Invalidate metadata
+    auto &meta = GetPageMeta(table_phys, pmt);
+    meta.type  = PageMetaType::Dummy;
+}
+
+template <size_t kLevel>
+void ReconstructRecursive(PPtr<void> table_phys, PageMeta *parent, PageMetaTable &pmt)
+{
+    // Initialize metadata for the current table frame
+    auto &meta = GetPageMeta(table_phys, pmt);
+    meta.InitPageTable(kLevel, parent);
+
+    auto *table_virt = reinterpret_cast<PageMapTable<kLevel> *>(PhysToVirt(table_phys));
+
+    u16 ref_count = 0;
+    for (const auto &entry : *table_virt) {
+        if (entry.IsPresent()) {
+            ref_count++;
+            if constexpr (kLevel > 1) {
+                if (!entry.IsHuge()) {
+                    PPtr<void> child_phys = reinterpret_cast<PPtr<void>>(entry.GetNextLevelTable());
+                    ReconstructRecursive<kLevel - 1>(child_phys, &meta, pmt);
+                }
+                // If page_size is set, then it's a huge page
+            }
+        }
+    }
+    meta.data.page_table.ref_count = ref_count;
 }
 
 }  // namespace
@@ -260,4 +322,33 @@ expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> 
     }
 
     return pme_l1->GetFrameAddress();
+}
+
+void Mmu::ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt)
+{
+    ReconstructRecursive<4>(root_page_table, nullptr, pmt);
+}
+
+void Mmu::UnmapLowerHalf(
+    Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
+)
+{
+    auto *pml4_virt = reinterpret_cast<PageMapTable<4> *>(PhysToVirt(root_page_table));
+    auto &pml4_meta = GetPageMeta(root_page_table, pmt);
+
+    constexpr size_t kLowerHalfLimit = 256;
+    for (size_t i = 0; i < kLowerHalfLimit; ++i) {
+        auto &entry = (*pml4_virt)[i];
+        if (entry.IsPresent()) {
+            // Free the table the entry points to
+            PPtr<void> pdpt_phys = reinterpret_cast<PPtr<void>>(entry.GetNextLevelTable());
+            FreeTableRecursive<3>(pdpt_phys, pmt, pmm);
+
+            // Free the entry
+            *reinterpret_cast<u64 *>(&entry) = 0;
+        }
+    }
+
+    // Flush TLB to ensure CPU doesn't retain old mappings
+    tlb.FlushAll();
 }

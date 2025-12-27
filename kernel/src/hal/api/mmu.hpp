@@ -9,7 +9,14 @@ namespace Mem
 {
 
 class AddressSpace;
+class PageMetaTable;
+class BitmapPmm;
 
+}  // namespace Mem
+
+namespace hal
+{
+class Tlb;
 }
 
 namespace arch
@@ -77,6 +84,37 @@ struct MmuAPI {
      *
      */
     void CleanRootPageMapTable(Mem::PPtr<void> root_page_table);
+
+    /**
+     * @brief Reconstructs the PageMeta metadata for an existing page table hierarchy.
+     *
+     * This is used during kernel initialization to synchronize the software metadata
+     * (PageMeta) with the hardware page tables set up by the bootloader. It recursively
+     * walks the tables, initializing PageMeta types and reference counts.
+     *
+     * @param root_page_table Physical pointer to the top-level page table.
+     * @param pmt Reference to the PageMetaTable instance.
+     */
+    void ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt);
+
+    /**
+     * @brief Unmaps the lower half of the address space (entries 0-255 of PML4).
+     *
+     * This removes the identity mapping established by the bootloader.
+     * It recursively frees the page tables used for this mapping but does NOT
+     * free the underlying physical frames (leaf nodes) mapped by them.
+     *
+     * @note THIS IS TO BE USED DIRECTLY AFTER RECONSTRUCTING BITMAP PMM, BEFORE BUDDY PMM
+     * IS INITIALIZED
+     *
+     * @param root_page_table Physical pointer to the top-level page table.
+     * @param pmt Reference to the PageMetaTable instance.
+     * @param pmm Reference to the BitmapPmm instance (for freeing tables).
+     * @param tlb Reference to the TLB instance (for flushing).
+     */
+    void UnmapLowerHalf(
+        Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
+    );
 };
 
 }  // namespace arch
