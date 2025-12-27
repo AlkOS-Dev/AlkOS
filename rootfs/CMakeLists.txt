@@ -31,3 +31,10 @@ else()
             ROOTFS_OVERLAY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/overlay
     )
 endif()
+
+set(USERSPACE_BIN_DIR "${CMAKE_BINARY_DIR}/userspace_bin")
+alkos_add_to_bash_config("CONF_USERSPACE_BIN_DIR" "${USERSPACE_BIN_DIR}")
+
+if(TARGET rootfs AND TARGET userspace_apps)
+    add_dependencies(rootfs userspace_apps)
+endif()
