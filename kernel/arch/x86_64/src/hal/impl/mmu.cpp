@@ -81,107 +81,78 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
 
     static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
 
-    // PML4
-    auto *pmt_l4 = reinterpret_cast<PageMapEntry<4> *>(Mem::PhysToVirt(as->PageTableRoot()));
-    auto *pme_l4 = &pmt_l4[PmeIdx<4>(vaddr)];
+    // Helper lambda to process each level
+    auto ProcessLevel = [&]<size_t L>(
+                            Mem::VPtr<PageMapEntry<L>> pme, bool create
+                        ) -> expected<Mem::VPtr<PageMapEntry<L - 1>>, Mem::MemError> {
+        if (pme->IsPresent()) {
+            return reinterpret_cast<PageMapEntry<L - 1> *>(
+                Mem::PhysToVirt(pme->GetNextLevelTable())
+            );
+        }
 
-    if (!pme_l4->IsPresent()) {
-        if (!create_if_missing) {
+        if (!create) {
             return unexpected(Mem::MemError::NotFound);
         }
 
-        auto res = Mem::KMalloc<PageMapTable<3>>();
+        auto res = Mem::KMalloc<PageMapTable<L - 1>>();
         if (!res) {
             return unexpected(res.error());
         }
 
-        memset(*res, 0, sizeof(PageMapTable<3>));
+        memset(*res, 0, sizeof(PageMapTable<L - 1>));
 
-        // Initialize Metadata for the new PDP table
-        auto *table_phys  = Mem::VirtToPhys(*res);
-        auto &new_meta    = GetPageMeta(table_phys);
-        auto &parent_meta = GetPageMetaFromVirt(pmt_l4);
+        // Initialize Metadata for the new table
+        auto *table_phys = Mem::VirtToPhys(*res);
+        auto &new_meta   = GetPageMeta(table_phys);
+        // pme points inside the parent table
+        auto &parent_meta = GetPageMetaFromVirt(pme);
 
-        new_meta.InitPageTable(3, &parent_meta);
+        new_meta.InitPageTable(L - 1, &parent_meta);
+        pme->SetNextLevelTable(table_phys, kDefFlags);
 
-        pme_l4->SetNextLevelTable(table_phys, kDefFlags);
-
-        // Increment PML4 ref count
+        // Increment parent ref count
         PageMeta::AsPageTable(parent_meta).ref_count++;
-    }
+
+        return reinterpret_cast<PageMapEntry<L - 1> *>(*res);
+    };
+
+    // PML4
+    auto *pmt_l4 = reinterpret_cast<PageMapEntry<4> *>(Mem::PhysToVirt(as->PageTableRoot()));
+    auto *pme_l4 = &pmt_l4[PmeIdx<4>(vaddr)];
+
     if constexpr (kLevel == 4) {
         return pme_l4;
     }
 
     // PDP (L3)
-    auto *pmt_l3 =
-        reinterpret_cast<PageMapEntry<3> *>(Mem::PhysToVirt(pme_l4->GetNextLevelTable()));
-    auto *pme_l3 = &pmt_l3[PmeIdx<3>(vaddr)];
-
-    if (!pme_l3->IsPresent()) {
-        if (!create_if_missing) {
-            return unexpected(Mem::MemError::NotFound);
-        }
-
-        auto res = Mem::KMalloc<PageMapTable<2>>();
-        if (!res) {
-            return unexpected(res.error());
-        }
-
-        memset(*res, 0, sizeof(PageMapTable<2>));
-
-        // Initialize Metadata for the new PD table
-        auto *table_phys  = Mem::VirtToPhys(*res);
-        auto &new_meta    = GetPageMeta(table_phys);
-        auto &parent_meta = GetPageMetaFromVirt(pmt_l3);
-
-        new_meta.InitPageTable(2, &parent_meta);
-
-        pme_l3->SetNextLevelTable(table_phys, kDefFlags);
-
-        // Increment PDP ref count
-        PageMeta::AsPageTable(parent_meta).ref_count++;
+    auto res_l3 = ProcessLevel.template operator()<4>(pme_l4, create_if_missing);
+    if (!res_l3) {
+        return unexpected(res_l3.error());
     }
-    if constexpr (kLevel == 3)
+    auto *pme_l3 = &(*res_l3)[PmeIdx<3>(vaddr)];
+
+    if constexpr (kLevel == 3) {
         return pme_l3;
+    }
 
     // PD (L2)
-    auto *pmt_l2 =
-        reinterpret_cast<PageMapEntry<2> *>(Mem::PhysToVirt(pme_l3->GetNextLevelTable()));
-    auto *pme_l2 = &pmt_l2[PmeIdx<2>(vaddr)];
-
-    if (!pme_l2->IsPresent()) {
-        if (!create_if_missing) {
-            return unexpected(Mem::MemError::NotFound);
-        }
-
-        auto res = Mem::KMalloc<PageMapTable<1>>();
-        if (!res) {
-            return unexpected(res.error());
-        }
-
-        memset(*res, 0, sizeof(PageMapTable<1>));
-
-        // Initialize Metadata for the new PT table
-        auto *table_phys  = Mem::VirtToPhys(*res);
-        auto &new_meta    = GetPageMeta(table_phys);
-        auto &parent_meta = GetPageMetaFromVirt(pmt_l2);
-
-        new_meta.InitPageTable(1, &parent_meta);
-
-        pme_l2->SetNextLevelTable(table_phys, kDefFlags);
-
-        // Increment PD ref count
-        PageMeta::AsPageTable(parent_meta).ref_count++;
+    auto res_l2 = ProcessLevel.template operator()<3>(pme_l3, create_if_missing);
+    if (!res_l2) {
+        return unexpected(res_l2.error());
     }
+    auto *pme_l2 = &(*res_l2)[PmeIdx<2>(vaddr)];
+
     if constexpr (kLevel == 2) {
         return pme_l2;
     }
 
     // PT (L1)
-    auto *pmt_l1 =
-        reinterpret_cast<PageMapEntry<1> *>(Mem::PhysToVirt(pme_l2->GetNextLevelTable()));
-    auto *pme_l1 = &pmt_l1[PmeIdx<1>(vaddr)];
+    auto res_l1 = ProcessLevel.template operator()<2>(pme_l2, create_if_missing);
+    if (!res_l1) {
+        return unexpected(res_l1.error());
+    }
+    auto *pme_l1 = &(*res_l1)[PmeIdx<1>(vaddr)];
 
     if constexpr (kLevel == 1) {
         return pme_l1;
@@ -199,13 +170,13 @@ expected<void, MemError> Mmu::Map(
 
     auto *pme_l1 = *res;
     if (pme_l1->IsPresent()) {
-        // Page is already mapped, unmap first
+        // Page is already mapped
         return unexpected(MemError::InvalidArgument);
     }
 
     pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
 
-    // pme_l1 points inside the L1 table, so use GetPageMetaFromVirt to get the table's meta
+    // Increment Page Table (L1) ref count
     auto &meta = GetPageMetaFromVirt(pme_l1);
     PageMeta::AsPageTable(meta).ref_count++;
 
@@ -219,7 +190,7 @@ expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     // 1. Find Leaf (L1 entry)
     auto res = WalkToEntry<1>(as, vaddr, false);
     if (!res) {
-        return {};  // Already unmapped (table lookup failed)
+        return {};  // Already unmapped
     }
 
     auto *pme_l1 = *res;
@@ -231,7 +202,6 @@ expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     pme_l1->SetFrameAddress(0, 0);
 
     // 3. Update RefCount
-    // pme_l1 points inside the L1 table. AlignDown gets the table start.
     auto *l1_table_virt = AlignDown(pme_l1, hal::kPageSizeBytes);
     auto &l1_meta       = GetPageMetaFromVirt(l1_table_virt);
 
@@ -247,7 +217,6 @@ expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
             break;
         }
 
-        // We need to clear the entry in the parent that points to the current table.
         // Get parent table physical address from its metadata
         size_t parent_pfn = MemoryModule::Get().GetPageMetaTable().GetPageFrameNumber(parent_meta);
         auto *parent_table_virt =
@@ -285,7 +254,7 @@ expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> 
     auto res = WalkToEntry<1>(as, vaddr, false);
     UNEXPECTED_RET_IF_ERR(res);
 
-    auto pme_l1 = *res;
+    auto *pme_l1 = *res;
     if (!pme_l1->IsPresent()) {
         return unexpected(MemError::InvalidArgument);
     }
