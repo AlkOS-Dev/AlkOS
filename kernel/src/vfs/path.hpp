@@ -83,10 +83,39 @@ class Path
         Parse();
     }
 
-    Path(const Path &other)                = default;
-    Path(Path &&other) noexcept            = default;
-    Path &operator=(const Path &other)     = default;
-    Path &operator=(Path &&other) noexcept = default;
+    Path(const Path &other)
+    {
+        raw_path_ = other.raw_path_;
+        path_len_ = other.path_len_;
+        Parse();
+    }
+
+    Path &operator=(const Path &other)
+    {
+        if (this != &other) {
+            raw_path_ = other.raw_path_;
+            path_len_ = other.path_len_;
+            Parse();
+        }
+        return *this;
+    }
+
+    Path(Path &&other) noexcept
+    {
+        raw_path_ = other.raw_path_;
+        path_len_ = other.path_len_;
+        Parse();
+    }
+
+    Path &operator=(Path &&other) noexcept
+    {
+        if (this != &other) {
+            raw_path_ = other.raw_path_;
+            path_len_ = other.path_len_;
+            Parse();
+        }
+        return *this;
+    }
 
     // --- Basic properties ---
     bool IsEmpty() const noexcept { return path_len_ == 0; }
