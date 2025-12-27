@@ -41,16 +41,11 @@ class Mmu : public MmuAPI
     u64 ToArchFlags(PageFlags flags);
 
     template <size_t kLevel = 0>
-    void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme);
-
-    template <size_t kLevel = 0>
     expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> WalkToEntry(
         Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, bool create_if_missing = false
     );
 };
 
 }  // namespace arch
-
-#include "hal/impl/mmu.tpp"
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_

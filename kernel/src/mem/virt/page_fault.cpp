@@ -3,7 +3,6 @@
 #include "hal/intr_parser.hpp"
 #include "hal/panic.hpp"
 #include "mem/virt/page_fault.hpp"
-#include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "trace_framework.hpp"
 
@@ -12,7 +11,7 @@ namespace Mem
 
 void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
-    TRACE_INFO_GENERAL("PageFaultHandler: Handling Anonymous VMA");
+    TRACE_INFO_GENERAL("PageFaultHandler: Enter");
     using namespace hal;
     ASSERT_NOT_NULL(data);
 
@@ -45,8 +44,8 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             if (!new_page_or_error) {
                 hal::KernelPanic("Out of memory during page fault handling");
             }
-            auto new_page_phys = *new_page_or_error;
-            auto new_page_virt = Mem::PhysToVirt(new_page_phys);
+            auto *new_page_phys = *new_page_or_error;
+            auto *new_page_virt = Mem::PhysToVirt(new_page_phys);
 
             memset(new_page_virt, 0, hal::kPageSizeBytes);
 
