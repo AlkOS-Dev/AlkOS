@@ -19,6 +19,8 @@ static constexpr size_t kPageShift          = arch::kPageShift;
 static constexpr u32 kMaxCores = arch::kMaxCores;
 static_assert(kMaxCores <= kBitMask16);  // Must fit in u16
 
+static constexpr u16 kElfMachineType = arch::kElfMachineType;
+
 using arch::HardwareClockId;
 using arch::HardwareEventClockId;
 }  // namespace hal

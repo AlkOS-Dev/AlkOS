@@ -1,9 +1,31 @@
 #include "sys/shell.hpp"
+
 #include <string.h>
-#include <modules/memory.hpp>
-#include <modules/vfs.hpp>
 #include <string.hpp>
-#include <vfs/path.hpp>
+
+#include "modules/memory.hpp"
+#include "modules/vfs.hpp"
+#include "sys/loader.hpp"
+#include "vfs/path.hpp"
+
+// !!! TEMPORARY !!!
+using UserEntry = void (*)(void (*)(const char *));
+
+// Static pointer to the active console for the callback
+static System::GraphicsConsole *g_active_console = nullptr;
+
+extern "C" void KernelPrintHelper(const char *msg)
+{
+    if (g_active_console) {
+        g_active_console->Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg))
+        );
+    } else {
+        // Fallback or ignore
+    }
+}
+
+// !!! TEMPORARY !!!
 
 namespace System
 {
@@ -11,6 +33,9 @@ namespace System
 Shell::Shell(GraphicsConsole &console, IO::IReader &input_reader)
     : console_(console), input_reader_(input_reader), current_dir_(vfs::Path::kRoot)
 {
+    // !!! TEMPORARY !!!
+    g_active_console = &console_;
+    // !!! TEMPORARY !!!
 }
 
 void Shell::Init()
@@ -90,6 +115,10 @@ void Shell::ProcessCommand()
         CmdCat(args);
     } else if (cmd == "pwd") {
         CmdPwd();
+    } else if (cmd.starts_with("./")) {
+        CmdExec(cmd.substr(2));
+    } else if (cmd == "exec") {
+        CmdExec(args);
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -111,7 +140,9 @@ void Shell::CmdHelp()
         "  pwd         - Print working directory\n"
         "  cd <path>   - Change directory\n"
         "  ls [path]   - List directory contents\n"
-        "  cat <file>  - Display file contents\n";
+        "  cat <file>  - Display file contents\n"
+        "  exec <file> - Execute a user program\n"
+        "  ./<file>    - Execute a user program\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
@@ -302,6 +333,50 @@ void Shell::CmdCat(std::string_view args)
 
     // Ensure we end with a newline
     console_.PutChar('\n');
+}
+
+void Shell::CmdExec(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    if (args.empty()) {
+        const char *err = "exec: missing file operand\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    vfs::Path programPath = ResolvePath(args);
+
+    auto &as       = MemoryModule::Get().GetKernelAddressSpace();
+    auto entry_res = ElfLoader::Load(programPath, as);
+
+    if (entry_res) {
+        Mem::VPtr<void> entry_addr = entry_res.value();
+        auto user_main             = reinterpret_cast<UserEntry>(entry_addr);
+
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>("Executing user program...\n"), 26)
+        );
+
+        // Execute the program
+        user_main(&KernelPrintHelper);
+
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>("User program returned.\n"), 23)
+        );
+    } else {
+        console_.Write(
+            std::span<const byte>(
+                reinterpret_cast<const byte *>("Failed to load executable.\n"), 27
+            )
+        );
+    }
 }
 
 }  // namespace System
