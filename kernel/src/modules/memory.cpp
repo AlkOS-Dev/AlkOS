@@ -25,18 +25,22 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
+    // Prune whatever bootloader had left over
+    TRACE_INFO_MEMORY("Unmapping lower half of memory");
+    // Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_);
+
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
-    // Note: Initializing buddy with all pages is a slow operation.
-    // This limit is for speed of boot. This operation should have
-    // a follow up once kernel is booted, and we have another CPU, we
-    // could offload this operation to.
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
-    SlabAllocator_.Init(BuddyPmm_);
+    // Reconstruct metadata for the existing page table hierarchy
+    TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
+    Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
 
+    SlabAllocator_.Init(BuddyPmm_);
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
-    Vmm_.Init(Tlb_, Mmu_);
+    // Init VMM with BuddyPmm for KVAlloc
+    Vmm_.Init(Tlb_, Mmu_, BuddyPmm_);
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)

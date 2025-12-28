@@ -1,14 +1,11 @@
 #include "hal/impl/mmu.hpp"
-#include <macros.hpp>
-
-#include <modules/memory.hpp>
+#include "cpu/control_registers.hpp"
 #include "mem/page_map.hpp"
 
-using namespace arch;
-using namespace Mem;
+namespace arch
+{
 
-using std::expected;
-using std::unexpected;
+using namespace Mem;
 
 u64 Mmu::ToArchFlags(PageFlags flags)
 {
@@ -37,53 +34,50 @@ u64 Mmu::ToArchFlags(PageFlags flags)
     return arch_flags;
 }
 
-expected<void, MemError> Mmu::Map(
-    VPtr<AddressSpace> as, VPtr<void> vaddr, PPtr<void> paddr, PageFlags flags
+void Mmu::SwitchRoot(Mem::PPtr<void> root)
+{
+    cpu::Cr3 cr3{};
+    cr3.PageMapLevel4Address = Mem::PtrToUptr(root) >> 12;
+    cpu::SetCR(cr3);
+}
+
+expected<void, MemError> Mmu::SetPageFlags(
+    Mem::PPtr<void> root, Mem::VPtr<void> vaddr, PageFlags flags
 )
 {
-    auto res = WalkToEntry<1>(as, vaddr, true);
-    UNEXPECTED_RET_IF_ERR(res);
+    // Walk to leaf without allocating
+    auto *pml4  = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(root));
+    auto &pml4e = (*pml4)[PmeIdx<4>(vaddr)];
+    if (!pml4e.IsPresent())
+        return unexpected(MemError::NotFound);
 
-    auto pme_l1 = *res;
-    if (pme_l1->IsPresent()) {
-        // Page is already mapped, unmap first
+    auto *pdpt  = reinterpret_cast<PageMapTable<3> *>(Mem::PhysToVirt(pml4e.GetNextLevelTable()));
+    auto &pdpte = (*pdpt)[PmeIdx<3>(vaddr)];
+    if (!pdpte.IsPresent())
+        return unexpected(MemError::NotFound);
+    if (pdpte.IsHuge())
+        return unexpected(MemError::InvalidArgument);  // TODO: Support huge pages
+
+    auto *pd  = reinterpret_cast<PageMapTable<2> *>(Mem::PhysToVirt(pdpte.GetNextLevelTable()));
+    auto &pde = (*pd)[PmeIdx<2>(vaddr)];
+    if (!pde.IsPresent())
+        return unexpected(MemError::NotFound);
+    if (pde.IsHuge())
         return unexpected(MemError::InvalidArgument);
-    }
 
-    pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
+    auto *pt  = reinterpret_cast<PageMapTable<1> *>(Mem::PhysToVirt(pde.GetNextLevelTable()));
+    auto &pte = (*pt)[PmeIdx<1>(vaddr)];
+    if (!pte.IsPresent())
+        return unexpected(MemError::NotFound);
 
-    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
+    // Update flags
+    auto paddr = pte.GetFrameAddress();
+    pte.SetFrameAddress(paddr, ToArchFlags(flags));
+
+    // Invalidate
+    asm volatile("invlpg (%0)" ::"r"(vaddr) : "memory");
 
     return {};
 }
 
-expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
-{
-    auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPECTED_RET_IF_ERR(res);
-
-    auto pme_l1 = *res;
-    if (!pme_l1->IsPresent()) {
-        return {};  // Already unmapped
-    }
-
-    // Clear the entry
-    *reinterpret_cast<u64 *>(pme_l1) = 0;
-
-    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
-
-    return {};
-}
-
-expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> vaddr)
-{
-    auto res = WalkToEntry<1>(as, vaddr, false);
-    UNEXPECTED_RET_IF_ERR(res);
-
-    auto pme_l1 = *res;
-    if (!pme_l1->IsPresent()) {
-        return unexpected(MemError::InvalidArgument);
-    }
-
-    return pme_l1->GetFrameAddress();
-}
+}  // namespace arch

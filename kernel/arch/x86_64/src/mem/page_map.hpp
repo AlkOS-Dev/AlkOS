@@ -91,6 +91,8 @@ struct PageMapEntry<4> {
 
     // Accessors
 
+    NODISCARD bool IsHuge() const { return false; }
+
     NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<3>> GetNextLevelTable() const
@@ -129,6 +131,8 @@ struct PageMapEntry<3> {
 
     // Accessors
 
+    NODISCARD bool IsHuge() const { return page_size; }
+
     NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<2>> GetNextLevelTable() const
@@ -165,6 +169,8 @@ struct PageMapEntry<3, kHugePage> {
     u64 execute_disable : 1;
 
     // Accessors
+
+    NODISCARD bool IsHuge() const { return page_size; }
 
     NODISCARD bool IsPresent() const { return present; }
 
@@ -203,6 +209,8 @@ struct PageMapEntry<2> {
 
     // Accessors
 
+    NODISCARD bool IsHuge() const { return page_size; }
+
     NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<1>> GetNextLevelTable() const
@@ -239,6 +247,8 @@ struct PageMapEntry<2, kHugePage> {
     u64 execute_disable : 1;
 
     // Accessors
+
+    NODISCARD bool IsHuge() const { return page_size; }
 
     NODISCARD bool IsPresent() const { return present; }
 
@@ -278,6 +288,8 @@ struct PageMapEntry<1> {
     u64 execute_disable : 1;
 
     // Accessors
+
+    NODISCARD bool IsHuge() const { return false; }
 
     NODISCARD bool IsPresent() const { return present; }
 

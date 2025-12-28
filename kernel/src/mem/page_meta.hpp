@@ -22,6 +22,7 @@ enum class PageMetaType : u8 {
     Buddy,
     Allocated,
     Slab,
+    PageTable,
     Dummy,
 };
 
@@ -40,6 +41,11 @@ struct SlabMeta {
     u16 inuse;
 } PACK;
 
+struct PageTableMeta {
+    u16 ref_count;
+    u8 _unused[14];
+} PACK;
+
 struct AllocatedMeta {
     u8 _unused[16];
 } PACK;
@@ -53,6 +59,7 @@ struct PageMeta {
         BuddyMeta buddy;
         SlabMeta slab;
         AllocatedMeta allocated;
+        PageTableMeta page_table;
         DummyMeta dummy;
     } data;
 
@@ -88,6 +95,14 @@ struct PageMeta {
         this->order = order;
     }
 
+    void InitPageTable(u8 order, VPtr<void> parent)
+    {
+        (void)parent;  // TODO: Track parent
+        type                      = PageMetaType::PageTable;
+        this->order               = order;
+        data.page_table.ref_count = 0;
+    }
+
     static BuddyMeta &AsBuddy(PageMeta &meta)
     {
         ASSERT_EQ(meta.type, PageMetaType::Buddy);
@@ -98,6 +113,12 @@ struct PageMeta {
     {
         ASSERT_EQ(meta.type, PageMetaType::Slab);
         return meta.data.slab;
+    }
+
+    static PageTableMeta &AsPageTable(PageMeta &meta)
+    {
+        ASSERT_EQ(meta.type, PageMetaType::PageTable);
+        return meta.data.page_table;
     }
 
     static AllocatedMeta &AsAllocated(PageMeta &meta)

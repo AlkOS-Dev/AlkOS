@@ -1,9 +1,15 @@
 #include "mem/virt/vmm.hpp"
+
+#include <bits_ext.hpp>
 #include <macros.hpp>
+
+#include "hal/constants.hpp"
 #include "mem/heap.hpp"
+#include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/area.hpp"
+#include "modules/memory.hpp"
 #include "trace_framework.hpp"
 
 namespace Mem
@@ -16,33 +22,31 @@ using Vmm = VirtualMemoryManager;
 using AS  = AddressSpace;
 
 TODO_WHEN_MULTITHREADING
-void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu) noexcept
+void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &pmm) noexcept
 {
     DEBUG_INFO_MEMORY("VirtualMemoryManager::Init()");
-    tlb_ = &tlb;
-    mmu_ = &mmu;
+    tlb_  = &tlb;
+    mmu_  = &mmu;
+    bpmm_ = &pmm;
 }
 
 expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
-    return KMalloc<AddressSpace>();
+    auto as_res = KNew<AddressSpace>(nullptr);
+    UNEXPECTED_RET_IF_ERR(as_res);
+    return *as_res;
 }
 
 expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
 {
-    for (const VMemArea &vma : *as) {
-        // Unmap all pages in the VMA
-        mmu_->UnMapRange(as, vma.start, vma.size);
-        tlb_->InvalidateRange(vma.start, vma.size);
-    }
-    KFree(as);
+    KDelete(as);
     return {};
 }
 
 void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 {
-    mmu_->SwitchRootPageMapTable(as->PageTableRoot());
-    tlb_->FlushAll();
+    mmu_->SwitchRoot(as->PageTableRoot());
+    // SwitchRoot does CR3 load which flushes TLB
 }
 
 expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
@@ -55,23 +59,62 @@ expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 
 expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 {
-    // Get area start/end
     auto a_or_err = as->FindArea(region_start);
     UNEXPECTED_RET_IF_ERR(a_or_err);
-    auto area  = *a_or_err;
-    auto start = area->start;
-    auto size  = area->size;
+    auto *area  = *a_or_err;
+    auto *start = area->start;
+    auto size   = area->size;
 
-    // Unmap the range
-    auto unmap_res = mmu_->UnMapRange(as, start, size);
+    auto &pmt = MemoryModule::Get().GetPageMetaTable();
+    hal::KernelMmuContext ctx{*bpmm_, pmt};
+
+    auto unmap_res = mmu_->UnMapRange(ctx, as->PageTableRoot(), start, size);
     UNEXPECTED_RET_IF_ERR(unmap_res);
 
-    // Remove from address space
     auto err = as->RmArea(region_start);
     UNEXPECTED_RET_IF_ERR(err);
 
-    // Invalidate TLB
-    tlb_->InvalidateRange(start, size);
+    // TLB invalidation handled inside UnMapRange or via explicit flush if needed.
+    // But UnMapRange implementation in HAL Mmu calls Unmap which calls invlpg.
+
+    return {};
+}
+
+expected<void, MemError> Vmm::UpdateAreaFlags(
+    VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
+)
+{
+    auto a_or_err = as->FindArea(region_start);
+    UNEXPECTED_RET_IF_ERR(a_or_err);
+    auto *area = *a_or_err;
+    if (area->start != region_start) {
+        return unexpected(MemError::InvalidArgument);
+    }
+
+    area->flags = vmaf;
+
+    bool is_kernel = (PtrToUptr(region_start) >= hal::kKernelVirtualAddressStart);
+
+    hal::PageFlags pf{
+        .Present        = true,
+        .Writable       = vmaf.writable,
+        .UserAccessible = !is_kernel,
+        .WriteThrough   = false,
+        .CacheDisable   = false,
+        .Global         = is_kernel,
+        .NoExecute      = !vmaf.executable
+    };
+
+    uptr start = PtrToUptr(area->start);
+    uptr end   = start + area->size;
+
+    for (uptr v = start; v < end; v += hal::kPageSizeBytes) {
+        auto res = mmu_->SetPageFlags(as->PageTableRoot(), UptrToPtr<void>(v), pf);
+        if (!res && res.error() != MemError::NotFound) {
+            return unexpected(res.error());
+        }
+    }
+
     return {};
 }
 
