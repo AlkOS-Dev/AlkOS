@@ -1,11 +1,14 @@
 #include "drivers/apic/local_apic.hpp"
-#include <acpi/acpi.hpp>
-#include <modules/hardware.hpp>
-#include "drivers/pic8259/pic8259.hpp"
 
 #include <assert.h>
 #include <todo.hpp>
-#include "trace_framework.hpp"
+
+#include <acpi/acpi.hpp>
+#include <mem/types.hpp>
+#include <modules/hardware.hpp>
+#include <trace_framework.hpp>
+
+#include "drivers/pic8259/pic8259.hpp"
 
 // ------------------------------
 // Static functions
@@ -68,10 +71,6 @@ LocalApic::LocalApic()
 void LocalApic::Enable()
 {
     R_ASSERT_TRUE(IsSupported(), "APIC is not supported on this platform...");
-
-    TODO_WHEN_VMEM_WORKS
-    /* Map local apic address to vmem */
-    // TODO: currently: identity
 
     DEBUG_INFO_INTERRUPTS("Assuming APIC address as: %016llX", local_apic_physical_address_);
 

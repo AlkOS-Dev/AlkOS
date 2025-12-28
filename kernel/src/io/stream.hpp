@@ -4,6 +4,8 @@
 #include <expected.hpp>
 #include <span.hpp>
 
+#include "macros.hpp"
+
 #include "io/error.hpp"
 #include "mem/types.hpp"
 
@@ -33,12 +35,8 @@ class IReader
     {
         byte c;
         auto res = Read(std::span<byte>(&c, 1));
-        if (!res) {
-            return std::unexpected(res.error());
-        }
-        if (*res == 0) {
-            return unexpected(Error::Retry);
-        }
+        RET_UNEXPECTED_IF_ERR(res);
+        RET_UNEXPECTED_IF(*res == 0, Error::Retry);
         return static_cast<char>(c);
     }
 };

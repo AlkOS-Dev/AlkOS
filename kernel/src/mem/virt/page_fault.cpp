@@ -1,8 +1,12 @@
+#include "mem/virt/page_fault.hpp"
+
 #include "interrupts/interrupt_types.hpp"
 
 #include "hal/intr_parser.hpp"
 #include "hal/panic.hpp"
+#include "mem/phys/mngr/buddy.hpp"
 #include "mem/virt/page_fault.hpp"
+#include "modules/hardware.hpp"
 #include "modules/memory.hpp"
 #include "trace_framework.hpp"
 
@@ -78,7 +82,16 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             .NoExecute      = !vma.flags.executable
         };
 
-        auto map_res = mmu.Map(&as, AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags);
+        // We need a context to Map.
+        // For now, we construct a KernelMmuContext on the fly using the global PMM/PMT
+        // FIXME: This is slightly inefficient to reconstruct on every fault, but valid.
+        hal::KernelMmuContext ctx{
+            MemoryModule::Get().GetBuddyPmm(), MemoryModule::Get().GetPageMetaTable()
+        };
+
+        auto map_res = mmu.Map(
+            ctx, as.PageTableRoot(), AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags
+        );
 
         if (!map_res) {
             hal::KernelPanicFormat("Failed to map page for address %p", f_ptr);

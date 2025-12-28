@@ -1,12 +1,12 @@
 #include "drivers/apic/io_apic.hpp"
-#include <mem/types.hpp>
 #include "drivers/apic/local_apic.hpp"
 
 #include <bit.hpp>
+#include <mem/types.hpp>
 #include <todo.hpp>
+#include <trace_framework.hpp>
 
 #include "interrupts/idt.hpp"
-#include "trace_framework.hpp"
 
 // ------------------------------
 // static functions
@@ -36,7 +36,6 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
 {
     ASSERT_NOT_ZERO(address);
 
-    /* Map the address first */
     virtual_address_ = reinterpret_cast<uintptr_t>(
         Mem::PhysToVirt(reinterpret_cast<void *>(static_cast<uintptr_t>(physical_address_)))
     );

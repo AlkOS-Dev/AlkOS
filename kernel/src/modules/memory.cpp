@@ -25,11 +25,9 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    // Prune whatever bootloader had left over
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
-    {
-        Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_, Tlb_);
-    }
+    Mmu_.Init(Tlb_);
+    Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_);
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
     // Note: Initializing buddy with all pages is a slow operation.
@@ -38,6 +36,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     // could offload this operation to.
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
+    // Reconstruct metadata for the existing page table hierarchy passed by the bootloader.
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
     Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
 
@@ -45,9 +44,8 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
-    Vmm_.Init(Tlb_, Mmu_);
+    Vmm_.Init(Tlb_, Mmu_, BuddyPmm_);
 
-    // TODO: This makes kernel stuck in infninite loop? Shoudnt?
     // Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
     // These areas were set up by the bootloader but are invisible to the generic VMM until
     // registered.
@@ -65,7 +63,6 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     //         .next                 = nullptr
     //     };
 
-    //     TRACE_INFO_MEMORY("Adding VMemArea for kernel");
     //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, kernel_vma); !res) {
     //         TRACE_WARN_MEMORY("Failed to register Kernel VMA");
     //     }
@@ -80,10 +77,10 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     //         .next                 = nullptr
     //     };
 
-    //     TRACE_INFO_MEMORY("Adding VMemArea for direct mem mapping");
     //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, dm_vma); !res) {
     //         TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
     //     }
+    //
     // }
 }
 

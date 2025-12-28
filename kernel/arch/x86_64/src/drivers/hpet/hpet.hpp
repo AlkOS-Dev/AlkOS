@@ -4,10 +4,12 @@
 #include <uacpi/acpi.h>
 #include <array.hpp>
 #include <data_structures/bit_array.hpp>
-#include <mem/types.hpp>
 #include <time.hpp>
 #include <todo.hpp>
 #include <types.hpp>
+
+#include <mem/types.hpp>
+
 #include "include/memory_io.hpp"
 #include "trace_framework.hpp"
 

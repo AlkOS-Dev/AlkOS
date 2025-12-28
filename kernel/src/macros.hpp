@@ -3,8 +3,12 @@
 
 #include <expected.hpp>
 
-#define UNEXPECTED_RET_IF_ERR(res) \
+#define RET_UNEXPECTED_IF_ERR(res) \
     if (!res)                      \
     return std::unexpected(res.error())
+
+#define RET_UNEXPECTED_IF(cond, err) \
+    if (cond)                        \
+    return std::unexpected(err)
 
 #endif  // KERNEL_SRC_MACROS_HPP_

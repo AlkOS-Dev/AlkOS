@@ -91,9 +91,9 @@ struct PageMapEntry<4> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
-
     NODISCARD bool IsHuge() const { return false; }
+
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<3>> GetNextLevelTable() const
     {
@@ -105,6 +105,8 @@ struct PageMapEntry<4> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -131,9 +133,9 @@ struct PageMapEntry<3> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
-
     NODISCARD bool IsHuge() const { return page_size; }
+
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<2>> GetNextLevelTable() const
     {
@@ -145,6 +147,8 @@ struct PageMapEntry<3> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 // Table 5-16. Format of a Page-Directory-Pointer-Table Entry (PDPTE) that Maps a 1-GByte Page
@@ -170,9 +174,9 @@ struct PageMapEntry<3, kHugePage> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
+    NODISCARD bool IsHuge() const { return page_size; }
 
-    NODISCARD bool IsHuge() const { return true; }
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
@@ -185,6 +189,8 @@ struct PageMapEntry<3, kHugePage> {
         frame                          = Mem::PtrToUptr(page_addr) >> 30;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -210,9 +216,9 @@ struct PageMapEntry<2> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
-
     NODISCARD bool IsHuge() const { return page_size; }
+
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<PageMapTable<1>> GetNextLevelTable() const
     {
@@ -224,6 +230,8 @@ struct PageMapEntry<2> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 // Table 5-18. Format of a Page-Directory Entry (PDE) that Maps a 2-MByte Page
@@ -249,9 +257,9 @@ struct PageMapEntry<2, kHugePage> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
+    NODISCARD bool IsHuge() const { return page_size; }
 
-    NODISCARD bool IsHuge() const { return true; }
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
@@ -264,6 +272,8 @@ struct PageMapEntry<2, kHugePage> {
         frame                          = Mem::PtrToUptr(page_addr) >> 21;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -291,9 +301,9 @@ struct PageMapEntry<1> {
 
     // Accessors
 
-    NODISCARD bool IsPresent() const { return present; }
-
     NODISCARD bool IsHuge() const { return false; }
+
+    NODISCARD bool IsPresent() const { return present; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
@@ -306,6 +316,8 @@ struct PageMapEntry<1> {
         frame                          = Mem::PtrToUptr(page_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //==============================================================================
