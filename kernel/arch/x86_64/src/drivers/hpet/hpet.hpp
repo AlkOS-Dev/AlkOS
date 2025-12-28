@@ -235,6 +235,32 @@ class Hpet final
     // Class methods
     // ------------------------------
 
+    template <class ReadF>
+    NODISCARD FORCE_INLINE_F u64 CalibrateByHpetHz(ReadF func, const u64 time_ms)
+    {
+        /* Prepare */
+        StartMainCounter();
+        const u64 hpet_period_femto = GetPeriod();
+        const u64 wait_time_cycles  = (time_ms * kFemtoSecondsPerMs) / hpet_period_femto;
+
+        /* Measure */
+
+        const u64 hpet_start = ReadMainCounter();
+        const u64 time_start = func();
+        while ((ReadMainCounter() - hpet_start) < wait_time_cycles) {
+        }
+        const u64 time_end = func();
+        const u64 hpet_end = ReadMainCounter();
+
+        /* Calibrate */
+        const u64 hpet_diff = hpet_end - hpet_start;
+        const u64 time_diff = time_end - time_start;
+
+        __uint128_t val = static_cast<__uint128_t>(time_diff) * kFemtoSecondsPerSecond;
+        val /= static_cast<__uint128_t>(hpet_diff) * hpet_period_femto;
+        return static_cast<u64>(val);
+    }
+
     NODISCARD FORCE_INLINE_F u32 GetPeriod() const { return clock_period_; }
 
     NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const

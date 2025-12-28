@@ -17,28 +17,11 @@ static u64 ReadCb(hardware::ClockRegistryEntry *)
 
 static void CalibrateByHpet(hardware::ClockRegistryEntry &entry)
 {
-    /* Prepare */
-    HardwareModule::Get().GetInterrupts().GetHpet()->StartMainCounter();
-    const u64 hpet_period_femto = HardwareModule::Get().GetInterrupts().GetHpet()->GetPeriod();
-    const u64 wait_time_cycles  = (100 * Hpet::kFemtoSecondsPerMs) / hpet_period_femto;
+    static constexpr u64 kCalibrationTimeMs = 200;
 
-    /* Measure */
-
-    const u64 hpet_start = HardwareModule::Get().GetInterrupts().GetHpet()->ReadMainCounter();
-    const u64 tsc_start  = tsc::Read();
-    while ((HardwareModule::Get().GetInterrupts().GetHpet()->ReadMainCounter() - hpet_start) <
-           wait_time_cycles) {
-    }
-    const u64 tsc_end  = tsc::Read();
-    const u64 hpet_end = HardwareModule::Get().GetInterrupts().GetHpet()->ReadMainCounter();
-
-    /* Calibrate */
-    const u64 hpet_diff = hpet_end - hpet_start;
-    const u64 tsc_diff  = tsc_end - tsc_start;
-
-    __uint128_t val = static_cast<__uint128_t>(tsc_diff) * Hpet::kFemtoSecondsPerSecond;
-    val /= static_cast<__uint128_t>(hpet_diff) * hpet_period_femto;
-    const u64 freq_hz = val;
+    const u64 freq_hz = HardwareModule::Get().GetInterrupts().GetHpet()->CalibrateByHpetHz(
+        tsc::Read, kCalibrationTimeMs
+    );
 
     DEBUG_INFO_TIME("Calculated frequency of TSC: %llu, by reading HPET values", freq_hz);
 
