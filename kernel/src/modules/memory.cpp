@@ -2,6 +2,7 @@
 
 #include "boot_args.hpp"
 #include "hal/constants.hpp"
+#include "mem/init/boot_mmu.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/types.hpp"
@@ -25,9 +26,14 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
+    Mmu_.Init(Tlb_);
+
+    // Cleanup bootloader mappings and reconstruct metadata for kernel mappings
+    Mem::Boot::BootMmuCleaner boot_cleaner;
+
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
     Mmu_.Init(Tlb_);
-    Mmu_.UnmapLowerHalf(args.root_page_table, PageMetaTable_, BitmapPmm_);
+    boot_cleaner.CleanIdentityMappings(Mmu_, BitmapPmm_, PageMetaTable_, args.root_page_table);
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
     // Note: Initializing buddy with all pages is a slow operation.
@@ -38,7 +44,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     // Reconstruct metadata for the existing page table hierarchy passed by the bootloader.
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
-    Mmu_.ReconstructAddressSpace(args.root_page_table, PageMetaTable_);
+    boot_cleaner.ReconstructMetadata(Mmu_, PageMetaTable_, args.root_page_table);
 
     SlabAllocator_.Init(BuddyPmm_);
 
