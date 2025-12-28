@@ -27,7 +27,10 @@ void KThreadEntrypoint(void (*f)())
 
 void UserThreadEntrypoint(void (*f)()) { R_FAIL_ALWAYS("Not implemented..."); }
 
-void OnKThreadExit() {}
+void OnKThreadExit()
+{
+    R_FAIL_ALWAYS("Not implemented. KThread should never return at this stage...");
+}
 
 void OnThreadExit() {}
 

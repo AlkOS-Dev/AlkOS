@@ -22,6 +22,7 @@ global ConvertToKernelTask
 ;   RDI = thread
 ; Note: Caller is responsible for ensuring proper environment before calling (disabling IRQs)
 ConvertToKernelTask:
+    mov r12, rdi                          ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
     call cdecl_SetCurrentTCB              ; Change TCB
     mov  rsp, [r12+Thread.kernel_stack]   ; Change the stack
 

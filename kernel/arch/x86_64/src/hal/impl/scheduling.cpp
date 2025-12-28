@@ -28,6 +28,7 @@ void InitializeStackKThread(void **stack, void (*f)())
 
 void InitializeStackUserThread(void **stack, void (*f)())
 {
+    DEBUG_INFO_SCHEDULING("XD");
     InitializeStack<Sched::UserThreadEntrypoint>(stack, f);
 }
 

@@ -35,12 +35,16 @@ void TaskMgr::InitializeMultitasking()
     }
 }
 
-std::expected<Pid, Error> TaskMgr::SpawnProcess(void (*f)(), const bool kernel_only)
+std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
+    void (*f)(), const bool kernel_only
+)
 {
     bool dismiss = false;
 
     if (kernel_only) {
         ASSERT_TRUE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
+    } else {
+        ASSERT_FALSE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
     }
 
     // 1. Prepare internal structure for the process
@@ -59,7 +63,8 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess(void (*f)(), const bool kernel_o
 
     // 2. Fill process data and resources - TODO: replace with proper one
     if (kernel_only) {
-        process.value()->address_space = &MemoryModule::Get().GetKernelAddressSpace();
+        process.value()->address_space         = &MemoryModule::Get().GetKernelAddressSpace();
+        process.value()->flags.KernelSpaceOnly = true;
     } else {
         R_FAIL_ALWAYS("User space tasks not supported!");
 
@@ -98,7 +103,7 @@ std::expected<Pid, Error> TaskMgr::SpawnProcess(void (*f)(), const bool kernel_o
     );
 
     dismiss = true;
-    return process.value()->pid;
+    return std::make_tuple(process.value()->pid, tid.value());
 }
 
 std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
