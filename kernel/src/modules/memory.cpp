@@ -32,18 +32,6 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     // could offload this operation to.
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
-    // Initialize metadata for the Kernel PML4 (Root Page Table).
-    // The bootloader passes it, so it's already allocated but its metadata
-    // needs to be correctly set as a PageTable to support MMU operations.
-    {
-        auto &root_meta = PageMetaTable_.GetPageMeta(args.root_page_table);
-
-        // Initialize as a Level 4 page table with no parent.
-        // We set ref_count to 1 to represent the kernel's static presence and prevent freeing.
-        root_meta.InitPageTable(4, nullptr);
-        root_meta.data.page_table.ref_count = 1;
-    }
-
     SlabAllocator_.Init(BuddyPmm_);
 
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
