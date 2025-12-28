@@ -59,7 +59,7 @@ static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_
         return 1;
     }
 
-    auto hpet = static_cast<Hpet *>(entry->own_data);
+    const auto hpet = static_cast<Hpet *>(entry->own_data);
     hpet->DisableTimer(0);
 
     const u64 hw_irq =
@@ -81,32 +81,30 @@ static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_
 
 static u32 SetPeriodicCb(hardware::EventClockRegistryEntry *entry)
 {
-    if (entry->state == hardware::EventClockState::kPeriodic) {
-        return 0;
+    if (entry->state != hardware::EventClockState::kPeriodic) {
+        const auto hpet = static_cast<Hpet *>(entry->own_data);
+
+        if (!hpet->IsTimerSupportingPeriodic(0)) {
+            DEBUG_WARN_TIME("Hpet does not support periodic!");
+            return 1;
+        }
+
+        hpet->DisableTimer(0);
+        entry->state = hardware::EventClockState::kPeriodic;
     }
 
-    auto hpet = static_cast<Hpet *>(entry->own_data);
-
-    if (!hpet->IsTimerSupportingPeriodic(0)) {
-        DEBUG_WARN_TIME("Hpet does not support periodic!");
-        return 1;
-    }
-
-    hpet->DisableTimer(0);
-    entry->state = hardware::EventClockState::kPeriodic;
     return 0;
 }
 
 static u32 SetOneshotCb(hardware::EventClockRegistryEntry *entry)
 {
-    if (entry->state == hardware::EventClockState::kOneshot ||
-        entry->state == hardware::EventClockState::kOneshotIdle) {
-        return 0;
+    if (entry->state != hardware::EventClockState::kOneshot &&
+        entry->state != hardware::EventClockState::kOneshotIdle) {
+        const auto hpet = static_cast<Hpet *>(entry->own_data);
+        hpet->DisableTimer(0);
+        entry->state = hardware::EventClockState::kOneshotIdle;
     }
 
-    auto hpet = static_cast<Hpet *>(entry->own_data);
-    hpet->DisableTimer(0);
-    entry->state = hardware::EventClockState::kOneshotIdle;
     return 0;
 }
 

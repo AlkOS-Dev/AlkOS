@@ -50,6 +50,7 @@ struct ExceptionData : IsrErrorStackFrame {
 /* Mapping params */
 static constexpr u16 kTimerHwLirq      = 0;
 static constexpr u16 kPageFaultExcLirq = 14;
+static constexpr u16 kTimerHwInt       = 32;
 
 /**
  * @brief x86_64 Page Fault Error Code structure.

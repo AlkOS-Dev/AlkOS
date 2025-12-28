@@ -54,11 +54,53 @@ static void ParseMadtRules_()
 
 static void LApicACK(intr::LitHwEntry &) { LocalApic::SendEOI(); }
 
-static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_ns) {}
+static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_ns)
+{
+    static constexpr u32 kTimerDivider = 8;
 
-static u32 SetPeriodicCb(hardware::EventClockRegistryEntry *entry) {}
+    if (entry->state == hardware::EventClockState::kDisabled) {
+        return 1;
+    }
 
-static u32 SetOneshotCb(hardware::EventClockRegistryEntry *entry) {}
+    const u64 lapic_freq   = static_cast<LocalApic *>(entry->own_data)->GetFreqHz();
+    const u64 divided_freq = lapic_freq / kTimerDivider;
+
+    LocalApic::DisableTimer();
+
+    LocalApic::SetTimerDivider(kTimerDivider);
+    LocalApic::SetTimerCounter((time_ns * kNanosInSecond) / divided_freq);
+
+    LocalApic::LocalVectorTableTimerRegister reg{};
+    reg.mask       = LocalApic::LocalVectorTableTimerRegister::Mask::kEnabled;
+    reg.timer_mode = entry->state == hardware::EventClockState::kPeriodic
+                         ? LocalApic::LocalVectorTableTimerRegister::TimerMode::kPeriodic
+                         : LocalApic::LocalVectorTableTimerRegister::TimerMode::kOneShot;
+    reg.vector     = arch::kTimerHwInt;
+
+    LocalApic::WriteRegister(LocalApic::kLvtTimerRegRW, reg);
+    return 0;
+}
+
+static u32 SetPeriodicCb(hardware::EventClockRegistryEntry *entry)
+{
+    if (entry->state != hardware::EventClockState::kPeriodic) {
+        LocalApic::DisableTimer();
+        entry->state = hardware::EventClockState::kPeriodic;
+    }
+
+    return 0;
+}
+
+static u32 SetOneshotCb(hardware::EventClockRegistryEntry *entry)
+{
+    if (entry->state != hardware::EventClockState::kOneshot &&
+        entry->state != hardware::EventClockState::kOneshotIdle) {
+        LocalApic::DisableTimer();
+        entry->state = hardware::EventClockState::kOneshotIdle;
+    }
+
+    return 0;
+}
 
 // ------------------------------
 // Implementations
@@ -102,6 +144,8 @@ void LocalApic::Enable()
 }
 void LocalApic::RegisterAsEventClock()
 {
+    timer_freq_hz_ = MeasureFreqHz_();
+
     hardware::EventClockRegistryEntry lapic_entry{};
 
     lapic_entry.id                 = static_cast<u64>(arch::HardwareEventClockId::kLapic);
@@ -111,7 +155,7 @@ void LocalApic::RegisterAsEventClock()
     lapic_entry.own_data           = this;
 
     lapic_entry.supported_cores.SetAll(true);
-    // lapic_entry.min_next_event_time_ns = clock_period_ / 1'000'000;
+    lapic_entry.min_next_event_time_ns = kNanosInSecond / timer_freq_hz_;
 
     lapic_entry.cbs.next_event   = NextEventCb;
     lapic_entry.cbs.set_oneshot  = SetOneshotCb;
@@ -120,4 +164,34 @@ void LocalApic::RegisterAsEventClock()
     lapic_entry.cbs.on_exit      = nullptr;
 
     HardwareModule::Get().GetEventClockRegistry().Register(lapic_entry);
+}
+
+u64 LocalApic::MeasureFreqHz_()
+{
+    static constexpr u64 kCalibrationTimeMs = 200;
+
+    const u64 hw_irq =
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .TranslateToHw<intr::InterruptType::kHardwareInterrupt>(hal::kTimerHwLirq);
+
+    LocalVectorTableTimerRegister enabled_reg{};
+    enabled_reg.vector     = hw_irq;
+    enabled_reg.timer_mode = LocalVectorTableTimerRegister::TimerMode::kOneShot;
+    enabled_reg.mask       = LocalVectorTableTimerRegister::Mask::kEnabled;
+
+    LocalVectorTableTimerRegister disabled_reg = enabled_reg;
+    disabled_reg.mask                          = LocalVectorTableTimerRegister::Mask::kDisabled;
+
+    SetTimerDivider(1);
+    SetTimerCounter(-1);
+    WriteRegister(kLvtTimerRegRW, enabled_reg);
+    const u64 lapic_freq_hz = HardwareModule::Get().GetInterrupts().GetHpet()->CalibrateByHpetHz(
+        GetTimerCounter, kCalibrationTimeMs
+    );
+    WriteRegister(kLvtTimerRegRW, disabled_reg);
+
+    DEBUG_INFO_INTERRUPTS("Lapic Timer frequency in Hz: %llu", lapic_freq_hz);
+    return lapic_freq_hz;
 }

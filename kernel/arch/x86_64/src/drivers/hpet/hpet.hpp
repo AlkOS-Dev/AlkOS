@@ -1,6 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 
+#include <stdlib.h>
 #include <uacpi/acpi.h>
 #include <array.hpp>
 #include <data_structures/bit_array.hpp>
@@ -224,7 +225,7 @@ class Hpet final
     }
 
     template <class RetT>
-    FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
+    NODISCARD FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
     {
         return ReadMemoryIo<u64, RetT>(
             Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddress())), offset
@@ -254,7 +255,8 @@ class Hpet final
 
         /* Calibrate */
         const u64 hpet_diff = hpet_end - hpet_start;
-        const u64 time_diff = time_end - time_start;
+        const u64 time_diff =
+            time_end >= time_start ? time_end - time_start : time_start - time_end;
 
         __uint128_t val = static_cast<__uint128_t>(time_diff) * kFemtoSecondsPerSecond;
         val /= static_cast<__uint128_t>(hpet_diff) * hpet_period_femto;
