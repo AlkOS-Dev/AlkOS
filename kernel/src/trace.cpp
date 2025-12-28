@@ -437,15 +437,19 @@ int WriteTraceData(char *dst, TraceModule module, const TraceType type)
         core_id = ::HardwareModule::Get().GetCoresController().MapHwToLogical(core_id);
     }
 
+    Sched::Pid pid{};
+    if (hal::GetCoreLocalData() != nullptr && hardware::GetCurrentTCB() != nullptr) {
+        pid = hardware::GetRunningPid();
+    }
+
     return snprintf(
         dst, FeatureValue<FeatureFlag::kSingleTraceMaxSize>,
         "[%s] "
-        "[MOD:%s] "     // Module name
-        "[TIME:%llu] "  // Timestamp
-        "[CORE:%u] "    // Core ID
-        "[PROC:%u] ",   // Process ID
-        type == TraceType::kKernelLog ? "LOG" : "DEBUG", module_name, system_time, core_id,
-        0u  // TODO: process ID
+        "[MOD:%s] "      // Module name
+        "[TIME:%llu] "   // Timestamp
+        "[CORE:%u] "     // Core ID
+        "[PROC:%llu] ",  // Process ID
+        type == TraceType::kKernelLog ? "LOG" : "DEBUG", module_name, system_time, core_id, pid
     );
 }
 

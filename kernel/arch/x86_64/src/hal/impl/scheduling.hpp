@@ -3,11 +3,17 @@
 
 #include "scheduling/thread.hpp"
 
-extern "C" void SwitchToTask(Sched::Thread *thread);
+extern "C" void ConvertToKernelTask(Sched::Thread *thread);
+extern "C" void SwitchToKernelTask(Sched::Thread *thread);
+extern "C" void SwitchToUserTask(Sched::Thread *thread);
 
 namespace arch
 {
-using ::SwitchToTask;
+using ::ConvertToKernelTask;
+using ::SwitchToKernelTask;
+using ::SwitchToUserTask;
+void InitializeStackKThread(void **stack, void (*f)());
+void InitializeStackUserThread(void **stack, void (*f)());
 }  // namespace arch
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SCHEDULING_HPP_
