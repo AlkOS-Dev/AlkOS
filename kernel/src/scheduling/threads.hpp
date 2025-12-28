@@ -73,6 +73,10 @@ class Threads
     data_structures::PooledHashMap<Thread, kMaxThreads> threads_{};
     hal::Atomic64 thread_counter_{};
 };
+
+void ThreadEntrypoint(void (*f)());
+void OnThreadExit();
+
 }  // namespace Sched
 
 extern "C" void *cdecl_GetThreadsPageTable(Sched::Thread *thread);

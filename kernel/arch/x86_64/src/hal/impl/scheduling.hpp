@@ -12,7 +12,7 @@ namespace arch
 using ::ConvertToKernelTask;
 using ::SwitchToKernelTask;
 using ::SwitchToUserTask;
-void InitializeStack(void **stack, void *func);
+void InitializeStack(void **stack, void (*f)());
 }  // namespace arch
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SCHEDULING_HPP_

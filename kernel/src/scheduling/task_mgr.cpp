@@ -161,6 +161,12 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
         thread.value()->user_stack_bottom = nullptr;
     }
 
+    hal::InitializeStack(
+        process.value()->flags.KernelSpaceOnly ? &thread.value()->kernel_stack
+                                               : &thread.value()->user_stack,
+        f
+    );
+
     dismiss = true;
     return thread.value()->tid;
 }

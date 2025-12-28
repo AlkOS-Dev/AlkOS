@@ -1,7 +1,9 @@
 #include "threads.hpp"
 #include "modules/scheduling.hpp"
 
-std::expected<Sched::Thread *, Sched::Error> Sched::Threads::PrepareThread()
+namespace Sched
+{
+std::expected<Thread *, Error> Threads::PrepareThread()
 {
     const size_t idx = threads_.Allocate();
 
@@ -16,6 +18,16 @@ std::expected<Sched::Thread *, Sched::Error> Sched::Threads::PrepareThread()
 
     return thread;
 }
+
+void ThreadEntrypoint(void (*f)())
+{
+    f();
+    OnThreadExit();
+}
+
+void OnThreadExit() {}
+
+}  // namespace Sched
 
 void *cdecl_GetThreadsPageTable(Sched::Thread *thread)
 {
