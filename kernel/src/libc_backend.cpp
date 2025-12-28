@@ -20,8 +20,10 @@ void __platform_get_clock_value(const ClockType type, TimeVal *time, Timezone *t
     ASSERT_NOT_NULL(time_zone);
 
     if (!TimingModule::IsInited()) {
-        time->seconds   = 0;
-        time->remainder = 0;
+        if (time != nullptr) {
+            time->seconds   = 0;
+            time->remainder = 0;
+        }
         return;
     }
 
@@ -64,7 +66,9 @@ u64 __platform_get_clock_ticks_in_second(const ClockType type)
 
 void __platform_get_timezone(Timezone *time_zone)
 {
-    assert(time_zone != nullptr);
+    ASSERT_NOT_NULL(time_zone);
+
+    ASSERT_TRUE(TimingModule::IsInited(), "Timing module is not initialized");
     *time_zone = TimingModule::Get().GetSystemTime().GetTimezone();
 }
 

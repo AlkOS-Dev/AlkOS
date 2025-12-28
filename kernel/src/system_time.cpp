@@ -21,7 +21,7 @@ void timing::SystemTime::SyncWithHardware()
     boot_time_read_utc_ = arch::QuerySystemTime(kUtcTimezone);
     sys_time_on_read_   = ReadLifeTimeNs();
 
-    tm time;
+    tm time{};
     ConvertFromPosixToTm(boot_time_read_utc_, time, kUtcTimezone);
     boot_time_read_local_ = ConvertDateTimeToPosix(time, GetTimezone());
 
