@@ -5,6 +5,7 @@
 
 #include "modules/helpers.hpp"
 #include "scheduling/processes.hpp"
+#include "scheduling/scheduler.hpp"
 #include "scheduling/task_mgr.hpp"
 #include "scheduling/threads.hpp"
 
