@@ -2,6 +2,7 @@
 
 #include <data_structures/bit_array.hpp>
 #include <expected.hpp>
+#include <macros.hpp>
 #include "hal/constants.hpp"
 #include "mem/page_meta.hpp"
 #include "mem/types.hpp"
@@ -20,9 +21,8 @@ void BitmapPmm::Init(data_structures::BitMapView bmv)
 
 expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
 {
-    if (ar.num_pages == 0) {
-        return unexpected(MemError::InvalidArgument);
-    }
+    RET_UNEXPECTED_IF(ar.num_pages == 0, MemError::InvalidArgument);
+
     const u64 total_pages = bitmap_view_.Size();
 
     FindBlockResult fbr;
@@ -47,9 +47,7 @@ expected<PPtr<Page>, MemError> BitmapPmm::Alloc(AllocationRequest ar)
         }
     }
 
-    if (!found) {
-        return unexpected(MemError::OutOfMemory);
-    }
+    RET_UNEXPECTED_IF(!found, MemError::OutOfMemory);
 
     MarkAllocated(fbr.start_pfn, fbr.start_pfn + ar.num_pages);
     last_alloc_idx_ = fbr.start_pfn;

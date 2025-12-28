@@ -8,7 +8,6 @@
 #include "modules/memory.hpp"
 #include "modules/vfs.hpp"
 #include "sys/elf/elf.hpp"
-
 #include "trace_framework.hpp"
 
 namespace System
@@ -99,6 +98,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         u64 virt_start = AlignDown(ph.vaddr, hal::kPageSizeBytes);
         u64 virt_end   = AlignUp(ph.vaddr + ph.memsz, hal::kPageSizeBytes);
         u64 size       = virt_end - virt_start;
+
         TRACE_INFO_GENERAL("Loading segment %d: [0x%llX - 0x%llX]", i, virt_start, virt_end);
 
         // Permissions

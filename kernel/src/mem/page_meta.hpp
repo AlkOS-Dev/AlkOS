@@ -42,9 +42,8 @@ struct SlabMeta {
 } PACK;
 
 struct PageTableMeta {
-    VPtr<PageMeta> parent;
     u16 ref_count;
-    u8 level;
+    u8 _unused[14];
 } PACK;
 
 struct AllocatedMeta {
@@ -59,8 +58,8 @@ struct PageMeta {
     union {
         BuddyMeta buddy;
         SlabMeta slab;
-        PageTableMeta page_table;
         AllocatedMeta allocated;
+        PageTableMeta page_table;
         DummyMeta dummy;
     } data;
 
@@ -90,19 +89,17 @@ struct PageMeta {
         data.slab.inuse    = inuse;
     }
 
-    void InitPageTable(u8 level, VPtr<PageMeta> parent)
-    {
-        type                      = PageMetaType::PageTable;
-        this->order               = 0;
-        data.page_table.ref_count = 0;
-        data.page_table.level     = level;
-        data.page_table.parent    = parent;
-    }
-
     void InitAllocated(u8 order)
     {
         type        = PageMetaType::Allocated;
         this->order = order;
+    }
+
+    void InitPageTable(u8 order)
+    {
+        type                      = PageMetaType::PageTable;
+        this->order               = order;
+        data.page_table.ref_count = 0;
     }
 
     static BuddyMeta &AsBuddy(PageMeta &meta)
