@@ -52,6 +52,7 @@ class Hpet final
     static constexpr u32 kMaxComparators              = 32;
     static constexpr u64 kFemtoSecondsPerSecond =
         1'000'000'000'000'000;  // 1 second in femto-seconds
+    static constexpr u64 kNsToFemto = 1'000'000;
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -322,6 +323,16 @@ class Hpet final
             GetTimerComparatorValueRegRW(timer_idx),
             AdjustTimeToHpetCapabilities(period_femto_seconds)
         );
+    }
+
+    FORCE_INLINE_F void DisableTimer(const u32 timer_idx)
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+
+        auto timer_conf =
+            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx));
+        timer_conf.enabled = TimerConfigurationReg::Enabled::kDisable;
+        WriteRegister(GetTimerConfigurationRegRW(timer_idx), timer_conf);
     }
 
     NODISCARD FORCE_INLINE_F bool IsLegacyReplacementSupported() const

@@ -6,7 +6,8 @@
 
 internal::TimingModule::TimingModule() noexcept
 {
-    BlockHardwareInterrupts();
+    ::HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
     arch::PickSystemClockSource();
     auto &clock_source = ::HardwareModule::Get().GetClockRegistry().GetSelected();
 
@@ -19,7 +20,7 @@ internal::TimingModule::TimingModule() noexcept
     }
 
     GetSystemTime().SyncWithHardware();
-    EnableHardwareInterrupts();
+    ::HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_TIME("TimingModule::TimingModule()");
 }

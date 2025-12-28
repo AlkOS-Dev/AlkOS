@@ -81,6 +81,13 @@ class LogicalInterruptTable
     }
 
     template <InterruptType kInterruptType>
+    FORCE_INLINE_F u64 TranslateToHw(const u16 lirq)
+    {
+        ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
+        return GetTable_<kInterruptType>()[lirq].hardware_irq;
+    }
+
+    template <InterruptType kInterruptType>
     FORCE_INLINE_F void InstallInterruptHandler(
         const u16 lirq, const HandlerData<kInterruptType> &handler
     )
