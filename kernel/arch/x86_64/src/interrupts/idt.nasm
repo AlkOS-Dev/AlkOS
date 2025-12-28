@@ -38,6 +38,7 @@ isr_wrapper_%+%1:
     add rsp, _shadow_space      ; Deallocate shadow space.
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
+    add rsp, 8                  ; Pop error code.
     iretq
 %endmacro
 

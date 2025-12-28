@@ -2,11 +2,13 @@
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_
 
 #include <assert.h>
-#include <cpuid.h>
 #include <bit.hpp>
 #include <defines.hpp>
 #include <todo.hpp>
-#include <types.hpp>
+
+#include <cpuid.h>
+#include <mem/types.hpp>
+
 #include "cpu/msrs.hpp"
 #include "hal/impl/constants.hpp"
 #include "include/memory_io.hpp"
@@ -347,10 +349,7 @@ class LocalApic
     {
         TODO_WHEN_VMEM_WORKS
         WriteMemoryIo<u32>(
-            reinterpret_cast<byte *>(
-                GetPhysicalAddressOnCore()
-            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-            offset, value
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddressOnCore())), offset, value
         );
     }
 
@@ -367,10 +366,7 @@ class LocalApic
     {
         TODO_WHEN_VMEM_WORKS
         return ReadMemoryIo<u32, RetT>(
-            reinterpret_cast<byte *>(
-                GetPhysicalAddressOnCore()
-            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-            offset
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddressOnCore())), offset
         );
     }
 

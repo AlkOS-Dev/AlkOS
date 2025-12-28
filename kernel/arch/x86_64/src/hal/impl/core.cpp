@@ -15,13 +15,14 @@ void Core::EnableCore()
 
 void InitializeCoreLocal()
 {
-    auto core_local = static_cast<hardware::CoreLocal *>(GetCoreLocalData());
+    auto *core_local = static_cast<hardware::CoreLocal *>(GetCoreLocalData());
 
     cpu::DefaultGdtInit(core_local->gdt, reinterpret_cast<u64>(&core_local->tss));
     core_local->gdtr.limit = sizeof(cpu::GDT) - 1;
     core_local->gdtr.base  = reinterpret_cast<u64>(&core_local->gdt);
 
     GdtFlush(&core_local->gdtr, cpu::GDT::kKernelCodeSelector, cpu::GDT::kKernelDataSelector);
+    SetCoreLocalData(core_local);
     cpu::LoadTss(cpu::GDT::kTssSelector);
 
     DEBUG_INFO_HARDWARE(
