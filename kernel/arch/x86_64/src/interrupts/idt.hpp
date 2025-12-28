@@ -102,6 +102,5 @@ const char *GetExceptionMsg(u8 idx);
 void DefaultInterruptHandler(u8 idt_idx);
 void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 void SimpleIrqHandler(intr::LitHwEntry &entry);
-void TimerIsr(intr::LitHwEntry &entry);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_

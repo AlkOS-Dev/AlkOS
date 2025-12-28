@@ -120,28 +120,6 @@ void SimpleIrqHandler(intr::LitHwEntry &entry)
     LogIrqReceived(entry.hardware_irq, entry.logical_irq);
 }
 
-void TimerIsr(intr::LitHwEntry &)
-{
-    // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
-
-    // TODO: Temporary code
-    static u64 counter = 0;
-    if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {
-        static constexpr size_t kBuffSize = 256;
-        char buff[kBuffSize]{};
-
-        if (TimingModule::IsInited()) {
-            const auto t = time(nullptr);
-            strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-        }
-
-        TRACE_INFO_TIME(
-            "Kernel time update: %s, have a nice day!",
-            TimingModule::IsInited() ? buff : "Timing module is not initialized!"
-        );
-    }
-}
-
 // ------------------------------
 // Functions
 // ------------------------------

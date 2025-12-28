@@ -121,13 +121,6 @@ void Interrupts::MapToLogicalInterrupts_()
                 idx, intr::HwHandler{.handler = SimpleIrqHandler}
             );
     }
-
-    HardwareModule::Get()
-        .GetInterrupts()
-        .GetLit()
-        .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
-            0, intr::HwHandler{.handler = TimerIsr}
-        );
 }
 
 void Interrupts::SetupPicAsDefaultDriver_()
