@@ -300,9 +300,7 @@ class Fat
         RET_UNEXPECTED_IF(LookupPath_(path).found, VfsError::kAlreadyExists);
 
         auto parent_cluster = GetParentCluster_(path);
-        if (!parent_cluster.has_value()) {
-            return std::unexpected(VfsError::kDirectoryNotFound);
-        }
+        RET_UNEXPECTED_IF_ERR(parent_cluster);
 
         return CreateEntry_(
             parent_cluster.value(), formatted_name, DirectoryEntry::Attributes::Archive, 0
@@ -311,14 +309,10 @@ class Fat
 
     NODISCARD Result<size_t> ReadFile(const Path &path, void *buffer, size_t size, size_t offset)
     {
-        if (!buffer || size == 0) {
-            return std::unexpected(VfsError::kInvalidArgument);
-        }
+        RET_UNEXPECTED_IF(!buffer || size == 0, VfsError::kInvalidArgument);
 
         auto lookup = LookupPath_(path);
-        if (!lookup.found) {
-            return std::unexpected(VfsError::kFileNotFound);
-        }
+        RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
         if (!lookup.entry.IsFile()) {
             return std::unexpected(VfsError::kNotAFile);
@@ -335,14 +329,10 @@ class Fat
         const Path &path, const void *buffer, size_t size, size_t offset
     )
     {
-        if (!buffer || size == 0) {
-            return std::unexpected(VfsError::kInvalidArgument);
-        }
+        RET_UNEXPECTED_IF(!buffer || size == 0, VfsError::kInvalidArgument);
 
         auto lookup = LookupPath_(path);
-        if (!lookup.found) {
-            return std::unexpected(VfsError::kFileNotFound);
-        }
+        RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
         if (!lookup.entry.IsFile()) {
             return std::unexpected(VfsError::kNotAFile);
@@ -354,9 +344,7 @@ class Fat
     NODISCARD Result<> DeleteFile(const Path &path)
     {
         auto lookup = LookupPath_(path);
-        if (!lookup.found) {
-            return std::unexpected(VfsError::kFileNotFound);
-        }
+        RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
         if (!lookup.entry.IsFile()) {
             return std::unexpected(VfsError::kNotAFile);
@@ -374,9 +362,7 @@ class Fat
     NODISCARD Result<size_t> GetFileSize(const Path &path)
     {
         auto lookup = LookupPath_(path);
-        if (!lookup.found) {
-            return std::unexpected(VfsError::kFileNotFound);
-        }
+        RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
         if (!lookup.entry.IsFile()) {
             return std::unexpected(VfsError::kNotAFile);
         }
@@ -399,9 +385,7 @@ class Fat
         RET_UNEXPECTED_IF(LookupPath_(path).found, VfsError::kAlreadyExists);
 
         auto parent_cluster = GetParentCluster_(path);
-        if (!parent_cluster.has_value()) {
-            return std::unexpected(VfsError::kDirectoryNotFound);
-        }
+        RET_UNEXPECTED_IF_ERR(parent_cluster);
 
         return CreateDirectoryWithCluster_(parent_cluster.value(), formatted_name);
     }
@@ -464,9 +448,7 @@ class Fat
     NODISCARD Result<> Move(const Path &old_path, const Path &new_path)
     {
         auto old_lookup = LookupPath_(old_path);
-        if (!old_lookup.found) {
-            return std::unexpected(VfsError::kFileNotFound);
-        }
+        RET_UNEXPECTED_IF(!old_lookup.found, VfsError::kFileNotFound);
 
         RET_UNEXPECTED_IF(LookupPath_(new_path).found, VfsError::kAlreadyExists);
 
@@ -476,9 +458,7 @@ class Fat
         );
 
         auto new_parent_cluster = GetParentCluster_(new_path);
-        if (!new_parent_cluster.has_value()) {
-            return std::unexpected(VfsError::kDirectoryNotFound);
-        }
+        RET_UNEXPECTED_IF_ERR(new_parent_cluster);
 
         return MoveEntry_(old_lookup, new_formatted, new_parent_cluster.value());
     }
