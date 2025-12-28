@@ -9,4 +9,8 @@ class TimeTests : public TestGroupBase
     static constexpr time_t kTestTime1 = 1737117056;
 };
 
-TEST_F(TimeTests, TestTime) { localtime_r(&kTestTime1, nullptr); }
+TEST_F(TimeTests, TestTime)
+{
+    tm result;
+    localtime_r(&kTestTime1, &result);
+}

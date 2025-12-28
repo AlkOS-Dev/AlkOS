@@ -65,7 +65,7 @@ FAST_CALL bool CompareTimes(const RtcTime &time, const RtcTime &last_time)
 
 FAST_CALL RtcTime FillRtcStruct()
 {
-    RtcTime time;
+    RtcTime time{};
 
     while (IsUpdateInProgress()) {
         /* Wait for the update to finish */
