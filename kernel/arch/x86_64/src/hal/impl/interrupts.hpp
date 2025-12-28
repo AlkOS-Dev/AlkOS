@@ -92,4 +92,6 @@ class Interrupts : public InterruptsAPI
 };
 }  // namespace arch
 
+extern "C" void cdecl_EnableHardwareInterrupts();
+
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPTS_HPP_

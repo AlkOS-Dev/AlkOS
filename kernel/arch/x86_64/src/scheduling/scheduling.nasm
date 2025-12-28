@@ -11,6 +11,7 @@ extern cdecl_GetCurrentTCB
 extern cdecl_SetCurrentTCB
 extern cdecl_GetThreadsPageTable
 extern cdecl_SetTssRsp0
+extern cdecl_EnableHardwareInterrupts
 
 section .text
 global SwitchToKernelTask
@@ -25,6 +26,8 @@ ConvertToKernelTask:
     mov r12, rdi                          ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
     call cdecl_SetCurrentTCB              ; Change TCB
     mov  rsp, [r12+Thread.kernel_stack]   ; Change the stack
+
+    call cdecl_EnableHardwareInterrupts
 
     pop_all_regs                    ; Restore registers of NEW thread's stack
     add rsp, _all_reg_size          ; Deallocate register save space.
@@ -63,6 +66,7 @@ SwitchToKernelTask:
     mov cr3, rax                       ; Load next task's virtual address space
 
 .done:
+    call cdecl_EnableHardwareInterrupts
 
     pop_all_regs                    ; Restore registers of NEW thread's stack
     add rsp, _all_reg_size          ; Deallocate register save space.

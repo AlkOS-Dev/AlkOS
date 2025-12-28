@@ -5,6 +5,7 @@
 #include "hal/debug.hpp"
 #include "hal/scheduling.hpp"
 #include "hardware/core_local.hpp"
+#include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "trace_framework.hpp"
 
@@ -28,6 +29,8 @@ static void Task0()
         }
 
         const auto tcb = hardware::GetCurrentTCB();
+
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         hal::SwitchToKernelTask(tcb->next);
     }
 }
@@ -46,6 +49,8 @@ static void Task1()
         }
 
         const auto tcb = hardware::GetCurrentTCB();
+
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         hal::SwitchToKernelTask(tcb->next);
     }
 }
@@ -68,6 +73,6 @@ MTEST(KernelTaskSwitchTest)
     t0.value()->next = t1.value();
     t1.value()->next = t0.value();
 
-    // hal::TerminalWriteString("\nXDDD\n");
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     hal::ConvertToKernelTask(t0.value());
 }

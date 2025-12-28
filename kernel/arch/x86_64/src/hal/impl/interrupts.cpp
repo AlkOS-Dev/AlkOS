@@ -152,3 +152,8 @@ void Interrupts::ReplacePicDriverWithLapic_()
         );
     }
 }
+
+void cdecl_EnableHardwareInterrupts()
+{
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+}

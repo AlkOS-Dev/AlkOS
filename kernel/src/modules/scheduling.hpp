@@ -27,6 +27,7 @@ class SchedulingModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Sched, Processes)
     DEFINE_MODULE_FIELD(Sched, Threads)
     DEFINE_MODULE_FIELD(Sched, TaskMgr)
+    DEFINE_MODULE_FIELD(Sched, Scheduler)
 
     public:
 };
