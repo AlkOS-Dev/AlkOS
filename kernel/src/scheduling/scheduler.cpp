@@ -3,6 +3,7 @@
 #include "hal/scheduling.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
+#include "modules/timing.hpp"
 
 void Sched::Scheduler::AddReadyThread(Thread *thread)
 {
@@ -42,6 +43,10 @@ void Sched::Scheduler::Schedule()
 void Sched::Scheduler::ConvertToScheduling()
 {
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+    static constexpr u64 kPeriodicTime1Ms = kNanosInSecond / 1'000;
+    TimingModule::Get().GetEventFramework().SetupPeriodic(kPeriodicTime1Ms);
+
     ASSERT_NOT_NULL(threads_);
 
     auto thread = GetNext_();

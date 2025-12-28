@@ -25,6 +25,9 @@ internal::TimingModule::TimingModule() noexcept
     // 2. Prepare system event clock source
     hal::PickSystemEventClockSource();
 
+    // 3. Register Timer Handler
+    GetEventFramework().InstallInterruptHandler();
+
     ::HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_TIME("TimingModule::TimingModule()");

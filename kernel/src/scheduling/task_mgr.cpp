@@ -30,7 +30,7 @@ void TaskMgr::InitializeMultitasking()
         );
 
         TRACE_INFO_SCHEDULING(
-            "Created initial Kernel Worker process with Pid: %llu", result.value()
+            "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
 }
