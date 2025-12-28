@@ -8,7 +8,8 @@ internal::TimingModule::TimingModule() noexcept
 {
     ::HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
 
-    arch::PickSystemClockSource();
+    // 1. Prepare System time clock source
+    hal::PickSystemClockSource();
     auto &clock_source = ::HardwareModule::Get().GetClockRegistry().GetSelected();
 
     if (clock_source.enable_device) {
@@ -20,6 +21,10 @@ internal::TimingModule::TimingModule() noexcept
     }
 
     GetSystemTime().SyncWithHardware();
+
+    // 2. Prepare system event clock source
+    hal::PickSystemEventClockSource();
+
     ::HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_TIME("TimingModule::TimingModule()");
