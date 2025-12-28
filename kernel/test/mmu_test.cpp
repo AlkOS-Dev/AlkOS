@@ -13,15 +13,15 @@ using namespace Mem;
 using namespace hal;
 
 struct TestMmuContext {
-    Mem::BitmapPmm &pmm;
+    Mem::BuddyPmm &pmm;
     data_structures::FastMinimalStaticHashmap<uintptr_t, int, 60> ref_counts;
 
-    TestMmuContext(Mem::BitmapPmm &pmm) : pmm(pmm) {}
+    TestMmuContext(Mem::BuddyPmm &pmm) : pmm(pmm) {}
 
     expected<Mem::PPtr<void>, Mem::MemError> AllocateTable(uint8_t level)
     {
         (void)level;
-        auto res = pmm.Alloc();
+        auto res = pmm.Alloc({.order = 0});
         if (!res)
             return unexpected(res.error());
         auto ptr = *res;
@@ -64,8 +64,8 @@ class MmuTest : public TestGroupBase
     void Setup_() override
     {
         // Allocate a physical page for the root page table (PML4)
-        auto &pmm     = MemoryModule::Get().GetBitmapPmm();
-        auto page_res = pmm.Alloc();
+        auto &pmm     = MemoryModule::Get().GetBuddyPmm();
+        auto page_res = pmm.Alloc({.order = 0});
         R_ASSERT_TRUE(page_res.has_value());
 
         pml4_phys_ = *page_res;
@@ -90,7 +90,7 @@ class MmuTest : public TestGroupBase
             ctx_ = nullptr;
         }
 
-        auto &pmm = MemoryModule::Get().GetBitmapPmm();
+        auto &pmm = MemoryModule::Get().GetBuddyPmm();
         pmm.Free(pml4_phys_);
     }
 
