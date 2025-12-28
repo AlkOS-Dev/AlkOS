@@ -40,6 +40,10 @@ class Mmu : public MmuAPI
         Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
     );
 
+    expected<void, Mem::MemError> SetPageFlags(
+        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, PageFlags flags
+    );
+
     private:
     template <size_t kLevel>
     u64 PmeIdx(Mem::VPtr<void> vaddr);
