@@ -399,6 +399,8 @@ class LocalApic
      */
     void Enable();
 
+    void RegisterAsEventClock();
+
     FORCE_INLINE_F void SetPhysicalAddress(const u64 address)
     {
         local_apic_physical_address_ = address;

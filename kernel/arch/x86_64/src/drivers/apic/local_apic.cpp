@@ -54,6 +54,12 @@ static void ParseMadtRules_()
 
 static void LApicACK(intr::LitHwEntry &) { LocalApic::SendEOI(); }
 
+static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_ns) {}
+
+static u32 SetPeriodicCb(hardware::EventClockRegistryEntry *entry) {}
+
+static u32 SetOneshotCb(hardware::EventClockRegistryEntry *entry) {}
+
 // ------------------------------
 // Implementations
 // ------------------------------
@@ -93,4 +99,25 @@ void LocalApic::Enable()
     WriteRegister(kTaskPriorityRegRW, 0);
 
     DEBUG_INFO_INTERRUPTS("Local APIC enabled...");
+}
+void LocalApic::RegisterAsEventClock()
+{
+    hardware::EventClockRegistryEntry lapic_entry{};
+
+    lapic_entry.id                 = static_cast<u64>(arch::HardwareEventClockId::kLapic);
+    lapic_entry.state              = hardware::EventClockState::kDisabled;
+    lapic_entry.flags.IsCoreLocal  = true;
+    lapic_entry.next_event_time_ns = 0;
+    lapic_entry.own_data           = this;
+
+    lapic_entry.supported_cores.SetAll(true);
+    // lapic_entry.min_next_event_time_ns = clock_period_ / 1'000'000;
+
+    lapic_entry.cbs.next_event   = NextEventCb;
+    lapic_entry.cbs.set_oneshot  = SetOneshotCb;
+    lapic_entry.cbs.set_periodic = SetPeriodicCb;
+    lapic_entry.cbs.on_entry     = nullptr;
+    lapic_entry.cbs.on_exit      = nullptr;
+
+    HardwareModule::Get().GetEventClockRegistry().Register(lapic_entry);
 }

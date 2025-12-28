@@ -24,6 +24,8 @@ void Interrupts::Init()
     /* Replace first stage PIC with new APIC chip on startup Core */
     local_apic_.Enable();
 
+    local_apic_.RegisterAsEventClock();
+
     ReplacePicDriverWithLapic_();
 
     tsc::Initialize();
@@ -120,19 +122,12 @@ void Interrupts::MapToLogicalInterrupts_()
             );
     }
 
-    // Map timer handler
     HardwareModule::Get()
         .GetInterrupts()
         .GetLit()
         .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
             0, intr::HwHandler{.handler = TimerIsr}
         );
-
-    // Map test software irq
-    HardwareModule::Get()
-        .GetInterrupts()
-        .GetLit()
-        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 48);
 }
 
 void Interrupts::SetupPicAsDefaultDriver_()

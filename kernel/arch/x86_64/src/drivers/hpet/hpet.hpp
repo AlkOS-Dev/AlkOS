@@ -52,7 +52,8 @@ class Hpet final
     static constexpr u32 kMaxComparators              = 32;
     static constexpr u64 kFemtoSecondsPerSecond =
         1'000'000'000'000'000;  // 1 second in femto-seconds
-    static constexpr u64 kNsToFemto = 1'000'000;
+    static constexpr u64 kNsToFemto         = 1'000'000;
+    static constexpr u64 kFemtoSecondsPerMs = kFemtoSecondsPerSecond / 1'000;
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -233,6 +234,8 @@ class Hpet final
     // ------------------------------
     // Class methods
     // ------------------------------
+
+    NODISCARD FORCE_INLINE_F u32 GetPeriod() const { return clock_period_; }
 
     NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const
     {
