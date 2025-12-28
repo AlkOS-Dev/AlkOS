@@ -78,7 +78,7 @@ expected<void, Mem::MemError> Mmu::Map(
 }
 
 template <MmuContext Context>
-expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
+void Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
 {
     // Track path for cleanup
     struct PathEntry {
@@ -92,25 +92,25 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
     path[0]     = {root, PmeIdx<4>(vaddr)};
     auto &pml4e = (*pml4)[path[0].index];
     if (!pml4e.IsPresent())
-        return {};
+        return;
 
     path[1]     = {reinterpret_cast<Mem::PPtr<void>>(pml4e.GetNextLevelTable()), PmeIdx<3>(vaddr)};
     auto *pdpt  = reinterpret_cast<PageMapTable<3> *>(Mem::PhysToVirt(path[1].table_phys));
     auto &pdpte = (*pdpt)[path[1].index];
     if (!pdpte.IsPresent())
-        return {};
+        return;
 
     path[2]   = {reinterpret_cast<Mem::PPtr<void>>(pdpte.GetNextLevelTable()), PmeIdx<2>(vaddr)};
     auto *pd  = reinterpret_cast<PageMapTable<2> *>(Mem::PhysToVirt(path[2].table_phys));
     auto &pde = (*pd)[path[2].index];
     if (!pde.IsPresent())
-        return {};
+        return;
 
     path[3]   = {reinterpret_cast<Mem::PPtr<void>>(pde.GetNextLevelTable()), PmeIdx<1>(vaddr)};
     auto *pt  = reinterpret_cast<PageMapTable<1> *>(Mem::PhysToVirt(path[3].table_phys));
     auto &pte = (*pt)[path[3].index];
     if (!pte.IsPresent())
-        return {};
+        return;
 
     // Clear leaf
     pte.Clear();
@@ -155,8 +155,6 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
     } else {
         // Leaf table not empty, nothing more to do
     }
-
-    return {};
 }
 
 template <MmuContext Context>

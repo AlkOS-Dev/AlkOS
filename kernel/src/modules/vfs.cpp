@@ -7,6 +7,7 @@
 #include <trace_framework.hpp>
 #include <vfs/fat/fat12.hpp>
 #include <vfs/io/in_memory.hpp>
+#include "../macros.hpp"
 #include "boot_args.hpp"
 
 using namespace vfs;
@@ -59,18 +60,12 @@ Result<> internal::VfsModule::Mount(
     const Path &mount_path, MountOptions options, Filesystem &driver
 )
 {
-    if (mount_path.IsEmpty() || !mount_path.IsAbsolute()) {
-        return std::unexpected(VfsError::kInvalidPath);
-    }
+    RET_UNEXPECTED_IF(mount_path.IsEmpty() || !mount_path.IsAbsolute(), VfsError::kInvalidPath);
 
-    if (GetMounts().Contains(mount_path.CString())) {
-        return std::unexpected(VfsError::kAlreadyMounted);
-    }
+    RET_UNEXPECTED_IF(GetMounts().Contains(mount_path.CString()), VfsError::kAlreadyMounted);
 
     bool inserted = GetMounts().Insert(mount_path.CString(), mount_path, options, driver);
-    if (!inserted) {
-        return std::unexpected(VfsError::kUnknownError);
-    }
+    RET_UNEXPECTED_IF(!inserted, VfsError::kUnknownError);
 
     TRACE_INFO_VFS("Mounted %s filesystem at %s", driver.GetInfo().name, mount_path.CString());
     return {};
@@ -78,18 +73,12 @@ Result<> internal::VfsModule::Mount(
 
 Result<> internal::VfsModule::Unmount(const Path &mount_path)
 {
-    if (mount_path.IsEmpty() || !mount_path.IsAbsolute()) {
-        return std::unexpected(VfsError::kInvalidPath);
-    }
+    RET_UNEXPECTED_IF(mount_path.IsEmpty() || !mount_path.IsAbsolute(), VfsError::kInvalidPath);
 
-    if (!GetMounts().Contains(mount_path.CString())) {
-        return std::unexpected(VfsError::kNotMounted);
-    }
+    RET_UNEXPECTED_IF(!GetMounts().Contains(mount_path.CString()), VfsError::kNotMounted);
 
     bool removed = GetMounts().Remove(mount_path.CString());
-    if (!removed) {
-        return std::unexpected(VfsError::kUnknownError);
-    }
+    RET_UNEXPECTED_IF(!removed, VfsError::kUnknownError);
 
     TRACE_INFO_VFS("Unmounted filesystem at %s", mount_path.CString());
     return {};
@@ -97,16 +86,11 @@ Result<> internal::VfsModule::Unmount(const Path &mount_path)
 
 Result<MountPoint *> internal::VfsModule::FindMountPoint(const Path &path)
 {
-    if (path.IsEmpty()) {
-        return std::unexpected(VfsError::kInvalidPath);
-    }
+    RET_UNEXPECTED_IF(path.IsEmpty(), VfsError::kInvalidPath);
 
     auto match = GetMounts().GetLongestPrefixMatch(path.CString());
-    if (match) {
-        return *match;
-    }
-
-    return std::unexpected(VfsError::kMountPointNotFound);
+    RET_UNEXPECTED_IF(!match, VfsError::kMountPointNotFound);
+    return *match;
 }
 
 // ------------------------------
@@ -145,15 +129,11 @@ Path internal::VfsModule::GetRelativePath_(const Path &absolute_path, const Path
 Result<> internal::VfsModule::CreateFile(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount = mount_result.value();
 
-    if (mount->options.read_only) {
-        return std::unexpected(VfsError::kReadOnly);
-    }
+    RET_UNEXPECTED_IF(mount->options.read_only, VfsError::kReadOnly);
 
     Path relative_path = GetRelativePath_(path, mount->path);
     return mount->fs.CreateFile(relative_path);
@@ -164,9 +144,7 @@ Result<size_t> internal::VfsModule::ReadFile(
 )
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount  = mount_result.value();
     Path relative_path = GetRelativePath_(path, mount->path);
@@ -178,15 +156,11 @@ Result<size_t> internal::VfsModule::WriteFile(
 )
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount = mount_result.value();
 
-    if (mount->options.read_only) {
-        return std::unexpected(VfsError::kReadOnly);
-    }
+    RET_UNEXPECTED_IF(mount->options.read_only, VfsError::kReadOnly);
 
     Path relative_path = GetRelativePath_(path, mount->path);
     return mount->fs.WriteFile(relative_path, buffer, size, offset);
@@ -195,15 +169,11 @@ Result<size_t> internal::VfsModule::WriteFile(
 Result<> internal::VfsModule::DeleteFile(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount = mount_result.value();
 
-    if (mount->options.read_only) {
-        return std::unexpected(VfsError::kReadOnly);
-    }
+    RET_UNEXPECTED_IF(mount->options.read_only, VfsError::kReadOnly);
 
     Path relative_path = GetRelativePath_(path, mount->path);
     return mount->fs.DeleteFile(relative_path);
@@ -212,9 +182,7 @@ Result<> internal::VfsModule::DeleteFile(const Path &path)
 Result<bool> internal::VfsModule::FileExists(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount  = mount_result.value();
     Path relative_path = GetRelativePath_(path, mount->path);
@@ -224,9 +192,7 @@ Result<bool> internal::VfsModule::FileExists(const Path &path)
 Result<size_t> internal::VfsModule::GetFileSize(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount  = mount_result.value();
     Path relative_path = GetRelativePath_(path, mount->path);
@@ -240,15 +206,11 @@ Result<size_t> internal::VfsModule::GetFileSize(const Path &path)
 Result<> internal::VfsModule::CreateDirectory(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount = mount_result.value();
 
-    if (mount->options.read_only) {
-        return std::unexpected(VfsError::kReadOnly);
-    }
+    RET_UNEXPECTED_IF(mount->options.read_only, VfsError::kReadOnly);
 
     Path relative_path = GetRelativePath_(path, mount->path);
     return mount->fs.CreateDirectory(relative_path);
@@ -257,15 +219,11 @@ Result<> internal::VfsModule::CreateDirectory(const Path &path)
 Result<> internal::VfsModule::RemoveDirectory(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount = mount_result.value();
 
-    if (mount->options.read_only) {
-        return std::unexpected(VfsError::kReadOnly);
-    }
+    RET_UNEXPECTED_IF(mount->options.read_only, VfsError::kReadOnly);
 
     Path relative_path = GetRelativePath_(path, mount->path);
     return mount->fs.RemoveDirectory(relative_path);
@@ -274,9 +232,7 @@ Result<> internal::VfsModule::RemoveDirectory(const Path &path)
 Result<bool> internal::VfsModule::DirectoryExists(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount  = mount_result.value();
     Path relative_path = GetRelativePath_(path, mount->path);
@@ -290,9 +246,7 @@ Result<bool> internal::VfsModule::DirectoryExists(const Path &path)
 Result<bool> internal::VfsModule::Exists(const Path &path)
 {
     auto mount_result = FindMountPoint(path);
-    if (!mount_result.has_value()) {
-        return std::unexpected(mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(mount_result);
 
     MountPoint *mount  = mount_result.value();
     Path relative_path = GetRelativePath_(path, mount->path);
@@ -303,22 +257,16 @@ Result<> internal::VfsModule::Move(const Path &old_path, const Path &new_path)
 {
     // Find mount points for both paths
     auto old_mount_result = FindMountPoint(old_path);
-    if (!old_mount_result.has_value()) {
-        return std::unexpected(old_mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(old_mount_result);
 
     auto new_mount_result = FindMountPoint(new_path);
-    if (!new_mount_result.has_value()) {
-        return std::unexpected(new_mount_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(new_mount_result);
 
     MountPoint *old_mount = old_mount_result.value();
     MountPoint *new_mount = new_mount_result.value();
 
     // Cross-filesystem move is not supported
-    if (old_mount != new_mount) {
-        return std::unexpected(VfsError::kCrossFilesystemRename);
-    }
+    RET_UNEXPECTED_IF(old_mount != new_mount, VfsError::kCrossFilesystemRename);
 
     if (old_mount->options.read_only) {
         return std::unexpected(VfsError::kReadOnly);

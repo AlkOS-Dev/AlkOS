@@ -21,7 +21,7 @@ class Mmu : public MmuAPI
     );
 
     template <MmuContext Context>
-    expected<void, Mem::MemError> Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
+    void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
 
     template <MmuContext Context>
     expected<Mem::PPtr<void>, Mem::MemError> Translate(

@@ -122,12 +122,10 @@ class Mmu : public arch::Mmu
     }
 
     template <MmuContext Context>
-    expected<void, Mem::MemError> Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
+    void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
     {
-        auto res = arch::Mmu::Unmap(ctx, root, vaddr);
-        if (res)
-            tlb_->InvalidatePage(vaddr);
-        return res;
+        arch::Mmu::Unmap(ctx, root, vaddr);
+        tlb_->InvalidatePage(vaddr);
     }
 
     expected<void, Mem::MemError> SetPageFlags(
@@ -141,9 +139,7 @@ class Mmu : public arch::Mmu
     }
 
     /// The range is treated as half-open: [start, start + size)
-    expected<void, Mem::MemError> UnmapRange(
-        KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> start, size_t size
-    )
+    void UnmapRange(KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> start, size_t size)
     {
         using namespace Mem;
 
@@ -151,11 +147,10 @@ class Mmu : public arch::Mmu
         auto e = AlignUp(PtrToUptr(start) + size, kPageSizeBytes);
 
         for (auto addr = s; addr < e; addr += kPageSizeBytes) {
-            auto unmap_res = arch::Mmu::Unmap(ctx, root, UptrToPtr<void>(addr));
+            arch::Mmu::Unmap(ctx, root, UptrToPtr<void>(addr));
         }
 
         tlb_->InvalidateRange(start, size);
-        return {};
     }
 
     /// Reconstructs metadata for an existing page table tree

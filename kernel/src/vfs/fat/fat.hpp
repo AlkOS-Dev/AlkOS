@@ -12,6 +12,7 @@
 #include <vfs/error.hpp>
 #include <vfs/interface.hpp>
 #include <vfs/path.hpp>
+#include "../../macros.hpp"
 
 namespace vfs
 {
@@ -289,18 +290,14 @@ class Fat
 
     NODISCARD Result<> CreateFile(const Path &path)
     {
-        if (path.IsEmpty() || !path.HasComponents()) {
-            return std::unexpected(VfsError::kInvalidPath);
-        }
+        RET_UNEXPECTED_IF(path.IsEmpty() || !path.HasComponents(), VfsError::kInvalidPath);
 
         char formatted_name[kMaxNameLength];
-        if (!FormatFilename_(path.GetFilename(), formatted_name)) {
-            return std::unexpected(VfsError::kInvalidName);
-        }
+        RET_UNEXPECTED_IF(
+            !FormatFilename_(path.GetFilename(), formatted_name), VfsError::kInvalidName
+        );
 
-        if (LookupPath_(path).found) {
-            return std::unexpected(VfsError::kAlreadyExists);
-        }
+        RET_UNEXPECTED_IF(LookupPath_(path).found, VfsError::kAlreadyExists);
 
         auto parent_cluster = GetParentCluster_(path);
         if (!parent_cluster.has_value()) {
@@ -392,18 +389,14 @@ class Fat
 
     NODISCARD Result<> CreateDirectory(const Path &path)
     {
-        if (path.IsEmpty() || !path.HasComponents()) {
-            return std::unexpected(VfsError::kInvalidPath);
-        }
+        RET_UNEXPECTED_IF(path.IsEmpty() || !path.HasComponents(), VfsError::kInvalidPath);
 
         char formatted_name[kMaxNameLength];
-        if (!FormatFilename_(path.GetFilename(), formatted_name)) {
-            return std::unexpected(VfsError::kInvalidName);
-        }
+        RET_UNEXPECTED_IF(
+            !FormatFilename_(path.GetFilename(), formatted_name), VfsError::kInvalidName
+        );
 
-        if (LookupPath_(path).found) {
-            return std::unexpected(VfsError::kAlreadyExists);
-        }
+        RET_UNEXPECTED_IF(LookupPath_(path).found, VfsError::kAlreadyExists);
 
         auto parent_cluster = GetParentCluster_(path);
         if (!parent_cluster.has_value()) {
@@ -475,14 +468,12 @@ class Fat
             return std::unexpected(VfsError::kFileNotFound);
         }
 
-        if (LookupPath_(new_path).found) {
-            return std::unexpected(VfsError::kAlreadyExists);
-        }
+        RET_UNEXPECTED_IF(LookupPath_(new_path).found, VfsError::kAlreadyExists);
 
         char new_formatted[kMaxNameLength];
-        if (!FormatFilename_(new_path.GetFilename(), new_formatted)) {
-            return std::unexpected(VfsError::kInvalidName);
-        }
+        RET_UNEXPECTED_IF(
+            !FormatFilename_(new_path.GetFilename(), new_formatted), VfsError::kInvalidName
+        );
 
         auto new_parent_cluster = GetParentCluster_(new_path);
         if (!new_parent_cluster.has_value()) {

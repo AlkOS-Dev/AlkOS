@@ -96,7 +96,7 @@ struct MmuAPI {
      * @param vaddr The virtual address to unmap.
      */
     template <MmuContext Context>
-    expected<void, Mem::MemError> Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
+    void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
 
     /**
      * @brief Updates flags for an existing mapping.

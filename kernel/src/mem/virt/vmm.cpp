@@ -68,8 +68,7 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     auto &pmt = MemoryModule::Get().GetPageMetaTable();
     hal::KernelMmuContext ctx{*bpmm_, pmt};
 
-    auto unmap_res = mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
-    RET_UNEXPECTED_IF_ERR(unmap_res);
+    mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
 
     auto err = as->RmArea(region_start);
     RET_UNEXPECTED_IF_ERR(err);
