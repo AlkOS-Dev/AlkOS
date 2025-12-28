@@ -74,7 +74,9 @@ class Threads
     hal::Atomic64 thread_counter_{};
 };
 
-void ThreadEntrypoint(void (*f)());
+void KThreadEntrypoint(void (*f)());
+void UserThreadEntrypoint(void (*f)());
+void OnKThreadExit();
 void OnThreadExit();
 
 }  // namespace Sched

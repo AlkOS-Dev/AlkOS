@@ -11,7 +11,14 @@ namespace hal
 WRAP_CALL void SwitchToKernelTask(Sched::Thread *thread) { arch::SwitchToKernelTask(thread); }
 WRAP_CALL void SwitchToUserTask(Sched::Thread *thread) { arch::SwitchToUserTask(thread); }
 WRAP_CALL void ConvertToKernelTask(Sched::Thread *thread) { arch::ConvertToKernelTask(thread); }
-WRAP_CALL void InitializeStack(void **stack, void (*f)()) { arch::InitializeStack(stack, f); }
+WRAP_CALL void InitializeStackKThread(void **stack, void (*f)())
+{
+    arch::InitializeStackKThread(stack, f);
+}
+WRAP_CALL void InitializeStackUserThread(void **stack, void (*f)())
+{
+    arch::InitializeStackUserThread(stack, f);
+}
 }  // namespace hal
 
 #endif  // KERNEL_SRC_HAL_SCHEDULING_HPP_

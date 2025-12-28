@@ -3,9 +3,8 @@
 
 #include <string.h>
 
-namespace arch
-{
-void InitializeStack(void **stack, void (*f)())
+template <auto func = Sched::KThreadEntrypoint>
+FAST_CALL void InitializeStack(void **stack, void (*f)())
 {
     static constexpr size_t kStackSpace = 16 * 8;  // 15 regs + rip
     static constexpr size_t kRipOffset  = 15 * 8;  // 15 regs
@@ -15,9 +14,21 @@ void InitializeStack(void **stack, void (*f)())
 
     memset(stack_top, 0, kStackSpace);
     *reinterpret_cast<u64 *>(stack_top + kRdiOffset) = reinterpret_cast<u64>(f);
-    *reinterpret_cast<u64 *>(stack_top + kRipOffset) =
-        reinterpret_cast<u64>(Sched::ThreadEntrypoint);
+    *reinterpret_cast<u64 *>(stack_top + kRipOffset) = reinterpret_cast<u64>(func);
 
     *stack = reinterpret_cast<void *>(stack_top);
 }
+
+namespace arch
+{
+void InitializeStackKThread(void **stack, void (*f)())
+{
+    InitializeStack<Sched::KThreadEntrypoint>(stack, f);
+}
+
+void InitializeStackUserThread(void **stack, void (*f)())
+{
+    InitializeStack<Sched::UserThreadEntrypoint>(stack, f);
+}
+
 }  // namespace arch

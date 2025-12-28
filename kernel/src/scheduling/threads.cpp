@@ -19,11 +19,15 @@ std::expected<Thread *, Error> Threads::PrepareThread()
     return thread;
 }
 
-void ThreadEntrypoint(void (*f)())
+void KThreadEntrypoint(void (*f)())
 {
     f();
-    OnThreadExit();
+    OnKThreadExit();
 }
+
+void UserThreadEntrypoint(void (*f)()) { R_FAIL_ALWAYS("Not implemented..."); }
+
+void OnKThreadExit() {}
 
 void OnThreadExit() {}
 
