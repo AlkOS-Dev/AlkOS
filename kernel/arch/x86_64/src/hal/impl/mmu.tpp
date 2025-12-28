@@ -38,7 +38,7 @@ expected<void, Mem::MemError> Mmu::Map(
 
     if (!pml4e.IsPresent()) {
         auto res = ctx.AllocateTable(3);
-        UNEXPECTED_RET_IF_ERR(res);
+        RET_UNEXPECTED_IF_ERR(res);
         pml4e.SetNextLevelTable(reinterpret_cast<PageMapTable<3> *>(*res), kDefTableFlags);
         ctx.IncreaseUsage(root);
     }
@@ -49,7 +49,7 @@ expected<void, Mem::MemError> Mmu::Map(
 
     if (!pdpte.IsPresent()) {
         auto res = ctx.AllocateTable(2);
-        UNEXPECTED_RET_IF_ERR(res);
+        RET_UNEXPECTED_IF_ERR(res);
         pdpte.SetNextLevelTable(reinterpret_cast<PageMapTable<2> *>(*res), kDefTableFlags);
         ctx.IncreaseUsage(reinterpret_cast<Mem::PPtr<void>>(pml4e.GetNextLevelTable()));
     }
@@ -60,8 +60,7 @@ expected<void, Mem::MemError> Mmu::Map(
 
     if (!pde.IsPresent()) {
         auto res = ctx.AllocateTable(1);
-        if (!res)
-            return unexpected(res.error());
+        RET_UNEXPECTED_IF_ERR(res);
         pde.SetNextLevelTable(reinterpret_cast<PageMapTable<1> *>(*res), kDefTableFlags);
         ctx.IncreaseUsage(reinterpret_cast<Mem::PPtr<void>>(pdpte.GetNextLevelTable()));
     }
@@ -70,9 +69,7 @@ expected<void, Mem::MemError> Mmu::Map(
     auto *pt  = reinterpret_cast<PageMapTable<1> *>(Mem::PhysToVirt(pde.GetNextLevelTable()));
     auto &pte = (*pt)[PmeIdx<1>(vaddr)];
 
-    if (pte.IsPresent()) {
-        return unexpected(Mem::MemError::InvalidArgument);  // Already mapped
-    }
+    RET_UNEXPECTED_IF(pte.IsPresent(), Mem::MemError::InvalidArgument);
 
     pte.SetFrameAddress(paddr, ToArchFlags(flags));
     ctx.IncreaseUsage(reinterpret_cast<Mem::PPtr<void>>(pde.GetNextLevelTable()));
@@ -116,7 +113,7 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
         return {};
 
     // Clear leaf
-    *reinterpret_cast<u64 *>(&pte) = 0;
+    pte.Clear();
 
     // Bubble up cleanup
     // Start checking from the leaf table (level 1, path[3]) up to PDPT (level 3, path[1])
@@ -129,7 +126,7 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
 
         auto *parent_pd  = reinterpret_cast<PageMapTable<2> *>(Mem::PhysToVirt(path[2].table_phys));
         auto &parent_pde = (*parent_pd)[path[2].index];
-        *reinterpret_cast<u64 *>(&parent_pde) = 0;  // Clear PD entry
+        parent_pde.Clear();  // Clear PD entry
 
         // Check PD (Level 2)
         if (ctx.DecreaseUsage(path[2].table_phys)) {
@@ -138,8 +135,8 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
 
             auto *parent_pdpt =
                 reinterpret_cast<PageMapTable<3> *>(Mem::PhysToVirt(path[1].table_phys));
-            auto &parent_pdpte                      = (*parent_pdpt)[path[1].index];
-            *reinterpret_cast<u64 *>(&parent_pdpte) = 0;
+            auto &parent_pdpte = (*parent_pdpt)[path[1].index];
+            parent_pdpte.Clear();
 
             // Check PDPT (Level 3)
             if (ctx.DecreaseUsage(path[1].table_phys)) {
@@ -148,8 +145,8 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
 
                 auto *parent_pml4 =
                     reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(path[0].table_phys));
-                auto &parent_pml4e                      = (*parent_pml4)[path[0].index];
-                *reinterpret_cast<u64 *>(&parent_pml4e) = 0;
+                auto &parent_pml4e = (*parent_pml4)[path[0].index];
+                parent_pml4e.Clear();
 
                 // Decrease usage of PML4
                 ctx.DecreaseUsage(path[0].table_phys);
@@ -175,29 +172,25 @@ expected<Mem::PPtr<void>, Mem::MemError> Mmu::Translate(
 {
     auto *pml4  = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(root));
     auto &pml4e = (*pml4)[PmeIdx<4>(vaddr)];
-    if (!pml4e.IsPresent())
-        return unexpected(Mem::MemError::NotFound);
+    RET_UNEXPECTED_IF(!pml4e.IsPresent(), Mem::MemError::NotFound);
 
     auto *pdpt  = reinterpret_cast<PageMapTable<3> *>(Mem::PhysToVirt(pml4e.GetNextLevelTable()));
     auto &pdpte = (*pdpt)[PmeIdx<3>(vaddr)];
-    if (!pdpte.IsPresent())
-        return unexpected(Mem::MemError::NotFound);
+    RET_UNEXPECTED_IF(!pdpte.IsPresent(), Mem::MemError::NotFound);
     if (pdpte.IsHuge())
         return reinterpret_cast<const PageMapEntry<3, kHugePage> &>(pdpte).GetFrameAddress() +
                (Mem::PtrToUptr(vaddr) & kBitMaskRight<u64, 30>);
 
     auto *pd  = reinterpret_cast<PageMapTable<2> *>(Mem::PhysToVirt(pdpte.GetNextLevelTable()));
     auto &pde = (*pd)[PmeIdx<2>(vaddr)];
-    if (!pde.IsPresent())
-        return unexpected(Mem::MemError::NotFound);
+    RET_UNEXPECTED_IF(!pde.IsPresent(), Mem::MemError::NotFound);
     if (pde.IsHuge())
         return reinterpret_cast<const PageMapEntry<2, kHugePage> &>(pde).GetFrameAddress() +
                (Mem::PtrToUptr(vaddr) & kBitMaskRight<u64, 21>);
 
     auto *pt  = reinterpret_cast<PageMapTable<1> *>(Mem::PhysToVirt(pde.GetNextLevelTable()));
     auto &pte = (*pt)[PmeIdx<1>(vaddr)];
-    if (!pte.IsPresent())
-        return unexpected(Mem::MemError::NotFound);
+    RET_UNEXPECTED_IF(!pte.IsPresent(), Mem::MemError::NotFound);
 
     return pte.GetFrameAddress() + (Mem::PtrToUptr(vaddr) & kBitMaskRight<u64, 12>);
 }
@@ -241,12 +234,12 @@ void Mmu::DestroyTable(Context &ctx, Mem::PPtr<void> table_phys, u8 level)
                         reinterpret_cast<Mem::PPtr<void>>(entry.GetNextLevelTable())
                     );
                 }
-                *reinterpret_cast<u64 *>(&entry) = 0;
+                entry.Clear();
             }
         } else {
             // Level 1: Just clear entries
             for (auto &entry : *table) {
-                *reinterpret_cast<u64 *>(&entry) = 0;
+                entry.Clear();
             }
         }
 

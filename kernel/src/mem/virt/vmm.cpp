@@ -33,7 +33,7 @@ void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &pmm) noexcept
 expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
     auto as_res = KNew<AddressSpace>(nullptr);
-    UNEXPECTED_RET_IF_ERR(as_res);
+    RET_UNEXPECTED_IF_ERR(as_res);
     return *as_res;
 }
 
@@ -52,7 +52,7 @@ void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 {
     auto res = as->AddArea(vma);
-    UNEXPECTED_RET_IF_ERR(res);
+    RET_UNEXPECTED_IF_ERR(res);
 
     return vma.start;
 }
@@ -60,7 +60,7 @@ expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 {
     auto a_or_err = as->FindArea(region_start);
-    UNEXPECTED_RET_IF_ERR(a_or_err);
+    RET_UNEXPECTED_IF_ERR(a_or_err);
     auto *area  = *a_or_err;
     auto *start = area->start;
     auto size   = area->size;
@@ -68,11 +68,11 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     auto &pmt = MemoryModule::Get().GetPageMetaTable();
     hal::KernelMmuContext ctx{*bpmm_, pmt};
 
-    auto unmap_res = mmu_->UnMapRange(ctx, as->PageTableRoot(), start, size);
-    UNEXPECTED_RET_IF_ERR(unmap_res);
+    auto unmap_res = mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
+    RET_UNEXPECTED_IF_ERR(unmap_res);
 
     auto err = as->RmArea(region_start);
-    UNEXPECTED_RET_IF_ERR(err);
+    RET_UNEXPECTED_IF_ERR(err);
 
     // TLB invalidation handled inside UnMapRange or via explicit flush if needed.
     // But UnMapRange implementation in HAL Mmu calls Unmap which calls invlpg.
@@ -85,7 +85,7 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
 )
 {
     auto a_or_err = as->FindArea(region_start);
-    UNEXPECTED_RET_IF_ERR(a_or_err);
+    RET_UNEXPECTED_IF_ERR(a_or_err);
     auto *area = *a_or_err;
     if (area->start != region_start) {
         return unexpected(MemError::InvalidArgument);

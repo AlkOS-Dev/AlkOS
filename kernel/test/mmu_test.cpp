@@ -141,10 +141,10 @@ TEST_F(MmuTest, Map_GivenZeroAddress_Succeeds)
 }
 
 // ------------------------------
-// UnMap Tests
+// Unmap Tests
 // ------------------------------
 
-TEST_F(MmuTest, UnMap_GivenMappedPage_Succeeds)
+TEST_F(MmuTest, Unmap_GivenMappedPage_Succeeds)
 {
     // Given
     VPtr<void> vaddr = reinterpret_cast<VPtr<void>>(0x400000);
@@ -152,7 +152,7 @@ TEST_F(MmuTest, UnMap_GivenMappedPage_Succeeds)
     mmu_.Map(test_as_, vaddr, paddr, kDefaultFlags);
 
     // When
-    auto result = mmu_.UnMap(test_as_, vaddr);
+    auto result = mmu_.Unmap(test_as_, vaddr);
 
     // Then
     EXPECT_TRUE(result.has_value());
@@ -162,13 +162,13 @@ TEST_F(MmuTest, UnMap_GivenMappedPage_Succeeds)
     EXPECT_FALSE(trans_res.has_value());
 }
 
-TEST_F(MmuTest, UnMap_GivenUnmappedPage_ReturnsError)
+TEST_F(MmuTest, Unmap_GivenUnmappedPage_ReturnsError)
 {
     // Given
     VPtr<void> vaddr = reinterpret_cast<VPtr<void>>(0x500000);  // Never mapped
 
     // When
-    auto result = mmu_.UnMap(test_as_, vaddr);
+    auto result = mmu_.Unmap(test_as_, vaddr);
 
     // Then: Should have memory error
     EXPECT_TRUE(result.error());

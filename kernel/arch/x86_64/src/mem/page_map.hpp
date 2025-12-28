@@ -105,6 +105,8 @@ struct PageMapEntry<4> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -145,6 +147,8 @@ struct PageMapEntry<3> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 // Table 5-16. Format of a Page-Directory-Pointer-Table Entry (PDPTE) that Maps a 1-GByte Page
@@ -184,6 +188,8 @@ struct PageMapEntry<3, kHugePage> {
         frame = Mem::PtrToUptr(page_addr) >> 30;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -223,6 +229,8 @@ struct PageMapEntry<2> {
         frame = Mem::PtrToUptr(table_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 // Table 5-18. Format of a Page-Directory Entry (PDE) that Maps a 2-MByte Page
@@ -262,6 +270,8 @@ struct PageMapEntry<2, kHugePage> {
         frame = Mem::PtrToUptr(page_addr) >> 21;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //------------------------------------------------------------------------------
@@ -303,6 +313,8 @@ struct PageMapEntry<1> {
         frame = Mem::PtrToUptr(page_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
+
+    FORCE_INLINE_F void Clear() { *reinterpret_cast<u64 *>(this) = 0; }
 } PACK;
 
 //==============================================================================

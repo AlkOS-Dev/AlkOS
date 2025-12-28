@@ -35,7 +35,7 @@ struct PageFlags {
  * management implementation.
  */
 template <typename T>
-concept MmuContext = requires(T ctx, uint8_t level, Mem::PPtr<void> table) {
+concept MmuContext = requires(T ctx, u8 level, Mem::PPtr<void> table) {
     /**
      * @brief Allocates a zeroed physical page for a translation table at the specified level.
      * @param level The level of the table being allocated (e.g., 3 for PDPT in x86_64).
@@ -68,7 +68,7 @@ concept MmuContext = requires(T ctx, uint8_t level, Mem::PPtr<void> table) {
  * @brief Concept for a visitor function used to traverse page tables.
  */
 template <typename Func>
-concept TableVisitor = requires(Func f, Mem::PPtr<void> table, uint8_t level) {
+concept TableVisitor = requires(Func f, Mem::PPtr<void> table, u8 level) {
     { f(table, level) } -> std::same_as<void>;
 };
 

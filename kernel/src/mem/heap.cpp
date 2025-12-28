@@ -42,13 +42,13 @@ expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
         }
 
         auto res = cache->Alloc();
-        UNEXPECTED_RET_IF_ERR(res);
+        RET_UNEXPECTED_IF_ERR(res);
         return *res;
     }
 
     // Large Allocations -> Buddy Allocator
     auto res = pmm_->Alloc({.order = BuddyPmm::SizeToPageOrder(size)});
-    UNEXPECTED_RET_IF_ERR(res);
+    RET_UNEXPECTED_IF_ERR(res);
 
     return PhysToVirt(*res);
 }
@@ -91,7 +91,7 @@ expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
     size_t alloc_size = size + alignment + sizeof(AllocationHeader);
 
     auto res = Malloc(alloc_size);
-    UNEXPECTED_RET_IF_ERR(res);
+    RET_UNEXPECTED_IF_ERR(res);
 
     VPtr<void> raw_ptr = *res;
     uptr raw_addr      = PtrToUptr(raw_ptr);

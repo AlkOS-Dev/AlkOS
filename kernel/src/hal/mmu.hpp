@@ -35,7 +35,7 @@ struct KernelMmuContext {
         auto &meta = pmt.GetPageMeta(ptr);
         // Parent tracking is not strictly enforced by this context during alloc,
         // but we init the metadata type.
-        meta.InitPageTable(level, nullptr);
+        meta.InitPageTable(level);
         return reinterpret_cast<Mem::PPtr<void>>(ptr);
     }
 
@@ -113,13 +113,13 @@ class Mmu : public arch::Mmu
 
         for (auto v = vaddr, p = paddr; v < end; v += kPageSizeBytes, p += kPageSizeBytes) {
             auto map_res = Map(ctx, root, UptrToPtr<void>(v), UptrToPtr<void>(p), flags);
-            UNEXPECTED_RET_IF_ERR(map_res);
+            RET_UNEXPECTED_IF_ERR(map_res);
         }
         return {};
     }
 
     /// The range is treated as half-open: [start, start + size)
-    expected<void, Mem::MemError> UnMapRange(
+    expected<void, Mem::MemError> UnmapRange(
         KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> start, size_t size
     )
     {
@@ -129,7 +129,7 @@ class Mmu : public arch::Mmu
         auto e = AlignUp(PtrToUptr(start) + size, kPageSizeBytes);
 
         for (auto addr = s; addr < e; addr += kPageSizeBytes) {
-            auto unmap_res = UnMap(ctx, root, UptrToPtr<void>(addr));
+            auto unmap_res = Unmap(ctx, root, UptrToPtr<void>(addr));
             // Continue even if unmap fails (page might not have been mapped yet)
         }
         return {};
@@ -146,7 +146,7 @@ class Mmu : public arch::Mmu
 
         VisitTables(root, [&](Mem::PPtr<void> table, uint8_t level) {
             auto &meta = pmt.GetPageMeta(table);
-            meta.InitPageTable(level, nullptr);
+            meta.InitPageTable(level);
 
             // Count entries for ref_count
             if (level > 1) {

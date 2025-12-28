@@ -95,9 +95,8 @@ struct PageMeta {
         this->order = order;
     }
 
-    void InitPageTable(u8 order, VPtr<void> parent)
+    void InitPageTable(u8 order)
     {
-        (void)parent;  // TODO: Track parent
         type                      = PageMetaType::PageTable;
         this->order               = order;
         data.page_table.ref_count = 0;
