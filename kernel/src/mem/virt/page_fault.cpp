@@ -75,7 +75,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         hal::PageFlags page_flags{
             .Present        = true,
             .Writable       = vma.flags.writable,
-            .UserAccessible = false,
+            .UserAccessible = true,
             .WriteThrough   = false,
             .CacheDisable   = false,
             .Global         = false,

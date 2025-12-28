@@ -1,4 +1,5 @@
 #include "hal/impl/mmu.hpp"
+#include <macros.hpp>
 #include "cpu/control_registers.hpp"
 #include "mem/page_map.hpp"
 
@@ -48,27 +49,21 @@ expected<void, MemError> Mmu::SetPageFlags(
     // Walk to leaf without allocating
     auto *pml4  = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(root));
     auto &pml4e = (*pml4)[PmeIdx<4>(vaddr)];
-    if (!pml4e.IsPresent())
-        return unexpected(MemError::NotFound);
+    RET_UNEXPECTED_IF(!pml4e.IsPresent(), MemError::NotFound);
 
     auto *pdpt  = reinterpret_cast<PageMapTable<3> *>(Mem::PhysToVirt(pml4e.GetNextLevelTable()));
     auto &pdpte = (*pdpt)[PmeIdx<3>(vaddr)];
-    if (!pdpte.IsPresent())
-        return unexpected(MemError::NotFound);
-    if (pdpte.IsHuge())
-        return unexpected(MemError::InvalidArgument);  // TODO: Support huge pages
+    RET_UNEXPECTED_IF(!pdpte.IsPresent(), MemError::NotFound);
+    RET_UNEXPECTED_IF(pdpte.IsHuge(), MemError::InvalidArgument);  // TODO: Support huge pages
 
     auto *pd  = reinterpret_cast<PageMapTable<2> *>(Mem::PhysToVirt(pdpte.GetNextLevelTable()));
     auto &pde = (*pd)[PmeIdx<2>(vaddr)];
-    if (!pde.IsPresent())
-        return unexpected(MemError::NotFound);
-    if (pde.IsHuge())
-        return unexpected(MemError::InvalidArgument);
+    RET_UNEXPECTED_IF(!pde.IsPresent(), MemError::NotFound);
+    RET_UNEXPECTED_IF(pde.IsHuge(), MemError::InvalidArgument);
 
     auto *pt  = reinterpret_cast<PageMapTable<1> *>(Mem::PhysToVirt(pde.GetNextLevelTable()));
     auto &pte = (*pt)[PmeIdx<1>(vaddr)];
-    if (!pte.IsPresent())
-        return unexpected(MemError::NotFound);
+    RET_UNEXPECTED_IF(!pte.IsPresent(), MemError::NotFound);
 
     // Update flags
     auto paddr = pte.GetFrameAddress();

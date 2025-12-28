@@ -87,9 +87,7 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
     auto a_or_err = as->FindArea(region_start);
     RET_UNEXPECTED_IF_ERR(a_or_err);
     auto *area = *a_or_err;
-    if (area->start != region_start) {
-        return unexpected(MemError::InvalidArgument);
-    }
+    RET_UNEXPECTED_IF(area->start != region_start, MemError::InvalidArgument);
 
     area->flags = vmaf;
 
@@ -110,9 +108,7 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
 
     for (uptr v = start; v < end; v += hal::kPageSizeBytes) {
         auto res = mmu_->SetPageFlags(as->PageTableRoot(), UptrToPtr<void>(v), pf);
-        if (!res && res.error() != MemError::NotFound) {
-            return unexpected(res.error());
-        }
+        RET_UNEXPECTED_IF(!res && res.error() != MemError::NotFound, res.error());
     }
 
     return {};
