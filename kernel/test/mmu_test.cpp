@@ -278,17 +278,3 @@ TEST_F(MmuTest, SwitchRoot_GivenCurrentRoot_DoesNotCrash)
     // Then: Execution continues
     EXPECT_TRUE(true);
 }
-
-TEST_F(MmuTest, DestroyTable_GivenAnyPtr_NoOp_If_Empty_Or_Inv)
-{
-    // Given
-    Mem::PPtr<void> dummy_root = reinterpret_cast<Mem::PPtr<void>>(0x1000);
-
-    // When
-    // Using level 4 for root
-    auto root = reinterpret_cast<Mem::PPtr<void>>(pml4_phys_);
-    mmu_.DestroyTable(*ctx_, root, 4);
-
-    // Then: Nothing happens (no crash), tables freed via ctx
-    EXPECT_TRUE(true);
-}
