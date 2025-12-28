@@ -3,6 +3,7 @@
 #include "cpu/utils.hpp"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
+#include "drivers/pit/pit.hpp"
 #include "drivers/tsc/tsc.hpp"
 #include "interrupts/idt.hpp"
 #include "trace_framework.hpp"
@@ -39,6 +40,7 @@ void Interrupts::FirstStageInit()
 {
     DEBUG_INFO_INTERRUPTS("Interrupts first stage init...");
 
+    pit::Disable();
     InitPic8259(kIrq1Offset, kIrq2Offset);
     MapToLogicalInterrupts_();
     SetupPicAsDefaultDriver_();

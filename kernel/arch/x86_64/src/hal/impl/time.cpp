@@ -81,7 +81,7 @@ void PickSystemEventClockSource()
     ASSERT_FALSE(HardwareModule::Get().GetEventClockRegistry().IsSelectedPicked());
 
     if (PickEventClock(HardwareEventClockId::kLapic)) {
-        HardwareModule::Get().GetInterrupts().GetIoApicTable() return;
+        return;
     }
 
     R_FAIL_ALWAYS("Support for available event clocks is not implemented!");
