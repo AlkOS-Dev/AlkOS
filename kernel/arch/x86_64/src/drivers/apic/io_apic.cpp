@@ -1,5 +1,4 @@
 #include "drivers/apic/io_apic.hpp"
-#include <mem/types.hpp>
 #include "drivers/apic/local_apic.hpp"
 
 #include <bit.hpp>
@@ -36,10 +35,9 @@ IoApic::IoApic(const u8 id, const u32 address, const u32 gsi_base)
 {
     ASSERT_NOT_ZERO(address);
 
-    /* Map the address first */
-    virtual_address_ = reinterpret_cast<uintptr_t>(
-        Mem::PhysToVirt(reinterpret_cast<void *>(static_cast<uintptr_t>(physical_address_)))
-    );
+    TODO_WHEN_VMEM_WORKS
+    /* TODO: Map the address first, currently identity */
+    virtual_address_ = physical_address_;
 
     version_ = static_cast<u8>(ReadRegister(kIoApicVerReg)); /* Removes upper bits */
     num_entries_ =

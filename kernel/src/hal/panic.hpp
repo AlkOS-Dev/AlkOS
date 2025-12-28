@@ -27,7 +27,6 @@ WRAP_CALL void KernelPanic(const char *msg)
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 {
-    TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
     TRACE_FATAL_GENERAL(fmt, args...);
     arch::KernelPanic();
 

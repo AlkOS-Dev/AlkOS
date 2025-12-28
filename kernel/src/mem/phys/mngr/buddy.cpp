@@ -169,7 +169,7 @@ void B::Free(PPtr<Page> page)
     size_t pfn     = PageFrameNumber(page);
     PageMeta &meta = pmt_->GetPageMeta(pfn);
 
-    R_ASSERT_EQ(
+    ASSERT_EQ(
         meta.type, PageMetaType::Allocated, "Double free detected or freeing an invalid page!"
     );
 

@@ -34,12 +34,6 @@ class Mmu : public MmuAPI
 
     void DestroyRootPageMapTable(Mem::PPtr<void> pmt4) { (void)pmt4; }
 
-    void ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt);
-
-    void UnmapLowerHalf(
-        Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
-    );
-
     private:
     template <size_t kLevel>
     u64 PmeIdx(Mem::VPtr<void> vaddr);

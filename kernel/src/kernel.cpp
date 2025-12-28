@@ -52,12 +52,12 @@ static void KernelRun()
     }
 }
 
-extern "C" void KernelMain(const Mem::PPtr<hal::RawBootArguments> raw_args)
+extern "C" void KernelMain(const hal::RawBootArguments *raw_args)
 {
     ASSERT_NOT_NULL(raw_args, "Raw boot arguments are null");
     TRACE_INFO_GENERAL("Running kernel initialization...");
 
-    KernelInit(*Mem::PhysToVirt(raw_args));
+    KernelInit(*raw_args);
 
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         TRACE_INFO_GENERAL("Running tests...");

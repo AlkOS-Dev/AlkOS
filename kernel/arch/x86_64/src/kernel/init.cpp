@@ -75,8 +75,6 @@ void ArchInit(const RawBootArguments &)
     hal::SetCoreLocalData(&g_CoreLocal);
     InitializeCoreLocal();
 
-    trace::AdvanceTracingStage();
-
     EnableHardwareInterrupts();
 
     DEBUG_INFO_BOOT("Leaving ArchInit");

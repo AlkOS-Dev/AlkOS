@@ -22,7 +22,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
     auto &as           = MemoryModule::Get().GetKernelAddressSpace();
     auto area_or_error = as.FindArea(f_ptr);
     if (!area_or_error) {
-        KernelPanicFormat("Page fault in unmapped memory at %p", f_ptr);
+        KernelPanicFormat("Page fault in unmapped memory at 0x%p", f_ptr);
         return;
     }
     VPtr<VMemArea> vma_ptr = *area_or_error;
@@ -30,7 +30,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 
     if (!err.present) {  // Page just wasn't there
         if (err.write && !vma.flags.writable) {
-            hal::KernelPanicFormat("Write to read-only memory area at %p", f_ptr);
+            hal::KernelPanicFormat("Write to read-only memory area at 0x%p", f_ptr);
             return;
         }
 
@@ -58,7 +58,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             );
         } else {
             hal::KernelPanicFormat(
-                "Unsupported VMA type %d at %p", static_cast<int>(vma.type), f_ptr
+                "Unsupported VMA type %d at 0x%p", static_cast<int>(vma.type), f_ptr
             );
             return;
         }
@@ -76,11 +76,11 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         auto map_res = mmu.Map(&as, AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags);
 
         if (!map_res) {
-            hal::KernelPanicFormat("Failed to map page for address %p", f_ptr);
+            hal::KernelPanicFormat("Failed to map page for address 0x%p", f_ptr);
         }
 
         TRACE_INFO_GENERAL(
-            "Handled page fault at %p by mapping to physical page at %p", f_ptr, map_to
+            "Handled page fault at 0x%p by mapping to physical page at 0x%p", f_ptr, map_to
         );
         return;
     }

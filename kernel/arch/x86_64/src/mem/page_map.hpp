@@ -93,8 +93,6 @@ struct PageMapEntry<4> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD bool IsHuge() const { return false; }
-
     NODISCARD Mem::PPtr<PageMapTable<3>> GetNextLevelTable() const
     {
         return Mem::UptrToPtr<PageMapTable<3>>(static_cast<u64>(frame) << 12);
@@ -133,8 +131,6 @@ struct PageMapEntry<3> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD bool IsHuge() const { return page_size; }
-
     NODISCARD Mem::PPtr<PageMapTable<2>> GetNextLevelTable() const
     {
         return Mem::UptrToPtr<PageMapTable<2>>(static_cast<u64>(frame) << 12);
@@ -171,8 +167,6 @@ struct PageMapEntry<3, kHugePage> {
     // Accessors
 
     NODISCARD bool IsPresent() const { return present; }
-
-    NODISCARD bool IsHuge() const { return true; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
@@ -211,8 +205,6 @@ struct PageMapEntry<2> {
 
     NODISCARD bool IsPresent() const { return present; }
 
-    NODISCARD bool IsHuge() const { return page_size; }
-
     NODISCARD Mem::PPtr<PageMapTable<1>> GetNextLevelTable() const
     {
         return Mem::UptrToPtr<PageMapTable<1>>(static_cast<u64>(frame) << 12);
@@ -249,8 +241,6 @@ struct PageMapEntry<2, kHugePage> {
     // Accessors
 
     NODISCARD bool IsPresent() const { return present; }
-
-    NODISCARD bool IsHuge() const { return true; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
@@ -290,8 +280,6 @@ struct PageMapEntry<1> {
     // Accessors
 
     NODISCARD bool IsPresent() const { return present; }
-
-    NODISCARD bool IsHuge() const { return false; }
 
     NODISCARD Mem::PPtr<void> GetFrameAddress() const
     {
