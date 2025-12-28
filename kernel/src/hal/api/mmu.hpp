@@ -115,6 +115,17 @@ struct MmuAPI {
     void UnmapLowerHalf(
         Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
     );
+
+    /**
+     * @brief Updates the flags of an existing mapping.
+     * @param as The address space.
+     * @param vaddr The virtual address.
+     * @param flags The new flags.
+     * @return Success, or NotFound if page is not mapped.
+     */
+    expected<void, Mem::MemError> SetPageFlags(
+        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, PageFlags flags
+    );
 };
 
 }  // namespace arch

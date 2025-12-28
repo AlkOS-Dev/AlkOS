@@ -74,4 +74,43 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     return {};
 }
 
+expected<void, MemError> Vmm::UpdateAreaFlags(
+    VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
+)
+{
+    auto a_or_err = as->FindArea(region_start);
+    UNEXPECTED_RET_IF_ERR(a_or_err);
+    auto *area = *a_or_err;
+    if (area->start != region_start) {
+        return unexpected(MemError::InvalidArgument);
+    }
+
+    area->flags = vmaf;
+    hal::PageFlags pf{
+        .Present        = true,
+        .Writable       = vmaf.writable,
+        .UserAccessible = true,  // User space VMA
+        .WriteThrough   = false,
+        .CacheDisable   = false,
+        .Global         = false,
+        .NoExecute      = !vmaf.executable
+    };
+
+    uptr start = PtrToUptr(area->start);
+    uptr end   = start + area->size;
+
+    for (uptr v = start; v < end; v += hal::kPageSizeBytes) {
+        auto res = mmu_->SetPageFlags(as, UptrToPtr<void>(v), pf);
+        if (res) {
+            tlb_->InvalidatePage(UptrToPtr<void>(v));
+        } else if (res.error() != MemError::NotFound) {
+            return unexpected(res.error());
+        }
+        // NotFound means page not mapped yet (lazy allocation),
+        // which is fine as future faults will use new VMA flags.
+    }
+
+    return {};
+}
+
 }  // namespace Mem
