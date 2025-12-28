@@ -23,6 +23,17 @@ static constexpr u16 kElfMachineType = arch::kElfMachineType;
 
 using arch::HardwareClockId;
 using arch::HardwareEventClockId;
+
+NODISCARD FAST_CALL bool IsKernelSpace(const u64 address)
+{
+    return address >= kKernelVirtualAddressStart;
+}
+
+NODISCARD FAST_CALL bool IsKernelSpace(const void *address)
+{
+    return IsKernelSpace(reinterpret_cast<u64>(address));
+}
+
 }  // namespace hal
 
 #endif  // KERNEL_SRC_HAL_CONSTANTS_HPP_
