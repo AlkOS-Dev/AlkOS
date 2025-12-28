@@ -141,14 +141,12 @@ expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> Mmu::WalkToEntry(
     static_assert(kLevel > 0);
     static_assert(kLevel <= 4);
 
-    // static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
+    static constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
 
     // Helper lambda to process each level
     auto ProcessLevel = [&]<size_t L>(
                             Mem::VPtr<PageMapEntry<L>> pme, bool create
                         ) -> expected<Mem::VPtr<PageMapEntry<L - 1>>, Mem::MemError> {
-        constexpr u64 kDefFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
-
         if (pme->IsPresent()) {
             return reinterpret_cast<PageMapEntry<L - 1> *>(
                 Mem::PhysToVirt(pme->GetNextLevelTable())
@@ -263,7 +261,7 @@ expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     }
 
     // 2. Clear Entry
-    *reinterpret_cast<u64 *>(pme_l1) = 0;
+    pme_l1->SetFrameAddress(0, 0);
 
     // 3. Update RefCount
     auto *l1_table_virt = AlignDown(pme_l1, hal::kPageSizeBytes);
@@ -326,32 +324,6 @@ expected<PPtr<void>, MemError> Mmu::Translate(VPtr<AddressSpace> as, VPtr<void> 
     return pme_l1->GetFrameAddress();
 }
 
-expected<void, MemError> Mmu::SetPageFlags(VPtr<AddressSpace> as, VPtr<void> vaddr, PageFlags flags)
-{
-    auto res = WalkToEntry<1>(as, vaddr, false);
-    if (!res) {
-        return unexpected(MemError::NotFound);
-    }
-
-    auto *pme_l1 = *res;
-    if (!pme_l1->IsPresent()) {
-        return unexpected(MemError::NotFound);
-    }
-
-    // Preserve address, update flags
-    auto *paddr = pme_l1->GetFrameAddress();
-
-    // We need to clear the entry before setting it again to avoid ORing flags
-    *reinterpret_cast<u64 *>(pme_l1) = 0;
-
-    pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
-
-    // Flush TLB for this page immediately to ensure CPU sees new permissions
-    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
-
-    return {};
-}
-
 void Mmu::ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt)
 {
     ReconstructRecursive<4>(root_page_table, nullptr, pmt);
@@ -362,6 +334,7 @@ void Mmu::UnmapLowerHalf(
 )
 {
     auto *pml4_virt = reinterpret_cast<PageMapTable<4> *>(PhysToVirt(root_page_table));
+    auto &pml4_meta = GetPageMeta(root_page_table, pmt);
 
     constexpr size_t kLowerHalfLimit = 256;
     for (size_t i = 0; i < kLowerHalfLimit; ++i) {

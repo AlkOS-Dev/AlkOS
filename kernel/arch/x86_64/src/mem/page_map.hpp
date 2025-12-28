@@ -181,8 +181,7 @@ struct PageMapEntry<3, kHugePage> {
 
     void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        *reinterpret_cast<u64 *>(this) = 0;
-        frame                          = Mem::PtrToUptr(page_addr) >> 30;
+        frame = Mem::PtrToUptr(page_addr) >> 30;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -260,8 +259,7 @@ struct PageMapEntry<2, kHugePage> {
 
     void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        *reinterpret_cast<u64 *>(this) = 0;
-        frame                          = Mem::PtrToUptr(page_addr) >> 21;
+        frame = Mem::PtrToUptr(page_addr) >> 21;
         *reinterpret_cast<u64 *>(this) |= flags | kHugePageBit;
     }
 } PACK;
@@ -302,8 +300,7 @@ struct PageMapEntry<1> {
 
     void SetFrameAddress(Mem::PPtr<void> page_addr, u64 flags)
     {
-        *reinterpret_cast<u64 *>(this) = 0;
-        frame                          = Mem::PtrToUptr(page_addr) >> 12;
+        frame = Mem::PtrToUptr(page_addr) >> 12;
         *reinterpret_cast<u64 *>(this) |= flags;
     }
 } PACK;

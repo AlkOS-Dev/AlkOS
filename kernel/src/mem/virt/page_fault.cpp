@@ -11,18 +11,13 @@ namespace Mem
 
 void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
-    TRACE_INFO_GENERAL("PageFaultHandler()");
+    TRACE_INFO_GENERAL("PageFaultHandler: Enter");
     using namespace hal;
     ASSERT_NOT_NULL(data);
 
     PageFaultData pfd = ParsePageFaultData(*data);
     const auto &f_ptr = pfd.faulting_ptr;
     const auto &err   = pfd.error;
-
-    TRACE_INFO_GENERAL(
-        "PageFaultHandler: Addr=%p, P=%d, W=%d, U=%d, R=%d, I=%d", f_ptr, err.present, err.write,
-        err.user, err.reserved_bits, err.instruction_fetch
-    );
 
     auto &as           = MemoryModule::Get().GetKernelAddressSpace();
     auto area_or_error = as.FindArea(f_ptr);
@@ -71,7 +66,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         hal::PageFlags page_flags{
             .Present        = true,
             .Writable       = vma.flags.writable,
-            .UserAccessible = true,
+            .UserAccessible = false,
             .WriteThrough   = false,
             .CacheDisable   = false,
             .Global         = false,
