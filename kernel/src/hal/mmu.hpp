@@ -5,12 +5,15 @@
 #include <macros.hpp>
 
 #include "hal/constants.hpp"
+#include "hal/tlb.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/phys/mngr/buddy.hpp"
 
 namespace hal
 {
+
+using arch::MmuContext;
 
 using std::expected;
 using std::unexpected;
@@ -94,10 +97,10 @@ struct BootstrapMmuContext {
 
 class Mmu : public arch::Mmu
 {
-    using arch::Mmu::Mmu;
+    Tlb *tlb_;
 
     public:
-    Mmu() = default;
+    void Init(Tlb &tlb) { tlb_ = &tlb; }
 
     /// The range is treated as half-open: [start, start + size)
     expected<void, Mem::MemError> MapRange(
@@ -118,6 +121,25 @@ class Mmu : public arch::Mmu
         return {};
     }
 
+    template <MmuContext Context>
+    expected<void, Mem::MemError> Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
+    {
+        auto res = arch::Mmu::Unmap(ctx, root, vaddr);
+        if (res)
+            tlb_->InvalidatePage(vaddr);
+        return res;
+    }
+
+    expected<void, Mem::MemError> SetPageFlags(
+        Mem::PPtr<void> root, Mem::VPtr<void> vaddr, PageFlags flags
+    )
+    {
+        auto res = arch::Mmu::SetPageFlags(root, vaddr, flags);
+        if (res)
+            tlb_->InvalidatePage(vaddr);
+        return {};
+    }
+
     /// The range is treated as half-open: [start, start + size)
     expected<void, Mem::MemError> UnmapRange(
         KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> start, size_t size
@@ -129,9 +151,10 @@ class Mmu : public arch::Mmu
         auto e = AlignUp(PtrToUptr(start) + size, kPageSizeBytes);
 
         for (auto addr = s; addr < e; addr += kPageSizeBytes) {
-            auto unmap_res = Unmap(ctx, root, UptrToPtr<void>(addr));
-            // Continue even if unmap fails (page might not have been mapped yet)
+            auto unmap_res = arch::Mmu::Unmap(ctx, root, UptrToPtr<void>(addr));
         }
+
+        tlb_->InvalidateRange(start, size);
         return {};
     }
 

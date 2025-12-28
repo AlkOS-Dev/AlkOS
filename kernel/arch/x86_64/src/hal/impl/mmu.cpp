@@ -69,9 +69,6 @@ expected<void, MemError> Mmu::SetPageFlags(
     auto paddr = pte.GetFrameAddress();
     pte.SetFrameAddress(paddr, ToArchFlags(flags));
 
-    // Invalidate
-    asm volatile("invlpg (%0)" ::"r"(vaddr) : "memory");
-
     return {};
 }
 

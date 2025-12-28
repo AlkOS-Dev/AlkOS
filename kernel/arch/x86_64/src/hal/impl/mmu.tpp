@@ -156,12 +156,6 @@ expected<void, Mem::MemError> Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem
         // Leaf table not empty, nothing more to do
     }
 
-    // Invalidate TLB for this address
-    // Note: API doesn't pass TLB interface, caller handles generic TLB flush or we use invlpg
-    // instruction directly? The MmuAPI header didn't expose TLB methods on the Mmu class itself,
-    // but usually map/unmap should invalidate. The instruction `invlpg` is arch specific.
-    asm volatile("invlpg (%0)" ::"r"(vaddr) : "memory");
-
     return {};
 }
 

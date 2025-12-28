@@ -1,6 +1,7 @@
 #include "mem/phys/mngr/slab.hpp"
 
 #include <limits.hpp>
+#include <macros.hpp>
 #include <mutex.hpp>
 
 #include "mem/page_meta_table.hpp"
@@ -113,9 +114,7 @@ expected<VPtr<void>, MemError> KmemCache::AllocSlab()
     ASSERT_NOT_NULL(buddy_pmm_, "BuddyPmm must be initialized");
 
     auto res = buddy_pmm_->Alloc({.order = block_order_});
-    if (!res) {
-        return unexpected(res.error());
-    }
+    RET_UNEXPECTED_IF_ERR(res);
 
     PPtr<Page> phys_page = *res;
     VPtr<Page> virt_page = PhysToVirt(phys_page);
@@ -212,9 +211,7 @@ expected<VPtr<void>, MemError> KmemCache::Alloc()
             num_slabs_free_--;
             num_slabs_partial_++;
         } else {
-            if (!Grow()) {
-                return unexpected(MemError::OutOfMemory);
-            }
+            RET_UNEXPECTED_IF(!Grow(), MemError::OutOfMemory);
         }
     }
 
