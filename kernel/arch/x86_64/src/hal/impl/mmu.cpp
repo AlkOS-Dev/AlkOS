@@ -263,7 +263,7 @@ expected<void, MemError> Mmu::UnMap(VPtr<AddressSpace> as, VPtr<void> vaddr)
     }
 
     // 2. Clear Entry
-    pme_l1->SetFrameAddress(0, 0);
+    *reinterpret_cast<u64 *>(pme_l1) = 0;
 
     // 3. Update RefCount
     auto *l1_table_virt = AlignDown(pme_l1, hal::kPageSizeBytes);
@@ -339,12 +339,15 @@ expected<void, MemError> Mmu::SetPageFlags(VPtr<AddressSpace> as, VPtr<void> vad
     }
 
     // Preserve address, update flags
-    auto paddr = pme_l1->GetFrameAddress();
+    auto *paddr = pme_l1->GetFrameAddress();
 
     // We need to clear the entry before setting it again to avoid ORing flags
     *reinterpret_cast<u64 *>(pme_l1) = 0;
 
     pme_l1->SetFrameAddress(paddr, ToArchFlags(flags));
+
+    // Flush TLB for this page immediately to ensure CPU sees new permissions
+    MemoryModule::Get().GetTlb().InvalidatePage(vaddr);
 
     return {};
 }

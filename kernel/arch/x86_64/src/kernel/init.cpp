@@ -33,6 +33,7 @@ BEGIN_DECL_C
 void EnableOSXSave();
 void EnableSSE();
 void EnableAVX();
+void EnableNXE();
 
 END_DECL_C
 
@@ -63,6 +64,7 @@ void ArchInit(const RawBootArguments &)
     EnableOSXSave();
     EnableSSE();
     EnableAVX();
+    EnableNXE();
 
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();

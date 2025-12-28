@@ -8,6 +8,7 @@
 #include "modules/memory.hpp"
 #include "modules/vfs.hpp"
 #include "sys/elf/elf.hpp"
+
 #include "trace_framework.hpp"
 
 namespace System
@@ -40,9 +41,11 @@ bool ValidateElfHeader(const Elf::Header &header)
 
 expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpace &as)
 {
+    TRACE_INFO_GENERAL("ElfLoader::Load()");
     auto &vfs = VfsModule::Get();
 
     // 1. Check if file exists
+    TRACE_FREQ_INFO_GENERAL("Validating the file exists");
     auto exists_res = vfs.FileExists(path);
     if (!exists_res.has_value() || !exists_res.value()) {
         return unexpected(LoadError::FileNotFound);
@@ -56,6 +59,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
     }
 
     // 3. Validate ELF
+    TRACE_FREQ_INFO_GENERAL("Validating the ELF header");
     if (!ValidateElfHeader(header)) {
         return unexpected(LoadError::InvalidElf);
     }
@@ -73,6 +77,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         Mem::KFree(ph_raw);
     });
 
+    TRACE_FREQ_INFO_GENERAL("Validating the ELF header");
     read_res = vfs.ReadFile(path, ph_raw, ph_size, header.phoff);
     if (!read_res.has_value() || read_res.value() != ph_size) {
         return unexpected(LoadError::IoError);
@@ -81,6 +86,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
     auto *ph_table = reinterpret_cast<Elf::ProgramHeader *>(ph_raw);
 
     // 5. Load Segments
+    TRACE_FREQ_INFO_GENERAL("Validating the ELF header");
     for (u16 i = 0; i < header.phnum; ++i) {
         auto &ph = ph_table[i];
         if (ph.type != Elf::ProgramHeader::kTypeLoad) {
@@ -93,6 +99,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         u64 virt_start = AlignDown(ph.vaddr, hal::kPageSizeBytes);
         u64 virt_end   = AlignUp(ph.vaddr + ph.memsz, hal::kPageSizeBytes);
         u64 size       = virt_end - virt_start;
+        TRACE_INFO_GENERAL("Loading segment %d: [0x%llX - 0x%llX]", i, virt_start, virt_end);
 
         // Permissions
         VirtualMemAreaFlags original_flags = {};
@@ -144,8 +151,6 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
                 return unexpected(LoadError::MemoryError);
             }
         }
-
-        TRACE_INFO_GENERAL("Loaded segment %d: [0x%llX - 0x%llX]", i, virt_start, virt_end);
     }
 
     u64 entry_point = header.entry;
