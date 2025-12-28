@@ -24,7 +24,10 @@ void Sched::Scheduler::AddReadyThread(Thread *thread)
 void Sched::Scheduler::Schedule()
 {
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    ASSERT_NOT_NULL(threads_);
+
     auto thread = GetNext_();
+    ASSERT_NOT_NULL(thread);
 
     auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
     ASSERT_TRUE(static_cast<bool>(owner));
@@ -39,7 +42,10 @@ void Sched::Scheduler::Schedule()
 void Sched::Scheduler::ConvertToScheduling()
 {
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    ASSERT_NOT_NULL(threads_);
+
     auto thread = GetNext_();
+    ASSERT_NOT_NULL(thread);
 
     auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
     ASSERT_TRUE(static_cast<bool>(owner));
