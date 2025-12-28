@@ -99,7 +99,7 @@ class Mmu : public arch::Mmu
     public:
     Mmu() = default;
 
-    /// Maps a range of virtual memory to physical memory
+    /// The range is treated as half-open: [start, start + size)
     expected<void, Mem::MemError> MapRange(
         KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr_start,
         Mem::PPtr<void> paddr_start, size_t size, PageFlags flags
@@ -118,7 +118,7 @@ class Mmu : public arch::Mmu
         return {};
     }
 
-    /// Unmaps a range of virtual memory
+    /// The range is treated as half-open: [start, start + size)
     expected<void, Mem::MemError> UnMapRange(
         KernelMmuContext &ctx, Mem::PPtr<void> root, Mem::VPtr<void> start, size_t size
     )
@@ -129,7 +129,7 @@ class Mmu : public arch::Mmu
         auto e = AlignUp(PtrToUptr(start) + size, kPageSizeBytes);
 
         for (auto addr = s; addr < e; addr += kPageSizeBytes) {
-            auto unmap_res = Unmap(ctx, root, UptrToPtr<void>(addr));
+            auto unmap_res = UnMap(ctx, root, UptrToPtr<void>(addr));
             // Continue even if unmap fails (page might not have been mapped yet)
         }
         return {};
