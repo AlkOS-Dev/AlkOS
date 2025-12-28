@@ -5,8 +5,8 @@
 #include <cpuid.h>
 #include <bit.hpp>
 #include <defines.hpp>
+#include <mem/types.hpp>
 #include <todo.hpp>
-#include <types.hpp>
 #include "cpu/msrs.hpp"
 #include "hal/impl/constants.hpp"
 #include "include/memory_io.hpp"
@@ -345,12 +345,8 @@ class LocalApic
     template <class InputT>
     FAST_CALL void WriteRegister(const u32 offset, const InputT value)
     {
-        TODO_WHEN_VMEM_WORKS
         WriteMemoryIo<u32>(
-            reinterpret_cast<byte *>(
-                GetPhysicalAddressOnCore()
-            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-            offset, value
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddressOnCore())), offset, value
         );
     }
 
@@ -365,12 +361,8 @@ class LocalApic
     template <class RetT = u32>
     FAST_CALL RetT ReadRegister(const u32 offset)
     {
-        TODO_WHEN_VMEM_WORKS
         return ReadMemoryIo<u32, RetT>(
-            reinterpret_cast<byte *>(
-                GetPhysicalAddressOnCore()
-            ),  // TODO : REPLACE WITH VIRTUAL ADDRESS
-            offset
+            Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddressOnCore())), offset
         );
     }
 

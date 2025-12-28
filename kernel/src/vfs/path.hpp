@@ -83,12 +83,41 @@ class Path
         Parse();
     }
 
-    Path(const Path &other)                = default;
-    Path(Path &&other) noexcept            = default;
-    Path &operator=(const Path &other)     = default;
-    Path &operator=(Path &&other) noexcept = default;
+    Path(const Path &other)
+    {
+        raw_path_ = other.raw_path_;
+        path_len_ = other.path_len_;
+        Parse();
+    }
 
-    // --- Basic properties ---
+    Path &operator=(const Path &other)
+    {
+        if (this != &other) {
+            raw_path_ = other.raw_path_;
+            path_len_ = other.path_len_;
+            Parse();
+        }
+        return *this;
+    }
+
+    Path(Path &&other) noexcept
+    {
+        raw_path_ = other.raw_path_;
+        path_len_ = other.path_len_;
+        Parse();
+    }
+
+    Path &operator=(Path &&other) noexcept
+    {
+        if (this != &other) {
+            raw_path_ = other.raw_path_;
+            path_len_ = other.path_len_;
+            Parse();
+        }
+        return *this;
+    }
+
+    // Basic properties
     bool IsEmpty() const noexcept { return path_len_ == 0; }
     bool IsAbsolute() const noexcept { return is_absolute_; }
     bool IsRelative() const noexcept { return !is_absolute_; }
@@ -100,7 +129,7 @@ class Path
         return std::string_view(raw_path_.data(), path_len_);
     }
 
-    // --- Component access ---
+    // Component access
     size_t ComponentCount() const noexcept { return num_components_; }
     bool HasComponents() const noexcept { return num_components_ > 0; }
 
@@ -158,7 +187,7 @@ class Path
         return parent;
     }
 
-    // --- Iterator interface ---
+    // Iterator interface
     using iterator       = PathIterator;
     using const_iterator = PathIterator;
 
@@ -169,7 +198,7 @@ class Path
     const_iterator cbegin() const { return begin(); }
     const_iterator cend() const { return end(); }
 
-    // --- Path manipulation ---
+    // Path manipulation
     Path operator/(const Path &other) const
     {
         if (other.IsAbsolute())
@@ -205,7 +234,7 @@ class Path
         return *this /= Path(std::forward<T>(component));
     }
 
-    // --- Canonical path operations ---
+    // Canonical path operations
     Path GetWeaklyCanonical() const
     {
         Path canonical;
@@ -241,7 +270,7 @@ class Path
 
     Path GetNormalized() const { return GetWeaklyCanonical(); }
 
-    // --- Callback-based iteration ---
+    // Callback-based iteration
     template <PathComponentCallback Callback>
     void ForEachComponent(Callback &&callback) const
     {
@@ -270,7 +299,7 @@ class Path
         }
     }
 
-    // --- Comparison operators ---
+    // Comparison operators
     bool operator==(const Path &other) const noexcept
     {
         if (is_absolute_ != other.is_absolute_ || num_components_ != other.num_components_) {
@@ -306,7 +335,7 @@ class Path
         return num_components_ < other.num_components_;
     }
 
-    // --- Static utility methods ---
+    // Static utility methods
 
     template <PathStringLike... Args>
     static Path Join(Args &&...args)

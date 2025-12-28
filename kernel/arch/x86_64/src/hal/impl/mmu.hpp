@@ -34,14 +34,21 @@ class Mmu : public MmuAPI
 
     void DestroyRootPageMapTable(Mem::PPtr<void> pmt4) { (void)pmt4; }
 
+    void ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt);
+
+    void UnmapLowerHalf(
+        Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
+    );
+
+    expected<void, Mem::MemError> SetPageFlags(
+        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, PageFlags flags
+    );
+
     private:
     template <size_t kLevel>
     u64 PmeIdx(Mem::VPtr<void> vaddr);
 
     u64 ToArchFlags(PageFlags flags);
-
-    template <size_t kLevel = 0>
-    void DestroyPageMapEntry(Mem::VPtr<PageMapEntry<kLevel>> pme);
 
     template <size_t kLevel = 0>
     expected<Mem::VPtr<PageMapEntry<kLevel>>, Mem::MemError> WalkToEntry(
@@ -50,7 +57,5 @@ class Mmu : public MmuAPI
 };
 
 }  // namespace arch
-
-#include "hal/impl/mmu.tpp"
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_HPP_

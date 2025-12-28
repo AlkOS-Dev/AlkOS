@@ -97,6 +97,7 @@ set(SYSTEM_LIB_TYPE k)
 add_subdirectory(libs)
 add_subdirectory(generated)
 add_subdirectory(kernel)
+add_subdirectory(userspace)
 add_subdirectory(rootfs)
 
 ################################################################################
