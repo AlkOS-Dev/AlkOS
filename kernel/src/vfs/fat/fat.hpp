@@ -12,7 +12,7 @@
 #include <vfs/error.hpp>
 #include <vfs/interface.hpp>
 #include <vfs/path.hpp>
-#include "../../macros.hpp"
+#include "macros.hpp"
 
 namespace vfs
 {
@@ -314,9 +314,7 @@ class Fat
         auto lookup = LookupPath_(path);
         RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
-        if (!lookup.entry.IsFile()) {
-            return std::unexpected(VfsError::kNotAFile);
-        }
+        RET_UNEXPECTED_IF(!lookup.entry.IsFile(), VfsError::kNotAFile);
 
         if (offset >= lookup.entry.file_size) {
             return 0;
@@ -334,9 +332,7 @@ class Fat
         auto lookup = LookupPath_(path);
         RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
-        if (!lookup.entry.IsFile()) {
-            return std::unexpected(VfsError::kNotAFile);
-        }
+        RET_UNEXPECTED_IF(!lookup.entry.IsFile(), VfsError::kNotAFile);
 
         return WriteFileData_(lookup, buffer, size, offset);
     }
@@ -346,9 +342,7 @@ class Fat
         auto lookup = LookupPath_(path);
         RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
 
-        if (!lookup.entry.IsFile()) {
-            return std::unexpected(VfsError::kNotAFile);
-        }
+        RET_UNEXPECTED_IF(!lookup.entry.IsFile(), VfsError::kNotAFile);
 
         return DeleteEntry_(lookup);
     }
@@ -363,9 +357,7 @@ class Fat
     {
         auto lookup = LookupPath_(path);
         RET_UNEXPECTED_IF(!lookup.found, VfsError::kFileNotFound);
-        if (!lookup.entry.IsFile()) {
-            return std::unexpected(VfsError::kNotAFile);
-        }
+        RET_UNEXPECTED_IF(!lookup.entry.IsFile(), VfsError::kNotAFile);
         return static_cast<size_t>(lookup.entry.file_size);
     }
 
@@ -393,17 +385,11 @@ class Fat
     NODISCARD Result<> RemoveDirectory(const Path &path)
     {
         auto lookup = LookupPath_(path);
-        if (!lookup.found) {
-            return std::unexpected(VfsError::kDirectoryNotFound);
-        }
+        RET_UNEXPECTED_IF(!lookup.found, VfsError::kDirectoryNotFound);
 
-        if (!lookup.entry.IsDirectory()) {
-            return std::unexpected(VfsError::kNotADirectory);
-        }
+        RET_UNEXPECTED_IF(!lookup.entry.IsDirectory(), VfsError::kNotADirectory);
 
-        if (!IsDirectoryEmpty_(lookup.entry)) {
-            return std::unexpected(VfsError::kNotEmpty);
-        }
+        RET_UNEXPECTED_IF(!IsDirectoryEmpty_(lookup.entry), VfsError::kNotEmpty);
 
         return DeleteEntry_(lookup);
     }
@@ -1021,9 +1007,7 @@ class Fat
             new_parent_cluster, new_name, old_lookup.entry.attributes,
             GetFirstCluster_(old_lookup.entry)
         );
-        if (!result.has_value()) {
-            return std::unexpected(result.error());
-        }
+        RET_UNEXPECTED_IF_ERR(result);
 
         old_lookup.entry.filename[0] = DirectoryEntry::kDeletedEntry;
         UpdateDirectoryEntry_(old_lookup.parent_cluster, old_lookup.entry_offset, old_lookup.entry);

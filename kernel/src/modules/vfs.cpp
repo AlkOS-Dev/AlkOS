@@ -7,8 +7,8 @@
 #include <trace_framework.hpp>
 #include <vfs/fat/fat12.hpp>
 #include <vfs/io/in_memory.hpp>
-#include "../macros.hpp"
 #include "boot_args.hpp"
+#include "macros.hpp"
 
 using namespace vfs;
 
