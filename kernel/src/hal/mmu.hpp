@@ -36,8 +36,6 @@ struct KernelMmuContext {
         memset(Mem::PhysToVirt(ptr), 0, hal::kPageSizeBytes);
 
         auto &meta = pmt.GetPageMeta(ptr);
-        // Parent tracking is not strictly enforced by this context during alloc,
-        // but we init the metadata type.
         meta.InitPageTable(level);
         return reinterpret_cast<Mem::PPtr<void>>(ptr);
     }
@@ -46,7 +44,7 @@ struct KernelMmuContext {
     {
         (void)level;
         auto &meta = pmt.GetPageMeta(table);
-        meta.InitAllocated(0);  // Reset type to generic allocated before freeing
+        meta.InitAllocated(0);
         pmm.Free(reinterpret_cast<Mem::PPtr<Mem::Page>>(table));
     }
 
@@ -64,35 +62,6 @@ struct KernelMmuContext {
             pt.ref_count--;
         return pt.ref_count == 0;
     }
-};
-
-/**
- * @brief Boot MMU Context using BitmapPmm (before Buddy is ready).
- * Used for cleaning up bootloader tables.
- */
-struct BootstrapMmuContext {
-    Mem::BitmapPmm &pmm;
-    Mem::PageMetaTable &pmt;
-
-    expected<Mem::PPtr<void>, Mem::MemError> AllocateTable(uint8_t)
-    {
-        // Not implemented/Needed for cleanup
-        return unexpected(Mem::MemError::OutOfMemory);
-    }
-
-    void FreeTable(Mem::PPtr<void> table, uint8_t level)
-    {
-        (void)level;
-        auto &meta = pmt.GetPageMeta(table);
-        meta.InitAllocated(0);
-        pmm.Free(reinterpret_cast<Mem::PPtr<Mem::Page>>(table));
-    }
-
-    void IncreaseUsage(Mem::PPtr<void>) {}
-    bool DecreaseUsage(Mem::PPtr<void>)
-    {
-        return true;
-    }  // Always assume empty/freeable during force cleanup
 };
 
 class Mmu : public arch::Mmu
@@ -128,6 +97,13 @@ class Mmu : public arch::Mmu
         tlb_->InvalidatePage(vaddr);
     }
 
+    template <MmuContext Context>
+    void ClearUserMappings(Context &ctx, Mem::PPtr<void> root)
+    {
+        arch::Mmu::ClearUserMappings(ctx, root);
+        tlb_->FlushAll();
+    }
+
     expected<void, Mem::MemError> SetPageFlags(
         Mem::PPtr<void> root, Mem::VPtr<void> vaddr, PageFlags flags
     )
@@ -151,70 +127,6 @@ class Mmu : public arch::Mmu
         }
 
         tlb_->InvalidateRange(start, size);
-    }
-
-    /// Reconstructs metadata for an existing page table tree
-    void ReconstructAddressSpace(Mem::PPtr<void> root, Mem::PageMetaTable &pmt)
-    {
-        // Counts refs for a table by inspecting its entries
-        // Note: this assumes we are iterating a valid tree
-        // The Visitor in arch::Mmu doesn't provide entry counts, so we do it manually or
-        // rely on the fact that we can just set type for now.
-        // To strictly restore ref_counts, we need to count bits.
-
-        VisitTables(root, [&](Mem::PPtr<void> table, uint8_t level) {
-            auto &meta = pmt.GetPageMeta(table);
-            meta.InitPageTable(level);
-
-            // Count entries for ref_count
-            if (level > 1) {
-                u16 count = 0;
-                // Hack: we cast to generic array to count present bits
-                // This assumes standard x86 layout which HAL technically shouldn't know,
-                // but Mmu inherits from arch::Mmu so it can access Arch defs if included.
-                // We can't access PageMapTable<L> easily here without template.
-                // Let's rely on a simplified assumption or add a helper in Arch.
-                // For now, we set ref_count to 1 to prevent accidental freeing
-                // until we implement proper counting or let the system run.
-                // Ideally, we would iterate the table.
-                auto *virt = reinterpret_cast<u64 *>(Mem::PhysToVirt(table));
-                for (int i = 0; i < 512; ++i) {
-                    if (virt[i] & 1)
-                        count++;
-                }
-                Mem::PageMeta::AsPageTable(meta).ref_count = count;
-            } else {
-                // Level 1 (PT)
-                u16 count  = 0;
-                auto *virt = reinterpret_cast<u64 *>(Mem::PhysToVirt(table));
-                for (int i = 0; i < 512; ++i) {
-                    if (virt[i] & 1)
-                        count++;
-                }
-                Mem::PageMeta::AsPageTable(meta).ref_count = count;
-            }
-        });
-    }
-
-    void UnmapLowerHalf(Mem::PPtr<void> root, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm)
-    {
-        BootstrapMmuContext ctx{pmm, pmt};
-
-        // Manual iteration of PML4 lower half
-        auto *pml4                         = reinterpret_cast<u64 *>(Mem::PhysToVirt(root));
-        constexpr size_t kLowerHalfEntries = 256;
-
-        for (size_t i = 0; i < kLowerHalfEntries; ++i) {
-            if (pml4[i] & 1) {  // Present
-                Mem::PPtr<void> child =
-                    reinterpret_cast<Mem::PPtr<void>>(pml4[i] & 0x000FFFFFFFFFF000);  // Mask flags
-                DestroyTable(ctx, child, 3);  // Child is Level 3 (PDPT)
-                pml4[i] = 0;
-            }
-        }
-
-        // TLB flush should be handled by caller or here
-        SwitchRoot(root);  // Reload CR3 flushes TLB
     }
 };
 

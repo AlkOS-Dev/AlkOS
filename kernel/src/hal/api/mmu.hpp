@@ -66,10 +66,11 @@ concept MmuContext = requires(T ctx, u8 level, Mem::PPtr<void> table) {
 
 /**
  * @brief Concept for a visitor function used to traverse page tables.
+ * Visitor signature: void(Mem::PPtr<void> table, u8 level, size_t entry_count)
  */
 template <typename Func>
-concept TableVisitor = requires(Func f, Mem::PPtr<void> table, u8 level) {
-    { f(table, level) } -> std::same_as<void>;
+concept TableVisitor = requires(Func f, Mem::PPtr<void> table, u8 level, size_t count) {
+    { f(table, level, count) } -> std::same_as<void>;
 };
 
 struct MmuAPI {
@@ -99,6 +100,15 @@ struct MmuAPI {
     void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
 
     /**
+     * @brief Clears the user-space portion of the virtual address space.
+     *
+     * This destroys all page tables associated with the lower half (user space)
+     * of the address space, freeing them via the provided context.
+     */
+    template <MmuContext Context>
+    void ClearUserMappings(Context &ctx, Mem::PPtr<void> root);
+
+    /**
      * @brief Updates flags for an existing mapping.
      */
     expected<void, Mem::MemError> SetPageFlags(
@@ -121,8 +131,11 @@ struct MmuAPI {
     void SwitchRoot(Mem::PPtr<void> root);
 
     /**
-     * @brief Walks the page table hierarchy and calls the visitor for each present table.
-     * Useful for reconstructing metadata or debugging.
+     * @brief Walks the page table hierarchy.
+     *
+     * Calls the visitor for each present table in the hierarchy.
+     * The visitor receives the table address, its level, and the number of active entries
+     * within that table (useful for reconstructing reference counts).
      */
     template <TableVisitor Visitor>
     void VisitTables(Mem::PPtr<void> root, Visitor visitor);
