@@ -158,6 +158,25 @@ void Mmu::Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr)
 }
 
 template <MmuContext Context>
+void Mmu::ClearUserMappings(Context &ctx, Mem::PPtr<void> root)
+{
+    // On x86_64, the lower half of the address space corresponds to
+    // the first 256 entries of PML4.
+    constexpr size_t kLowerHalfEntries = 256;
+
+    auto *pml4 = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(root));
+
+    for (size_t i = 0; i < kLowerHalfEntries; ++i) {
+        auto &entry = (*pml4)[i];
+        if (entry.IsPresent()) {
+            // Recursively destroy the sub-tables
+            DestroyTable(ctx, reinterpret_cast<Mem::PPtr<void>>(entry.GetNextLevelTable()), 3);
+            entry.Clear();
+        }
+    }
+}
+
+template <MmuContext Context>
 expected<Mem::PPtr<void>, Mem::MemError> Mmu::Translate(
     Context &, Mem::PPtr<void> root, Mem::VPtr<void> vaddr
 )
@@ -190,14 +209,24 @@ expected<Mem::PPtr<void>, Mem::MemError> Mmu::Translate(
 template <TableVisitor Visitor>
 void Mmu::VisitTables(Mem::PPtr<void> root, Visitor visitor)
 {
-    // Visitor signature: void(Mem::PPtr<void> table, uint8_t level)
+    // Visitor signature: void(Mem::PPtr<void> table, uint8_t level, size_t entry_count)
 
     // We traverse recursively
     auto RecVisit = [&]<size_t Level>(this auto &&self, Mem::PPtr<void> table_phys) -> void {
-        visitor(table_phys, Level);
+        auto *table = reinterpret_cast<PageMapTable<Level> *>(Mem::PhysToVirt(table_phys));
+
+        // First pass: count entries
+        size_t count = 0;
+        for (const auto &entry : *table) {
+            if (entry.IsPresent()) {
+                count++;
+            }
+        }
+
+        // Invoke visitor with stats
+        visitor(table_phys, Level, count);
 
         if constexpr (Level > 1) {
-            auto *table = reinterpret_cast<PageMapTable<Level> *>(Mem::PhysToVirt(table_phys));
             for (const auto &entry : *table) {
                 if (entry.IsPresent() && !entry.IsHuge()) {
                     self.template operator()<Level - 1>(

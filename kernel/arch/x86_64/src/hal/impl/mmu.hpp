@@ -24,6 +24,9 @@ class Mmu : public MmuAPI
     void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
 
     template <MmuContext Context>
+    void ClearUserMappings(Context &ctx, Mem::PPtr<void> root);
+
+    template <MmuContext Context>
     expected<Mem::PPtr<void>, Mem::MemError> Translate(
         Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr
     );
