@@ -4,6 +4,7 @@
 #include <macros.hpp>
 #include <template/scope_guard.hpp>
 
+#include "constants.hpp"
 #include "hal/constants.hpp"
 #include "mem/heap.hpp"
 #include "mem/mmu/contexts.hpp"
@@ -114,6 +115,57 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
     tlb_->InvalidateRange(hint.start, hint.size);
 
     return {};
+}
+
+expected<VPtr<void>, MemError> Vmm::AllocAnonymous(
+    VPtr<AddressSpace> as, size_t size, VirtualMemAreaFlags flags, VPtr<void> range_start,
+    VPtr<void> range_end
+)
+{
+    auto gap_res = as->FindGap(size, range_start, range_end);
+    RET_UNEXPECTED_IF_ERR(gap_res);
+    auto gap = *gap_res;
+
+    auto vma_res = KNew<AnonymousVMemArea>(gap.start, gap.size, flags);
+    RET_UNEXPECTED_IF(!vma_res, MemError::OutOfMemory);
+    auto *vma = *vma_res;
+
+    auto add_res = as->AddArea(vma);
+    RET_UNEXPECTED_IF_ERR(add_res);
+
+    return gap.start;
+}
+
+expected<VPtr<void>, MemError> Vmm::AllocUserStack(VPtr<AddressSpace> as, size_t size)
+{
+    auto user_start = UptrToPtr<void>(kUserSpaceStart);
+    auto user_end   = UptrToPtr<void>(kUserSpaceEnd);
+
+    VirtualMemAreaFlags flags = {
+        .readable = true, .writable = true, .executable = false, .cache_disable = true
+    };
+
+    auto res = AllocAnonymous(as, size, flags, user_start, user_end);
+    RET_UNEXPECTED_IF_ERR(res);
+
+    VPtr<void> base = *res;
+
+    if constexpr (hal::kStackGrowsDown) {
+        return reinterpret_cast<VPtr<void>>(reinterpret_cast<uptr>(base) + size);
+    } else {
+        return base;
+    }
+}
+
+expected<VPtr<void>, MemError> Vmm::AllocKernelHeap(size_t size)
+{
+    auto kernel_start = UptrToPtr<void>(kKernelSpaceStart);
+
+    VirtualMemAreaFlags flags = {
+        .readable = true, .writable = true, .executable = false, .cache_disable = false
+    };
+
+    return AllocAnonymous(&kernel_as_, size, flags, kernel_start, nullptr);
 }
 
 }  // namespace Mem
