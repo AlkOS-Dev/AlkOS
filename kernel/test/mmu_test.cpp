@@ -74,9 +74,6 @@ class MmuTest : public TestGroupBase
         // Zero out the PML4 to ensure it's clean and valid
         memset(pml4_virt_, 0, hal::kPageSizeBytes);
 
-        // Initialize Mmu
-        mmu_.Init(tlb_);
-
         // Initialize Context
         auto ctx_res = KNew<TestMmuContext>(pmm);
         R_ASSERT_TRUE(ctx_res.has_value());
