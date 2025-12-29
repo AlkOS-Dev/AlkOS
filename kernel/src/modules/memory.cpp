@@ -12,7 +12,6 @@
 using namespace Mem;
 
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
-    : KernelAddressSpace_(args.root_page_table)
 {
     DEBUG_INFO_MEMORY("MemoryModule::MemoryModule()");
 
@@ -48,6 +47,7 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
+    KernelAddressSpace_.InitKernel(args.root_page_table, BuddyPmm_, Mmu_, PageMetaTable_);
     Vmm_.Init(Tlb_, Mmu_, BuddyPmm_);
 
     // Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.

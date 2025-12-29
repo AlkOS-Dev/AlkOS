@@ -12,8 +12,15 @@
 #include "mem/virt/addr_space_iterator.hpp"
 #include "mem/virt/area.hpp"
 
+namespace hal
+{
+class Mmu;
+}
+
 namespace Mem
 {
+
+struct KernelMmuContext;
 
 using std::expected;
 using std::unexpected;
@@ -23,6 +30,8 @@ using std::unexpected;
 //==============================================================================
 
 class VirtualMemoryManager;
+class BuddyPmm;
+class PageMetaTable;
 
 //==============================================================================
 // AddressSpace
@@ -31,10 +40,12 @@ class VirtualMemoryManager;
 class AddressSpace
 {
     public:
-    explicit AddressSpace(PPtr<void> page_table_root)
-        : page_table_root_{page_table_root}, area_list_head_{nullptr}
-    {
-    }
+    explicit AddressSpace();
+
+    expected<void, MemError> InitUser(BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt);
+    expected<void, MemError> InitKernel(
+        const PPtr<void> kernel_root, BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt
+    );
 
     ~AddressSpace();
     AddressSpace(const AddressSpace &)            = delete;
@@ -56,10 +67,19 @@ class AddressSpace
     bool IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr);
     bool AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b);
 
+    // Fields
     PPtr<void> page_table_root_;
+    bool owns_page_table_root_;
     VPtr<VMemArea> area_list_head_;
     hal::Spinlock area_list_lock_;
 
+    // Dependencies
+    KernelMmuContext *ctx_;
+    BuddyPmm *pmm_;
+    hal::Mmu *mmu_;
+    Mem::PageMetaTable *pmt_;
+
+    // Friends
     friend VirtualMemoryManager;
     friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 

@@ -1,12 +1,55 @@
 #include "mem/virt/addr_space.hpp"
+
 #include <macros.hpp>
+#include "hal/api/mmu.hpp"
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
+#include "mem/mmu/contexts.hpp"
+#include "mem/page_meta_table.hpp"
+#include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
 
 using namespace Mem;
 using AS = AddressSpace;
 
+AS::AddressSpace()
+    : page_table_root_{nullptr}, owns_page_table_root_{false}, area_list_head_{nullptr}
+{
+}
+
+expected<void, MemError> AS::InitUser(BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt)
+{
+    auto ctx_res = KNew<KernelMmuContext>(pmm, pmt);
+    RET_UNEXPECTED_IF_ERR(ctx_res);
+
+    ctx_ = *ctx_res;
+    pmm_ = &pmm;
+    mmu_ = &mmu;
+    pmt_ = &pmt;
+
+    auto page_table_root_res = ctx_->AllocateTable(0);
+    RET_UNEXPECTED_IF_ERR(page_table_root_res);
+    page_table_root_      = *page_table_root_res;
+    owns_page_table_root_ = true;
+
+    return {};
+}
+
+expected<void, MemError> AS::InitKernel(
+    const PPtr<void> kernel_root, BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt
+)
+{
+    auto ctx_res = KNew<KernelMmuContext>(pmm, pmt);
+    RET_UNEXPECTED_IF_ERR(ctx_res);
+
+    page_table_root_ = kernel_root;
+    pmm_             = &pmm;
+    mmu_             = &mmu;
+    pmt_             = &pmt;
+    ctx_             = *ctx_res;
+
+    return {};
+}
 AS::~AddressSpace()
 {
     // Free all allocated areas
@@ -14,6 +57,13 @@ AS::~AddressSpace()
         auto to_free    = area_list_head_;
         area_list_head_ = area_list_head_->next;
         KFree(to_free);
+    }
+
+    if (ctx_) {
+        if (owns_page_table_root_ && page_table_root_ != nullptr) {
+            ctx_->FreeTable(page_table_root_, 0);
+        }
+        KDelete(ctx_);
     }
 }
 

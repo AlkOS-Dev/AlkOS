@@ -33,7 +33,7 @@ void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &pmm) noexcept
 
 expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
 {
-    auto as_res = KNew<AddressSpace>(nullptr);
+    auto as_res = KNew<AddressSpace>();
     RET_UNEXPECTED_IF_ERR(as_res);
     return *as_res;
 }
@@ -74,9 +74,6 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 
     auto err = as->RmArea(region_start);
     RET_UNEXPECTED_IF_ERR(err);
-
-    // TLB invalidation handled inside UnMapRange or via explicit flush if needed.
-    // But UnMapRange implementation in HAL Mmu calls Unmap which calls invlpg.
 
     return {};
 }
