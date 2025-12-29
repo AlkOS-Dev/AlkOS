@@ -9,8 +9,8 @@
 namespace allocators
 {
 
-template <decltype(auto) AllocateFunc, decltype(auto) DeallocateFunc, typename AllocatorT = void>
-class CustomAllocatorWrapper : decltype(AllocateFunc), decltype(DeallocateFunc)
+template <typename AllocateFunc, typename DeallocateFunc, typename AllocatorT = void>
+class CustomAllocatorWrapper : public AllocateFunc, public DeallocateFunc
 {
     static constexpr bool kCondition = !std::is_void_v<AllocatorT>;
 
@@ -18,44 +18,69 @@ class CustomAllocatorWrapper : decltype(AllocateFunc), decltype(DeallocateFunc)
     template <typename U, typename... Args>
     FORCE_INLINE_F U *Allocate(Args &&...args)
     {
-        return decltype(AllocateFunc)::operator()(std::forward<Args>(args)...);
+        return AllocateFunc::template operator()<U>(std::forward<Args>(args)...);
     }
 
     template <typename U>
     FORCE_INLINE_F void Deallocate(U *ptr)
     {
-        decltype(DeallocateFunc)::operator()(ptr);
+        DeallocateFunc::operator()(ptr);
     }
 
     OPTIONAL_FIELD(kCondition, AllocatorT) Allocator {};
 };
 
-template <typename T>
-using KMallocAllocator = CustomAllocatorWrapper<
-    []<typename... Args>(this auto &, Args &&...args) FORCE_INLINE_L {
+// Stateless functor for KMalloc
+struct KMallocAllocate {
+    template <typename T, typename... Args>
+    static FORCE_INLINE_F T *operator()(Args &&...args)
+    {
         auto mem = Mem::KMalloc<T>();
         if (!mem) {
             return static_cast<T *>(nullptr);
         }
-
         return new (*mem) T(std::forward<Args>(args)...);
-    },
-    []<typename U>(this auto &, U *ptr) FORCE_INLINE_L {
+    }
+};
+
+struct KMallocDeallocate {
+    template <typename U>
+    static FORCE_INLINE_F void operator()(U *ptr)
+    {
         if (ptr) {
             ptr->~U();
             Mem::KFree(ptr);
         }
-    }>;
+    }
+};
 
-template <typename T, size_t kPoolSize>
-using CyclicAllocatorWrapper = CustomAllocatorWrapper<
-    []<typename... Args>(this auto &self, Args &&...args) FORCE_INLINE_L {
-        return self.Allocator.Allocate(std::forward<Args>(args)...);
-    },
-    []<typename U>(this auto &self, U *ptr) FORCE_INLINE_L {
-        self.Allocator.Free(ptr);
-    },
-    CyclicAllocator<T, kPoolSize>>;
+template <typename T>
+using KMallocAllocator = CustomAllocatorWrapper<KMallocAllocate, KMallocDeallocate>;
+
+template <typename T, size_t kSize>
+class CyclicAllocatorWrapper
+{
+    CyclicAllocator<T, kSize> allocator_;
+
+    public:
+    template <typename U, typename... Args>
+    U *Allocate(Args &&...args)
+    {
+        static_assert(
+            std::is_same_v<U, T>, "CyclicAllocatorWrapper can only allocate its underlying type"
+        );
+        return allocator_.Allocate(std::forward<Args>(args)...);
+    }
+
+    template <typename U>
+    void Deallocate(U *ptr)
+    {
+        static_assert(
+            std::is_same_v<U, T>, "CyclicAllocatorWrapper can only deallocate its underlying type"
+        );
+        allocator_.Free(ptr);
+    }
+};
 
 }  // namespace allocators
 

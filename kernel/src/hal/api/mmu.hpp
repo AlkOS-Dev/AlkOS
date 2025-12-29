@@ -139,6 +139,17 @@ struct MmuAPI {
      */
     template <TableVisitor Visitor>
     void VisitTables(Mem::PPtr<void> root, Visitor visitor);
+
+    /**
+     * @brief Synchronizes a top-level page table entry from a source root to a destination root.
+     * Used for lazy kernel mapping synchronization (e.g. updating a user process's kernel view).
+     *
+     * @param dst_root The physical address of the destination root page table.
+     * @param src_root The physical address of the source (master) root page table.
+     * @param vaddr The virtual address causing the fault/needing synchronization.
+     * @return true if synchronization was performed (entry copied), false otherwise.
+     */
+    bool SyncMapping(Mem::PPtr<void> dst_root, Mem::PPtr<void> src_root, Mem::VPtr<void> vaddr);
 };
 
 }  // namespace arch

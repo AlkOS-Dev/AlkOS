@@ -5,6 +5,8 @@
 #include <template/scope_guard.hpp>
 
 #include "hal/constants.hpp"
+#include "mem/heap.hpp"
+#include "mem/virt/area.hpp"
 #include "modules/memory.hpp"
 #include "modules/vfs.hpp"
 #include "sys/elf/elf.hpp"
@@ -84,6 +86,29 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
 
     auto *ph_table = reinterpret_cast<Elf::ProgramHeader *>(ph_raw);
 
+    // Track loaded segments so we can roll back changes to the address space
+    // if loading fails halfway through.
+    u16 loaded_segments_count = 0;
+    template_lib::ScopeGuard vma_cleanup_guard([&]() {
+        u16 segments_cleaned = 0;
+        for (u16 i = 0; i < header.phnum && segments_cleaned < loaded_segments_count; ++i) {
+            auto &ph = ph_table[i];
+            if (ph.type != Elf::ProgramHeader::kTypeLoad || ph.memsz == 0) {
+                continue;
+            }
+
+            u64 virt_start = AlignDown(ph.vaddr, hal::kPageSizeBytes);
+            if (auto res =
+                    MemoryModule::Get().GetVmm().RmArea(&as, Mem::UptrToPtr<void>(virt_start));
+                !res) {
+                TRACE_WARN_GENERAL(
+                    "Failed to clean up VMA for segment %d during error recovery", i
+                );
+            }
+            segments_cleaned++;
+        }
+    });
+
     // 5. Load Segments
     TRACE_FREQ_INFO_GENERAL("Validating the ELF header");
     for (u16 i = 0; i < header.phnum; ++i) {
@@ -111,23 +136,25 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         loading_flags.writable            = true;
 
         // Add VMA to Address Space
-        VMemArea vma{
-            .start                = UptrToPtr<void>(virt_start),
-            .size                 = size,
-            .flags                = loading_flags,
-            .type                 = VirtualMemAreaT::Anonymous,
-            .direct_mapping_start = nullptr,
-        };
+        auto vma_res = Mem::KNew<Mem::AnonymousVMemArea>(
+            Mem::UptrToPtr<void>(virt_start), size, loading_flags
+        );
 
-        if (auto res = MemoryModule::Get().GetVmm().AddArea(&as, vma); !res) {
-            TRACE_WARN_GENERAL("Failed to add VMA for segment %d", i);
+        if (!vma_res) {
+            TRACE_WARN_GENERAL("Failed to allocate VMA for segment %d", i);
             return unexpected(LoadError::MemoryError);
         }
 
+        // AddArea takes ownership of the pointer
+        if (auto res = MemoryModule::Get().GetVmm().AddArea(&as, *vma_res); !res) {
+            TRACE_WARN_GENERAL("Failed to add VMA for segment %d", i);
+            return unexpected(LoadError::MemoryError);
+        }
+        loaded_segments_count++;
+
+        VMemArea *vma = *vma_res;
+
         // Copy file data into the mapped region
-        // Since we are in the same address space (kernel), we can just write to the virtual
-        // address. The Page Fault handler will catch the write to the anonymous area and allocate
-        // the page.
         if (ph.filesz > 0) {
             void *dest = reinterpret_cast<void *>(ph.vaddr);
             read_res   = vfs.ReadFile(path, dest, ph.filesz, ph.offset);
@@ -144,8 +171,9 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
 
         // Restore flags
         if (loading_flags.writable != original_flags.writable) {
-            if (auto res =
-                    MemoryModule::Get().GetVmm().UpdateAreaFlags(&as, vma.start, original_flags);
+            if (auto res = MemoryModule::Get().GetVmm().UpdateAreaFlags(
+                    &as, vma->GetStart(), original_flags
+                );
                 !res) {
                 TRACE_WARN_GENERAL("Failed to restore flags for segment %d", i);
                 return unexpected(LoadError::MemoryError);
@@ -153,8 +181,9 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
         }
     }
 
+    vma_cleanup_guard.dismiss();
     u64 entry_point = header.entry;
-    return UptrToPtr<void>(entry_point);
+    return Mem::UptrToPtr<void>(entry_point);
 }
 
 }  // namespace System
