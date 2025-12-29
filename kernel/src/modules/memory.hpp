@@ -48,6 +48,12 @@ class MemoryModule : template_lib::StaticSingletonHelper
 
     public:
     void RegisterPageFault(HardwareModule &hw);
+
+    /// @brief Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
+    /// These areas were set up by the bootloader but are invisible to the generic VMM until
+    /// registered.
+    /// @note This can't be done in Init() because it requires MemoryModule to be fully initialized.
+    void RegisterKernelVMAreas(const BootArguments &args);
 };
 }  // namespace internal
 

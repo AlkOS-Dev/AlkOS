@@ -77,8 +77,8 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             .Present        = true,
             .Writable       = vma.flags.writable,
             .UserAccessible = true,
-            .WriteThrough   = false,
-            .CacheDisable   = false,
+            .WriteThrough   = vma.flags.write_through,
+            .CacheDisable   = vma.flags.cache_disable,
             .Global         = false,
             .NoExecute      = !vma.flags.executable
         };

@@ -167,8 +167,8 @@ expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFl
         .Present        = true,
         .Writable       = vmaf.writable,
         .UserAccessible = !is_kernel,
-        .WriteThrough   = false,
-        .CacheDisable   = false,
+        .WriteThrough   = vmaf.write_through,
+        .CacheDisable   = vmaf.cache_disable,
         .Global         = is_kernel,
         .NoExecute      = !vmaf.executable
     };

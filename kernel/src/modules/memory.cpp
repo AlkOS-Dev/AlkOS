@@ -1,5 +1,6 @@
 #include "modules/memory.hpp"
 
+#include <assert.h>
 #include "boot_args.hpp"
 #include "hal/constants.hpp"
 #include "mem/init/boot_mmu.hpp"
@@ -52,49 +53,43 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     KernelMmuContext_.Init(&BuddyPmm_, &PageMetaTable_);
 
-    KernelAddressSpace_.InitKernel(args.root_page_table, KernelMmuContext_, Mmu_);
+    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
+    auto init_res = KernelAddressSpace_.InitKernel(args.root_page_table, KernelMmuContext_, Mmu_);
+    R_ASSERT_TRUE(init_res);
 
     TRACE_INFO_MEMORY("Initializing Virtual Memory Manager");
     Vmm_.Init(Tlb_, Mmu_, KernelMmuContext_, Heap_);
+}
 
-    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
+void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
+{
+    DEBUG_INFO_MEMORY("Registering Kernel VMAreas...");
 
-    // Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
-    // These areas were set up by the bootloader but are invisible to the generic VMM until
-    // registered.
-    // {
-    //     // Kernel Image
-    //     size_t kernel_size =
-    //         reinterpret_cast<uptr>(args.kernel_end) - reinterpret_cast<uptr>(args.kernel_start);
-    //
-    //     VMemArea kernel_vma{
-    //         .start                = args.kernel_start,
-    //         .size                 = kernel_size,
-    //         .flags                = {.readable = true, .writable = true, .executable = true},
-    //         .type                 = VirtualMemAreaT::Anonymous,
-    //         .direct_mapping_start = VirtToPhys(args.kernel_start),
-    //         .next                 = nullptr
-    //     };
+    // Kernel Image
+    size_t kernel_size =
+        reinterpret_cast<uptr>(args.kernel_end) - reinterpret_cast<uptr>(args.kernel_start);
+    VMemArea kernel_vma{
+        .start                = args.kernel_start,
+        .size                 = kernel_size,
+        .flags                = {.readable = true, .writable = true, .executable = true},
+        .type                 = VirtualMemAreaT::Anonymous,
+        .direct_mapping_start = VirtToPhys(args.kernel_start),
+        .next                 = nullptr
+    };
 
-    //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, kernel_vma); !res) {
-    //         TRACE_WARN_MEMORY("Failed to register Kernel VMA");
-    //     }
+    if (auto res = Vmm_.AddArea(&KernelAddressSpace_, kernel_vma); !res) {
+        TRACE_WARN_MEMORY("Failed to register Kernel VMA");
+    }
 
-    //     // Direct Physical Map
-    //     VMemArea dm_vma{
-    //         .start                = UptrToPtr<void>(hal::kDirectMapAddrStart),
-    //         .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
-    //         .flags                = {.readable = true, .writable = true, .executable = false},
-    //         .type                 = VirtualMemAreaT::DirectMapping,
-    //         .direct_mapping_start = UptrToPtr<void>(0),
-    //         .next                 = nullptr
-    //     };
-
-    //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, dm_vma); !res) {
-    //         TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
-    //     }
-    //
-    // }
+    // Direct Physical Map
+    VMemArea dm_vma{
+        .start                = UptrToPtr<void>(hal::kDirectMapAddrStart),
+        .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
+        .flags                = {.readable = true, .writable = true, .executable = false},
+        .type                 = VirtualMemAreaT::DirectMapping,
+        .direct_mapping_start = UptrToPtr<void>(0),
+        .next                 = nullptr
+    };
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)
