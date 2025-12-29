@@ -69,12 +69,13 @@ void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
     // SwitchRoot does CR3 load which flushes TLB
 }
 
-expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
+expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea *vma)
 {
-    auto res = as->AddArea(vma);
+    auto start = vma->GetStart();
+    auto res   = as->AddArea(vma);
     RET_UNEXPECTED_IF_ERR(res);
 
-    return vma.start;
+    return start;
 }
 
 expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)

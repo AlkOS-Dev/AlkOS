@@ -47,7 +47,7 @@ class VirtualMemoryManager
     expected<void, MemError> DestroyUserAddrSpace(VPtr<AddressSpace> as);
     void SwitchAddrSpace(VPtr<AddressSpace> as);
 
-    expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
+    expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea *vma);
     expected<void, MemError> RmArea(VPtr<AddressSpace> as, VPtr<void> region_start);
     expected<void, MemError> UpdateAreaFlags(
         VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf

@@ -3,10 +3,12 @@
 #include <assert.h>
 #include "boot_args.hpp"
 #include "hal/constants.hpp"
+#include "mem/heap.hpp"
 #include "mem/init/boot_mmu.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/types.hpp"
+#include "mem/virt/area.hpp"
 #include "mem/virt/page_fault.hpp"
 #include "trace_framework.hpp"
 
@@ -64,28 +66,27 @@ void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
     // Kernel Image
     size_t kernel_size =
         reinterpret_cast<uptr>(args.kernel_end) - reinterpret_cast<uptr>(args.kernel_start);
-    VMemArea kernel_vma{
-        .start                = args.kernel_start,
-        .size                 = kernel_size,
-        .flags                = {.readable = true, .writable = true, .executable = true},
-        .type                 = VirtualMemAreaT::Anonymous,
-        .direct_mapping_start = VirtToPhys(args.kernel_start)
-    };
 
-    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), kernel_vma); !res) {
+    auto kernel_vma_res = Mem::KNew<Mem::AnonymousVMemArea>(
+        args.kernel_start, kernel_size,
+        VirtualMemAreaFlags{.readable = true, .writable = true, .executable = true}
+    );
+    R_ASSERT_TRUE(kernel_vma_res);
+
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), *kernel_vma_res); !res) {
         TRACE_WARN_MEMORY("Failed to register Kernel VMA");
     }
 
     // Direct Physical Map
-    VMemArea dm_vma{
-        .start                = UptrToPtr<void>(hal::kDirectMapAddrStart),
-        .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
-        .flags                = {.readable = true, .writable = true, .executable = false},
-        .type                 = VirtualMemAreaT::DirectMapping,
-        .direct_mapping_start = UptrToPtr<void>(0)
-    };
+    auto dm_vma_res = Mem::KNew<Mem::DirectMappingVMemArea>(
+        Mem::UptrToPtr<void>(hal::kDirectMapAddrStart),
+        hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
+        VirtualMemAreaFlags{.readable = true, .writable = true, .executable = false},
+        Mem::UptrToPtr<void>(0)  // phys_start
+    );
+    R_ASSERT_TRUE(dm_vma_res);
 
-    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), dm_vma); !res) {
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), *dm_vma_res); !res) {
         TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
     }
 }
