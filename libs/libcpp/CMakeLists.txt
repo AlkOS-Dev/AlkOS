@@ -24,6 +24,7 @@ target_include_directories(alkos.libcpp.interface INTERFACE
     # Decoupling them now brings too little benefit and too much complexity to justify the effort
     "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src/abi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src"
 )
 
 target_link_libraries(alkos.libcpp.interface INTERFACE
