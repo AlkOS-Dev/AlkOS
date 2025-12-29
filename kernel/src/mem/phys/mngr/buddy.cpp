@@ -1,6 +1,7 @@
 #include "mem/phys/mngr/buddy.hpp"
 
 #include <algorithm.hpp>
+#include <macros.hpp>
 #include <mutex.hpp>
 
 #include "mem/page_meta_table.hpp"
@@ -141,9 +142,7 @@ expected<PPtr<Page>, MemError> B::Alloc(AllocationRequest ar)
     std::lock_guard guard{lock_};
     u8 order = ar.order;
 
-    if (order > kMaxOrder) {
-        return unexpected(MemError::InvalidArgument);
-    }
+    RET_UNEXPECTED_IF(order > kMaxOrder, MemError::InvalidArgument);
 
     // Find the smallest available block that is large enough
     for (u8 current_order = order; current_order <= kMaxOrder; current_order++) {

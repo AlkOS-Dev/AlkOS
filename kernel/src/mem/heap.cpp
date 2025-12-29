@@ -29,9 +29,7 @@ void Heap::Init(PageMetaTable &pmt, BuddyPmm &pmm, SlabAllocator &slab)
 
 expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
 {
-    if (size == 0) {
-        return unexpected(MemError::InvalidArgument);
-    }
+    RET_UNEXPECTED_IF(size == 0, MemError::InvalidArgument);
 
     // Small Allocations -> Slab Allocator
     if (size < hal::kPageSizeBytes) {
@@ -42,13 +40,13 @@ expected<VPtr<void>, MemError> Heap::Malloc(size_t size)
         }
 
         auto res = cache->Alloc();
-        UNEXPECTED_RET_IF_ERR(res);
+        RET_UNEXPECTED_IF_ERR(res);
         return *res;
     }
 
     // Large Allocations -> Buddy Allocator
     auto res = pmm_->Alloc({.order = BuddyPmm::SizeToPageOrder(size)});
-    UNEXPECTED_RET_IF_ERR(res);
+    RET_UNEXPECTED_IF_ERR(res);
 
     return PhysToVirt(*res);
 }
@@ -83,15 +81,14 @@ expected<VPtr<void>, MemError> Heap::MallocAligned(KMallocRequest r)
     size_t size      = r.size;
 
     // Sanity checks
-    if (alignment == 0 || (alignment & (alignment - 1)) != 0) {
-        // Alignment must be power of 2
-        return unexpected(MemError::InvalidArgument);
-    }
+    RET_UNEXPECTED_IF(
+        alignment == 0 || (alignment & (alignment - 1)) != 0, MemError::InvalidArgument
+    );
 
     size_t alloc_size = size + alignment + sizeof(AllocationHeader);
 
     auto res = Malloc(alloc_size);
-    UNEXPECTED_RET_IF_ERR(res);
+    RET_UNEXPECTED_IF_ERR(res);
 
     VPtr<void> raw_ptr = *res;
     uptr raw_addr      = PtrToUptr(raw_ptr);

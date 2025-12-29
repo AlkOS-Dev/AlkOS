@@ -5,6 +5,7 @@
 #include <hal/spinlock.hpp>
 
 #include "io/stream.hpp"
+#include "macros.hpp"
 
 namespace IO
 {
@@ -25,9 +26,7 @@ class Pipe : public IStream
     {
         size_t bytes_written = buffer_.Write(buffer);
 
-        if (bytes_written == 0 && buffer.size() > 0) {
-            return std::unexpected(Error::Retry);
-        }
+        RET_UNEXPECTED_IF(bytes_written == 0 && buffer.size() > 0, Error::Retry);
         return bytes_written;
     }
 
@@ -35,9 +34,7 @@ class Pipe : public IStream
     {
         size_t bytes_read = buffer_.Read(buffer);
 
-        if (bytes_read == 0 && buffer.size() > 0) {
-            return std::unexpected(Error::Retry);
-        }
+        RET_UNEXPECTED_IF(bytes_read == 0 && buffer.size() > 0, Error::Retry);
         return bytes_read;
     }
 

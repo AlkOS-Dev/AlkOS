@@ -2,6 +2,7 @@
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_UTILS_HPP_
 
 #include <defines.hpp>
+#include <internal/empty.hpp>
 #include <type_traits.hpp>
 
 namespace template_lib

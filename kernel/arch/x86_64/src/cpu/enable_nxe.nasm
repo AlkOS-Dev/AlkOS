@@ -1,4 +1,4 @@
-    bits 64
+bits 64
 
     %include "startup/panic.nasm"
 

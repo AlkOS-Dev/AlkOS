@@ -1,23 +1,11 @@
 #ifndef KERNEL_SRC_HAL_API_MMU_HPP_
 #define KERNEL_SRC_HAL_API_MMU_HPP_
 
+#include <concepts.hpp>
 #include <expected.hpp>
+
 #include "mem/error.hpp"
 #include "mem/types.hpp"
-
-namespace Mem
-{
-
-class AddressSpace;
-class PageMetaTable;
-class BitmapPmm;
-
-}  // namespace Mem
-
-namespace hal
-{
-class Tlb;
-}
 
 namespace arch
 {
@@ -38,94 +26,119 @@ struct PageFlags {
     bool NoExecute : 1;
 };
 
+/**
+ * @brief Concept defining the context required by the MMU for memory operations.
+ *
+ * This context abstracts the management of page table pages (allocation/freeing)
+ * and the tracking of their usage (reference counting). This allows the
+ * architecture-specific MMU code to be decoupled from the kernel's memory
+ * management implementation.
+ */
+template <typename T>
+concept MmuContext = requires(T ctx, u8 level, Mem::PPtr<void> table) {
+    /**
+     * @brief Allocates a zeroed physical page for a translation table at the specified level.
+     * @param level The level of the table being allocated (e.g., 3 for PDPT in x86_64).
+     * @return Physical pointer to the allocated page, or error.
+     */
+    { ctx.AllocateTable(level) } -> std::same_as<expected<Mem::PPtr<void>, Mem::MemError>>;
+
+    /**
+     * @brief Frees a translation table page.
+     * @param table Physical pointer to the table to free.
+     * @param level The level of the table.
+     */
+    { ctx.FreeTable(table, level) } -> std::same_as<void>;
+
+    /**
+     * @brief Called when a new entry is inserted into a table (increasing its usage).
+     * @param table Physical pointer to the table.
+     */
+    { ctx.IncreaseUsage(table) } -> std::same_as<void>;
+
+    /**
+     * @brief Called when an entry is removed from a table (decreasing its usage).
+     * @param table Physical pointer to the table.
+     * @return true if the table is now empty and should be freed/removed from its parent.
+     */
+    { ctx.DecreaseUsage(table) } -> std::same_as<bool>;
+};
+
+/**
+ * @brief Concept for a visitor function used to traverse page tables.
+ * Visitor signature: void(Mem::PPtr<void> table, u8 level, size_t entry_count)
+ */
+template <typename Func>
+concept TableVisitor = requires(Func f, Mem::PPtr<void> table, u8 level, size_t count) {
+    { f(table, level, count) } -> std::same_as<void>;
+};
+
 struct MmuAPI {
     /**
-     * @brief Maps a physical page to a virtual address in a given address space.
-     * This function is responsible for walking the page tables and creating entries
-     * as needed.
-     * @param as The target address space.
+     * @brief Maps a physical page to a virtual address in the specified page table hierarchy.
+     *
+     * @param ctx The MMU context for managing table allocations and metadata.
+     * @param root The physical address of the root page table (e.g., PML4).
      * @param vaddr The virtual address to map. Must be page-aligned.
      * @param paddr The physical address to map to. Must be page-aligned.
      * @param flags Page protection and control flags.
-     * @return Success or a memory error.
      */
+    template <MmuContext Context>
     expected<void, Mem::MemError> Map(
-        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, Mem::PPtr<void> paddr, PageFlags
+        Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr, Mem::PPtr<void> paddr,
+        PageFlags flags
     );
 
     /**
-     * @brief Unmaps a virtual address, invalidating its page table entry.
-     * should also free the pme entries and tables if adequate
+     * @brief Unmaps a virtual address from the specified page table hierarchy.
      *
-     * @param as The target address space.
+     * @param ctx The MMU context for managing table freeing and metadata.
+     * @param root The physical address of the root page table.
      * @param vaddr The virtual address to unmap.
-     * @return Success or a memory error if the page is not mapped.
      */
-    expected<void, Mem::MemError> UnMap(Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr);
+    template <MmuContext Context>
+    void Unmap(Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr);
 
     /**
-     * @brief Translates a virtual address to its corresponding physical address.
-     * @param as The address space to perform the translation in.
-     * @param vaddr The virtual address to translate.
-     * @return The physical address, or a memory error if the address is not mapped.
+     * @brief Clears the user-space portion of the virtual address space.
+     *
+     * This destroys all page tables associated with the lower half (user space)
+     * of the address space, freeing them via the provided context.
      */
-    expected<Mem::PPtr<void>, Mem::MemError> Translate(
-        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr
-    );
+    template <MmuContext Context>
+    void ClearUserMappings(Context &ctx, Mem::PPtr<void> root);
 
     /**
-     * @brief Switches the current root page table
-     */
-    void SwitchRootPageMapTable(Mem::PPtr<void> root_page_table);
-
-    /**
-     * @brief Destroys and free's the current root page table entries,
-     * subentries, subsubentries etc
-     *
-     */
-    void CleanRootPageMapTable(Mem::PPtr<void> root_page_table);
-
-    /**
-     * @brief Reconstructs the PageMeta metadata for an existing page table hierarchy.
-     *
-     * This is used during kernel initialization to synchronize the software metadata
-     * (PageMeta) with the hardware page tables set up by the bootloader. It recursively
-     * walks the tables, initializing PageMeta types and reference counts.
-     *
-     * @param root_page_table Physical pointer to the top-level page table.
-     * @param pmt Reference to the PageMetaTable instance.
-     */
-    void ReconstructAddressSpace(Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt);
-
-    /**
-     * @brief Unmaps the lower half of the address space (entries 0-255 of PML4).
-     *
-     * This removes the identity mapping established by the bootloader.
-     * It recursively frees the page tables used for this mapping but does NOT
-     * free the underlying physical frames (leaf nodes) mapped by them.
-     *
-     * @note THIS IS TO BE USED DIRECTLY AFTER RECONSTRUCTING BITMAP PMM, BEFORE BUDDY PMM
-     * IS INITIALIZED
-     *
-     * @param root_page_table Physical pointer to the top-level page table.
-     * @param pmt Reference to the PageMetaTable instance.
-     * @param pmm Reference to the BitmapPmm instance (for freeing tables).
-     * @param tlb Reference to the TLB instance (for flushing).
-     */
-    void UnmapLowerHalf(
-        Mem::PPtr<void> root_page_table, Mem::PageMetaTable &pmt, Mem::BitmapPmm &pmm, hal::Tlb &tlb
-    );
-
-    /**
-     * @brief Updates the flags of an existing mapping.
-     * @param as The address space.
-     * @param vaddr The virtual address.
-     * @param flags The new flags.
-     * @return Success, or NotFound if page is not mapped.
+     * @brief Updates flags for an existing mapping.
      */
     expected<void, Mem::MemError> SetPageFlags(
-        Mem::VPtr<Mem::AddressSpace> as, Mem::VPtr<void> vaddr, PageFlags flags
+        Mem::PPtr<void> root, Mem::VPtr<void> vaddr, PageFlags flags
     );
+
+    /**
+     * @brief Translates a virtual address to physical using the specified root.
+     * @param ctx The MMU context (unused for simple translation but kept for API consistency if
+     * needed).
+     */
+    template <MmuContext Context>
+    expected<Mem::PPtr<void>, Mem::MemError> Translate(
+        Context &ctx, Mem::PPtr<void> root, Mem::VPtr<void> vaddr
+    );
+
+    /**
+     * @brief Switches the active page table root (e.g., loads CR3).
+     */
+    void SwitchRoot(Mem::PPtr<void> root);
+
+    /**
+     * @brief Walks the page table hierarchy.
+     *
+     * Calls the visitor for each present table in the hierarchy.
+     * The visitor receives the table address, its level, and the number of active entries
+     * within that table (useful for reconstructing reference counts).
+     */
+    template <TableVisitor Visitor>
+    void VisitTables(Mem::PPtr<void> root, Visitor visitor);
 };
 
 }  // namespace arch

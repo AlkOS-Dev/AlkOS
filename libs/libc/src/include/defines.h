@@ -45,6 +45,9 @@ static constexpr bool kIsKernel = false;
 /* Marks a function or variable as unused */
 #define UNUSED __attribute__((unused))
 
+/* Marks a function as naked (no prologue/epilogue) */
+#define NAKED __attribute__((naked))
+
 // ------------------------------
 // Useful macros
 // ------------------------------
@@ -62,7 +65,7 @@ static constexpr bool kIsKernel = false;
 #define CONCAT(a, b) CONCAT_IMPL(a, b)
 
 /* Creates a COMPILER LEVEL memory barrier forcing optimizer to not re-order memory accesses */
-#define BARRIER() __asm__ volatile("" : : : "memory")
+#define COMPILER_FENCE __asm__ volatile("" : : : "memory");
 
 /* Create reserved structure member */
 #define RESERVED(size) byte CONCAT(__reserved_, __COUNTER__)[size] UNUSED

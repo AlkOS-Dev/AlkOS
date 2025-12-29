@@ -22,8 +22,9 @@ target_include_directories(alkos.libcpp.interface INTERFACE
 
     # At the time of their making, both libc and libcpp were in the same directory
     # Decoupling them now brings too little benefit and too much complexity to justify the effort
-    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/abi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src/abi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../libc/src"
 )
 
 target_link_libraries(alkos.libcpp.interface INTERFACE

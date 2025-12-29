@@ -36,9 +36,33 @@ _sysv_reg_size equ 8*10
     mov qword [rsp + _rbp], rbp
 %endmacro
 
+%macro push_sysv_regs_without_rax 0
+    mov qword [rsp + _rcx], rcx
+    mov qword [rsp + _rdx], rdx
+    mov qword [rsp + _rsi], rsi
+    mov qword [rsp + _rdi], rdi
+    mov qword [rsp + _r8], r8
+    mov qword [rsp + _r9], r9
+    mov qword [rsp + _r10], r10
+    mov qword [rsp + _r11], r11
+    mov qword [rsp + _rbp], rbp
+%endmacro
+
 ; Macro to restore all volatile registers (SysV ABI) from the stack.
 %macro pop_sysv_regs 0
     mov rax, qword [rsp + _rax]
+    mov rcx, qword [rsp + _rcx]
+    mov rdx, qword [rsp + _rdx]
+    mov rsi, qword [rsp + _rsi]
+    mov rdi, qword [rsp + _rdi]
+    mov r8, qword [rsp + _r8]
+    mov r9, qword [rsp + _r9]
+    mov r10, qword [rsp + _r10]
+    mov r11, qword [rsp + _r11]
+    mov rbp, qword [rsp + _rbp]
+%endmacro
+
+%macro pop_sysv_regs_without_rax 0
     mov rcx, qword [rsp + _rcx]
     mov rdx, qword [rsp + _rdx]
     mov rsi, qword [rsp + _rsi]
