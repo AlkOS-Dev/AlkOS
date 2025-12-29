@@ -40,10 +40,14 @@ expected<void, MemError> AS::InitKernel(
 
     return {};
 }
+
 AS::~AddressSpace()
 {
-    // Free all allocated areas
-    // area_list_ destructor will handle freeing nodes and data
+    // Manually free all VMA objects before the list destroys the nodes
+    for (auto *vma : area_list_) {
+        KDelete(vma);
+    }
+    area_list_.Clear();
 
     if (ctx_) {
         if (owns_page_table_root_ && page_table_root_ != nullptr) {
@@ -52,33 +56,36 @@ AS::~AddressSpace()
     }
 }
 
-expected<void, MemError> AS::AddArea(VMemArea vma)
+expected<void, MemError> AS::AddArea(VMemArea *vma)
 {
+    ASSERT_NOT_NULL(vma);
     std::lock_guard guard(area_list_lock_);
 
     // Check for overlapping areas
     for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
-        if (AreasOverlap(&(*it), &vma)) {
+        if (AreasOverlap(*it, vma)) {
+            // We own vma, so we must delete it on failure
+            KDelete(vma);
             return unexpected(MemError::InvalidArgument);
         }
     }
 
     auto node = area_list_.PushFront(vma);
     if (!node) {
+        KDelete(vma);
         return unexpected(MemError::OutOfMemory);
     }
 
     return {};
 }
 
-bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
+bool AS::AreasOverlap(const VMemArea *a, const VMemArea *b)
 {
-    const auto a_s_addr = reinterpret_cast<uptr>(a->start);
-    const auto a_e_addr = a_s_addr + a->size;
-    const auto b_s_addr = reinterpret_cast<uptr>(b->start);
-    const auto b_e_addr = b_s_addr + b->size;
-
-    return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
+    const auto a_s = reinterpret_cast<uptr>(a->GetStart());
+    const auto a_e = a_s + a->GetSize();
+    const auto b_s = reinterpret_cast<uptr>(b->GetStart());
+    const auto b_e = b_s + b->GetSize();
+    return a_s < b_e && b_s < a_e;
 }
 
 expected<TlbHint, MemError> AS::RmArea(VPtr<void> ptr)
@@ -87,15 +94,17 @@ expected<TlbHint, MemError> AS::RmArea(VPtr<void> ptr)
 
     auto res = FindAreaLocked(ptr);
     RET_UNEXPECTED_IF_ERR(res);
-    auto it = *res;
+    auto it       = *res;
+    VMemArea *vma = *it;
 
-    // Do MMU unmap while we have the area info
-    auto start = it->start;
-    auto size  = it->size;
-
+    // Do MMU unmap
+    auto start = vma->GetStart();
+    auto size  = vma->GetSize();
     mmu_->UnmapRange(*ctx_, page_table_root_, start, size);
 
+    // Remove from list and delete object
     area_list_.Remove(it.GetNode());
+    KDelete(vma);
 
     return TlbHint{start, size};
 }
@@ -106,12 +115,14 @@ expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFl
 
     auto res = FindAreaLocked(ptr);
     RET_UNEXPECTED_IF_ERR(res);
-    VMemArea &area = *res.value();
-    RET_UNEXPECTED_IF(area.start != ptr, MemError::InvalidArgument);
+    VMemArea *vma = *res.value();
 
-    area.flags = vmaf;
-    auto start = area.start;
-    auto size  = area.size;
+    RET_UNEXPECTED_IF(vma->GetStart() != ptr, MemError::InvalidArgument);
+
+    vma->SetFlags(vmaf);
+
+    auto start = vma->GetStart();
+    auto size  = vma->GetSize();
 
     bool is_kernel = (PtrToUptr(start) >= hal::kKernelVirtualAddressStart);
 
@@ -139,36 +150,27 @@ expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFl
 expected<AS::AddrSpMutIt, MemError> AS::FindAreaLocked(VPtr<void> ptr)
 {
     for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
-        if (IsAddrInArea(&(*it), ptr)) {
+        if (IsAddrInArea(*it, ptr)) {
             return it;
         }
     }
     return unexpected(MemError::NotFound);
 }
 
-expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
+expected<VMemArea *, MemError> AS::FindArea(VPtr<void> ptr)
 {
     std::lock_guard guard(area_list_lock_);
-
     auto res = FindAreaLocked(ptr);
     RET_UNEXPECTED_IF_ERR(res);
-
-    VPtr<VMemArea> vma = &(*res.value());
-    return vma;
+    return *(*res);
 }
 
-bool AS::IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr)
+bool AS::IsAddrInArea(const VMemArea *vma, VPtr<void> ptr)
 {
-    ASSERT_NOT_NULL(vma, "Virtual memory area is null");
+    ASSERT_NOT_NULL(vma);
 
-    const auto vma_s_addr = reinterpret_cast<uptr>(vma->start);
-    const auto vma_e_addr = vma_s_addr + vma->size;
-    const auto addr       = reinterpret_cast<uptr>(ptr);
-
-    // Check if ptr is in [vma start, vma end]
-    if (vma_s_addr <= addr && addr < vma_e_addr) {
-        return true;
-    }
-
-    return false;
+    const auto vma_s = reinterpret_cast<uptr>(vma->GetStart());
+    const auto vma_e = vma_s + vma->GetSize();
+    const auto addr  = reinterpret_cast<uptr>(ptr);
+    return vma_s <= addr && addr < vma_e;
 }
