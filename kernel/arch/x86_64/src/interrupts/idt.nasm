@@ -58,17 +58,56 @@ isr_wrapper_%+%2:
     iretq                       ; Return from interrupt.
 %endmacro
 
+bits 64
+section .text
+
+; ------------------------------
+; Syscall wrapper definitions
+; ------------------------------
+
+extern g_syscall_dispatch_table
+extern g_syscall_count
+
+; Expected system call convention:
+; - RAX: syscall number
+; - RDI: arg0
+; - RSI: arg1
+; - RDX: arg2
+; - R10: arg3
+; - R8:  arg4
+; - R9:  arg5
+; - Return value: RAX
+isr_wrapper_128:  ; Syscall interrupt (128)
+    sub rsp, _sysv_reg_size          ; Allocate space for saving registers.
+    push_sysv_regs_without_rax       ; Save registers except RAX.
+    cld                              ; Clear direction flag for string operations.
+
+    ; Syscall to Sys V ABI conversion
+    mov rcx, r10
+
+    ; Check syscall number bounds
+    cmp rax, [rel g_syscall_count]
+    jae .invalid_syscall
+
+    ; Get pointer to syscall_dispatch_table and dispatch
+    call qword [rel g_syscall_dispatch_table + rax*8]
+    jmp .return
+
+.invalid_syscall:
+    mov rax, -1                      ; Set error return value
+
+.return:
+    pop_sysv_regs_without_rax        ; Restore registers except RAX.
+    add rsp, _sysv_reg_size          ; Deallocate register save space.
+    iretq                            ; Return from interrupt.
+
 ; ------------------------------
 ; ISR wrappers definitions
 ; ------------------------------
 
-bits 64
-
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt
-
-section .text
 
 ; Intel-defined interrupts (0-31) -> HandleException
 exception_wrapper 0  ; Division Error: Divide by zero error
@@ -122,28 +161,36 @@ interrupt_wrapper 13, 45, HandleHardwareInterrupt ; IRQ13: FPU (legacy)
 interrupt_wrapper 14, 46, HandleHardwareInterrupt ; IRQ14: Primary ATA channel
 interrupt_wrapper 15, 47, HandleHardwareInterrupt ; IRQ15: Secondary ATA channel
 
+; IRQs for APICs and other devices (48–127) -> HandleHardwareInterrupt
+%assign idt_num 48
+%assign irq_num 16
+%rep 127-48+1
+    interrupt_wrapper irq_num, idt_num, HandleHardwareInterrupt
+%assign idt_num idt_num + 1
+%assign irq_num irq_num + 1
+%endrep
 
-; Software interrupts (48–63) -> HandleSoftwareInterrupt
-interrupt_wrapper 0, 48, HandleSoftwareInterrupt
-interrupt_wrapper 1, 49, HandleSoftwareInterrupt
-interrupt_wrapper 2, 50, HandleSoftwareInterrupt
-interrupt_wrapper 3, 51, HandleSoftwareInterrupt
-interrupt_wrapper 4, 52, HandleSoftwareInterrupt
-interrupt_wrapper 5, 53, HandleSoftwareInterrupt
-interrupt_wrapper 6, 54, HandleSoftwareInterrupt
-interrupt_wrapper 7, 55, HandleSoftwareInterrupt
-interrupt_wrapper 8, 56, HandleSoftwareInterrupt
-interrupt_wrapper 9, 57, HandleSoftwareInterrupt
-interrupt_wrapper 10, 58, HandleSoftwareInterrupt
-interrupt_wrapper 11, 59, HandleSoftwareInterrupt
-interrupt_wrapper 12, 60, HandleSoftwareInterrupt
-interrupt_wrapper 13, 61, HandleSoftwareInterrupt
-interrupt_wrapper 14, 62, HandleSoftwareInterrupt
-interrupt_wrapper 15, 63, HandleSoftwareInterrupt
+; Software interrupts (128–143) -> HandleSoftwareInterrupt
+; interrupt_wrapper 0, 128, HandleSoftwareInterrupt ; Syscall handled separately above
+interrupt_wrapper 1, 129, HandleSoftwareInterrupt
+interrupt_wrapper 2, 130, HandleSoftwareInterrupt
+interrupt_wrapper 3, 131, HandleSoftwareInterrupt
+interrupt_wrapper 4, 132, HandleSoftwareInterrupt
+interrupt_wrapper 5, 133, HandleSoftwareInterrupt
+interrupt_wrapper 6, 134, HandleSoftwareInterrupt
+interrupt_wrapper 7, 135, HandleSoftwareInterrupt
+interrupt_wrapper 8, 136, HandleSoftwareInterrupt
+interrupt_wrapper 9, 137, HandleSoftwareInterrupt
+interrupt_wrapper 10, 138, HandleSoftwareInterrupt
+interrupt_wrapper 11, 139, HandleSoftwareInterrupt
+interrupt_wrapper 12, 140, HandleSoftwareInterrupt
+interrupt_wrapper 13, 141, HandleSoftwareInterrupt
+interrupt_wrapper 14, 142, HandleSoftwareInterrupt
+interrupt_wrapper 15, 143, HandleSoftwareInterrupt
 
 
 ; Total number of ISRs.
-_num_isrs equ 64
+_num_isrs equ 144
 
 ; ----------------------------------
 ; ISR wrapper table definition

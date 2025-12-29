@@ -15,7 +15,7 @@
 
 #include "trace_framework.hpp"
 
-static constexpr u32 kStubTableSize = 64;
+static constexpr u32 kStubTableSize = 144;
 
 /**
  * Flags for ISRs (Interrupt Service Routines):
@@ -25,8 +25,21 @@ static constexpr u32 kStubTableSize = 64;
  *   that can access this interrupt via the INT instruction. Hardware interrupts ignore this.
  * - Bit 7: Present bit (must be set to 1 for the descriptor to be valid).
  */
-static constexpr u8 kTrapFlags      = 0x8F;
-static constexpr u8 kInterruptFlags = 0x8E;
+static constexpr IdtEntryFlags kTrapFlags = {
+    .type = IdtGateType::k64BitTrapGate, .zero = 0, .dpl = IdtPrivilegeLevel::kRing0, .present = 1
+};
+static constexpr IdtEntryFlags kInterruptFlags = {
+    .type    = IdtGateType::k64BitInterruptGate,
+    .zero    = 0,
+    .dpl     = IdtPrivilegeLevel::kRing0,
+    .present = 1
+};
+static constexpr IdtEntryFlags kSyscallFlags = {
+    .type    = IdtGateType::k64BitInterruptGate,
+    .zero    = 0,
+    .dpl     = IdtPrivilegeLevel::kRing3,
+    .present = 1
+};
 
 /* gdt kernel code offset */
 extern "C" u32 kKernelCodeOffset;
@@ -176,7 +189,7 @@ const char *GetExceptionMsg(const u8 exc_idx)
     return nullptr;
 }
 
-static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const u8 flags)
+static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const IdtEntryFlags flags)
 {
     IdtEntry &entry = idt.idt[idx];
 
@@ -203,6 +216,11 @@ void arch::Interrupts::InitializeDefaultIdt_()
             IsTrapEntry(idx) ? kTrapFlags : kInterruptFlags
         );
     }
+
+    // Set syscall interrupt
+    IdtSetDescriptor(
+        idt_, kSyscallVector, reinterpret_cast<u64>(IsrWrapperTable[kSyscallVector]), kSyscallFlags
+    );
 
     /* load the new IDT */
     __asm__ volatile("lidt %0" : : "m"(idt_.idtr));

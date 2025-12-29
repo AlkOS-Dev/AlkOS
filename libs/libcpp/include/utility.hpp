@@ -142,5 +142,8 @@ using make_integer_sequence
 template <size_t N>
 using make_index_sequence = make_integer_sequence<size_t, N>;
 
+template <typename... Args>
+using index_sequence_for = make_index_sequence<sizeof...(Args)>;
+
 }  // namespace std
 #endif  // LIBS_LIBCPP_INCLUDE_UTILITY_HPP_

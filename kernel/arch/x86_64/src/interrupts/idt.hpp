@@ -14,6 +14,7 @@ static constexpr u32 kIdtEntries = 256;
 static constexpr u16 kIrq1Offset     = 0x20; /* Start for hardware interrupts */
 static constexpr u16 kIrq2Offset     = 0x28;
 static constexpr u16 kSpuriousVector = 0xFF; /* Spurious interrupt vector */
+static constexpr u16 kSyscallVector  = 0x80; /* Syscall interrupt vector */
 
 static constexpr u8 kExceptionIdx[]{0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
                                     16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
@@ -64,6 +65,27 @@ static_assert(
 // Data layout
 // ------------------------------
 
+enum class IdtGateType : u8 {
+    k16BitTaskGate      = 0x5,
+    k16BitInterruptGate = 0x6,
+    k16BitTrapGate      = 0x7,
+    k32BitTaskGate      = 0x9,
+    k32BitInterruptGate = 0xA,
+    k32BitTrapGate      = 0xB,
+    k64BitInterruptGate = 0xE,
+    k64BitTrapGate      = 0xF,
+};
+
+enum class IdtPrivilegeLevel : u8 { kRing0 = 0, kRing1 = 1, kRing2 = 2, kRing3 = 3 };
+
+struct PACK IdtEntryFlags {
+    IdtGateType type : 4;
+    u8 zero : 1;
+    IdtPrivilegeLevel dpl : 2;
+    u8 present : 1;
+};
+static_assert(sizeof(IdtEntryFlags) == 1, "IdtEntryFlags size must be 1 byte");
+
 /**
  * @brief Data layout of x86_64 interrupt service routines, refer to intel manual for details
  */
@@ -71,11 +93,11 @@ struct PACK IdtEntry {
     u16 isr_low;    // The lower 16 bits of the ISR's address
     u16 kernel_cs;  // The GDT segment selector that the CPU will load into CS before calling the
     // ISR
-    u8 ist;         // The IST in the TSS that the CPU will load into RSP; set to zero for now
-    u8 attributes;  // Type and attributes; see the IDT page
-    u16 isr_mid;    // The higher 16 bits of the lower 32 bits of the ISR's address
-    u32 isr_high;   // The higher 32 bits of the ISR's address
-    u32 reserved;   // Set to zero
+    u8 ist;  // The IST in the TSS that the CPU will load into RSP; set to zero for now
+    IdtEntryFlags attributes;  // Type and attributes; see the IDT page
+    u16 isr_mid;               // The higher 16 bits of the lower 32 bits of the ISR's address
+    u32 isr_high;              // The higher 32 bits of the ISR's address
+    u32 reserved;              // Set to zero
 };
 
 /**
@@ -102,7 +124,6 @@ const char *GetExceptionMsg(u8 idx);
 void DefaultInterruptHandler(u8 idt_idx);
 void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 void SimpleIrqHandler(intr::LitHwEntry &entry);
-void TestIsr(intr::LitSwEntry &entry);
 void TimerIsr(intr::LitHwEntry &entry);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_INTERRUPTS_IDT_HPP_
