@@ -43,10 +43,15 @@ class ACPIController final : public hal::AcpiController
     // ------------------------------
 
     /**
-     * @brief Initialize the ACPI subsystem.
-     * @return Status code
+     * @brief Early initialize the ACPI subsystem.
+     * @param args Boot arguments passed from the bootloader.
      */
-    int Init(const BootArguments &args);
+    void EarlyInit(const BootArguments &args);
+
+    /**
+     * @brief Fully initialize the ACPI subsystem.
+     */
+    void Init();
 
     /**
      * @brief Deinitialize the ACPI subsystem.

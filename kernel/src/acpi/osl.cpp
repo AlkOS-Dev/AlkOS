@@ -129,19 +129,19 @@ void uacpi_kernel_log(uacpi_log_level level, const uacpi_char *log)
 {
     switch (level) {
         case UACPI_LOG_ERROR:
-            TRACE_FATAL_GENERAL(log);
+            TRACE_FATAL_ACPI(log);
             break;
         case UACPI_LOG_WARN:
-            TRACE_WARN_GENERAL(log);
+            TRACE_WARN_ACPI(log);
             break;
         case UACPI_LOG_INFO:
-            TRACE_INFO_GENERAL(log);
+            TRACE_INFO_ACPI(log);
             break;
         case UACPI_LOG_DEBUG:
-            DEBUG_INFO_GENERAL(log);
+            DEBUG_INFO_ACPI(log);
             break;
         case UACPI_LOG_TRACE:
-            TRACE_INFO_GENERAL(log);
+            TRACE_INFO_ACPI(log);
             break;
     }
 }
@@ -158,13 +158,26 @@ void uacpi_kernel_stall(uacpi_u8 usec) { (void)usec; }
 
 void uacpi_kernel_sleep(uacpi_u64 msec) { (void)msec; }
 
-uacpi_handle uacpi_kernel_create_event() { return nullptr; }
+// TODO: Replace with real event implementation
+struct uacpi_event_internal {
+};
+
+uacpi_handle uacpi_kernel_create_event()
+{
+    static uacpi_event_internal event;
+    return &event;
+}
 
 void uacpi_kernel_free_event(uacpi_handle) {}
 
 uacpi_thread_id uacpi_kernel_get_thread_id() { return nullptr; }
 
-uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle, uacpi_u16) { return UACPI_FALSE; }
+uacpi_bool uacpi_kernel_wait_for_event(uacpi_handle event, uacpi_u16 timeout_msec)
+{
+    (void)event;
+    (void)timeout_msec;
+    return UACPI_FALSE;
+}
 
 void uacpi_kernel_signal_event(uacpi_handle) {}
 
@@ -191,7 +204,7 @@ uacpi_status uacpi_kernel_install_interrupt_handler(
     uacpi_handle *out_irq_handle
 )
 {
-    DEBUG_INFO_BOOT(
+    DEBUG_INFO_ACPI(
         "Installing uacpi irq: %u with handler: %p", irq, reinterpret_cast<void *>(uacpi_handler)
     );
 
