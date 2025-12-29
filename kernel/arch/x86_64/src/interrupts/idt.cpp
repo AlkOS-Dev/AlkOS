@@ -44,9 +44,10 @@ extern "C" void *IsrWrapperTable[];
  *
  * @param idt_idx index of interrupt triggered.
  */
-NO_RET void DefaultInterruptHandler(const u8 idt_idx)
+NO_RET void *DefaultInterruptHandler(const u8 idt_idx)
 {
     hal::KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
+    return nullptr;
 }
 
 static void FormatIsrRegisters(
@@ -105,9 +106,10 @@ NO_RET FAST_CALL void DefaultExceptionHandler(
     );
 }
 
-void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
+void *DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
 {
     DefaultExceptionHandler(data, entry.hardware_irq);
+    return nullptr;
 }
 
 FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
@@ -115,9 +117,10 @@ FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
     TRACE_FREQ_INFO_INTERRUPTS("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
 }
 
-void SimpleIrqHandler(intr::LitHwEntry &entry)
+void *SimpleIrqHandler(intr::LitHwEntry &entry)
 {
     LogIrqReceived(entry.hardware_irq, entry.logical_irq);
+    return nullptr;
 }
 
 // ------------------------------

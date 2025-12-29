@@ -40,7 +40,7 @@ class LogicalInterruptTable
     // Class interaction
     // ------------------------------
 
-    FORCE_INLINE_F void HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
+    FORCE_INLINE_F void *HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
         hardware::GetCoreLocalData().nested_interrupts++;
         hal::FullMemFence();
@@ -50,15 +50,17 @@ class LogicalInterruptTable
         auto &entry = GetTable_<InterruptType::kException>()[lirq];
 
         /* Exception MUST be handled */
-        (*entry.handler_data.handler)(entry, data);
+        void *rv = (*entry.handler_data.handler)(entry, data);
 
-        hal::FullMemFence();
         hardware::GetCoreLocalData().nested_interrupts--;
+        hal::FullMemFence();
+
+        return rv;
     }
 
     template <InterruptType kInterruptType>
         requires(kInterruptType != InterruptType::kException)
-    FORCE_INLINE_F void HandleInterrupt(const u16 lirq)
+    FORCE_INLINE_F void *HandleInterrupt(const u16 lirq)
     {
         hardware::GetCoreLocalData().nested_interrupts++;
         hal::FullMemFence();
@@ -67,8 +69,9 @@ class LogicalInterruptTable
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
         auto &entry = GetTable_<kInterruptType>()[lirq];
 
+        void *rv = nullptr;
         if (entry.handler_data.handler) {
-            (*entry.handler_data.handler)(entry);
+            rv = (*entry.handler_data.handler)(entry);
         }
 
         if constexpr (kInterruptType == InterruptType::kHardwareInterrupt) {
@@ -78,6 +81,8 @@ class LogicalInterruptTable
 
         hal::FullMemFence();
         hardware::GetCoreLocalData().nested_interrupts--;
+
+        return rv;
     }
 
     template <InterruptType kInterruptType>

@@ -12,6 +12,7 @@ extern cdecl_SetCurrentTCB
 extern cdecl_GetThreadsPageTable
 extern cdecl_SetTssRsp0
 extern cdecl_EnableHardwareInterrupts
+extern HandleHardwareInterrupt
 
 _context_switch_stack_space equ 20*8
 _context_switch_stack_space_ext equ 8*19 ; 8 bytes already reserved by caller
@@ -29,6 +30,7 @@ _user_data_selector equ 0x20
 section .text
 global ContextSwitch
 global ConvertContext
+global TimerContextSwitch
 
 ; c_decl
 ; void ConvertContext(Thread* thread)
@@ -88,7 +90,7 @@ ContextSwitch:
 
     mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
     call cdecl_SetCurrentTCB
-    mov rsp, [r12+Thread.kernel_stack]   ; Change the stack
+    mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
 
     mov rdi, r13                       ; Set RDI for GetThreadsPageTable
     call cdecl_GetThreadsPageTable     ; RAX = next cr3
@@ -103,3 +105,41 @@ ContextSwitch:
     add rsp, _all_reg_size          ; Deallocate register save space.
 
     iretq                             ; Load next thread's RIP from its stack
+
+; c_decl
+; void TimerContextSwitch(void)
+TimerContextSwitch:
+    sub rsp, _all_reg_size           ; Allocate space for saving registers.
+    push_sysv_regs                   ; Save registers.
+
+    mov rdi, 0                       ; Pass the mapped IRQ number as the first argument.
+    call HandleHardwareInterrupt    ; Call the specific ISR handler.
+
+    cmp rax, 0
+    je .done                         ; Omit context switch if there is no need to change it
+
+    mov r13, rax                     ; save next TCB
+
+    call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
+    mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
+
+    ; ------------------------
+    ; Setup next task state
+
+    mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
+    call cdecl_SetCurrentTCB
+    mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
+
+    mov rdi, r13                       ; Set RDI for GetThreadsPageTable
+    call cdecl_GetThreadsPageTable     ; RAX = next cr3
+    mov r11, cr3                       ; R11 = current cr3
+
+    cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
+    je .done
+    mov cr3, rax                       ; Load next task's virtual address space
+
+.done:
+    pop_sysv_regs                    ; Restore registers.
+    add rsp, _all_reg_size           ; Deallocate register save space.
+
+    iretq                            ; Return from interrupt.

@@ -23,7 +23,9 @@ class Scheduler
 
     void AddReadyThread(Thread *thread);
 
-    void Schedule();
+    Thread *Schedule();
+
+    void Yield();
 
     void ConvertToScheduling();
 

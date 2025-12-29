@@ -67,6 +67,7 @@ bits 64
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt
+extern TimerContextSwitch
 
 section .text
 
@@ -105,7 +106,7 @@ exception_error_wrapper 30 ; Security Exception: Security-related error
 exception_wrapper 31 ; Reserved: Reserved by Intel
 
 ; IRQs for PICs (32–47) -> HandleHardwareInterrupt
-interrupt_wrapper 0, 32, HandleHardwareInterrupt ; IRQ0: System timer
+; DEFINED in SCHEDULING FILE ; IRQ0: System timer
 interrupt_wrapper 1, 33, HandleHardwareInterrupt ; IRQ1: Keyboard
 interrupt_wrapper 2, 34, HandleHardwareInterrupt ; IRQ2: Cascade
 interrupt_wrapper 3, 35, HandleHardwareInterrupt ; IRQ3: Serial port 2
@@ -155,7 +156,15 @@ section .data
 global IsrWrapperTable
 IsrWrapperTable:
 %assign i 0
-%rep    _num_isrs
+%rep    32
+    dq isr_wrapper_%+i
+%assign i i+1
+%endrep
+
+dq TimerContextSwitch
+
+%assign i 33
+%rep    31
     dq isr_wrapper_%+i
 %assign i i+1
 %endrep

@@ -60,7 +60,7 @@ class AddressSpace
     hal::Spinlock area_list_lock_;
 
     friend VirtualMemoryManager;
-    friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+    friend void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
     public:
 };

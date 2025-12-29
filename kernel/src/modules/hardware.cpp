@@ -3,9 +3,10 @@
 
 #include "trace_framework.hpp"
 
-static void Ps2KeyboardHandler(intr::LitHwEntry &)
+static void *Ps2KeyboardHandler(intr::LitHwEntry &)
 {
     HardwareModule::Get().GetPs2Keyboard().OnInterrupt();
+    return nullptr;
 }
 
 internal::HardwareModule::HardwareModule() noexcept

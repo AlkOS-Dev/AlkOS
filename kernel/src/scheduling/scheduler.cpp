@@ -5,7 +5,9 @@
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
 
-void Sched::Scheduler::AddReadyThread(Thread *thread)
+namespace Sched
+{
+void Scheduler::AddReadyThread(Thread *thread)
 {
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
 
@@ -22,9 +24,8 @@ void Sched::Scheduler::AddReadyThread(Thread *thread)
     HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 }
 
-void Sched::Scheduler::Schedule()
+Thread *Scheduler::Schedule()
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     ASSERT_NOT_NULL(threads_);
 
     auto thread = GetNext_();
@@ -33,14 +34,23 @@ void Sched::Scheduler::Schedule()
     auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
     ASSERT_TRUE(static_cast<bool>(owner));
 
-    if (owner.value()->flags.KernelSpaceOnly) {
-        hal::SwitchToKernelTask(thread);
-    } else {
-        hal::SwitchToUserTask(thread);
+    if (thread == hardware::GetCurrentTCB()) {
+        return nullptr;
+    }
+
+    return thread;
+}
+void Scheduler::Yield()
+{
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    auto thread = Schedule();
+
+    if (thread != nullptr) {
+        hal::ContextSwitch(thread);
     }
 }
 
-void Sched::Scheduler::ConvertToScheduling()
+void Scheduler::ConvertToScheduling()
 {
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
 
@@ -55,16 +65,13 @@ void Sched::Scheduler::ConvertToScheduling()
     auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
     ASSERT_TRUE(static_cast<bool>(owner));
 
-    if (owner.value()->flags.KernelSpaceOnly) {
-        hal::ConvertToKernelTask(thread);
-    } else {
-        R_FAIL_ALWAYS("Not implemented...");
-    }
+    hal::ConvertContext(thread);
 }
 
-Sched::Thread *Sched::Scheduler::GetNext_()
+Thread *Scheduler::GetNext_()
 {
     Thread *thread = threads_;
     threads_       = threads_->next;
     return thread;
 }
+}  // namespace Sched

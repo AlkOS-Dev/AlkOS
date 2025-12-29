@@ -1,11 +1,15 @@
 #include "event_framework.hpp"
 #include "modules/hardware.hpp"
+#include "modules/scheduling.hpp"
 
 // ------------------------------
 // statics
 // ------------------------------
 
-static void TimerHandler(intr::LitHwEntry &entry) {}
+static void *TimerHandler(intr::LitHwEntry &)
+{
+    return SchedulingModule::Get().GetScheduler().Schedule();
+}
 
 // ------------------------------
 // Implementations
