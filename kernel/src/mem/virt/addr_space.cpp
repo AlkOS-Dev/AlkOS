@@ -17,15 +17,10 @@ AS::AddressSpace()
 {
 }
 
-expected<void, MemError> AS::InitUser(BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt)
+expected<void, MemError> AS::InitUser(KernelMmuContext &ctx, hal::Mmu &mmu)
 {
-    auto ctx_res = KNew<KernelMmuContext>(pmm, pmt);
-    RET_UNEXPECTED_IF_ERR(ctx_res);
-
-    ctx_ = *ctx_res;
-    pmm_ = &pmm;
+    ctx_ = &ctx;
     mmu_ = &mmu;
-    pmt_ = &pmt;
 
     auto page_table_root_res = ctx_->AllocateTable(0);
     RET_UNEXPECTED_IF_ERR(page_table_root_res);
@@ -36,17 +31,13 @@ expected<void, MemError> AS::InitUser(BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTabl
 }
 
 expected<void, MemError> AS::InitKernel(
-    const PPtr<void> kernel_root, BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt
+    const PPtr<void> kernel_root, KernelMmuContext &ctx, hal::Mmu &mmu
 )
 {
-    auto ctx_res = KNew<KernelMmuContext>(pmm, pmt);
-    RET_UNEXPECTED_IF_ERR(ctx_res);
-
-    page_table_root_ = kernel_root;
-    pmm_             = &pmm;
-    mmu_             = &mmu;
-    pmt_             = &pmt;
-    ctx_             = *ctx_res;
+    page_table_root_      = kernel_root;
+    mmu_                  = &mmu;
+    ctx_                  = &ctx;
+    owns_page_table_root_ = false;
 
     return {};
 }
@@ -63,7 +54,6 @@ AS::~AddressSpace()
         if (owns_page_table_root_ && page_table_root_ != nullptr) {
             ctx_->FreeTable(page_table_root_, 0);
         }
-        KDelete(ctx_);
     }
 }
 

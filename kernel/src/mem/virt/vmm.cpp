@@ -6,7 +6,6 @@
 #include "hal/constants.hpp"
 #include "mem/heap.hpp"
 #include "mem/mmu/contexts.hpp"
-#include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/area.hpp"
@@ -23,12 +22,15 @@ using Vmm = VirtualMemoryManager;
 using AS  = AddressSpace;
 
 TODO_WHEN_MULTITHREADING
-void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &pmm) noexcept
+void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) noexcept
 {
     DEBUG_INFO_MEMORY("VirtualMemoryManager::Init()");
-    tlb_  = &tlb;
-    mmu_  = &mmu;
-    bpmm_ = &pmm;
+    tlb_ = &tlb;
+    mmu_ = &mmu;
+    ctx_ = &ctx;
+    // Heap is used implicitly via KNew / KDelete
+    heap_ = &heap;
+    (void)heap;
 }
 
 expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
@@ -66,8 +68,7 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     auto *start = area->start;
     auto size   = area->size;
 
-    auto &pmt = MemoryModule::Get().GetPageMetaTable();
-    Mem::KernelMmuContext ctx{*bpmm_, pmt};
+    auto &ctx = MemoryModule::Get().GetKernelMmuContext();
 
     mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
     tlb_->InvalidateRange(start, size);

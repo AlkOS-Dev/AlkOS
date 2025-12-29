@@ -14,6 +14,7 @@ namespace Mem
 {
 
 class BuddyPmm;
+class Heap;
 
 using std::expected;
 using std::unexpected;
@@ -30,7 +31,7 @@ class VirtualMemoryManager
     // ------------------------------
 
     VirtualMemoryManager() = default;
-    void Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &bpmm) noexcept;
+    void Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) noexcept;
 
     // ------------------------------
     // Class interaction
@@ -52,7 +53,8 @@ class VirtualMemoryManager
     // ------------------------------
     hal::Tlb *tlb_;
     hal::Mmu *mmu_;
-    BuddyPmm *bpmm_;
+    KernelMmuContext *ctx_;
+    Heap *heap_;
 };
 using Vmm = VirtualMemoryManager;
 

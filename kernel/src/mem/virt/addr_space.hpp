@@ -42,9 +42,9 @@ class AddressSpace
     public:
     explicit AddressSpace();
 
-    expected<void, MemError> InitUser(BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt);
+    expected<void, MemError> InitUser(KernelMmuContext &ctx, hal::Mmu &mmu);
     expected<void, MemError> InitKernel(
-        const PPtr<void> kernel_root, BuddyPmm &pmm, hal::Mmu &mmu, PageMetaTable &pmt
+        const PPtr<void> kernel_root, KernelMmuContext &ctx, hal::Mmu &mmu
     );
 
     ~AddressSpace();
@@ -75,9 +75,7 @@ class AddressSpace
 
     // Dependencies
     KernelMmuContext *ctx_;
-    BuddyPmm *pmm_;
     hal::Mmu *mmu_;
-    Mem::PageMetaTable *pmt_;
 
     // Friends
     friend VirtualMemoryManager;

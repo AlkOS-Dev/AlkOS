@@ -86,9 +86,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         // We need a context to Map.
         // For now, we construct a KernelMmuContext on the fly using the global PMM/PMT
         // FIXME: This is slightly inefficient to reconstruct on every fault, but valid.
-        Mem::KernelMmuContext ctx{
-            MemoryModule::Get().GetBuddyPmm(), MemoryModule::Get().GetPageMetaTable()
-        };
+        auto &ctx = MemoryModule::Get().GetKernelMmuContext();
 
         auto map_res = mmu.Map(
             ctx, as.PageTableRoot(), AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags

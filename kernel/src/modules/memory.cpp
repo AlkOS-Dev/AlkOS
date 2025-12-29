@@ -37,18 +37,27 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
     // This limit is for speed of boot. This operation should have
     // a follow up once kernel is booted, and we have another CPU, we
     // could offload this operation to.
+    TRACE_INFO_MEMORY("Initializing Buddy PMM");
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
     // Reconstruct metadata for the existing page table hierarchy passed by the bootloader.
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
     boot_cleaner.ReconstructMetadata(Mmu_, PageMetaTable_, args.root_page_table);
 
+    TRACE_INFO_MEMORY("Initializing Slab Allocator");
     SlabAllocator_.Init(BuddyPmm_);
 
+    TRACE_INFO_MEMORY("Initializing Heap");
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
-    KernelAddressSpace_.InitKernel(args.root_page_table, BuddyPmm_, Mmu_, PageMetaTable_);
-    Vmm_.Init(Tlb_, Mmu_, BuddyPmm_);
+    KernelMmuContext_.Init(&BuddyPmm_, &PageMetaTable_);
+
+    KernelAddressSpace_.InitKernel(args.root_page_table, KernelMmuContext_, Mmu_);
+
+    TRACE_INFO_MEMORY("Initializing Virtual Memory Manager");
+    Vmm_.Init(Tlb_, Mmu_, KernelMmuContext_, Heap_);
+
+    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
 
     // Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
     // These areas were set up by the bootloader but are invisible to the generic VMM until

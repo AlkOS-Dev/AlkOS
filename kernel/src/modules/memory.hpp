@@ -9,6 +9,7 @@
 #include "hal/mmu.hpp"
 #include "hal/tlb.hpp"
 #include "mem/heap.hpp"
+#include "mem/mmu/contexts.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/phys/mngr/bitmap.hpp"
 #include "mem/phys/mngr/buddy.hpp"
@@ -42,6 +43,7 @@ class MemoryModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Mem, Vmm);
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);
+    DEFINE_MODULE_FIELD(Mem, KernelMmuContext);
     DEFINE_MODULE_FIELD(MemoryModule, KernelAddressSpace);
 
     public:
