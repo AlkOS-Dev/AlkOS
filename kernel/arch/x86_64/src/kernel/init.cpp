@@ -50,6 +50,13 @@ static int GetCpuModel()
 
 static hardware::CoreLocal g_CoreLocal{};
 
+TODO_WHEN_MULTICORE
+// TODO: replace when core
+extern "C" void cdecl_SetKernelGs()
+{
+    cpu::SetMSR(arch::kIa32GsKernelBase, g_CoreLocal.thread_control_block->gs_base);
+}
+
 namespace arch
 {
 void ArchInit(const RawBootArguments &)
@@ -73,8 +80,8 @@ void ArchInit(const RawBootArguments &)
 
     /* Zero mem core local as no global constructors available yet */
     memset(&g_CoreLocal, 0, sizeof(hardware::CoreLocal));
-
-    hal::SetCoreLocalData(&g_CoreLocal);
+    cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(&g_CoreLocal));
+    cpu::SetMSR(kIa32GsKernelBase, reinterpret_cast<u64>(&g_CoreLocal));
     InitializeCoreLocal();
 
     trace::AdvanceTracingStage();

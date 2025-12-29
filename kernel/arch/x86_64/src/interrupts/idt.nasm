@@ -2,8 +2,16 @@
 ; ISR with full GPR save/restore
 ; ------------------------------------
 
-%include "include/regs.nasm"
-%include "include/thread.nasm"
+%include "include/scheduling.nasm"
+
+%macro load_user_gs_if_needed 0
+    mov r12, [rsp + _cs_int_frame_offset]
+    cmp qword r12, _kernel_code_selector
+    je .skip_user_gs_swap
+    call cdecl_SetKernelGs
+    swapgs
+.skip_user_gs_swap:
+%endmacro
 
 %macro context_switch_if_needed 0
     cmp rax, 0
@@ -18,7 +26,7 @@
     ; Setup next task state
 
     mov rdi, r13
-    call cdecl_SetNextThreadFs           ; Set FS base if needed
+    call cdecl_SwapFsIfNeeded           ; Set FS base if needed
 
     mov rdi, r13
     call cdecl_SetCurrentTCB
@@ -34,13 +42,22 @@
     cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
     je .done
     mov cr3, rax                       ; Load next task's virtual address space
-
 .done:
+
+    load_user_gs_if_needed
 
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                  ; Pop dummy error code.
     iretq
+%endmacro
+
+%macro load_kernel_gs_if_needed 0
+    mov r12, [rsp + _cs_int_frame_offset]
+    cmp qword r12, _kernel_code_selector
+    je .skip_kernel_gs_swap
+    swapgs
+.skip_kernel_gs_swap:
 %endmacro
 
 ; Macro for CPU exceptions that DO NOT push an error code.
@@ -51,6 +68,8 @@ isr_wrapper_%+%1:
     push 0                      ; Push a dummy error code for alignment.
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
+
+    load_kernel_gs_if_needed
 
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
@@ -66,6 +85,8 @@ isr_wrapper_%+%1:
 isr_wrapper_%+%1:
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
+
+    load_kernel_gs_if_needed
 
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
@@ -83,6 +104,8 @@ isr_wrapper_%+%2:
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
 
+    load_kernel_gs_if_needed
+
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
     call %3                     ; Call the specific ISR handler.
@@ -99,6 +122,7 @@ section .text
 
 extern g_syscall_dispatch_table
 extern g_syscall_count
+extern cdecl_SetKernelGs
 
 ; Expected system call convention:
 ; - RAX: syscall number
@@ -121,6 +145,8 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     cmp rax, [rel g_syscall_count]
     jae .invalid_syscall
 
+    swapgs
+
     ; Get pointer to syscall_dispatch_table and dispatch
     call qword [rel g_syscall_dispatch_table + rax*8]
     jmp .return
@@ -129,6 +155,10 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     mov rax, -1                      ; Set error return value
 
 .return:
+
+    call cdecl_SetKernelGs
+    swapgs
+
     pop_sysv_regs_without_rax        ; Restore registers except RAX.
     add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                            ; Return from interrupt.
@@ -142,6 +172,7 @@ extern cdecl_SetCurrentTCB
 extern cdecl_GetThreadsPageTable
 extern cdecl_SetTssRsp0
 extern cdecl_SetNextThreadFs
+extern cdecl_SwapFsIfNeeded
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt

@@ -112,5 +112,6 @@ void InitializeCoreLocal();
 extern "C" void cdecl_SetTssRsp0(u64 rsp0);
 extern "C" void cdecl_SwapFsIfNeeded(Sched::Thread *thread);
 extern "C" void cdecl_SetNextThreadFs(Sched::Thread *thread);
+extern "C" void cdecl_LoadThreadsGs(Sched::Thread *thread);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_

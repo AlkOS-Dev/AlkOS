@@ -2,8 +2,7 @@
 ; Scheduling utilities and crucial functionality
 ; ------------------------------------------------------------
 
-%include "include/regs.nasm"
-%include "include/thread.nasm"
+%include "include/scheduling.nasm"
 
 bits 64
 
@@ -15,28 +14,7 @@ extern cdecl_EnableHardwareInterrupts
 extern cdecl_SetNextThreadFs
 extern cdecl_SwapFsIfNeeded
 extern HandleHardwareInterrupt
-
-_context_switch_stack_space equ 21*8
-_context_switch_stack_space_ext equ 20*8; 8 bytes already reserved by caller
-_rip_call_offset equ _context_switch_stack_space_ext
-_rip_int_frame_offset equ _all_reg_size + 8
-_cs_int_frame_offset equ _rip_int_frame_offset + 8
-_flags_int_frame_offset equ _cs_int_frame_offset + 8
-_sp_int_frame_offset equ _flags_int_frame_offset + 8
-_ss_int_frame_offset equ _sp_int_frame_offset + 8
-
-_kernel_code_selector equ 0x08
-_kernel_data_selector equ 0x10
-_user_code_selector equ 0x18
-_user_data_selector equ 0x20
-
-_rip_user_space_offset equ 0
-_cs_user_space_offset equ _rip_user_space_offset + 8
-_flags_user_space_offset equ _cs_user_space_offset + 8
-_sp_user_space_offset equ _flags_user_space_offset + 8
-_ss_user_space_offset equ _sp_user_space_offset + 8
-_jump_userspace_stack_space equ  5*8
-_userspace_initial_flags equ 0x202
+extern cdecl_LoadThreadsGs
 
 section .text
 global ContextSwitch
@@ -59,6 +37,14 @@ ConvertContext:
     mov rdi, [r12+Thread.kernel_stack_bottom]
     call cdecl_SetTssRsp0
 
+    mov qword r13, [rsp+_cs_int_frame_offset]
+    cmp qword r13, _kernel_code_selector
+    je .done
+
+    mov rdi, r12
+    call cdecl_LoadThreadsGs
+
+.done:
     pop_all_regs                    ; Restore registers of NEW thread's stack
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                      ; pop error code
@@ -84,6 +70,9 @@ JumpToUserSpace:
 
     mov qword [rsp + _ss_user_space_offset], _user_data_selector
     mov [rsp + _sp_user_space_offset], r13
+
+    mov rdi, rax
+    call cdecl_LoadThreadsGs
 
     xor rax, rax
     mov rax, _user_data_selector
@@ -129,7 +118,7 @@ ContextSwitch:
     mov qword [rsp + _ss_int_frame_offset], _kernel_data_selector
 
     mov r12, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
-    call cdecl_SetNextThreadFs
+    call cdecl_SwapFsIfNeeded
 
     mov rdi, r12
     call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
@@ -150,8 +139,17 @@ ContextSwitch:
     mov r11, cr3                       ; R11 = current cr3
 
     cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
-    je .done
+    je .gs
     mov cr3, rax                       ; Load next task's virtual address space
+
+.gs:
+
+    mov qword r13, [rsp+_cs_int_frame_offset]
+    cmp qword r13, _kernel_code_selector
+    je .done
+
+    mov rdi, r12
+    call cdecl_LoadThreadsGs
 
 .done:
     pop_all_regs                    ; Restore registers of NEW thread's stack
