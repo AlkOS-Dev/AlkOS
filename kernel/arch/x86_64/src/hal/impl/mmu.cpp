@@ -55,6 +55,35 @@ void Mmu::CopyKernelSpace(Mem::PPtr<void> dst_root, Mem::PPtr<void> kernel_root)
     memcpy(&((*dst_pml4)[256]), &((*src_pml4)[256]), 256 * sizeof(PageMapEntry<4>));
 }
 
+bool Mmu::SyncMapping(Mem::PPtr<void> dst_root, Mem::PPtr<void> src_root, Mem::VPtr<void> vaddr)
+{
+    // Synchronize the PML4 entry for the given virtual address.
+    auto *dst_pml4 = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(dst_root));
+    auto *src_pml4 = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(src_root));
+
+    // Calculate PML4 index
+    u64 idx = PmeIdx<4>(vaddr);
+
+    // Ensure we are operating in the upper half (kernel space)
+    if (idx < 256) {
+        return false;
+    }
+
+    auto &src_entry = (*src_pml4)[idx];
+    auto &dst_entry = (*dst_pml4)[idx];
+
+    // Check if the source entry is present and the destination is either
+    // missing or outdated (pointing to a different frame or having different flags).
+    if (src_entry.IsPresent()) {
+        if (!dst_entry.IsPresent() || dst_entry.frame != src_entry.frame) {
+            dst_entry = src_entry;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 expected<void, MemError> Mmu::SetPageFlags(
     Mem::PPtr<void> root, Mem::VPtr<void> vaddr, PageFlags flags
 )

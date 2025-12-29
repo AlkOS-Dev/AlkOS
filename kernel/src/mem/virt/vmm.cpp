@@ -2,6 +2,7 @@
 
 #include <bits_ext.hpp>
 #include <macros.hpp>
+#include <template/scope_guard.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/heap.hpp"
@@ -47,11 +48,24 @@ expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
     RET_UNEXPECTED_IF_ERR(as_res);
     auto as = *as_res;
 
+    template_lib::ScopeGuard as_guard([&] {
+        DestroyUserAddrSpace(as);
+    });
+
     auto init_res = as->InitUser(*ctx_, *mmu_);
     RET_UNEXPECTED_IF_ERR(init_res);
 
     mmu_->CopyKernelSpace(as->PageTableRoot(), kernel_as_.PageTableRoot());
 
+    // This enables lazy synchronization of kernel mappings into user address spaces.
+    auto kernel_sync_vma = Mem::KNew<Mem::KernelSyncVMemArea>();
+    RET_UNEXPECTED_IF(!kernel_sync_vma, MemError::OutOfMemory);
+
+    // AddArea takes ownership of the VMA pointer
+    auto res = as->AddArea(*kernel_sync_vma);
+    RET_UNEXPECTED_IF_ERR(res);
+
+    as_guard.dismiss();
     return as;
 }
 

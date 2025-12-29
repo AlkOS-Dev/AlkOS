@@ -95,6 +95,21 @@ class DirectMappingVMemArea final : public VMemArea
     private:
     PPtr<void> phys_start_;
 };
+
+/**
+ * @brief Represents the kernel address space area.
+ * Handles lazy synchronization of kernel mappings into user address spaces.
+ */
+class KernelSyncVMemArea final : public VMemArea
+{
+    public:
+    KernelSyncVMemArea();
+
+    bool HandleFault(
+        VPtr<void> fault_addr, const PageFaultData::ErrorCode &err, AddressSpace &as
+    ) override;
+};
+
 }  // namespace Mem
 
 #endif  // KERNEL_SRC_MEM_VIRT_AREA_HPP_

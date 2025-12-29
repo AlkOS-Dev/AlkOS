@@ -109,4 +109,44 @@ bool DirectMappingVMemArea::HandleFault(
     return MapPage(as, aligned_vaddr, phys_page, flags_);
 }
 
+// -----------------------------------------------------------------------------
+// KernelSyncVMemArea
+// -----------------------------------------------------------------------------
+
+KernelSyncVMemArea::KernelSyncVMemArea()
+    // Covers the entire upper half of the 64-bit address space
+    // 0x8000000000000000 - 0xFFFFFFFFFFFFFFFF
+    : VMemArea(
+          Mem::UptrToPtr<void>(kBitMaskLeft<u64, 1>), kBitMaskLeft<u64, 1> - 1,
+          // Permissions are determined by the actual kernel page table entries being copied,
+          // these flags are just placeholders for the VMA object.
+          VirtualMemAreaFlags{.readable = true, .writable = true, .executable = true}
+      )
+{
+}
+
+bool KernelSyncVMemArea::HandleFault(
+    VPtr<void> fault_addr, const PageFaultData::ErrorCode &, AddressSpace &as
+)
+{
+    auto &vmm = MemoryModule::Get().GetVmm();
+
+    auto kernel_root  = vmm.GetKernelAddressSpace().PageTableRoot();
+    auto current_root = as.PageTableRoot();
+
+    if (current_root == kernel_root) {
+        TRACE_FATAL_MEMORY("Kernel Page Fault in Kernel Address Space at %p", fault_addr);
+        return false;
+    }
+
+    auto &mmu = MemoryModule::Get().GetMmu();
+    if (mmu.SyncMapping(current_root, kernel_root, fault_addr)) {
+        MemoryModule::Get().GetTlb().InvalidatePage(AlignDown(fault_addr, hal::kPageSizeBytes));
+        return true;
+    }
+
+    TRACE_FATAL_MEMORY("Kernel Sync Fault failed at %p (not mapped in kernel)", fault_addr);
+    return false;
+}
+
 }  // namespace Mem
