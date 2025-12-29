@@ -2,8 +2,12 @@
 
 #include <macros.hpp>
 #include <mutex.hpp>
+
+#include <template/scope_guard.hpp>
+
 #include "hal/constants.hpp"
 #include "hal/mmu.hpp"
+
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
 #include "mem/mmu/contexts.hpp"
@@ -60,21 +64,27 @@ expected<void, MemError> AS::AddArea(VMemArea *vma)
 {
     ASSERT_NOT_NULL(vma);
     std::lock_guard guard(area_list_lock_);
+    template_lib::ScopeGuard vma_guard([&] {
+        KDelete(vma);
+    });
 
-    // Check for overlapping areas
     for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
-        if (AreasOverlap(*it, vma)) {
-            // We own vma, so we must delete it on failure
-            KDelete(vma);
-            return unexpected(MemError::InvalidArgument);
+        VMemArea *current = *it;
+        RET_UNEXPECTED_IF(AreasOverlap(current, vma), MemError::InvalidArgument);
+
+        if (vma->GetStart() < current->GetStart()) {
+            auto *pos = it.GetNode();
+            auto *new_node =
+                pos->prev ? area_list_.InsertAfter(pos->prev, vma) : area_list_.PushFront(vma);
+
+            RET_UNEXPECTED_IF(!new_node, MemError::OutOfMemory);
+            vma_guard.dismiss();
+            return {};
         }
     }
 
-    auto node = area_list_.PushFront(vma);
-    if (!node) {
-        KDelete(vma);
-        return unexpected(MemError::OutOfMemory);
-    }
+    RET_UNEXPECTED_IF(!area_list_.PushBack(vma), MemError::OutOfMemory);
+    vma_guard.dismiss();
 
     return {};
 }
@@ -173,4 +183,45 @@ bool AS::IsAddrInArea(const VMemArea *vma, VPtr<void> ptr)
     const auto vma_e = vma_s + vma->GetSize();
     const auto addr  = reinterpret_cast<uptr>(ptr);
     return vma_s <= addr && addr < vma_e;
+}
+
+expected<GapInfo, MemError> AS::FindGap(size_t size, VPtr<void> range_start, VPtr<void> range_end)
+{
+    std::lock_guard guard(area_list_lock_);
+
+    uptr search_start = range_start ? PtrToUptr(range_start) : 0;
+    uptr search_end   = range_end ? PtrToUptr(range_end) : UINTPTR_MAX;
+
+    // Sentinel value
+    uptr prev_end = search_start;
+
+    for (auto *vma : area_list_) {
+        uptr curr_start = PtrToUptr(vma->GetStart());
+        uptr curr_end   = curr_start + vma->GetSize();
+
+        // Find gaps only in the range of interest
+        if (curr_end <= search_start) {
+            continue;
+        }
+        if (curr_start >= search_end) {
+            break;
+        }
+
+        // Gap found
+        uptr gap_start = prev_end;
+        uptr gap_end   = curr_start;
+
+        if (gap_end > gap_start && (gap_end - gap_start) >= size) {
+            return GapInfo{UptrToPtr<void>(gap_start), size};
+        }
+
+        prev_end = curr_end;
+    }
+
+    // Final check: gap between last processed area and search_end
+    if (search_end > prev_end && (search_end - prev_end) >= size) {
+        return GapInfo{UptrToPtr<void>(prev_end), size};
+    }
+
+    return unexpected(MemError::NotFound);
 }
