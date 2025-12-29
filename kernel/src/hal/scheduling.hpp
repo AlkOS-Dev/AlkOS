@@ -8,6 +8,7 @@
 
 namespace hal
 {
+WRAP_CALL void JumpToUserSpace(void (*f)()) { arch::JumpToUserSpace(f); }
 WRAP_CALL void ContextSwitch(Sched::Thread *thread) { arch::ContextSwitch(thread); }
 WRAP_CALL void ConvertContext(Sched::Thread *thread) { arch::ConvertContext(thread); }
 WRAP_CALL void InitializeStackKThread(void **stack, void (*f)())

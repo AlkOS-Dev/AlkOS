@@ -4,7 +4,13 @@
 #include <defines.hpp>
 #include <types.hpp>
 
-#include "mem/virt/addr_space.hpp"
+#include "hal/tasks.hpp"
+#include "mem/types.hpp"
+
+namespace Mem
+{
+class AddressSpace;
+}
 
 namespace Sched
 {
@@ -18,7 +24,7 @@ struct PACK ProcessFlags {
 };
 static_assert(sizeof(ProcessFlags) == 1);
 
-struct Process {
+struct Process : hal::Process {
     /* Management */
     Pid pid;
     ProcessFlags flags;

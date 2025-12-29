@@ -4,6 +4,7 @@
 #include <defines.hpp>
 #include <types.hpp>
 
+#include "hal/tasks.hpp"
 #include "process.hpp"
 
 namespace Sched
@@ -14,7 +15,7 @@ struct PACK Tid {
     u64 count : 48;
 };
 
-struct Thread {
+struct Thread : hal::Thread {
     /* Management */
     Tid tid;
     Pid owner;
