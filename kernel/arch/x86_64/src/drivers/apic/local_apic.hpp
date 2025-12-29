@@ -382,6 +382,8 @@ class LocalApic
 
     FAST_CALL u8 GetCoreId() { return ReadRegister(kIdRegRW) >> 24; }
 
+    NODISCARD FORCE_INLINE_F u64 GetFreqHz() const { return timer_freq_hz_; }
+
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -403,24 +405,49 @@ class LocalApic
      */
     void Enable();
 
+    void RegisterAsEventClock();
+
     FORCE_INLINE_F void SetPhysicalAddress(const u64 address)
     {
         local_apic_physical_address_ = address;
     }
 
-    FORCE_INLINE_F u64 GetPhysicalAddress() const { return local_apic_physical_address_; }
+    NODISCARD FORCE_INLINE_F u64 GetPhysicalAddress() const { return local_apic_physical_address_; }
 
     NODISCARD FORCE_INLINE_F bool IsEnabled() const { return is_enabled_; }
 
     NODISCARD FORCE_INLINE_F intr::InterruptDriver &GetInterruptDriver() { return driver_; }
 
+    FAST_CALL void SetTimerDivider(const u32 divider)
+    {
+        WriteRegister(kDivideConfigRegRW, divider);
+    }
+
+    FAST_CALL void SetTimerCounter(const u32 value) { WriteRegister(kInitialCountRegRW, value); }
+
+    NODISCARD FAST_CALL u32 GetTimerCounter() { return ReadRegister(kCurrentCountRegRO); }
+
+    FAST_CALL void DisableTimer()
+    {
+        LocalVectorTableTimerRegister disabled_reg{};
+        disabled_reg.mask = LocalVectorTableTimerRegister::Mask::kDisabled;
+        WriteRegister(kLvtTimerRegRW, disabled_reg);
+    }
+
+    // ------------------------------
+    // Private methods
+    // ------------------------------
+
+    protected:
+    NODISCARD static u64 MeasureFreqHz_();
+
     // ------------------------------
     // Class fields
     // ------------------------------
 
-    protected:
     bool is_enabled_{};
     u64 local_apic_physical_address_{};
+    u64 timer_freq_hz_{};
     intr::InterruptDriver driver_{};
 };
 #endif  // KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_LOCAL_APIC_HPP_

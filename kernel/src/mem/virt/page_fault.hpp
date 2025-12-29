@@ -7,7 +7,7 @@
 namespace Mem
 {
 
-void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
 }  // namespace Mem
 

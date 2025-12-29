@@ -12,12 +12,12 @@ isr_wrapper_%+%1:
     push 0                      ; Push a dummy error code for alignment.
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space.
+
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
+    mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                  ; Pop dummy error code.
@@ -30,12 +30,12 @@ isr_wrapper_%+%1:
 isr_wrapper_%+%1:
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space.
+
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
+    mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                  ; Pop error code.
@@ -48,11 +48,11 @@ isr_wrapper_%+%1:
 isr_wrapper_%+%2:
     sub rsp, _sysv_reg_size          ; Allocate space for saving registers.
     push_sysv_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space for function calls.
+
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
     call %3                     ; Call the specific ISR handler.
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_sysv_regs                    ; Restore registers.
     add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                       ; Return from interrupt.
@@ -108,6 +108,7 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt
+extern TimerContextSwitch
 
 ; Intel-defined interrupts (0-31) -> HandleException
 exception_wrapper 0  ; Division Error: Divide by zero error
@@ -144,7 +145,7 @@ exception_error_wrapper 30 ; Security Exception: Security-related error
 exception_wrapper 31 ; Reserved: Reserved by Intel
 
 ; IRQs for PICs (32–47) -> HandleHardwareInterrupt
-interrupt_wrapper 0, 32, HandleHardwareInterrupt ; IRQ0: System timer
+; DEFINED in SCHEDULING FILE ; IRQ0: System timer
 interrupt_wrapper 1, 33, HandleHardwareInterrupt ; IRQ1: Keyboard
 interrupt_wrapper 2, 34, HandleHardwareInterrupt ; IRQ2: Cascade
 interrupt_wrapper 3, 35, HandleHardwareInterrupt ; IRQ3: Serial port 2
@@ -202,7 +203,15 @@ section .data
 global IsrWrapperTable
 IsrWrapperTable:
 %assign i 0
-%rep    _num_isrs
+%rep    32
+    dq isr_wrapper_%+i
+%assign i i+1
+%endrep
+
+dq TimerContextSwitch
+
+%assign i 33
+%rep    31
     dq isr_wrapper_%+i
 %assign i i+1
 %endrep

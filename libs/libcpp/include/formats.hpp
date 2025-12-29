@@ -71,4 +71,32 @@ void DumpObjHexWithSep(FuncT func, const ObjT &obj)
     func(buffer);
 }
 
+template <size_t kSize, size_t kSepDist = 8, typename FuncT>
+void DumpMemHex(FuncT func, void *mem)
+{
+    static constexpr size_t kBuffSize = 4 * kSize;
+    char buffer[kBuffSize];
+
+    size_t sep_dist    = 0;
+    u8 *ptr            = reinterpret_cast<u8 *>(mem);
+    char *buff_ptr     = buffer;
+    size_t buffer_size = kBuffSize;
+    for (size_t i = 0; i < kSize; ++i) {
+        const int bytes_written =
+            snprintf(buff_ptr, buffer_size, ++sep_dist == kSepDist ? "%02X\n" : "%02X", ptr[i]);
+
+        sep_dist %= kSepDist;
+
+        assert(
+            bytes_written < static_cast<int>(buffer_size) &&
+            "DumpObjToBufferHexWithSep buffer fully used!"
+        );
+
+        buffer_size -= bytes_written;
+        buff_ptr += bytes_written;
+    }
+
+    func(buffer);
+}
+
 #endif  // LIBS_LIBCPP_INCLUDE_FORMATS_HPP_

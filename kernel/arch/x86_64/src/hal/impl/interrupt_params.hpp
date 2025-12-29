@@ -28,6 +28,7 @@ struct PACK IsrStackFrame {
     u64 cs;
     u64 rflags;
     u64 rsp;
+    u64 ss;
 };
 
 struct PACK IsrErrorStackFrame {
@@ -50,6 +51,7 @@ struct ExceptionData : IsrErrorStackFrame {
 /* Mapping params */
 static constexpr u16 kTimerHwLirq      = 0;
 static constexpr u16 kPageFaultExcLirq = 14;
+static constexpr u16 kTimerHwInt       = 32;
 
 /**
  * @brief x86_64 Page Fault Error Code structure.

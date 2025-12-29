@@ -89,7 +89,7 @@ class AddressSpace
 
     // Friends
     friend VirtualMemoryManager;
-    friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+    friend void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
     public:
 };

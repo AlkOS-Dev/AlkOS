@@ -5,6 +5,7 @@
 
 #include "modules/helpers.hpp"
 #include "scheduling/processes.hpp"
+#include "scheduling/scheduler.hpp"
 #include "scheduling/task_mgr.hpp"
 #include "scheduling/threads.hpp"
 
@@ -26,6 +27,7 @@ class SchedulingModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Sched, Processes)
     DEFINE_MODULE_FIELD(Sched, Threads)
     DEFINE_MODULE_FIELD(Sched, TaskMgr)
+    DEFINE_MODULE_FIELD(Sched, Scheduler)
 
     public:
 };

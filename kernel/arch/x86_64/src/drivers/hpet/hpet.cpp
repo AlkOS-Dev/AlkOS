@@ -1,5 +1,6 @@
 #include "drivers/hpet/hpet.hpp"
 #include "cpu/utils.hpp"
+#include "hal/interrupt_params.hpp"
 #include "modules/hardware.hpp"
 
 // ------------------------------
@@ -39,6 +40,72 @@ static void StopCounterCb(hardware::ClockRegistryEntry *clock_entry)
 static void ResumeCounterCb(hardware::ClockRegistryEntry *clock_entry)
 {
     GetHpetFromClockEntry(clock_entry)->StartMainCounter();
+}
+
+// ------------------------------
+// Event Clock callbacks
+// ------------------------------
+
+static void OnEntryCb(hardware::EventClockRegistryEntry *clock_entry)
+{
+    if (clock_entry->state == hardware::EventClockState::kOneshot) {
+        clock_entry->state = hardware::EventClockState::kOneshotIdle;
+    }
+}
+
+static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_ns)
+{
+    if (entry->state == hardware::EventClockState::kDisabled) {
+        return 1;
+    }
+
+    const auto hpet = static_cast<Hpet *>(entry->own_data);
+    hpet->DisableTimer(0);
+
+    const u64 hw_irq =
+        HardwareModule::Get()
+            .GetInterrupts()
+            .GetLit()
+            .TranslateToHw<intr::InterruptType::kHardwareInterrupt>(hal::kTimerHwLirq);
+    const u64 time_femto = time_ns * Hpet::kNsToFemto;
+
+    if (entry->state == hardware::EventClockState::kPeriodic) {
+        hpet->SetupPeriodicTimer(0, time_femto, hw_irq);
+    } else {
+        entry->state = hardware::EventClockState::kOneshot;
+        hpet->SetupOneShotTimer(0, time_femto, hw_irq);
+    }
+
+    return 0;
+}
+
+static u32 SetPeriodicCb(hardware::EventClockRegistryEntry *entry)
+{
+    if (entry->state != hardware::EventClockState::kPeriodic) {
+        const auto hpet = static_cast<Hpet *>(entry->own_data);
+
+        if (!hpet->IsTimerSupportingPeriodic(0)) {
+            DEBUG_WARN_TIME("Hpet does not support periodic!");
+            return 1;
+        }
+
+        hpet->DisableTimer(0);
+        entry->state = hardware::EventClockState::kPeriodic;
+    }
+
+    return 0;
+}
+
+static u32 SetOneshotCb(hardware::EventClockRegistryEntry *entry)
+{
+    if (entry->state != hardware::EventClockState::kOneshot &&
+        entry->state != hardware::EventClockState::kOneshotIdle) {
+        const auto hpet = static_cast<Hpet *>(entry->own_data);
+        hpet->DisableTimer(0);
+        entry->state = hardware::EventClockState::kOneshotIdle;
+    }
+
+    return 0;
 }
 
 // ------------------------------
@@ -113,6 +180,8 @@ Hpet::Hpet(acpi_hpet *table)
     SetupStandardMapping();
     StopMainCounter();
 
+    // ========================
+    // Register as clock
     hardware::ClockRegistryEntry hpet_entry = {};
 
     /* Clock data */
@@ -134,6 +203,27 @@ Hpet::Hpet(acpi_hpet *table)
     hpet_entry.own_data = this;
 
     HardwareModule::Get().GetClockRegistry().Register(hpet_entry);
+
+    // ========================
+    // Register as event clock
+    hardware::EventClockRegistryEntry hpet_event_entry{};
+
+    hpet_event_entry.id                 = static_cast<u64>(arch::HardwareEventClockId::kHpet);
+    hpet_event_entry.state              = hardware::EventClockState::kDisabled;
+    hpet_event_entry.flags.IsCoreLocal  = false;
+    hpet_event_entry.next_event_time_ns = 0;
+    hpet_event_entry.own_data           = this;
+
+    hpet_event_entry.supported_cores.SetAll(true);
+    hpet_event_entry.min_next_event_time_ns = clock_period_ / 1'000'000;
+
+    hpet_event_entry.cbs.next_event   = NextEventCb;
+    hpet_event_entry.cbs.set_oneshot  = SetOneshotCb;
+    hpet_event_entry.cbs.set_periodic = SetPeriodicCb;
+    hpet_event_entry.cbs.on_entry     = OnEntryCb;
+    hpet_event_entry.cbs.on_exit      = nullptr;
+
+    HardwareModule::Get().GetEventClockRegistry().Register(hpet_event_entry);
 }
 
 u64 Hpet::AdjustTimeToHpetCapabilities(const u64 time_femto) const

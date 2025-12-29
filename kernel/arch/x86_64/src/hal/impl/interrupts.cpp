@@ -3,6 +3,7 @@
 #include "cpu/utils.hpp"
 #include "drivers/apic/local_apic.hpp"
 #include "drivers/pic8259/pic8259.hpp"
+#include "drivers/pit/pit.hpp"
 #include "drivers/tsc/tsc.hpp"
 #include "interrupts/idt.hpp"
 #include "trace_framework.hpp"
@@ -24,6 +25,8 @@ void Interrupts::Init()
     /* Replace first stage PIC with new APIC chip on startup Core */
     local_apic_.Enable();
 
+    local_apic_.RegisterAsEventClock();
+
     ReplacePicDriverWithLapic_();
 
     tsc::Initialize();
@@ -37,6 +40,7 @@ void Interrupts::FirstStageInit()
 {
     DEBUG_INFO_INTERRUPTS("Interrupts first stage init...");
 
+    pit::Disable();
     InitPic8259(kIrq1Offset, kIrq2Offset);
     MapToLogicalInterrupts_();
     SetupPicAsDefaultDriver_();
@@ -119,20 +123,6 @@ void Interrupts::MapToLogicalInterrupts_()
                 idx, intr::HwHandler{.handler = SimpleIrqHandler}
             );
     }
-
-    // Map timer handler
-    HardwareModule::Get()
-        .GetInterrupts()
-        .GetLit()
-        .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
-            0, intr::HwHandler{.handler = TimerIsr}
-        );
-
-    // Map test software irq
-    HardwareModule::Get()
-        .GetInterrupts()
-        .GetLit()
-        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 129);
 }
 
 void Interrupts::SetupPicAsDefaultDriver_()
@@ -151,4 +141,9 @@ void Interrupts::ReplacePicDriverWithLapic_()
             idx, &local_apic_.GetInterruptDriver()
         );
     }
+}
+
+void cdecl_EnableHardwareInterrupts()
+{
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 }

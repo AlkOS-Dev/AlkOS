@@ -5,6 +5,7 @@
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
 #include <modules/timing.hpp>
 
+#include "cpu/gdt.hpp"
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
 #include "interrupts/interrupt_types.hpp"
@@ -41,9 +42,6 @@ static constexpr IdtEntryFlags kSyscallFlags = {
     .present = 1
 };
 
-/* gdt kernel code offset */
-extern "C" u32 kKernelCodeOffset;
-
 /* isr stub table initialized in nasm */
 extern "C" void *IsrWrapperTable[];
 
@@ -57,9 +55,10 @@ extern "C" void *IsrWrapperTable[];
  *
  * @param idt_idx index of interrupt triggered.
  */
-NO_RET void DefaultInterruptHandler(const u8 idt_idx)
+NO_RET void *DefaultInterruptHandler(const u8 idt_idx)
 {
     hal::KernelPanicFormat("Received unsupported interrupt with code: %hhu\n", idt_idx);
+    return nullptr;
 }
 
 static void FormatIsrRegisters(
@@ -118,9 +117,10 @@ NO_RET FAST_CALL void DefaultExceptionHandler(
     );
 }
 
-void DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
+void *DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
 {
     DefaultExceptionHandler(data, entry.hardware_irq);
+    return nullptr;
 }
 
 FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
@@ -128,31 +128,10 @@ FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)
     TRACE_FREQ_INFO_INTERRUPTS("Received interrupt with idt idx: %hu and lirq: %hu", idt_idx, lirq);
 }
 
-void SimpleIrqHandler(intr::LitHwEntry &entry)
+void *SimpleIrqHandler(intr::LitHwEntry &entry)
 {
     LogIrqReceived(entry.hardware_irq, entry.logical_irq);
-}
-
-void TimerIsr(intr::LitHwEntry &)
-{
-    // LogIrqReceived(entry.hardware_irq, entry.logical_irq);
-
-    // TODO: Temporary code
-    static u64 counter = 0;
-    if (!FeatureEnabled<FeatureFlag::kRunTestMode> && counter++ % 33 == 0) {
-        static constexpr size_t kBuffSize = 256;
-        char buff[kBuffSize]{};
-
-        if (TimingModule::IsInited()) {
-            const auto t = time(nullptr);
-            strftime(buff, kBuffSize, "%Y-%m-%d %H:%M:%S", localtime(&t));
-        }
-
-        TRACE_INFO_TIME(
-            "Kernel time update: %s, have a nice day!",
-            TimingModule::IsInited() ? buff : "Timing module is not initialized!"
-        );
-    }
+    return nullptr;
 }
 
 // ------------------------------
@@ -194,7 +173,7 @@ static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const IdtEnt
     IdtEntry &entry = idt.idt[idx];
 
     entry.isr_low    = isr & kBitMask16;
-    entry.kernel_cs  = kKernelCodeOffset;
+    entry.kernel_cs  = cpu::GDT::kKernelCodeSelector;
     entry.ist        = 0;
     entry.attributes = flags;
     entry.isr_mid    = (isr >> 16) & kBitMask16;
@@ -204,8 +183,8 @@ static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const IdtEnt
 
 void arch::Interrupts::InitializeDefaultIdt_()
 {
-    R_ASSERT_LT(kKernelCodeOffset, static_cast<u32>(UINT16_MAX));
-    R_ASSERT_NEQ(static_cast<u32>(0), kKernelCodeOffset);
+    R_ASSERT_LT(cpu::GDT::kKernelCodeSelector, static_cast<u32>(UINT16_MAX));
+    R_ASSERT_NEQ(static_cast<u32>(0), cpu::GDT::kKernelCodeSelector);
 
     idt_.idtr.base  = reinterpret_cast<uintptr_t>(idt_.idt);
     idt_.idtr.limit = static_cast<u16>(sizeof(IdtEntry)) * kIdtEntries - 1;

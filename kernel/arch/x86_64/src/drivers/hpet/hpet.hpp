@@ -1,6 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 
+#include <stdlib.h>
 #include <uacpi/acpi.h>
 #include <array.hpp>
 #include <data_structures/bit_array.hpp>
@@ -54,6 +55,8 @@ class Hpet final
     static constexpr u32 kMaxComparators              = 32;
     static constexpr u64 kFemtoSecondsPerSecond =
         1'000'000'000'000'000;  // 1 second in femto-seconds
+    static constexpr u64 kNsToFemto         = 1'000'000;
+    static constexpr u64 kFemtoSecondsPerMs = kFemtoSecondsPerSecond / 1'000;
 
     /**
      * Returns the memory offset for a timer's configuration register
@@ -224,7 +227,7 @@ class Hpet final
     }
 
     template <class RetT>
-    FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
+    NODISCARD FORCE_INLINE_F RetT ReadRegister(const u32 offset) const
     {
         return ReadMemoryIo<u64, RetT>(
             Mem::PhysToVirt(reinterpret_cast<byte *>(GetPhysicalAddress())), offset
@@ -234,6 +237,35 @@ class Hpet final
     // ------------------------------
     // Class methods
     // ------------------------------
+
+    template <class ReadF>
+    NODISCARD FORCE_INLINE_F u64 CalibrateByHpetHz(ReadF func, const u64 time_ms)
+    {
+        /* Prepare */
+        StartMainCounter();
+        const u64 hpet_period_femto = GetPeriod();
+        const u64 wait_time_cycles  = (time_ms * kFemtoSecondsPerMs) / hpet_period_femto;
+
+        /* Measure */
+
+        const u64 hpet_start = ReadMainCounter();
+        const u64 time_start = func();
+        while ((ReadMainCounter() - hpet_start) < wait_time_cycles) {
+        }
+        const u64 time_end = func();
+        const u64 hpet_end = ReadMainCounter();
+
+        /* Calibrate */
+        const u64 hpet_diff = hpet_end - hpet_start;
+        const u64 time_diff =
+            time_end >= time_start ? time_end - time_start : time_start - time_end;
+
+        __uint128_t val = static_cast<__uint128_t>(time_diff) * kFemtoSecondsPerSecond;
+        val /= static_cast<__uint128_t>(hpet_diff) * hpet_period_femto;
+        return static_cast<u64>(val);
+    }
+
+    NODISCARD FORCE_INLINE_F u32 GetPeriod() const { return clock_period_; }
 
     NODISCARD FORCE_INLINE_F bool IsTimerSupportingPeriodic(const u32 timer_idx) const
     {
@@ -324,6 +356,16 @@ class Hpet final
             GetTimerComparatorValueRegRW(timer_idx),
             AdjustTimeToHpetCapabilities(period_femto_seconds)
         );
+    }
+
+    FORCE_INLINE_F void DisableTimer(const u32 timer_idx)
+    {
+        ASSERT_LT(timer_idx, num_comparators_);
+
+        auto timer_conf =
+            ReadRegister<TimerConfigurationReg>(GetTimerConfigurationRegRW(timer_idx));
+        timer_conf.enabled = TimerConfigurationReg::Enabled::kDisable;
+        WriteRegister(GetTimerConfigurationRegRW(timer_idx), timer_conf);
     }
 
     NODISCARD FORCE_INLINE_F bool IsLegacyReplacementSupported() const
