@@ -3,6 +3,8 @@
 ; ------------------------------------------------------------
 
 struc Thread
+    .fs_base       resq 1
+    .gs_base       resq 1
     .tid:          resq 1
     .owner:        resq 1
     .next:         resq 1

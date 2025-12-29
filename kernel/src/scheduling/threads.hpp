@@ -76,8 +76,8 @@ class Threads
 
 void KThreadEntrypoint(void (*f)());
 void UserThreadEntrypoint(void (*f)());
+void OnUserThreadEntry();
 void OnKThreadExit();
-void OnThreadExit();
 
 }  // namespace Sched
 

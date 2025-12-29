@@ -6,6 +6,7 @@
 #include "cpu/msrs.hpp"
 #include "cpu/utils.hpp"
 #include "drivers/apic/local_apic.hpp"
+#include "scheduling/thread.hpp"
 
 namespace arch
 {
@@ -14,7 +15,9 @@ namespace arch
 // defines
 // ------------------------------
 
-static constexpr u32 kIa32GsBase = 0xC0000101;
+static constexpr u32 kIa32FsBase       = 0xC0000100;
+static constexpr u32 kIa32GsBase       = 0xC0000101;
+static constexpr u32 kIa32GsKernelBase = 0xC0000102;
 
 struct CoreConfig {
     u16 acpi_id;
@@ -107,5 +110,7 @@ void InitializeCoreLocal();
 }  // namespace arch
 
 extern "C" void cdecl_SetTssRsp0(u64 rsp0);
+extern "C" void cdecl_SwapFsIfNeeded(Sched::Thread *thread);
+extern "C" void cdecl_SetNextThreadFs(Sched::Thread *thread);
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CORE_HPP_

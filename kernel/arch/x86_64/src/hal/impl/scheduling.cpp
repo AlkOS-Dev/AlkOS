@@ -1,4 +1,5 @@
 #include "hal/impl/scheduling.hpp"
+#include "cpu/gdt.hpp"
 #include "scheduling/threads.hpp"
 
 #include <string.h>
@@ -13,9 +14,9 @@ FAST_CALL void InitializeStack(void **stack, void (*f)())
     static constexpr u64 kInitialFlags =
         kSingleBit<u64, 1> | kSingleBit<u64, 9>;  // Bit1 - Reserved, Bit9 - Interrupt flag
 
-    static constexpr size_t kStackSpace  = 20 * 8;  // 15 regs + InterruptStackFrame
+    static constexpr size_t kStackSpace  = 21 * 8;  // 15 regs + InterruptStackFrame
     static constexpr size_t kRdiOffset   = 4 * 8;   // rdi = 5th reg
-    static constexpr size_t kRipOffset   = 15 * 8;  // 15 regs
+    static constexpr size_t kRipOffset   = 16 * 8;  // 15 regs + error code
     static constexpr size_t kCsOffset    = kRipOffset + sizeof(u64);
     static constexpr size_t kFlagsOffset = kCsOffset + sizeof(u64);
     static constexpr size_t kSpOffset    = kFlagsOffset + sizeof(u64);
