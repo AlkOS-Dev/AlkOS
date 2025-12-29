@@ -150,7 +150,7 @@ static u64 LoadKernelIntoMemory(
     auto mmap_tag_res = multiboot_info.FindTag<TagMmap>();
     ASSERT_TRUE(mmap_tag_res, "Failed to find memory map tag in multiboot info");
 
-    vmm.Alloc(kKernelVirtualAddressStart, kernel_info.size, kPresentBit | kWriteBit);
+    vmm.Alloc(kKernelVirtualAddressStart, kernel_info.size, kPresentBit | kWriteBit | kGlobalBit);
 
     // Load the ELF file from the module into the newly mapped memory
     byte *module_start   = reinterpret_cast<byte *>(kernel_info.tag->mod_start);

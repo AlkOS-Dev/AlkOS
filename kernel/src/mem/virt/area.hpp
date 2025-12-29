@@ -28,8 +28,6 @@ struct VirtualMemArea {
     TODO_STD_VARIANT
     VirtualMemAreaT type;
     PPtr<void> direct_mapping_start;
-
-    VirtualMemArea *next = nullptr;
 };
 using VMemArea = VirtualMemArea;
 

@@ -43,7 +43,7 @@ void VirtualMemoryManager::Map(
     MapOnePageTag, const u64 virt_addr, const u64 phys_addr, const u64 flags
 )
 {
-    static constexpr u64 kDefaultFlags = kPresentBit | kWriteBit | kUserAccessibleBit;
+    static constexpr u64 kDefaultFlags = kPresentBit | kWriteBit;
 
     // !!!
     // Note: Has to be understood that this whole function

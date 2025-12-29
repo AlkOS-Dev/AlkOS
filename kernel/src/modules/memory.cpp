@@ -69,8 +69,7 @@ void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
         .size                 = kernel_size,
         .flags                = {.readable = true, .writable = true, .executable = true},
         .type                 = VirtualMemAreaT::Anonymous,
-        .direct_mapping_start = VirtToPhys(args.kernel_start),
-        .next                 = nullptr
+        .direct_mapping_start = VirtToPhys(args.kernel_start)
     };
 
     if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), kernel_vma); !res) {
@@ -83,8 +82,7 @@ void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
         .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
         .flags                = {.readable = true, .writable = true, .executable = false},
         .type                 = VirtualMemAreaT::DirectMapping,
-        .direct_mapping_start = UptrToPtr<void>(0),
-        .next                 = nullptr
+        .direct_mapping_start = UptrToPtr<void>(0)
     };
 
     if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), dm_vma); !res) {
