@@ -37,6 +37,11 @@ class PageMetaTable;
 // AddressSpace
 //==============================================================================
 
+struct TlbHint {
+    VPtr<void> start;
+    size_t size;
+};
+
 class AddressSpace
 {
     public:
@@ -60,7 +65,8 @@ class AddressSpace
     private:
     // This is orchestrated in VMM (For proper TLB management)
     expected<void, MemError> AddArea(VMemArea vma);
-    expected<void, MemError> RmArea(VPtr<void> ptr);
+    expected<TlbHint, MemError> RmArea(VPtr<void> ptr);
+    expected<TlbHint, MemError> UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFlags flags);
 
     // Helpers
     expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
