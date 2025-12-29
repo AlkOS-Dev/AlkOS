@@ -172,21 +172,21 @@ interrupt_wrapper 15, 47, HandleHardwareInterrupt ; IRQ15: Secondary ATA channel
 
 ; Software interrupts (128–143) -> HandleSoftwareInterrupt
 ; interrupt_wrapper 0, 128, HandleSoftwareInterrupt ; Syscall handled separately above
-interrupt_wrapper 1, 129, HandleSoftwareInterrupt
-interrupt_wrapper 2, 130, HandleSoftwareInterrupt
-interrupt_wrapper 3, 131, HandleSoftwareInterrupt
-interrupt_wrapper 4, 132, HandleSoftwareInterrupt
-interrupt_wrapper 5, 133, HandleSoftwareInterrupt
-interrupt_wrapper 6, 134, HandleSoftwareInterrupt
-interrupt_wrapper 7, 135, HandleSoftwareInterrupt
-interrupt_wrapper 8, 136, HandleSoftwareInterrupt
-interrupt_wrapper 9, 137, HandleSoftwareInterrupt
-interrupt_wrapper 10, 138, HandleSoftwareInterrupt
-interrupt_wrapper 11, 139, HandleSoftwareInterrupt
-interrupt_wrapper 12, 140, HandleSoftwareInterrupt
-interrupt_wrapper 13, 141, HandleSoftwareInterrupt
-interrupt_wrapper 14, 142, HandleSoftwareInterrupt
-interrupt_wrapper 15, 143, HandleSoftwareInterrupt
+interrupt_wrapper 0, 129, HandleSoftwareInterrupt
+interrupt_wrapper 1, 130, HandleSoftwareInterrupt
+interrupt_wrapper 2, 131, HandleSoftwareInterrupt
+interrupt_wrapper 3, 132, HandleSoftwareInterrupt
+interrupt_wrapper 4, 133, HandleSoftwareInterrupt
+interrupt_wrapper 5, 134, HandleSoftwareInterrupt
+interrupt_wrapper 6, 135, HandleSoftwareInterrupt
+interrupt_wrapper 7, 136, HandleSoftwareInterrupt
+interrupt_wrapper 8, 137, HandleSoftwareInterrupt
+interrupt_wrapper 9, 138, HandleSoftwareInterrupt
+interrupt_wrapper 10, 139, HandleSoftwareInterrupt
+interrupt_wrapper 11, 140, HandleSoftwareInterrupt
+interrupt_wrapper 12, 141, HandleSoftwareInterrupt
+interrupt_wrapper 13, 142, HandleSoftwareInterrupt
+interrupt_wrapper 14, 143, HandleSoftwareInterrupt
 
 
 ; Total number of ISRs.

@@ -127,6 +127,12 @@ void Interrupts::MapToLogicalInterrupts_()
         .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
             0, intr::HwHandler{.handler = TimerIsr}
         );
+
+    // Map test software irq
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 129);
 }
 
 void Interrupts::SetupPicAsDefaultDriver_()

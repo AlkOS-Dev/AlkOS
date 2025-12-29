@@ -75,12 +75,12 @@ FAST_CALL void OsHangNoInterrupts()
 template <const u8 idx>
 FAST_CALL void InvokeInterrupt()
 {
-    __asm__ volatile("int %0" : : "N"(idx));
+    __asm__ volatile("int %0" : : "N"(static_cast<size_t>(idx)));
 }
 
 FAST_CALL void InvokeInterruptDynamic(const u8 idx)
 {
-    template_lib::RolledSwitch<u8, 64, 1>(
+    template_lib::RolledSwitch<u8, 255, 1>(
         []<const u64 idx> {
             return InvokeInterrupt<idx>();
         },
