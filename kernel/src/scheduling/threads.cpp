@@ -1,4 +1,5 @@
 #include "threads.hpp"
+#include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
 
 namespace Sched

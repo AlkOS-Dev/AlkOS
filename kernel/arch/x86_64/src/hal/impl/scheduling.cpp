@@ -1,4 +1,5 @@
 #include "hal/impl/scheduling.hpp"
+#include "cpu/gdt.hpp"
 #include "scheduling/threads.hpp"
 
 #include <string.h>

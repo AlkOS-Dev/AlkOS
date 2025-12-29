@@ -12,6 +12,8 @@ extern cdecl_SetCurrentTCB
 extern cdecl_GetThreadsPageTable
 extern cdecl_SetTssRsp0
 extern cdecl_EnableHardwareInterrupts
+extern cdecl_SetNextThreadFs
+extern cdecl_SwapFsIfNeeded
 extern HandleHardwareInterrupt
 
 _context_switch_stack_space equ 21*8
@@ -33,7 +35,7 @@ _cs_user_space_offset equ _rip_user_space_offset + 8
 _flags_user_space_offset equ _cs_user_space_offset + 8
 _sp_user_space_offset equ _flags_user_space_offset + 8
 _ss_user_space_offset equ _sp_user_space_offset + 8
-_jump_userspace_stack_space equ  5x8
+_jump_userspace_stack_space equ  5*8
 _userspace_initial_flags equ 0x202
 
 section .text
@@ -48,6 +50,9 @@ global JumpToUserSpace
 ; Note: ASSUMPTION ConvertContext is always called inside KERNEL code
 ConvertContext:
     mov r12, rdi                          ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
+    call cdecl_SetNextThreadFs
+
+    mov rdi, r12
     call cdecl_SetCurrentTCB              ; Change TCB
     mov  rsp, [r12+Thread.kernel_stack]   ; Change the stack
 
@@ -64,6 +69,7 @@ ConvertContext:
 ; void JumpToUserSpace(void (*func)())
 ;   RDI = func
 ; Note: Caller is responsible for ensuring proper environment before calling (disabling IRQs)
+; Note: FS already should be changed during contex switch
 JumpToUserSpace:
     sub rsp, _context_switch_stack_space
 
@@ -85,8 +91,6 @@ JumpToUserSpace:
     mov es, ax
     mov fs, ax
     mov gs, ax
-
-    swapgs
 
     iretq
 
@@ -125,7 +129,9 @@ ContextSwitch:
     mov qword [rsp + _ss_int_frame_offset], _kernel_data_selector
 
     mov r12, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
+    call cdecl_SetNextThreadFs
 
+    mov rdi, r12
     call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
     mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
 

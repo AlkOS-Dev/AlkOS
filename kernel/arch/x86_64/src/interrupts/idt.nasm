@@ -17,20 +17,24 @@
     ; ------------------------
     ; Setup next task state
 
-    mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
-    call cdecl_SetCurrentTCB
+    mov rdi, r13
+    call cdecl_SetNextThreadFs           ; Set FS base if needed
+
     mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
 
     mov rdi, [r13+Thread.kernel_stack_bottom]
-    call cdecl_SetTssRsp0
+    call cdecl_SetTssRsp0                ; Adjust TSS.rsp0
 
-    mov rdi, r13                       ; Set RDI for GetThreadsPageTable
+    mov rdi, r13
     call cdecl_GetThreadsPageTable     ; RAX = next cr3
     mov r11, cr3                       ; R11 = current cr3
 
     cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
     je .done
     mov cr3, rax                       ; Load next task's virtual address space
+
+    mov rdi, r13
+    call cdecl_SetCurrentTCB
 
 .done:
 
@@ -138,6 +142,7 @@ extern cdecl_GetCurrentTCB
 extern cdecl_SetCurrentTCB
 extern cdecl_GetThreadsPageTable
 extern cdecl_SetTssRsp0
+extern cdecl_SetNextThreadFs
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt
