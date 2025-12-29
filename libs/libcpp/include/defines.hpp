@@ -11,8 +11,6 @@ static constexpr bool kIsDebugBuild = false;
 static constexpr bool kIsDebugBuild = true;
 #endif  // NDEBUG
 
-#define COMPILER_FENCE __asm__ volatile("" ::: "memory");
-
 #define NODISCARD         [[nodiscard]]
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
 #define MAYBE_UNUSED      [[maybe_unused]]
@@ -126,14 +124,5 @@ constexpr byte operator""_byte(const unsigned long long value) { return static_c
 
 constexpr f32 operator""_f32(const long double value) { return static_cast<f32>(value); }
 constexpr f64 operator""_f64(const long double value) { return static_cast<f64>(value); }
-
-// ------------------------------
-// Unique empty struct
-// ------------------------------
-template <size_t ID>
-struct empty_t {
-};
-
-#define UNIQUE_EMPTY empty_t<__COUNTER__>
 
 #endif  // LIBS_LIBCPP_INCLUDE_DEFINES_HPP_

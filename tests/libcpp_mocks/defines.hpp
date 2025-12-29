@@ -43,8 +43,7 @@ static constexpr bool kIsKernel = false;
 
 #define STRINGIFY(x)   #x
 #define TOSTRING(x)    STRINGIFY(x)
-#define BARRIER()      std::atomic_thread_fence(std::memory_order_seq_cst)
-#define COMPILER_FENCE std::atomic_signal_fence(std::memory_order_seq_cst)
+#define COMPILER_FENCE std::atomic_signal_fence(std::memory_order_seq_cst);
 
 // Map kernel asserts to standard asserts
 #undef assert

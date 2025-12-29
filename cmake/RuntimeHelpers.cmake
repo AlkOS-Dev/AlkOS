@@ -136,7 +136,6 @@ function(register_filesystem)
     set(oneValueArgs
         TYPE
         ROOTFS_TYPE
-        ROOTFS_DIR
         ROOTFS_TARGET_PATH
         ROOTFS_OVERLAY_DIR
         MODULE
@@ -149,7 +148,7 @@ function(register_filesystem)
     alkos_ensure_called_once(NAME ${CMAKE_CURRENT_FUNCTION})
 
     alkos_ensure_defined(
-        VARS ARG_TYPE ARG_ROOTFS_TYPE ARG_ROOTFS_DIR ARG_ROOTFS_TARGET_PATH ARG_ROOTFS_OVERLAY_DIR
+        VARS ARG_TYPE ARG_ROOTFS_TYPE ARG_ROOTFS_TARGET_PATH ARG_ROOTFS_OVERLAY_DIR
     )
 
     # Resolve target defaults and feature flags
@@ -163,7 +162,6 @@ function(register_filesystem)
     endif()
 
     # Export variables for the rootfs maker
-    alkos_add_to_bash_config("CONF_ROOTFS_DIR" "${ARG_ROOTFS_DIR}")
     alkos_add_to_bash_config("CONF_ROOTFS_TARGET_PATH" "${ARG_ROOTFS_TARGET_PATH}")
     alkos_add_to_bash_config("CONF_ROOTFS_OVERLAY_DIR" "${ARG_ROOTFS_OVERLAY_DIR}")
 
@@ -179,6 +177,11 @@ function(register_filesystem)
     alkos_ensure_path_exists(PATHS ${MAKE_ROOTFS_SCRIPT_PATH})
 
     add_custom_target(rootfs
+            # Ensure the staging directory is clean before building the rootfs.
+            # Remove the directory and recreate it so the generator starts from
+            # an empty staging area.
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${ROOTFS_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${ROOTFS_DIR}"
             COMMAND ${MAKE_ROOTFS_SCRIPT_PATH} -v -- ${ARG_ROOTFS_TYPE}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Building root filesystem"

@@ -3,35 +3,18 @@
 #include <string.h>
 #include <string.hpp>
 
+#include "acpi/acpi_power.hpp"
 #include "modules/memory.hpp"
 #include "modules/vfs.hpp"
 #include "sys/loader.hpp"
-#include "vfs/path.hpp"
-
-// !!! TEMPORARY !!!
-using UserEntry = void (*)(void (*)(const char *));
-
-// Static pointer to the active console for the callback
-static System::GraphicsConsole *g_active_console = nullptr;
-
-extern "C" void KernelPrintHelper(const char *msg)
-{
-    if (g_active_console) {
-        g_active_console->Write(
-            std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg))
-        );
-    } else {
-        // Fallback or ignore
-    }
-}
-
-// !!! TEMPORARY !!!
 
 namespace System
 {
 
+GraphicsConsole *g_active_console = nullptr;
+
 Shell::Shell(GraphicsConsole &console, IO::IReader &input_reader)
-    : console_(console), input_reader_(input_reader), current_dir_(vfs::Path::kRoot)
+    : console_(console), input_reader_(input_reader)
 {
     // !!! TEMPORARY !!!
     g_active_console = &console_;
@@ -119,6 +102,10 @@ void Shell::ProcessCommand()
         CmdExec(cmd.substr(2));
     } else if (cmd == "exec") {
         CmdExec(args);
+    } else if (cmd == "shutdown") {
+        ACPI::SystemShutdown();
+    } else if (cmd == "reboot") {
+        ACPI::SystemReboot();
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -142,7 +129,9 @@ void Shell::CmdHelp()
         "  ls [path]   - List directory contents\n"
         "  cat <file>  - Display file contents\n"
         "  exec <file> - Execute a user program\n"
-        "  ./<file>    - Execute a user program\n";
+        "  ./<file>    - Execute a user program\n"
+        "  shutdown    - Shutdown the system\n"
+        "  reboot      - Reboot the system\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
@@ -358,14 +347,14 @@ void Shell::CmdExec(std::string_view args)
 
     if (entry_res) {
         Mem::VPtr<void> entry_addr = entry_res.value();
-        auto user_main             = reinterpret_cast<UserEntry>(entry_addr);
+        auto user_main             = reinterpret_cast<void (*)()>(entry_addr);
 
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Executing user program...\n"), 26)
         );
 
         // Execute the program
-        user_main(&KernelPrintHelper);
+        user_main();
 
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("User program returned.\n"), 23)
