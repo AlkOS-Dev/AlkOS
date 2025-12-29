@@ -38,6 +38,7 @@ Thread *Scheduler::Schedule()
         return nullptr;
     }
 
+    DEBUG_INFO_SCHEDULING("Schedule() returns thread with tid: %llu", thread->tid);
     return thread;
 }
 void Scheduler::Yield()

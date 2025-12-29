@@ -8,6 +8,7 @@
 
 static void *TimerHandler(intr::LitHwEntry &)
 {
+    TRACE_INFO_INTERRUPTS("TIMER INTERRUPT!");
     return SchedulingModule::Get().GetScheduler().Schedule();
 }
 

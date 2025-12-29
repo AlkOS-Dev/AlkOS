@@ -79,8 +79,8 @@ class LogicalInterruptTable
             entry.driver->cbs.ack(entry);
         }
 
-        hal::FullMemFence();
         hardware::GetCoreLocalData().nested_interrupts--;
+        hal::FullMemFence();
 
         return rv;
     }

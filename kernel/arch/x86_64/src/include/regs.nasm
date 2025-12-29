@@ -22,9 +22,6 @@ _r15 equ 112
 ; Size needed to save the sysv registers on the stack
 _sysv_reg_size equ 8*10
 
-; Shadow space required for C++ function calls
-_shadow_space equ 8*4
-
 ; Macro to save all volatile registers (SysV ABI) onto the stack.
 %macro push_sysv_regs 0
     mov qword [rsp + _rax], rax

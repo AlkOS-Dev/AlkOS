@@ -12,12 +12,12 @@ isr_wrapper_%+%1:
     push 0                      ; Push a dummy error code for alignment.
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space.
+
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
+    mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                  ; Pop dummy error code.
@@ -30,12 +30,12 @@ isr_wrapper_%+%1:
 isr_wrapper_%+%1:
     sub rsp, _all_reg_size          ; Allocate space for saving registers.
     push_all_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space.
+
     cld                         ; Clear direction flag.
     mov rdi, %1                 ; Arg1: interrupt number.
-    lea rsi, [rsp + _shadow_space] ; Arg2: pointer to stack frame.
+    mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_all_regs                    ; Restore registers.
     add rsp, _all_reg_size          ; Deallocate register save space.
     add rsp, 8                      ; Pop error code.
@@ -48,11 +48,11 @@ isr_wrapper_%+%1:
 isr_wrapper_%+%2:
     sub rsp, _sysv_reg_size          ; Allocate space for saving registers.
     push_sysv_regs                   ; Save registers.
-    sub rsp, _shadow_space      ; Allocate shadow space for function calls.
+
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
     call %3                     ; Call the specific ISR handler.
-    add rsp, _shadow_space      ; Deallocate shadow space.
+
     pop_sysv_regs                    ; Restore registers.
     add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                       ; Return from interrupt.

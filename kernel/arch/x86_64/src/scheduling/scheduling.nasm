@@ -42,6 +42,9 @@ ConvertContext:
     call cdecl_SetCurrentTCB              ; Change TCB
     mov  rsp, [r12+Thread.kernel_stack]   ; Change the stack
 
+    mov rdi, [r12+Thread.kernel_stack_bottom]
+    call cdecl_SetTssRsp0
+
     pop_all_regs                    ; Restore registers of NEW thread's stack
     add rsp, _all_reg_size          ; Deallocate register save space.
 
@@ -78,6 +81,7 @@ ContextSwitch:
     ; FLAGS
     pushfq
     pop r12
+    or r12, 0x200 ; Ensure Interrupts are enabled after the context switch
     mov [rsp + _flags_int_frame_offset], r12
 
     mov r13, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
@@ -91,6 +95,9 @@ ContextSwitch:
     mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
     call cdecl_SetCurrentTCB
     mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
+
+    mov rdi, [r13+Thread.kernel_stack_bottom]
+    call cdecl_SetTssRsp0
 
     mov rdi, r13                       ; Set RDI for GetThreadsPageTable
     call cdecl_GetThreadsPageTable     ; RAX = next cr3
@@ -110,7 +117,7 @@ ContextSwitch:
 ; void TimerContextSwitch(void)
 TimerContextSwitch:
     sub rsp, _all_reg_size           ; Allocate space for saving registers.
-    push_sysv_regs                   ; Save registers.
+    push_all_regs                   ; Save registers.
 
     mov rdi, 0                       ; Pass the mapped IRQ number as the first argument.
     call HandleHardwareInterrupt    ; Call the specific ISR handler.
@@ -130,6 +137,9 @@ TimerContextSwitch:
     call cdecl_SetCurrentTCB
     mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
 
+    mov rdi, [r13+Thread.kernel_stack_bottom]
+    call cdecl_SetTssRsp0
+
     mov rdi, r13                       ; Set RDI for GetThreadsPageTable
     call cdecl_GetThreadsPageTable     ; RAX = next cr3
     mov r11, cr3                       ; R11 = current cr3
@@ -139,7 +149,7 @@ TimerContextSwitch:
     mov cr3, rax                       ; Load next task's virtual address space
 
 .done:
-    pop_sysv_regs                    ; Restore registers.
+    pop_all_regs                     ; Restore registers.
     add rsp, _all_reg_size           ; Deallocate register save space.
 
     iretq                            ; Return from interrupt.
