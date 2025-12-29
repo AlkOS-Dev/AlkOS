@@ -67,13 +67,6 @@ ConvertContext:
 JumpToUserSpace:
     sub rsp, _context_switch_stack_space
 
-    xor rax, rax
-    mov rax, _user_data_selector
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-
     mov [rsp + _rip_user_space_offset], rdi
     mov qword [rsp + _cs_user_space_offset], _user_code_selector
     mov qword [rsp + _flags_user_space_offset], _userspace_initial_flags
@@ -85,6 +78,15 @@ JumpToUserSpace:
 
     mov qword [rsp + _ss_user_space_offset], _user_data_selector
     mov [rsp + _sp_user_space_offset], r13
+
+    xor rax, rax
+    mov rax, _user_data_selector
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    swapgs
 
     iretq
 
