@@ -20,6 +20,8 @@
     mov rdi, r13
     call cdecl_SetNextThreadFs           ; Set FS base if needed
 
+    mov rdi, r13
+    call cdecl_SetCurrentTCB
     mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
 
     mov rdi, [r13+Thread.kernel_stack_bottom]
@@ -32,9 +34,6 @@
     cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
     je .done
     mov cr3, rax                       ; Load next task's virtual address space
-
-    mov rdi, r13
-    call cdecl_SetCurrentTCB
 
 .done:
 
