@@ -8,6 +8,7 @@
 #include <initializer_list.hpp>
 #include <internal/utility.hpp>
 #include <memory.hpp>
+#include <template/utils.hpp>
 #include <type_traits.hpp>
 
 namespace std
@@ -364,7 +365,7 @@ class span
     // Data members
     // ------------------------------
     pointer data_;
-    NO_UNIQUE_ADDRESS std::conditional_t<is_dynamic_extent_, size_type, UNIQUE_EMPTY> size_;
+    OPTIONAL_FIELD(is_dynamic_extent_, size_type) size_;
 };
 
 // ------------------------------

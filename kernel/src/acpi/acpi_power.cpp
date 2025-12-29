@@ -1,6 +1,5 @@
 #include <acpi/acpi_power.hpp>
 
-#include <todo.hpp>
 #include "hal/panic.hpp"
 #include "trace_framework.hpp"
 
@@ -19,7 +18,7 @@ bool ACPI::SystemShutdown()
      */
     uacpi_status ret = uacpi_prepare_for_sleep_state(UACPI_SLEEP_STATE_S5);
     if (uacpi_unlikely_error(ret)) {
-        TRACE_FATAL_GENERAL("failed to prepare for sleep: %s", uacpi_status_to_string(ret));
+        TRACE_FATAL_ACPI("Failed to prepare for sleep: %s", uacpi_status_to_string(ret));
         return false;
     }
 
@@ -37,13 +36,13 @@ bool ACPI::SystemShutdown()
      */
     ret = uacpi_enter_sleep_state(UACPI_SLEEP_STATE_S5);
     if (uacpi_unlikely_error(ret)) {
-        TRACE_FATAL_GENERAL("failed to enter sleep: %s", uacpi_status_to_string(ret));
+        TRACE_FATAL_ACPI("Failed to enter sleep: %s", uacpi_status_to_string(ret));
         EnableHardwareInterrupts();
         return false;
     }
 
     hal::KernelPanic("Shutdown failed");
-    return false;
+    __builtin_unreachable();
 }
 
 bool ACPI::SystemReboot()
@@ -54,10 +53,9 @@ bool ACPI::SystemReboot()
      * some work to fetch the \_S5 and \_S0 values to make system wake
      * possible later on.
      */
-    TODO_WHEN_VMEM_WORKS
     uacpi_status ret = uacpi_prepare_for_sleep_state(UACPI_SLEEP_STATE_S5);
     if (uacpi_unlikely_error(ret)) {
-        TRACE_FATAL_GENERAL("failed to prepare for sleep: %s", uacpi_status_to_string(ret));
+        TRACE_FATAL_ACPI("Failed to prepare for sleep: %s", uacpi_status_to_string(ret));
         return false;
     }
 
@@ -70,11 +68,11 @@ bool ACPI::SystemReboot()
     /* Attempt to reboot via ACPI */
     ret = uacpi_reboot();
     if (uacpi_unlikely_error(ret)) {
-        TRACE_FATAL_GENERAL("failed to reboot: %s", uacpi_status_to_string(ret));
+        TRACE_FATAL_ACPI("Failed to reboot: %s", uacpi_status_to_string(ret));
         EnableHardwareInterrupts();
         return false;
     }
 
     hal::KernelPanic("Reboot failed");
-    return false;
+    __builtin_unreachable();
 }

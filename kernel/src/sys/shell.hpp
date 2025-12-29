@@ -12,6 +12,8 @@
 namespace System
 {
 
+extern GraphicsConsole *g_active_console;
+
 // --------------------------------------------------------------------------------
 // Shell
 // --------------------------------------------------------------------------------
@@ -70,7 +72,7 @@ class Shell
     // Data
     GraphicsConsole &console_;
     IO::IReader &input_reader_;
-    vfs::Path current_dir_;
+    vfs::Path current_dir_{vfs::Path::kRoot};
 
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;

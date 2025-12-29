@@ -64,6 +64,20 @@ feature_flags:
     min: 0
     max: 3
 
+  - name: vfs_trace_level
+    description: Level of VFS module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
+  - name: acpi_trace_level
+    description: Level of ACPI module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
   - name: ramdisk
     description: Load root filesystem from ramdisk instead of block device.
     default: true

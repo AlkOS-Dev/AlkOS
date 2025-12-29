@@ -18,6 +18,7 @@ void __platform_get_timezone(Timezone *time_zone);
 // Debug IO
 void __platform_debug_write(const char *buffer);
 size_t __platform_debug_read_line(char *buffer, size_t buffer_size);
+void __platform_write_console(const char *buffer);
 
 END_DECL_C
 

@@ -132,7 +132,7 @@ void Interrupts::MapToLogicalInterrupts_()
     HardwareModule::Get()
         .GetInterrupts()
         .GetLit()
-        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 48);
+        .MapLogicalInterruptToHw<intr::InterruptType::kSoftwareInterrupt>(0, 129);
 }
 
 void Interrupts::SetupPicAsDefaultDriver_()
