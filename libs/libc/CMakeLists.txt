@@ -18,8 +18,8 @@ set(ALKOS_LIBC_SOURCES ${ALKOS_LIBC_SOURCES} CACHE INTERNAL "Source files for li
 add_library(alkos.libc.interface INTERFACE)
 
 target_include_directories(alkos.libc.interface INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/abi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/abi"
 
     # At the time of their making, both libc and libcpp were in the same directory
     # Decoupling them now brings too little benefit and too much complexity to justify the effort
@@ -27,10 +27,12 @@ target_include_directories(alkos.libc.interface INTERFACE
 )
 
 target_include_directories(alkos.libc.interface INTERFACE
-    "${CMAKE_CURRENT_SOURCE_DIR}/internal"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/internal"
 )
 
 target_link_libraries(alkos.libc.interface INTERFACE
     alkos.libcpp.interface
     alkos.autogen.interface
 )
+
+add_subdirectory(arch/${ARCH})
