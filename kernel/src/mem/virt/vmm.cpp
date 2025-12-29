@@ -5,7 +5,7 @@
 
 #include "hal/constants.hpp"
 #include "mem/heap.hpp"
-#include "mem/phys/mngr/buddy.hpp"
+#include "mem/mmu/contexts.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/area.hpp"
@@ -22,23 +22,38 @@ using Vmm = VirtualMemoryManager;
 using AS  = AddressSpace;
 
 TODO_WHEN_MULTITHREADING
-void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &pmm) noexcept
+void Vmm::Init(
+    hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap, const PPtr<void> kernel_root
+) noexcept
 {
     DEBUG_INFO_MEMORY("VirtualMemoryManager::Init()");
-    tlb_  = &tlb;
-    mmu_  = &mmu;
-    bpmm_ = &pmm;
+    tlb_ = &tlb;
+    mmu_ = &mmu;
+    ctx_ = &ctx;
+    // Heap is used implicitly via KNew / KDelete
+    heap_ = &heap;
+    (void)heap;
+
+    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
+    auto init_res = kernel_as_.InitKernel(kernel_root, *ctx_, *mmu_);
+    R_ASSERT_TRUE(init_res);
 }
 
-expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
+expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
 {
-    auto as_res = KNew<AddressSpace>(nullptr);
+    auto as_res = KNew<AddressSpace>();
     RET_UNEXPECTED_IF_ERR(as_res);
-    return *as_res;
+    auto as = *as_res;
+
+    auto init_res = as->InitUser(*ctx_, *mmu_);
+    RET_UNEXPECTED_IF_ERR(init_res);
+
+    return as;
 }
 
-expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
+expected<void, MemError> Vmm::DestroyUserAddrSpace(VPtr<AddressSpace> as)
 {
+    mmu_->ClearUserMappings(*ctx_, as->PageTableRoot());
     KDelete(as);
     return {};
 }
@@ -59,22 +74,11 @@ expected<VPtr<void>, MemError> Vmm::AddArea(VPtr<AddrSp> as, VMemArea vma)
 
 expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
 {
-    auto a_or_err = as->FindArea(region_start);
-    RET_UNEXPECTED_IF_ERR(a_or_err);
-    auto *area  = *a_or_err;
-    auto *start = area->start;
-    auto size   = area->size;
+    auto hint_res = as->RmArea(region_start);
+    RET_UNEXPECTED_IF_ERR(hint_res);
+    auto hint = *hint_res;
 
-    auto &pmt = MemoryModule::Get().GetPageMetaTable();
-    hal::KernelMmuContext ctx{*bpmm_, pmt};
-
-    mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
-
-    auto err = as->RmArea(region_start);
-    RET_UNEXPECTED_IF_ERR(err);
-
-    // TLB invalidation handled inside UnMapRange or via explicit flush if needed.
-    // But UnMapRange implementation in HAL Mmu calls Unmap which calls invlpg.
+    tlb_->InvalidateRange(hint.start, hint.size);
 
     return {};
 }
@@ -83,32 +87,11 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
     VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
 )
 {
-    auto a_or_err = as->FindArea(region_start);
-    RET_UNEXPECTED_IF_ERR(a_or_err);
-    auto *area = *a_or_err;
-    RET_UNEXPECTED_IF(area->start != region_start, MemError::InvalidArgument);
+    auto hint_res = as->UpdateAreaFlags(region_start, vmaf);
+    RET_UNEXPECTED_IF_ERR(hint_res);
+    auto hint = *hint_res;
 
-    area->flags = vmaf;
-
-    bool is_kernel = (PtrToUptr(region_start) >= hal::kKernelVirtualAddressStart);
-
-    hal::PageFlags pf{
-        .Present        = true,
-        .Writable       = vmaf.writable,
-        .UserAccessible = !is_kernel,
-        .WriteThrough   = false,
-        .CacheDisable   = false,
-        .Global         = is_kernel,
-        .NoExecute      = !vmaf.executable
-    };
-
-    uptr start = PtrToUptr(area->start);
-    uptr end   = start + area->size;
-
-    for (uptr v = start; v < end; v += hal::kPageSizeBytes) {
-        auto res = mmu_->SetPageFlags(as->PageTableRoot(), UptrToPtr<void>(v), pf);
-        RET_UNEXPECTED_IF(!res && res.error() != MemError::NotFound, res.error());
-    }
+    tlb_->InvalidateRange(hint.start, hint.size);
 
     return {};
 }

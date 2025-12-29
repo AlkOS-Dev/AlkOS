@@ -1,5 +1,6 @@
 #include "modules/memory.hpp"
 
+#include <assert.h>
 #include "boot_args.hpp"
 #include "hal/constants.hpp"
 #include "mem/init/boot_mmu.hpp"
@@ -12,7 +13,6 @@
 using namespace Mem;
 
 internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
-    : KernelAddressSpace_(args.root_page_table)
 {
     DEBUG_INFO_MEMORY("MemoryModule::MemoryModule()");
 
@@ -26,68 +26,70 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    Mmu_.Init(Tlb_);
-
     // Cleanup bootloader mappings and reconstruct metadata for kernel mappings
     Mem::Boot::BootMmuCleaner boot_cleaner;
 
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
-    Mmu_.Init(Tlb_);
     boot_cleaner.CleanIdentityMappings(Mmu_, BitmapPmm_, PageMetaTable_, args.root_page_table);
+    Tlb_.FlushAll();
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
     // Note: Initializing buddy with all pages is a slow operation.
     // This limit is for speed of boot. This operation should have
     // a follow up once kernel is booted, and we have another CPU, we
     // could offload this operation to.
+    TRACE_INFO_MEMORY("Initializing Buddy PMM");
     BuddyPmm_.Init(BitmapPmm_, PageMetaTable_, kInitialBuddyPagesLimit);
 
     // Reconstruct metadata for the existing page table hierarchy passed by the bootloader.
     TRACE_INFO_MEMORY("Reconstructing page table metadata from root: 0x%p", args.root_page_table);
     boot_cleaner.ReconstructMetadata(Mmu_, PageMetaTable_, args.root_page_table);
 
+    TRACE_INFO_MEMORY("Initializing Slab Allocator");
     SlabAllocator_.Init(BuddyPmm_);
 
+    TRACE_INFO_MEMORY("Initializing Heap");
     Heap_.Init(PageMetaTable_, BuddyPmm_, SlabAllocator_);
 
-    Vmm_.Init(Tlb_, Mmu_, BuddyPmm_);
+    KernelMmuContext_.Init(&BuddyPmm_, &PageMetaTable_);
 
-    // Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
-    // These areas were set up by the bootloader but are invisible to the generic VMM until
-    // registered.
-    // {
-    //     // Kernel Image
-    //     size_t kernel_size =
-    //         reinterpret_cast<uptr>(args.kernel_end) - reinterpret_cast<uptr>(args.kernel_start);
-    //
-    //     VMemArea kernel_vma{
-    //         .start                = args.kernel_start,
-    //         .size                 = kernel_size,
-    //         .flags                = {.readable = true, .writable = true, .executable = true},
-    //         .type                 = VirtualMemAreaT::Anonymous,
-    //         .direct_mapping_start = VirtToPhys(args.kernel_start),
-    //         .next                 = nullptr
-    //     };
+    TRACE_INFO_MEMORY("Initializing Virtual Memory Manager");
+    Vmm_.Init(Tlb_, Mmu_, KernelMmuContext_, Heap_, args.root_page_table);
+}
 
-    //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, kernel_vma); !res) {
-    //         TRACE_WARN_MEMORY("Failed to register Kernel VMA");
-    //     }
+void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
+{
+    DEBUG_INFO_MEMORY("Registering Kernel VMAreas...");
 
-    //     // Direct Physical Map
-    //     VMemArea dm_vma{
-    //         .start                = UptrToPtr<void>(hal::kDirectMapAddrStart),
-    //         .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
-    //         .flags                = {.readable = true, .writable = true, .executable = false},
-    //         .type                 = VirtualMemAreaT::DirectMapping,
-    //         .direct_mapping_start = UptrToPtr<void>(0),
-    //         .next                 = nullptr
-    //     };
+    // Kernel Image
+    size_t kernel_size =
+        reinterpret_cast<uptr>(args.kernel_end) - reinterpret_cast<uptr>(args.kernel_start);
+    VMemArea kernel_vma{
+        .start                = args.kernel_start,
+        .size                 = kernel_size,
+        .flags                = {.readable = true, .writable = true, .executable = true},
+        .type                 = VirtualMemAreaT::Anonymous,
+        .direct_mapping_start = VirtToPhys(args.kernel_start),
+        .next                 = nullptr
+    };
 
-    //     if (auto res = Vmm_.AddArea(&KernelAddressSpace_, dm_vma); !res) {
-    //         TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
-    //     }
-    //
-    // }
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), kernel_vma); !res) {
+        TRACE_WARN_MEMORY("Failed to register Kernel VMA");
+    }
+
+    // Direct Physical Map
+    VMemArea dm_vma{
+        .start                = UptrToPtr<void>(hal::kDirectMapAddrStart),
+        .size                 = hal::kDirectMemMapSizeGb * 1024ULL * 1024ULL * 1024ULL,
+        .flags                = {.readable = true, .writable = true, .executable = false},
+        .type                 = VirtualMemAreaT::DirectMapping,
+        .direct_mapping_start = UptrToPtr<void>(0),
+        .next                 = nullptr
+    };
+
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), dm_vma); !res) {
+        TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
+    }
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)

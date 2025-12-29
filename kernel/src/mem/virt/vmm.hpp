@@ -14,6 +14,7 @@ namespace Mem
 {
 
 class BuddyPmm;
+class Heap;
 
 using std::expected;
 using std::unexpected;
@@ -30,14 +31,19 @@ class VirtualMemoryManager
     // ------------------------------
 
     VirtualMemoryManager() = default;
-    void Init(hal::Tlb &tlb, hal::Mmu &mmu, BuddyPmm &bpmm) noexcept;
+    void Init(
+        hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap,
+        const PPtr<void> kernel_root
+    ) noexcept;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
 
-    expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
-    expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
+    AddressSpace &GetKernelAddressSpace() { return kernel_as_; }
+
+    expected<VPtr<AddressSpace>, MemError> CreateUserAddrSpace();
+    expected<void, MemError> DestroyUserAddrSpace(VPtr<AddressSpace> as);
     void SwitchAddrSpace(VPtr<AddressSpace> as);
 
     expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
@@ -52,7 +58,9 @@ class VirtualMemoryManager
     // ------------------------------
     hal::Tlb *tlb_;
     hal::Mmu *mmu_;
-    BuddyPmm *bpmm_;
+    KernelMmuContext *ctx_;
+    Heap *heap_;
+    AddressSpace kernel_as_;
 };
 using Vmm = VirtualMemoryManager;
 

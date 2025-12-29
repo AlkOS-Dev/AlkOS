@@ -14,6 +14,8 @@ struct VirtualMemAreaFlags {
     bool readable : 1;
     bool writable : 1;
     bool executable : 1;
+    bool write_through : 1 = false;
+    bool cache_disable : 1 = false;
     // Future flags: bool user_accessible, bool copy_on_write, etc.
 };
 using VMemAreaFlags = VirtualMemAreaFlags;

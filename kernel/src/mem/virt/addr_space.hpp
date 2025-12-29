@@ -12,8 +12,15 @@
 #include "mem/virt/addr_space_iterator.hpp"
 #include "mem/virt/area.hpp"
 
+namespace hal
+{
+class Mmu;
+}
+
 namespace Mem
 {
+
+struct KernelMmuContext;
 
 using std::expected;
 using std::unexpected;
@@ -23,18 +30,28 @@ using std::unexpected;
 //==============================================================================
 
 class VirtualMemoryManager;
+class BuddyPmm;
+class PageMetaTable;
 
 //==============================================================================
 // AddressSpace
 //==============================================================================
 
+struct TlbHint {
+    VPtr<void> start;
+    size_t size;
+};
+
 class AddressSpace
 {
     public:
-    AddressSpace(PPtr<void> page_table_root)
-        : page_table_root_{page_table_root}, area_list_head_{nullptr}
-    {
-    }
+    explicit AddressSpace();
+
+    expected<void, MemError> InitUser(KernelMmuContext &ctx, hal::Mmu &mmu);
+    expected<void, MemError> InitKernel(
+        const PPtr<void> kernel_root, KernelMmuContext &ctx, hal::Mmu &mmu
+    );
+
     ~AddressSpace();
     AddressSpace(const AddressSpace &)            = delete;
     AddressSpace &operator=(const AddressSpace &) = delete;
@@ -48,17 +65,25 @@ class AddressSpace
     private:
     // This is orchestrated in VMM (For proper TLB management)
     expected<void, MemError> AddArea(VMemArea vma);
-    expected<void, MemError> RmArea(VPtr<void> ptr);
+    expected<TlbHint, MemError> RmArea(VPtr<void> ptr);
+    expected<TlbHint, MemError> UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFlags flags);
 
     // Helpers
     expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
     bool IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr);
     bool AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b);
 
+    // Fields
     PPtr<void> page_table_root_;
+    bool owns_page_table_root_;
     VPtr<VMemArea> area_list_head_;
     hal::Spinlock area_list_lock_;
 
+    // Dependencies
+    KernelMmuContext *ctx_;
+    hal::Mmu *mmu_;
+
+    // Friends
     friend VirtualMemoryManager;
     friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
