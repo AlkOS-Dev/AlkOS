@@ -37,6 +37,8 @@ void Vmm::Init(
     TRACE_INFO_MEMORY("Initializing Kernel Address Space");
     auto init_res = kernel_as_.InitKernel(kernel_root, *ctx_, *mmu_);
     R_ASSERT_TRUE(init_res);
+
+    current_as_ = &kernel_as_;
 }
 
 expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
@@ -62,6 +64,7 @@ expected<void, MemError> Vmm::DestroyUserAddrSpace(VPtr<AddressSpace> as)
 
 void Vmm::SwitchAddrSpace(VPtr<AddressSpace> as)
 {
+    current_as_ = as;
     mmu_->SwitchRoot(as->PageTableRoot());
     // SwitchRoot does CR3 load which flushes TLB
 }

@@ -41,6 +41,7 @@ class VirtualMemoryManager
     // ------------------------------
 
     AddressSpace &GetKernelAddressSpace() { return kernel_as_; }
+    AddressSpace &GetCurrentAddressSpace() { return *current_as_; }
 
     expected<VPtr<AddressSpace>, MemError> CreateUserAddrSpace();
     expected<void, MemError> DestroyUserAddrSpace(VPtr<AddressSpace> as);
@@ -61,6 +62,7 @@ class VirtualMemoryManager
     KernelMmuContext *ctx_;
     Heap *heap_;
     AddressSpace kernel_as_;
+    AddressSpace *current_as_;
 };
 using Vmm = VirtualMemoryManager;
 
