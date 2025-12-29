@@ -14,7 +14,7 @@ extern cdecl_EnableHardwareInterrupts
 extern cdecl_SetNextThreadFs
 extern cdecl_SwapFsIfNeeded
 extern HandleHardwareInterrupt
-extern cdecl_LoadThreadsGs
+extern cdecl_SetKernelGs
 
 section .text
 global ContextSwitch
@@ -41,8 +41,8 @@ ConvertContext:
     cmp qword r13, _kernel_code_selector
     je .done
 
-    mov rdi, r12
-    call cdecl_LoadThreadsGs
+    call cdecl_SetKernelGs
+    swapgs
 
 .done:
     pop_all_regs                    ; Restore registers of NEW thread's stack
@@ -71,8 +71,8 @@ JumpToUserSpace:
     mov qword [rsp + _ss_user_space_offset], _user_data_selector
     mov [rsp + _sp_user_space_offset], r13
 
-    mov rdi, rax
-    call cdecl_LoadThreadsGs
+    call cdecl_SetKernelGs
+    swapgs
 
     xor rax, rax
     mov rax, _user_data_selector
@@ -148,8 +148,8 @@ ContextSwitch:
     cmp qword r13, _kernel_code_selector
     je .done
 
-    mov rdi, r12
-    call cdecl_LoadThreadsGs
+    call cdecl_SetKernelGs
+    swapgs
 
 .done:
     pop_all_regs                    ; Restore registers of NEW thread's stack

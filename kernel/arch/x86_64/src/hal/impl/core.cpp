@@ -46,5 +46,3 @@ void cdecl_SetNextThreadFs(Sched::Thread *thread)
 {
     cpu::SetMSR(arch::kIa32FsBase, thread->fs_base);
 }
-
-void cdecl_LoadThreadsGs(Sched::Thread *thread) { cpu::SetMSR(arch::kIa32GsBase, thread->gs_base); }
