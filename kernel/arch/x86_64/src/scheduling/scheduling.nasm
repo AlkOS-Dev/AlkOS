@@ -68,13 +68,13 @@ ContextSwitch:
     mov [rsp + _rip_int_frame_offset], r12
 
     ; CS
-    mov [rsp + _cs_int_frame_offset], _kernel_code_selector
+    mov qword [rsp + _cs_int_frame_offset], _kernel_code_selector
 
     ; FLAGS
     pushfq
     pop r12
     or r12, 0x200 ; Ensure Interrupts are enabled after the context switch
-    mov [rsp + _flags_int_frame_offset], r12
+    mov qword [rsp + _flags_int_frame_offset], r12
 
     ; RSP
     mov r13, rsp
@@ -82,9 +82,9 @@ ContextSwitch:
     mov [rsp + _sp_int_frame_offset], r13
 
     ; SS
-    mov [rsp + _ss_int_frame_offset], _kernel_data_selector
+    mov qword [rsp + _ss_int_frame_offset], _kernel_data_selector
 
-    mov r13, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
+    mov r12, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
 
     call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
     mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
@@ -92,14 +92,14 @@ ContextSwitch:
     ; ------------------------
     ; Setup next task state
 
-    mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
+    mov rdi, r12                         ; Restore next TCB pointer to RDI for the next call
     call cdecl_SetCurrentTCB
-    mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
+    mov rsp, [r12+Thread.kernel_stack]   ; Change the stack
 
-    mov rdi, [r13+Thread.kernel_stack_bottom]
+    mov rdi, [r12+Thread.kernel_stack_bottom]
     call cdecl_SetTssRsp0
 
-    mov rdi, r13                       ; Set RDI for GetThreadsPageTable
+    mov rdi, r12                       ; Set RDI for GetThreadsPageTable
     call cdecl_GetThreadsPageTable     ; RAX = next cr3
     mov r11, cr3                       ; R11 = current cr3
 

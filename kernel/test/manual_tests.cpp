@@ -29,7 +29,6 @@ static void Task0()
         }
 
         const auto tcb = hardware::GetCurrentTCB();
-
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         hal::ContextSwitch(tcb->next);
     }

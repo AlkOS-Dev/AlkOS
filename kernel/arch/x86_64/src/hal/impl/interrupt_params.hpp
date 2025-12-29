@@ -28,6 +28,7 @@ struct PACK IsrStackFrame {
     u64 cs;
     u64 rflags;
     u64 rsp;
+    u64 ss;
 };
 
 struct PACK IsrErrorStackFrame {
