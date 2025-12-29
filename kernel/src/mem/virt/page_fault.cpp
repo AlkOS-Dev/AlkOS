@@ -11,7 +11,7 @@
 namespace Mem
 {
 
-void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
+void *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     ASSERT_NOT_NULL(data);
 
@@ -29,7 +29,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 
     if (!vma_res) {
         hal::KernelPanicFormat("Page fault in unmapped memory at %p", f_ptr);
-        return;
+        return nullptr;
     }
     VMemArea *vma = *(*vma_res);
 
@@ -44,6 +44,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
     if (!vma->HandleFault(f_ptr, err, as)) {
         hal::KernelPanicFormat("Failed to resolve page fault at %p", f_ptr);
     }
+    return nullptr;
 }
 
 }  // namespace Mem

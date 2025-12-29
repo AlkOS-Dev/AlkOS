@@ -18,7 +18,8 @@ WRAP_CALL time_t QuerySystemTime(const timezone &tz) { return arch::QuerySystemT
  *
  * @note All clock sources should be registered before this function is called.
  */
-WRAP_CALL void PickSystemClockSource() { return arch::PickSystemClockSource(); }
+WRAP_CALL void PickSystemClockSource() { arch::PickSystemClockSource(); }
+WRAP_CALL void PickSystemEventClockSource() { arch::PickSystemEventClockSource(); }
 }  // namespace hal
 
 #endif  // KERNEL_SRC_HAL_TIMERS_HPP_

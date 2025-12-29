@@ -24,6 +24,7 @@ WRAP_CALL time_t QuerySystemTime(const timezone &tz)
 }
 
 void PickSystemClockSource();
+void PickSystemEventClockSource();
 
 }  // namespace arch
 

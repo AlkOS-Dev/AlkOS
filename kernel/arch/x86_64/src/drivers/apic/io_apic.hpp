@@ -208,6 +208,12 @@ class IoApic final
 
     void ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const;
 
+    void MaskIrq(u32 gsi) const;
+
+    void UnmaskIrq(u32 gsi) const;
+
+    void SetMask(u32 gsi, bool masked) const;
+
     // ------------------------------
     // Class Fields
     // ------------------------------

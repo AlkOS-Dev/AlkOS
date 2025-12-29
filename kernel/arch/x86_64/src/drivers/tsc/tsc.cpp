@@ -15,9 +15,29 @@ static u64 ReadCb(hardware::ClockRegistryEntry *)
 // Private functions
 // ------------------------------
 
-static void AlternativeTscCheck(hardware::ClockRegistryEntry &)
+static void CalibrateByHpet(hardware::ClockRegistryEntry &entry)
 {
-    FAIL_ALWAYS("Not implemented yet: Alternative TSC check");
+    static constexpr u64 kCalibrationTimeMs = 200;
+
+    const u64 freq_hz = HardwareModule::Get().GetInterrupts().GetHpet()->CalibrateByHpetHz(
+        tsc::Read, kCalibrationTimeMs
+    );
+
+    DEBUG_INFO_TIME("Calculated frequency of TSC: %llu, by reading HPET values", freq_hz);
+
+    entry.frequency_kHz     = freq_hz / 1'000;
+    entry.clock_numerator   = kNanosInSecond;
+    entry.clock_denominator = freq_hz;
+}
+
+static void AlternativeTscCheck(hardware::ClockRegistryEntry &entry)
+{
+    if (HardwareModule::Get().GetInterrupts().GetHpet().has_value()) {
+        CalibrateByHpet(entry);
+        return;
+    }
+
+    FAIL_ALWAYS("Not implemented yet: Alternative TSC check - PIT");
 }
 
 static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
@@ -25,9 +45,10 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
     u32 eax, ebx, ecx, unused;
     __get_cpuid(tsc::kIA32CpuidClockInfo, &eax, &ebx, &ecx, &unused);
 
-    if (ebx == 0) {
+    if (ebx == 0 || eax == 0) {
         /* According to 19.17.4 of Intel SDM, EBX might be 0 */
         AlternativeTscCheck(entry);
+        return;
     }
 
     const u64 denominator  = eax;
@@ -53,6 +74,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
 // Implementations
 // ------------------------------
 
+/* INTERRUPTS MUST BE DISABLED */
 void tsc::Initialize()
 {
     if (!IsAvailable()) {

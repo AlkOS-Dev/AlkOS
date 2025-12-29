@@ -3,15 +3,13 @@
 
 #include "scheduling/thread.hpp"
 
-extern "C" void ConvertToKernelTask(Sched::Thread *thread);
-extern "C" void SwitchToKernelTask(Sched::Thread *thread);
-extern "C" void SwitchToUserTask(Sched::Thread *thread);
+extern "C" void ConvertContext(Sched::Thread *thread);
+extern "C" void ContextSwitch(Sched::Thread *thread);
 
 namespace arch
 {
-using ::ConvertToKernelTask;
-using ::SwitchToKernelTask;
-using ::SwitchToUserTask;
+using ::ContextSwitch;
+using ::ConvertContext;
 void InitializeStackKThread(void **stack, void (*f)());
 void InitializeStackUserThread(void **stack, void (*f)());
 }  // namespace arch

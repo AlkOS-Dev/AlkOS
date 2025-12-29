@@ -51,9 +51,9 @@ static constexpr u64 kCpuIdTscInvariantLeaf = 0x80000007;
 
 FAST_CALL void SetUserSpaceAccess(const bool enabled)
 {
-    auto cr3             = cpu::GetCR<cpu::Cr4>();
-    cr3.TimeStampDisable = !enabled;
-    cpu::SetCR(cr3);
+    auto cr4             = cpu::GetCR<cpu::Cr4>();
+    cr4.TimeStampDisable = !enabled;
+    cpu::SetCR(cr4);
 }
 
 NODISCARD FAST_CALL u64 Read()

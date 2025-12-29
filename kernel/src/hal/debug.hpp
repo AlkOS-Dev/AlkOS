@@ -3,6 +3,8 @@
 
 #include <hal/impl/debug.hpp>
 
+#include <defines.hpp>
+
 namespace hal
 {
 /**

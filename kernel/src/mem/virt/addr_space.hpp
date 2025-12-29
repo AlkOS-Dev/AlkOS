@@ -96,7 +96,9 @@ class AddressSpace
 
     // Friends
     friend class VirtualMemoryManager;
-    friend void PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+    friend void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+
+    public:
 };
 
 using AddrSp = AddressSpace;

@@ -21,7 +21,7 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 0;
+    static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         auto result = SpawnProcess(KWorkerMain, true);
         R_ASSERT_TRUE(
@@ -30,7 +30,7 @@ void TaskMgr::InitializeMultitasking()
         );
 
         TRACE_INFO_SCHEDULING(
-            "Created initial Kernel Worker process with Pid: %llu", result.value()
+            "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
 }
@@ -86,27 +86,28 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
     }
 
     // 3. Spawn first thread
-    const auto tid = SpawnThread(process.value()->pid, f);
-    if (!tid) {
+    const auto thread = SpawnThread(process.value()->pid, f);
+    if (!thread) {
         DEBUG_WARN_SCHEDULING(
             "Failed to create process. Failed on initial thread creation: %s",
-            to_string(tid.error())
+            to_string(thread.error())
         );
-        return std::unexpected(tid.error());
+        return std::unexpected(thread.error());
     }
 
-    // 4. Add to scheduler - TODO
+    // 4. Add to scheduler
+    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
 
     DEBUG_INFO_SCHEDULING(
         "Created process with pid: %llu, and initial thread with tid: %llu", process.value()->pid,
-        tid.value()
+        thread.value()->tid
     );
 
     dismiss = true;
-    return std::make_tuple(process.value()->pid, tid.value());
+    return std::make_tuple(process.value()->pid, thread.value()->tid);
 }
 
-std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
+std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 {
     bool dismiss = false;
 
@@ -173,6 +174,6 @@ std::expected<Tid, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
     }
 
     dismiss = true;
-    return thread.value()->tid;
+    return thread.value();
 }
 }  // namespace Sched
