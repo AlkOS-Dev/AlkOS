@@ -1,4 +1,7 @@
 #include "threads.hpp"
+
+#include <hal/scheduling.hpp>
+
 #include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
 
@@ -26,14 +29,18 @@ void KThreadEntrypoint(void (*f)())
     OnKThreadExit();
 }
 
-void UserThreadEntrypoint(void (*f)()) { R_FAIL_ALWAYS("Not implemented..."); }
+void UserThreadEntrypoint(void (*f)())
+{
+    OnUserThreadEntry();
+    hal::JumpToUserSpace(f);
+}
+
+void OnUserThreadEntry() {}
 
 void OnKThreadExit()
 {
     R_FAIL_ALWAYS("Not implemented. KThread should never return at this stage...");
 }
-
-void OnThreadExit() {}
 
 }  // namespace Sched
 
