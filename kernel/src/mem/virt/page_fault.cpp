@@ -1,13 +1,10 @@
 #include "mem/virt/page_fault.hpp"
 
-#include "interrupts/interrupt_types.hpp"
+#include <template/scope_guard.hpp>
 
 #include "hal/intr_parser.hpp"
 #include "hal/panic.hpp"
-#include "mem/mmu/contexts.hpp"
-#include "mem/phys/mngr/buddy.hpp"
-#include "mem/virt/page_fault.hpp"
-#include "modules/hardware.hpp"
+#include "mem/virt/addr_space.hpp"
 #include "modules/memory.hpp"
 #include "trace_framework.hpp"
 
@@ -16,93 +13,37 @@ namespace Mem
 
 void *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
-    TRACE_INFO_GENERAL("PageFaultHandler()");
-    using namespace hal;
     ASSERT_NOT_NULL(data);
 
-    PageFaultData pfd = ParsePageFaultData(*data);
+    PageFaultData pfd = hal::ParsePageFaultData(*data);
     const auto &f_ptr = pfd.faulting_ptr;
     const auto &err   = pfd.error;
 
-    TRACE_INFO_GENERAL(
-        "PageFaultHandler: Addr=%p, P=%d, W=%d, U=%d, R=%d, I=%d", f_ptr, err.present, err.write,
-        err.user, err.reserved_bits, err.instruction_fetch
-    );
+    auto &as = MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
 
-    auto &as           = MemoryModule::Get().GetKernelAddressSpace();
-    auto area_or_error = as.FindArea(f_ptr);
-    if (!area_or_error) {
-        KernelPanicFormat("Page fault in unmapped memory at %p", f_ptr);
+    as.Lock();
+    template_lib::ScopeGuard guard([&]() {
+        as.Unlock();
+    });
+    auto vma_res = as.FindAreaLocked(f_ptr);
+
+    if (!vma_res) {
+        hal::KernelPanicFormat("Page fault in unmapped memory at %p", f_ptr);
         return nullptr;
     }
-    VPtr<VMemArea> vma_ptr = *area_or_error;
-    const auto &vma        = *vma_ptr;
+    VMemArea *vma = *(*vma_res);
 
-    if (!err.present) {  // Page just wasn't there
-        if (err.write && !vma.flags.writable) {
-            hal::KernelPanicFormat("Write to read-only memory area at %p", f_ptr);
-            return nullptr;
-        }
-
-        auto &pmm = MemoryModule::Get().GetBitmapPmm();
-        auto &mmu = MemoryModule::Get().GetMmu();
-
-        PPtr<void> map_to = nullptr;
-        if (vma.type == VirtualMemAreaT::Anonymous) {
-            TRACE_INFO_GENERAL("PageFaultHandler: Handling Anonymous VMA");
-            auto new_page_or_error = pmm.Alloc();
-            if (!new_page_or_error) {
-                hal::KernelPanic("Out of memory during page fault handling");
-            }
-            auto *new_page_phys = *new_page_or_error;
-            auto *new_page_virt = Mem::PhysToVirt(new_page_phys);
-
-            memset(new_page_virt, 0, hal::kPageSizeBytes);
-
-            map_to = new_page_phys;
-        } else if (vma.type == VirtualMemAreaT::DirectMapping) {
-            TRACE_INFO_GENERAL("PageFaultHandler: Handling DirectMapping VMA");
-            const auto offset = PtrToUptr(f_ptr) - PtrToUptr(vma.start);
-            map_to            = UptrToPtr<void>(
-                AlignDown(PtrToUptr(vma.direct_mapping_start) + offset, kPageSizeBytes)
-            );
-        } else {
-            hal::KernelPanicFormat(
-                "Unsupported VMA type %d at %p", static_cast<int>(vma.type), f_ptr
-            );
-            return nullptr;
-        }
-
-        hal::PageFlags page_flags{
-            .Present        = true,
-            .Writable       = vma.flags.writable,
-            .UserAccessible = true,
-            .WriteThrough   = vma.flags.write_through,
-            .CacheDisable   = vma.flags.cache_disable,
-            .Global         = false,
-            .NoExecute      = !vma.flags.executable
-        };
-
-        // We need a context to Map.
-        // For now, we construct a KernelMmuContext on the fly using the global PMM/PMT
-        // FIXME: This is slightly inefficient to reconstruct on every fault, but valid.
-        auto &ctx = MemoryModule::Get().GetKernelMmuContext();
-
-        auto map_res = mmu.Map(
-            ctx, as.PageTableRoot(), AlignDown(f_ptr, hal::kPageSizeBytes), map_to, page_flags
-        );
-
-        if (!map_res) {
-            hal::KernelPanicFormat("Failed to map page for address %p", f_ptr);
-        }
-
-        TRACE_INFO_GENERAL(
-            "Handled page fault at %p by mapping to physical page at %p", f_ptr, map_to
-        );
-        return nullptr;
+    if (err.present) {
+        // Protection violation
+        // TODO: CoW handling would go here via vma->HandleProtectionFault()
+        hal::KernelPanicFormat("Unhandled protection fault at %p", f_ptr);
     }
 
-    hal::KernelPanicFormat("Unhandled page fault type at 0x%p", f_ptr);
+    // Delegate to VMA
+    // The VMA knows if it's anonymous, file-backed, or MMIO, and handles it accordingly.
+    if (!vma->HandleFault(f_ptr, err, as)) {
+        hal::KernelPanicFormat("Failed to resolve page fault at %p", f_ptr);
+    }
     return nullptr;
 }
 

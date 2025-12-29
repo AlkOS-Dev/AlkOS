@@ -58,29 +58,36 @@ class AddressSpace
 
     PPtr<void> PageTableRoot() const { return page_table_root_; }
 
-    using AddrSpIt = data_structures::DoubleLinkedList<VMemArea>::ConstIterator;
+    void Lock() { area_list_lock_.Lock(); }
+    void Unlock() { area_list_lock_.Unlock(); }
+
+    private:
+    // Store pointers to polymorphic VMemArea objects
+    using AddrSpIt = data_structures::DoubleLinkedList<VMemArea *>::ConstIterator;
 
     // Iterator
     AddrSpIt begin() const { return area_list_.begin(); }
     AddrSpIt end() const { return area_list_.end(); }
 
-    private:
-    // This is orchestrated in VMM (For proper TLB management)
-    expected<void, MemError> AddArea(VMemArea vma);
+    // Takes ownership of vma pointer
+    expected<void, MemError> AddArea(VMemArea *vma);
+
     expected<TlbHint, MemError> RmArea(VPtr<void> ptr);
     expected<TlbHint, MemError> UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFlags flags);
 
     // Helpers
-    using AddrSpMutIt = data_structures::DoubleLinkedList<VMemArea>::Iterator;
+    using AddrSpMutIt = data_structures::DoubleLinkedList<VMemArea *>::Iterator;
     expected<AddrSpMutIt, MemError> FindAreaLocked(VPtr<void> ptr);
-    expected<VPtr<VMemArea>, MemError> FindArea(VPtr<void> ptr);
-    bool IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr);
-    bool AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b);
+    expected<VMemArea *, MemError> FindArea(VPtr<void> ptr);
+    bool IsAddrInArea(const VMemArea *vma, VPtr<void> ptr);
+    bool AreasOverlap(const VMemArea *a, const VMemArea *b);
 
     // Fields
     PPtr<void> page_table_root_;
     bool owns_page_table_root_;
-    data_structures::DoubleLinkedList<VMemArea> area_list_;
+
+    // List of pointers to VMA objects (we own these objects)
+    data_structures::DoubleLinkedList<VMemArea *> area_list_;
     hal::Spinlock area_list_lock_;
 
     // Dependencies
@@ -88,11 +95,12 @@ class AddressSpace
     hal::Mmu *mmu_;
 
     // Friends
-    friend VirtualMemoryManager;
+    friend class VirtualMemoryManager;
     friend void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
     public:
 };
+
 using AddrSp = AddressSpace;
 
 }  // namespace Mem

@@ -23,13 +23,10 @@ TEST_F(PageFaultHandlerTest, AnonymousMemory_WhenWritingToUnmappedPage_ShouldHan
     auto &kernel_as = MemoryModule::Get().GetKernelAddressSpace();
 
     auto *vaddr = reinterpret_cast<Mem::VPtr<u64>>(0xABCD0000);
-    Mem::VMemArea vma{
-        .start                = vaddr,
-        .size                 = hal::kPageSizeBytes,
-        .flags                = {.readable = true, .writable = true, .executable = false},
-        .type                 = VirtualMemAreaT::Anonymous,
-        .direct_mapping_start = nullptr
-    };
+    Mem::VirtualMemAreaFlags flags{.readable = true, .writable = true, .executable = false};
+    auto vma_res = Mem::KNew<Mem::AnonymousVMemArea>(vaddr, hal::kPageSizeBytes, flags);
+    ASSERT_TRUE(vma_res, "Failed to allocate VMA");
+    auto *vma = *vma_res;
 
     auto add_res = vmm.AddArea(&kernel_as, vma);
     ASSERT_TRUE(add_res, "Failed to add anonymous memory area");
@@ -53,13 +50,10 @@ TEST_F(PageFaultHandlerTest, AnonymousMemory_WhenAccessingMultipleLocationsInSam
     auto &kernel_as = MemoryModule::Get().GetKernelAddressSpace();
 
     auto *vaddr = reinterpret_cast<Mem::VPtr<u64>>(0xABCD0000);
-    Mem::VMemArea vma{
-        .start                = vaddr,
-        .size                 = hal::kPageSizeBytes,
-        .flags                = {.readable = true, .writable = true, .executable = false},
-        .type                 = VirtualMemAreaT::Anonymous,
-        .direct_mapping_start = nullptr
-    };
+    Mem::VirtualMemAreaFlags flags{.readable = true, .writable = true, .executable = false};
+    auto vma_res = Mem::KNew<Mem::AnonymousVMemArea>(vaddr, hal::kPageSizeBytes, flags);
+    ASSERT_TRUE(vma_res, "Failed to allocate VMA");
+    auto *vma = *vma_res;
 
     auto add_res = vmm.AddArea(&kernel_as, vma);
     ASSERT_TRUE(add_res, "Failed to add anonymous memory area");
@@ -104,13 +98,10 @@ TEST_F(PageFaultHandlerTest, DirectMappedMemory_WhenReadingFromUnmappedPage_Shou
     auto &kernel_as = MemoryModule::Get().GetKernelAddressSpace();
     auto *vaddr     = reinterpret_cast<Mem::VPtr<u64>>(0xBCDE0000);
 
-    Mem::VMemArea vma{
-        .start                = vaddr,
-        .size                 = hal::kPageSizeBytes,
-        .flags                = {.readable = true, .writable = true, .executable = false},
-        .type                 = Mem::VirtualMemAreaT::DirectMapping,
-        .direct_mapping_start = paddr,
-    };
+    Mem::VirtualMemAreaFlags flags{.readable = true, .writable = true, .executable = false};
+    auto vma_res = Mem::KNew<Mem::DirectMappingVMemArea>(vaddr, hal::kPageSizeBytes, flags, paddr);
+    ASSERT_TRUE(vma_res, "Failed to allocate VMA");
+    auto *vma = *vma_res;
 
     auto add_res = vmm.AddArea(&kernel_as, vma);
     ASSERT_TRUE(add_res, "Failed to add direct-mapped memory area");
@@ -146,13 +137,10 @@ TEST_F(PageFaultHandlerTest, DirectMappedMemory_WhenWritingToVirtualAddress_Shou
     auto &kernel_as = MemoryModule::Get().GetKernelAddressSpace();
     auto *vaddr     = reinterpret_cast<Mem::VPtr<u64>>(0xBCDE0000);
 
-    Mem::VMemArea vma{
-        .start                = vaddr,
-        .size                 = hal::kPageSizeBytes,
-        .flags                = {.readable = true, .writable = true, .executable = false},
-        .type                 = Mem::VirtualMemAreaT::DirectMapping,
-        .direct_mapping_start = paddr,
-    };
+    Mem::VirtualMemAreaFlags flags{.readable = true, .writable = true, .executable = false};
+    auto vma_res = Mem::KNew<Mem::DirectMappingVMemArea>(vaddr, hal::kPageSizeBytes, flags, paddr);
+    ASSERT_TRUE(vma_res, "Failed to allocate VMA");
+    auto *vma = *vma_res;
 
     auto add_res = vmm.AddArea(&kernel_as, vma);
     ASSERT_TRUE(add_res, "Failed to add direct-mapped memory area");
