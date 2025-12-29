@@ -31,7 +31,7 @@ static void Task0()
         const auto tcb = hardware::GetCurrentTCB();
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-        hal::SwitchToKernelTask(tcb->next);
+        hal::ContextSwitch(tcb->next);
     }
 }
 
@@ -51,7 +51,7 @@ static void Task1()
         const auto tcb = hardware::GetCurrentTCB();
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-        hal::SwitchToKernelTask(tcb->next);
+        hal::ContextSwitch(tcb->next);
     }
 }
 
@@ -74,5 +74,5 @@ MTEST(KernelTaskSwitchTest)
     t1.value()->next = t0.value();
 
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-    hal::ConvertToKernelTask(t0.value());
+    hal::ConvertContext(t0.value());
 }
