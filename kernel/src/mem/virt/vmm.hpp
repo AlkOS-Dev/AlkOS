@@ -31,11 +31,16 @@ class VirtualMemoryManager
     // ------------------------------
 
     VirtualMemoryManager() = default;
-    void Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) noexcept;
+    void Init(
+        hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap,
+        const PPtr<void> kernel_root
+    ) noexcept;
 
     // ------------------------------
     // Class interaction
     // ------------------------------
+
+    AddressSpace &GetKernelAddressSpace() { return kernel_as_; }
 
     expected<VPtr<AddressSpace>, MemError> CreateUserAddrSpace();
     expected<void, MemError> DestroyUserAddrSpace(VPtr<AddressSpace> as);
@@ -55,6 +60,7 @@ class VirtualMemoryManager
     hal::Mmu *mmu_;
     KernelMmuContext *ctx_;
     Heap *heap_;
+    AddressSpace kernel_as_;
 };
 using Vmm = VirtualMemoryManager;
 

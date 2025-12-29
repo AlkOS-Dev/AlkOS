@@ -53,12 +53,8 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     KernelMmuContext_.Init(&BuddyPmm_, &PageMetaTable_);
 
-    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
-    auto init_res = KernelAddressSpace_.InitKernel(args.root_page_table, KernelMmuContext_, Mmu_);
-    R_ASSERT_TRUE(init_res);
-
     TRACE_INFO_MEMORY("Initializing Virtual Memory Manager");
-    Vmm_.Init(Tlb_, Mmu_, KernelMmuContext_, Heap_);
+    Vmm_.Init(Tlb_, Mmu_, KernelMmuContext_, Heap_, args.root_page_table);
 }
 
 void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
@@ -77,7 +73,7 @@ void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
         .next                 = nullptr
     };
 
-    if (auto res = Vmm_.AddArea(&KernelAddressSpace_, kernel_vma); !res) {
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), kernel_vma); !res) {
         TRACE_WARN_MEMORY("Failed to register Kernel VMA");
     }
 
@@ -90,6 +86,10 @@ void internal::MemoryModule::RegisterKernelVMAreas(const BootArguments &args)
         .direct_mapping_start = UptrToPtr<void>(0),
         .next                 = nullptr
     };
+
+    if (auto res = Vmm_.AddArea(&Vmm_.GetKernelAddressSpace(), dm_vma); !res) {
+        TRACE_WARN_MEMORY("Failed to register Direct Map VMA");
+    }
 }
 
 void internal::MemoryModule::RegisterPageFault(HardwareModule &hw)

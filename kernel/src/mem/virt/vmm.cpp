@@ -22,7 +22,9 @@ using Vmm = VirtualMemoryManager;
 using AS  = AddressSpace;
 
 TODO_WHEN_MULTITHREADING
-void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) noexcept
+void Vmm::Init(
+    hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap, const PPtr<void> kernel_root
+) noexcept
 {
     DEBUG_INFO_MEMORY("VirtualMemoryManager::Init()");
     tlb_ = &tlb;
@@ -31,6 +33,10 @@ void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) 
     // Heap is used implicitly via KNew / KDelete
     heap_ = &heap;
     (void)heap;
+
+    TRACE_INFO_MEMORY("Initializing Kernel Address Space");
+    auto init_res = kernel_as_.InitKernel(kernel_root, *ctx_, *mmu_);
+    R_ASSERT_TRUE(init_res);
 }
 
 expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()

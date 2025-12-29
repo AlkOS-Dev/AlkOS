@@ -33,8 +33,6 @@ class MemoryModule : template_lib::StaticSingletonHelper
     // Module fields
     // ------------------------------
 
-    using KernelAddressSpace = Mem::AddressSpace;
-
     DEFINE_MODULE_FIELD(Mem, PageMetaTable);
     DEFINE_MODULE_FIELD(Mem, BitmapPmm);
     DEFINE_MODULE_FIELD(Mem, BuddyPmm);
@@ -44,10 +42,11 @@ class MemoryModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(hal, Tlb);
     DEFINE_MODULE_FIELD(hal, Mmu);
     DEFINE_MODULE_FIELD(Mem, KernelMmuContext);
-    DEFINE_MODULE_FIELD(MemoryModule, KernelAddressSpace);
 
     public:
     void RegisterPageFault(HardwareModule &hw);
+
+    Mem::AddressSpace &GetKernelAddressSpace() { return Vmm_.GetKernelAddressSpace(); }
 
     /// @brief Register initial Virtual Memory Areas (VMAs) so the VMM is aware of them.
     /// These areas were set up by the bootloader but are invisible to the generic VMM until
