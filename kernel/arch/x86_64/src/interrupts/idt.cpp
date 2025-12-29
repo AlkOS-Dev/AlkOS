@@ -5,6 +5,7 @@
 #include <hal/panic.hpp>  // I dislike this import architecturally, but let it be for now
 #include <modules/timing.hpp>
 
+#include "cpu/gdt.hpp"
 #include "cpu/utils.hpp"
 #include "hal/interrupts.hpp"
 #include "interrupts/interrupt_types.hpp"
@@ -40,9 +41,6 @@ static constexpr IdtEntryFlags kSyscallFlags = {
     .dpl     = IdtPrivilegeLevel::kRing3,
     .present = 1
 };
-
-/* gdt kernel code offset */
-extern "C" u32 kKernelCodeOffset;
 
 /* isr stub table initialized in nasm */
 extern "C" void *IsrWrapperTable[];
@@ -175,7 +173,7 @@ static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const IdtEnt
     IdtEntry &entry = idt.idt[idx];
 
     entry.isr_low    = isr & kBitMask16;
-    entry.kernel_cs  = kKernelCodeOffset;
+    entry.kernel_cs  = cpu::GDT::kKernelCodeSelector;
     entry.ist        = 0;
     entry.attributes = flags;
     entry.isr_mid    = (isr >> 16) & kBitMask16;
@@ -185,8 +183,8 @@ static void IdtSetDescriptor(Idt &idt, const u8 idx, const u64 isr, const IdtEnt
 
 void arch::Interrupts::InitializeDefaultIdt_()
 {
-    R_ASSERT_LT(kKernelCodeOffset, static_cast<u32>(UINT16_MAX));
-    R_ASSERT_NEQ(static_cast<u32>(0), kKernelCodeOffset);
+    R_ASSERT_LT(cpu::GDT::kKernelCodeSelector, static_cast<u32>(UINT16_MAX));
+    R_ASSERT_NEQ(static_cast<u32>(0), cpu::GDT::kKernelCodeSelector);
 
     idt_.idtr.base  = reinterpret_cast<uintptr_t>(idt_.idt);
     idt_.idtr.limit = static_cast<u16>(sizeof(IdtEntry)) * kIdtEntries - 1;

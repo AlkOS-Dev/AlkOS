@@ -15,7 +15,7 @@ extern cdecl_EnableHardwareInterrupts
 extern HandleHardwareInterrupt
 
 _context_switch_stack_space equ 20*8
-_context_switch_stack_space_ext equ 8*19 ; 8 bytes already reserved by caller
+_context_switch_stack_space_ext equ 19*8; 8 bytes already reserved by caller
 _rip_call_offset equ _context_switch_stack_space_ext
 _rip_int_frame_offset equ _all_reg_size
 _cs_int_frame_offset equ _rip_int_frame_offset + 8
@@ -70,19 +70,19 @@ ContextSwitch:
     ; CS
     mov [rsp + _cs_int_frame_offset], _kernel_code_selector
 
-    ; SS
-    mov [rsp + _ss_int_frame_offset], _kernel_data_selector
+    ; FLAGS
+    pushfq
+    pop r12
+    or r12, 0x200 ; Ensure Interrupts are enabled after the context switch
+    mov [rsp + _flags_int_frame_offset], r12
 
     ; RSP
     mov r13, rsp
     add r13, _context_switch_stack_space
     mov [rsp + _sp_int_frame_offset], r13
 
-    ; FLAGS
-    pushfq
-    pop r12
-    or r12, 0x200 ; Ensure Interrupts are enabled after the context switch
-    mov [rsp + _flags_int_frame_offset], r12
+    ; SS
+    mov [rsp + _ss_int_frame_offset], _kernel_data_selector
 
     mov r13, rdi                       ; Save next TCB pointer in r12 (non-volatile) to survive C++ calls
 

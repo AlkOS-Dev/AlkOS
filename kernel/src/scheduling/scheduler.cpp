@@ -1,5 +1,6 @@
 #include "scheduling/scheduler.hpp"
 
+#include "autogen/feature_flags.h"
 #include "hal/scheduling.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
@@ -26,6 +27,10 @@ void Scheduler::AddReadyThread(Thread *thread)
 
 Thread *Scheduler::Schedule()
 {
+    if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
+        return nullptr;
+    }
+
     ASSERT_NOT_NULL(threads_);
 
     auto thread = GetNext_();
