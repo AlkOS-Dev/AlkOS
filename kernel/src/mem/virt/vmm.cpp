@@ -33,15 +33,21 @@ void Vmm::Init(hal::Tlb &tlb, hal::Mmu &mmu, KernelMmuContext &ctx, Heap &heap) 
     (void)heap;
 }
 
-expected<VirtualPtr<AddressSpace>, MemError> Vmm::CreateAddrSpace()
+expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
 {
     auto as_res = KNew<AddressSpace>();
     RET_UNEXPECTED_IF_ERR(as_res);
-    return *as_res;
+    auto as = *as_res;
+
+    auto init_res = as->InitUser(*ctx_, *mmu_);
+    RET_UNEXPECTED_IF_ERR(init_res);
+
+    return as;
 }
 
-expected<void, MemError> Vmm::DestroyAddrSpace(VPtr<AddressSpace> as)
+expected<void, MemError> Vmm::DestroyUserAddrSpace(VPtr<AddressSpace> as)
 {
+    mmu_->ClearUserMappings(*ctx_, as->PageTableRoot());
     KDelete(as);
     return {};
 }

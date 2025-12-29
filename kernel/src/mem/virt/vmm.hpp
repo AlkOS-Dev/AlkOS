@@ -37,8 +37,8 @@ class VirtualMemoryManager
     // Class interaction
     // ------------------------------
 
-    expected<VPtr<AddressSpace>, MemError> CreateAddrSpace();
-    expected<void, MemError> DestroyAddrSpace(VPtr<AddressSpace> as);
+    expected<VPtr<AddressSpace>, MemError> CreateUserAddrSpace();
+    expected<void, MemError> DestroyUserAddrSpace(VPtr<AddressSpace> as);
     void SwitchAddrSpace(VPtr<AddressSpace> as);
 
     expected<VPtr<void>, MemError> AddArea(VPtr<AddressSpace> as, VMemArea vma);
