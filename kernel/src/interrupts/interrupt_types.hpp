@@ -15,11 +15,11 @@ enum class InterruptType : uint8_t {
 template <InterruptType kInterruptType>
 struct InterruptHandlerEntry {
     /* Interrupt handler */
-    using InterruptHandler = void (*)(InterruptHandlerEntry &entry);
-    using InterruptHandlerException =
-        void (*)(InterruptHandlerEntry &entry, hal::ExceptionData *data);
-    using HandlerType = std::conditional_t<
-        kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
+    using InterruptHandler          = void *(*)(InterruptHandlerEntry & entry);
+    using InterruptHandlerException = void *(*)(InterruptHandlerEntry & entry,
+                                                hal::ExceptionData *data);
+    using HandlerType               = std::conditional_t<
+                      kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
 
     /* Interrupt driver */
     struct InterruptDriver {

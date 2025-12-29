@@ -5,6 +5,7 @@
 
 #include "modules/helpers.hpp"
 #include "modules/timing_constants.hpp"
+#include "time/event_framework.hpp"
 #include "time/system_time.hpp"
 
 namespace internal
@@ -28,6 +29,7 @@ class TimingModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     DEFINE_MODULE_FIELD(timing, SystemTime)
+    DEFINE_MODULE_FIELD(timing, EventFramework)
 };
 }  // namespace internal
 

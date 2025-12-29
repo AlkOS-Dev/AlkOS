@@ -28,7 +28,7 @@ class TaskMgr
         void (*f)(), bool kernel_only
     );
 
-    NODISCARD std::expected<Tid, Error> SpawnThread(Pid pid, void (*f)());
+    NODISCARD std::expected<Thread *, Error> SpawnThread(Pid pid, void (*f)());
 
     // ------------------------------
     // Private methods

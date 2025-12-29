@@ -8,10 +8,12 @@
 
 namespace hardware
 {
-enum class EventClockFeatures : u8 {
-    kIsCoreLocal = 0,  // Clock is local to the core
-    kLast,
+
+struct PACK EventClockFlags {
+    bool IsCoreLocal : 1;
+    u32 padding : 31;
 };
+static_assert(sizeof(EventClockFlags) == sizeof(u32));
 
 enum class EventClockState : u8 {
     kDisabled = 0,  // Clock is disabled
@@ -24,11 +26,10 @@ enum class EventClockState : u8 {
 struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structures::RegistryEntry {
     /* Clock numbers */
     u64 min_next_event_time_ns;  // Minimum time for the next event in nanoseconds
-    u64 max_event_time_ns;       // Maximum time for the event in nanoseconds
 
     /* Clock specific data */
-    data_structures::BitArray<32> features;  // Features of the event clock, e.g., core-local
-    CoreMask supported_cores;                // Cores that support this event clock
+    EventClockFlags flags;     // Features of the event clock, e.g., core-local
+    CoreMask supported_cores;  // Cores that support this event clock
 
     /* infra data */
     u64 next_event_time_ns;  // Time for the next event in nanoseconds
@@ -45,6 +46,8 @@ struct alignas(arch::kCacheLineSizeBytes) EventClockRegistryEntry : data_structu
         u32 (*next_event)(EventClockRegistryEntry *, u64);  // Callback to set next event time
         u32 (*set_oneshot)(EventClockRegistryEntry *);      // Callback to set clock state
         u32 (*set_periodic)(EventClockRegistryEntry *);     // Callback to set clock state
+        void (*on_entry)(EventClockRegistryEntry *);        // optional
+        void (*on_exit)(EventClockRegistryEntry *);         // optional
     } cbs;
 };
 

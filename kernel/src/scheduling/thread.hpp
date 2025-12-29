@@ -14,7 +14,7 @@ struct PACK Tid {
     u64 count : 48;
 };
 
-struct PACK Thread {
+struct Thread {
     /* Management */
     Tid tid;
     Pid owner;

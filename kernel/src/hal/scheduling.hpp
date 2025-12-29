@@ -8,9 +8,8 @@
 
 namespace hal
 {
-WRAP_CALL void SwitchToKernelTask(Sched::Thread *thread) { arch::SwitchToKernelTask(thread); }
-WRAP_CALL void SwitchToUserTask(Sched::Thread *thread) { arch::SwitchToUserTask(thread); }
-WRAP_CALL void ConvertToKernelTask(Sched::Thread *thread) { arch::ConvertToKernelTask(thread); }
+WRAP_CALL void ContextSwitch(Sched::Thread *thread) { arch::ContextSwitch(thread); }
+WRAP_CALL void ConvertContext(Sched::Thread *thread) { arch::ConvertContext(thread); }
 WRAP_CALL void InitializeStackKThread(void **stack, void (*f)())
 {
     arch::InitializeStackKThread(stack, f);

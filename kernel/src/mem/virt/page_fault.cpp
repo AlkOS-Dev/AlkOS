@@ -14,7 +14,7 @@
 namespace Mem
 {
 
-void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
+void *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     TRACE_INFO_GENERAL("PageFaultHandler()");
     using namespace hal;
@@ -33,7 +33,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
     auto area_or_error = as.FindArea(f_ptr);
     if (!area_or_error) {
         KernelPanicFormat("Page fault in unmapped memory at %p", f_ptr);
-        return;
+        return nullptr;
     }
     VPtr<VMemArea> vma_ptr = *area_or_error;
     const auto &vma        = *vma_ptr;
@@ -41,7 +41,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
     if (!err.present) {  // Page just wasn't there
         if (err.write && !vma.flags.writable) {
             hal::KernelPanicFormat("Write to read-only memory area at %p", f_ptr);
-            return;
+            return nullptr;
         }
 
         auto &pmm = MemoryModule::Get().GetBitmapPmm();
@@ -70,7 +70,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
             hal::KernelPanicFormat(
                 "Unsupported VMA type %d at %p", static_cast<int>(vma.type), f_ptr
             );
-            return;
+            return nullptr;
         }
 
         hal::PageFlags page_flags{
@@ -99,10 +99,11 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         TRACE_INFO_GENERAL(
             "Handled page fault at %p by mapping to physical page at %p", f_ptr, map_to
         );
-        return;
+        return nullptr;
     }
 
     hal::KernelPanicFormat("Unhandled page fault type at 0x%p", f_ptr);
+    return nullptr;
 }
 
 }  // namespace Mem

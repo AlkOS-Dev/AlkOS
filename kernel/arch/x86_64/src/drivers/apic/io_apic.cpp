@@ -1,5 +1,6 @@
 #include "drivers/apic/io_apic.hpp"
 #include "drivers/apic/local_apic.hpp"
+#include "trace_framework.hpp"
 
 #include <bit.hpp>
 #include <mem/types.hpp>
@@ -113,4 +114,19 @@ void IoApic::ApplyNmiRule(const acpi_madt_nmi_source *nmi_source) const
 
     /* Write back */
     WriteLowerTableRegister(nmi_source->gsi - GetGsiBase(), reg_low);
+}
+void IoApic::MaskIrq(const u32 gsi) const { SetMask(gsi, true); }
+
+void IoApic::UnmaskIrq(const u32 gsi) const { SetMask(gsi, false); }
+
+void IoApic::SetMask(const u32 gsi, const bool masked) const
+{
+    R_ASSERT_TRUE(IsInChargeOfGsi(gsi));
+
+    const u32 idx = gsi - gsi_base_;
+    auto reg_low  = ReadLowerTableRegister(idx);
+    reg_low.mask  = masked ? LowerTableRegister::EnabledFlag::kDisabled
+                           : LowerTableRegister::EnabledFlag::kEnabled;
+
+    WriteLowerTableRegister(idx, reg_low);
 }
