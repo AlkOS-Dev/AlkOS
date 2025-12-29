@@ -48,6 +48,8 @@ expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
     auto init_res = as->InitUser(*ctx_, *mmu_);
     RET_UNEXPECTED_IF_ERR(init_res);
 
+    mmu_->CopyKernelSpace(as->PageTableRoot(), kernel_as_.PageTableRoot());
+
     return as;
 }
 

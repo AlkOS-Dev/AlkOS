@@ -29,6 +29,8 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         err.user, err.reserved_bits, err.instruction_fetch
     );
 
+    // TODO: Pagefaults from kernel addr space should have special handling (lazy sync)
+
     auto &as           = MemoryModule::Get().GetKernelAddressSpace();
     auto area_or_error = as.FindArea(f_ptr);
     if (!area_or_error) {

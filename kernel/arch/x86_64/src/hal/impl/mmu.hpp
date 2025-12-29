@@ -37,6 +37,8 @@ class Mmu : public MmuAPI
 
     void SwitchRoot(Mem::PPtr<void> root);
 
+    void CopyKernelSpace(Mem::PPtr<void> dst_root, Mem::PPtr<void> kernel_root);
+
     template <TableVisitor Visitor>
     void VisitTables(Mem::PPtr<void> root, Visitor visitor);
 

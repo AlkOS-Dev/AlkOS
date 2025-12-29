@@ -1,5 +1,8 @@
 #include "hal/impl/mmu.hpp"
+
+#include <string.h>
 #include <macros.hpp>
+
 #include "cpu/control_registers.hpp"
 #include "mem/page_map.hpp"
 
@@ -40,6 +43,16 @@ void Mmu::SwitchRoot(Mem::PPtr<void> root)
     cpu::Cr3 cr3{};
     cr3.PageMapLevel4Address = Mem::PtrToUptr(root) >> 12;
     cpu::SetCR(cr3);
+}
+
+void Mmu::CopyKernelSpace(Mem::PPtr<void> dst_root, Mem::PPtr<void> kernel_root)
+{
+    // x86_64: Copy upper 256 entries of PML4 (indices 256-511)
+    auto *dst_pml4 = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(dst_root));
+    auto *src_pml4 = reinterpret_cast<PageMapTable<4> *>(Mem::PhysToVirt(kernel_root));
+
+    // 256 * 8 bytes = 2048 bytes
+    memcpy(&((*dst_pml4)[256]), &((*src_pml4)[256]), 256 * sizeof(PageMapEntry<4>));
 }
 
 expected<void, MemError> Mmu::SetPageFlags(
