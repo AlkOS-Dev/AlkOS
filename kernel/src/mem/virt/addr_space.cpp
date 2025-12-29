@@ -1,46 +1,73 @@
 #include "mem/virt/addr_space.hpp"
+
 #include <macros.hpp>
+#include <mutex.hpp>
+#include "hal/constants.hpp"
+#include "hal/mmu.hpp"
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
+#include "mem/mmu/contexts.hpp"
+#include "mem/page_meta_table.hpp"
+#include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
 
 using namespace Mem;
 using AS = AddressSpace;
 
+AS::AddressSpace() : page_table_root_{nullptr}, owns_page_table_root_{false} {}
+
+expected<void, MemError> AS::InitUser(KernelMmuContext &ctx, hal::Mmu &mmu)
+{
+    ctx_ = &ctx;
+    mmu_ = &mmu;
+
+    auto page_table_root_res = ctx_->AllocateTable(0);
+    RET_UNEXPECTED_IF_ERR(page_table_root_res);
+    page_table_root_      = *page_table_root_res;
+    owns_page_table_root_ = true;
+
+    return {};
+}
+
+expected<void, MemError> AS::InitKernel(
+    const PPtr<void> kernel_root, KernelMmuContext &ctx, hal::Mmu &mmu
+)
+{
+    page_table_root_      = kernel_root;
+    mmu_                  = &mmu;
+    ctx_                  = &ctx;
+    owns_page_table_root_ = false;
+
+    return {};
+}
 AS::~AddressSpace()
 {
     // Free all allocated areas
-    while (area_list_head_) {
-        auto to_free    = area_list_head_;
-        area_list_head_ = area_list_head_->next;
-        KFree(to_free);
+    // area_list_ destructor will handle freeing nodes and data
+
+    if (ctx_) {
+        if (owns_page_table_root_ && page_table_root_ != nullptr) {
+            ctx_->FreeTable(page_table_root_, 0);
+        }
     }
 }
 
 expected<void, MemError> AS::AddArea(VMemArea vma)
 {
-    auto res = KMalloc<VMemArea>();
-    RET_UNEXPECTED_IF_ERR(res);
-
-    VPtr<VMemArea> n_area = *res;
-    *n_area               = vma;
-    n_area->next          = nullptr;
-
-    area_list_lock_.Lock();
+    std::lock_guard guard(area_list_lock_);
 
     // Check for overlapping areas
-    for (auto it = area_list_head_; it; it = it->next) {
-        if (AreasOverlap(it, n_area)) {
-            area_list_lock_.Unlock();
-            KFree(n_area);
+    for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
+        if (AreasOverlap(&(*it), &vma)) {
             return unexpected(MemError::InvalidArgument);
         }
     }
 
-    n_area->next    = area_list_head_;
-    area_list_head_ = n_area;
+    auto node = area_list_.PushFront(vma);
+    if (!node) {
+        return unexpected(MemError::OutOfMemory);
+    }
 
-    area_list_lock_.Unlock();
     return {};
 }
 
@@ -54,56 +81,80 @@ bool AS::AreasOverlap(VPtr<VMemArea> a, VPtr<VMemArea> b)
     return a_s_addr < b_e_addr && b_s_addr < a_e_addr;
 }
 
-expected<void, MemError> AS::RmArea(VPtr<void> ptr)
+expected<TlbHint, MemError> AS::RmArea(VPtr<void> ptr)
 {
-    area_list_lock_.Lock();
+    std::lock_guard guard(area_list_lock_);
 
-    if (!area_list_head_) {
-        area_list_lock_.Unlock();
-        return {};  // Nothing to remove
+    auto res = FindAreaLocked(ptr);
+    RET_UNEXPECTED_IF_ERR(res);
+    auto it = *res;
+
+    // Do MMU unmap while we have the area info
+    auto start = it->start;
+    auto size  = it->size;
+
+    mmu_->UnmapRange(*ctx_, page_table_root_, start, size);
+
+    area_list_.Remove(it.GetNode());
+
+    return TlbHint{start, size};
+}
+
+expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFlags vmaf)
+{
+    std::lock_guard guard(area_list_lock_);
+
+    auto res = FindAreaLocked(ptr);
+    RET_UNEXPECTED_IF_ERR(res);
+    VMemArea &area = *res.value();
+    RET_UNEXPECTED_IF(area.start != ptr, MemError::InvalidArgument);
+
+    area.flags = vmaf;
+    auto start = area.start;
+    auto size  = area.size;
+
+    bool is_kernel = (PtrToUptr(start) >= hal::kKernelVirtualAddressStart);
+
+    hal::PageFlags pf{
+        .Present        = true,
+        .Writable       = vmaf.writable,
+        .UserAccessible = !is_kernel,
+        .WriteThrough   = vmaf.write_through,
+        .CacheDisable   = vmaf.cache_disable,
+        .Global         = is_kernel,
+        .NoExecute      = !vmaf.executable
+    };
+
+    uptr start_u = PtrToUptr(start);
+    uptr end_u   = start_u + size;
+
+    for (uptr v = start_u; v < end_u; v += hal::kPageSizeBytes) {
+        auto res = mmu_->SetPageFlags(page_table_root_, UptrToPtr<void>(v), pf);
+        RET_UNEXPECTED_IF(!res && res.error() != MemError::NotFound, res.error());
     }
 
-    // Head is to be removed
-    if (IsAddrInArea(area_list_head_, ptr)) {
-        auto to_free    = area_list_head_;
-        area_list_head_ = area_list_head_->next;
-        area_list_lock_.Unlock();
-        KFree(to_free);
-        return {};
-    }
+    return TlbHint{start, size};
+}
 
-    // Traverse rest
-    auto iterator = area_list_head_;
-    while (iterator->next) {
-        if (IsAddrInArea(iterator->next, ptr)) {
-            auto to_free   = iterator->next;
-            iterator->next = to_free->next;
-            area_list_lock_.Unlock();
-            KFree(to_free);
-            return {};
+expected<AS::AddrSpMutIt, MemError> AS::FindAreaLocked(VPtr<void> ptr)
+{
+    for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
+        if (IsAddrInArea(&(*it), ptr)) {
+            return it;
         }
-        iterator = iterator->next;
     }
-
-    area_list_lock_.Unlock();
-    return unexpected(MemError::InvalidArgument);
+    return unexpected(MemError::NotFound);
 }
 
 expected<VPtr<VMemArea>, MemError> AS::FindArea(VPtr<void> ptr)
 {
-    area_list_lock_.Lock();
+    std::lock_guard guard(area_list_lock_);
 
-    VPtr<VMemArea> vma = area_list_head_;
-    while (vma != nullptr) {
-        if (IsAddrInArea(vma, ptr)) {
-            area_list_lock_.Unlock();
-            return vma;
-        }
-        vma = vma->next;
-    }
+    auto res = FindAreaLocked(ptr);
+    RET_UNEXPECTED_IF_ERR(res);
 
-    area_list_lock_.Unlock();
-    return unexpected(MemError::NotFound);
+    VPtr<VMemArea> vma = &(*res.value());
+    return vma;
 }
 
 bool AS::IsAddrInArea(VPtr<VMemArea> vma, VPtr<void> ptr)

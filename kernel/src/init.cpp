@@ -26,6 +26,7 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     BootArguments args = SanitizeBootArgs(raw_args);
 
     MemoryModule::Init(args);
+    MemoryModule::Get().RegisterKernelVMAreas(args);
 
     /* GCC CXX provided function initializing global constructors */
     _init();
