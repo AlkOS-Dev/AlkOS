@@ -3,6 +3,42 @@
 ; ------------------------------------
 
 %include "include/regs.nasm"
+%include "include/thread.nasm"
+
+%macro context_switch_if_needed 0
+    cmp rax, 0
+    je .done                         ; Omit context switch if there is no need to change it
+
+    mov r13, rax                     ; save next TCB
+
+    call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
+    mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
+
+    ; ------------------------
+    ; Setup next task state
+
+    mov rdi, r13                         ; Restore next TCB pointer to RDI for the next call
+    call cdecl_SetCurrentTCB
+    mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
+
+    mov rdi, [r13+Thread.kernel_stack_bottom]
+    call cdecl_SetTssRsp0
+
+    mov rdi, r13                       ; Set RDI for GetThreadsPageTable
+    call cdecl_GetThreadsPageTable     ; RAX = next cr3
+    mov r11, cr3                       ; R11 = current cr3
+
+    cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
+    je .done
+    mov cr3, rax                       ; Load next task's virtual address space
+
+.done:
+
+    pop_all_regs                    ; Restore registers.
+    add rsp, _all_reg_size          ; Deallocate register save space.
+    add rsp, 8                  ; Pop dummy error code.
+    iretq
+%endmacro
 
 ; Macro for CPU exceptions that DO NOT push an error code.
 ; A dummy error code is pushed to create a consistent stack frame.
@@ -18,10 +54,7 @@ isr_wrapper_%+%1:
     mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
 
-    pop_all_regs                    ; Restore registers.
-    add rsp, _all_reg_size          ; Deallocate register save space.
-    add rsp, 8                  ; Pop dummy error code.
-    iretq
+    context_switch_if_needed
 %endmacro
 
 ; Macro for CPU exceptions that DO push an error code.
@@ -36,26 +69,22 @@ isr_wrapper_%+%1:
     mov rsi, rsp                ; Arg2: pointer to stack frame.
     call HandleException
 
-    pop_all_regs                    ; Restore registers.
-    add rsp, _all_reg_size          ; Deallocate register save space.
-    add rsp, 8                  ; Pop error code.
-    iretq
+    context_switch_if_needed
 %endmacro
 
 ; Macro for hardware or software interrupts.
 ; Calls a handler with the signature 'void handler(u16 lirq)'.
 %macro interrupt_wrapper 3 ; %1: Logical IRQ, %2: idt idx %3: C handler function
 isr_wrapper_%+%2:
-    sub rsp, _sysv_reg_size          ; Allocate space for saving registers.
-    push_sysv_regs                   ; Save registers.
+    push 0                      ; Push a dummy error code for alignment.
+    sub rsp, _all_reg_size          ; Allocate space for saving registers.
+    push_all_regs                   ; Save registers.
 
     cld                         ; Clear direction flag for string operations.
     mov rdi, %1                 ; Pass the mapped IRQ number as the first argument.
     call %3                     ; Call the specific ISR handler.
 
-    pop_sysv_regs                    ; Restore registers.
-    add rsp, _sysv_reg_size          ; Deallocate register save space.
-    iretq                       ; Return from interrupt.
+    context_switch_if_needed
 %endmacro
 
 bits 64
@@ -105,10 +134,13 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 ; ISR wrappers definitions
 ; ------------------------------
 
+extern cdecl_GetCurrentTCB
+extern cdecl_SetCurrentTCB
+extern cdecl_GetThreadsPageTable
+extern cdecl_SetTssRsp0
 extern HandleException
 extern HandleHardwareInterrupt
 extern HandleSoftwareInterrupt
-extern TimerContextSwitch
 
 ; Intel-defined interrupts (0-31) -> HandleException
 exception_wrapper 0  ; Division Error: Divide by zero error
@@ -145,7 +177,7 @@ exception_error_wrapper 30 ; Security Exception: Security-related error
 exception_wrapper 31 ; Reserved: Reserved by Intel
 
 ; IRQs for PICs (32–47) -> HandleHardwareInterrupt
-; DEFINED in SCHEDULING FILE ; IRQ0: System timer
+interrupt_wrapper 0, 32, HandleHardwareInterrupt ; IRQ0: System timer
 interrupt_wrapper 1, 33, HandleHardwareInterrupt ; IRQ1: Keyboard
 interrupt_wrapper 2, 34, HandleHardwareInterrupt ; IRQ2: Cascade
 interrupt_wrapper 3, 35, HandleHardwareInterrupt ; IRQ3: Serial port 2
@@ -203,15 +235,7 @@ section .data
 global IsrWrapperTable
 IsrWrapperTable:
 %assign i 0
-%rep    32
-    dq isr_wrapper_%+i
-%assign i i+1
-%endrep
-
-dq TimerContextSwitch
-
-%assign i 33
-%rep    31
+%rep    _num_isrs
     dq isr_wrapper_%+i
 %assign i i+1
 %endrep

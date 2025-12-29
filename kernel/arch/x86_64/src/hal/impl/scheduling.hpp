@@ -5,11 +5,13 @@
 
 extern "C" void ConvertContext(Sched::Thread *thread);
 extern "C" void ContextSwitch(Sched::Thread *thread);
+extern "C" void JumpToUserSpace(void (*f)());
 
 namespace arch
 {
 using ::ContextSwitch;
 using ::ConvertContext;
+using ::JumpToUserSpace;
 void InitializeStackKThread(void **stack, void (*f)());
 void InitializeStackUserThread(void **stack, void (*f)());
 }  // namespace arch
