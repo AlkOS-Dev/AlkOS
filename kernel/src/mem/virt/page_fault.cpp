@@ -4,6 +4,7 @@
 
 #include "hal/intr_parser.hpp"
 #include "hal/panic.hpp"
+#include "mem/mmu/contexts.hpp"
 #include "mem/phys/mngr/buddy.hpp"
 #include "mem/virt/page_fault.hpp"
 #include "modules/hardware.hpp"
@@ -85,7 +86,7 @@ void PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
         // We need a context to Map.
         // For now, we construct a KernelMmuContext on the fly using the global PMM/PMT
         // FIXME: This is slightly inefficient to reconstruct on every fault, but valid.
-        hal::KernelMmuContext ctx{
+        Mem::KernelMmuContext ctx{
             MemoryModule::Get().GetBuddyPmm(), MemoryModule::Get().GetPageMetaTable()
         };
 

@@ -5,6 +5,7 @@
 
 #include "hal/constants.hpp"
 #include "mem/heap.hpp"
+#include "mem/mmu/contexts.hpp"
 #include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
 #include "mem/virt/addr_space.hpp"
@@ -66,9 +67,10 @@ expected<void, MemError> Vmm::RmArea(VPtr<AddrSp> as, VPtr<void> region_start)
     auto size   = area->size;
 
     auto &pmt = MemoryModule::Get().GetPageMetaTable();
-    hal::KernelMmuContext ctx{*bpmm_, pmt};
+    Mem::KernelMmuContext ctx{*bpmm_, pmt};
 
     mmu_->UnmapRange(ctx, as->PageTableRoot(), start, size);
+    tlb_->InvalidateRange(start, size);
 
     auto err = as->RmArea(region_start);
     RET_UNEXPECTED_IF_ERR(err);
@@ -109,6 +111,7 @@ expected<void, MemError> Vmm::UpdateAreaFlags(
         auto res = mmu_->SetPageFlags(as->PageTableRoot(), UptrToPtr<void>(v), pf);
         RET_UNEXPECTED_IF(!res && res.error() != MemError::NotFound, res.error());
     }
+    tlb_->InvalidateRange(area->start, area->size);
 
     return {};
 }

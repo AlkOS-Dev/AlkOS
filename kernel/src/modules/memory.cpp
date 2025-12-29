@@ -26,14 +26,12 @@ internal::MemoryModule::MemoryModule(const BootArguments &args) noexcept
 
     PageMetaTable_.Init(args.total_page_frames, BitmapPmm_);
 
-    Mmu_.Init(Tlb_);
-
     // Cleanup bootloader mappings and reconstruct metadata for kernel mappings
     Mem::Boot::BootMmuCleaner boot_cleaner;
 
     TRACE_INFO_MEMORY("Unmapping lower half of memory");
-    Mmu_.Init(Tlb_);
     boot_cleaner.CleanIdentityMappings(Mmu_, BitmapPmm_, PageMetaTable_, args.root_page_table);
+    Tlb_.FlushAll();
 
     constexpr size_t kInitialBuddyPagesLimit = 4096;  // 16MB
     // Note: Initializing buddy with all pages is a slow operation.
