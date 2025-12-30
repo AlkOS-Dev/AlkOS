@@ -58,6 +58,7 @@ MTEST(KernelTaskSwitchTest)
 {
     Sched::ProcessFlags flags{};
     flags.KernelSpaceOnly = true;
+    flags.PreserveFloats  = true;
 
     auto p0 = SchedulingModule::Get().GetTaskMgr().SpawnProcess(Task0, flags);
     ASSERT_TRUE(static_cast<bool>(p0));

@@ -6,18 +6,6 @@
 
 bits 64
 
-extern cdecl_GetCurrentTCB
-extern cdecl_SetCurrentTCB
-extern cdecl_GetThreadsPageTable
-extern cdecl_SetTssRsp0
-extern cdecl_EnableHardwareInterrupts
-extern cdecl_SetNextThreadFs
-extern cdecl_SwapFsIfNeeded
-extern HandleHardwareInterrupt
-extern cdecl_SetKernelGs
-extern cdecl_DumpFpStateIfNeeded
-extern cdecl_LoadFpStateIfNeeded
-
 extern cdecl_ConvertContextEntry
 extern cdecl_JumpToUserSpaceEntry
 extern cdecl_ContextSwitchEntry

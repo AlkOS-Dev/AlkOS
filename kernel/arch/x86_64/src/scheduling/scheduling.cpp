@@ -164,6 +164,17 @@ extern "C" void cdecl_ContextSwitchEntry(
     hardware::SetCurrentTCB(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
     SwapGsIfJumpingToUserspace(thread);
+    LoadFpStateIfNeeded(thread);
+    SwapCr3IfNeeded(thread);
+}
+
+extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
+{
+    auto current_tcb          = hardware::GetCurrentTCB();
+    current_tcb->kernel_stack = rsp;
+    SwapFsIfNeeded(current_tcb, thread);
+    hardware::SetCurrentTCB(thread);
+    SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
     SwapCr3IfNeeded(thread);
 }
 

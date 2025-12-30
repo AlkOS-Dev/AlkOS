@@ -1,6 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TASKS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_TASKS_HPP_
 
+#include <string.h>
 #include <defines.hpp>
 #include <types.hpp>
 
@@ -19,6 +20,7 @@ struct Thread : ThreadAPI {
     {
         fs_base = 0;
         gs_base = 0;
+        memset(fp_state, 0, sizeof(fp_state));
     }
 };
 struct Process {
