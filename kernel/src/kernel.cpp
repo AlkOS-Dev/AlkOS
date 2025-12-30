@@ -26,6 +26,8 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
+    trace::DumpAllBuffersOnFailure();  // TODO: should be removed and testing converted to threads?
+
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }
 
