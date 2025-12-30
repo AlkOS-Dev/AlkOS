@@ -36,6 +36,15 @@ class TaggedPointer
 
     explicit TaggedPointer(BaseT tagged_ptr) : tagged_ptr_(tagged_ptr) {}
 
+    template <typename T>
+    NODISCARD static TaggedPointer FromPtr(T *ptr)
+    {
+        static_assert(
+            (std::is_same_v<T *, TaggedTypes> || ...), "Type T must be one of the TaggedTypes"
+        );
+        return TaggedPointer(TagPtr(ptr, GetTypeIndex<T>()));
+    }
+
     ~TaggedPointer() { Destroy(); }
 
     TaggedPointer(const TaggedPointer &)            = delete;
@@ -172,9 +181,11 @@ class TaggedPointer
     template <typename T>
     void DestroyType()
     {
-        T *ptr = static_cast<T *>(UntagPtr());
-        ptr->~T();
-        Mem::KFreeAligned(ptr);
+        if constexpr (!std::is_pointer_v<T>) {
+            T *ptr = static_cast<T *>(UntagPtr());
+            ptr->~T();
+            Mem::KFreeAligned(ptr);
+        }
     }
 
     template <typename Visitor, typename T, typename... Rest>

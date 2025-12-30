@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "stdarg.h"
+#include "stdbool.h"
 #include "stddef.h"
 #include "sys/calls/fd.h"
 
@@ -36,6 +37,12 @@ typedef struct {
 } FILE;
 
 BEGIN_DECL_C
+/**
+ * @brief Initialize standard I/O streams
+ * Must be called before using stdin, stdout, or stderr
+ */
+void InitStdio(void);
+
 /**
  *  Writes formatted output to a character array (*str) up to a maximum amount of characters (size)
  */

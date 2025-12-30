@@ -2,7 +2,9 @@
 #define KERNEL_SRC_FS_FILE_DESCRIPTOR_HPP_
 
 #include <types.h>
+#include <data_structures/tagged_pointer.hpp>
 #include <span.hpp>
+#include "io/pipe.hpp"
 
 #include "hal/spinlock.hpp"
 #include "io/error.hpp"
@@ -225,11 +227,7 @@ class FdTable
     public:
     static constexpr size_t kMaxFds = 256;
 
-    struct FdEntry {
-        OpenFileEntry *global_entry;
-        u32 fd_flags;
-        bool is_standard_stream;
-    };
+    using FdEntry = data_structures::TaggedPointer<OpenFileEntry *, IO::Pipe<4096>>;
 
     FdTable();
     ~FdTable();
@@ -237,13 +235,12 @@ class FdTable
     FdResult<fd_t> AllocateFd(OpenFileEntry *global_entry);
     FdResult<fd_t> AllocateFdAt(OpenFileEntry *global_entry, fd_t fd);
     FdResult<> FreeFd(fd_t fd);
-    FdResult<OpenFileEntry *> GetGlobalEntry(fd_t fd);
+    FdEntry *GetEntry(fd_t fd);
     bool IsValidFd(fd_t fd) const;
     FdResult<fd_t> DuplicateFd(fd_t fd);
     size_t GetOpenCount() const { return open_count_; }
     bool IsStandardStreamInitialized() const;
     void SetStandardStreamsInitialized(bool initialized);
-    FdEntry *GetEntries() { return entries_; }
 
     private:
     FdEntry entries_[kMaxFds];

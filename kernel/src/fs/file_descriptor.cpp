@@ -48,28 +48,12 @@ class LockGuard
 // FdTable Implementation
 // ============================================================================
 
-FdTable::FdTable() : open_count_(0), standard_streams_initialized_(false)
-{
-    // Initialize all entries as unused
-    for (size_t i = 0; i < kMaxFds; ++i) {
-        entries_[i].global_entry       = nullptr;
-        entries_[i].fd_flags           = 0;
-        entries_[i].is_standard_stream = false;
-    }
-}
+FdTable::FdTable() : open_count_(0), standard_streams_initialized_(false) {}
 
 FdTable::~FdTable()
 {
-    // Close all open file descriptors
+    // TaggedPointer destructor handles cleanup automatically
     LockGuard lock(lock_);
-
-    for (size_t i = 0; i < kMaxFds; ++i) {
-        if (entries_[i].global_entry != nullptr) {
-            // Note: We cannot close global entries here as we don't have access
-            // to the OpenFileTable. This cleanup should be handled by FdManager.
-            entries_[i].global_entry = nullptr;
-        }
-    }
 }
 
 FdResult<fd_t> FdTable::AllocateFd(OpenFileEntry *global_entry)
@@ -82,10 +66,8 @@ FdResult<fd_t> FdTable::AllocateFd(OpenFileEntry *global_entry)
 
     // Find the first available file descriptor
     for (size_t i = 0; i < kMaxFds; ++i) {
-        if (entries_[i].global_entry == nullptr) {
-            entries_[i].global_entry       = global_entry;
-            entries_[i].fd_flags           = 0;
-            entries_[i].is_standard_stream = false;
+        if (!entries_[i].IsValid()) {
+            entries_[i] = FdEntry::FromPtr(global_entry);
             open_count_++;
             return static_cast<fd_t>(i);
         }
@@ -107,14 +89,12 @@ FdResult<fd_t> FdTable::AllocateFdAt(OpenFileEntry *global_entry, fd_t fd)
     LockGuard lock(lock_);
 
     // Check if the FD is already in use
-    if (entries_[fd].global_entry != nullptr) {
+    if (entries_[fd].IsValid()) {
         return std::unexpected(FdError::kFdTableFull);
     }
 
     // Allocate at the specific index
-    entries_[fd].global_entry       = global_entry;
-    entries_[fd].fd_flags           = 0;
-    entries_[fd].is_standard_stream = (fd <= kStderrFd);
+    entries_[fd] = FdEntry::FromPtr(global_entry);
     open_count_++;
 
     return fd;
@@ -129,36 +109,27 @@ FdResult<> FdTable::FreeFd(fd_t fd)
     LockGuard lock(lock_);
 
     // Prevent closing standard streams through normal operations
-    if (entries_[fd].is_standard_stream) {
+    if (fd <= kStderrFd && entries_[fd].Is<IO::Pipe<4096>>()) {
         return std::unexpected(FdError::kPermissionDenied);
     }
 
-    if (entries_[fd].global_entry == nullptr) {
+    if (!entries_[fd].IsValid()) {
         return std::unexpected(FdError::kNotOpen);
     }
 
-    entries_[fd].global_entry       = nullptr;
-    entries_[fd].fd_flags           = 0;
-    entries_[fd].is_standard_stream = false;
+    // TaggedPointer destructor handles cleanup automatically
+    entries_[fd] = FdEntry();
     open_count_--;
 
     return {};
 }
 
-FdResult<OpenFileEntry *> FdTable::GetGlobalEntry(fd_t fd)
+Fs::FdTable::FdEntry *FdTable::GetEntry(fd_t fd)
 {
     if (!IsValidFd(fd)) {
-        return std::unexpected(FdError::kInvalidFd);
+        return nullptr;
     }
-
-    LockGuard lock(lock_);
-
-    OpenFileEntry *entry = entries_[fd].global_entry;
-    if (entry == nullptr) {
-        return std::unexpected(FdError::kBadFileDescriptor);
-    }
-
-    return entry;
+    return &entries_[fd];
 }
 
 bool FdTable::IsValidFd(fd_t fd) const { return fd >= 0 && static_cast<size_t>(fd) < kMaxFds; }
@@ -171,17 +142,15 @@ FdResult<fd_t> FdTable::DuplicateFd(fd_t fd)
 
     LockGuard lock(lock_);
 
-    if (entries_[fd].global_entry == nullptr) {
+    if (!entries_[fd].IsValid()) {
         return std::unexpected(FdError::kBadFileDescriptor);
     }
 
     // Find the first available file descriptor for the copy
     for (size_t i = 0; i < kMaxFds; ++i) {
-        if (entries_[i].global_entry == nullptr) {
-            // Copy the entry
-            entries_[i].global_entry       = entries_[fd].global_entry;
-            entries_[i].fd_flags           = entries_[fd].fd_flags;
-            entries_[i].is_standard_stream = false;
+        if (!entries_[i].IsValid()) {
+            // Copy the entry - TaggedPointer move constructor handles this
+            entries_[i] = std::move(entries_[fd]);
             open_count_++;
 
             return static_cast<fd_t>(i);
@@ -498,129 +467,8 @@ FdResult<> FdManager::InitializeStandardStreams(FdTable &fd_table)
         return {};  // Already initialized, no error
     }
 
-    // Use a scope guard to handle rollback on failure
-    struct StandardStreamCleanup {
-        File *stdin_file               = nullptr;
-        File *stdout_file              = nullptr;
-        File *stderr_file              = nullptr;
-        OpenFileEntry *stdin_entry     = nullptr;
-        OpenFileEntry *stdout_entry    = nullptr;
-        OpenFileEntry *stderr_entry    = nullptr;
-        bool stdin_fd_allocated        = false;
-        bool stdout_fd_allocated       = false;
-        bool stderr_fd_allocated       = false;
-        FileTable *file_table          = nullptr;
-        OpenFileTable *open_file_table = nullptr;
-        FdTable::FdEntry *fd_entries   = nullptr;
-
-        void Cleanup()
-        {
-            // Clean up in reverse order of allocation
-            if (stderr_fd_allocated) {
-                fd_entries[kStderrFd].global_entry       = nullptr;
-                fd_entries[kStderrFd].fd_flags           = 0;
-                fd_entries[kStderrFd].is_standard_stream = false;
-            }
-            if (stdout_fd_allocated) {
-                fd_entries[kStdoutFd].global_entry       = nullptr;
-                fd_entries[kStdoutFd].fd_flags           = 0;
-                fd_entries[kStdoutFd].is_standard_stream = false;
-            }
-            if (stdin_fd_allocated) {
-                fd_entries[kStdinFd].global_entry       = nullptr;
-                fd_entries[kStdinFd].fd_flags           = 0;
-                fd_entries[kStdinFd].is_standard_stream = false;
-            }
-            if (stderr_entry != nullptr) {
-                open_file_table->CloseFile(stderr_entry);
-            }
-            if (stdout_entry != nullptr) {
-                open_file_table->CloseFile(stdout_entry);
-            }
-            if (stdin_entry != nullptr) {
-                open_file_table->CloseFile(stdin_entry);
-            }
-            if (stderr_file != nullptr) {
-                file_table->Release(stderr_file);
-            }
-            if (stdout_file != nullptr) {
-                file_table->Release(stdout_file);
-            }
-            if (stdin_file != nullptr) {
-                file_table->Release(stdin_file);
-            }
-        }
-    };
-
-    StandardStreamCleanup cleanup;
-    cleanup.file_table      = &file_table_;
-    cleanup.open_file_table = &open_file_table_;
-    cleanup.fd_entries      = fd_table.GetEntries();
-
-    // Create standard stream files directly without using paths
-    auto result = file_table_.CreateStandardStream(StandardStreamType::kStdin);
-    if (!result) {
-        return std::unexpected(result.error());
-    }
-    cleanup.stdin_file = *result;
-
-    result = file_table_.CreateStandardStream(StandardStreamType::kStdout);
-    if (!result) {
-        cleanup.Cleanup();
-        return std::unexpected(result.error());
-    }
-    cleanup.stdout_file = *result;
-
-    result = file_table_.CreateStandardStream(StandardStreamType::kStderr);
-    if (!result) {
-        cleanup.Cleanup();
-        return std::unexpected(result.error());
-    }
-    cleanup.stderr_file = *result;
-
-    // Create global file entries
-    FdError err =
-        open_file_table_.OpenFile(cleanup.stdin_file, OpenMode::kRead, &cleanup.stdin_entry);
-    if (err != FdError{}) {
-        cleanup.Cleanup();
-        return std::unexpected(err);
-    }
-
-    err = open_file_table_.OpenFile(cleanup.stdout_file, OpenMode::kWrite, &cleanup.stdout_entry);
-    if (err != FdError{}) {
-        cleanup.Cleanup();
-        return std::unexpected(err);
-    }
-
-    err = open_file_table_.OpenFile(cleanup.stderr_file, OpenMode::kWrite, &cleanup.stderr_entry);
-    if (err != FdError{}) {
-        cleanup.Cleanup();
-        return std::unexpected(err);
-    }
-
-    // Allocate file descriptors at explicit indices 0, 1, 2
-    auto fd_result = fd_table.AllocateFdAt(cleanup.stdin_entry, kStdinFd);
-    if (!fd_result) {
-        cleanup.Cleanup();
-        return std::unexpected(fd_result.error());
-    }
-    cleanup.stdin_fd_allocated = true;
-
-    fd_result = fd_table.AllocateFdAt(cleanup.stdout_entry, kStdoutFd);
-    if (!fd_result) {
-        cleanup.Cleanup();
-        return std::unexpected(fd_result.error());
-    }
-    cleanup.stdout_fd_allocated = true;
-
-    fd_result = fd_table.AllocateFdAt(cleanup.stderr_entry, kStderrFd);
-    if (!fd_result) {
-        cleanup.Cleanup();
-        return std::unexpected(fd_result.error());
-    }
-    cleanup.stderr_fd_allocated = true;
-
-    // Mark as initialized
+    // Standard streams are now allocated directly in PrepareProcess with pipes
+    // Just mark as initialized
     standard_streams_initialized_ = true;
     fd_table.SetStandardStreamsInitialized(true);
 
@@ -672,17 +520,21 @@ FdResult<> FdManager::Close(int fd)
         return std::unexpected(FdError::kIoError);
     }
 
-    // Get global entry
-    auto entry_result = fd_table->GetGlobalEntry(fd);
-    if (!entry_result) {
-        return std::unexpected(entry_result.error());
+    // Get entry using TaggedPointer
+    auto *entry = fd_table->GetEntry(fd);
+    if (!entry || !entry->IsValid()) {
+        return std::unexpected(FdError::kBadFileDescriptor);
     }
-    OpenFileEntry *global_entry = *entry_result;
 
-    // Close global entry
-    FdError err = open_file_table_.CloseFile(global_entry);
-    if (err != FdError{}) {
-        return std::unexpected(err);
+    // Dispatch based on type - close OpenFileEntry if needed
+    if (entry->Is<OpenFileEntry *>()) {
+        OpenFileEntry *global_entry = entry->As<OpenFileEntry *>();
+
+        // Close global entry
+        FdError err = open_file_table_.CloseFile(global_entry);
+        if (err != FdError{}) {
+            return std::unexpected(err);
+        }
     }
 
     // Free file descriptor
@@ -706,35 +558,53 @@ FdResult<size_t> FdManager::Read(int fd, std::span<byte> buffer)
         return std::unexpected(FdError::kIoError);
     }
 
-    // Get global entry
-    auto entry_result = fd_table->GetGlobalEntry(fd);
-    if (!entry_result) {
-        return std::unexpected(entry_result.error());
-    }
-    OpenFileEntry *global_entry = *entry_result;
-
-    // Check if file is opened for reading
-    OpenMode mode = static_cast<OpenMode>(global_entry->flags);
-    if (!HasMode(mode, OpenMode::kRead) && !HasMode(mode, OpenMode::kReadWrite)) {
-        return std::unexpected(FdError::kPermissionDenied);
-    }
-
-    // Get file and stream
-    File *file = global_entry->file;
-    if (file == nullptr || file->stream == nullptr) {
+    // Get entry using TaggedPointer
+    auto *entry = fd_table->GetEntry(fd);
+    if (!entry || !entry->IsValid()) {
         return std::unexpected(FdError::kBadFileDescriptor);
     }
 
-    // Read from stream
-    auto result = file->stream->Read(buffer);
-    if (!result) {
-        return std::unexpected(FdError::kIoError);
-    }
+    // Dispatch based on type using visitor pattern
+    return entry->Visit([&](auto &value) -> FdResult<size_t> {
+        using T = std::decay_t<decltype(value)>;
 
-    // Update offset
-    global_entry->offset += *result;
+        if constexpr (std::is_pointer_v<T>) {
+            // Regular file handling (OpenFileEntry *)
+            OpenFileEntry *global_entry = value;
+            if (global_entry == nullptr) {
+                return std::unexpected(FdError::kBadFileDescriptor);
+            }
 
-    return *result;
+            // Check if file is opened for reading
+            OpenMode mode = static_cast<OpenMode>(global_entry->flags);
+            if (!HasMode(mode, OpenMode::kRead) && !HasMode(mode, OpenMode::kReadWrite)) {
+                return std::unexpected(FdError::kPermissionDenied);
+            }
+
+            // Get file and stream
+            File *file = global_entry->file;
+            if (file == nullptr || file->stream == nullptr) {
+                return std::unexpected(FdError::kBadFileDescriptor);
+            }
+
+            // Read from stream
+            auto result = file->stream->Read(buffer);
+            if (!result) {
+                return std::unexpected(FdError::kIoError);
+            }
+
+            // Update offset
+            global_entry->offset += *result;
+            return *result;
+        } else {
+            // Standard stream handling (IO::Pipe<4096>)
+            auto result = value.Read(buffer);
+            if (!result) {
+                return std::unexpected(FdError::kIoError);
+            }
+            return *result;
+        }
+    });
 }
 
 FdResult<size_t> FdManager::Write(int fd, std::span<const byte> buffer)
@@ -749,41 +619,59 @@ FdResult<size_t> FdManager::Write(int fd, std::span<const byte> buffer)
         return std::unexpected(FdError::kIoError);
     }
 
-    // Get global entry
-    auto entry_result = fd_table->GetGlobalEntry(fd);
-    if (!entry_result) {
-        return std::unexpected(entry_result.error());
-    }
-    OpenFileEntry *global_entry = *entry_result;
-
-    // Check if file is opened for writing
-    OpenMode mode = static_cast<OpenMode>(global_entry->flags);
-    if (!HasMode(mode, OpenMode::kWrite) && !HasMode(mode, OpenMode::kReadWrite)) {
-        return std::unexpected(FdError::kPermissionDenied);
-    }
-
-    // Get file and stream
-    File *file = global_entry->file;
-    if (file == nullptr || file->stream == nullptr) {
+    // Get entry using TaggedPointer
+    auto *entry = fd_table->GetEntry(fd);
+    if (!entry || !entry->IsValid()) {
         return std::unexpected(FdError::kBadFileDescriptor);
     }
 
-    // For append mode, seek to end of file
-    if (global_entry->is_append) {
-        // TODO: Implement seek to end when VFS supports it
-        // For now, just write at current offset
-    }
+    // Dispatch based on type using visitor pattern
+    return entry->Visit([&](auto &value) -> FdResult<size_t> {
+        using T = std::decay_t<decltype(value)>;
 
-    // Write to stream
-    auto result = file->stream->Write(buffer);
-    if (!result) {
-        return std::unexpected(FdError::kIoError);
-    }
+        if constexpr (std::is_pointer_v<T>) {
+            // Regular file handling (OpenFileEntry *)
+            OpenFileEntry *global_entry = value;
+            if (global_entry == nullptr) {
+                return std::unexpected(FdError::kBadFileDescriptor);
+            }
 
-    // Update offset
-    global_entry->offset += *result;
+            // Check if file is opened for writing
+            OpenMode mode = static_cast<OpenMode>(global_entry->flags);
+            if (!HasMode(mode, OpenMode::kWrite) && !HasMode(mode, OpenMode::kReadWrite)) {
+                return std::unexpected(FdError::kPermissionDenied);
+            }
 
-    return *result;
+            // Get file and stream
+            File *file = global_entry->file;
+            if (file == nullptr || file->stream == nullptr) {
+                return std::unexpected(FdError::kBadFileDescriptor);
+            }
+
+            // For append mode, seek to end of file
+            if (global_entry->is_append) {
+                // TODO: Implement seek to end when VFS supports it
+                // For now, just write at current offset
+            }
+
+            // Write to stream
+            auto result = file->stream->Write(buffer);
+            if (!result) {
+                return std::unexpected(FdError::kIoError);
+            }
+
+            // Update offset
+            global_entry->offset += *result;
+            return *result;
+        } else {
+            // Standard stream handling (IO::Pipe<4096>)
+            auto result = value.Write(buffer);
+            if (!result) {
+                return std::unexpected(FdError::kIoError);
+            }
+            return *result;
+        }
+    });
 }
 
 FdTable *FdManager::GetCurrentProcessFdTable()
