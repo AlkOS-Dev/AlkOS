@@ -30,6 +30,8 @@ class Processes
 
     NODISCARD std::expected<Process *, Error> PrepareProcess();
 
+    void CleanupProcess(Process *process);
+
     NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
     {
         const u16 id = pid.id;
@@ -50,6 +52,7 @@ class Processes
             return std::unexpected(Error::ProcessNotFound);
         }
 
+        CleanupProcess(processes_.Get(id));
         processes_.Free(id);
         return {};
     }

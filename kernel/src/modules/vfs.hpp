@@ -4,6 +4,7 @@
 #include <template_lib.hpp>
 #include <vfs/types.hpp>
 #include "boot_args.hpp"
+#include "fs/file_descriptor.hpp"
 #include "modules/helpers.hpp"
 
 namespace internal
@@ -22,6 +23,7 @@ class VfsModule : template_lib::StaticSingletonHelper
     // ------------------------------
 
     DEFINE_MODULE_FIELD(vfs, Mounts);
+    DEFINE_MODULE_FIELD(Fs, FdManager);
 
     // ------------------------------
     // Mount Point Management

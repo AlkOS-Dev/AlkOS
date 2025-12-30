@@ -1,4 +1,5 @@
 #include "syscalls.hpp"
+#include "dispatch_table.hpp"
 
 #include <sys/calls.h>
 

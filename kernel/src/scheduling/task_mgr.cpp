@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
+#include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 #include "trace_framework.hpp"

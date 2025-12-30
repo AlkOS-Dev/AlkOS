@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_SCHEDULING_PROCESS_HPP_
 #define KERNEL_SRC_SCHEDULING_PROCESS_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include "hal/tasks.hpp"
 #include "mem/types.hpp"
@@ -10,6 +10,12 @@
 namespace Mem
 {
 class AddressSpace;
+}
+
+// Forward declarations
+namespace Fs
+{
+class FdTable;
 }
 
 namespace Sched
@@ -35,6 +41,9 @@ struct Process : hal::Process {
 
     /* Process resources */
     Mem::VirtualPtr<Mem::AddressSpace> address_space;
+
+    /* File descriptor table */
+    Fs::FdTable *fd_table;
 };
 }  // namespace Sched
 

@@ -16,8 +16,8 @@ using namespace vfs;
 // Global ramdisk storage (must persist for the lifetime of the VFS)
 // ------------------------------
 
-static byte gRamdiskIoStorage[sizeof(io::InMemory)];
-static byte gRamdiskFsStorage[sizeof(Fat12<io::InMemory>)];
+static byte gRamdiskIoStorage[sizeof(vfs::io::InMemory)];
+static byte gRamdiskFsStorage[sizeof(Fat12<vfs::io::InMemory>)];
 
 // ------------------------------
 // Construction
@@ -31,10 +31,10 @@ internal::VfsModule::VfsModule(const BootArguments &args) noexcept
     if constexpr (FeatureEnabled<FeatureFlag::kRamdisk>) {
         if (args.ramdisk_args.start != nullptr && args.ramdisk_args.end > args.ramdisk_args.start) {
             auto *ramdisk_virt = Mem::PhysToVirt(args.ramdisk_args.start);
-            auto *io_ptr       = new (gRamdiskIoStorage) io::InMemory(ramdisk_virt);
+            auto *io_ptr       = new (gRamdiskIoStorage) vfs::io::InMemory(ramdisk_virt);
 
             // Validate and create Fat12 filesystem
-            if (Fat12<io::InMemory>::IsValid(*io_ptr)) {
+            if (Fat12<vfs::io::InMemory>::IsValid(*io_ptr)) {
                 auto *fat12_ptr = new (gRamdiskFsStorage) Fat12(*io_ptr);
                 auto fs         = fat12_ptr->GetFilesystem();
 
