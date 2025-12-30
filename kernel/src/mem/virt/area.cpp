@@ -17,7 +17,7 @@ namespace Mem
 static bool MapPage(AddressSpace &as, VPtr<void> vaddr, PPtr<void> paddr, VirtualMemAreaFlags flags)
 {
     auto &mmu      = MemoryModule::Get().GetMmu();
-    bool is_kernel = (Mem::PtrToUptr(vaddr) >= hal::kKernelVirtualAddressStart);
+    bool is_kernel = (Mem::PtrToUptr(vaddr) >= kKernelSpaceStart);
 
     hal::PageFlags page_flags{
         .Present        = true,
@@ -119,7 +119,7 @@ KernelSyncVMemArea::KernelSyncVMemArea()
     // Covers the entire upper half of the 64-bit address space
     // 0x8000000000000000 - 0xFFFFFFFFFFFFFFFF
     : VMemArea(
-          Mem::UptrToPtr<void>(kKernelSpaceStart), kKernelSpaceEnd - kKernelSpaceStart,
+          Mem::UptrToPtr<void>(kKernelSpaceStart), kKernelSpaceEndInclusive - kKernelSpaceStart,
           // Permissions are determined by the actual kernel page table entries being copied,
           // these flags are just placeholders for the VMA object.
           VirtualMemAreaFlags{.readable = true, .writable = true, .executable = true}

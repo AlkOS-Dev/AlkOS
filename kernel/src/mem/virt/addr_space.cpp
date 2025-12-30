@@ -5,6 +5,7 @@
 
 #include <template/scope_guard.hpp>
 
+#include "constants.hpp"
 #include "hal/constants.hpp"
 #include "hal/mmu.hpp"
 
@@ -63,6 +64,9 @@ AS::~AddressSpace()
 expected<void, MemError> AS::AddArea(VMemArea *vma)
 {
     ASSERT_NOT_NULL(vma);
+    R_ASSERT_TRUE(IsAligned(vma->GetStart(), hal::kPageSizeBytes), "VMA start is not aligned");
+    R_ASSERT_TRUE(IsAligned(vma->GetSize(), hal::kPageSizeBytes), "VMA size is not aligned");
+
     std::lock_guard guard(area_list_lock_);
     template_lib::ScopeGuard vma_guard([&] {
         KDelete(vma);
@@ -134,7 +138,7 @@ expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFl
     auto start = vma->GetStart();
     auto size  = vma->GetSize();
 
-    bool is_kernel = (PtrToUptr(start) >= hal::kKernelVirtualAddressStart);
+    bool is_kernel = IsKernelSpace(start);
 
     hal::PageFlags pf{
         .Present        = true,
@@ -192,15 +196,19 @@ expected<GapInfo, MemError> AS::FindGap(size_t size, VPtr<void> range_start, VPt
     uptr search_start = range_start ? PtrToUptr(range_start) : 0;
     uptr search_end   = range_end ? PtrToUptr(range_end) : UINTPTR_MAX;
 
-    // Sentinel value
+    search_start = AlignUp(search_start, hal::kPageSizeBytes);
+    search_end   = AlignDown(search_end, hal::kPageSizeBytes);
+
     uptr prev_end = search_start;
 
     for (auto *vma : area_list_) {
         uptr curr_start = PtrToUptr(vma->GetStart());
         uptr curr_end   = curr_start + vma->GetSize();
 
-        // Find gaps only in the range of interest
+        // Search only in the range of interest
         if (curr_end <= search_start) {
+            // Handle case where VMA overlaps the search_start boundary but ends after it
+            prev_end = std::max(prev_end, curr_end);
             continue;
         }
         if (curr_start >= search_end) {
@@ -208,8 +216,8 @@ expected<GapInfo, MemError> AS::FindGap(size_t size, VPtr<void> range_start, VPt
         }
 
         // Gap found
-        uptr gap_start = prev_end;
-        uptr gap_end   = curr_start;
+        uptr gap_start = AlignUp(prev_end, hal::kPageSizeBytes);
+        uptr gap_end   = AlignDown(curr_start, hal::kPageSizeBytes);
 
         if (gap_end > gap_start && (gap_end - gap_start) >= size) {
             return GapInfo{UptrToPtr<void>(gap_start), size};
@@ -218,9 +226,10 @@ expected<GapInfo, MemError> AS::FindGap(size_t size, VPtr<void> range_start, VPt
         prev_end = curr_end;
     }
 
-    // Final check: gap between last processed area and search_end
-    if (search_end > prev_end && (search_end - prev_end) >= size) {
-        return GapInfo{UptrToPtr<void>(prev_end), size};
+    uptr gap_start = AlignUp(prev_end, hal::kPageSizeBytes);
+
+    if (search_end > gap_start && (search_end - gap_start) >= size) {
+        return GapInfo{UptrToPtr<void>(gap_start), size};
     }
 
     return unexpected(MemError::NotFound);

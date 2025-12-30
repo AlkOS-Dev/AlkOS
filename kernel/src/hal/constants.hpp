@@ -7,7 +7,6 @@
 
 namespace hal
 {
-static constexpr u64 kKernelVirtualAddressStart = arch::kKernelVirtualAddressStart;
 
 static constexpr u64 kDirectMapAddrStart = arch::kDirectMapAddrStart;
 static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
