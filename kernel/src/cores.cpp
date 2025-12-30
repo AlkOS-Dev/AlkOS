@@ -62,3 +62,8 @@ void hardware::CoresController::BootUpAllCores()
 
     DEBUG_INFO_INTERRUPTS("Finished booting up all cores...");
 }
+
+void hardware::CoresController::PanicAllCores()
+{
+    TRACE_INFO_HARDWARE("Invoking panic on all cores...");
+}

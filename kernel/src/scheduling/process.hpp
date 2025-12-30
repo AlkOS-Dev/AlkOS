@@ -26,7 +26,10 @@ struct PACK ProcessFlags {
 static_assert(sizeof(ProcessFlags) == 1);
 
 struct Process : hal::Process {
+    static constexpr size_t kMaxNameLength = 128;
+
     /* Management */
+    char name[kMaxNameLength];
     Pid pid;
     ProcessFlags flags;
 

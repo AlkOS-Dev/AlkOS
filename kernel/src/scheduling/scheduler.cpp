@@ -10,8 +10,6 @@ namespace Sched
 {
 void Scheduler::AddReadyThread(Thread *thread)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-
     if (threads_ == nullptr) {
         threads_     = thread;
         thread->next = thread;
@@ -21,8 +19,6 @@ void Scheduler::AddReadyThread(Thread *thread)
     thread->next   = threads_->next;
     threads_->next = thread;
     threads_       = thread;
-
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 }
 
 Thread *Scheduler::Schedule()
@@ -47,7 +43,6 @@ Thread *Scheduler::Schedule()
 }
 void Scheduler::Yield()
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     auto thread = Schedule();
 
     if (thread != nullptr) {
