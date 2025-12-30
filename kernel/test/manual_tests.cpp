@@ -30,6 +30,7 @@ static void Task0()
 
         const auto tcb = hardware::GetCurrentTCB();
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        trace::DumpAllBuffersOnFailure();
         hal::ContextSwitch(tcb->next);
     }
 }
@@ -50,6 +51,7 @@ static void Task1()
         const auto tcb = hardware::GetCurrentTCB();
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        trace::DumpAllBuffersOnFailure();
         hal::ContextSwitch(tcb->next);
     }
 }
@@ -60,9 +62,9 @@ MTEST(KernelTaskSwitchTest)
     flags.KernelSpaceOnly = true;
     flags.PreserveFloats  = true;
 
-    auto p0 = SchedulingModule::Get().GetTaskMgr().SpawnProcess(Task0, flags);
+    auto p0 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess("task0", flags, Task0);
     ASSERT_TRUE(static_cast<bool>(p0));
-    auto p1 = SchedulingModule::Get().GetTaskMgr().SpawnProcess(Task1, flags);
+    auto p1 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess("task1", flags, Task1);
     ASSERT_TRUE(static_cast<bool>(p1));
 
     const auto tid0 = std::get<1>(p0.value());
