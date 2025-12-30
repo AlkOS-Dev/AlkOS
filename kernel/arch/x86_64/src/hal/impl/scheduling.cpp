@@ -1,5 +1,7 @@
 #include "hal/impl/scheduling.hpp"
 #include "cpu/gdt.hpp"
+#include "cpu/utils.hpp"
+#include "hal/interrupt_params.hpp"
 #include "scheduling/threads.hpp"
 
 #include <string.h>
@@ -11,28 +13,19 @@ FAST_CALL void InitializeStack(void **stack, void (*f)())
     /* NOTE: Thread entry always starts in Kernel Code */
     static constexpr auto kFunc =
         kIsKernelTask ? Sched::KThreadEntrypoint : Sched::UserThreadEntrypoint;
-    static constexpr u64 kInitialFlags =
-        kSingleBit<u64, 1> | kSingleBit<u64, 9>;  // Bit1 - Reserved, Bit9 - Interrupt flag
 
-    static constexpr size_t kStackSpace  = 21 * 8;  // 15 regs + InterruptStackFrame
-    static constexpr size_t kRdiOffset   = 4 * 8;   // rdi = 5th reg
-    static constexpr size_t kRipOffset   = 16 * 8;  // 15 regs + error code
-    static constexpr size_t kCsOffset    = kRipOffset + sizeof(u64);
-    static constexpr size_t kFlagsOffset = kCsOffset + sizeof(u64);
-    static constexpr size_t kSpOffset    = kFlagsOffset + sizeof(u64);
-    static constexpr size_t kSsOffset    = kSpOffset + sizeof(u64);
+    auto stack_top = static_cast<byte *>(*stack) - sizeof(IsrErrorStackFrame);
+    auto frame     = reinterpret_cast<IsrErrorStackFrame *>(stack_top);
 
-    auto stack_top = static_cast<byte *>(*stack) - kStackSpace;
+    memset(stack_top, 0, sizeof(IsrErrorStackFrame));
 
-    memset(stack_top, 0, kStackSpace);
-    *reinterpret_cast<u64 *>(stack_top + kRdiOffset) = reinterpret_cast<u64>(f);
-    *reinterpret_cast<u64 *>(stack_top + kRipOffset) = reinterpret_cast<u64>(kFunc);
-    *reinterpret_cast<u64 *>(stack_top + kCsOffset) =
-        static_cast<u64>(cpu::GDT::kKernelCodeSelector);
-    *reinterpret_cast<u64 *>(stack_top + kSsOffset) =
-        static_cast<u64>(cpu::GDT::kKernelDataSelector);
-    *reinterpret_cast<u64 *>(stack_top + kSpOffset)    = reinterpret_cast<u64>(*stack);
-    *reinterpret_cast<u64 *>(stack_top + kFlagsOffset) = kInitialFlags;
+    frame->registers.rdi          = reinterpret_cast<u64>(f);
+    frame->isr_stack_frame.rip    = reinterpret_cast<u64>(kFunc);
+    frame->error_code             = 0;
+    frame->isr_stack_frame.cs     = static_cast<u64>(cpu::GDT::kKernelCodeSelector);
+    frame->isr_stack_frame.rflags = kInitialRFlags;
+    frame->isr_stack_frame.rsp    = reinterpret_cast<u64>(*stack);
+    frame->isr_stack_frame.ss     = static_cast<u64>(cpu::GDT::kKernelDataSelector);
 
     *stack = reinterpret_cast<void *>(stack_top);
 }

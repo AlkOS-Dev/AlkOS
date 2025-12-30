@@ -4,6 +4,12 @@
 
 %include "include/scheduling.nasm"
 
+extern cdecl_SetKernelGs
+extern cdecl_ContextSwitchOnInterrupt
+extern HandleException
+extern HandleHardwareInterrupt
+extern HandleSoftwareInterrupt
+
 %macro load_user_gs_if_needed 0
     mov r12, [rsp + _cs_int_frame_offset]
     cmp qword r12, _kernel_code_selector
@@ -19,29 +25,11 @@
 
     mov r13, rax                     ; save next TCB
 
-    call cdecl_GetCurrentTCB           ; RAX = pointer to TCB
-    mov [rax+Thread.kernel_stack], rsp ; Save RSP for previous task's kernel stack in the thread's TCB
-
-    ; ------------------------
-    ; Setup next task state
-
     mov rdi, r13
-    call cdecl_SwapFsIfNeeded           ; Set FS base if needed
+    mov rsi, rsp
+    call cdecl_ContextSwitchOnInterrupt
 
-    mov rdi, r13
-    call cdecl_SetCurrentTCB
     mov rsp, [r13+Thread.kernel_stack]   ; Change the stack
-
-    mov rdi, [r13+Thread.kernel_stack_bottom]
-    call cdecl_SetTssRsp0                ; Adjust TSS.rsp0
-
-    mov rdi, r13
-    call cdecl_GetThreadsPageTable     ; RAX = next cr3
-    mov r11, cr3                       ; R11 = current cr3
-
-    cmp r11, rax                       ; Skip virtual address space change if not needed - omit tlb flushes
-    je .done
-    mov cr3, rax                       ; Load next task's virtual address space
 .done:
 
     load_user_gs_if_needed
@@ -122,7 +110,6 @@ section .text
 
 extern g_syscall_dispatch_table
 extern g_syscall_count
-extern cdecl_SetKernelGs
 
 ; Expected system call convention:
 ; - RAX: syscall number
@@ -166,16 +153,6 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 ; ------------------------------
 ; ISR wrappers definitions
 ; ------------------------------
-
-extern cdecl_GetCurrentTCB
-extern cdecl_SetCurrentTCB
-extern cdecl_GetThreadsPageTable
-extern cdecl_SetTssRsp0
-extern cdecl_SetNextThreadFs
-extern cdecl_SwapFsIfNeeded
-extern HandleException
-extern HandleHardwareInterrupt
-extern HandleSoftwareInterrupt
 
 ; Intel-defined interrupts (0-31) -> HandleException
 exception_wrapper 0  ; Division Error: Divide by zero error

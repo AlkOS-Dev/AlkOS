@@ -16,6 +16,7 @@ std::expected<Thread *, Error> Threads::PrepareThread()
     }
 
     Thread *thread = threads_.Get(idx);
+    thread->InitMem();
 
     ASSERT_LE(idx, std::numeric_limits<u16>::max());
     thread->tid = AssignNewTid(static_cast<u16>(idx));
@@ -43,13 +44,3 @@ void OnKThreadExit()
 }
 
 }  // namespace Sched
-
-void *cdecl_GetThreadsPageTable(Sched::Thread *thread)
-{
-    ASSERT_NOT_NULL(thread);
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-
-    return proc.value()->address_space->PageTableRoot();
-}

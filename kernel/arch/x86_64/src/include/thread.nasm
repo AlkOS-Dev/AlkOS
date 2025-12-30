@@ -3,6 +3,7 @@
 ; ------------------------------------------------------------
 
 struc Thread
+    .fp_state      resb 4096
     .fs_base       resq 1
     .gs_base       resq 1
     .tid:          resq 1

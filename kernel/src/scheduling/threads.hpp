@@ -81,6 +81,4 @@ void OnKThreadExit();
 
 }  // namespace Sched
 
-extern "C" void *cdecl_GetThreadsPageTable(Sched::Thread *thread);
-
 #endif  // KERNEL_SRC_SCHEDULING_THREADS_HPP_
