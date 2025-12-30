@@ -440,6 +440,6 @@ NODISCARD TraceLevel GetTraceLevel(TraceModule module)
 
 void DumpAllBuffersOnFailure() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
 
-void DumpWorker() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
+void TraceDumperTask() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
 
 }  // namespace trace

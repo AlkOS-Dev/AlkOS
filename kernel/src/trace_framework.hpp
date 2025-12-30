@@ -52,7 +52,7 @@ enum class TraceModule {
 void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 void DumpAllBuffersOnFailure();
-void DumpWorker();
+void TraceDumperTask();
 
 /* MODULE TIME CORE PROC MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>

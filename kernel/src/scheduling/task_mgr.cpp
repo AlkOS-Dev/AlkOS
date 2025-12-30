@@ -37,6 +37,10 @@ void TaskMgr::InitializeMultitasking()
             "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
+
+    // Spawn trace dumper
+    const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
+    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)

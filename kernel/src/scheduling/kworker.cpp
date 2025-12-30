@@ -1,5 +1,7 @@
 #include "kworker.hpp"
 #include "hal/debug.hpp"
+#include "modules/hardware.hpp"
+#include "modules/scheduling.hpp"
 #include "trace_framework.hpp"
 
 void Sched::KWorkerMain()
@@ -13,5 +15,17 @@ void Sched::KWorkerMain()
             hal::Noop();
             hal::Noop();
         }
+    }
+}
+
+void Sched::TraceDumperMain()
+{
+    TRACE_INFO_SCHEDULING("Created new TraceDumper!");
+    while (true) {
+        trace::TraceDumperTask();
+
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        SchedulingModule::Get().GetScheduler().Yield();
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     }
 }
