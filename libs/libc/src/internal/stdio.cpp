@@ -1,5 +1,6 @@
-#include "stdio.h"
+#include "stdio.hpp"
 #include "string.h"
+#include "stdio.h"
 #include "sys/calls/fd.h"
 
 static FILE _stdin;
@@ -10,7 +11,7 @@ FILE *stdin  = &_stdin;
 FILE *stdout = &_stdout;
 FILE *stderr = &_stderr;
 
-void InitStdio(void)
+void InitStdio()
 {
     memset(&_stdin, 0, sizeof(FILE));
     _stdin.fd                    = kFdStdIn;

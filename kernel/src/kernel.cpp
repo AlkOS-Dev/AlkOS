@@ -26,7 +26,32 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
-    SchedulingModule::Get().GetScheduler().ConvertToScheduling();
+
+    // SchedulingModule::Get().GetScheduler().ConvertToScheduling();
+
+    auto &video = VideoModule::Get();
+    Graphics::Painter painter(video.GetScreen(), video.GetFormat());
+    Graphics::Psf2Font font(drdos8x8_psfu);
+
+    if (!font.IsValid()) {
+        TRACE_WARN_VIDEO("Invalid font");
+    }
+
+    System::GraphicsConsole console(painter, font);
+    System::Shell shell(console, HardwareModule::Get().GetPs2Keyboard());
+
+    shell.Init();
+    video.Flush();
+
+    while (true) {
+        shell.Update();
+        video.Flush();
+
+        // TODO: Replace with CpuHalt or smth like scheduler sleep.
+        for (volatile i32 i = 0; i < 10000; ++i) {
+        }
+        trace::TraceDumperTask();
+    }
 }
 
 extern "C" void KernelMain(const Mem::PPtr<hal::RawBootArguments> raw_args)

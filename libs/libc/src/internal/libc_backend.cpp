@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "sys/calls.h"
+#include "sys/fd.h"
 
 DEFINE_SYSCALL_VOID(
     get_clock_value, kSysGetClockValue, const ClockType, type, TimeVal *, time, Timezone *,
@@ -17,9 +18,9 @@ DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
 DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
 
 DEFINE_SYSCALL(open, kSysOpen, int, const char *, pathname, int, flags)
-DEFINE_SYSCALL(close, kSysClose, int, int, fd)
-DEFINE_SYSCALL(read, kSysRead, ssize_t, int, fd, void *, buf, size_t, count)
-DEFINE_SYSCALL(write, kSysWrite, ssize_t, int, fd, const void *, buf, size_t, count)
-DEFINE_SYSCALL(seek, kSysSeek, ssize_t, int, fd, ssize_t, offset, FdSeek, whence)
+DEFINE_SYSCALL(close, kSysClose, int, fd_t, fd)
+DEFINE_SYSCALL(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count)
+DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count)
+DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
 
 #endif  // __ALKOS_KERNEL__

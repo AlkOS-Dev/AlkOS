@@ -15,6 +15,8 @@
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
+#include "internal/stdio.hpp"
+
 /* GCC CXX provided function initializing global constructors */
 extern "C" void _init();
 
@@ -54,11 +56,15 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Fully Initialize ACPI subsystem */
     // HardwareModule::Get().GetACPIController().Init();
 
+    VfsModule::Init(args);
+
+    // !!! Temporary !!!
+    InitStdio();
+
     SchedulingModule::Init();
     SchedulingModule::Get().GetTaskMgr().InitializeMultitasking();
 
     HardwareModule::Get().GetCoresController().BootUpAllCores();
 
-    VfsModule::Init(args);
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
 }
