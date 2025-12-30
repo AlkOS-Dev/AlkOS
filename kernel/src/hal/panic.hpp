@@ -2,6 +2,7 @@
 #define KERNEL_SRC_HAL_PANIC_HPP_
 
 #include <hal/impl/panic.hpp>
+#include "modules/hardware.hpp"
 #include "trace_framework.hpp"
 
 #include <stdio.h>
@@ -17,6 +18,9 @@ namespace hal
  */
 WRAP_CALL void KernelPanic(const char *msg)
 {
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    HardwareModule::Get().GetCoresController().PanicAllCores();
+
     TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
     TRACE_FATAL_GENERAL(msg);
     TRACE_FATAL_GENERAL("\n");
@@ -27,6 +31,9 @@ WRAP_CALL void KernelPanic(const char *msg)
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 {
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    HardwareModule::Get().GetCoresController().PanicAllCores();
+
     TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
     TRACE_FATAL_GENERAL(fmt, args...);
     arch::KernelPanic();

@@ -56,23 +56,23 @@ void TestModule::RunTestModule()
 
     /* read single line of input */
     char buff[kInputBufferSize];
-    arch::TerminalWriteString(
+    hal::TerminalWriteString(
         "Provide test name for framework or simply type \"exit\" to quit...\n"
     );
-    if (arch::TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
-        arch::TerminalWriteError("[TEST] [FAIL] Too long input message...\n");
+    if (hal::TerminalReadLine(buff, kInputBufferSize) == kInputBufferSize) {
+        hal::TerminalWriteError("[TEST] [FAIL] Too long input message...\n");
         hal::QemuShutdown();
     }
 
     if (strcmp(buff, "exit") == 0) {
-        arch::TerminalWriteString("Kernel shutdown on test...\n");
+        hal::TerminalWriteString("Kernel shutdown on test...\n");
         hal::QemuShutdown();
     }
 
     const TestSpec *test = FindTestFunction(buff);
 
     if (test == nullptr) {
-        arch::TerminalWriteError("[TEST] [FAIL] Test not found...\n");
+        hal::TerminalWriteError("[TEST] [FAIL] Test not found...\n");
         hal::QemuShutdown();
     }
 
@@ -137,18 +137,18 @@ void TestModule::RunTest_(const TestSpec *test)
         arch::TerminalWriteError(
             "[TEST] [FAIL] Test was supposed to fail but all checks passed correctly...\n"
         );
-        trace::Flush();
+        trace::DumpAllBuffersOnFailure();
         return;
     }
 
     if (g_testCheckFailed) {
         arch::TerminalWriteError("[TEST] [FAIL] Test failed on some EXPECT_* checks...\n");
-        trace::Flush();
+        trace::DumpAllBuffersOnFailure();
         return;
     }
 
     arch::TerminalWriteString("[TEST] [SUCCESS] Test passed...\n");
-    trace::Flush();
+    trace::DumpAllBuffersOnFailure();
 }
 
 void AddTest(const char *name, const test_factory_t factory)

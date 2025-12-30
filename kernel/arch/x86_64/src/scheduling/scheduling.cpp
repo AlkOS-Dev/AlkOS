@@ -47,11 +47,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
     }
 }
 
-FAST_CALL void SetTssRsp0(const u64 rsp0)
-{
-    auto core_local     = hardware::GetCoreLocalData();
-    core_local.tss.rsp0 = rsp0;
-}
+FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalData().tss.rsp0 = rsp0; }
 
 FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
@@ -154,7 +150,7 @@ extern "C" void cdecl_ContextSwitchEntry(
     mem->error_code             = 0;
     mem->isr_stack_frame.rip    = rip;
     mem->isr_stack_frame.cs     = static_cast<u64>(cpu::GDT::kKernelCodeSelector);
-    mem->isr_stack_frame.rflags = GetRFlags() | 0x200;
+    mem->isr_stack_frame.rflags = GetRFlags();
     mem->isr_stack_frame.rsp    = reinterpret_cast<u64>(mem) + sizeof(IsrErrorStackFrame);
     mem->isr_stack_frame.ss     = static_cast<u64>(cpu::GDT::kKernelDataSelector);
 

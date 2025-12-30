@@ -11,6 +11,7 @@ enum class Error {
     ExceededMaxAllowedInstances,
     ProcessNotFound,
     ThreadNotFound,
+    ProcessNameTooLong,
 };
 
 }  // namespace Sched
@@ -26,6 +27,8 @@ static constexpr const char *to_string(const Sched::Error &error)
             return "ProcessNotFound";
         case Sched::Error::ThreadNotFound:
             return "ThreadNotFound";
+        case Sched::Error::ProcessNameTooLong:
+            return "ProcessNameTooLong";
     }
 
     return "unknown error";

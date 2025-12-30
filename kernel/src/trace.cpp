@@ -57,8 +57,7 @@ static struct TraceFramework {
     // ------------------------------
 
     struct SmallTraceCyclicBuffer {
-        static constexpr size_t kSize      = 65536;
-        static constexpr size_t kDumpSize  = kSize - (kSize / 16);
+        static constexpr size_t kSize      = FeatureValue<FeatureFlag::kTraceBufferSize>;
         static constexpr size_t kBatchSize = 256;
 
         hal::Atomic32 bytes_left{.value = kSize};
@@ -67,7 +66,7 @@ static struct TraceFramework {
         char buffer[kSize]{};
     };
 
-    struct MultithreadTraceCyclicBuffer {
+    struct MultiCoreTraceCyclicBuffer {
         static constexpr size_t kSize = FeatureValue<FeatureFlag::kTraceBufferSize>;
 
         hal::Atomic32 bytes_left{.value = kSize};
@@ -99,178 +98,64 @@ static struct TraceFramework {
         ASSERT_LT(stage, TracingStage::kLast);
 
         switch (stage) {
-            case TracingStage::kSingleThreadEnv:
-                AdvanceToSingleThreadInterruptsStage();
-                stage = TracingStage::kSingleThreadInterruptsEnv;
+            case TracingStage::kSingleCoreEnv:
+                AdvanceToSingleCoreInterruptsStage();
+                stage = TracingStage::kSingleCoreInterruptsEnv;
                 break;
 
-            case TracingStage::kSingleThreadInterruptsEnv:
-                AdvanceToMultiThreadStage();
-                stage = TracingStage::kMultiThreadEnv;
+            case TracingStage::kSingleCoreInterruptsEnv:
+                AdvanceToMultiCoreStage();
+                stage = TracingStage::kMultiCoreEnv;
                 break;
 
-            case TracingStage::kMultiThreadEnv:
+            case TracingStage::kMultiCoreEnv:
             case TracingStage::kLast:
-                R_FAIL_ALWAYS("Cannot advance tracing stage beyond multi thread env...");
+                R_FAIL_ALWAYS("Cannot advance tracing stage beyond multi core env...");
         }
     }
 
-    FORCE_INLINE_F void AdvanceToSingleThreadInterruptsStage()
+    FORCE_INLINE_F void AdvanceToSingleCoreInterruptsStage()
     {
         /* Should be executed before interrupts are enabled */
 
-        DEBUG_INFO_GENERAL("Updating tracing stage to stage 1 (Single thread with interrupts)");
-        stage_callbacks.get_workspace_cb = &TraceFramework::GetWorkspaceSingleThreadInterrupts;
-        stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleThreadInterrupts;
+        DEBUG_INFO_GENERAL("Updating tracing stage to stage 1 (Single Core with interrupts)");
+        stage_callbacks.get_workspace_cb = &TraceFramework::GetWorkspaceSingleCoreInterrupts;
+        stage_callbacks.commit_to_log_cb = &TraceFramework::CommitToLogSingleCoreInterrupts;
         stage_callbacks.commit_to_debug_log_cb =
-            &TraceFramework::CommitToDebugLogSingleThreadInterrupts;
-        stage_callbacks.dump_all = &TraceFramework::DumpAllSingleThreadInterrupts;
+            &TraceFramework::CommitToDebugLogSingleCoreInterrupts;
+        stage_callbacks.dump_all = &TraceFramework::DumpAllSingleCoreInterrupts;
     }
 
-    FORCE_INLINE_F void AdvanceToMultiThreadStage()
+    FORCE_INLINE_F void AdvanceToMultiCoreStage()
     {
         /* Should be executed before another cores are enabled!!! */
 
-        DEBUG_INFO_GENERAL("Updating tracing stage to stage 2 (Multithreaded environment)");
+        DEBUG_INFO_GENERAL("Updating tracing stage to stage 2 (Multicore environment)");
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
 
-        stage_callbacks.get_workspace_cb       = &TraceFramework::GetWorkspaceMultithreaded;
-        stage_callbacks.commit_to_log_cb       = &TraceFramework::CommitToLogMultithreaded;
-        stage_callbacks.commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogMultithreaded;
-        stage_callbacks.dump_all               = &TraceFramework::DumpAllMultithreaded;
+        stage_callbacks.get_workspace_cb       = &TraceFramework::GetWorkspaceMultiCore;
+        stage_callbacks.commit_to_log_cb       = &TraceFramework::CommitToLogMultiCore;
+        stage_callbacks.commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogMultiCore;
+        stage_callbacks.dump_all               = &TraceFramework::DumpAllMultiCore;
 
         HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     }
 
     // --------------------------------------
-    // Single thread env implementation
+    // Single Core env implementation
     // --------------------------------------
 
-    char *GetWorkspaceSingleThread() { return single_thread_env.main_execution_workspace; }
-
-    void CommitToLogSingleThread(const size_t)
-    {
-        /* Bypass kernel log as we are only writers and we do not care bout perf here */
-        HardenFullString(single_thread_env.main_execution_workspace);
-    }
-
-    void CommitToDebugLogSingleThread(const size_t)
-    {
-        hal::DebugTerminalWrite(single_thread_env.main_execution_workspace);
-    }
-
-    void DumpAllSingleThread() { /* No need to dump */ }
-
-    // -------------------------------------------------
-    // Single thread interrupts env implementation
-    // -------------------------------------------------
-
-    template <bool kIsDebug>
-    FAST_CALL void HardenSingleThread(const char *src, const size_t size)
-    {
-        const char *start = src;
-        const char *end   = src + size;
-
-        while (start != end) {
-            if (*start != '\0') {
-                if constexpr (kIsDebug) {
-                    hal::DebugTerminalPutChar(*start);
-                } else {
-                    hal::TerminalPutChar(*start);
-                }
-            }
-
-            ++start;
-        }
-    }
-
-    template <bool kIsDebug>
-    FORCE_INLINE_F void DumpBufferSingleThread(SmallTraceCyclicBuffer &buffer)
-    {
-        // Assumptions:
-        // 1) bytes_left (1 thread, only main execution writes out) -> bytes_left may only decrement
-        // by interrupts, so
-        //    in worst case we will not write the most recent message from interrupts incoming
-        //    during dumping the buffer
-        // 2) tail is only moved by this function and only main execution can write out so we are
-        // safe to modify
-        //    it without atomics and any constraints
-        //
-        // Based on those two assumptions this function operates
-
-        // 1. Save exact amount of bytes to write at entry level (IMPORTANT: to not write infinite)
-        const i32 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
-        i32 bytes_to_write   = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - bytes_left;
-
-        // 1. Write out the content
-        while (bytes_to_write > 0) {
-            // 1. Prepare old tail and write_size
-            const i32 tail = buffer.tail.value;
-            const i32 batch_write_size =
-                std::min(bytes_to_write, static_cast<i32>(SmallTraceCyclicBuffer::kBatchSize));
-
-            if (tail + batch_write_size > static_cast<i32>(SmallTraceCyclicBuffer::kSize)) {
-                // We cross the boundary
-                const size_t first_write  = SmallTraceCyclicBuffer::kSize - tail;
-                const size_t second_write = batch_write_size - first_write;
-                HardenSingleThread<kIsDebug>(
-                    buffer.buffer + tail, static_cast<size_t>(first_write)
-                );
-                HardenSingleThread<kIsDebug>(buffer.buffer, static_cast<size_t>(second_write));
-            } else {
-                HardenSingleThread<kIsDebug>(
-                    buffer.buffer + tail, static_cast<size_t>(batch_write_size)
-                );
-            }
-
-            // 2. Push the tail
-            hal::AtomicStore(
-                &buffer.tail,
-                (tail + batch_write_size) % static_cast<i32>(SmallTraceCyclicBuffer::kSize)
-            );
-
-            // 3. Release space
-            hal::AtomicAdd(&buffer.bytes_left, batch_write_size);
-
-            // 4. Iterate further
-            bytes_to_write -= batch_write_size;
-        }
-    }
-
-    template <bool kIsDebug>
-    FORCE_INLINE_F void CommitToLogPtrSingleThreadInterrupts(
-        SmallTraceCyclicBuffer &buffer, const size_t trace_size
+    FAST_CALL void CommitToLogPtrSingleCore(
+        SmallTraceCyclicBuffer &buffer, const size_t trace_size, const char *src
     )
     {
-        // Assumptions:
-        // 1) Interrupt message will be dropped when there is no space left in the buffer
-        // 2) Main execution will try to immediately dump the buffers if there is no space
-        // 3) Only main execution may write the buffer out -> (interrupt writes -> no buffer dumps),
-        // (main exec writes ->
-        //    no buffer dumps) -> no buffer dumps during writing traces (it is safe to operate on
-        //    bytes_left)
-        // 4) Only full traces can be written out
-
-        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
-
         // 1. Allocate space for the trace
-        while (true) {
-            if (hal::AtomicSub(&buffer.bytes_left, static_cast<i32>(trace_size)) < 0) {
-                hal::AtomicAdd(&buffer.bytes_left, static_cast<i32>(trace_size));
+        if (hal::AtomicSub(&buffer.bytes_left, static_cast<i32>(trace_size)) < 0) {
+            hal::AtomicAdd(&buffer.bytes_left, static_cast<i32>(trace_size));
 
-                if (nested_intrs == 0) {
-                    DumpBufferSingleThread<kIsDebug>(buffer);
-                } else {
-                    /* No space for trace coming from this interrupt, we are dropping it */
-                    return;
-                }
-            } else {
-                break;
-            }
+            /* No space for trace coming from this interrupt, we are dropping it */
+            return;
         }
-
-        char *src = nested_intrs == 0 ? single_thread_env.main_execution_workspace
-                                      : single_thread_env.interrupt_workspace[nested_intrs - 1];
 
         // 2. Adjust head ptr
         i32 old_head;
@@ -292,66 +177,154 @@ static struct TraceFramework {
         } else {
             memcpy(buffer.buffer + old_head, src, static_cast<i32>(trace_size));
         }
+    }
 
-        if (nested_intrs == 0 &&
-            buffer.bytes_left.value < static_cast<i32>(SmallTraceCyclicBuffer::kDumpSize)) {
-            // Dump the content on main execution if we used enough space
-            DumpBufferSingleThread<kIsDebug>(buffer);
+    char *GetWorkspaceSingleCore() { return single_core_env.main_execution_workspace; }
+
+    void CommitToLogSingleCore(const size_t size)
+    {
+        CommitToLogPtrSingleCore(trace_log, size, GetWorkspaceSingleCore());
+    }
+
+    void CommitToDebugLogSingleCore(const size_t size)
+    {
+        CommitToLogPtrSingleCore(trace_debug_log, size, GetWorkspaceSingleCore());
+    }
+
+    void DumpAllSingleCore()
+    {
+        /* There is possibility to write out garbage at this stage but everything important is in
+         * place */
+        DumpBufferSingleCore<false>(trace_log);
+        DumpBufferSingleCore<true>(trace_debug_log);
+    }
+
+    // -------------------------------------------------
+    // Single core interrupts env implementation
+    // -------------------------------------------------
+
+    template <bool kIsDebug>
+    FAST_CALL void HardenSingleCore(const char *src, const size_t size)
+    {
+        const char *start = src;
+        const char *end   = src + size;
+
+        while (start != end) {
+            if (*start != '\0') {
+                if constexpr (kIsDebug) {
+                    hal::DebugTerminalPutChar(*start);
+                } else {
+                    hal::TerminalPutChar(*start);
+                }
+            }
+
+            ++start;
         }
     }
 
-    char *GetWorkspaceSingleThreadInterrupts()
+    template <bool kIsDebug>
+    FAST_CALL void DumpBufferSingleCore(SmallTraceCyclicBuffer &buffer)
+    {
+        // 1. Save exact amount of bytes to write at entry level (IMPORTANT: to not write infinite)
+        const i32 bytes_left = hal::AtomicLoad(&buffer.bytes_left);
+        i32 bytes_to_write   = static_cast<i32>(SmallTraceCyclicBuffer::kSize) - bytes_left;
+
+        // 1. Write out the content
+        while (bytes_to_write > 0) {
+            // 1. Prepare old tail and write_size
+            const i32 tail = buffer.tail.value;
+            const i32 batch_write_size =
+                std::min(bytes_to_write, static_cast<i32>(SmallTraceCyclicBuffer::kBatchSize));
+
+            if (tail + batch_write_size > static_cast<i32>(SmallTraceCyclicBuffer::kSize)) {
+                // We cross the boundary
+                const size_t first_write  = SmallTraceCyclicBuffer::kSize - tail;
+                const size_t second_write = batch_write_size - first_write;
+                HardenSingleCore<kIsDebug>(buffer.buffer + tail, static_cast<size_t>(first_write));
+                HardenSingleCore<kIsDebug>(buffer.buffer, static_cast<size_t>(second_write));
+            } else {
+                HardenSingleCore<kIsDebug>(
+                    buffer.buffer + tail, static_cast<size_t>(batch_write_size)
+                );
+            }
+
+            // 2. Push the tail
+            hal::AtomicStore(
+                &buffer.tail,
+                (tail + batch_write_size) % static_cast<i32>(SmallTraceCyclicBuffer::kSize)
+            );
+
+            // 3. Release space
+            hal::AtomicAdd(&buffer.bytes_left, batch_write_size);
+
+            // 4. Iterate further
+            bytes_to_write -= batch_write_size;
+        }
+    }
+
+    FORCE_INLINE_F void CommitToLogPtrSingleCoreInterrupts(
+        SmallTraceCyclicBuffer &buffer, const size_t trace_size
+    )
+    {
+        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
+        const char *src       = nested_intrs == 0 ? single_core_env.main_execution_workspace
+                                                  : single_core_env.interrupt_workspace[nested_intrs - 1];
+
+        CommitToLogPtrSingleCore(buffer, trace_size, src);
+    }
+
+    char *GetWorkspaceSingleCoreInterrupts()
     {
         const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
 
         if (nested_intrs == 0) {
-            return single_thread_env.main_execution_workspace;
+            return single_core_env.main_execution_workspace;
         }
 
-        return single_thread_env.interrupt_workspace[nested_intrs - 1];
+        return single_core_env.interrupt_workspace[nested_intrs - 1];
     }
 
-    void CommitToLogSingleThreadInterrupts(const size_t trace_size)
+    void CommitToLogSingleCoreInterrupts(const size_t trace_size)
     {
-        CommitToLogPtrSingleThreadInterrupts<false>(trace_log, trace_size);
+        CommitToLogPtrSingleCoreInterrupts(trace_log, trace_size);
     }
 
-    void CommitToDebugLogSingleThreadInterrupts(const size_t trace_size)
+    void CommitToDebugLogSingleCoreInterrupts(const size_t trace_size)
     {
-        CommitToLogPtrSingleThreadInterrupts<true>(trace_debug_log, trace_size);
+        CommitToLogPtrSingleCoreInterrupts(trace_debug_log, trace_size);
     }
 
-    void DumpAllSingleThreadInterrupts()
+    void DumpAllSingleCoreInterrupts()
     {
         /* There is possibility to write out garbage at this stage but everything important is in
          * place */
-        DumpBufferSingleThread<false>(trace_log);
-        DumpBufferSingleThread<true>(trace_debug_log);
+        DumpBufferSingleCore<false>(trace_log);
+        DumpBufferSingleCore<true>(trace_debug_log);
     }
 
     // ------------------------------------
-    // Multithread env implementation
+    // Multicore env implementation
     // ------------------------------------
 
-    char *GetWorkspaceMultithreaded() { return nullptr; }
+    char *GetWorkspaceMultiCore() { return nullptr; }
 
-    void CommitToLogMultithreaded(const size_t) {}
+    void CommitToLogMultiCore(const size_t) {}
 
-    void CommitToDebugLogMultithreaded(const size_t) {}
+    void CommitToDebugLogMultiCore(const size_t) {}
 
-    void DumpAllMultithreaded() {}
+    void DumpAllMultiCore() {}
 
     // ------------------------------
     // Global fields
     // ------------------------------
 
-    TracingStage stage = TracingStage::kSingleThreadEnv;
+    TracingStage stage = TracingStage::kSingleCoreEnv;
 
     StageCallbacks stage_callbacks{
-        .get_workspace_cb       = &TraceFramework::GetWorkspaceSingleThread,
-        .commit_to_log_cb       = &TraceFramework::CommitToLogSingleThread,
-        .commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogSingleThread,
-        .dump_all               = &TraceFramework::DumpAllSingleThread,
+        .get_workspace_cb       = &TraceFramework::GetWorkspaceSingleCore,
+        .commit_to_log_cb       = &TraceFramework::CommitToLogSingleCore,
+        .commit_to_debug_log_cb = &TraceFramework::CommitToDebugLogSingleCore,
+        .dump_all               = &TraceFramework::DumpAllSingleCore,
     };
 
     std::array<TraceLevel, static_cast<size_t>(TraceModule::kLast)> trace_levels = []() constexpr {
@@ -385,20 +358,20 @@ static struct TraceFramework {
     }();
 
     // ------------------------------
-    // Single thread env fields
+    // Single core env fields
     // ------------------------------
 
-    CoreTraceData single_thread_env{};
+    CoreTraceData single_core_env{};
     SmallTraceCyclicBuffer trace_log{};
     SmallTraceCyclicBuffer trace_debug_log{};
 
     // ------------------------------
-    // Multi thread env fields
+    // Multi core env fields
     // ------------------------------
 
-    MultithreadTraceCyclicBuffer dyn_trace_log{};
-    MultithreadTraceCyclicBuffer dyn_debug_trace_log{};
-    CoreTraceData *multithread_env = nullptr;
+    MultiCoreTraceCyclicBuffer dyn_trace_log{};
+    MultiCoreTraceCyclicBuffer dyn_debug_trace_log{};
+    CoreTraceData *multicore_env = nullptr;
 
 } g_TraceFramework{};
 
@@ -465,6 +438,8 @@ NODISCARD TraceLevel GetTraceLevel(TraceModule module)
     return g_TraceFramework.trace_levels[static_cast<size_t>(module)];
 }
 
-void Flush() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
-void DumpAllBuffersOnFailure() { Flush(); }
+void DumpAllBuffersOnFailure() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
+
+void TraceDumperTask() { (g_TraceFramework.*g_TraceFramework.stage_callbacks.dump_all)(); }
+
 }  // namespace trace
