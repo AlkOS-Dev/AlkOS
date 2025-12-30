@@ -30,7 +30,4 @@ NODISCARD FAST_CALL Sched::Pid GetRunningPid() { return GetCurrentTCB()->owner; 
 
 }  // namespace hardware
 
-extern "C" Sched::Thread *cdecl_GetCurrentTCB();
-extern "C" void cdecl_SetCurrentTCB(Sched::Thread *tcb);
-
 #endif  // KERNEL_SRC_HARDWARE_CORE_LOCAL_HPP_

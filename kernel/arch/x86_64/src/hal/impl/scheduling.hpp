@@ -1,6 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SCHEDULING_HPP_
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SCHEDULING_HPP_
 
+#include <defines.hpp>
+
 #include "scheduling/thread.hpp"
 
 extern "C" void ConvertContext(Sched::Thread *thread);

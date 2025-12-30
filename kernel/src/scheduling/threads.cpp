@@ -16,6 +16,7 @@ std::expected<Thread *, Error> Threads::PrepareThread()
     }
 
     Thread *thread = threads_.Get(idx);
+    thread->InitMem();
 
     ASSERT_LE(idx, std::numeric_limits<u16>::max());
     thread->tid = AssignNewTid(static_cast<u16>(idx));

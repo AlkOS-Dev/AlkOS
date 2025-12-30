@@ -52,9 +52,9 @@ static hardware::CoreLocal g_CoreLocal{};
 
 TODO_WHEN_MULTICORE
 // TODO: replace when core
-extern "C" void cdecl_SetKernelGs()
+extern "C" void cdecl_SetKernelGs(Sched::Thread *thread)
 {
-    cpu::SetMSR(arch::kIa32GsKernelBase, g_CoreLocal.thread_control_block->gs_base);
+    cpu::SetMSR(arch::kIa32GsKernelBase, thread->gs_base);
 }
 
 namespace arch

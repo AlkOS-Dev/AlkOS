@@ -30,19 +30,3 @@ void InitializeCoreLocal()
     );
 }
 }  // namespace arch
-
-void cdecl_SetTssRsp0(const u64 rsp0) { arch::SetTssRsp0(rsp0); }
-
-void cdecl_SwapFsIfNeeded(Sched::Thread *thread)
-{
-    auto tcb = hardware::GetCurrentTCB();
-
-    if (tcb->fs_base != thread->fs_base) {
-        cpu::SetMSR(arch::kIa32FsBase, thread->fs_base);
-    }
-}
-
-void cdecl_SetNextThreadFs(Sched::Thread *thread)
-{
-    cpu::SetMSR(arch::kIa32FsBase, thread->fs_base);
-}

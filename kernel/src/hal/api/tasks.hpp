@@ -3,7 +3,9 @@
 
 namespace arch
 {
-
-}
+struct ThreadAPI {
+    FORCE_INLINE_F void InitMem() {}
+};
+}  // namespace arch
 
 #endif  // KERNEL_SRC_HAL_API_TASKS_HPP_
