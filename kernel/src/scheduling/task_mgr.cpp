@@ -23,7 +23,10 @@ void TaskMgr::InitializeMultitasking()
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
-        auto result = SpawnProcess(KWorkerMain, true);
+        ProcessFlags flags{};
+        flags.KernelSpaceOnly = true;
+
+        auto result = SpawnProcess(KWorkerMain, flags);
         R_ASSERT_TRUE(
             static_cast<bool>(result),
             "Failed to spawn kernel workers. Not enough resources for the system"
@@ -35,13 +38,11 @@ void TaskMgr::InitializeMultitasking()
     }
 }
 
-std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
-    void (*f)(), const bool kernel_only
-)
+std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(void (*f)(), ProcessFlags flags)
 {
     bool dismiss = false;
 
-    if (kernel_only) {
+    if (flags.KernelSpaceOnly) {
         ASSERT_TRUE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
     } else {
         ASSERT_FALSE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
@@ -62,7 +63,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
     });
 
     // 2. Fill process data and resources - TODO: replace with proper one
-    if (kernel_only) {
+    if (flags.KernelSpaceOnly) {
         process.value()->address_space         = &MemoryModule::Get().GetKernelAddressSpace();
         process.value()->flags.KernelSpaceOnly = true;
     } else {

@@ -25,7 +25,7 @@ class TaskMgr
     void InitializeMultitasking();
 
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> SpawnProcess(
-        void (*f)(), bool kernel_only
+        void (*f)(), ProcessFlags flags
     );
 
     NODISCARD std::expected<Thread *, Error> SpawnThread(Pid pid, void (*f)());
