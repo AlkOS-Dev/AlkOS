@@ -53,6 +53,19 @@ class VirtualMemoryManager
         VPtr<AddressSpace> as, VPtr<void> region_start, VirtualMemAreaFlags vmaf
     );
 
+    // ------------------------------
+    // Allocation Helpers
+    // ------------------------------
+
+    expected<VPtr<void>, MemError> AllocAnonymous(
+        VPtr<AddressSpace> as, size_t size, VirtualMemAreaFlags flags,
+        VPtr<void> range_start = nullptr, VPtr<void> range_end = nullptr
+    );
+
+    expected<VPtr<void>, MemError> AllocUserStack(VPtr<AddressSpace> as, size_t size);
+
+    expected<VPtr<void>, MemError> AllocKernelHeap(size_t size);
+
     private:
     // ------------------------------
     // Class fields

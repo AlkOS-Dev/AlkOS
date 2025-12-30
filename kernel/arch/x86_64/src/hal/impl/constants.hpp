@@ -21,6 +21,8 @@ static constexpr size_t kPageShift          = 12;
 static constexpr u32 kMaxCores              = 512;
 static constexpr u16 kElfMachineType        = 0x3E;
 
+static constexpr bool kStackGrowsDown = true;
+
 // ------------------------------
 // Enums
 // ------------------------------
