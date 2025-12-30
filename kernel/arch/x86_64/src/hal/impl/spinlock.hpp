@@ -4,8 +4,8 @@
 #include <hal/api/spinlock.hpp>
 
 #include <autogen/feature_flags.h>
+#include <types.h>
 #include <hal/constants.hpp>
-#include <types.hpp>
 #include "include/memory_io.hpp"
 
 #include "hal/core.hpp"

@@ -1,8 +1,8 @@
 #ifndef LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_CHECKS_HPP_
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_CHECKS_HPP_
 
+#include <types.h>
 #include <concepts_ext.hpp>
-#include <types.hpp>
 
 namespace template_lib
 {

@@ -2,8 +2,8 @@
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPT_PARAMS_HPP_
 
 #include <defines.h>
+#include <types.h>
 #include <hal/api/interrupts_params.hpp>
-#include <types.hpp>
 
 struct PACK IsrRegisters {
     uint64_t rax;

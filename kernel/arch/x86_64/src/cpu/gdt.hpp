@@ -1,9 +1,9 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_GDT_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_GDT_HPP_
 
+#include <types.h>
 #include <defines.hpp>
 #include <type_traits.hpp>
-#include <types.hpp>
 
 #include "tss.hpp"
 

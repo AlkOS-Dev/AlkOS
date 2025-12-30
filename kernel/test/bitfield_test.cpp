@@ -1,6 +1,6 @@
+#include <types.h>
 #include <data_structures/bitfield.hpp>
 #include <test_module/test.hpp>
-#include <types.hpp>
 
 class BitFieldTest : public TestGroupBase
 {

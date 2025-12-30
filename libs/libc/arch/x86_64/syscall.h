@@ -3,7 +3,7 @@
 
 #include "defines.h"
 #include "macro.hpp"
-#include "types.hpp"
+#include "types.h"
 
 /**
  * @file syscall.h

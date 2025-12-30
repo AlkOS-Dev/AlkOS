@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_
 #define KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_
 
+#include <types.h>
 #include <string.hpp>
-#include <types.hpp>
 
 namespace Graphics
 {

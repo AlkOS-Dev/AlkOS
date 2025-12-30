@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_SYSCALLS_HANDLER_HPP_
 #define KERNEL_SRC_SYSCALLS_HANDLER_HPP_
 
+#include <types.h>
 #include <type_traits.hpp>
-#include <types.hpp>
 #include <utility.hpp>
 
 #include "hal/types.hpp"

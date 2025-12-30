@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_HW_PCI_HPP_
 
+#include <types.h>
 #include <bit.hpp>
-#include <types.hpp>
 #include "hw/io.hpp"
 #include "trace_framework.hpp"
 

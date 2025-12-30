@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_VFS_TYPES_HPP_
 #define KERNEL_SRC_VFS_TYPES_HPP_
 
+#include <types.h>
 #include <data_structures/critbit_tree.hpp>
-#include <types.hpp>
 
 #include "vfs/error.hpp"
 #include "vfs/interface.hpp"

@@ -5,9 +5,9 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
+#include <types.h>
 #include <defines.hpp>
 #include <tuple.hpp>
-#include <types.hpp>
 
 // ------------------------------
 // Time constants
@@ -79,7 +79,7 @@ WRAP_CALL constexpr bool IsTmYearLeap(const tm &time)
     return IsLeapYear(time.tm_year + kTmBaseYear);
 }
 
-NODISCARD u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone);
+NODISCARD u64 ConvertDateTimeToPosix(const tm &date_time, const Timezone &time_zone);
 
 FAST_CALL i64 constexpr SumUpDays(const i64 year)
 {
@@ -160,11 +160,11 @@ NODISCARD i64 CalculateIsoBasedYear(const tm &time);
 /* [month, day] */
 NODISCARD std::tuple<u64, u64> CalculateMonthAndDaysFromPosix(u64 days, bool is_leap_year);
 
-NODISCARD u64 GetDSTOffset(u64 time, const timezone &tz);
+NODISCARD u64 GetDSTOffset(u64 time, const Timezone &tz);
 
-tm *ConvertFromPosixToTm(time_t timer, tm &result, const timezone &tz);
+tm *ConvertFromPosixToTm(time_t timer, tm &result, const Timezone &tz);
 
-NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const timezone &time_zone)
+NODISCARD FAST_CALL time_t MkTimeFromTimeZone(tm &time_ptr, const Timezone &time_zone)
 {
     const time_t t = ConvertDateTimeToPosix(time_ptr, time_zone);
 

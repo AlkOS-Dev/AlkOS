@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_HW_VGA_HPP_
 
-#include <types.hpp>
+#include <types.h>
 
 /**
  * @file vga.hpp

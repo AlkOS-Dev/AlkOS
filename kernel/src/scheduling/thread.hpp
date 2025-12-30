@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_SCHEDULING_THREAD_HPP_
 #define KERNEL_SRC_SCHEDULING_THREAD_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include "hal/tasks.hpp"
 #include "process.hpp"
