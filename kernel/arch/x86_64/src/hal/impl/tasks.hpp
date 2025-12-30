@@ -6,6 +6,8 @@ namespace arch
 {
 
 struct Thread {
+    alignas(64) byte fp_state[4096];
+
     u64 fs_base;
     u64 gs_base;
 };
