@@ -24,10 +24,10 @@ void TaskMgr::InitializeMultitasking()
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
-        ProcessFlags flags{};
-        flags.KernelSpaceOnly = true;
+        char name[] = "kworker-0";
 
-        auto result = SpawnProcess(KWorkerMain, flags);
+        name[sizeof(name) - 2] = static_cast<char>('0' + i);
+        auto result            = SpawnKernelProcess(name, {}, KWorkerMain);
         R_ASSERT_TRUE(
             static_cast<bool>(result),
             "Failed to spawn kernel workers. Not enough resources for the system"
@@ -39,14 +39,10 @@ void TaskMgr::InitializeMultitasking()
     }
 }
 
-std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(void (*f)(), ProcessFlags flags)
+std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
 {
-    bool dismiss = false;
-
-    if (flags.KernelSpaceOnly) {
-        ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
-    } else {
-        ASSERT_FALSE(IsKernelSpace(reinterpret_cast<void *>(f)));
+    if (strnlen(name, Process::kMaxNameLength) == Process::kMaxNameLength) {
+        return std::unexpected(Error::ProcessNameTooLong);
     }
 
     // 1. Prepare internal structure for the process
@@ -57,15 +53,18 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(void (*f)(), Pr
         );
         return std::unexpected(process.error());
     }
-    template_lib::BatchedScopeGuard process_guard(dismiss, [&]() {
+    template_lib::ScopeGuard process_guard([&] {
         [[maybe_unused]] const auto result =
             SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
         ASSERT_TRUE(static_cast<bool>(result));
     });
-    process.value()->flags = flags;
 
+    // 1.1 Fill process properties
+    process.value()->flags = flags;
+    strcpy(process.value()->name, name);
+
+    // 2. Prepare address space
     Mem::AddressSpace *address_space{};
-    // 2. Fill process data and resources - TODO: replace with proper one
     if (flags.KernelSpaceOnly) {
         address_space = &MemoryModule::Get().GetKernelAddressSpace();
     } else {
@@ -79,36 +78,11 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(void (*f)(), Pr
         }
         address_space = as.value();
     }
+
     process.value()->address_space = address_space;
+    process_guard.dismiss();
 
-    template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
-        if (!flags.KernelSpaceOnly) {
-            [[maybe_unused]] const auto result =
-                MemoryModule::Get().GetVmm().DestroyUserAddrSpace(address_space);
-            ASSERT_TRUE(static_cast<bool>(result));
-        }
-    });
-
-    // 3. Spawn first thread
-    const auto thread = SpawnThread(process.value()->pid, f);
-    if (!thread) {
-        DEBUG_WARN_SCHEDULING(
-            "Failed to create process. Failed on initial thread creation: %s",
-            to_string(thread.error())
-        );
-        return std::unexpected(thread.error());
-    }
-
-    // 4. Add to scheduler
-    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-
-    DEBUG_INFO_SCHEDULING(
-        "Created process with pid: %llu, and initial thread with tid: %llu", process.value()->pid,
-        thread.value()->tid
-    );
-
-    dismiss = true;
-    return std::make_tuple(process.value()->pid, thread.value()->tid);
+    return process.value()->pid;
 }
 
 std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
@@ -117,6 +91,12 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));
+
+    if (process.value()->flags.KernelSpaceOnly) {
+        ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
+    } else {
+        ASSERT_FALSE(IsKernelSpace(reinterpret_cast<void *>(f)));
+    }
 
     // 1. Prepare internal structure for execution unit - thread:
     auto thread = SchedulingModule::Get().GetThreads().PrepareThread();
@@ -128,7 +108,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 
         return std::unexpected(thread.error());
     }
-    template_lib::BatchedScopeGuard thread_guard(dismiss, [&]() {
+    template_lib::BatchedScopeGuard thread_guard(dismiss, [&] {
         [[maybe_unused]] const auto result =
             SchedulingModule::Get().GetThreads().Free(thread.value()->tid);
         ASSERT_TRUE(static_cast<bool>(result));
@@ -147,7 +127,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 
         return std::unexpected(Error::OutOfMemory);
     }
-    template_lib::BatchedScopeGuard esp0_guard(dismiss, [&]() {
+    template_lib::BatchedScopeGuard esp0_guard(dismiss, [&] {
         Mem::KFreeAligned(kernel_stack.value());
     });
     thread.value()->kernel_stack        = kernel_stack.value();
@@ -181,4 +161,76 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
     dismiss = true;
     return thread.value();
 }
+
+std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
+    const char *name, ProcessFlags flags, void (*f)()
+)
+{
+    flags.KernelSpaceOnly = true;
+    ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
+
+    auto process = SpawnEmptyProcess(name, flags);
+    if (!process) {
+        return std::unexpected(process.error());
+    }
+
+    template_lib::ScopeGuard process_guard([&] {
+        const auto result = SchedulingModule::Get().GetProcesses().Free(process.value());
+        ASSERT_TRUE(static_cast<bool>(result));
+    });
+
+    const auto thread = SpawnThread(process.value(), f);
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+
+    DEBUG_INFO_SCHEDULING(
+        "Created kernel process with pid: %llu, name: %s and initial thread with tid: %llu",
+        process.value(), name, thread.value()->tid
+    );
+
+    process_guard.dismiss();
+    return std::make_tuple(process.value(), thread.value()->tid);
+}
+
+std::expected<Pid, Error> TaskMgr::CloneProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
+std::expected<Tid, Error> TaskMgr::ExecuteElf64(Pid, const char *)
+{
+    R_FAIL_ALWAYS("NOT IMPLEMENTED");
+}
+
+std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
+    const char *path, const ProcessFlags flags
+)
+{
+    auto process = SpawnEmptyProcess(path, flags);
+    if (!process) {
+        return std::unexpected(process.error());
+    }
+
+    template_lib::ScopeGuard process_guard([&] {
+        const auto result = SchedulingModule::Get().GetProcesses().Free(process.value());
+        ASSERT_TRUE(static_cast<bool>(result));
+    });
+
+    auto thread = ExecuteElf64(process.value(), path);
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    process_guard.dismiss();
+    return std::make_tuple(process.value(), thread.value());
+}
+
+std::expected<void, Error> TaskMgr::KillProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
+std::expected<void, Error> TaskMgr::ExitProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
+std::expected<void, Error> TaskMgr::ExitThread(Tid tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
 }  // namespace Sched

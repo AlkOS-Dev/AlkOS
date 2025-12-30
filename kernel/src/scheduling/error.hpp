@@ -11,6 +11,7 @@ enum class Error {
     ExceededMaxAllowedInstances,
     ProcessNotFound,
     ThreadNotFound,
+    ProcessNameTooLong,
 };
 
 }  // namespace Sched
