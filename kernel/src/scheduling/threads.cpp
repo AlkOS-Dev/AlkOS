@@ -44,13 +44,3 @@ void OnKThreadExit()
 }
 
 }  // namespace Sched
-
-void *cdecl_GetThreadsPageTable(Sched::Thread *thread)
-{
-    ASSERT_NOT_NULL(thread);
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-
-    return proc.value()->address_space->PageTableRoot();
-}
