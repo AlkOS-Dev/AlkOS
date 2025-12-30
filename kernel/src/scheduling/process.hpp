@@ -21,6 +21,7 @@ struct PACK Pid {
 
 struct PACK ProcessFlags {
     bool KernelSpaceOnly : 1;
+    bool PreserveFloats : 1;
 };
 static_assert(sizeof(ProcessFlags) == 1);
 

@@ -3,6 +3,8 @@
 
 #include <types.hpp>
 
+#include <trace_framework.hpp>
+
 namespace cpu
 {
 NODISCARD FAST_CALL u64 GetMSR(const u32 msr)

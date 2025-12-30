@@ -19,10 +19,4 @@ _kernel_data_selector equ 0x10
 _user_code_selector equ 0x18
 _user_data_selector equ 0x20
 
-_rip_user_space_offset equ 0
-_cs_user_space_offset equ _rip_user_space_offset + 8
-_flags_user_space_offset equ _cs_user_space_offset + 8
-_sp_user_space_offset equ _flags_user_space_offset + 8
-_ss_user_space_offset equ _sp_user_space_offset + 8
-_jump_userspace_stack_space equ  5*8
-_userspace_initial_flags equ 0x202
+_jump_userspace_stack_space equ  5*8  ; sizeof(IsrStackFrame)

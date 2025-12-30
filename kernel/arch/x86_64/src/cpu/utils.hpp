@@ -1,6 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 
+#include <bits_ext.hpp>
 #include <defines.hpp>
 #include <template/rolled_switch.hpp>
 #include <types.hpp>
@@ -200,5 +201,8 @@ FAST_CALL void DumpGeneralRegisters(DumpedRegisters *regs)
 }
 
 void TraceDumpedRegisters(const DumpedRegisters *regs);
+
+static constexpr u64 kInitialRFlags =
+    kSingleBit<u64, 1> | kSingleBit<u64, 9>;  // Bit1 - Reserved, Bit9 - Interrupt flag
 
 #endif  // KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_

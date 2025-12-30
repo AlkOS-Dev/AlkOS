@@ -24,7 +24,10 @@ void TaskMgr::InitializeMultitasking()
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
-        auto result = SpawnProcess(KWorkerMain, true);
+        ProcessFlags flags{};
+        flags.KernelSpaceOnly = true;
+
+        auto result = SpawnProcess(KWorkerMain, flags);
         R_ASSERT_TRUE(
             static_cast<bool>(result),
             "Failed to spawn kernel workers. Not enough resources for the system"
@@ -36,13 +39,11 @@ void TaskMgr::InitializeMultitasking()
     }
 }
 
-std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
-    void (*f)(), const bool kernel_only
-)
+std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(void (*f)(), ProcessFlags flags)
 {
     bool dismiss = false;
 
-    if (kernel_only) {
+    if (flags.KernelSpaceOnly) {
         ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
     } else {
         ASSERT_FALSE(IsKernelSpace(reinterpret_cast<void *>(f)));
@@ -61,30 +62,32 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
             SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
         ASSERT_TRUE(static_cast<bool>(result));
     });
+    process.value()->flags = flags;
 
+    Mem::AddressSpace *address_space{};
     // 2. Fill process data and resources - TODO: replace with proper one
-    if (kernel_only) {
-        process.value()->address_space         = &MemoryModule::Get().GetKernelAddressSpace();
-        process.value()->flags.KernelSpaceOnly = true;
+    if (flags.KernelSpaceOnly) {
+        address_space = &MemoryModule::Get().GetKernelAddressSpace();
     } else {
-        R_FAIL_ALWAYS("User space tasks not supported!");
-
-        TODO_WHEN_VMEM_WORKS
-        // auto addr_space = MemoryModule::Get().GetVmm().CreateAddrSpace();
-        // if (!addr_space) {
-        //     DEBUG_WARN_SCHEDULING(
-        //         "Failed to create process. Failed on AddressSpace creation: %s",
-        //         template_lib::to_string(addr_space.error()).data()
-        //     );
-        //     return std::unexpected(Error::OutOfMemory);
-        // }
-        // process.value()->address_space = addr_space.value();
-        // template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
-        //     [[maybe_unused]] const auto result =
-        //         MemoryModule::Get().GetVmm().DestroyAddrSpace(addr_space.value());
-        //     ASSERT_TRUE(static_cast<bool>(result));
-        // });
+        auto as = MemoryModule::Get().GetVmm().CreateUserAddrSpace();
+        if (!as) {
+            DEBUG_WARN_SCHEDULING(
+                "Failed to create process. Failed on AddressSpace creation: %s",
+                to_string(as.error())
+            );
+            return std::unexpected(Error::OutOfMemory);
+        }
+        address_space = as.value();
     }
+    process.value()->address_space = address_space;
+
+    template_lib::BatchedScopeGuard addr_space_guard(dismiss, [&]() {
+        if (!flags.KernelSpaceOnly) {
+            [[maybe_unused]] const auto result =
+                MemoryModule::Get().GetVmm().DestroyUserAddrSpace(address_space);
+            ASSERT_TRUE(static_cast<bool>(result));
+        }
+    });
 
     // 3. Spawn first thread
     const auto thread = SpawnThread(process.value()->pid, f);
@@ -152,7 +155,8 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
 
     // 2.2 Thread Stack
     if (!process.value()->flags.KernelSpaceOnly) {
-        const auto thread_stack = Mem::KMallocAligned({kStackSize, kStackAlignment});
+        const auto thread_stack =
+            MemoryModule::Get().GetVmm().AllocUserStack(process.value()->address_space, kStackSize);
         if (!thread_stack) {
             DEBUG_WARN_SCHEDULING(
                 "Failed to create thread for %llu. Failed on thread stack allocation: %s", pid,

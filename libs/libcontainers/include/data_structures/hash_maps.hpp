@@ -397,7 +397,7 @@ class PooledHashMap
 
         const size_t idx = pool_.Pop();
 
-        auto mem = Mem::KMalloc(sizeof(T));
+        auto mem = Mem::KMallocAligned({.size = sizeof(T), .alignment = alignof(T)});
         R_ASSERT_TRUE(static_cast<bool>(mem));
         map_[idx] = static_cast<T *>(mem.value());
 
@@ -409,7 +409,7 @@ class PooledHashMap
         ASSERT_LT(idx, kSize);
         ASSERT_NOT_NULL(Get(idx));
 
-        Mem::KFree(Get(idx));
+        Mem::KFreeAligned(Get(idx));
         map_[idx] = nullptr;
 
         pool_.Push(static_cast<Idx_t>(idx));
