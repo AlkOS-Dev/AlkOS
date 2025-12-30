@@ -788,12 +788,7 @@ FdResult<size_t> FdManager::Write(int fd, std::span<const byte> buffer)
 
 FdTable *FdManager::GetCurrentProcessFdTable()
 {
-    auto current_thread = SchedulingModule::Get().GetScheduler().Schedule();
-    if (current_thread == nullptr) {
-        return nullptr;
-    }
-
-    auto process = SchedulingModule::Get().GetProcesses().GetProcess(current_thread->owner);
+    auto process = SchedulingModule::Get().GetProcesses().GetCurrentProcess();
     if (!process) {
         return nullptr;
     }

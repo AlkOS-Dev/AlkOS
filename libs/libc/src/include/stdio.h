@@ -6,6 +6,8 @@
 #include "stddef.h"
 #include "sys/calls/fd.h"
 
+#define BUFSIZ 4096
+
 #define _IOFBF kFdBufferFull
 #define _IOLBF kFdBufferLine
 #define _IONBF kFdBufferNone
@@ -63,6 +65,11 @@ size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
  *  Writes data from a buffer to a FILE pointer
  */
 size_t fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
+
+// Standard file streams
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
 
 END_DECL_C
 

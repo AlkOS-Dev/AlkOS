@@ -10,6 +10,7 @@
 #include "scheduling/error.hpp"
 #include "scheduling/process.hpp"
 
+#include <hardware/core_local.hpp>
 #include <trace_framework.hpp>
 
 namespace Sched
@@ -42,6 +43,12 @@ class Processes
         }
 
         return ptr;
+    }
+
+    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetCurrentProcess()
+    {
+        const Pid pid = hardware::GetRunningPid();
+        return GetProcess(pid);
     }
 
     FORCE_INLINE_F std::expected<void, Error> Free(const Pid pid)
