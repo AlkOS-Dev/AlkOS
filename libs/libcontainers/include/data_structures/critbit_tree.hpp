@@ -32,7 +32,7 @@ class CritBitTree
 
     // Tag 0: ExternalNode
     // Tag 1: InternalNode
-    using NodePtr = TaggedPointer<ExternalNode, InternalNode>;
+    using NodePtr = OwningTaggedPtr<ExternalNode, InternalNode>;
 
     struct ExternalNode {
         char *key;

@@ -43,7 +43,7 @@ struct Process : hal::Process {
     Mem::VirtualPtr<Mem::AddressSpace> address_space;
 
     /* File descriptor table */
-    Fs::FdTable *fd_table;
+    Mem::VirtualPtr<Fs::FdTable> fd_table;
 };
 }  // namespace Sched
 

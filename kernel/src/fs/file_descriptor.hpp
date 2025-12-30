@@ -45,7 +45,7 @@ using FdResult = std::expected<T, FdError>;
 // File Mode Flags
 // -----------------------------
 
-enum class OpenMode : u32 {
+enum class OpenMode : u8 {
     kRead      = 1 << 0,
     kWrite     = 1 << 1,
     kReadWrite = kRead | kWrite,
@@ -58,12 +58,12 @@ enum class OpenMode : u32 {
 
 constexpr OpenMode operator|(OpenMode a, OpenMode b)
 {
-    return static_cast<OpenMode>(static_cast<u32>(a) | static_cast<u32>(b));
+    return static_cast<OpenMode>(static_cast<u8>(a) | static_cast<u8>(b));
 }
 
 constexpr OpenMode operator&(OpenMode a, OpenMode b)
 {
-    return static_cast<OpenMode>(static_cast<u32>(a) & static_cast<u32>(b));
+    return static_cast<OpenMode>(static_cast<u8>(a) & static_cast<u8>(b));
 }
 
 constexpr bool HasMode(OpenMode flags, OpenMode mode) { return (flags & mode) == mode; }
@@ -76,6 +76,16 @@ enum class BufferMode : u8 {
     kNone = kFdBufferNone,  // No buffering
     kLine = kFdBufferLine,  // Line buffering (flush on newline)
     kFull = kFdBufferFull,  // Full buffering (flush when buffer full)
+};
+
+// ------------------------------
+// Seek Whence Options
+// ------------------------------
+
+enum class FdSeek : u8 {
+    kSet = 0,  // Seek from beginning of file
+    kCur = 1,  // Seek from current position
+    kEnd = 2   // Seek from end of file
 };
 
 // ------------------------------
@@ -96,13 +106,7 @@ struct File {
     u32 mode;       // File mode (permissions and type)
     u64 ref_count;  // Number of open file entries referencing this file
 
-    // Underlying I/O stream (wraps VFS operations)
-    IO::IStream *stream;
-    vfs::MountPoint *mount_point;
-    vfs::Path rel_path;
-
-    // Standard stream flag
-    bool is_standard_stream;
+    vfs::Path path;
 };
 
 // ------------------------------
@@ -117,7 +121,7 @@ struct File {
 struct OpenFileEntry {
     u32 flags;
     u64 offset;
-    u32 ref_count;
+    u32 ref_count;  // Number of file descriptors referencing this entry
     File *file;
 
     // Access control
@@ -125,7 +129,7 @@ struct OpenFileEntry {
 };
 
 // ------------------------------
-// Open File Handle with RAII
+// Open File Handle
 // -----------------------------
 
 /**
@@ -151,9 +155,8 @@ class OpenFileHandle
             entry_->ref_count--;
             if (entry_->ref_count == 0 && entry_->file != nullptr) {
                 entry_->file->ref_count--;
-                if (entry_->file->ref_count == 0 && entry_->file->stream != nullptr) {
-                    delete entry_->file->stream;
-                    entry_->file->stream = nullptr;
+                if (entry_->file->ref_count == 0) {
+                    // Clean up file resources if needed
                 }
             }
         }
@@ -225,12 +228,14 @@ class OpenFileHandle
 class FdTable
 {
     public:
-    static constexpr size_t kMaxFds = 256;
+    static constexpr size_t kMaxFds    = 256;
+    static constexpr size_t kStdioSize = 4096;
 
-    using FdEntry = data_structures::TaggedPointer<OpenFileEntry *, IO::Pipe<4096>>;
+    using FdEntry = data_structures::TaggedPointer<
+        data_structures::NonOwned<OpenFileEntry>, data_structures::Owned<IO::Pipe<kStdioSize>>>;
 
-    FdTable();
-    ~FdTable();
+    FdTable()  = default;
+    ~FdTable() = default;
 
     FdResult<fd_t> AllocateFd(OpenFileEntry *global_entry);
     FdResult<fd_t> AllocateFdAt(OpenFileEntry *global_entry, fd_t fd);
@@ -244,8 +249,7 @@ class FdTable
 
     private:
     FdEntry entries_[kMaxFds];
-    size_t open_count_;
-    bool standard_streams_initialized_;
+    size_t open_count_{};
     mutable arch::Spinlock lock_;
 };
 
@@ -262,19 +266,16 @@ class FileTable
     public:
     static constexpr size_t kMaxFiles = 1024;
 
-    FileTable();
-    ~FileTable();
+    FileTable()  = default;
+    ~FileTable() = default;
 
     FdResult<File *> GetOrCreate(const vfs::Path &path);
-    FdResult<File *> CreateStandardStream(StandardStreamType);
     FdResult<> Release(File *file);
     std::optional<File *> Find(const vfs::Path &path);
 
     private:
-    std::optional<File *> FindUnlocked(const vfs::Path &path) const;
-
-    File files_[kMaxFiles];
-    size_t count_;
+    File files_[kMaxFiles]{};
+    size_t count_{};
     mutable arch::Spinlock lock_;
 };
 
@@ -327,11 +328,11 @@ class FdManager
     FdManager();
     ~FdManager();
 
-    FdResult<> InitializeStandardStreams(FdTable &fd_table);
     FdResult<fd_t> Open(const vfs::Path &path, OpenMode flags);
-    FdResult<> Close(int fd);
-    FdResult<size_t> Read(int fd, std::span<byte> buffer);
-    FdResult<size_t> Write(int fd, std::span<const byte> buffer);
+    FdResult<> Close(fd_t fd);
+    FdResult<size_t> Read(fd_t fd, std::span<byte> buffer);
+    FdResult<size_t> Write(fd_t fd, std::span<const byte> buffer);
+    FdResult<ssize_t> Seek(fd_t fd, ssize_t offset, FdSeek whence);
     FileTable &GetFileTable() { return file_table_; }
     OpenFileTable &GetOpenFileTable() { return open_file_table_; }
     FdTable *GetCurrentProcessFdTable();
@@ -339,7 +340,6 @@ class FdManager
     private:
     FileTable file_table_;
     OpenFileTable open_file_table_;
-    bool standard_streams_initialized_;
 };
 
 }  // namespace Fs

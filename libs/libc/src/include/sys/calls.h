@@ -28,6 +28,7 @@ enum SyscallNumber {
     kSysClose,
     kSysRead,
     kSysWrite,
+    kSysSeek,
 
     kSysMax,
 };

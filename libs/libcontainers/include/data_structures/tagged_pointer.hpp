@@ -10,12 +10,61 @@
 
 namespace data_structures
 {
+// Ownership marker types
+template <typename T>
+struct Owned {
+    using Type                   = T;
+    static constexpr bool kOwned = true;
+};
+
+template <typename T>
+struct NonOwned {
+    using Type                   = T;
+    static constexpr bool kOwned = false;
+};
+
+namespace internal
+{
+// Helper to extract the underlying type
+template <typename T>
+struct UnwrapType {
+    using Type = T;
+};
+
+template <typename T>
+struct UnwrapType<Owned<T>> {
+    using Type = T;
+};
+
+template <typename T>
+struct UnwrapType<NonOwned<T>> {
+    using Type = T;
+};
+
+template <typename T>
+using UnwrapType_t = typename UnwrapType<T>::Type;
+
+// Helper to check if a type is owned
+template <typename T>
+struct IsOwned : std::false_type {
+};
+
+template <typename T>
+struct IsOwned<Owned<T>> : std::true_type {
+};
+
+template <typename T>
+inline constexpr bool IsOwned_v = IsOwned<T>::value;
+
+}  // namespace internal
+
 /**
  * @brief A tagged pointer that stores type information in unused pointer bits.
  *
  * The number of available tag bits is determined by the number of types provided.
+ * Types can be wrapped in Owned<T> or NonOwned<T> to control ownership semantics.
  *
- * @tparam TaggedTypes Variadic list of types that can be stored with this tagged pointer
+ * @tparam TaggedTypes Variadic list of types (can be Owned<T> or NonOwned<T>)
  */
 template <typename... TaggedTypes>
 class TaggedPointer
@@ -37,12 +86,14 @@ class TaggedPointer
     explicit TaggedPointer(BaseT tagged_ptr) : tagged_ptr_(tagged_ptr) {}
 
     template <typename T>
-    NODISCARD static TaggedPointer FromPtr(T *ptr)
+    NODISCARD static TaggedPointer Wrap(T *ptr)
     {
+        // Check if NonOwned<T> is in the type list
         static_assert(
-            (std::is_same_v<T *, TaggedTypes> || ...), "Type T must be one of the TaggedTypes"
+            (std::is_same_v<NonOwned<T>, TaggedTypes> || ...),
+            "Type NonOwned<T> must be in the TaggedTypes list to use Wrap"
         );
-        return TaggedPointer(TagPtr(ptr, GetTypeIndex<T>()));
+        return TaggedPointer(TagPtr(ptr, GetTypeIndex<NonOwned<T>>()));
     }
 
     ~TaggedPointer() { Destroy(); }
@@ -72,8 +123,10 @@ class TaggedPointer
     template <typename T, typename... Args>
     NODISCARD FAST_CALL TaggedPointer Construct(Args &&...args)
     {
+        // Check if Owned<T> is in the type list
         static_assert(
-            (std::is_same_v<T, TaggedTypes> || ...), "Type T must be one of the TaggedTypes"
+            (std::is_same_v<Owned<T>, TaggedTypes> || ...),
+            "Type Owned<T> must be in the TaggedTypes list to use Construct"
         );
 
         auto mem = Mem::KMallocAligned(
@@ -86,16 +139,32 @@ class TaggedPointer
 
         T *ptr = new (*mem) T(std::forward<Args>(args)...);
 
-        return TaggedPointer(TagPtr(ptr, GetTypeIndex<T>()));
+        return TaggedPointer(TagPtr(ptr, GetTypeIndex<Owned<T>>()));
     }
 
     template <typename T>
     NODISCARD FORCE_INLINE_F bool Is() const
     {
+        // Check both owned and non-owned variants
+        constexpr bool has_owned     = (std::is_same_v<Owned<T>, TaggedTypes> || ...);
+        constexpr bool has_non_owned = (std::is_same_v<NonOwned<T>, TaggedTypes> || ...);
         static_assert(
-            (std::is_same_v<T, TaggedTypes> || ...), "Type T must be one of the TaggedTypes"
+            has_owned || has_non_owned, "Type T (as Owned<T> or NonOwned<T>) must be in TaggedTypes"
         );
-        return IsValid() && GetTag() == GetTypeIndex<T>();
+
+        if (!IsValid())
+            return false;
+
+        size_t tag = GetTag();
+        if constexpr (has_owned) {
+            if (tag == GetTypeIndex<Owned<T>>())
+                return true;
+        }
+        if constexpr (has_non_owned) {
+            if (tag == GetTypeIndex<NonOwned<T>>())
+                return true;
+        }
+        return false;
     }
 
     template <typename T>
@@ -120,7 +189,6 @@ class TaggedPointer
         size_t tag           = GetTag();
         size_t current_index = 0;
 
-        // Dispatch to the correct type
         return VisitImpl<Visitor, TaggedTypes...>(
             std::forward<Visitor>(visitor), tag, current_index
         );
@@ -154,6 +222,7 @@ class TaggedPointer
             size_t tag           = GetTag();
             size_t current_index = 0;
 
+            // Only destroy owned types
             (void)((current_index++ == tag ? (DestroyType<TaggedTypes>(), true) : false) || ...);
         }
     }
@@ -181,18 +250,22 @@ class TaggedPointer
     template <typename T>
     void DestroyType()
     {
-        if constexpr (!std::is_pointer_v<T>) {
-            T *ptr = static_cast<T *>(UntagPtr());
-            ptr->~T();
+        // Only destroy if the type is marked as Owned
+        if constexpr (internal::IsOwned_v<T>) {
+            using ActualType = internal::UnwrapType_t<T>;
+            ActualType *ptr  = static_cast<ActualType *>(UntagPtr());
+            ptr->~ActualType();
             Mem::KFreeAligned(ptr);
         }
+        // If NonOwned, do nothing
     }
 
     template <typename Visitor, typename T, typename... Rest>
     decltype(auto) VisitImpl(Visitor &&visitor, size_t tag, size_t &current_index)
     {
         if (current_index == tag) {
-            return visitor(As<T>());
+            using ActualType = internal::UnwrapType_t<T>;
+            return visitor(*static_cast<ActualType *>(UntagPtr()));
         }
         current_index++;
         if constexpr (sizeof...(Rest) > 0) {
@@ -205,7 +278,8 @@ class TaggedPointer
     decltype(auto) VisitImpl(Visitor &&visitor, size_t tag, size_t &current_index) const
     {
         if (current_index == tag) {
-            return visitor(As<T>());
+            using ActualType = internal::UnwrapType_t<T>;
+            return visitor(*static_cast<const ActualType *>(UntagPtr()));
         }
         current_index++;
         if constexpr (sizeof...(Rest) > 0) {
@@ -219,6 +293,12 @@ class TaggedPointer
 
     BaseT tagged_ptr_{};
 };
+
+template <typename... TaggedTypes>
+using OwningTaggedPtr = TaggedPointer<Owned<TaggedTypes>...>;
+
+template <typename... TaggedTypes>
+using NonOwningTaggedPtr = TaggedPointer<NonOwned<TaggedTypes>...>;
 
 }  // namespace data_structures
 

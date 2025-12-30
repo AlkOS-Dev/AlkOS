@@ -19,6 +19,6 @@ enum { kFdStdIn = 0, kFdStdOut = 1, kFdStdErr = 2 };
 
 typedef enum { kFdBufferNone = 0, kFdBufferLine = 1, kFdBufferFull = 2 } FdBufferMode;
 
-typedef enum { kFdSeekCurrent = 0, kFdSeekBeginning = 1, kFdSeekEnd = 2 } FdSeek;
+typedef enum { kFdSeekSet = 0, kFdSeekCurrent = 1, kFdSeekEnd = 2 } FdSeek;
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_SYS_FD_H_

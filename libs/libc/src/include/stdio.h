@@ -37,11 +37,6 @@ typedef struct {
 } FILE;
 
 BEGIN_DECL_C
-/**
- * @brief Initialize standard I/O streams
- * Must be called before using stdin, stdout, or stderr
- */
-void InitStdio(void);
 
 /**
  *  Writes formatted output to a character array (*str) up to a maximum amount of characters (size)
@@ -66,12 +61,12 @@ int fclose(FILE *stream);
 /**
  *  Reads data from a FILE pointer into a buffer
  */
-size_t fread(void *ptr, size_t size, size_t count, FILE *stream);
+size_t fread(void *buf, size_t size, size_t count, FILE *stream);
 
 /**
  *  Writes data from a buffer to a FILE pointer
  */
-size_t fwrite(const void *ptr, size_t size, size_t count, FILE *stream);
+size_t fwrite(const void *buf, size_t size, size_t count, FILE *stream);
 
 // Standard file streams
 extern FILE *stdin;

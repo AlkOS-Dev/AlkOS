@@ -62,6 +62,20 @@ FORCE_INLINE_F Fs::FdResult<size_t> SysWrite(fd_t fd, std::span<const byte> buff
     return result.value();
 }
 
+/**
+ * @brief Seek to a position in a file descriptor
+ * @param fd File descriptor to seek
+ * @param offset Offset to seek to
+ * @param whence Seek mode
+ * @return New offset on success, or error
+ */
+FORCE_INLINE_F Fs::FdResult<i64> SysSeek(fd_t fd, const i64 offset, const Fs::FdSeek whence)
+{
+    auto result = ::VfsModule::Get().GetFdManager().Seek(fd, offset, whence);
+    RET_UNEXPECTED_IF_ERR(result);
+    return result.value();
+}
+
 }  // namespace Syscall
 
 #endif  // KERNEL_SRC_SYSCALLS_CALLS_FD_HPP_

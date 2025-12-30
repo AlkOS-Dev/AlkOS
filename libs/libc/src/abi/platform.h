@@ -5,6 +5,8 @@
 #include "sys/time.h"
 #include "types.h"
 
+#include <sys/fd.h>
+
 BEGIN_DECL_C
 
 // Panic
@@ -25,6 +27,7 @@ int __platform_open(const char *pathname, int flags);
 int __platform_close(int fd);
 ssize_t __platform_read(int fd, void *buf, size_t count);
 ssize_t __platform_write(int fd, const void *buf, size_t count);
+ssize_t __platform_seek(int fd, ssize_t offset, FdSeek whence);
 
 END_DECL_C
 
