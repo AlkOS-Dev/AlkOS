@@ -7,7 +7,6 @@
 
 namespace hal
 {
-static constexpr u64 kKernelVirtualAddressStart = arch::kKernelVirtualAddressStart;
 
 static constexpr u64 kDirectMapAddrStart = arch::kDirectMapAddrStart;
 static constexpr u64 kDirectMemMapSizeGb = arch::kDirectMemMapSizeGb;
@@ -21,18 +20,10 @@ static_assert(kMaxCores <= kBitMask16);  // Must fit in u16
 
 static constexpr u16 kElfMachineType = arch::kElfMachineType;
 
+static constexpr bool kStackGrowsDown = arch::kStackGrowsDown;
+
 using arch::HardwareClockId;
 using arch::HardwareEventClockId;
-
-NODISCARD FAST_CALL bool IsKernelSpace(const u64 address)
-{
-    return address >= kKernelVirtualAddressStart;
-}
-
-NODISCARD FAST_CALL bool IsKernelSpace(const void *address)
-{
-    return IsKernelSpace(reinterpret_cast<u64>(address));
-}
 
 }  // namespace hal
 

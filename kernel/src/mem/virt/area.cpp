@@ -2,12 +2,14 @@
 
 #include <string.h>
 #include <bits_ext.hpp>
-#include <hal/constants.hpp>
-#include <hal/panic.hpp>
-#include <mem/mmu/contexts.hpp>
-#include <mem/virt/addr_space.hpp>
-#include <modules/memory.hpp>
-#include <trace_framework.hpp>
+
+#include "constants.hpp"
+#include "hal/constants.hpp"
+#include "hal/panic.hpp"
+#include "mem/mmu/contexts.hpp"
+#include "mem/virt/addr_space.hpp"
+#include "modules/memory.hpp"
+#include "trace_framework.hpp"
 
 namespace Mem
 {
@@ -15,7 +17,7 @@ namespace Mem
 static bool MapPage(AddressSpace &as, VPtr<void> vaddr, PPtr<void> paddr, VirtualMemAreaFlags flags)
 {
     auto &mmu      = MemoryModule::Get().GetMmu();
-    bool is_kernel = (Mem::PtrToUptr(vaddr) >= hal::kKernelVirtualAddressStart);
+    bool is_kernel = (Mem::PtrToUptr(vaddr) >= kKernelSpaceStart);
 
     hal::PageFlags page_flags{
         .Present        = true,
@@ -117,7 +119,7 @@ KernelSyncVMemArea::KernelSyncVMemArea()
     // Covers the entire upper half of the 64-bit address space
     // 0x8000000000000000 - 0xFFFFFFFFFFFFFFFF
     : VMemArea(
-          Mem::UptrToPtr<void>(kBitMaskLeft<u64, 1>), kBitMaskLeft<u64, 1> - 1,
+          Mem::UptrToPtr<void>(kKernelSpaceStart), kKernelSpaceEndInclusive - kKernelSpaceStart,
           // Permissions are determined by the actual kernel page table entries being copied,
           // these flags are just placeholders for the VMA object.
           VirtualMemAreaFlags{.readable = true, .writable = true, .executable = true}
