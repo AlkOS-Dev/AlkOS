@@ -1,5 +1,6 @@
 #include <template/scope_guard.hpp>
 
+#include "constants.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "scheduling/kworker.hpp"
@@ -42,9 +43,9 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnProcess(
     bool dismiss = false;
 
     if (kernel_only) {
-        ASSERT_TRUE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
+        ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
     } else {
-        ASSERT_FALSE(hal::IsKernelSpace(reinterpret_cast<void *>(f)));
+        ASSERT_FALSE(IsKernelSpace(reinterpret_cast<void *>(f)));
     }
 
     // 1. Prepare internal structure for the process

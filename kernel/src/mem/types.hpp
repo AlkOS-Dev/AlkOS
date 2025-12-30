@@ -4,6 +4,7 @@
 #include <expected.hpp>
 #include <type_traits.hpp>
 #include <types.hpp>
+#include "constants.hpp"
 #include "hal/constants.hpp"
 
 namespace Mem
@@ -37,7 +38,7 @@ PPtr<T> VirtToPhys(VPtr<T> virtAddr)
         return reinterpret_cast<PPtr<T>>(vaddr - hal::kDirectMapAddrStart);
     }
 
-    return reinterpret_cast<PPtr<T>>(vaddr - hal::kKernelVirtualAddressStart);
+    return reinterpret_cast<PPtr<T>>(vaddr - kKernelSpaceStart);
 }
 
 template <typename T>

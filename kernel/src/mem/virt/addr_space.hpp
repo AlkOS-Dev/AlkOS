@@ -42,6 +42,11 @@ struct TlbHint {
     size_t size;
 };
 
+struct GapInfo {
+    VPtr<void> start;
+    size_t size;
+};
+
 class AddressSpace
 {
     public:
@@ -74,6 +79,9 @@ class AddressSpace
 
     expected<TlbHint, MemError> RmArea(VPtr<void> ptr);
     expected<TlbHint, MemError> UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFlags flags);
+    expected<GapInfo, MemError> FindGap(
+        size_t size, VPtr<void> start = nullptr, VPtr<void> end = nullptr
+    );
 
     // Helpers
     using AddrSpMutIt = data_structures::DoubleLinkedList<VMemArea *>::Iterator;
@@ -86,7 +94,8 @@ class AddressSpace
     PPtr<void> page_table_root_;
     bool owns_page_table_root_;
 
-    // List of pointers to VMA objects (we own these objects)
+    /// @brief Sorted list of pointers to VMA objects. We own these objects.
+    /// @note The list is sorted by the start address of the VMA objects.
     data_structures::DoubleLinkedList<VMemArea *> area_list_;
     hal::Spinlock area_list_lock_;
 

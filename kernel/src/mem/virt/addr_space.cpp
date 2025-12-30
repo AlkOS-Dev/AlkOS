@@ -2,8 +2,13 @@
 
 #include <macros.hpp>
 #include <mutex.hpp>
+
+#include <template/scope_guard.hpp>
+
+#include "constants.hpp"
 #include "hal/constants.hpp"
 #include "hal/mmu.hpp"
+
 #include "mem/error.hpp"
 #include "mem/heap.hpp"
 #include "mem/mmu/contexts.hpp"
@@ -59,22 +64,31 @@ AS::~AddressSpace()
 expected<void, MemError> AS::AddArea(VMemArea *vma)
 {
     ASSERT_NOT_NULL(vma);
-    std::lock_guard guard(area_list_lock_);
+    R_ASSERT_TRUE(IsAligned(vma->GetStart(), hal::kPageSizeBytes), "VMA start is not aligned");
+    R_ASSERT_TRUE(IsAligned(vma->GetSize(), hal::kPageSizeBytes), "VMA size is not aligned");
 
-    // Check for overlapping areas
+    std::lock_guard guard(area_list_lock_);
+    template_lib::ScopeGuard vma_guard([&] {
+        KDelete(vma);
+    });
+
     for (auto it = area_list_.begin(); it != area_list_.end(); ++it) {
-        if (AreasOverlap(*it, vma)) {
-            // We own vma, so we must delete it on failure
-            KDelete(vma);
-            return unexpected(MemError::InvalidArgument);
+        VMemArea *current = *it;
+        RET_UNEXPECTED_IF(AreasOverlap(current, vma), MemError::InvalidArgument);
+
+        if (vma->GetStart() < current->GetStart()) {
+            auto *pos = it.GetNode();
+            auto *new_node =
+                pos->prev ? area_list_.InsertAfter(pos->prev, vma) : area_list_.PushFront(vma);
+
+            RET_UNEXPECTED_IF(!new_node, MemError::OutOfMemory);
+            vma_guard.dismiss();
+            return {};
         }
     }
 
-    auto node = area_list_.PushFront(vma);
-    if (!node) {
-        KDelete(vma);
-        return unexpected(MemError::OutOfMemory);
-    }
+    RET_UNEXPECTED_IF(!area_list_.PushBack(vma), MemError::OutOfMemory);
+    vma_guard.dismiss();
 
     return {};
 }
@@ -124,7 +138,7 @@ expected<TlbHint, MemError> AS::UpdateAreaFlags(VPtr<void> ptr, VirtualMemAreaFl
     auto start = vma->GetStart();
     auto size  = vma->GetSize();
 
-    bool is_kernel = (PtrToUptr(start) >= hal::kKernelVirtualAddressStart);
+    bool is_kernel = IsKernelSpace(start);
 
     hal::PageFlags pf{
         .Present        = true,
@@ -173,4 +187,50 @@ bool AS::IsAddrInArea(const VMemArea *vma, VPtr<void> ptr)
     const auto vma_e = vma_s + vma->GetSize();
     const auto addr  = reinterpret_cast<uptr>(ptr);
     return vma_s <= addr && addr < vma_e;
+}
+
+expected<GapInfo, MemError> AS::FindGap(size_t size, VPtr<void> range_start, VPtr<void> range_end)
+{
+    std::lock_guard guard(area_list_lock_);
+
+    uptr search_start = range_start ? PtrToUptr(range_start) : 0;
+    uptr search_end   = range_end ? PtrToUptr(range_end) : UINTPTR_MAX;
+
+    search_start = AlignUp(search_start, hal::kPageSizeBytes);
+    search_end   = AlignDown(search_end, hal::kPageSizeBytes);
+
+    uptr prev_end = search_start;
+
+    for (auto *vma : area_list_) {
+        uptr curr_start = PtrToUptr(vma->GetStart());
+        uptr curr_end   = curr_start + vma->GetSize();
+
+        // Search only in the range of interest
+        if (curr_end <= search_start) {
+            // Handle case where VMA overlaps the search_start boundary but ends after it
+            prev_end = std::max(prev_end, curr_end);
+            continue;
+        }
+        if (curr_start >= search_end) {
+            break;
+        }
+
+        // Gap found
+        uptr gap_start = AlignUp(prev_end, hal::kPageSizeBytes);
+        uptr gap_end   = AlignDown(curr_start, hal::kPageSizeBytes);
+
+        if (gap_end > gap_start && (gap_end - gap_start) >= size) {
+            return GapInfo{UptrToPtr<void>(gap_start), size};
+        }
+
+        prev_end = curr_end;
+    }
+
+    uptr gap_start = AlignUp(prev_end, hal::kPageSizeBytes);
+
+    if (search_end > gap_start && (search_end - gap_start) >= size) {
+        return GapInfo{UptrToPtr<void>(gap_start), size};
+    }
+
+    return unexpected(MemError::NotFound);
 }
