@@ -3,11 +3,6 @@
 
 #include <defines.hpp>
 
-/* FUTURE PLANS:
- * - get rid of dumping -> introduce user space program dumping traces
- * - remove flush() function
- */
-
 namespace trace
 {
 // ------------------------------
@@ -15,9 +10,9 @@ namespace trace
 // ------------------------------
 
 enum class TracingStage {
-    kSingleThreadEnv = 0, /* Starts on this stage */
-    kSingleThreadInterruptsEnv,
-    kMultiThreadEnv, /* Should end up here */
+    kSingleCoreEnv = 0, /* Starts on this stage */
+    kSingleCoreInterruptsEnv,
+    kMultiCoreEnv, /* Should end up here */
     kLast,
 };
 
@@ -57,7 +52,7 @@ enum class TraceModule {
 void AdvanceTracingStage();
 NODISCARD TraceLevel GetTraceLevel(TraceModule module);
 void DumpAllBuffersOnFailure();
-void Flush(); /* May only be used on main execution, no interrupts allowed */
+void DumpWorker();
 
 /* MODULE TIME CORE PROC MSG */
 template <TraceType type, TraceModule module, TraceLevel level, class... Args>

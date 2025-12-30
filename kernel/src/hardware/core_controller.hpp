@@ -29,6 +29,8 @@ class CoresController final : public hal::CoreController
 
     void BootUpAllCores();
 
+    void PanicAllCores();
+
     void AllocateTables(size_t num_cores, size_t max_hw_id);
 
     Core &AllocateCore(const CoreConfig &config);

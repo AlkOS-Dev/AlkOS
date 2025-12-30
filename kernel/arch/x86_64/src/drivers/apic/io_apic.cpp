@@ -83,6 +83,7 @@ void IoApic::PrepareDefaultConfig() const
         }
 
         WriteLowerTableRegister(idx, reg_low);
+        WriteHigherTableRegister(idx, reg_high);
     }
 }
 

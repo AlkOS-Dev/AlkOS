@@ -47,11 +47,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
     }
 }
 
-FAST_CALL void SetTssRsp0(const u64 rsp0)
-{
-    auto core_local     = hardware::GetCoreLocalData();
-    core_local.tss.rsp0 = rsp0;
-}
+FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalData().tss.rsp0 = rsp0; }
 
 FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
