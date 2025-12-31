@@ -147,6 +147,10 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
+
+    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
+    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
+    MemoryModule::Get().GetVmm().SwitchAddrSpace(proc.value()->address_space);
 }
 
 extern "C" void cdecl_ContextSwitchEntry(

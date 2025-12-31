@@ -27,7 +27,7 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 1;
+    static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
