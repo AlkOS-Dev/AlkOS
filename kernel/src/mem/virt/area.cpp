@@ -119,7 +119,8 @@ KernelSyncVMemArea::KernelSyncVMemArea()
     // Covers the entire upper half of the 64-bit address space
     // 0x8000000000000000 - 0xFFFFFFFFFFFFFFFF
     : VMemArea(
-          Mem::UptrToPtr<void>(kKernelSpaceStart), kKernelSpaceEndInclusive - kKernelSpaceStart,
+          Mem::UptrToPtr<void>(kKernelSpaceStart),
+          AlignDown(kKernelSpaceEndInclusive - kKernelSpaceStart, hal::kPageSizeBytes),
           // Permissions are determined by the actual kernel page table entries being copied,
           // these flags are just placeholders for the VMA object.
           VirtualMemAreaFlags{.readable = true, .writable = true, .executable = true}

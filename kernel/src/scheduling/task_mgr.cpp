@@ -6,6 +6,10 @@
 #include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
+
+#include <hal/panic.hpp>
+#include <sys/loader.hpp>
+
 #include "trace_framework.hpp"
 
 #include "hal/scheduling.hpp"
@@ -23,7 +27,7 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
+    static constexpr size_t kNumKWorkers = 1;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -42,6 +46,10 @@ void TaskMgr::InitializeMultitasking()
     // Spawn trace dumper
     const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
+
+    // Spawn hello world process
+    const auto res = ExecuteElf64("/bin/hello", {});
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
@@ -204,29 +212,53 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
 
 std::expected<Pid, Error> TaskMgr::CloneProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<Tid, Error> TaskMgr::ExecuteElf64(Pid, const char *)
+std::expected<Tid, Error> TaskMgr::ExecuteElf64(Pid pid, const char *path)
 {
-    R_FAIL_ALWAYS("NOT IMPLEMENTED");
+    auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    RET_UNEXPECTED_IF_ERR(process);
+
+    auto &as = process.value()->address_space;
+    ASSERT_NOT_NULL(as);
+
+    auto entry_res = System::ElfLoader::Load(vfs::Path(path), *as);
+    if (!entry_res) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
+        );
+        return std::unexpected(Error::OutOfMemory);
+    }
+
+    const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
+
+    auto thread = SpawnThread(pid, entry);
+    RET_UNEXPECTED_IF_ERR(thread);
+
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+
+    DEBUG_INFO_SCHEDULING(
+        "Created userspace process with pid: %llu, name: %s and initial thread with tid: %llu", pid,
+        process.value()->name, thread.value()->tid
+    );
+
+    return thread.value()->tid;
 }
 
 std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     const char *path, const ProcessFlags flags
 )
 {
+    trace::TraceDumperTask();
     auto process = SpawnEmptyProcess(path, flags);
-    if (!process) {
-        return std::unexpected(process.error());
-    }
+    RET_UNEXPECTED_IF_ERR(process);
 
     template_lib::ScopeGuard process_guard([&] {
         const auto result = SchedulingModule::Get().GetProcesses().Free(process.value());
         ASSERT_TRUE(static_cast<bool>(result));
     });
-
     auto thread = ExecuteElf64(process.value(), path);
-    if (!thread) {
-        return std::unexpected(thread.error());
-    }
+    RET_UNEXPECTED_IF_ERR(thread);
 
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());
