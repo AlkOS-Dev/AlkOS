@@ -3,8 +3,8 @@
 #include "constants.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
+#include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
-#include "sys/loader.hpp"
 #include "task_mgr.hpp"
 #include "vfs/path.hpp"
 
@@ -24,13 +24,23 @@ namespace Sched
 {
 void TaskMgr::InitializeMultitasking()
 {
+    // Spawn hello world process
+    const auto res = ExecuteElf64("/bin/hello", {});
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
+
+    // Spawn trace dumper
+    const auto result =
+        SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));
+    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
+
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
         name[sizeof(name) - 2] = static_cast<char>('0' + i);
-        auto result            = SpawnKernelProcess(name, {}, KWorkerMain);
+
+        auto result = SpawnKernelProcess(name, {}, PrepareKThreadTask(KWorkerMain));
         R_ASSERT_TRUE(
             static_cast<bool>(result),
             "Failed to spawn kernel workers. Not enough resources for the system"
@@ -40,14 +50,6 @@ void TaskMgr::InitializeMultitasking()
             "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
-
-    // Spawn trace dumper
-    const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
-    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
-
-    // Spawn hello world process
-    const auto res = ExecuteElf64("/bin/hello", {});
-    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
@@ -96,18 +98,12 @@ std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const Pro
     return process.value()->pid;
 }
 
-std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
+std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, Task task)
 {
     bool dismiss = false;
 
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));
-
-    if (process.value()->flags.KernelSpaceOnly) {
-        ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
-    } else {
-        ASSERT_FALSE(IsKernelSpace(reinterpret_cast<void *>(f)));
-    }
 
     // 1. Prepare internal structure for execution unit - thread:
     auto thread = SchedulingModule::Get().GetThreads().PrepareThread();
@@ -163,22 +159,16 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, void (*f)())
         thread.value()->user_stack_bottom = nullptr;
     }
 
-    if (process.value()->flags.KernelSpaceOnly) {
-        hal::InitializeStackKThread(&thread.value()->kernel_stack, f);
-    } else {
-        hal::InitializeStackUserThread(&thread.value()->kernel_stack, f);
-    }
-
+    hal::InitializeThreadStack(&thread.value()->kernel_stack, task);
     dismiss = true;
     return thread.value();
 }
 
 std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
-    const char *name, ProcessFlags flags, void (*f)()
+    const char *name, ProcessFlags flags, Task task
 )
 {
     flags.KernelSpaceOnly = true;
-    ASSERT_TRUE(IsKernelSpace(reinterpret_cast<void *>(f)));
 
     auto process = SpawnEmptyProcess(name, flags);
     if (!process) {
@@ -190,7 +180,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
         ASSERT_TRUE(static_cast<bool>(result));
     });
 
-    const auto thread = SpawnThread(process.value(), f);
+    const auto thread = SpawnThread(process.value(), task);
     if (!thread) {
         return std::unexpected(thread.error());
     }
@@ -210,25 +200,14 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
 
 std::expected<Pid, Error> TaskMgr::CloneProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<Tid, Error> TaskMgr::ExecuteElf64(Pid pid, const char *path)
+std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
 {
     auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
-    auto &as = process.value()->address_space;
-    ASSERT_NOT_NULL(as);
+    // TODO: KILL ALL EXISTING THREADS FROM THIS PROCESS
 
-    auto entry_res = System::ElfLoader::Load(vfs::Path(path), *as);
-    if (!entry_res) {
-        DEBUG_WARN_SCHEDULING(
-            "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
-        );
-        return std::unexpected(Error::OutOfMemory);
-    }
-
-    const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
-
-    auto thread = SpawnThread(pid, entry);
+    auto thread = SpawnThread(pid, PrepareElf64LoaderTask(pid, path));
     RET_UNEXPECTED_IF_ERR(thread);
 
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
@@ -236,8 +215,8 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(Pid pid, const char *path)
     HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_SCHEDULING(
-        "Created userspace process with pid: %llu, name: %s and initial thread with tid: %llu", pid,
-        process.value()->name, thread.value()->tid
+        "Created userspace process with pid: %llu and initial thread with tid: %llu", pid,
+        thread.value()->tid
     );
 
     return thread.value()->tid;
@@ -247,6 +226,11 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     const char *path, const ProcessFlags flags
 )
 {
+    const auto exists_res = VfsModule::Get().FileExists(vfs::Path(path));
+    if (!exists_res.has_value() || !exists_res.value()) {
+        return std::unexpected(Error::ExecPathNotFound);
+    }
+
     auto process = SpawnEmptyProcess(path, flags);
     RET_UNEXPECTED_IF_ERR(process);
 
@@ -262,6 +246,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
 }
 
 std::expected<void, Error> TaskMgr::KillProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
+void TaskMgr::CommitSuicide(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
 std::expected<void, Error> TaskMgr::ExitProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 

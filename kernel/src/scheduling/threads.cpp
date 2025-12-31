@@ -4,6 +4,8 @@
 
 #include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
+#include "sys/loader.hpp"
+#include "vfs/path.hpp"
 
 namespace Sched
 {
@@ -30,17 +32,29 @@ void KThreadEntrypoint(void (*f)())
     OnKThreadExit();
 }
 
-void UserThreadEntrypoint(void (*f)())
-{
-    OnUserThreadEntry();
-    hal::JumpToUserSpace(f);
-}
-
-void OnUserThreadEntry() {}
-
 void OnKThreadExit()
 {
     R_FAIL_ALWAYS("Not implemented. KThread should never return at this stage...");
+}
+
+void Elf64EntryPoint(const Pid pid, const char *path)
+{
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    ASSERT_TRUE(static_cast<bool>(process));  // TODO: CAN IT BE MISSING HERE????
+
+    auto &as = process.value()->address_space;
+    ASSERT_NOT_NULL(as);
+
+    const auto entry_res = System::ElfLoader::Load(vfs::Path(path), *as);
+    if (!entry_res) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
+        );
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+    }
+
+    const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
+    hal::JumpToUserSpace(entry);
 }
 
 }  // namespace Sched

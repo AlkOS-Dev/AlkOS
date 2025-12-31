@@ -62,9 +62,13 @@ MTEST(KernelTaskSwitchTest)
     flags.KernelSpaceOnly = true;
     flags.PreserveFloats  = true;
 
-    auto p0 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess("task0", flags, Task0);
+    auto p0 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess(
+        "task0", flags, Sched::PrepareKThreadTask(Task0)
+    );
     ASSERT_TRUE(static_cast<bool>(p0));
-    auto p1 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess("task1", flags, Task1);
+    auto p1 = SchedulingModule::Get().GetTaskMgr().SpawnKernelProcess(
+        "task1", flags, Sched::PrepareKThreadTask(Task1)
+    );
     ASSERT_TRUE(static_cast<bool>(p1));
 
     const auto tid0 = std::get<1>(p0.value());

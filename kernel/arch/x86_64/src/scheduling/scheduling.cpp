@@ -94,16 +94,6 @@ FAST_CALL void SwapFsIfNeeded(Sched::Thread *current_tcb, Sched::Thread *next_tc
     }
 }
 
-FAST_CALL u64 GetThreadsPageTable(Sched::Thread *thread)
-{
-    ASSERT_NOT_NULL(thread);
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-
-    return reinterpret_cast<u64>(proc.value()->address_space->PageTableRoot());
-}
-
 FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
 {
     ASSERT_NOT_NULL(tcb);
@@ -111,10 +101,10 @@ FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
     const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(tcb->owner);
     ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
 
-    auto &current_as = MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
-    auto thread_as   = proc.value()->address_space;
+    const auto current_as = &MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
+    const auto thread_as  = proc.value()->address_space;
 
-    if (&current_as != thread_as) {
+    if (current_as != thread_as) {
         MemoryModule::Get().GetVmm().SwitchAddrSpace(thread_as);
     }
 }
@@ -130,6 +120,7 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
     hardware::SetCurrentTCB(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
     SwapGsIfJumpingToUserspace(thread);
+    SwapAsIfNeeded(thread);
 }
 
 extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
@@ -145,16 +136,14 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-    MemoryModule::Get().GetVmm().SwitchAddrSpace(proc.value()->address_space);
 }
 
 extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
+    DumpFpStateIfNeeded(thread);
+
     mem->error_code             = 0;
     mem->isr_stack_frame.rip    = rip;
     mem->isr_stack_frame.cs     = static_cast<u64>(cpu::GDT::kKernelCodeSelector);
@@ -174,34 +163,14 @@ extern "C" void cdecl_ContextSwitchEntry(
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
+    DumpFpStateIfNeeded(thread);
+
     auto current_tcb          = hardware::GetCurrentTCB();
     current_tcb->kernel_stack = rsp;
     SwapFsIfNeeded(current_tcb, thread);
     hardware::SetCurrentTCB(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
+
+    LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
-}
-
-// ===========================
-
-extern "C" void cdecl_SetTssRsp0(const u64 rsp0) { SetTssRsp0(rsp0); }
-
-extern "C" void cdecl_SwapFsIfNeeded(Sched::Thread *thread)
-{
-    SwapFsIfNeeded(hardware::GetCurrentTCB(), thread);
-}
-
-extern "C" void cdecl_SetNextThreadFs(Sched::Thread *thread) { SetNextThreadFs(thread); }
-
-extern "C" void cdecl_DumpFpStateIfNeeded(Sched::Thread *thread) { DumpFpStateIfNeeded(thread); }
-
-extern "C" void cdecl_LoadFpStateIfNeeded(Sched::Thread *thread) { LoadFpStateIfNeeded(thread); }
-
-extern "C" Sched::Thread *cdecl_GetCurrentTCB() { return hardware::GetCurrentTCB(); }
-
-extern "C" void cdecl_SetCurrentTCB(Sched::Thread *tcb) { hardware::SetCurrentTCB(tcb); }
-
-extern "C" u64 cdecl_GetThreadsPageTable(Sched::Thread *thread)
-{
-    return GetThreadsPageTable(thread);
 }
