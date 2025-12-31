@@ -130,6 +130,8 @@ expected<VPtr<void>, MemError> Vmm::AllocAnonymous(
     RET_UNEXPECTED_IF(!vma_res, MemError::OutOfMemory);
     auto *vma = *vma_res;
 
+    UpdateAreaFlags(as, vma->GetStart(), flags);
+
     auto add_res = as->AddArea(vma);
     RET_UNEXPECTED_IF_ERR(add_res);
 

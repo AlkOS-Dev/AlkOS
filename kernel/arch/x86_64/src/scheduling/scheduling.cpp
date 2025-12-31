@@ -1,6 +1,7 @@
 #include "modules/scheduling.hpp"
 
 #include <cpu/control_registers.hpp>
+#include <modules/memory.hpp>
 
 #include "cpu/utils.hpp"
 #include "hal/interrupt_params.hpp"
@@ -103,15 +104,18 @@ FAST_CALL u64 GetThreadsPageTable(Sched::Thread *thread)
     return reinterpret_cast<u64>(proc.value()->address_space->PageTableRoot());
 }
 
-FAST_CALL void SwapCr3IfNeeded(Sched::Thread *tcb)
+FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
 {
     ASSERT_NOT_NULL(tcb);
 
-    auto cr3 = cpu::GetCR<cpu::Cr3>();
+    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(tcb->owner);
+    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
 
-    auto next_cr3 = GetThreadsPageTable(tcb);
-    if (*reinterpret_cast<u64 *>(&cr3) != next_cr3) {
-        cpu::SetCR(*reinterpret_cast<cpu::Cr3 *>(&next_cr3));
+    auto &current_as = MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
+    auto thread_as   = proc.value()->address_space;
+
+    if (&current_as != thread_as) {
+        MemoryModule::Get().GetVmm().SwitchAddrSpace(thread_as);
     }
 }
 
@@ -141,6 +145,10 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
+
+    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
+    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
+    MemoryModule::Get().GetVmm().SwitchAddrSpace(proc.value()->address_space);
 }
 
 extern "C" void cdecl_ContextSwitchEntry(
@@ -161,7 +169,7 @@ extern "C" void cdecl_ContextSwitchEntry(
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
     SwapGsIfJumpingToUserspace(thread);
     LoadFpStateIfNeeded(thread);
-    SwapCr3IfNeeded(thread);
+    SwapAsIfNeeded(thread);
 }
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
@@ -171,7 +179,7 @@ extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
     SwapFsIfNeeded(current_tcb, thread);
     hardware::SetCurrentTCB(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
-    SwapCr3IfNeeded(thread);
+    SwapAsIfNeeded(thread);
 }
 
 // ===========================
