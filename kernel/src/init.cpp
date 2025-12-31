@@ -54,11 +54,12 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     /* Fully Initialize ACPI subsystem */
     // HardwareModule::Get().GetACPIController().Init();
 
+    VfsModule::Init(args);
+
     SchedulingModule::Init();
     SchedulingModule::Get().GetTaskMgr().InitializeMultitasking();
 
     HardwareModule::Get().GetCoresController().BootUpAllCores();
 
-    VfsModule::Init(args);
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
 }
