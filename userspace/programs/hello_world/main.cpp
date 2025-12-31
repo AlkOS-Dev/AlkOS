@@ -18,18 +18,26 @@ extern "C" int main()
         "----------------------------------\n"
     );
 
-    printf("\nFormatting Test: %d + %d = %d\n\n", 2, 2, 4);
+    printf("Formatting Test: %d + %d = %d\n", 2, 2, 4);
 
     Timezone tz;
     __platform_get_timezone(&tz);
-    printf("Timezone offset (minutes): %d\n\n", tz.west_offset_minutes);
+    printf("Timezone offset (minutes): %d\n", tz.west_offset_minutes);
 
     u64 ticks = __platform_get_clock_ticks_in_second(kTimeUtc);
-    printf("Ticks per second (UTC): %llu\n\n", ticks);
+    printf("Ticks per second (UTC): %llu\n", ticks);
 
     TimeVal tv;
     __platform_get_clock_value(kTimeUtc, &tv, &tz);
-    printf("Current Timestamp: %llu\n\n", tv.seconds);
+    printf("Current Timestamp: %llu\n", tv.seconds);
+
+    while (true) {
+        static size_t kSpins = 1'000'000;
+        size_t counter       = 0;
+        for (size_t i = 0; i < kSpins; i++) {
+            ++counter;
+        }
+    }
 
     char buffer[64]{};
     fd_t fd = __platform_open("/docs/greet.txt", kFdFlagReadWrite);

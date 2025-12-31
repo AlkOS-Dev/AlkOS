@@ -5,6 +5,7 @@
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
+#include "sys/loader.hpp"
 #include "task_mgr.hpp"
 
 #include <hal/panic.hpp>

@@ -2,6 +2,7 @@
 #include "modules/memory.hpp"
 
 #include <cpu/control_registers.hpp>
+#include <modules/memory.hpp>
 
 #include "cpu/utils.hpp"
 #include "hal/interrupt_params.hpp"
