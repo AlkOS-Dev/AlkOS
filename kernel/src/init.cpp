@@ -54,7 +54,7 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().RegisterInterruptHandlers();
 
     /* Fully Initialize ACPI subsystem */
-    // HardwareModule::Get().GetACPIController().Init();
+    HardwareModule::Get().GetACPIController().Init();
 
     VfsModule::Init(args);
 
