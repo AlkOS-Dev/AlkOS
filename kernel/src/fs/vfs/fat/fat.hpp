@@ -1,11 +1,12 @@
-#ifndef KERNEL_SRC_VFS_FAT_FAT_HPP_
-#define KERNEL_SRC_VFS_FAT_FAT_HPP_
+#ifndef KERNEL_SRC_FS_VFS_FAT_FAT_HPP_
+#define KERNEL_SRC_FS_VFS_FAT_FAT_HPP_
 
 #include <ctype.h>
 #include <string.h>
 #include <fs/vfs/error.hpp>
 #include <fs/vfs/interface.hpp>
 #include <fs/vfs/path.hpp>
+#include <fs/vfs/types.hpp>
 #include <internal/span.hpp>
 #include <span.hpp>
 #include <string.hpp>
@@ -1388,4 +1389,4 @@ class Fat
 
 }  // namespace vfs
 
-#endif  // KERNEL_SRC_VFS_FAT_FAT_HPP_
+#endif  // KERNEL_SRC_FS_VFS_FAT_FAT_HPP_

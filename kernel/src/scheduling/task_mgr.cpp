@@ -48,6 +48,11 @@ void TaskMgr::InitializeMultitasking()
     const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
+    // Spawn FD hierarchy dumper
+    const auto fd_result =
+        SpawnKernelProcess("kworker-fd-hierarchy-dumper", {}, FdHierarchyDumperMain);
+    R_ASSERT_TRUE(static_cast<bool>(fd_result), "Failed to spawn FD hierarchy dumper process...");
+
     // Spawn hello world process
     const auto res = ExecuteElf64("/bin/hello", {});
     R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");

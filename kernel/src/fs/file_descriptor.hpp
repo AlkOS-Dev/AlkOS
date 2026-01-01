@@ -2,6 +2,7 @@
 #define KERNEL_SRC_FS_FILE_DESCRIPTOR_HPP_
 
 #include <types.h>
+#include <data_structures/ref_count.hpp>
 #include <data_structures/tagged_pointer.hpp>
 #include <span.hpp>
 
@@ -19,6 +20,7 @@ namespace Fs
 // ------------------------------
 
 class OpenFileTable;
+class FileTable;
 
 // ------------------------------
 // Error Types
@@ -116,12 +118,17 @@ enum class StandardStreamType { kStdin, kStdout, kStderr };
  * @brief File represents a file in filesystem
  *
  * Thread-safe: All access must be protected by FileTable::lock_
+ * Uses RefCounted for automatic lifetime management
  */
-struct File {
-    u64 size;       // File size in bytes
-    u32 mode;       // File mode (permissions and type)
-    u32 ref_count;  // Number of open file entries referencing this file
+class File : public data_structures::RefCountedBase<File>
+{
+    public:
+    u64 size{0};
+    u32 mode{0};
     vfs::Path path;
+
+    File()          = default;
+    virtual ~File() = default;
 };
 
 // ------------------------------
@@ -131,9 +138,8 @@ struct File {
 /**
  * @brief Tagged union holding either a File or Pipe
  *
- * Both are NonOwned:
- * - File: managed by FileTable
- * - Pipe: owned by Process (for stdin/stdout/stderr)
+ * - File: Smart (ref-counted), managed by RefCounted
+ * - Pipe: NonOwned, owned by Process (for stdin/stdout/stderr)
  */
 using FileHandle = data_structures::NonOwningTaggedPtr<File, IO::Pipe<kStdioBufferSize>>;
 
@@ -148,17 +154,19 @@ using FileHandle = data_structures::NonOwningTaggedPtr<File, IO::Pipe<kStdioBuff
  * Multiple process file descriptors can reference same entry.
  *
  * Contains either:
- * - A File (for regular files)
+ * - A File (with automatic ref counting via RefCounted)
  * - A Pipe (for stdin/stdout/stderr)
- *
- * Thread-safe: All access must be protected by OpenFileTable::lock_
  */
-struct OpenFileEntry {
-    FileHandle handle;  // Either File* or Pipe (owned)
-    u32 flags;          // Open mode flags
-    u64 offset;         // Current file offset
-    u32 ref_count;      // Number of file descriptors referencing this entry
-    bool is_append;     // True if opened in append mode
+class OpenFileEntry : public data_structures::RefCountedBase<OpenFileEntry>
+{
+    public:
+    FileHandle handle;      // Either File* or Pipe*
+    u32 flags{0};           // Open mode flags
+    u64 offset{0};          // Current file offset
+    bool is_append{false};  // True if opened in append mode
+
+    OpenFileEntry()          = default;
+    virtual ~OpenFileEntry() = default;
 
     // Helper methods
     bool IsFile() const { return handle.Is<File>(); }
@@ -203,6 +211,7 @@ class FdTable
     const OpenFileEntry *GetEntry(fd_t fd) const;
 
     FdResult<fd_t> DuplicateFd(fd_t fd);
+    FdResult<fd_t> DuplicateFdTo(fd_t old_fd, fd_t new_fd);
 
     size_t GetOpenCount() const { return open_count_; }
 
@@ -242,6 +251,9 @@ class FileTable
     File *Find(const vfs::Path &path);
     const File *Find(const vfs::Path &path) const;
 
+    size_t GetCount() const { return count_; }
+    const File *GetFile(size_t index) const { return &files_[index]; }
+
     private:
     File files_[kMaxActiveFiles]{};
     size_t count_{};
@@ -260,6 +272,9 @@ class FileTable
  */
 class OpenFileTable
 {
+    // Friend to allow OnZeroRefs callback to access count_
+    friend struct OpenFileEntry;
+
     public:
     OpenFileTable();
     ~OpenFileTable();
@@ -276,6 +291,9 @@ class OpenFileTable
 
     FdResult<u64> GetOffset(const OpenFileEntry *entry) const;
     FdResult<> SetOffset(OpenFileEntry *entry, u64 offset) const;
+
+    size_t GetOpenCount() const { return open_count_; }
+    const OpenFileEntry *GetEntry(size_t index) const { return &entries_[index]; }
 
     private:
     OpenFileEntry entries_[kMaxOpenFiles];

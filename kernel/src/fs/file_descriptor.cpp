@@ -30,7 +30,7 @@ FdResult<fd_t> FdTable::AllocateFd(OpenFileEntry *global_entry)
     for (size_t i = 0; i < kMaxFdsPerProcess; ++i) {
         if (entries_[i] == nullptr) {
             entries_[i] = global_entry;
-            global_entry->ref_count++;
+            global_entry->AddRef();
             open_count_++;
             return static_cast<fd_t>(i);
         }
@@ -52,7 +52,7 @@ FdResult<fd_t> FdTable::AllocateFdAt(OpenFileEntry *global_entry, fd_t fd)
 
     // Allocate at the specific index
     entries_[fd] = global_entry;
-    global_entry->ref_count++;
+    global_entry->AddRef();
     open_count_++;
 
     return fd;
@@ -106,7 +106,7 @@ FdResult<fd_t> FdTable::DuplicateFd(fd_t fd)
         if (entries_[i] == nullptr) {
             // Copy the pointer and increment ref count
             entries_[i] = entries_[fd];
-            entries_[i]->ref_count++;
+            entries_[i]->AddRef();
             open_count_++;
 
             return static_cast<fd_t>(i);
@@ -114,6 +114,29 @@ FdResult<fd_t> FdTable::DuplicateFd(fd_t fd)
     }
 
     return std::unexpected(FdError::kFdTableFull);
+}
+
+FdResult<fd_t> FdTable::DuplicateFdTo(fd_t old_fd, fd_t new_fd)
+{
+    RET_UNEXPECTED_IF(!IsValidFd(old_fd), FdError::kInvalidFd);
+    RET_UNEXPECTED_IF(!IsValidFd(new_fd), FdError::kInvalidFd);
+
+    std::lock_guard lock(lock_);
+
+    RET_UNEXPECTED_IF(entries_[old_fd] == nullptr, FdError::kBadFileDescriptor);
+
+    // If new_fd is already open, close it first
+    if (entries_[new_fd] != nullptr) {
+        entries_[new_fd] = nullptr;
+        open_count_--;
+    }
+
+    // Duplicate the entry
+    entries_[new_fd] = entries_[old_fd];
+    entries_[new_fd]->AddRef();
+    open_count_++;
+
+    return new_fd;
 }
 
 // ============================================================================
@@ -127,16 +150,16 @@ FdResult<File *> FileTable::GetOrCreate(const vfs::Path &path)
     std::lock_guard lock(lock_);
 
     // Check if file already exists (under lock, safe to return pointer)
-    File *existing = const_cast<File *>(Find(path));
+    File *existing = Find(path);
     if (existing != nullptr) {
-        existing->ref_count++;
+        existing->AddRef();
         return existing;
     }
 
     // Find a free file slot
     size_t free_slot = kMaxActiveFiles;
     for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (files_[i].ref_count == 0) {
+        if (!files_[i].HasRefs()) {
             free_slot = i;
             break;
         }
@@ -145,11 +168,13 @@ FdResult<File *> FileTable::GetOrCreate(const vfs::Path &path)
     RET_UNEXPECTED_IF(free_slot == kMaxActiveFiles, FdError::kIoError);
 
     // Initialize the new file
-    File *file      = &files_[free_slot];
-    file->size      = 0;  // TODO: Get from VFS when implemented
-    file->mode      = 0;
-    file->ref_count = 1;  // Start with ref_count = 1
-    file->path      = path;
+    File *file = &files_[free_slot];
+    file->AddRef();
+
+    // TODO: Get from VFS when implemented
+    file->size = 0;
+    file->mode = 0;
+    file->path = path;
 
     count_++;
     return file;
@@ -163,12 +188,15 @@ FdResult<> FileTable::Release(File *file)
 
     std::lock_guard lock(lock_);
 
-    RET_UNEXPECTED_IF(file->ref_count == 0, FdError::kNotOpen);
+    if (!file->HasRefs()) {
+        return std::unexpected(FdError::kNotOpen);
+    }
 
-    file->ref_count--;
+    u32 old_count = file->GetRefCount();
+    file->Release();
 
-    if (file->ref_count == 0) {
-        // TODO: Clean up file resources if needed
+    // If this was the last reference, decrement table count
+    if (old_count == 1) {
         count_--;
     }
 
@@ -178,7 +206,7 @@ FdResult<> FileTable::Release(File *file)
 File *FileTable::Find(const vfs::Path &path)
 {
     for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (files_[i].ref_count > 0 && files_[i].path == path) {
+        if (files_[i].HasRefs() && files_[i].path == path) {
             return &files_[i];
         }
     }
@@ -188,7 +216,7 @@ File *FileTable::Find(const vfs::Path &path)
 const File *FileTable::Find(const vfs::Path &path) const
 {
     for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (files_[i].ref_count > 0 && files_[i].path == path) {
+        if (files_[i].HasRefs() && files_[i].path == path) {
             return &files_[i];
         }
     }
@@ -201,14 +229,7 @@ const File *FileTable::Find(const vfs::Path &path) const
 
 OpenFileTable::OpenFileTable() : open_count_(0)
 {
-    // Initialize all entries as unused
-    for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        entries_[i].handle    = {};
-        entries_[i].flags     = 0;
-        entries_[i].offset    = 0;
-        entries_[i].ref_count = 0;
-        entries_[i].is_append = false;
-    }
+    // Entries are default-initialized (all fields are zero/empty)
 }
 
 OpenFileTable::~OpenFileTable()
@@ -217,12 +238,9 @@ OpenFileTable::~OpenFileTable()
 
     // All entries should be closed by now, but clean up just in case
     for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (entries_[i].ref_count > 0) {
-            if (entries_[i].IsFile() && entries_[i].GetFile() != nullptr) {
-                // Decrement file reference count
-                entries_[i].GetFile()->ref_count--;
-            }
-            // Pipes are not owned by OpenFileEntry, they're owned by Process
+        if (entries_[i].HasRefs()) {
+            // FileHandle will automatically call Release() on RefCounted File types
+            entries_[i].handle = {};
         }
     }
 }
@@ -237,16 +255,12 @@ FdResult<OpenFileEntry *> OpenFileTable::OpenFile(File *file, OpenMode flags)
 
     // Find a free entry slot
     for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (entries_[i].ref_count == 0) {
-            // Initialize the new entry with File handle (non-owned)
+        if (!entries_[i].HasRefs()) {
+            // Initialize the new entry - Wrap will auto-call AddRef for RefCounted File
             entries_[i].handle    = FileHandle::Wrap(file);
             entries_[i].flags     = static_cast<u32>(flags);
             entries_[i].offset    = 0;
-            entries_[i].ref_count = 1;
             entries_[i].is_append = HasMode(flags, OpenMode::kAppend);
-
-            // Increment file reference count
-            file->ref_count++;
 
             open_count_++;
             return &entries_[i];
@@ -262,12 +276,11 @@ FdResult<OpenFileEntry *> OpenFileTable::OpenPipe(IO::Pipe<kStdioBufferSize> &pi
 
     // Find a free entry slot
     for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (entries_[i].ref_count == 0) {
-            // Initialize the new entry with Pipe handle (non-owned reference)
+        if (!entries_[i].HasRefs()) {
+            // Initialize the new entry with Pipe handle (NonOwned - no ref counting)
             entries_[i].handle    = FileHandle::Wrap(&pipe);
             entries_[i].flags     = static_cast<u32>(OpenMode::kReadWrite);
             entries_[i].offset    = 0;
-            entries_[i].ref_count = 1;
             entries_[i].is_append = false;
 
             open_count_++;
@@ -286,19 +299,16 @@ FdResult<> OpenFileTable::CloseFile(OpenFileEntry *entry)
 
     std::lock_guard lock(lock_);
 
-    if (entry->ref_count == 0) {
+    if (!entry->HasRefs()) {
         return std::unexpected(FdError::kAlreadyClosed);
     }
 
-    entry->ref_count--;
+    u32 old_count = entry->GetRefCount();
+    entry->Release();
 
-    // If no more references, clean up entry
-    if (entry->ref_count == 0) {
-        if (entry->IsFile() && entry->GetFile() != nullptr) {
-            // Decrement file reference count
-            entry->GetFile()->ref_count--;
-        }
-        // Pipes are not owned, just clear the handle reference
+    // If this was the last reference (old_count was 1, now 0), clean up entry
+    if (old_count == 1) {
+        // FileHandle will automatically call Release() on RefCounted File
         entry->handle = {};
         open_count_--;
     }

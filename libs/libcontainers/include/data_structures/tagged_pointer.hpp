@@ -1,6 +1,8 @@
 #ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_TAGGED_POINTER_HPP_
 #define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_TAGGED_POINTER_HPP_
 
+#include "ref_count.hpp"
+
 #include <algorithm.hpp>
 #include <defines.hpp>
 #include <mem/heap.hpp>
@@ -10,6 +12,7 @@
 
 namespace data_structures
 {
+
 // Ownership marker types
 template <typename T>
 struct Owned {
@@ -25,6 +28,7 @@ struct NonOwned {
 
 namespace internal
 {
+
 // Helper to extract the underlying type
 template <typename T>
 struct UnwrapType {
@@ -55,6 +59,9 @@ struct IsOwned<Owned<T>> : std::true_type {
 
 template <typename T>
 inline constexpr bool IsOwned_v = IsOwned<T>::value;
+
+template <typename T>
+inline constexpr bool IsRefCounted_v = std::derived_from<T, RefCountedBase<T>>;
 
 }  // namespace internal
 
@@ -93,21 +100,39 @@ class TaggedPointer
             (std::is_same_v<NonOwned<T>, TaggedTypes> || ...),
             "Type NonOwned<T> must be in the TaggedTypes list to use Wrap"
         );
+
+        // Auto-detect RefCounted and call AddRef if needed
+        if constexpr (internal::IsRefCounted_v<T>) {
+            if (ptr) {
+                ptr->AddRef();
+            }
+        }
+
         return TaggedPointer(TagPtr(ptr, GetTypeIndex<NonOwned<T>>()));
     }
 
     ~TaggedPointer() { Destroy(); }
 
-    TaggedPointer(const TaggedPointer &)            = delete;
-    TaggedPointer &operator=(const TaggedPointer &) = delete;
-
-    // Copy assignment enabled if all types are NonOwned
-    template <typename... Ts>
-        requires(internal::IsOwned_v<Ts> == ... == false)
-    TaggedPointer &operator=(const TaggedPointer<Ts...> &other)
+    // Copy constructor - only enabled if all types are non-owned
+    TaggedPointer(const TaggedPointer &other)
+        requires(!internal::IsOwned_v<TaggedTypes> && ...)
+        : tagged_ptr_(other.tagged_ptr_)
     {
-        if (this != reinterpret_cast<const TaggedPointer *>(&other)) {
+        if (IsValid()) {
+            AddRefIfRefCounted();
+        }
+    }
+
+    // Copy assignment - only enabled if all types are non-owned
+    TaggedPointer &operator=(const TaggedPointer &other)
+        requires(!internal::IsOwned_v<TaggedTypes> && ...)
+    {
+        if (this != &other) {
+            Destroy();
             tagged_ptr_ = other.tagged_ptr_;
+            if (IsValid()) {
+                AddRefIfRefCounted();
+            }
         }
         return *this;
     }
@@ -156,7 +181,7 @@ class TaggedPointer
     template <typename T>
     NODISCARD FORCE_INLINE_F bool Is() const
     {
-        // Check both owned and non-owned variants
+        // Check owned and non-owned variants
         constexpr bool has_owned     = (std::is_same_v<Owned<T>, TaggedTypes> || ...);
         constexpr bool has_non_owned = (std::is_same_v<NonOwned<T>, TaggedTypes> || ...);
         static_assert(
@@ -239,7 +264,7 @@ class TaggedPointer
     }
 
     template <typename T>
-    static constexpr size_t GetTypeIndex()
+    FORCE_INLINE_F static constexpr size_t GetTypeIndex()
     {
         size_t index = 0;
         ((std::is_same_v<T, TaggedTypes> ? true : (++index, false)) || ...);
@@ -259,14 +284,45 @@ class TaggedPointer
     NODISCARD FORCE_INLINE_F size_t GetTag() const { return tagged_ptr_ & kTagMask; }
 
     template <typename T>
-    void DestroyType()
+    FORCE_INLINE_F void DestroyType()
     {
-        // Only destroy if the type is marked as Owned
+        using ActualType = internal::UnwrapType_t<T>;
+        ActualType *ptr  = static_cast<ActualType *>(UntagPtr());
+
+        if (!ptr)
+            return;
+
         if constexpr (internal::IsOwned_v<T>) {
-            using ActualType = internal::UnwrapType_t<T>;
-            ActualType *ptr  = static_cast<ActualType *>(UntagPtr());
             ptr->~ActualType();
             Mem::KFreeAligned(ptr);
+        } else if constexpr (internal::IsRefCounted_v<ActualType>) {
+            ptr->Release();
+        }
+    }
+
+    FORCE_INLINE_F void AddRefIfRefCounted()
+    {
+        if (!IsValid())
+            return;
+
+        size_t tag           = GetTag();
+        size_t current_index = 0;
+
+        (void)((current_index++ == tag ? (AddRefType<TaggedTypes>(), true) : false) || ...);
+    }
+
+    template <typename T>
+    FORCE_INLINE_F void AddRefType()
+    {
+        using ActualType = internal::UnwrapType_t<T>;
+        ActualType *ptr  = static_cast<ActualType *>(UntagPtr());
+
+        if (!ptr)
+            return;
+
+        // Auto-detect and increment RefCounted types
+        if constexpr (internal::IsRefCounted_v<ActualType>) {
+            ptr->AddRef();
         }
     }
 

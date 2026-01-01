@@ -19,7 +19,7 @@ struct AlignedStruct2 {
     AlignedStruct2(long long x, long long y, long long z) : a(x), b(y), c(z) {}
 };
 
-using TagPtr = TaggedPointer<AlignedStruct1, AlignedStruct2>;
+using TagPtr = OwningTaggedPtr<AlignedStruct1, AlignedStruct2>;
 
 TEST_F(TaggedPointerTest, BasicCreateAndIs)
 {
