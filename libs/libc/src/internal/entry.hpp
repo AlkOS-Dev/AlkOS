@@ -9,7 +9,7 @@ BEGIN_DECL_C
 extern int main();
 
 /**
- * @brief Entry point for the C library
+ * @brief Entry point to initialize C runtime
  *
  * This function initializes standard I/O streams and then calls the main function.
  */

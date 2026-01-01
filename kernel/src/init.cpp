@@ -58,9 +58,6 @@ void KernelInit(const hal::RawBootArguments &raw_args)
 
     VfsModule::Init(args);
 
-    // !!! Temporary !!!
-    InitStdio();
-
     SchedulingModule::Init();
     SchedulingModule::Get().GetTaskMgr().InitializeMultitasking();
 

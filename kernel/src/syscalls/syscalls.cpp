@@ -7,9 +7,9 @@ using namespace Syscall;
 
 BEGIN_DECL_C
 
-size_t g_syscall_count                                  = kSysMax;
-constinit SyscallDispatchTable g_syscall_dispatch_table = []() consteval {
-    SyscallDispatchTable table{};
+size_t g_syscall_count                  = kSysMax;
+constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<[] {
+    SyscallDispatchTable<kSysMax> table{};
 
     // Time related syscalls
     table.RegisterHandler<kSysGetClockValue, SysGetClockValue>();
@@ -24,7 +24,14 @@ constinit SyscallDispatchTable g_syscall_dispatch_table = []() consteval {
     // Panic syscall
     table.RegisterHandler<kSysPanic, SysPanic>();
 
+    // File Descriptor syscalls
+    table.RegisterHandler<kSysOpen, SysOpen>();
+    table.RegisterHandler<kSysClose, SysClose>();
+    table.RegisterHandler<kSysRead, SysRead>();
+    table.RegisterHandler<kSysWrite, SysWrite>();
+    table.RegisterHandler<kSysSeek, SysSeek>();
+
     return table;
-}();
+}>();
 
 END_DECL_C

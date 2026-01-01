@@ -1,11 +1,11 @@
 #ifndef KERNEL_SRC_MODULES_VFS_HPP_
 #define KERNEL_SRC_MODULES_VFS_HPP_
 
-#include <template_lib.hpp>
-#include <vfs/types.hpp>
 #include "boot_args.hpp"
 #include "fs/file_descriptor.hpp"
+#include "fs/vfs/types.hpp"
 #include "modules/helpers.hpp"
+#include "template_lib.hpp"
 
 namespace internal
 {

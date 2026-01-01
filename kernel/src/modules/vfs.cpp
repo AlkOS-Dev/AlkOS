@@ -2,11 +2,11 @@
 #include "../vfs.hpp"
 
 #include <autogen/feature_flags.h>
+#include <fs/vfs/fat/fat12.hpp>
+#include <fs/vfs/io/in_memory.hpp>
 #include <mem/heap.hpp>
 #include <mem/types.hpp>
 #include <trace_framework.hpp>
-#include <vfs/fat/fat12.hpp>
-#include <vfs/io/in_memory.hpp>
 #include "boot_args.hpp"
 #include "macros.hpp"
 

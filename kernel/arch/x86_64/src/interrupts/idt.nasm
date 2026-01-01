@@ -143,9 +143,11 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 
 .return:
 
+    push rax                         ; Save RAX (syscall return value).
     call cdecl_SetKernelGs
     swapgs
 
+    pop rax                          ; Restore RAX.
     pop_sysv_regs_without_rax        ; Restore registers except RAX.
     add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                            ; Return from interrupt.

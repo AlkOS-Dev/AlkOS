@@ -31,17 +31,9 @@ extern "C" int main()
     __platform_get_clock_value(kTimeUtc, &tv, &tz);
     printf("Current Timestamp: %llu\n", tv.seconds);
 
-    while (true) {
-        static size_t kSpins = 1'000'000;
-        size_t counter       = 0;
-        for (size_t i = 0; i < kSpins; i++) {
-            ++counter;
-        }
-    }
-
     char buffer[64]{};
     fd_t fd = __platform_open("/docs/greet.txt", kFdFlagReadWrite);
-    if (fd < 0) {
+    if (fd < 3) {
         printf("KWorker failed to open /docs/greet.txt for reading!");
     }
 
@@ -64,8 +56,9 @@ extern "C" int main()
     printf("KWorker: '%.*s'", static_cast<int>(written), buffer);
 
     while (true) {
-        size_t counter = 0;
-        for (size_t i = 0; i < 1'000'000; i++) {
+        static size_t kSpins = 1'000'000;
+        size_t counter       = 0;
+        for (size_t i = 0; i < kSpins; i++) {
             ++counter;
         }
     }

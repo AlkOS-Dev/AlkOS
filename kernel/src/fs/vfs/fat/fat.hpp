@@ -3,15 +3,14 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <fs/vfs/error.hpp>
+#include <fs/vfs/interface.hpp>
+#include <fs/vfs/path.hpp>
 #include <internal/span.hpp>
 #include <span.hpp>
 #include <string.hpp>
 #include <template_lib.hpp>
 #include <trace_framework.hpp>
-#include <vfs.hpp>
-#include <vfs/error.hpp>
-#include <vfs/interface.hpp>
-#include <vfs/path.hpp>
 #include "macros.hpp"
 
 namespace vfs

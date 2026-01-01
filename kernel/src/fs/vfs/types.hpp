@@ -4,9 +4,9 @@
 #include <types.h>
 #include <data_structures/critbit_tree.hpp>
 
-#include "vfs/error.hpp"
-#include "vfs/interface.hpp"
-#include "vfs/path.hpp"
+#include "fs/vfs/error.hpp"
+#include "interface.hpp"
+#include "path.hpp"
 
 namespace vfs
 {
