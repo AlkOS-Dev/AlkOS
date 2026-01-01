@@ -1,7 +1,12 @@
 #include "stdio.hpp"
-#include "string.h"
 #include "stdio.h"
+#include "string.h"
 #include "sys/calls/fd.h"
+
+// Static fixed buffers for standard streams
+static byte _stdin_buffer[BUFSIZ];
+static byte _stdout_buffer[BUFSIZ];
+static byte _stderr_buffer[BUFSIZ];
 
 static FILE _stdin;
 static FILE _stdout;
@@ -21,8 +26,8 @@ void InitStdio()
     _stdin.flags.error           = false;
     _stdin.flags.closed          = false;
     _stdin.flags.is_buffer_owner = false;
-    _stdin.buffer                = NULL;
-    _stdin.buffer_size           = 0;
+    _stdin.buffer                = _stdin_buffer;
+    _stdin.buffer_size           = sizeof(_stdin_buffer);
     _stdin.buffer_pos            = 0;
     _stdin.buffer_level          = 0;
     _stdin.file_pos              = 0;
@@ -35,8 +40,8 @@ void InitStdio()
     _stdout.flags.error           = false;
     _stdout.flags.closed          = false;
     _stdout.flags.is_buffer_owner = false;
-    _stdout.buffer                = NULL;
-    _stdout.buffer_size           = 0;
+    _stdout.buffer                = _stdout_buffer;
+    _stdout.buffer_size           = sizeof(_stdout_buffer);
     _stdout.buffer_pos            = 0;
     _stdout.buffer_level          = 0;
     _stdout.file_pos              = 0;
@@ -49,8 +54,8 @@ void InitStdio()
     _stderr.flags.error           = false;
     _stderr.flags.closed          = false;
     _stderr.flags.is_buffer_owner = false;
-    _stderr.buffer                = NULL;
-    _stderr.buffer_size           = 0;
+    _stderr.buffer                = _stderr_buffer;
+    _stderr.buffer_size           = sizeof(_stderr_buffer);
     _stderr.buffer_pos            = 0;
     _stderr.buffer_level          = 0;
     _stderr.file_pos              = 0;

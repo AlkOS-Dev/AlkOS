@@ -101,6 +101,17 @@ class TaggedPointer
     TaggedPointer(const TaggedPointer &)            = delete;
     TaggedPointer &operator=(const TaggedPointer &) = delete;
 
+    // Copy assignment enabled if all types are NonOwned
+    template <typename... Ts>
+        requires(internal::IsOwned_v<Ts> == ... == false)
+    TaggedPointer &operator=(const TaggedPointer<Ts...> &other)
+    {
+        if (this != reinterpret_cast<const TaggedPointer *>(&other)) {
+            tagged_ptr_ = other.tagged_ptr_;
+        }
+        return *this;
+    }
+
     TaggedPointer(TaggedPointer &&other) noexcept : tagged_ptr_(other.tagged_ptr_)
     {
         other.tagged_ptr_ = 0;
@@ -257,7 +268,6 @@ class TaggedPointer
             ptr->~ActualType();
             Mem::KFreeAligned(ptr);
         }
-        // If NonOwned, do nothing
     }
 
     template <typename Visitor, typename T, typename... Rest>

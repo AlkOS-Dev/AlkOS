@@ -5,10 +5,8 @@
 
 #include <autogen/feature_flags.h>
 #include <types.h>
-#include <hal/constants.hpp>
-#include "include/memory_io.hpp"
-
 #include "hal/core.hpp"
+#include "include/memory_io.hpp"
 
 namespace arch
 {

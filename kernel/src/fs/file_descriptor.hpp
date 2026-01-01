@@ -4,13 +4,10 @@
 #include <types.h>
 #include <data_structures/tagged_pointer.hpp>
 #include <span.hpp>
-#include "io/pipe.hpp"
 
 #include "hal/spinlock.hpp"
-#include "io/error.hpp"
+#include "io/pipe.hpp"
 #include "io/stream.hpp"
-#include "mem/types.hpp"
-#include "scheduling/process.hpp"
 #include "sys/calls/fd.h"
 #include "vfs/types.hpp"
 
@@ -40,6 +37,23 @@ enum class FdError {
 
 template <typename T = void>
 using FdResult = std::expected<T, FdError>;
+
+// ------------------------------
+// Constants
+// ------------------------------
+
+inline constexpr size_t kMaxFdsPerProcess = 128;
+inline constexpr size_t kMaxOpenFiles     = 1014;
+inline constexpr size_t kMaxActiveFiles   = 512;
+inline constexpr size_t kStdioBufferSize  = 4096;
+
+// Lock ordering to prevent deadlocks (lower number = acquired first):
+// 1. FileTable::lock_
+// 2. OpenFileTable::lock_
+// 3. FdTable::lock_
+//
+// When acquiring multiple locks, ALWAYS acquire in this order.
+// Release locks in reverse order.
 
 // ------------------------------
 // File Mode Flags
@@ -96,209 +110,172 @@ enum class StandardStreamType { kStdin, kStdout, kStderr };
 
 // ------------------------------
 // File Structure
-// ------------------------------
+// -----------------------------
 
 /**
  * @brief File represents a file in filesystem
+ *
+ * Thread-safe: All access must be protected by FileTable::lock_
  */
 struct File {
     u64 size;       // File size in bytes
     u32 mode;       // File mode (permissions and type)
-    u64 ref_count;  // Number of open file entries referencing this file
-
+    u32 ref_count;  // Number of open file entries referencing this file
     vfs::Path path;
 };
 
 // ------------------------------
-// Global Open File Table Entry
-// ------------------------------
-
-/**
- * @brief Global open file table entry
- * This is middle level in three-tier hierarchy
- * Multiple process file descriptors can reference same entry
- */
-struct OpenFileEntry {
-    u32 flags;
-    u64 offset;
-    u32 ref_count;  // Number of file descriptors referencing this entry
-    File *file;
-
-    // Access control
-    bool is_append;
-};
-
-// ------------------------------
-// Open File Handle
+// File Handle (File or Pipe)
 // -----------------------------
 
 /**
- * @brief RAII wrapper for OpenFileEntry with automatic resource management
- * Manages reference counting and cleanup automatically
+ * @brief Tagged union holding either a File or Pipe
+ *
+ * Both are NonOwned:
+ * - File: managed by FileTable
+ * - Pipe: owned by Process (for stdin/stdout/stderr)
  */
-class OpenFileHandle
-{
-    public:
-    OpenFileHandle() noexcept : entry_(nullptr), own_table_(nullptr) {}
+using FileHandle = data_structures::NonOwningTaggedPtr<File, IO::Pipe<kStdioBufferSize>>;
 
-    explicit OpenFileHandle(OpenFileEntry *entry, OpenFileTable *table) noexcept
-        : entry_(entry), own_table_(table)
+// ------------------------------
+// Global Open File Table Entry
+// -----------------------------
+
+/**
+ * @brief Global open file table entry
+ *
+ * This is middle level in three-tier hierarchy.
+ * Multiple process file descriptors can reference same entry.
+ *
+ * Contains either:
+ * - A File (for regular files)
+ * - A Pipe (for stdin/stdout/stderr)
+ *
+ * Thread-safe: All access must be protected by OpenFileTable::lock_
+ */
+struct OpenFileEntry {
+    FileHandle handle;  // Either File* or Pipe (owned)
+    u32 flags;          // Open mode flags
+    u64 offset;         // Current file offset
+    u32 ref_count;      // Number of file descriptors referencing this entry
+    bool is_append;     // True if opened in append mode
+
+    // Helper methods
+    bool IsFile() const { return handle.Is<File>(); }
+    bool IsPipe() const { return handle.Is<IO::Pipe<kStdioBufferSize>>(); }
+
+    File *GetFile() { return IsFile() ? &handle.As<File>() : nullptr; }
+
+    IO::Pipe<kStdioBufferSize> *GetPipe()
     {
-        if (entry_ != nullptr) {
-            entry_->ref_count++;
-        }
+        return IsPipe() ? &handle.As<IO::Pipe<kStdioBufferSize>>() : nullptr;
     }
-
-    ~OpenFileHandle() noexcept
-    {
-        if (entry_ != nullptr && own_table_ != nullptr && entry_->ref_count > 0) {
-            entry_->ref_count--;
-            if (entry_->ref_count == 0 && entry_->file != nullptr) {
-                entry_->file->ref_count--;
-                if (entry_->file->ref_count == 0) {
-                    // Clean up file resources if needed
-                }
-            }
-        }
-    }
-
-    OpenFileHandle(const OpenFileHandle &other) noexcept
-        : entry_(other.entry_), own_table_(other.own_table_)
-    {
-        if (entry_ != nullptr) {
-            entry_->ref_count++;
-        }
-    }
-
-    OpenFileHandle(OpenFileHandle &&other) noexcept
-        : entry_(other.entry_), own_table_(other.own_table_)
-    {
-        other.entry_     = nullptr;
-        other.own_table_ = nullptr;
-    }
-
-    OpenFileHandle &operator=(const OpenFileHandle &other) noexcept
-    {
-        if (this != &other) {
-            this->~OpenFileHandle();
-
-            entry_     = other.entry_;
-            own_table_ = other.own_table_;
-
-            if (entry_ != nullptr) {
-                entry_->ref_count++;
-            }
-        }
-        return *this;
-    }
-
-    OpenFileHandle &operator=(OpenFileHandle &&other) noexcept
-    {
-        if (this != &other) {
-            this->~OpenFileHandle();
-
-            entry_     = other.entry_;
-            own_table_ = other.own_table_;
-
-            other.entry_     = nullptr;
-            other.own_table_ = nullptr;
-        }
-        return *this;
-    }
-
-    explicit operator bool() const noexcept { return entry_ != nullptr; }
-
-    OpenFileEntry *Get() const noexcept { return entry_; }
-    OpenFileEntry *operator->() const noexcept { return entry_; }
-    OpenFileEntry &operator*() const noexcept { return *entry_; }
-
-    private:
-    OpenFileEntry *entry_;
-    OpenFileTable *own_table_;
 };
 
 // ------------------------------
 // Process File Descriptor Table
-// ------------------------------
+// -----------------------------
 
 /**
  * @brief Process-local file descriptor table
- * Each process has its own table of file descriptors
+ *
+ * Each process has its own table of file descriptors.
+ * Thread-safe: All operations protected by internal lock_
  */
 class FdTable
 {
     public:
-    static constexpr size_t kMaxFds    = 256;
-    static constexpr size_t kStdioSize = 4096;
-
-    using FdEntry = data_structures::TaggedPointer<
-        data_structures::NonOwned<OpenFileEntry>, data_structures::Owned<IO::Pipe<kStdioSize>>>;
-
     FdTable()  = default;
     ~FdTable() = default;
+
+    // Disable copy and move
+    FdTable(const FdTable &)            = delete;
+    FdTable &operator=(const FdTable &) = delete;
+    FdTable(FdTable &&)                 = delete;
+    FdTable &operator=(FdTable &&)      = delete;
 
     FdResult<fd_t> AllocateFd(OpenFileEntry *global_entry);
     FdResult<fd_t> AllocateFdAt(OpenFileEntry *global_entry, fd_t fd);
     FdResult<> FreeFd(fd_t fd);
-    FdEntry *GetEntry(fd_t fd);
-    bool IsValidFd(fd_t fd) const;
+
+    // Get entry pointer (valid only while lock is held)
+    OpenFileEntry *GetEntry(fd_t fd);
+    const OpenFileEntry *GetEntry(fd_t fd) const;
+
     FdResult<fd_t> DuplicateFd(fd_t fd);
+
     size_t GetOpenCount() const { return open_count_; }
-    bool IsStandardStreamInitialized() const;
-    void SetStandardStreamsInitialized(bool initialized);
 
     private:
-    FdEntry entries_[kMaxFds];
+    OpenFileEntry *entries_[kMaxFdsPerProcess]{};
     size_t open_count_{};
-    mutable arch::Spinlock lock_;
+    hal::Spinlock lock_{};
 };
 
 // ------------------------------
 // Global File Table
-// ------------------------------
+// -----------------------------
 
 /**
  * @brief Global file table
- * Manages all files system-wide
+ *
+ * Manages all files system-wide.
+ * Thread-safe: All operations protected by internal lock_
  */
 class FileTable
 {
     public:
-    static constexpr size_t kMaxFiles = 1024;
-
     FileTable()  = default;
     ~FileTable() = default;
 
+    // Disable copy and move
+    FileTable(const FileTable &)            = delete;
+    FileTable &operator=(const FileTable &) = delete;
+    FileTable(FileTable &&)                 = delete;
+    FileTable &operator=(FileTable &&)      = delete;
+
     FdResult<File *> GetOrCreate(const vfs::Path &path);
     FdResult<> Release(File *file);
-    std::optional<File *> Find(const vfs::Path &path);
+
+    // Find file (returns nullptr if not found)
+    // Caller must ensure lock ordering: FileTable lock must be held
+    File *Find(const vfs::Path &path);
+    const File *Find(const vfs::Path &path) const;
 
     private:
-    File files_[kMaxFiles]{};
+    File files_[kMaxActiveFiles]{};
     size_t count_{};
-    mutable arch::Spinlock lock_;
+    hal::Spinlock lock_{};
 };
 
 // ------------------------------
 // Global Open File Table
-// ------------------------------
+// -----------------------------
 
 /**
  * @brief Global open file table
- * Manages all open file entries system-wide
+ *
+ * Manages all open file entries system-wide.
+ * Thread-safe: All operations protected by internal lock_
  */
 class OpenFileTable
 {
     public:
-    static constexpr size_t kMaxOpenFiles = 512;
-
     OpenFileTable();
     ~OpenFileTable();
 
-    FdError OpenFile(File *inode, OpenMode flags, OpenFileEntry **entry_out);
-    FdError CloseFile(OpenFileEntry *entry);
-    FdError GetOffset(OpenFileEntry *entry, u64 *offset_out);
-    FdError SetOffset(OpenFileEntry *entry, u64 offset);
+    // Disable copy and move
+    OpenFileTable(const OpenFileTable &)            = delete;
+    OpenFileTable &operator=(const OpenFileTable &) = delete;
+    OpenFileTable(OpenFileTable &&)                 = delete;
+    OpenFileTable &operator=(OpenFileTable &&)      = delete;
+
+    FdResult<OpenFileEntry *> OpenFile(File *file, OpenMode flags);
+    FdResult<OpenFileEntry *> OpenPipe(IO::Pipe<kStdioBufferSize> &pipe);
+    FdResult<> CloseFile(OpenFileEntry *entry);
+
+    FdResult<u64> GetOffset(const OpenFileEntry *entry) const;
+    FdResult<> SetOffset(OpenFileEntry *entry, u64 offset) const;
 
     private:
     OpenFileEntry entries_[kMaxOpenFiles];
@@ -320,7 +297,11 @@ inline constexpr fd_t kStderrFd = kFdStdErr;
 
 /**
  * @brief Main file descriptor manager
- * Coordinates three-tier hierarchy
+ *
+ * Coordinates three-tier hierarchy following lock ordering:
+ * 1. FileTable::lock_
+ * 2. OpenFileTable::lock_
+ * 3. FdTable::lock_
  */
 class FdManager
 {
@@ -328,14 +309,26 @@ class FdManager
     FdManager();
     ~FdManager();
 
+    // Disable copy and move
+    FdManager(const FdManager &)            = delete;
+    FdManager &operator=(const FdManager &) = delete;
+    FdManager(FdManager &&)                 = delete;
+    FdManager &operator=(FdManager &&)      = delete;
+
     FdResult<fd_t> Open(const vfs::Path &path, OpenMode flags);
     FdResult<> Close(fd_t fd);
     FdResult<size_t> Read(fd_t fd, std::span<byte> buffer);
     FdResult<size_t> Write(fd_t fd, std::span<const byte> buffer);
     FdResult<ssize_t> Seek(fd_t fd, ssize_t offset, FdSeek whence);
+
     FileTable &GetFileTable() { return file_table_; }
+    const FileTable &GetFileTable() const { return file_table_; }
+
     OpenFileTable &GetOpenFileTable() { return open_file_table_; }
+    const OpenFileTable &GetOpenFileTable() const { return open_file_table_; }
+
     FdTable *GetCurrentProcessFdTable();
+    const FdTable *GetCurrentProcessFdTable() const;
 
     private:
     FileTable file_table_;

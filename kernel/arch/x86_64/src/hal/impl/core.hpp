@@ -4,9 +4,7 @@
 #include <hal/api/core.hpp>
 #include "cpu/gdt.hpp"
 #include "cpu/msrs.hpp"
-#include "cpu/utils.hpp"
 #include "drivers/apic/local_apic.hpp"
-#include "scheduling/thread.hpp"
 
 namespace arch
 {

@@ -4,6 +4,7 @@
 #include <types.h>
 #include <defines.hpp>
 
+#include "fs/file_descriptor.hpp"
 #include "hal/tasks.hpp"
 #include "mem/types.hpp"
 
@@ -44,6 +45,11 @@ struct Process : hal::Process {
 
     /* File descriptor table */
     Mem::VirtualPtr<Fs::FdTable> fd_table;
+
+    /* Standard I/O pipes (owned by process) */
+    IO::Pipe<Fs::kStdioBufferSize> stdin_pipe;
+    IO::Pipe<Fs::kStdioBufferSize> stdout_pipe;
+    IO::Pipe<Fs::kStdioBufferSize> stderr_pipe;
 };
 }  // namespace Sched
 

@@ -4,6 +4,7 @@
 #include <data_structures/tagged_pointer.hpp>
 #include <template/scope_guard.hpp>
 #include "fs/file_descriptor.hpp"
+#include "modules/vfs.hpp"
 
 // ------------------------------
 // statics
@@ -37,18 +38,54 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
         Mem::KFree(fd_table_ptr);
     });
 
-    // TODO: Insert the references when cloning processes (fork, etc.) or store them somewhere else
-    auto stdin_entry = fd_table_ptr->GetEntry(Fs::kStdinFd);
-    *stdin_entry     = Fs::FdTable::FdEntry::Construct<IO::Pipe<4096>>();
-    RET_UNEXPECTED_IF(!stdin_entry, Error::OutOfMemory);
+    // Get the global OpenFileTable
+    auto &open_file_table = VfsModule::Get().GetFdManager().GetOpenFileTable();
 
-    auto stdout_entry = fd_table_ptr->GetEntry(Fs::kStdoutFd);
-    *stdout_entry     = Fs::FdTable::FdEntry::Construct<IO::Pipe<4096>>();
-    RET_UNEXPECTED_IF(!stdout_entry, Error::OutOfMemory);
+    // Open stdin pipe in the global open file table
+    auto stdin_entry_result = open_file_table.OpenPipe(process->stdin_pipe);
+    RET_UNEXPECTED_IF(!stdin_entry_result, Error::OutOfMemory);
+    auto *stdin_entry = *stdin_entry_result;
 
-    auto stderr_entry = fd_table_ptr->GetEntry(Fs::kStderrFd);
-    *stderr_entry     = Fs::FdTable::FdEntry::Construct<IO::Pipe<4096>>();
-    RET_UNEXPECTED_IF(!stderr_entry, Error::OutOfMemory);
+    // Allocate stdin file descriptor
+    auto stdin_fd_result = fd_table_ptr->AllocateFdAt(stdin_entry, Fs::kStdinFd);
+    if (!stdin_fd_result) {
+        open_file_table.CloseFile(stdin_entry);
+        return std::unexpected(Error::OutOfMemory);
+    }
+
+    // Open stdout pipe in the global open file table
+    auto stdout_entry_result = open_file_table.OpenPipe(process->stdout_pipe);
+    if (!stdout_entry_result) {
+        open_file_table.CloseFile(stdin_entry);
+        return std::unexpected(Error::OutOfMemory);
+    }
+    auto *stdout_entry = *stdout_entry_result;
+
+    // Allocate stdout file descriptor
+    auto stdout_fd_result = fd_table_ptr->AllocateFdAt(stdout_entry, Fs::kStdoutFd);
+    if (!stdout_fd_result) {
+        open_file_table.CloseFile(stdin_entry);
+        open_file_table.CloseFile(stdout_entry);
+        return std::unexpected(Error::OutOfMemory);
+    }
+
+    // Open stderr pipe in the global open file table
+    auto stderr_entry_result = open_file_table.OpenPipe(process->stderr_pipe);
+    if (!stderr_entry_result) {
+        open_file_table.CloseFile(stdin_entry);
+        open_file_table.CloseFile(stdout_entry);
+        return std::unexpected(Error::OutOfMemory);
+    }
+    auto *stderr_entry = *stderr_entry_result;
+
+    // Allocate stderr file descriptor
+    auto stderr_fd_result = fd_table_ptr->AllocateFdAt(stderr_entry, Fs::kStderrFd);
+    if (!stderr_fd_result) {
+        open_file_table.CloseFile(stdin_entry);
+        open_file_table.CloseFile(stdout_entry);
+        open_file_table.CloseFile(stderr_entry);
+        return std::unexpected(Error::OutOfMemory);
+    }
 
     fd_table_guard.dismiss();
 
