@@ -136,9 +136,9 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
     frame->rsp    = reinterpret_cast<u64>(thread->user_stack_bottom);
     frame->ss     = static_cast<u64>(cpu::GDT::kUserDataSelector);
 
-    // const u64 t            = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    // thread->kernel_time_ns = t - thread->timestamp;
-    // thread->timestamp      = t;
+    const u64 t            = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->kernel_time_ns = t - thread->timestamp;
+    thread->timestamp      = t;
 
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
@@ -163,9 +163,9 @@ extern "C" void cdecl_ContextSwitchEntry(
     hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
 
-    // const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    // current_tcb->kernel_time_ns = t - current_tcb->timestamp;
-    // thread->timestamp           = t;
+    const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    current_tcb->kernel_time_ns = t - current_tcb->timestamp;
+    thread->timestamp           = t;
 
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);

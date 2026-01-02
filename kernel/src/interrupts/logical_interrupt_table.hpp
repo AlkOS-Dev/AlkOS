@@ -46,7 +46,7 @@ class LogicalInterruptTable
     {
         hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() + 1);
         hal::FullMemFence();
-        // Sched::UpdateTcbOnInterruptEntry(data);
+        Sched::UpdateTcbOnInterruptEntry(data);
 
         ASSERT_LT(lirq, GetTableSize_<InterruptType::kException>());
         ASSERT_FALSE(IsUnmapped_<InterruptType::kException>(lirq));
@@ -58,7 +58,8 @@ class LogicalInterruptTable
         hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() - 1);
         hal::FullMemFence();
 
-        // Sched::UpdateTcbOnInterruptExit(rv);
+        Sched::UpdateTcbOnInterruptExit(rv);
+
         return rv;
     }
 
@@ -68,7 +69,7 @@ class LogicalInterruptTable
     {
         hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() + 1);
         hal::FullMemFence();
-        // Sched::UpdateTcbOnInterruptEntry(data);
+        Sched::UpdateTcbOnInterruptEntry(data);
 
         ASSERT_LT(lirq, GetTableSize_<kInterruptType>());
         ASSERT_FALSE(IsUnmapped_<kInterruptType>(lirq));
@@ -87,7 +88,7 @@ class LogicalInterruptTable
         hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() - 1);
         hal::FullMemFence();
 
-        // Sched::UpdateTcbOnInterruptExit(rv);
+        Sched::UpdateTcbOnInterruptExit(rv);
         return rv;
     }
 

@@ -86,8 +86,12 @@ void UpdateTcbOnInterruptExit(Thread *thread)
     }
 
     const u64 t = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    current_thread->kernel_time_ns += t - thread->timestamp;
-    thread->timestamp = t;
+    current_thread->kernel_time_ns += t - current_thread->timestamp;
+    current_thread->timestamp = t;
+
+    if (thread) {
+        thread->timestamp = t;
+    }
 }
 
 }  // namespace Sched
