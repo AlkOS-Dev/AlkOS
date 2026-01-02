@@ -26,10 +26,10 @@ class TaskMgr
 
     NODISCARD std::expected<Pid, Error> SpawnEmptyProcess(const char *name, ProcessFlags flags);
 
-    NODISCARD std::expected<Thread *, Error> SpawnThread(Pid pid, Task task);
+    NODISCARD std::expected<Thread *, Error> SpawnThread(Pid pid, const Task &task);
 
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> SpawnKernelProcess(
-        const char *name, ProcessFlags flags, Task task
+        const char *name, ProcessFlags flags, const Task &task
     );
 
     NODISCARD std::expected<Pid, Error> CloneProcess(Pid pid);
@@ -40,7 +40,7 @@ class TaskMgr
         const char *path, ProcessFlags flags
     );
 
-    NODISCARD std::expected<void, Error> KillProcess(Pid pid);
+    NODISCARD std::expected<void, Error> CommitMurder(Pid pid);
 
     void CommitSuicide(Pid pid);
 

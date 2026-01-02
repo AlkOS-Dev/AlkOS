@@ -98,7 +98,7 @@ std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const Pro
     return process.value()->pid;
 }
 
-std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, Task task)
+std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &task)
 {
     bool dismiss = false;
 
@@ -165,7 +165,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, Task task)
 }
 
 std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
-    const char *name, ProcessFlags flags, Task task
+    const char *name, ProcessFlags flags, const Task &task
 )
 {
     flags.KernelSpaceOnly = true;

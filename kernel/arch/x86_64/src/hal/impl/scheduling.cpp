@@ -9,7 +9,7 @@
 
 namespace arch
 {
-void InitializeThreadStack(void **stack, Sched::Task task)
+void InitializeThreadStack(void **stack, const Sched::Task &task)
 {
     /* NOTE: Thread entry always starts in Kernel Code */
     auto stack_top = static_cast<byte *>(*stack) - sizeof(IsrErrorStackFrame);
