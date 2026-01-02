@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_ELF_ELF_DYNAMIC_HPP_
 
+#include <types.h>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include "elf/error.hpp"
 

@@ -23,6 +23,13 @@ enum SyscallNumber {
     /* Panic/Program termination */
     kSysPanic,
 
+    /* File descriptor syscalls */
+    kSysOpen,
+    kSysClose,
+    kSysRead,
+    kSysWrite,
+    kSysSeek,
+
     kSysMax,
 };
 

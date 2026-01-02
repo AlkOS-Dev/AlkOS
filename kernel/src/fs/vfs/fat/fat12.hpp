@@ -2,10 +2,10 @@
 #define KERNEL_SRC_VFS_FAT_FAT12_HPP_
 
 #include <bit.hpp>
+#include <fs/vfs/fat/fat.hpp>
+#include <fs/vfs/interface.hpp>
 #include <internal/math.hpp>
 #include <internal/span.hpp>
-#include <vfs/fat/fat.hpp>
-#include <vfs/interface.hpp>
 
 namespace vfs
 {

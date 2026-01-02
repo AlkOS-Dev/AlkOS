@@ -2,7 +2,7 @@
 #define KERNEL_SRC_MEM_PAGE_META_HPP_
 
 #include <defines.h>
-#include <types.hpp>
+#include <types.h>
 
 #include "mem/types.hpp"
 

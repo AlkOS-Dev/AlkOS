@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_TIME_EVENT_FRAMEWORK_HPP_
 #define KERNEL_SRC_TIME_EVENT_FRAMEWORK_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace timing
 {

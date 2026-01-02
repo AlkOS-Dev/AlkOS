@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_SERIAL_QEMU_HPP_
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_SERIAL_QEMU_HPP_
 
-#include <types.hpp>
+#include <types.h>
 
 /**
  * @file serial_qemu.hpp

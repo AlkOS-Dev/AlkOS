@@ -5,9 +5,9 @@
 #include <span.hpp>
 #include <string.hpp>
 
+#include "fs/vfs/path.hpp"
 #include "io/stream.hpp"
 #include "sys/graphics_console.hpp"
-#include "vfs/path.hpp"
 
 namespace System
 {

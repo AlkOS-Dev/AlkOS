@@ -3,10 +3,13 @@
 #include "constants.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
+#include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
 #include "sys/loader.hpp"
 #include "task_mgr.hpp"
-#include "vfs/path.hpp"
+
+#include <hal/panic.hpp>
+#include <sys/loader.hpp>
 
 #include "trace_framework.hpp"
 
@@ -44,10 +47,6 @@ void TaskMgr::InitializeMultitasking()
     // Spawn trace dumper
     const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
-
-    // Spawn hello world process
-    const auto res = ExecuteElf64("/bin/hello", {});
-    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
@@ -247,6 +246,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     const char *path, const ProcessFlags flags
 )
 {
+    trace::TraceDumperTask();
     auto process = SpawnEmptyProcess(path, flags);
     RET_UNEXPECTED_IF_ERR(process);
 

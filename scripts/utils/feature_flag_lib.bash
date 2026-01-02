@@ -8,10 +8,50 @@ FEATURE_FLAGS_CXX_PATH="${FEATURE_FLAGS_DIR}/../../generated/include/autogen/fea
 source "${FEATURE_FLAGS_DIR}/helpers.bash"
 
 declare -A CONFIGURE_FEATURE_FLAGS
+declare -A CONFIGURE_FEATURE_FLAGS_TYPE
+declare -A CONFIGURE_FEATURE_FLAGS_DESCRIPTION
+declare -A CONFIGURE_FEATURE_FLAGS_DEFAULT
+declare -A CONFIGURE_FEATURE_FLAGS_MIN
+declare -A CONFIGURE_FEATURE_FLAGS_MAX
+declare -a CONFIGURE_FEATURE_FLAGS_ORDER
+declare CONFIGURE_FLAGS_METADATA_LOADED=false
 
 # --------------------------------------------
 # Helper functions for YAML handling
 # --------------------------------------------
+
+load_flag_metadata() {
+  if [[ "$CONFIGURE_FLAGS_METADATA_LOADED" == true ]]; then
+    return
+  fi
+
+  # Load all metadata in one yq call - output as TSV (tab-separated)
+  local metadata_tsv
+  metadata_tsv=$(yq -r '.feature_flags[] | [.name, .type // "boolean", .description // "", .default // "false", .min // "null", .max // "null"] | @tsv' "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+
+  # Clear and repopulate the order array
+  CONFIGURE_FEATURE_FLAGS_ORDER=()
+
+  # Parse TSV and populate arrays
+  while IFS=$'\t' read -r name type description default min max; do
+    [[ -n "$name" ]] || continue  # Skip empty lines
+    CONFIGURE_FEATURE_FLAGS_ORDER+=("$name")
+    CONFIGURE_FEATURE_FLAGS_TYPE[$name]="$type"
+    CONFIGURE_FEATURE_FLAGS_DESCRIPTION[$name]="$description"
+    CONFIGURE_FEATURE_FLAGS_DEFAULT[$name]="$default"
+    CONFIGURE_FEATURE_FLAGS_MIN[$name]="$min"
+    CONFIGURE_FEATURE_FLAGS_MAX[$name]="$max"
+  done <<< "$metadata_tsv"
+
+  CONFIGURE_FLAGS_METADATA_LOADED=true
+}
+
+get_all_flag_names() {
+  if [[ "$CONFIGURE_FLAGS_METADATA_LOADED" == false ]]; then
+    load_flag_metadata
+  fi
+  printf '%s\n' "${CONFIGURE_FEATURE_FLAGS_ORDER[@]}"
+}
 
 load_feature_flags_from_yaml() {
   if [[ -f "${FEATURE_FLAGS_PATH}" ]]; then
@@ -31,24 +71,21 @@ load_feature_flags_from_yaml() {
 }
 
 save_feature_flags_to_yaml() {
+  load_flag_metadata
+
   cat > "${FEATURE_FLAGS_PATH}" << 'EOF'
 # Feature flags configuration - rerun configure script to update the build system
 feature_flags:
 EOF
 
-  # Get flag names from definitions to maintain order and get descriptions
+  # Use cached flag names and descriptions
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   for flag in "${flag_names[@]}"; do
-    flag=$(strip_quotes "${flag}")
     if [[ -n "${CONFIGURE_FEATURE_FLAGS["$flag"]}" ]]; then
-      local description
-      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
-      description=$(strip_quotes "${description}")
-
-      echo "" >> "${FEATURE_FLAGS_PATH}"
-      echo "  # ${description}" >> "${FEATURE_FLAGS_PATH}"
+      [[ "$flag" != "${flag_names[0]}" ]] && echo "" >> "${FEATURE_FLAGS_PATH}"
+      echo "  # ${CONFIGURE_FEATURE_FLAGS_DESCRIPTION[$flag]}" >> "${FEATURE_FLAGS_PATH}"
       echo "  ${flag}: ${CONFIGURE_FEATURE_FLAGS[$flag]}" >> "${FEATURE_FLAGS_PATH}"
     fi
   done
@@ -60,16 +97,8 @@ EOF
 
 get_flag_type() {
   local flag=$1
-  local type
-  type=$(yq ".feature_flags[] | select(.name == \"$flag\") | .type" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
-  type=$(strip_quotes "${type}")
-
-  # Default to boolean if type is not specified
-  if [[ -z "$type" || "$type" == "null" ]]; then
-    echo "boolean"
-  else
-    echo "$type"
-  fi
+  load_flag_metadata
+  echo "${CONFIGURE_FEATURE_FLAGS_TYPE[$flag]:-boolean}"
 }
 
 validate_flag_value() {
@@ -91,8 +120,7 @@ validate_flag_value() {
       fi
 
       # Check min constraint
-      local min
-      min=$(yq ".feature_flags[] | select(.name == \"$flag\") | .min" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+      local min="${CONFIGURE_FEATURE_FLAGS_MIN[$flag]}"
       if [[ -n "$min" && "$min" != "null" ]]; then
         if (( value < min )); then
           dump_error "Value $value is below minimum $min for flag $flag"
@@ -101,8 +129,7 @@ validate_flag_value() {
       fi
 
       # Check max constraint
-      local max
-      max=$(yq ".feature_flags[] | select(.name == \"$flag\") | .max" "${FEATURE_FLAGS_DEFS_PATH}" 2>/dev/null)
+      local max="${CONFIGURE_FEATURE_FLAGS_MAX[$flag]}"
       if [[ -n "$max" && "$max" != "null" ]]; then
         if (( value > max )); then
           dump_error "Value $value exceeds maximum $max for flag $flag"
@@ -140,25 +167,22 @@ feature_flags_generate_cxx_files_header() {
 }
 
 feature_flags_generate_cxx_files_c_macros() {
+  load_flag_metadata
+
   # C code macros
   echo "// Macros for feature flags in C code" >> "${FEATURE_FLAGS_CXX_PATH}"
   echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
 
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   for flag in "${flag_names[@]}"; do
-    default=$(yq ".feature_flags[] | select(.name == $flag) | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-    description=$(yq ".feature_flags[] | select(.name == $flag) | .description" "${FEATURE_FLAGS_DEFS_PATH}")
+    echo "// ${flag} - ${CONFIGURE_FEATURE_FLAGS_DESCRIPTION[$flag]}" >> "${FEATURE_FLAGS_CXX_PATH}"
 
-    echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
-
-    # make uppercase and strip quotes
-    flag=$(strip_quotes "${flag}")
     flag_upper=$(convert_to_upper_case "${flag}")
 
     local type
-    type=$(get_flag_type "$flag")
+    type="${CONFIGURE_FEATURE_FLAGS_TYPE[$flag]}"
 
     if [[ "$type" == "boolean" ]]; then
       if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
@@ -180,13 +204,14 @@ feature_flags_generate_cxx_files_c_macros() {
 }
 
 feature_flags_generate_cxx_files_enums() {
+  load_flag_metadata
+
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   # Prepare enum for C++ code
   echo "enum class FeatureFlag {" >> "${FEATURE_FLAGS_CXX_PATH}"
   for flag in "${flag_names[@]}"; do
-    flag=$(strip_quotes "${flag}")
     local flag_pascal
     flag_pascal=$(snake_case_to_pascal_case "${flag}")
 
@@ -198,17 +223,17 @@ feature_flags_generate_cxx_files_enums() {
 }
 
 feature_flags_generate_cxx_files_cxx_vars() {
+  load_flag_metadata
+
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   # Separate boolean and integer flags
   local bool_flags=()
   local int_flags=()
 
   for flag in "${flag_names[@]}"; do
-    flag=$(strip_quotes "${flag}")
-    local type
-    type=$(get_flag_type "$flag")
+    local type="${CONFIGURE_FEATURE_FLAGS_TYPE[$flag]}"
 
     if [[ "$type" == "boolean" ]]; then
       bool_flags+=("$flag")
@@ -225,10 +250,7 @@ feature_flags_generate_cxx_files_cxx_vars() {
     echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
 
     for flag in "${bool_flags[@]}"; do
-      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
-
-      echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
+      echo "// ${flag} - ${CONFIGURE_FEATURE_FLAGS_DESCRIPTION[$flag]}" >> "${FEATURE_FLAGS_CXX_PATH}"
 
       local flag_pascal
       flag_pascal=$(snake_case_to_pascal_case "${flag}")
@@ -251,10 +273,7 @@ feature_flags_generate_cxx_files_cxx_vars() {
     echo "" >> "${FEATURE_FLAGS_CXX_PATH}"
 
     for flag in "${int_flags[@]}"; do
-      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
-
-      echo "// ${flag} - ${description}" >> "${FEATURE_FLAGS_CXX_PATH}"
+      echo "// ${flag} - ${CONFIGURE_FEATURE_FLAGS_DESCRIPTION[$flag]}" >> "${FEATURE_FLAGS_CXX_PATH}"
 
       local flag_pascal
       flag_pascal=$(snake_case_to_pascal_case "${flag}")
@@ -300,6 +319,7 @@ feature_flags_process() {
   fi
 
   load_feature_flags_from_yaml
+  load_flag_metadata
 
   # Check if YAML file has correct structure
   if ! yq -e '.feature_flags' "${FEATURE_FLAGS_PATH}" >/dev/null 2>&1; then
@@ -308,18 +328,13 @@ feature_flags_process() {
   fi
 
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
   local flags_updated=false
 
   # Add each missing flag to the feature flags
   for flag in ${flag_names[@]}; do
-    flag=$(strip_quotes "${flag}")
-
     if [[ -z "${CONFIGURE_FEATURE_FLAGS[$flag]}" ]]; then
-      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-      description=$(yq ".feature_flags[] | select(.name == \"$flag\") | .description" "${FEATURE_FLAGS_DEFS_PATH}")
-
-      CONFIGURE_FEATURE_FLAGS["$flag"]="$default"
+      CONFIGURE_FEATURE_FLAGS["$flag"]="${CONFIGURE_FEATURE_FLAGS_DEFAULT[$flag]}"
       flags_updated=true
     fi
   done
@@ -329,7 +344,6 @@ feature_flags_process() {
     # Check if flag from file is in definitions
     local flag_exists=false
     for def_flag in "${flag_names[@]}"; do
-      def_flag=$(strip_quotes "${def_flag}")
       if [[ "$flag" == "$def_flag" ]]; then
         flag_exists=true
         break
@@ -343,8 +357,7 @@ feature_flags_process() {
     # Validate flag value based on type
     if ! validate_flag_value "$flag" "${CONFIGURE_FEATURE_FLAGS[$flag]}"; then
       pretty_warn "Feature flag ${flag} has invalid value ${CONFIGURE_FEATURE_FLAGS[$flag]}."
-      default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-      CONFIGURE_FEATURE_FLAGS[$flag]="$default"
+      CONFIGURE_FEATURE_FLAGS[$flag]="${CONFIGURE_FEATURE_FLAGS_DEFAULT[$flag]}"
       flags_updated=true
     fi
   done
@@ -355,35 +368,32 @@ feature_flags_process() {
 }
 
 feature_flags_reset_to_defaults() {
+  load_flag_metadata
+
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   for flag in "${flag_names[@]}"; do
-    flag=$(strip_quotes "${flag}")
-    default=$(yq ".feature_flags[] | select(.name == \"$flag\") | .default" "${FEATURE_FLAGS_DEFS_PATH}")
-    CONFIGURE_FEATURE_FLAGS[$flag]="$default"
+    CONFIGURE_FEATURE_FLAGS[$flag]="${CONFIGURE_FEATURE_FLAGS_DEFAULT[$flag]}"
   done
 
   save_feature_flags_to_yaml
 }
 
 feature_flags_generate_cmake() {
-  load_feature_flags_from_yaml
+  load_flag_metadata
 
   local conf_cmake="${FEATURE_FLAGS_DIR}/../../config/conf.generated.cmake"
 
   local flag_names
-  mapfile -t flag_names < <(yq '.feature_flags[].name' "${FEATURE_FLAGS_DEFS_PATH}")
+  mapfile -t flag_names < <(get_all_flag_names)
 
   echo "" >> "$conf_cmake"
   echo "# FEATURE FLAGS: " >> "$conf_cmake"
   for flag in "${flag_names[@]}"; do
-    # make first letter uppercase and replace underscores with big letters
-    flag=$(echo "${flag}" | tr -d '"')
     flag_upper=$(convert_to_upper_case "${flag}")
 
-    local type
-    type=$(get_flag_type "$flag")
+    local type="${CONFIGURE_FEATURE_FLAGS_TYPE[$flag]}"
 
     if [[ "$type" == "boolean" ]]; then
       if [[ ${CONFIGURE_FEATURE_FLAGS[$flag]} == true ]]; then
@@ -455,7 +465,24 @@ feature_flags_apply_preset() {
     # Split flag into name and value
     IFS='=' read -r flag_name flag_value <<< "$flag"
 
-    feature_flags_set $flag_name $flag_value
+    # Validate the flag and value
+    if [[ -z "${CONFIGURE_FEATURE_FLAGS[$flag_name]}" ]]; then
+      dump_error "Feature flag '${flag_name}' is not defined."
+      return 1
+    fi
+
+    if ! validate_flag_value "$flag_name" "$flag_value"; then
+      local type
+      type=$(get_flag_type "$flag_name")
+      if [[ "$type" == "boolean" ]]; then
+        dump_error "Invalid value for feature flag '${flag_name}'. Use 'true' or 'false'."
+      else
+        dump_error "Invalid value for feature flag '${flag_name}'."
+      fi
+      return 1
+    fi
+
+    CONFIGURE_FEATURE_FLAGS[$flag_name]="$flag_value"
   done
 
   save_feature_flags_to_yaml

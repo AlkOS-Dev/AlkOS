@@ -1,8 +1,8 @@
 #ifndef LIBS_LIBCPP_INCLUDE_COMPARE_HPP_
 #define LIBS_LIBCPP_INCLUDE_COMPARE_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace std
 {

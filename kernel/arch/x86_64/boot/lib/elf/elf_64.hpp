@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
+#include <types.h>
 #include <expected.hpp>
 #include <tuple.hpp>
-#include <types.hpp>
 
 #include "elf/error.hpp"
 

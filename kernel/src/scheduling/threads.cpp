@@ -1,5 +1,6 @@
 #include "threads.hpp"
 
+#include <hal/debug_terminal.hpp>
 #include <hal/scheduling.hpp>
 
 #include "mem/virt/addr_space.hpp"

@@ -2,9 +2,9 @@
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_TSC_TSC_HPP_
 
 #include <cpuid.h>
+#include <types.h>
 #include <bit.hpp>
 #include <todo.hpp>
-#include <types.hpp>
 #include "cpu/control_registers.hpp"
 #include "cpu/msrs.hpp"
 #include "trace_framework.hpp"

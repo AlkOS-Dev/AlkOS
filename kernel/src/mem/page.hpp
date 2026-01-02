@@ -2,8 +2,8 @@
 #define KERNEL_SRC_MEM_PAGE_HPP_
 
 #include <assert.h>
+#include <types.h>
 #include <bit.hpp>
-#include <types.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/types.hpp"

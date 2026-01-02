@@ -2,10 +2,10 @@
 #define KERNEL_SRC_GRAPHICS_FONT_PSF2_FONT_HPP_
 
 #include <assert.h>
+#include <types.h>
 #include <defines.hpp>
 #include <span.hpp>
 #include <string.hpp>
-#include <types.hpp>
 
 #include "graphics/font/glyph.hpp"
 #include "graphics/geometry.hpp"

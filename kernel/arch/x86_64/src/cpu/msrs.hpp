@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_MSRS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_MSRS_HPP_
 
-#include <types.hpp>
+#include <types.h>
 
 #include <trace_framework.hpp>
 

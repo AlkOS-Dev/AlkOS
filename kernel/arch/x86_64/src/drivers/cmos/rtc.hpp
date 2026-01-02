@@ -2,7 +2,7 @@
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_CMOS_RTC_HPP_
 
 #include <time.h>
-#include <types.hpp>
+#include <types.h>
 
 static constexpr u16 kOsYear    = 2025;
 static constexpr u16 kOsCentury = 20;

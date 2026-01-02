@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_DRIVERS_SERIAL_UART_16550_HPP_
 #define KERNEL_SRC_DRIVERS_SERIAL_UART_16550_HPP_
 
+#include <types.h>
 #include <io/register.hpp>
 #include <io/stream.hpp>
-#include <types.hpp>
 
 namespace Drivers::Serial
 {

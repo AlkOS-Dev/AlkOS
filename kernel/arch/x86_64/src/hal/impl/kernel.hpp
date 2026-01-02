@@ -2,8 +2,8 @@
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_KERNEL_HPP_
 
 #include <defines.h>
+#include <types.h>
 #include <hal/api/boot_args.hpp>
-#include <types.hpp>
 
 namespace arch
 {

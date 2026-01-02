@@ -35,4 +35,52 @@ size_t __platform_debug_read_line(char *buffer, const size_t buffer_size)
 
 void __platform_write_console(const char *buffer) { SysWriteConsole(buffer); }
 
+fd_t __platform_open(const char *pathname, const int flags)
+{
+    auto res = SysOpen(vfs::Path(pathname), static_cast<Fs::OpenMode>(flags));
+    if (!res) {
+        return -1;
+    }
+
+    return *res;
+}
+
+int __platform_close(const fd_t fd)
+{
+    auto res = SysClose(fd);
+    if (!res) {
+        return -1;
+    }
+
+    return 0;
+}
+
+ssize_t __platform_read(const fd_t fd, void *buf, const size_t count)
+{
+    auto res = SysRead(fd, {static_cast<byte *>(buf), count});
+    if (!res) {
+        DEBUG_FATAL_VFS("Read syscall failed on fd %d: %d", fd, static_cast<int>(res.error()));
+        return -1;
+    }
+    return static_cast<ssize_t>(*res);
+}
+
+ssize_t __platform_write(const fd_t fd, const void *buf, const size_t count)
+{
+    auto res = SysWrite(fd, {static_cast<const byte *>(buf), count});
+    if (!res) {
+        return -1;
+    }
+    return static_cast<ssize_t>(*res);
+}
+
+ssize_t __platform_seek(int fd, ssize_t offset, FdSeek whence)
+{
+    auto res = SysSeek(fd, offset, static_cast<Fs::FdSeek>(whence));
+    if (!res) {
+        return -1;
+    }
+    return *res;
+}
+
 #endif

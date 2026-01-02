@@ -1,11 +1,11 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_MULTIBOOT2_INFO_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <concepts.hpp>
 #include <defines.hpp>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include "multiboot2/error.hpp"
 #include "multiboot2/multiboot2.h"

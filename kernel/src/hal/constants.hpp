@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_HAL_CONSTANTS_HPP_
 #define KERNEL_SRC_HAL_CONSTANTS_HPP_
 
+#include <types.h>
 #include <bits_ext.hpp>
 #include <hal/impl/constants.hpp>
-#include <types.hpp>
 
 namespace hal
 {

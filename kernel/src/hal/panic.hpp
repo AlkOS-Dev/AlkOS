@@ -21,6 +21,8 @@ WRAP_CALL void KernelPanic(const char *msg)
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     HardwareModule::Get().GetCoresController().PanicAllCores();
 
+    // For some reason trace::DumpAllBuffersOnFailure() must be called before and after printing
+    trace::DumpAllBuffersOnFailure();
     TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
     TRACE_FATAL_GENERAL(msg);
     TRACE_FATAL_GENERAL("\n");
@@ -34,6 +36,8 @@ FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     HardwareModule::Get().GetCoresController().PanicAllCores();
 
+    // For some reason trace::DumpAllBuffersOnFailure() must be called before and after printing
+    trace::DumpAllBuffersOnFailure();
     TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
     TRACE_FATAL_GENERAL(fmt, args...);
     arch::KernelPanic();

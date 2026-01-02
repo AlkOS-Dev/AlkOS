@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_HARDWARE_INTERRUPT_DRIVER_HPP_
 #define KERNEL_SRC_HARDWARE_INTERRUPT_DRIVER_HPP_
 
-#include <types.hpp>
+#include <types.h>
 
 namespace intr
 {

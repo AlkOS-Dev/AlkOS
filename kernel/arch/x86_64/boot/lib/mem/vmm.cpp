@@ -1,7 +1,7 @@
+#include <types.h>
 #include <bit.hpp>
 #include <defines.hpp>
 #include <memory.hpp>
-#include <types.hpp>
 #include "debug_trace.hpp"
 
 #include "mem/error.hpp"

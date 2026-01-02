@@ -2,7 +2,7 @@
 #define KERNEL_SRC_HAL_API_BOOT_ARGS_HPP_
 
 #include <defines.h>
-#include <types.hpp>
+#include <types.h>
 
 namespace arch
 {
