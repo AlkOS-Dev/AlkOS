@@ -61,13 +61,14 @@ namespace arch
 {
 void ArchInit(const RawBootArguments &)
 {
-    hal::SetCoreLocalData(nullptr);
-
-    DEBUG_INFO_BOOT("In ArchInit...");
-    DEBUG_INFO_BOOT("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
-
-    DEBUG_INFO_BOOT("Setting up CPU features...");
     BlockHardwareInterrupts();
+
+    /* Zero mem core local as no global constructors available yet */
+    memset(&g_CoreLocal, 0, sizeof(hardware::CoreLocal));
+    g_CoreLocal.self = &g_CoreLocal;
+    cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(&g_CoreLocal));
+    cpu::SetMSR(kIa32GsKernelBase, reinterpret_cast<u64>(&g_CoreLocal));
+    InitializeCoreLocal();
 
     /* NOTE: sequence is important */
     EnableOSXSave();
@@ -75,14 +76,11 @@ void ArchInit(const RawBootArguments &)
     EnableAVX();
     EnableNXE();
 
+    DEBUG_INFO_BOOT("In ArchInit...");
+    DEBUG_INFO_BOOT("CPU Model: %d / %08X", GetCpuModel(), GetCpuModel());
+
     HardwareModule::Init();
     HardwareModule::Get().GetInterrupts().FirstStageInit();
-
-    /* Zero mem core local as no global constructors available yet */
-    memset(&g_CoreLocal, 0, sizeof(hardware::CoreLocal));
-    cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(&g_CoreLocal));
-    cpu::SetMSR(kIa32GsKernelBase, reinterpret_cast<u64>(&g_CoreLocal));
-    InitializeCoreLocal();
 
     trace::AdvanceTracingStage();
 

@@ -49,7 +49,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
     }
 }
 
-FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalData().tss.rsp0 = rsp0; }
+FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalSelf()->tss.rsp0 = rsp0; }
 
 FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
@@ -118,16 +118,16 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
 {
     SetNextThreadFs(thread);
     LoadFpStateIfNeeded(thread);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
     thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    SwapGsIfJumpingToUserspace(thread);
     SwapAsIfNeeded(thread);
+    SwapGsIfJumpingToUserspace(thread);
 }
 
 extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 {
-    auto thread          = hardware::GetCurrentTCB();
+    auto thread          = hardware::GetCoreLocalTcb();
     thread->kernel_stack = thread->kernel_stack_bottom;
 
     frame->rip    = reinterpret_cast<u64>(addr);
@@ -148,7 +148,8 @@ extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
-    DumpFpStateIfNeeded(thread);
+    const auto current_tcb = hardware::GetCoreLocalTcb();
+    DumpFpStateIfNeeded(current_tcb);
 
     mem->error_code             = 0;
     mem->isr_stack_frame.rip    = rip;
@@ -157,29 +158,28 @@ extern "C" void cdecl_ContextSwitchEntry(
     mem->isr_stack_frame.rsp    = reinterpret_cast<u64>(mem) + sizeof(IsrErrorStackFrame);
     mem->isr_stack_frame.ss     = static_cast<u64>(cpu::GDT::kKernelDataSelector);
 
-    auto current_tcb = hardware::GetCurrentTCB();
     SwapFsIfNeeded(current_tcb, thread);
     current_tcb->kernel_stack = reinterpret_cast<void *>(mem);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
 
     const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     current_tcb->kernel_time_ns = t - current_tcb->timestamp;
     thread->timestamp           = t;
 
-    SwapGsIfJumpingToUserspace(thread);
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
+    SwapGsIfJumpingToUserspace(thread);
 }
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
     DumpFpStateIfNeeded(thread);
 
-    auto current_tcb          = hardware::GetCurrentTCB();
+    auto current_tcb          = hardware::GetCoreLocalTcb();
     current_tcb->kernel_stack = rsp;
     SwapFsIfNeeded(current_tcb, thread);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
 
     LoadFpStateIfNeeded(thread);

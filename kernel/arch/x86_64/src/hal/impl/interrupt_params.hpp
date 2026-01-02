@@ -51,7 +51,7 @@ struct ExceptionData : IsrErrorStackFrame {
 
 NODISCARD FAST_CALL bool IsInterruptFromUserSpace(const ExceptionData &data)
 {
-    return data.isr_stack_frame.cs != cpu::GDT::kKernelCodeSelector;
+    return (data.isr_stack_frame.cs & 3) != 0;
 }
 
 /* Mapping params */

@@ -61,7 +61,7 @@ void Elf64EntryPoint(const Pid pid, const char *path)
 void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
 {
     ASSERT_NOT_NULL(data);
-    const auto thread = hardware::GetCurrentTCB();
+    const auto thread = hardware::GetCoreLocalTcb();
 
     if (!thread) {
         return;
@@ -79,7 +79,7 @@ void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
 
 void UpdateTcbOnInterruptExit(Thread *thread)
 {
-    const auto current_thread = hardware::GetCurrentTCB();
+    const auto current_thread = hardware::GetCoreLocalTcb();
 
     if (!current_thread) {
         return;
@@ -94,7 +94,7 @@ void UpdateTcbOnInterruptExit(Thread *thread)
 
 void cdecl_UpdateTcbOnSyscallEntry()
 {
-    const auto thread = hardware::GetCurrentTCB();
+    const auto thread = hardware::GetCoreLocalTcb();
     const u64 t       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     thread->user_time_ns += t - thread->timestamp;
     thread->timestamp = t;
@@ -102,7 +102,7 @@ void cdecl_UpdateTcbOnSyscallEntry()
 
 void cdecl_UpdateTcbOnSyscallExit()
 {
-    const auto thread = hardware::GetCurrentTCB();
+    const auto thread = hardware::GetCoreLocalTcb();
     const u64 t       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     thread->kernel_time_ns += t - thread->timestamp;
     thread->timestamp = t;

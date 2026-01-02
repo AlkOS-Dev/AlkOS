@@ -44,7 +44,7 @@ class LogicalInterruptTable
 
     FORCE_INLINE_F void *HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
-        hardware::GetCoreLocalData().nested_interrupts++;
+        hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() + 1);
         hal::FullMemFence();
         Sched::UpdateTcbOnInterruptEntry(data);
 
@@ -55,7 +55,7 @@ class LogicalInterruptTable
         /* Exception MUST be handled */
         Sched::Thread *rv = (*entry.handler_data.handler)(entry, data);
 
-        hardware::GetCoreLocalData().nested_interrupts--;
+        hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() - 1);
         hal::FullMemFence();
 
         Sched::UpdateTcbOnInterruptExit(rv);
@@ -66,7 +66,7 @@ class LogicalInterruptTable
         requires(kInterruptType != InterruptType::kException)
     FORCE_INLINE_F void *HandleInterrupt(const u16 lirq, hal::ExceptionData *data)
     {
-        hardware::GetCoreLocalData().nested_interrupts++;
+        hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() + 1);
         hal::FullMemFence();
         Sched::UpdateTcbOnInterruptEntry(data);
 
@@ -84,7 +84,7 @@ class LogicalInterruptTable
             entry.driver->cbs.ack(entry);
         }
 
-        hardware::GetCoreLocalData().nested_interrupts--;
+        hardware::SetCoreLocalNestedInterrupts(hardware::GetCoreLocalNestedInterrupts() - 1);
         hal::FullMemFence();
 
         Sched::UpdateTcbOnInterruptExit(rv);

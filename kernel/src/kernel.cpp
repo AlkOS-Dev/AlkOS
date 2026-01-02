@@ -31,7 +31,8 @@ static void KernelRun()
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
     // Spawn hello world process
-    R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
+    // R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello
+    // process...");
 
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }
@@ -39,7 +40,6 @@ static void KernelRun()
 extern "C" void KernelMain(const Mem::PPtr<hal::RawBootArguments> raw_args)
 {
     ASSERT_NOT_NULL(raw_args, "Raw boot arguments are null");
-    TRACE_INFO_GENERAL("Running kernel initialization...");
 
     KernelInit(*Mem::PhysToVirt(raw_args));
 

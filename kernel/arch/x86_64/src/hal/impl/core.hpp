@@ -78,6 +78,7 @@ class CoreController : public CoreControllerAPI
 // ------------------------------
 
 struct CoreLocal {
+    void *self;
     cpu::GDT gdt;
     cpu::Gdtr gdtr;
     cpu::TSS tss;
@@ -95,7 +96,52 @@ FAST_CALL void SetCoreLocalData(void *data)
     cpu::SetMSR(kIa32GsBase, reinterpret_cast<u64>(data));
 }
 
-FAST_CALL void *GetCoreLocalData() { return reinterpret_cast<void *>(cpu::GetMSR(kIa32GsBase)); }
+template <typename T, size_t kOffset>
+NODISCARD FAST_CALL T GetCoreLocalField()
+{
+    T value;
+    static_assert(sizeof(T) <= 8, "Unsupported size for GetCoreLocalField");
+
+    if constexpr (sizeof(T) == 8) {
+        __asm__ volatile("movq %%gs:%1, %q0"
+                         : "=r"(value)
+                         : "m"(*reinterpret_cast<T *>(kOffset))
+                         : "memory");
+    } else if constexpr (sizeof(T) == 4) {
+        __asm__ volatile("movl %%gs:%1, %k0"
+                         : "=r"(value)
+                         : "m"(*reinterpret_cast<T *>(kOffset))
+                         : "memory");
+    } else if constexpr (sizeof(T) == 2) {
+        __asm__ volatile("movw %%gs:%1, %w0"
+                         : "=r"(value)
+                         : "m"(*reinterpret_cast<T *>(kOffset))
+                         : "memory");
+    } else if constexpr (sizeof(T) == 1) {
+        __asm__ volatile("movb %%gs:%1, %b0"
+                         : "=r"(value)
+                         : "m"(*reinterpret_cast<T *>(kOffset))
+                         : "memory");
+    }
+    return value;
+}
+
+template <typename T, size_t Offset>
+FAST_CALL void SetCoreLocalField(T value)
+{
+    static_assert(std::is_trivially_copyable_v<T>);
+    static_assert(sizeof(T) <= 8);
+
+    if constexpr (sizeof(T) == 8) {
+        __asm__ volatile("movq %q0, %%gs:%P1" : : "r"(value), "n"(Offset) : "memory");
+    } else if constexpr (sizeof(T) == 4) {
+        __asm__ volatile("movl %k0, %%gs:%P1" : : "r"(value), "n"(Offset) : "memory");
+    } else if constexpr (sizeof(T) == 2) {
+        __asm__ volatile("movw %w0, %%gs:%P1" : : "r"(value), "n"(Offset) : "memory");
+    } else if constexpr (sizeof(T) == 1) {
+        __asm__ volatile("movb %b0, %%gs:%P1" : : "r"(value), "n"(Offset) : "memory");
+    }
+}
 
 void InitializeCoreLocal();
 

@@ -13,9 +13,8 @@ extern cdecl_UpdateTcbOnSyscallEntry
 extern cdecl_UpdateTcbOnSyscallExit
 
 %macro load_user_gs_if_needed 0
-    mov r12, [rsp + _cs_int_frame_offset]
-    cmp qword r12, _kernel_code_selector
-    je .skip_user_gs_swap
+    test qword [rsp + _cs_int_frame_offset], 3
+    jz .skip_user_gs_swap
     call cdecl_SetKernelGs
     swapgs
 .skip_user_gs_swap:
@@ -43,9 +42,8 @@ extern cdecl_UpdateTcbOnSyscallExit
 %endmacro
 
 %macro load_kernel_gs_if_needed 0
-    mov r12, [rsp + _cs_int_frame_offset]
-    cmp qword r12, _kernel_code_selector
-    je .skip_kernel_gs_swap
+    test qword [rsp + _cs_int_frame_offset], 3
+    jz .skip_kernel_gs_swap
     swapgs
 .skip_kernel_gs_swap:
 %endmacro

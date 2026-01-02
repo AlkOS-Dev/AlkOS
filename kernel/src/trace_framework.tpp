@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
 #include <stdio.h>
+#include <cpu/utils.hpp>
 
 namespace internal
 {
