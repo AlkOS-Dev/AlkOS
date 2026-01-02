@@ -8,6 +8,7 @@
 #include "stddef.h"
 
 #define BUFSIZ 4096
+#define EOF    (-1)
 
 #define _IOFBF kFdBufferFull
 #define _IOLBF kFdBufferLine
@@ -42,11 +43,19 @@ BEGIN_DECL_C
  *  Writes formatted output to a character array (*str) up to a maximum amount of characters (size)
  */
 int snprintf(char *str, size_t size, const char *format, ...);
+int vsnprintf(char *str, size_t size, const char *format, va_list va);
 
 /**
- *  Writes formatted data from a variable argument list (va) to a sized buffer (str, size)
+ *  Writes formatted output to a FILE pointer (stream)
  */
-int vsnprintf(char *str, size_t size, const char *format, va_list va);
+int fprintf(FILE *stream, const char *format, ...);
+int vfprintf(FILE *stream, const char *format, va_list va);
+
+/**
+ *  Writes formatted output to standard output (stdout)
+ */
+int printf(const char *format, ...);
+int vprintf(const char *format, va_list va);
 
 /**
  *  Opens a file and returns a FILE pointer
@@ -68,7 +77,22 @@ size_t fread(void *buf, size_t size, size_t count, FILE *stream);
  */
 size_t fwrite(const void *buf, size_t size, size_t count, FILE *stream);
 
-// Standard file streams
+/**
+ *  Flushes the output buffer of a FILE pointer
+ */
+int fflush(FILE *stream);
+
+/**
+ *  Sets the buffering mode for a FILE pointer
+ */
+int setvbuf(FILE *stream, char *buf, int mode, size_t size);
+
+/**
+ *  Sets the position of the FILE pointer
+ */
+int fseek(FILE *stream, long offset, int whence);
+
+// Standard streams
 extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;

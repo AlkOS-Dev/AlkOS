@@ -35,10 +35,9 @@ struct SyscallDispatchTable {
     static consteval auto Create()
     {
         constexpr SyscallDispatchTable table = kFun();
-#ifdef NDEBUG
-        // static_assert(table.IsAllHandlersRegistered(), "Not all syscall handlers are
-        // registered");
-#endif
+#ifndef NDEBUG
+        static_assert(table.IsAllHandlersRegistered(), "Not all syscall handlers are registered");
+#endif  // NDEBUG
         return table;
     }
 
