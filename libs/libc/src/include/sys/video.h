@@ -25,10 +25,6 @@ struct GuiBufferInfo {
     struct GuiPixelFormat format;
 };
 
-// Syscall wrappers
-void __platform_create_graphic_session(struct GuiBufferInfo *info);
-void __platform_blit(void);
-
 END_DECL_C
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_SYS_VIDEO_H_

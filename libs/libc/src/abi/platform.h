@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_ABI_PLATFORM_H_
-#define LIBS_LIBC_ABI_PLATFORM_H_
+#ifndef LIBS_LIBC_SRC_ABI_PLATFORM_H_
+#define LIBS_LIBC_SRC_ABI_PLATFORM_H_
 
 #include <sys/time.h>
 #include <types.hpp>
@@ -20,6 +20,11 @@ void __platform_debug_write(const char *buffer);
 size_t __platform_debug_read_line(char *buffer, size_t buffer_size);
 void __platform_write_console(const char *buffer);
 
+// Video
+struct GuiBufferInfo;
+void __platform_create_graphic_session(struct GuiBufferInfo *info);
+void __platform_blit(void);
+
 END_DECL_C
 
-#endif  // LIBS_LIBC_ABI_PLATFORM_H_
+#endif  // LIBS_LIBC_SRC_ABI_PLATFORM_H_
