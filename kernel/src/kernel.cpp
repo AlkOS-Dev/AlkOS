@@ -31,8 +31,7 @@ static void KernelRun()
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
     // Spawn hello world process
-    // R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello
-    // process...");
+    R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
 
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }

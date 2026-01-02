@@ -18,9 +18,9 @@ struct PACK Tid {
 
 struct PACK ThreadFlags {
     bool PreserveFloats : 1;
-    u32 padding : 31;
+    u64 padding : 63;
 };
-static_assert(sizeof(ThreadFlags) == 4);
+static_assert(sizeof(ThreadFlags) == 8);
 
 struct Task {
     static constexpr size_t kMaxArgs = 6;
