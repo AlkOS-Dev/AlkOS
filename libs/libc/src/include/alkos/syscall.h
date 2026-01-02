@@ -1,6 +1,7 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_
 
+#include <syscall.h>
 #include "macro.hpp"
 
 /**
@@ -57,4 +58,4 @@ enum SyscallNumber {
         (void)_SYSCALL_DISPATCH(num, FOR_EACH_PAIR(GET_SECOND_ARG, __VA_ARGS__)); \
     }
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_

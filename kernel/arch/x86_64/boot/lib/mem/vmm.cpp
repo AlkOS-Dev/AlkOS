@@ -4,11 +4,11 @@
 #include <memory.hpp>
 #include "debug_trace.hpp"
 
-#include "alkos/panic.hpp"
 #include "mem/error.hpp"
 #include "mem/page_map.hpp"
 #include "mem/physical_ptr.hpp"
 #include "mem/vmm.hpp"
+#include "sys/panic.hpp"
 
 static PhysicalPtr<PageMapTable<4>> AllocatePml4Table(PhysicalMemoryManager &pmm)
 {

@@ -9,12 +9,12 @@
 #include <hal/terminal.hpp>
 #include <scheduling/kworker.hpp>
 
-#include "../../libs/libc/src/include/alkos/shell.hpp"
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
 #include "graphics/painter.hpp"
 #include "modules/hardware.hpp"
 #include "modules/video.hpp"
+#include "sys/shell.hpp"
 
 #include "drivers/apic/local_apic.hpp"
 #include "hal/boot_args.hpp"

@@ -1,14 +1,13 @@
 #include <template/scope_guard.hpp>
 
-#include "alkos/loader.hpp"
 #include "constants.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
+#include "sys/loader.hpp"
 #include "task_mgr.hpp"
 
-#include <alkos/loader.hpp>
 #include <hal/panic.hpp>
 
 #include "trace_framework.hpp"

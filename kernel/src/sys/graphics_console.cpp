@@ -1,4 +1,4 @@
-#include "alkos/graphics_console.hpp"
+#include "sys/graphics_console.hpp"
 
 #include <string.h>
 #include <algorithm.hpp>

@@ -1,8 +1,8 @@
 #ifndef __ALKOS_KERNEL__
 
+#include "alkos/calls.h"
+#include "alkos/structs.h"
 #include "platform.h"
-#include "sys/calls.h"
-#include "sys/fd.h"
 
 DEFINE_SYSCALL_VOID(
     get_clock_value, kSysGetClockValue, const ClockType, type, TimeVal *, time, Timezone *,

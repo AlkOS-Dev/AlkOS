@@ -142,8 +142,6 @@ void QemuTerminalInit()
 
     /* Switch to normal operation mode with final modem configuration */
     outb(kModemControlReg, kModemConfFlags);
-
-    TRACE_SUCCESS("QemuTerminalInit() returned with success");
 }
 
 /**
