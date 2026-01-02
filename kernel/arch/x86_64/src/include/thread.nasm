@@ -8,6 +8,7 @@ struc Thread
     .gs_base       resq 1
     .tid:          resq 1
     .owner:        resq 1
+    .flags         resd 1
     .next:         resq 1
     .kernel_stack: resq 1
     .kernel_stack_bottom: resq 1

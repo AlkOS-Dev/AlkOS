@@ -15,10 +15,17 @@ struct PACK Tid {
     u64 count : 48;
 };
 
+struct PACK ThreadFlags {
+    bool PreserveFloats : 1;
+    u32 padding : 31;
+};
+static_assert(sizeof(ThreadFlags) == 4);
+
 struct Thread : hal::Thread {
     /* Management */
     Tid tid;
     Pid owner;
+    ThreadFlags flags;
 
     /* Scheduler data */
     Thread *next;
