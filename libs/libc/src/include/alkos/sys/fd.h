@@ -3,7 +3,7 @@
 
 #include "defines.h"
 #include "platform.h"
-#include "sys/fd.h"
+#include "alkos/fd.h"
 #include "types.h"
 
 BEGIN_DECL_C

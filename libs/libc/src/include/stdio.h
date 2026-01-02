@@ -1,11 +1,11 @@
 #ifndef LIBS_LIBC_SRC_INCLUDE_STDIO_H_
 #define LIBS_LIBC_SRC_INCLUDE_STDIO_H_
 
+#include "alkos/sys/fd.h"
 #include "defines.h"
 #include "stdarg.h"
 #include "stdbool.h"
 #include "stddef.h"
-#include "sys/calls/fd.h"
 
 #define BUFSIZ 4096
 

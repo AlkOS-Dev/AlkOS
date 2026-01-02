@@ -16,6 +16,12 @@ struct PACK Tid {
     u64 count : 48;
 };
 
+struct PACK ThreadFlags {
+    bool PreserveFloats : 1;
+    u64 padding : 63;
+};
+static_assert(sizeof(ThreadFlags) == 8);
+
 struct Task {
     static constexpr size_t kMaxArgs = 6;
 
@@ -28,6 +34,7 @@ struct Thread : hal::Thread {
     /* Management */
     Tid tid;
     Pid owner;
+    ThreadFlags flags;
 
     /* Scheduler data */
     Thread *next;

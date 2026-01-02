@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_SYSCALLS_CALLS_TIME_HPP_
 #define KERNEL_SRC_SYSCALLS_CALLS_TIME_HPP_
 
+#include <alkos/time.h>
 #include <defines.h>
-#include <sys/time.h>
 #include <types.h>
 
 #include "modules/timing.hpp"

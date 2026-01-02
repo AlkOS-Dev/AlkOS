@@ -2,8 +2,8 @@
 #include <assert.h>
 #include <time.h>
 
-#include <sys/calls.h>
-#include <sys/time.h>
+#include <alkos/calls.h>
+#include <alkos/time.h>
 
 static constexpr u64 kNSecInSec = 1'000'000'000;
 
