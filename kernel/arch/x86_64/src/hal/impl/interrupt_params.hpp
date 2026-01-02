@@ -4,6 +4,7 @@
 #include <defines.h>
 #include <hal/api/interrupts_params.hpp>
 #include <types.hpp>
+#include "cpu/gdt.hpp"
 
 struct PACK IsrRegisters {
     uint64_t rax;
@@ -47,6 +48,11 @@ static constexpr size_t kNumX86_64Irqs          = 16;
 
 struct ExceptionData : IsrErrorStackFrame {
 };
+
+NODISCARD FAST_CALL bool IsInterruptFromUserSpace(const ExceptionData &data)
+{
+    return data.isr_stack_frame.cs != cpu::GDT::kKernelCodeSelector;
+}
 
 /* Mapping params */
 static constexpr u16 kTimerHwLirq      = 0;

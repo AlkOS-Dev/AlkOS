@@ -37,6 +37,11 @@ struct Thread : hal::Thread {
     void *kernel_stack_bottom;
     void *user_stack;
     void *user_stack_bottom;
+
+    /* Timing */
+    u64 kernel_time_ns;
+    u64 user_time_ns;
+    u64 timestamp;
 };
 }  // namespace Sched
 

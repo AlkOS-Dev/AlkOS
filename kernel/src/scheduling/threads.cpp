@@ -2,8 +2,10 @@
 
 #include <hal/scheduling.hpp>
 
+#include "hardware/core_local.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
+#include "modules/timing.hpp"
 #include "sys/loader.hpp"
 #include "vfs/path.hpp"
 
@@ -18,8 +20,6 @@ std::expected<Thread *, Error> Threads::PrepareThread()
     }
 
     Thread *thread = threads_.Get(idx);
-    thread->InitMem();
-
     ASSERT_LE(idx, std::numeric_limits<u16>::max());
     thread->tid = AssignNewTid(static_cast<u16>(idx));
 
@@ -57,4 +57,52 @@ void Elf64EntryPoint(const Pid pid, const char *path)
     hal::JumpToUserSpace(entry);
 }
 
+void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
+{
+    ASSERT_NOT_NULL(data);
+    const auto thread = hardware::GetCurrentTCB();
+
+    if (!thread) {
+        return;
+    }
+
+    const u64 t = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    if (hal::IsInterruptFromUserSpace(*data)) {
+        thread->user_time_ns += t - thread->timestamp;
+    } else {
+        thread->kernel_time_ns += t - thread->timestamp;
+    }
+
+    thread->timestamp = t;
+}
+
+void UpdateTcbOnInterruptExit(Thread *thread)
+{
+    const auto current_thread = hardware::GetCurrentTCB();
+
+    if (!current_thread) {
+        return;
+    }
+
+    const u64 t = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    current_thread->kernel_time_ns += t - thread->timestamp;
+    thread->timestamp = t;
+}
+
 }  // namespace Sched
+
+void cdecl_UpdateTcbOnSyscallEntry()
+{
+    const auto thread = hardware::GetCurrentTCB();
+    const u64 t       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->user_time_ns += t - thread->timestamp;
+    thread->timestamp = t;
+}
+
+void cdecl_UpdateTcbOnSyscallExit()
+{
+    const auto thread = hardware::GetCurrentTCB();
+    const u64 t       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->kernel_time_ns += t - thread->timestamp;
+    thread->timestamp = t;
+}

@@ -4,6 +4,7 @@
 #include <data_structures/hash_maps.hpp>
 #include <defines.hpp>
 #include <expected.hpp>
+#include <hal/interrupt_params.hpp>
 #include <hal/sync.hpp>
 
 #include "constants.hpp"
@@ -79,6 +80,9 @@ void OnKThreadExit();
 
 void Elf64EntryPoint(Pid pid, const char *path);
 
+void UpdateTcbOnInterruptEntry(hal::ExceptionData *data);
+void UpdateTcbOnInterruptExit(Thread *thread);
+
 NODISCARD FAST_CALL Task PrepareKThreadTask(void (*f)())
 {
     Task task{};
@@ -100,5 +104,8 @@ NODISCARD FAST_CALL Task PrepareElf64LoaderTask(Pid pid, const char *path)
 }
 
 }  // namespace Sched
+
+extern "C" void cdecl_UpdateTcbOnSyscallEntry();
+extern "C" void cdecl_UpdateTcbOnSyscallExit();
 
 #endif  // KERNEL_SRC_SCHEDULING_THREADS_HPP_

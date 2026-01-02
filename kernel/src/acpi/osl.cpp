@@ -193,7 +193,7 @@ struct UacpiInterrupt {
     uacpi_handle ctx;
 };
 
-static void *UacpiHander(intr::LitHwEntry &handler)
+static Sched::Thread *UacpiHander(intr::LitHwEntry &handler)
 {
     auto *uacpi_interrupt = static_cast<UacpiInterrupt *>(handler.handler_data.data);
     uacpi_interrupt->uacpi_handler(uacpi_interrupt->ctx);

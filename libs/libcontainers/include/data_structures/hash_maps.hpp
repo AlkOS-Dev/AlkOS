@@ -399,7 +399,7 @@ class PooledHashMap
 
         auto mem = Mem::KMallocAligned({.size = sizeof(T), .alignment = alignof(T)});
         R_ASSERT_TRUE(static_cast<bool>(mem));
-        map_[idx] = static_cast<T *>(mem.value());
+        map_[idx] = new (mem.value()) T();
 
         return idx;
     }

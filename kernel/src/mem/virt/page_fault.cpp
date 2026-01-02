@@ -11,7 +11,7 @@
 namespace Mem
 {
 
-void *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
+Sched::Thread *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     ASSERT_NOT_NULL(data);
 
