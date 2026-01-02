@@ -1,6 +1,7 @@
 #include <platform.h>
 #include <stdio.h>
 #include <sys/video.h>
+#include <time.h>
 #include <types.hpp>
 
 extern "C" int main()
@@ -18,7 +19,17 @@ extern "C" int main()
     // cast void* to something writable (assuming 32bpp / 4 bytes)
     u32 *fb = static_cast<u32 *>(info.buffer_ptr);
 
-    int color_offset = 0;
+    u32 t = static_cast<u32>(time(NULL));
+    // Apply a bit-mixing hash (MurmurHash3 finalizer).
+    // This ensures that t and t+1 produce vastly different bit patterns,
+    // causing the color to jump drastically every second.
+    t ^= t >> 16;
+    t *= 0x85ebca6b;
+    t ^= t >> 13;
+    t *= 0xc2b2ae35;
+    t ^= t >> 16;
+
+    int color_offset = static_cast<int>(t);
 
     // Use pixel format info
     const auto &fmt = info.format;

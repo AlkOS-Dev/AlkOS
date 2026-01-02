@@ -48,6 +48,7 @@ class Ps2Keyboard final : public Keyboard
     static constexpr u8 kScancodeLeftShift      = 0x2A;
     static constexpr u8 kScancodeRightShift     = 0x36;
     static constexpr u8 kScancodeCapsLock       = 0x3A;
+    static constexpr u8 kScanCodeTab            = 0x0F;
 
     static constexpr int kResetTimeout = 1000000;
 
