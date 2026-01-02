@@ -2,6 +2,7 @@
 #define KERNEL_SRC_FS_FILE_DESCRIPTOR_HPP_
 
 #include <types.h>
+#include <data_structures/hash_maps.hpp>
 #include <data_structures/ref_count.hpp>
 #include <data_structures/tagged_pointer.hpp>
 #include <span.hpp>
@@ -48,14 +49,6 @@ inline constexpr size_t kMaxFdsPerProcess = 128;
 inline constexpr size_t kMaxOpenFiles     = 1014;
 inline constexpr size_t kMaxActiveFiles   = 512;
 inline constexpr size_t kStdioBufferSize  = 4096;
-
-// Lock ordering to prevent deadlocks (lower number = acquired first):
-// 1. FileTable::lock_
-// 2. OpenFileTable::lock_
-// 3. FdTable::lock_
-//
-// When acquiring multiple locks, ALWAYS acquire in this order.
-// Release locks in reverse order.
 
 // ------------------------------
 // File Mode Flags
@@ -105,30 +98,22 @@ enum class FdSeek : u8 {
 };
 
 // ------------------------------
-// Standard Stream Types
-// -----------------------------
-
-enum class StandardStreamType { kStdin, kStdout, kStderr };
-
-// ------------------------------
 // File Structure
 // -----------------------------
 
 /**
  * @brief File represents a file in filesystem
  *
- * Thread-safe: All access must be protected by FileTable::lock_
- * Uses RefCounted for automatic lifetime management
  */
-class File : public data_structures::RefCountedBase<File>
+class File : public data_structures::RefCounted<File>
 {
     public:
     u64 size{0};
     u32 mode{0};
     vfs::Path path;
 
-    File()          = default;
-    virtual ~File() = default;
+    File()  = default;
+    ~File() = default;
 };
 
 // ------------------------------
@@ -157,18 +142,17 @@ using FileHandle = data_structures::NonOwningTaggedPtr<File, IO::Pipe<kStdioBuff
  * - A File (with automatic ref counting via RefCounted)
  * - A Pipe (for stdin/stdout/stderr)
  */
-class OpenFileEntry : public data_structures::RefCountedBase<OpenFileEntry>
+class OpenFileEntry : public data_structures::RefCounted<OpenFileEntry>
 {
     public:
-    FileHandle handle;      // Either File* or Pipe*
-    u32 flags{0};           // Open mode flags
-    u64 offset{0};          // Current file offset
-    bool is_append{false};  // True if opened in append mode
+    FileHandle handle;
+    u32 flags{0};
+    u64 offset{0};
+    bool is_append{false};
 
-    OpenFileEntry()          = default;
-    virtual ~OpenFileEntry() = default;
+    OpenFileEntry()  = default;
+    ~OpenFileEntry() = default;
 
-    // Helper methods
     bool IsFile() const { return handle.Is<File>(); }
     bool IsPipe() const { return handle.Is<IO::Pipe<kStdioBufferSize>>(); }
 
@@ -188,7 +172,6 @@ class OpenFileEntry : public data_structures::RefCountedBase<OpenFileEntry>
  * @brief Process-local file descriptor table
  *
  * Each process has its own table of file descriptors.
- * Thread-safe: All operations protected by internal lock_
  */
 class FdTable
 {
@@ -196,7 +179,6 @@ class FdTable
     FdTable()  = default;
     ~FdTable() = default;
 
-    // Disable copy and move
     FdTable(const FdTable &)            = delete;
     FdTable &operator=(const FdTable &) = delete;
     FdTable(FdTable &&)                 = delete;
@@ -206,7 +188,6 @@ class FdTable
     FdResult<fd_t> AllocateFdAt(OpenFileEntry *global_entry, fd_t fd);
     FdResult<> FreeFd(fd_t fd);
 
-    // Get entry pointer (valid only while lock is held)
     OpenFileEntry *GetEntry(fd_t fd);
     const OpenFileEntry *GetEntry(fd_t fd) const;
 
@@ -228,8 +209,7 @@ class FdTable
 /**
  * @brief Global file table
  *
- * Manages all files system-wide.
- * Thread-safe: All operations protected by internal lock_
+ * Manages all active files.
  */
 class FileTable
 {
@@ -237,7 +217,6 @@ class FileTable
     FileTable()  = default;
     ~FileTable() = default;
 
-    // Disable copy and move
     FileTable(const FileTable &)            = delete;
     FileTable &operator=(const FileTable &) = delete;
     FileTable(FileTable &&)                 = delete;
@@ -246,16 +225,14 @@ class FileTable
     FdResult<File *> GetOrCreate(const vfs::Path &path);
     FdResult<> Release(File *file);
 
-    // Find file (returns nullptr if not found)
-    // Caller must ensure lock ordering: FileTable lock must be held
     File *Find(const vfs::Path &path);
     const File *Find(const vfs::Path &path) const;
 
     size_t GetCount() const { return count_; }
-    const File *GetFile(size_t index) const { return &files_[index]; }
+    const File *GetFile(size_t index) const { return files_.Get(index); }
 
     private:
-    File files_[kMaxActiveFiles]{};
+    data_structures::PooledHashMap<File, kMaxActiveFiles> files_{};
     size_t count_{};
     hal::Spinlock lock_{};
 };
@@ -268,18 +245,13 @@ class FileTable
  * @brief Global open file table
  *
  * Manages all open file entries system-wide.
- * Thread-safe: All operations protected by internal lock_
  */
 class OpenFileTable
 {
-    // Friend to allow OnZeroRefs callback to access count_
-    friend struct OpenFileEntry;
-
     public:
     OpenFileTable();
     ~OpenFileTable();
 
-    // Disable copy and move
     OpenFileTable(const OpenFileTable &)            = delete;
     OpenFileTable &operator=(const OpenFileTable &) = delete;
     OpenFileTable(OpenFileTable &&)                 = delete;
@@ -293,10 +265,10 @@ class OpenFileTable
     FdResult<> SetOffset(OpenFileEntry *entry, u64 offset) const;
 
     size_t GetOpenCount() const { return open_count_; }
-    const OpenFileEntry *GetEntry(size_t index) const { return &entries_[index]; }
+    const OpenFileEntry *GetEntry(size_t index) const { return entries_.Get(index); }
 
     private:
-    OpenFileEntry entries_[kMaxOpenFiles];
+    data_structures::PooledHashMap<OpenFileEntry, kMaxOpenFiles> entries_{};
     size_t open_count_;
     mutable arch::Spinlock lock_;
 };
@@ -313,21 +285,12 @@ inline constexpr fd_t kStderrFd = kFdStdErr;
 // File Descriptor Manager
 // -----------------------------
 
-/**
- * @brief Main file descriptor manager
- *
- * Coordinates three-tier hierarchy following lock ordering:
- * 1. FileTable::lock_
- * 2. OpenFileTable::lock_
- * 3. FdTable::lock_
- */
 class FdManager
 {
     public:
     FdManager();
     ~FdManager();
 
-    // Disable copy and move
     FdManager(const FdManager &)            = delete;
     FdManager &operator=(const FdManager &) = delete;
     FdManager(FdManager &&)                 = delete;

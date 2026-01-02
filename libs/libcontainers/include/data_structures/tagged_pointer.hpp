@@ -1,19 +1,16 @@
 #ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_TAGGED_POINTER_HPP_
 #define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_TAGGED_POINTER_HPP_
 
-#include "ref_count.hpp"
-
-#include <algorithm.hpp>
 #include <defines.hpp>
 #include <mem/heap.hpp>
 #include <new.hpp>
 #include <type_traits.hpp>
 #include <utility.hpp>
+#include "ref_count.hpp"
 
 namespace data_structures
 {
 
-// Ownership marker types
 template <typename T>
 struct Owned {
     using Type                   = T;
@@ -29,7 +26,6 @@ struct NonOwned {
 namespace internal
 {
 
-// Helper to extract the underlying type
 template <typename T>
 struct UnwrapType {
     using Type = T;
@@ -48,7 +44,6 @@ struct UnwrapType<NonOwned<T>> {
 template <typename T>
 using UnwrapType_t = typename UnwrapType<T>::Type;
 
-// Helper to check if a type is owned
 template <typename T>
 struct IsOwned : std::false_type {
 };
@@ -61,7 +56,8 @@ template <typename T>
 inline constexpr bool IsOwned_v = IsOwned<T>::value;
 
 template <typename T>
-inline constexpr bool IsRefCounted_v = std::derived_from<T, RefCountedBase<T>>;
+inline constexpr bool IsRefCounted_v =
+    std::derived_from<T, RefCounted<T, false>> || std::derived_from<T, RefCounted<T, true>>;
 
 }  // namespace internal
 
@@ -95,13 +91,11 @@ class TaggedPointer
     template <typename T>
     NODISCARD static TaggedPointer Wrap(T *ptr)
     {
-        // Check if NonOwned<T> is in the type list
         static_assert(
             (std::is_same_v<NonOwned<T>, TaggedTypes> || ...),
             "Type NonOwned<T> must be in the TaggedTypes list to use Wrap"
         );
 
-        // Auto-detect RefCounted and call AddRef if needed
         if constexpr (internal::IsRefCounted_v<T>) {
             if (ptr) {
                 ptr->AddRef();
@@ -159,7 +153,6 @@ class TaggedPointer
     template <typename T, typename... Args>
     NODISCARD FAST_CALL TaggedPointer Construct(Args &&...args)
     {
-        // Check if Owned<T> is in the type list
         static_assert(
             (std::is_same_v<Owned<T>, TaggedTypes> || ...),
             "Type Owned<T> must be in the TaggedTypes list to use Construct"
@@ -181,7 +174,6 @@ class TaggedPointer
     template <typename T>
     NODISCARD FORCE_INLINE_F bool Is() const
     {
-        // Check owned and non-owned variants
         constexpr bool has_owned     = (std::is_same_v<Owned<T>, TaggedTypes> || ...);
         constexpr bool has_non_owned = (std::is_same_v<NonOwned<T>, TaggedTypes> || ...);
         static_assert(
@@ -258,7 +250,6 @@ class TaggedPointer
             size_t tag           = GetTag();
             size_t current_index = 0;
 
-            // Only destroy owned types
             (void)((current_index++ == tag ? (DestroyType<TaggedTypes>(), true) : false) || ...);
         }
     }
@@ -292,6 +283,7 @@ class TaggedPointer
         if (!ptr)
             return;
 
+        // If owned, destroy and free memory
         if constexpr (internal::IsOwned_v<T>) {
             ptr->~ActualType();
             Mem::KFreeAligned(ptr);
@@ -320,7 +312,6 @@ class TaggedPointer
         if (!ptr)
             return;
 
-        // Auto-detect and increment RefCounted types
         if constexpr (internal::IsRefCounted_v<ActualType>) {
             ptr->AddRef();
         }

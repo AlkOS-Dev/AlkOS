@@ -26,7 +26,6 @@ FdResult<fd_t> FdTable::AllocateFd(OpenFileEntry *global_entry)
 
     std::lock_guard lock(lock_);
 
-    // Find the first available file descriptor
     for (size_t i = 0; i < kMaxFdsPerProcess; ++i) {
         if (entries_[i] == nullptr) {
             entries_[i] = global_entry;
@@ -47,10 +46,8 @@ FdResult<fd_t> FdTable::AllocateFdAt(OpenFileEntry *global_entry, fd_t fd)
 
     std::lock_guard lock(lock_);
 
-    // Check if the FD is already in use
     RET_UNEXPECTED_IF(entries_[fd] != nullptr, FdError::kBadFileDescriptor);
 
-    // Allocate at the specific index
     entries_[fd] = global_entry;
     global_entry->AddRef();
     open_count_++;
@@ -64,7 +61,6 @@ FdResult<> FdTable::FreeFd(fd_t fd)
 
     std::lock_guard lock(lock_);
 
-    // Prevent closing standard streams through normal operations
     if (fd <= kStderrFd && entries_[fd] != nullptr && entries_[fd]->IsPipe()) {
         return std::unexpected(FdError::kPermissionDenied);
     }
@@ -101,10 +97,8 @@ FdResult<fd_t> FdTable::DuplicateFd(fd_t fd)
 
     RET_UNEXPECTED_IF(entries_[fd] == nullptr, FdError::kBadFileDescriptor);
 
-    // Find the first available file descriptor for the copy
     for (size_t i = 0; i < kMaxFdsPerProcess; ++i) {
         if (entries_[i] == nullptr) {
-            // Copy the pointer and increment ref count
             entries_[i] = entries_[fd];
             entries_[i]->AddRef();
             open_count_++;
@@ -131,7 +125,6 @@ FdResult<fd_t> FdTable::DuplicateFdTo(fd_t old_fd, fd_t new_fd)
         open_count_--;
     }
 
-    // Duplicate the entry
     entries_[new_fd] = entries_[old_fd];
     entries_[new_fd]->AddRef();
     open_count_++;
@@ -149,27 +142,18 @@ FdResult<File *> FileTable::GetOrCreate(const vfs::Path &path)
 
     std::lock_guard lock(lock_);
 
-    // Check if file already exists (under lock, safe to return pointer)
     File *existing = Find(path);
     if (existing != nullptr) {
-        existing->AddRef();
         return existing;
     }
 
-    // Find a free file slot
-    size_t free_slot = kMaxActiveFiles;
-    for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (!files_[i].HasRefs()) {
-            free_slot = i;
-            break;
-        }
-    }
+    size_t idx = files_.Allocate();
+    RET_UNEXPECTED_IF(idx == std::numeric_limits<size_t>::max(), FdError::kIoError);
 
-    RET_UNEXPECTED_IF(free_slot == kMaxActiveFiles, FdError::kIoError);
+    File *file = files_.Get(idx);
+    ASSERT_NOT_NULL(file);
 
-    // Initialize the new file
-    File *file = &files_[free_slot];
-    file->AddRef();
+    new (file) File();
 
     // TODO: Get from VFS when implemented
     file->size = 0;
@@ -195,9 +179,16 @@ FdResult<> FileTable::Release(File *file)
     u32 old_count = file->GetRefCount();
     file->Release();
 
-    // If this was the last reference, decrement table count
     if (old_count == 1) {
-        count_--;
+        for (size_t i = 0; i < kMaxActiveFiles; ++i) {
+            if (files_.Get(i) == file) {
+                file->~File();
+                files_.Free(i);
+                count_--;
+                return {};
+            }
+        }
+        return std::unexpected(FdError::kInvalidArgument);
     }
 
     return {};
@@ -206,8 +197,9 @@ FdResult<> FileTable::Release(File *file)
 File *FileTable::Find(const vfs::Path &path)
 {
     for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (files_[i].HasRefs() && files_[i].path == path) {
-            return &files_[i];
+        File *file = files_.Get(i);
+        if (file != nullptr && file->HasRefs() && file->path == path) {
+            return file;
         }
     }
     return nullptr;
@@ -216,31 +208,29 @@ File *FileTable::Find(const vfs::Path &path)
 const File *FileTable::Find(const vfs::Path &path) const
 {
     for (size_t i = 0; i < kMaxActiveFiles; ++i) {
-        if (files_[i].HasRefs() && files_[i].path == path) {
-            return &files_[i];
+        const File *file = files_.Get(i);
+        if (file != nullptr && file->HasRefs() && file->path == path) {
+            return file;
         }
     }
     return nullptr;
 }
-
 // ============================================================================
 // OpenFileTable Implementation
 // ============================================================================
 
-OpenFileTable::OpenFileTable() : open_count_(0)
-{
-    // Entries are default-initialized (all fields are zero/empty)
-}
+OpenFileTable::OpenFileTable() : open_count_(0) {}
 
 OpenFileTable::~OpenFileTable()
 {
     std::lock_guard lock(lock_);
 
-    // All entries should be closed by now, but clean up just in case
     for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (entries_[i].HasRefs()) {
-            // FileHandle will automatically call Release() on RefCounted File types
-            entries_[i].handle = {};
+        OpenFileEntry *entry = entries_.Get(i);
+        if (entry != nullptr && entry->HasRefs()) {
+            entry->handle = {};
+            entry->~OpenFileEntry();
+            entries_.Free(i);
         }
     }
 }
@@ -253,42 +243,46 @@ FdResult<OpenFileEntry *> OpenFileTable::OpenFile(File *file, OpenMode flags)
 
     std::lock_guard lock(lock_);
 
-    // Find a free entry slot
-    for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (!entries_[i].HasRefs()) {
-            // Initialize the new entry - Wrap will auto-call AddRef for RefCounted File
-            entries_[i].handle    = FileHandle::Wrap(file);
-            entries_[i].flags     = static_cast<u32>(flags);
-            entries_[i].offset    = 0;
-            entries_[i].is_append = HasMode(flags, OpenMode::kAppend);
-
-            open_count_++;
-            return &entries_[i];
-        }
+    size_t idx = entries_.Allocate();
+    if (idx == std::numeric_limits<size_t>::max()) {
+        return std::unexpected(FdError::kIoError);
     }
 
-    return std::unexpected(FdError::kIoError);
+    OpenFileEntry *entry = entries_.Get(idx);
+    ASSERT_NOT_NULL(entry);
+
+    new (entry) OpenFileEntry();
+
+    entry->handle    = FileHandle::Wrap(file);
+    entry->flags     = static_cast<u32>(flags);
+    entry->offset    = 0;
+    entry->is_append = HasMode(flags, OpenMode::kAppend);
+
+    open_count_++;
+    return entry;
 }
 
 FdResult<OpenFileEntry *> OpenFileTable::OpenPipe(IO::Pipe<kStdioBufferSize> &pipe)
 {
     std::lock_guard lock(lock_);
 
-    // Find a free entry slot
-    for (size_t i = 0; i < kMaxOpenFiles; ++i) {
-        if (!entries_[i].HasRefs()) {
-            // Initialize the new entry with Pipe handle (NonOwned - no ref counting)
-            entries_[i].handle    = FileHandle::Wrap(&pipe);
-            entries_[i].flags     = static_cast<u32>(OpenMode::kReadWrite);
-            entries_[i].offset    = 0;
-            entries_[i].is_append = false;
-
-            open_count_++;
-            return &entries_[i];
-        }
+    size_t idx = entries_.Allocate();
+    if (idx == std::numeric_limits<size_t>::max()) {
+        return std::unexpected(FdError::kIoError);
     }
 
-    return std::unexpected(FdError::kIoError);
+    OpenFileEntry *entry = entries_.Get(idx);
+    ASSERT_NOT_NULL(entry);
+
+    new (entry) OpenFileEntry();
+
+    entry->handle    = FileHandle::Wrap(&pipe);
+    entry->flags     = static_cast<u32>(OpenMode::kReadWrite);
+    entry->offset    = 0;
+    entry->is_append = false;
+
+    open_count_++;
+    return entry;
 }
 
 FdResult<> OpenFileTable::CloseFile(OpenFileEntry *entry)
@@ -306,11 +300,18 @@ FdResult<> OpenFileTable::CloseFile(OpenFileEntry *entry)
     u32 old_count = entry->GetRefCount();
     entry->Release();
 
-    // If this was the last reference (old_count was 1, now 0), clean up entry
     if (old_count == 1) {
-        // FileHandle will automatically call Release() on RefCounted File
         entry->handle = {};
-        open_count_--;
+
+        for (size_t i = 0; i < kMaxOpenFiles; ++i) {
+            if (entries_.Get(i) == entry) {
+                entry->~OpenFileEntry();
+                entries_.Free(i);
+                open_count_--;
+                return {};
+            }
+        }
+        return std::unexpected(FdError::kInvalidArgument);
     }
 
     return {};
@@ -349,32 +350,24 @@ FdManager::~FdManager() = default;
 
 FdResult<fd_t> FdManager::Open(const vfs::Path &path, OpenMode flags)
 {
-    // Get or create file (Lock level 1: FileTable)
     auto file_result = file_table_.GetOrCreate(path);
     RET_UNEXPECTED_IF_ERR(file_result);
     File *file = *file_result;
 
-    // Create global file entry (Lock level 2: OpenFileTable)
     auto open_result = open_file_table_.OpenFile(file, flags);
     if (!open_result) {
-        // Clean up file reference on failure
-        file_table_.Release(file);
         return std::unexpected(open_result.error());
     }
     OpenFileEntry *global_entry = *open_result;
 
-    // Get current process FD table
     FdTable *fd_table = GetCurrentProcessFdTable();
     if (fd_table == nullptr) {
-        // Clean up global entry on failure
         open_file_table_.CloseFile(global_entry);
         return std::unexpected(FdError::kIoError);
     }
 
-    // Allocate file descriptor (Lock level 3: FdTable)
     auto fd_result = fd_table->AllocateFd(global_entry);
     if (!fd_result) {
-        // Clean up global entry on failure
         open_file_table_.CloseFile(global_entry);
         return std::unexpected(fd_result.error());
     }
@@ -384,19 +377,15 @@ FdResult<fd_t> FdManager::Open(const vfs::Path &path, OpenMode flags)
 
 FdResult<> FdManager::Close(fd_t fd)
 {
-    // Get current process FD table
     FdTable *fd_table = GetCurrentProcessFdTable();
     RET_UNEXPECTED_IF(fd_table == nullptr, FdError::kIoError);
 
-    // Get entry
     OpenFileEntry *entry = fd_table->GetEntry(fd);
     RET_UNEXPECTED_IF(!entry, FdError::kBadFileDescriptor);
 
-    // Close global entry (Lock level 2: OpenFileTable)
     auto close_result = open_file_table_.CloseFile(entry);
     RET_UNEXPECTED_IF(!close_result, close_result.error());
 
-    // Free file descriptor (Lock level 3: FdTable)
     auto free_result = fd_table->FreeFd(fd);
     RET_UNEXPECTED_IF(!free_result, free_result.error());
 
@@ -407,28 +396,22 @@ FdResult<size_t> FdManager::Read(fd_t fd, std::span<byte> buffer)
 {
     RET_UNEXPECTED_IF(buffer.empty(), FdError::kInvalidArgument);
 
-    // Get current process FD table
     FdTable *fd_table = GetCurrentProcessFdTable();
     ASSERT_NOT_NULL(fd_table);
 
-    // Get entry
     OpenFileEntry *entry = fd_table->GetEntry(fd);
     RET_UNEXPECTED_IF(!entry, FdError::kBadFileDescriptor);
 
-    // Check if file is opened for reading
     OpenMode mode = static_cast<OpenMode>(entry->flags);
     RET_UNEXPECTED_IF(!HasMode(mode, OpenMode::kRead), FdError::kPermissionDenied);
 
-    // Dispatch based on handle type
     if (entry->IsFile()) {
         File *file = entry->GetFile();
         RET_UNEXPECTED_IF(file == nullptr, FdError::kBadFileDescriptor);
 
-        // Read from file
         auto result = vfs::ReadFile(file->path, buffer.data(), buffer.size(), entry->offset);
         RET_UNEXPECTED_IF(!result, FdError::kIoError);
 
-        // Update offset
         entry->offset += *result;
         return *result;
     } else if (entry->IsPipe()) {
@@ -447,33 +430,26 @@ FdResult<size_t> FdManager::Write(fd_t fd, std::span<const byte> buffer)
 {
     RET_UNEXPECTED_IF(buffer.empty(), FdError::kInvalidArgument);
 
-    // Get current process FD table
     FdTable *fd_table = GetCurrentProcessFdTable();
     ASSERT_NOT_NULL(fd_table);
 
-    // Get entry
     OpenFileEntry *entry = fd_table->GetEntry(fd);
     RET_UNEXPECTED_IF(!entry, FdError::kBadFileDescriptor);
 
-    // Check if file is opened for writing
     OpenMode mode = static_cast<OpenMode>(entry->flags);
     RET_UNEXPECTED_IF(!HasMode(mode, OpenMode::kWrite), FdError::kPermissionDenied);
 
-    // Dispatch based on handle type
     if (entry->IsFile()) {
         File *file = entry->GetFile();
         RET_UNEXPECTED_IF(file == nullptr, FdError::kBadFileDescriptor);
 
-        // For append mode, seek to end of file
         if (entry->is_append) {
             entry->offset = file->size;
         }
 
-        // Write to stream
         auto result = vfs::WriteFile(file->path, buffer.data(), buffer.size(), entry->offset);
         RET_UNEXPECTED_IF(!result, FdError::kIoError);
 
-        // Update offset
         entry->offset += *result;
         return *result;
     } else if (entry->IsPipe()) {
@@ -490,21 +466,17 @@ FdResult<size_t> FdManager::Write(fd_t fd, std::span<const byte> buffer)
 
 FdResult<ssize_t> FdManager::Seek(fd_t fd, ssize_t offset, FdSeek whence)
 {
-    // Get current process FD table
     FdTable *fd_table = GetCurrentProcessFdTable();
     ASSERT_NOT_NULL(fd_table);
 
-    // Get entry
     OpenFileEntry *entry = fd_table->GetEntry(fd);
     RET_UNEXPECTED_IF(!entry, FdError::kBadFileDescriptor);
 
-    // Only files support seeking, not pipes
     RET_UNEXPECTED_IF(!entry->IsFile(), FdError::kInvalidArgument);
 
     File *file = entry->GetFile();
     RET_UNEXPECTED_IF(file == nullptr, FdError::kBadFileDescriptor);
 
-    // Determine new offset based on whence
     ssize_t new_offset = 0;
     switch (whence) {
         case FdSeek::kSet:

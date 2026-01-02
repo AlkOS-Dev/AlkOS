@@ -3,6 +3,8 @@
 
 #include "atomic.hpp"
 #include "defines.hpp"
+#include "mem/heap.hpp"
+#include "template/utils.hpp"
 #include "types.h"
 
 namespace data_structures
@@ -11,20 +13,20 @@ namespace data_structures
 /**
  * @brief Intrusive thread-safe reference counting base class
  */
-template <typename T>
-class RefCountedBase
+template <typename T, bool kCustomDeleter = false>
+class RefCounted
 {
+    using DeleterCallback = void (*)(T *);
+    using CounterType     = u32;
+
     public:
-    using CounterType = u32;
+    RefCounted() {}
+    ~RefCounted() = default;
 
-    RefCountedBase() noexcept : ref_count_(0) {}
-    virtual ~RefCountedBase() = default;
-
-    // Disable copy/move - each object has unique ref count
-    RefCountedBase(const RefCountedBase &)            = delete;
-    RefCountedBase &operator=(const RefCountedBase &) = delete;
-    RefCountedBase(RefCountedBase &&)                 = delete;
-    RefCountedBase &operator=(RefCountedBase &&)      = delete;
+    RefCounted(const RefCounted &)            = delete;
+    RefCounted &operator=(const RefCounted &) = delete;
+    RefCounted(RefCounted &&)                 = delete;
+    RefCounted &operator=(RefCounted &&)      = delete;
 
     // ========================================================================
     // Reference counting operations
@@ -39,7 +41,13 @@ class RefCountedBase
         ASSERT_GT(old_count, 0, "Releasing ref_count that is already zero");
 
         if (old_count == 1) {
-            static_cast<T *>(this)->~T();
+            T *ptr = static_cast<T *>(this);
+            ptr->~T();
+            if constexpr (kCustomDeleter) {
+                if (deleter_) {
+                    deleter_(ptr);
+                }
+            }
         }
     }
 
@@ -53,18 +61,27 @@ class RefCountedBase
         return ref_count_.load(std::memory_order_acquire) > 0;
     }
 
+    void SetDeleter(DeleterCallback deleter) noexcept
+        requires(kCustomDeleter)
+    {
+        deleter_ = deleter;
+    }
+
     private:
-    std::atomic<CounterType> ref_count_;
+    OPTIONAL_FIELD(kCustomDeleter, DeleterCallback) deleter_ {};
+    std::atomic<CounterType> ref_count_{0};
 };
 
-// ============================================================================
-// Smart pointer for intrusive reference counting
-// ============================================================================
-
+/**
+ * @brief Smart pointer for RefCounted objects
+ */
 template <typename T>
 class RefPtr
 {
-    static_assert(std::derived_from<T, RefCountedBase<T>>, "T must derive from RefCountedBase<T>");
+    static_assert(
+        std::derived_from<T, RefCounted<T, false>> || std::derived_from<T, RefCounted<T, true>>,
+        "T must derive from RefCountedBase<T>"
+    );
 
     public:
     RefPtr() noexcept : ptr_(nullptr) {}
@@ -178,18 +195,23 @@ class RefPtr
 // Helper functions
 // ============================================================================
 
-template <typename T, typename... Args>
+template <
+    typename T, typename Allocator = decltype([]<typename... Args>(Args &&...args) {
+                    return Mem::KNew<T>(std::forward<Args>(args)...).value_or(nullptr);
+                }),
+    typename Deleter = decltype([](T *ptr) {
+        Mem::KDelete(ptr);
+    }),
+    typename... Args>
 RefPtr<T> MakeRefCounted(Args &&...args)
+    requires(std::derived_from<T, RefCounted<T, true>>)
 {
-    // Note: New object starts with ref_count_ = 0, so we pass add_ref = true
-    return RefPtr<T>(new T(std::forward<Args>(args)...), true);
-}
-
-template <typename T>
-RefPtr<T> AdoptRef(T *ptr) noexcept
-{
-    // Adopt existing reference without incrementing
-    return RefPtr<T>(ptr, false);
+    auto res = Allocator{}(std::forward<Args>(args)...);
+    if (!res) {
+        return RefPtr<T>{};
+    }
+    res->SetDeleter(Deleter{});
+    return RefPtr<T>(res);
 }
 
 }  // namespace data_structures
