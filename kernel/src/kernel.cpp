@@ -7,6 +7,7 @@
 /* internal includes */
 #include <hal/debug.hpp>
 #include <hal/terminal.hpp>
+#include <scheduling/kworker.hpp>
 
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
@@ -27,31 +28,18 @@ static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
 
-    SchedulingModule::Get().GetScheduler().ConvertToScheduling();
+    auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
-    // auto &video = VideoModule::Get();
-    // Graphics::Painter painter(video.GetScreen(), video.GetFormat());
-    // Graphics::Psf2Font font(drdos8x8_psfu);
-    //
-    // if (!font.IsValid()) {
-    //     TRACE_WARN_VIDEO("Invalid font");
-    // }
-    //
-    // System::GraphicsConsole console(painter, font);
-    // System::Shell shell(console, HardwareModule::Get().GetPs2Keyboard());
-    //
-    // shell.Init();
-    // video.Flush();
-    //
-    // while (true) {
-    //     shell.Update();
-    //     video.Flush();
-    //
-    //     // TODO: Replace with CpuHalt or smth like scheduler sleep.
-    //     for (volatile i32 i = 0; i < 10000; ++i) {
-    //     }
-    //     trace::TraceDumperTask();
-    // }
+    // Spawn FD hierarchy dumper
+    R_ASSERT_TRUE(
+        task_mgr.SpawnKernelProcess("fd-hierarchy-dumper", {}, Sched::FdHierarchyDumperMain),
+        "Failed to spawn FD hierarchy dumper process..."
+    );
+
+    // Spawn hello world process
+    R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
+
+    SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }
 
 extern "C" void KernelMain(const Mem::PPtr<hal::RawBootArguments> raw_args)
