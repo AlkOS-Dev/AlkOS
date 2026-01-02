@@ -1,10 +1,10 @@
-#ifndef LIBS_LIBC_INCLUDE_TIME_H_
-#define LIBS_LIBC_INCLUDE_TIME_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_TIME_H_
+#define LIBS_LIBC_SRC_INCLUDE_TIME_H_
 
 /* external includes */
+#include <alkos/time.h>
 #include <errno.h>
 #include <stddef.h>
-#include <sys/time.h>
 #include <types.h>
 
 // ------------------------------
@@ -94,4 +94,4 @@ time_t mktime(struct tm *time_ptr);
 
 END_DECL_C
 
-#endif  // LIBS_LIBC_INCLUDE_TIME_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_TIME_H_

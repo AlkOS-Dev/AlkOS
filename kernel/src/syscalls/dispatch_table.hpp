@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_SYSCALLS_DISPATCH_TABLE_HPP_
 #define KERNEL_SRC_SYSCALLS_DISPATCH_TABLE_HPP_
 
-#include <sys/calls.h>
+#include <alkos/calls.h>
 #include <defines.hpp>
 
 #include "hal/types.hpp"

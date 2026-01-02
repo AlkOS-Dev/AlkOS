@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
 #define KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
 
-#include <sys/time.h>
+#include <alkos/time.h>
 #include <time.h>
 #include <time.hpp>
 

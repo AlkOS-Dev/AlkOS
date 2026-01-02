@@ -8,7 +8,6 @@
 #include "task_mgr.hpp"
 
 #include <hal/panic.hpp>
-#include <sys/loader.hpp>
 
 #include "trace_framework.hpp"
 

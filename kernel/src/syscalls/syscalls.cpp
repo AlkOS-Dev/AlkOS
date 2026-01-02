@@ -1,7 +1,7 @@
 #include "syscalls.hpp"
 #include "dispatch_table.hpp"
 
-#include <sys/calls.h>
+#include <alkos/syscall.h>
 
 using namespace Syscall;
 
@@ -30,6 +30,14 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kSysRead, SysRead>();
     table.RegisterHandler<kSysWrite, SysWrite>();
     table.RegisterHandler<kSysSeek, SysSeek>();
+
+    /* Thread, processes */
+    table.RegisterHandler<kProcAbort, SysAbort>();
+    table.RegisterHandler<kProcExit, SysExit>();
+    table.RegisterHandler<kThreadCreate, SysThreadCreate>();
+    table.RegisterHandler<kThreadExit, SysThreadExit>();
+    table.RegisterHandler<kThreadJoin, SysThreadJoin>();
+    table.RegisterHandler<kThreadDetach, SysThreadDetach>();
 
     return table;
 }>();
