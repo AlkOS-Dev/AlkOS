@@ -2,45 +2,39 @@
 #define LIBS_LIBC_SRC_ABI_PLATFORM_H_
 
 #include "defines.h"
-#include "sys/time.h"
 #include "types.h"
 
-#include "sys/fd.h"
-#include "sys/proc.h"
-#include "sys/thread.h"
-#include "sys/time.h"
+#include "alkos/structs.h"
+#include "alkos/syscall.h"
 
 BEGIN_DECL_C
 
-DEFINE_SYSCALL_VOID(
+SYSCALL_VOID_NAME(
     get_clock_value, kSysGetClockValue, const ClockType, type, TimeVal *, time, Timezone *,
     time_zone
-)
-DEFINE_SYSCALL(get_clock_ticks_in_second, kSysGetClockTicksInSecond, u64, const ClockType, type)
-DEFINE_SYSCALL_VOID(get_timezone, kSysGetTimezone, Timezone *, time_zone)
+);
+SYSCALL_NAME(get_clock_ticks_in_second, kSysGetClockTicksInSecond, u64, const ClockType, type);
+SYSCALL_VOID_NAME(get_timezone, kSysGetTimezone, Timezone *, time_zone);
 
-DEFINE_SYSCALL_VOID(debug_write, kSysDebugWrite, const char *, buffer)
-DEFINE_SYSCALL(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size)
-DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
+SYSCALL_VOID_NAME(debug_write, kSysDebugWrite, const char *, buffer);
+SYSCALL_NAME(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size);
+SYSCALL_VOID_NAME(write_console, kSysWriteConsole, const char *, buffer);
 
-DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
+SYSCALL_VOID_NAME(panic, kSysPanic, const char *, msg);
 
-DEFINE_SYSCALL(open, kSysOpen, int, const char *, pathname, int, flags)
-DEFINE_SYSCALL(close, kSysClose, int, fd_t, fd)
-DEFINE_SYSCALL(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count)
-DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count)
-DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
+SYSCALL_NAME(open, kSysOpen, int, const char *, pathname, int, flags);
+SYSCALL_NAME(close, kSysClose, int, fd_t, fd);
+SYSCALL_NAME(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count);
+SYSCALL_NAME(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count);
+SYSCALL_NAME(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence);
 
 /* Thread, processes */
-DEFINE_SYSCALL(
-    thread_create, kThreadCreate, int, Thread *, thread, ThreadFlags, flags, thread_func_t, f,
-    void *, arg
-)
-DEFINE_SYSCALL_VOID(thread_exit, kThreadExit, void *, retval)
-DEFINE_SYSCALL(thread_join, ThreadJoin, int, Thread *, thread)
-DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)
-DEFINE_SYSCALL_VOID(proc_exit, kProcExit, int, status)
-DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
+SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
+SYSCALL_VOID_NAME(thread_exit, kThreadExit, void *, retval);
+SYSCALL_NAME(thread_join, ThreadJoin, int, Thread *, thread);
+SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
+SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
+SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 
 END_DECL_C
 

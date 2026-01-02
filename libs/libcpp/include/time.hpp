@@ -1,9 +1,9 @@
 #ifndef LIBS_LIBCPP_INCLUDE_TIME_HPP_
 #define LIBS_LIBCPP_INCLUDE_TIME_HPP_
 
+#include <alkos/time.h>
 #include <assert.h>
 #include <stdint.h>
-#include <sys/time.h>
 #include <time.h>
 #include <types.h>
 #include <defines.hpp>

@@ -1,7 +1,7 @@
 #include "stdio.hpp"
+#include "alkos/sys/fd.h"
 #include "stdio.h"
 #include "string.h"
-#include "sys/calls/fd.h"
 
 // Static fixed buffers for standard streams
 static byte _stdin_buffer[BUFSIZ];

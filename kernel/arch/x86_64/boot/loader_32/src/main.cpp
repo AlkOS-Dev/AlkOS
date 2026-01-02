@@ -13,6 +13,8 @@
 #include "debug_trace.hpp"
 
 #include "abi/transition_data.hpp"
+#include "alkos/panic.hpp"
+#include "alkos/terminal.hpp"
 #include "cpu/utils.hpp"
 #include "elf/elf_64.hpp"
 #include "elf/elf_dynamic.hpp"
@@ -23,8 +25,6 @@
 #include "multiboot2/memory_map.hpp"
 #include "multiboot2/multiboot2.h"
 #include "settings.hpp"
-#include "sys/panic.hpp"
-#include "sys/terminal.hpp"
 
 using namespace Multiboot;
 

@@ -1,12 +1,12 @@
-#include "sys/shell.hpp"
+#include "alkos/shell.hpp"
 
 #include <string.h>
 #include <string.hpp>
 
 #include "acpi/acpi_power.hpp"
+#include "alkos/loader.hpp"
 #include "modules/memory.hpp"
 #include "modules/vfs.hpp"
-#include "sys/loader.hpp"
 
 namespace System
 {

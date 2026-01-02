@@ -3,7 +3,7 @@
 
 #include "defines.h"
 #include "platform.h"
-#include "sys/time.h"
+#include "alkos/time.h"
 
 // ------------------------------
 // System calls

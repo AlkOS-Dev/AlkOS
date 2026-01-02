@@ -1,6 +1,6 @@
+#include <alkos/calls.h>
 #include <platform.h>
 #include <stdio.h>
-#include <sys/calls.h>
 
 template <typename... Args>
 void printf(const char *format, Args... args)

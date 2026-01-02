@@ -5,9 +5,9 @@
 #include <span.hpp>
 #include <string.hpp>
 
+#include "alkos/graphics_console.hpp"
 #include "fs/vfs/path.hpp"
 #include "io/stream.hpp"
-#include "sys/graphics_console.hpp"
 
 namespace System
 {

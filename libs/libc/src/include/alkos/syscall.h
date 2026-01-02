@@ -2,7 +2,6 @@
 #define LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
 
 #include "macro.hpp"
-#include "syscall.h"
 
 /**
  * @brief Syscall numbers

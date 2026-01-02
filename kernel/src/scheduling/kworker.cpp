@@ -1,10 +1,10 @@
 #include "kworker.hpp"
 
+#include <alkos/loader.hpp>
 #include <fs/file_descriptor.hpp>
 #include <modules/memory.hpp>
 #include <modules/scheduling.hpp>
 #include <modules/vfs.hpp>
-#include <sys/loader.hpp>
 
 #include "hal/debug.hpp"
 #include "modules/hardware.hpp"

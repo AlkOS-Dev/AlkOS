@@ -1,4 +1,4 @@
-#include "sys/terminal.hpp"
+#include "alkos/terminal.hpp"
 #include "hw/serial/qemu.hpp"
 
 void TerminalInit()

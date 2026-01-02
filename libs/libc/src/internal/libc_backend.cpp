@@ -24,10 +24,7 @@ DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, c
 DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
 
 /* Thread, processes */
-DEFINE_SYSCALL(
-    thread_create, kThreadCreate, int, Thread *, thread, ThreadFlags, flags, thread_func_t, f,
-    void *, arg
-)
+DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)
 DEFINE_SYSCALL_VOID(thread_exit, kThreadExit, void *, retval)
 DEFINE_SYSCALL(thread_join, ThreadJoin, int, Thread *, thread)
 DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)

@@ -4,8 +4,8 @@
 #include <defines.h>
 #include <types.h>
 
+#include "alkos/shell.hpp"
 #include "hal/debug_terminal.hpp"
-#include "sys/shell.hpp"
 #include "trace_framework.hpp"
 
 namespace Syscall
