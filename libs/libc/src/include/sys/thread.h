@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <types.h>
 
+typedef void (*thread_func_t)(void *);
+
 typedef struct PACK {
     bool PreserveFloats : 1;
     u32 padding : 31;

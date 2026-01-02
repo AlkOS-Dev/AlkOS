@@ -5,29 +5,42 @@
 #include "sys/time.h"
 #include "types.h"
 
-#include <sys/fd.h>
+#include "sys/fd.h"
+#include "sys/proc.h"
+#include "sys/thread.h"
+#include "sys/time.h"
 
 BEGIN_DECL_C
 
-// Panic
-NO_RET void __platform_panic(const char *msg);
+DEFINE_SYSCALL_VOID(
+    get_clock_value, kSysGetClockValue, const ClockType, type, TimeVal *, time, Timezone *,
+    time_zone
+)
+DEFINE_SYSCALL(get_clock_ticks_in_second, kSysGetClockTicksInSecond, u64, const ClockType, type)
+DEFINE_SYSCALL_VOID(get_timezone, kSysGetTimezone, Timezone *, time_zone)
 
-// Time Related
-void __platform_get_clock_value(ClockType type, TimeVal *time, Timezone *time_zone);
-u64 __platform_get_clock_ticks_in_second(ClockType type);
-void __platform_get_timezone(Timezone *time_zone);
+DEFINE_SYSCALL_VOID(debug_write, kSysDebugWrite, const char *, buffer)
+DEFINE_SYSCALL(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size)
+DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
 
-// Debug IO
-void __platform_debug_write(const char *buffer);
-size_t __platform_debug_read_line(char *buffer, size_t buffer_size);
-void __platform_write_console(const char *buffer);
+DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
 
-// File Descriptor Related
-int __platform_open(const char *pathname, int flags);
-int __platform_close(int fd);
-ssize_t __platform_read(int fd, void *buf, size_t count);
-ssize_t __platform_write(int fd, const void *buf, size_t count);
-ssize_t __platform_seek(int fd, ssize_t offset, FdSeek whence);
+DEFINE_SYSCALL(open, kSysOpen, int, const char *, pathname, int, flags)
+DEFINE_SYSCALL(close, kSysClose, int, fd_t, fd)
+DEFINE_SYSCALL(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count)
+DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count)
+DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
+
+/* Thread, processes */
+DEFINE_SYSCALL(
+    thread_create, kThreadCreate, int, Thread *, thread, ThreadFlags, flags, thread_func_t, f,
+    void *, arg
+)
+DEFINE_SYSCALL_VOID(thread_exit, kThreadExit, void *, retval)
+DEFINE_SYSCALL(thread_join, ThreadJoin, int, Thread *, thread)
+DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)
+DEFINE_SYSCALL_VOID(proc_exit, kProcExit, int, status)
+DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
 
 END_DECL_C
 

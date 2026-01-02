@@ -1,4 +1,6 @@
 #ifndef LIBS_LIBC_SRC_INCLUDE_SYS_PROC_H_
 #define LIBS_LIBC_SRC_INCLUDE_SYS_PROC_H_
 
+#include "thread.h"
+
 #endif  // LIBS_LIBC_SRC_INCLUDE_SYS_PROC_H_
