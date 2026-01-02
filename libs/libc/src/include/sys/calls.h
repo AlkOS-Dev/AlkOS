@@ -51,6 +51,7 @@ enum SyscallNumber {
  * Calls should be specified in other header files and then included here.
  */
 
+#include <sys/calls/fd.h>
 #include <sys/calls/time.h>
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
