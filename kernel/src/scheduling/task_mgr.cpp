@@ -6,7 +6,9 @@
 #include "modules/vfs.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
-#include "vfs/path.hpp"
+
+#include <hal/panic.hpp>
+#include <sys/loader.hpp>
 
 #include "trace_framework.hpp"
 
@@ -24,10 +26,6 @@ namespace Sched
 {
 void TaskMgr::InitializeMultitasking()
 {
-    // Spawn hello world process
-    const auto res = ExecuteElf64("/bin/hello", {});
-    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
-
     // Spawn trace dumper
     const auto result =
         SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));
@@ -231,7 +229,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
         return std::unexpected(Error::ExecPathNotFound);
     }
 
-    auto process = SpawnEmptyProcess(path, flags);
+    auto process = SpawnEmptyProcess(vfs::Path(path).GetFilename().data(), flags);
     RET_UNEXPECTED_IF_ERR(process);
 
     template_lib::ScopeGuard process_guard([&] {

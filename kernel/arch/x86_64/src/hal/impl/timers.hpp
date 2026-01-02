@@ -8,7 +8,7 @@
 
 namespace arch
 {
-WRAP_CALL time_t QuerySystemTime(const timezone &tz)
+WRAP_CALL time_t QuerySystemTime(const Timezone &tz)
 {
     static constexpr size_t kBuffSize = 64;
     [[maybe_unused]] char buffer[kBuffSize];

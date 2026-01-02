@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_DRIVERS_PIT_PIT_HPP_
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_PIT_PIT_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 #include "include/io.hpp"
 
 namespace pit

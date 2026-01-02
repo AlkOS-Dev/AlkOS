@@ -2,9 +2,9 @@
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_ROLLED_SWITCH_HPP_
 
 #include <assert.h>
+#include <types.h>
 #include <concepts_ext.hpp>
 #include <defines.hpp>
-#include <types.hpp>
 #include <utility.hpp>
 
 namespace template_lib

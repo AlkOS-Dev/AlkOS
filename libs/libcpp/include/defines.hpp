@@ -3,7 +3,7 @@
 
 #include <defines.h>
 #include <stddef.h>
-#include <types.hpp>
+#include <types.h>
 
 #ifdef NDEBUG
 static constexpr bool kIsDebugBuild = false;

@@ -1,12 +1,13 @@
 #include <test_module/test.hpp>
 
 #include <string.h>
+#include <fs/vfs/fat/fat12.hpp>
+#include <fs/vfs/io/in_memory.hpp>
+#include <fs/vfs/path.hpp>
 #include <mem/heap.hpp>
 #include <memory.hpp>
 #include <modules/vfs.hpp>
-#include <vfs/fat/fat12.hpp>
-#include <vfs/io/in_memory.hpp>
-#include <vfs/path.hpp>
+#include <vfs.hpp>
 
 class VfsFat12ImageHelper
 {

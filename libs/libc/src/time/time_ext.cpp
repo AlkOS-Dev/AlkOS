@@ -1,12 +1,12 @@
 #include <assert.h>
+#include <types.h>
 #include <time.hpp>
-#include <types.hpp>
 
 // ------------------------------
 // Implementations
 // ------------------------------
 
-u64 ConvertDateTimeToPosix(const tm &date_time, const timezone &time_zone)
+u64 ConvertDateTimeToPosix(const tm &date_time, const Timezone &time_zone)
 {
     const i64 is_month_negative = date_time.tm_mon < 0;
 
@@ -217,7 +217,7 @@ std::tuple<u64, u64> CalculateYears30LessWLeaps(const u64 time)
     return {years + 1, static_cast<u64>(local_time_left)};
 }
 
-u64 GetDSTOffset(u64 time, const timezone &time_zone)
+u64 GetDSTOffset(u64 time, const Timezone &time_zone)
 {
     if (time_zone.dst_time_offset_minutes == 0) {
         return 0;
@@ -242,7 +242,7 @@ u64 GetDSTOffset(u64 time, const timezone &time_zone)
     }
 }
 
-tm *ConvertFromPosixToTm(const time_t timer, tm &result, const timezone &tz)
+tm *ConvertFromPosixToTm(const time_t timer, tm &result, const Timezone &tz)
 {
     u64 time_left = timer;
 

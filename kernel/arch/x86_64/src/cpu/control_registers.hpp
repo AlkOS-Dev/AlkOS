@@ -1,9 +1,9 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_CONTROL_REGISTERS_HPP_
 
+#include <types.h>
 #include <concepts.hpp>
 #include <concepts_ext.hpp>
-#include <types.hpp>
 
 /**
  * @file control_registers.hpp

@@ -8,6 +8,7 @@
 
 static Sched::Thread *TimerHandler(intr::LitHwEntry &)
 {
+    TRACE_FATAL_ACPI("XDDD");
     return SchedulingModule::Get().GetScheduler().Schedule();
 }
 

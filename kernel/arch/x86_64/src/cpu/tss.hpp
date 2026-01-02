@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_TSS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_TSS_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace cpu
 {

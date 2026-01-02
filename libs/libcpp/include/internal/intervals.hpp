@@ -2,7 +2,7 @@
 #define LIBS_LIBCPP_INCLUDE_INTERNAL_INTERVALS_HPP_
 
 #include "type_traits.hpp"
-#include "types.hpp"
+#include "types.h"
 
 namespace internal
 {

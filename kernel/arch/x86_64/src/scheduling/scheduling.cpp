@@ -8,6 +8,8 @@
 #include "modules/timing.hpp"
 #include "scheduling/thread.hpp"
 
+#include <hal/debug_terminal.hpp>
+
 // ------------------------------
 // statics
 // ------------------------------

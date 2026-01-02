@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include "mem/error.hpp"
 #include "mem/page.hpp"

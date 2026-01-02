@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_HAL_API_SYNC_HPP_
 #define KERNEL_SRC_HAL_API_SYNC_HPP_
 
+#include <types.h>
 #include <type_traits.hpp>
-#include <types.hpp>
 
 namespace hal
 {

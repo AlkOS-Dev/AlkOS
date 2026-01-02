@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_MEM_PHYS_PTR_HPP_
 #define KERNEL_SRC_MEM_PHYS_PTR_HPP_
 
+#include <types.h>
 #include <type_traits.hpp>
-#include <types.hpp>
 #include "hal/constants.hpp"
 
 namespace mem

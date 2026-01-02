@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_MEM_VIRT_AREA_HPP_
 #define KERNEL_SRC_MEM_VIRT_AREA_HPP_
 
-#include <types.hpp>
+#include <types.h>
 #include "mem/types.hpp"
 #include "mem/virt/page_fault_data.hpp"
 

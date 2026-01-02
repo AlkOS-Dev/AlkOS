@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_ACPI_ACPI_BATTERY_HPP_
 #define KERNEL_SRC_ACPI_ACPI_BATTERY_HPP_
 
+#include <types.h>
 #include <uacpi/tables.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace ACPI
 {

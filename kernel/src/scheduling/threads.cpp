@@ -1,13 +1,14 @@
 #include "threads.hpp"
 
+#include <hal/debug_terminal.hpp>
 #include <hal/scheduling.hpp>
 
+#include "fs/vfs/path.hpp"
 #include "hardware/core_local.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
 #include "sys/loader.hpp"
-#include "vfs/path.hpp"
 
 namespace Sched
 {

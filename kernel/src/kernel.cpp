@@ -7,6 +7,7 @@
 /* internal includes */
 #include <hal/debug.hpp>
 #include <hal/terminal.hpp>
+#include <scheduling/kworker.hpp>
 
 #include "graphics/font/psf2_font.hpp"
 #include "graphics/fonts/drdos8x8.hpp"
@@ -26,6 +27,12 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
+
+    auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
+
+    // Spawn hello world process
+    R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
+
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }
 

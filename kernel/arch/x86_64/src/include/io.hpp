@@ -2,8 +2,8 @@
 #define KERNEL_ARCH_X86_64_SRC_INCLUDE_IO_HPP_
 
 #include <assert.h>
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 FAST_CALL byte inb(const u16 port)
 {

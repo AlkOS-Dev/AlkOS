@@ -4,11 +4,9 @@
 #include <hal/api/spinlock.hpp>
 
 #include <autogen/feature_flags.h>
-#include <hal/constants.hpp>
-#include <types.hpp>
-#include "include/memory_io.hpp"
-
+#include <types.h>
 #include "hal/core.hpp"
+#include "include/memory_io.hpp"
 
 namespace arch
 {

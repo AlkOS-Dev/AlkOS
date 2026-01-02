@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
 #define KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
 
+#include <types.h>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include <data_structures/linked_list.hpp>
 #include "hal/interrupt_params.hpp"
