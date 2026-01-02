@@ -3,8 +3,6 @@
 
 #include <defines.hpp>
 
-#include "cpu/utils.hpp"
-
 namespace trace
 {
 // ------------------------------

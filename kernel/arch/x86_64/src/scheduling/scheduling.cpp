@@ -120,7 +120,7 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
     LoadFpStateIfNeeded(thread);
     hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
-    thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    // thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     SwapAsIfNeeded(thread);
     SwapGsIfJumpingToUserspace(thread);
 }
@@ -136,9 +136,9 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
     frame->rsp    = reinterpret_cast<u64>(thread->user_stack_bottom);
     frame->ss     = static_cast<u64>(cpu::GDT::kUserDataSelector);
 
-    const u64 t            = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    thread->kernel_time_ns = t - thread->timestamp;
-    thread->timestamp      = t;
+    // const u64 t            = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    // thread->kernel_time_ns = t - thread->timestamp;
+    // thread->timestamp      = t;
 
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
@@ -163,9 +163,9 @@ extern "C" void cdecl_ContextSwitchEntry(
     hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
 
-    const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    current_tcb->kernel_time_ns = t - current_tcb->timestamp;
-    thread->timestamp           = t;
+    // const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    // current_tcb->kernel_time_ns = t - current_tcb->timestamp;
+    // thread->timestamp           = t;
 
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
@@ -174,9 +174,9 @@ extern "C" void cdecl_ContextSwitchEntry(
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
-    DumpFpStateIfNeeded(thread);
+    const auto current_tcb = hardware::GetCoreLocalTcb();
+    DumpFpStateIfNeeded(current_tcb);
 
-    auto current_tcb          = hardware::GetCoreLocalTcb();
     current_tcb->kernel_stack = rsp;
     SwapFsIfNeeded(current_tcb, thread);
     hardware::SetCoreLocalTcb(thread);
