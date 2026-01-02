@@ -10,9 +10,9 @@
 
 BEGIN_DECL_C
 
-// FAST_CALL void Exit(int status) { __platform_proc_exit(status); }
-//
-// FAST_CALL void Abort() { __platform_proc_abort(); }
+FAST_CALL void Exit(int status) { __platform_proc_exit(status); }
+
+FAST_CALL void Abort() { __platform_proc_abort(); }
 
 END_DECL_C
 

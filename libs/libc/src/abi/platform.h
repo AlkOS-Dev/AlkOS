@@ -29,12 +29,12 @@ SYSCALL_NAME(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, cou
 SYSCALL_NAME(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence);
 
 /* Thread, processes */
-// SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
-// SYSCALL_VOID_NAME(thread_exit, kThreadExit, void *, retval);
-// SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread);
-// SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
-// SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
-// SYSCALL_VOID_NAME(proc_abort, kProcAbort);
+SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
+SYSCALL_VOID_NAME(thread_exit, kThreadExit, void *, retval);
+SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread);
+SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
+SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
+SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 
 END_DECL_C
 

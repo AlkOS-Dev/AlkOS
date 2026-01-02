@@ -11,23 +11,17 @@
 
 BEGIN_DECL_C
 
-// FAST_CALL int ThreadCreate(Thread *thread, ThreadFlags flags, thread_func_t f, void *arg) {
-//     thread->flags = flags;
-//     return __platform_thread_create(thread, f, arg);
-// }
-//
-// FAST_CALL int ThreadJoin(Thread *thread)
-// {
-//     return __platform_thread_join(thread);
-// }
-//
-// FAST_CALL int ThreadDetach(Thread *thread) {
-//     return __platform_thread_detach(thread);
-// }
-//
-// FAST_CALL void ThreadExit(void *retval) {
-//     __platform_thread_exit(retval);
-// }
+FAST_CALL int ThreadCreate(Thread *thread, ThreadFlags flags, thread_func_t f, void *arg)
+{
+    thread->flags = flags;
+    return __platform_thread_create(thread, f, arg);
+}
+
+FAST_CALL int ThreadJoin(Thread *thread) { return __platform_thread_join(thread); }
+
+FAST_CALL int ThreadDetach(Thread *thread) { return __platform_thread_detach(thread); }
+
+FAST_CALL void ThreadExit(void *retval) { __platform_thread_exit(retval); }
 
 END_DECL_C
 
