@@ -40,7 +40,7 @@ bool ValidateElfHeader(const Elf::Header &header)
 }
 }  // namespace
 
-expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem::AddressSpace &as)
+expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, AddressSpace &as)
 {
     TRACE_INFO_GENERAL("ElfLoader::Load()");
     auto &vfs = VfsModule::Get();
@@ -108,10 +108,6 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
             segments_cleaned++;
         }
     });
-
-    // Switch Address Space to load data
-    auto &prev_as = MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
-    MemoryModule::Get().GetVmm().SwitchAddrSpace(&as);
 
     // 5. Load Segments
     TRACE_FREQ_INFO_GENERAL("Validating the ELF header");
@@ -184,9 +180,6 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Mem:
             }
         }
     }
-
-    // Restore previous Address Space
-    MemoryModule::Get().GetVmm().SwitchAddrSpace(&prev_as);
 
     vma_cleanup_guard.dismiss();
     u64 entry_point = header.entry;

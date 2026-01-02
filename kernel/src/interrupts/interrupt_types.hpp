@@ -3,6 +3,7 @@
 
 #include <template_lib.hpp>
 #include "hal/interrupt_params.hpp"
+#include "scheduling/thread.hpp"
 
 namespace intr
 {
@@ -15,9 +16,9 @@ enum class InterruptType : uint8_t {
 template <InterruptType kInterruptType>
 struct InterruptHandlerEntry {
     /* Interrupt handler */
-    using InterruptHandler          = void *(*)(InterruptHandlerEntry & entry);
-    using InterruptHandlerException = void *(*)(InterruptHandlerEntry & entry,
-                                                hal::ExceptionData *data);
+    using InterruptHandler          = Sched::Thread *(*)(InterruptHandlerEntry & entry);
+    using InterruptHandlerException = Sched::Thread *(*)(InterruptHandlerEntry & entry,
+                                                         hal::ExceptionData *data);
     using HandlerType               = std::conditional_t<
                       kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
 

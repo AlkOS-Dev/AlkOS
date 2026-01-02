@@ -14,8 +14,7 @@ namespace arch
 using ::ContextSwitch;
 using ::ConvertContext;
 using ::JumpToUserSpace;
-void InitializeStackKThread(void **stack, void (*f)());
-void InitializeStackUserThread(void **stack, void (*f)());
+void InitializeThreadStack(void **stack, const Sched::Task &task);
 }  // namespace arch
 
 #endif  // KERNEL_ARCH_X86_64_SRC_HAL_IMPL_SCHEDULING_HPP_

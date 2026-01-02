@@ -12,6 +12,7 @@ enum class Error {
     ProcessNotFound,
     ThreadNotFound,
     ProcessNameTooLong,
+    ExecPathNotFound,
 };
 
 }  // namespace Sched
@@ -29,6 +30,8 @@ static constexpr const char *to_string(const Sched::Error &error)
             return "ThreadNotFound";
         case Sched::Error::ProcessNameTooLong:
             return "ProcessNameTooLong";
+        case Sched::Error::ExecPathNotFound:
+            return "ExecPathNotFound";
     }
 
     return "unknown error";

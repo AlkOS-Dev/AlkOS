@@ -18,14 +18,16 @@ namespace hal
  */
 WRAP_CALL void KernelPanic(const char *msg)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-    HardwareModule::Get().GetCoresController().PanicAllCores();
+    if (HardwareModule::IsInited()) {
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        HardwareModule::Get().GetCoresController().PanicAllCores();
+    }
 
     // For some reason trace::DumpAllBuffersOnFailure() must be called before and after printing
-    trace::DumpAllBuffersOnFailure();
-    TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
-    TRACE_FATAL_GENERAL(msg);
-    TRACE_FATAL_GENERAL("\n");
+    // BYPASS TRACE FRAMEWORK AS this function is used inside of it
+    TerminalWriteString("[ KERNEL PANIC ]");
+    TerminalWriteString(msg);
+    TerminalWriteString("\n");
 
     arch::KernelPanic();
 }

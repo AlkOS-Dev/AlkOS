@@ -4,6 +4,7 @@
 #include <data_structures/hash_maps.hpp>
 #include <defines.hpp>
 #include <expected.hpp>
+#include <hal/interrupt_params.hpp>
 #include <hal/sync.hpp>
 
 #include "constants.hpp"
@@ -75,10 +76,36 @@ class Threads
 };
 
 void KThreadEntrypoint(void (*f)());
-void UserThreadEntrypoint(void (*f)());
-void OnUserThreadEntry();
 void OnKThreadExit();
 
+void Elf64EntryPoint(Pid pid, const char *path);
+
+void UpdateTcbOnInterruptEntry(hal::ExceptionData *data);
+void UpdateTcbOnInterruptExit(Thread *thread);
+
+NODISCARD FAST_CALL Task PrepareKThreadTask(void (*f)())
+{
+    Task task{};
+    task.func       = reinterpret_cast<void *>(KThreadEntrypoint);
+    task.args_count = 1;
+    task.args       = {reinterpret_cast<u64>(f)};
+
+    return task;
+}
+
+NODISCARD FAST_CALL Task PrepareElf64LoaderTask(Pid pid, const char *path)
+{
+    Task task{};
+    task.func       = reinterpret_cast<void *>(Elf64EntryPoint);
+    task.args_count = 2;
+    task.args       = {*reinterpret_cast<u64 *>(&pid), reinterpret_cast<u64>(path)};
+
+    return task;
+}
+
 }  // namespace Sched
+
+extern "C" void cdecl_UpdateTcbOnSyscallEntry();
+extern "C" void cdecl_UpdateTcbOnSyscallExit();
 
 #endif  // KERNEL_SRC_SCHEDULING_THREADS_HPP_

@@ -4,7 +4,6 @@
 namespace arch
 {
 struct ThreadAPI {
-    FORCE_INLINE_F void InitMem() {}
 };
 }  // namespace arch
 
