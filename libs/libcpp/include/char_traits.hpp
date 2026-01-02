@@ -2,9 +2,9 @@
 #define LIBS_LIBCPP_INCLUDE_CHAR_TRAITS_HPP_
 
 #include <string.h>
+#include <types.h>
 #include <compare.hpp>
 #include <type_traits.hpp>
-#include <types.hpp>
 
 #define __need_wint_t
 #include <stddef.h>

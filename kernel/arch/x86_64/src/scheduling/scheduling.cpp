@@ -1,4 +1,5 @@
 #include "modules/scheduling.hpp"
+#include "modules/memory.hpp"
 
 #include <cpu/control_registers.hpp>
 #include <modules/memory.hpp>
@@ -8,6 +9,8 @@
 #include "hardware/core_local.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "scheduling/thread.hpp"
+
+#include <hal/debug_terminal.hpp>
 
 // ------------------------------
 // statics

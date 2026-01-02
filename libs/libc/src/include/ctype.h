@@ -1,8 +1,8 @@
-#ifndef LIBS_LIBC_INCLUDE_CTYPE_H_
-#define LIBS_LIBC_INCLUDE_CTYPE_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_CTYPE_H_
+#define LIBS_LIBC_SRC_INCLUDE_CTYPE_H_
 
 #include <defines.h>
-#include <types.hpp>
+#include <types.h>
 
 namespace internal
 {
@@ -205,4 +205,4 @@ CONSTEXPR int toupper(int c) { return islower(c) ? c - 0x20 : c; }
 
 END_DECL_C
 
-#endif  // LIBS_LIBC_INCLUDE_CTYPE_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_CTYPE_H_

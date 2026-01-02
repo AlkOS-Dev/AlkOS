@@ -1,9 +1,9 @@
 #include <test_module/test.hpp>
 
 #include <string.h>
-#include <vfs/fat/fat12.hpp>
-#include <vfs/io/in_memory.hpp>
-#include <vfs/path.hpp>
+#include <fs/vfs/fat/fat12.hpp>
+#include <fs/vfs/io/in_memory.hpp>
+#include <fs/vfs/path.hpp>
 
 // FAT12 disk image layout helper
 // A minimal FAT12 filesystem for testing

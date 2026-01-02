@@ -598,12 +598,14 @@ generate_fish_completion() {
                     if [[ "$type" != "flag" ]]; then
                         completion_line="$completion_line -r"
                         if [[ -n "$choices" ]]; then
-                            completion_line="$completion_line -a '${choices//|/ }'"
+                            completion_line="$completion_line -f -a '${choices//|/ }'"
                         elif [[ "$type" == "file" ]]; then
                             completion_line="$completion_line -F"
                         elif [[ "$type" == "directory" ]]; then
-                            completion_line="$completion_line -a '(__fish_complete_directories)'"
-                        fi
+                            completion_line="$completion_line -f -a '(__fish_complete_directories)'"
+                        elif [[ "$type" == "string" || "$type" == "list" ]]; then
+                	    completion_line="$completion_line -f"
+                	fi
                     fi
 
                     echo "$completion_line"

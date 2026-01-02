@@ -1,15 +1,22 @@
 #ifndef KERNEL_SRC_SCHEDULING_PROCESS_HPP_
 #define KERNEL_SRC_SCHEDULING_PROCESS_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
+#include "fs/file_descriptor.hpp"
 #include "hal/tasks.hpp"
 #include "mem/types.hpp"
 
 namespace Mem
 {
 class AddressSpace;
+}
+
+// Forward declarations
+namespace Fs
+{
+class FdTable;
 }
 
 namespace Sched
@@ -35,6 +42,14 @@ struct Process : hal::Process {
 
     /* Process resources */
     Mem::VirtualPtr<Mem::AddressSpace> address_space;
+
+    /* File descriptor table */
+    Mem::VirtualPtr<Fs::FdTable> fd_table;
+
+    /* Standard I/O pipes (owned by process) */
+    IO::Pipe<Fs::kStdioBufferSize> stdin_pipe;
+    IO::Pipe<Fs::kStdioBufferSize> stdout_pipe;
+    IO::Pipe<Fs::kStdioBufferSize> stderr_pipe;
 };
 }  // namespace Sched
 

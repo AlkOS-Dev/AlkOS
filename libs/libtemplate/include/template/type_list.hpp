@@ -1,9 +1,9 @@
 #ifndef LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_LIST_HPP_
 #define LIBS_LIBTEMPLATE_INCLUDE_TEMPLATE_TYPE_LIST_HPP_
 
+#include <types.h>
 #include <internal/tuple_base.hpp>
 #include <type_traits.hpp>
-#include <types.hpp>
 #include <utility.hpp>
 
 #include "type_checks.hpp"

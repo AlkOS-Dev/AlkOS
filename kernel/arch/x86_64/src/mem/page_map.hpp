@@ -1,9 +1,9 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_MEM_PAGE_MAP_HPP_
 #define KERNEL_ARCH_X86_64_SRC_MEM_PAGE_MAP_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include <mem/types.hpp>
 

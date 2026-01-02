@@ -2,8 +2,8 @@
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_APIC_IO_APIC_HPP_
 
 #include <defines.h>
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include <acpi/acpi.hpp>
 #include "include/memory_io.hpp"

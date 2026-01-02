@@ -10,9 +10,9 @@ namespace vfs
 {
 
 // Constants
-inline constexpr size_t kMaxPathSize      = 4096;
+inline constexpr size_t kMaxPathSize      = 1024;
 inline constexpr size_t kMaxComponents    = 64;
-inline constexpr size_t kMaxComponentSize = 256;
+inline constexpr size_t kMaxComponentSize = 128;
 inline constexpr char kPathSeparator      = '/';
 
 // Ccncepts

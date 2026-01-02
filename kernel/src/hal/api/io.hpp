@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_HAL_API_IO_HPP_
 #define KERNEL_SRC_HAL_API_IO_HPP_
 
+#include <types.h>
 #include <concepts.hpp>
-#include <types.hpp>
 
 namespace arch
 {

@@ -3,8 +3,8 @@
 
 #include <expected.hpp>
 
+#include "fs/vfs/path.hpp"
 #include "mem/virt/addr_space.hpp"
-#include "vfs/path.hpp"
 
 namespace System
 {

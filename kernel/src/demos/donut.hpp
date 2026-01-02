@@ -2,11 +2,11 @@
 #define KERNEL_SRC_DEMOS_DONUT_HPP_
 
 #include <stdio.h>
+#include <types.h>
 #include <algorithm.hpp>
 #include <memory.hpp>
 #include <span.hpp>
 #include <string.hpp>
-#include <types.hpp>
 
 #include "graphics/color.hpp"
 #include "graphics/font/psf2_font.hpp"

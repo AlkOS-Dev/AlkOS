@@ -18,7 +18,7 @@ void ACPI::ACPIController::EarlyInit(const BootArguments &args)
     );
 
     RsdpAddress_ = args.rsdp;
-    DEBUG_INFO_ACPI("RSDP address: 0x%016p", RsdpAddress_);
+    DEBUG_INFO_ACPI("RSDP address: 0x%016X", RsdpAddress_);
 
     /* Load all tables, bring the event subsystem online, and enter ACPI mode */
     uacpi_status ret = uacpi_initialize(0);

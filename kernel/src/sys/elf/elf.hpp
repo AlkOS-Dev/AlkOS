@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_SYS_ELF_ELF_HPP_
 #define KERNEL_SRC_SYS_ELF_ELF_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace System::Elf
 {

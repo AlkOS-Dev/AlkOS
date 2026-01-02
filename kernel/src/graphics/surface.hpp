@@ -2,9 +2,9 @@
 #define KERNEL_SRC_GRAPHICS_SURFACE_HPP_
 
 #include <assert.h>
+#include <types.h>
 #include <mem/types.hpp>
 #include <span.hpp>
-#include <types.hpp>
 #include "graphics/native_pixel.hpp"
 
 namespace Graphics

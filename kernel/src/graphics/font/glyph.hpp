@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_GRAPHICS_FONT_GLYPH_HPP_
 #define KERNEL_SRC_GRAPHICS_FONT_GLYPH_HPP_
 
-#include <types.hpp>
+#include <types.h>
 
 namespace Graphics
 {

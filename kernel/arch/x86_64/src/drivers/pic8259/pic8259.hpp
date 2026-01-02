@@ -8,7 +8,7 @@
 #include "interrupts/interrupt_types.hpp"
 #include "trace_framework.hpp"
 
-#include <types.hpp>
+#include <types.h>
 
 /**
  * @file pic8259.hpp

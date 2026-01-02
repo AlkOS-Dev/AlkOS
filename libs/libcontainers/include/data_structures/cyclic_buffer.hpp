@@ -1,13 +1,13 @@
 #ifndef LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_CYCLIC_BUFFER_HPP_
 #define LIBS_LIBCONTAINERS_INCLUDE_DATA_STRUCTURES_CYCLIC_BUFFER_HPP_
 
+#include <types.h>
 #include <algorithm.hpp>
 #include <array.hpp>
 #include <atomic.hpp>
 #include <defines.hpp>
 #include <mutex.hpp>
 #include <span.hpp>
-#include <types.hpp>
 
 namespace data_structures
 {

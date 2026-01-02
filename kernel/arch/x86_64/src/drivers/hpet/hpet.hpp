@@ -2,12 +2,12 @@
 #define KERNEL_ARCH_X86_64_SRC_DRIVERS_HPET_HPET_HPP_
 
 #include <stdlib.h>
+#include <types.h>
 #include <uacpi/acpi.h>
 #include <array.hpp>
 #include <data_structures/bit_array.hpp>
 #include <time.hpp>
 #include <todo.hpp>
-#include <types.hpp>
 
 #include <mem/types.hpp>
 

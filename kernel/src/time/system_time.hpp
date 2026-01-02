@@ -30,7 +30,7 @@ class SystemTime
 
     void SyncWithHardware();
 
-    NODISCARD timezone GetTimezone() const { return time_zone_; }
+    NODISCARD Timezone GetTimezone() const { return time_zone_; }
 
     // ------------------------------
     // Class fields
@@ -45,7 +45,7 @@ class SystemTime
     /* Hard coded Poland */
     static constexpr uint64_t kPolandOffset = 1;
 
-    timezone time_zone_{
+    Timezone time_zone_{
         .west_offset_minutes     = kPolandOffset * kMinutesInHour,
         .dst_time_offset_minutes = 0,
         .dst_time_start_seconds  = static_cast<u16>(-1),

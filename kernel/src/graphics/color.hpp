@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_GRAPHICS_COLOR_HPP_
 #define KERNEL_SRC_GRAPHICS_COLOR_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace Graphics
 {

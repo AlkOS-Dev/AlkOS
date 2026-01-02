@@ -1,7 +1,7 @@
 
 /* internal includes */
 #include "drivers/pic8259/pic8259.hpp"
-#include <types.hpp>
+#include <types.h>
 #include "trace_framework.hpp"
 
 /**
