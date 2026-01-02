@@ -4,8 +4,10 @@
 #include <types.h>
 #include <defines.hpp>
 
-#include "fs/file_descriptor.hpp"
+#include "fs/costants.hpp"
+#include "fs/vfs/path.hpp"
 #include "hal/tasks.hpp"
+#include "io/pipe.hpp"
 #include "mem/types.hpp"
 
 namespace Mem
@@ -33,7 +35,7 @@ struct PACK ProcessFlags {
 static_assert(sizeof(ProcessFlags) == 1);
 
 struct Process : hal::Process {
-    static constexpr size_t kMaxNameLength = 128;
+    static constexpr size_t kMaxNameLength = vfs::kMaxComponentSize;
 
     /* Management */
     char name[kMaxNameLength];

@@ -6,7 +6,7 @@
 // Preserve cpu state test
 // ------------------------------
 
-static void *PolluteAllRegistersSw(intr::LitSwEntry &)
+static Sched::Thread *PolluteAllRegistersSw(intr::LitSwEntry &)
 {
     /* pollute all registers possible */
     __asm__ volatile("movq $-1, %%rax" : : : "rax");
@@ -29,7 +29,7 @@ static void *PolluteAllRegistersSw(intr::LitSwEntry &)
 
 static DumpedRegisters g_DumpedRegisters{};
 
-static void *DivZeroExceptionHandler(intr::LitExcEntry &, hal::ExceptionData *data)
+static Sched::Thread *DivZeroExceptionHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     g_DumpedRegisters.rax = data->registers.rax;
     g_DumpedRegisters.rbx = data->registers.rbx;

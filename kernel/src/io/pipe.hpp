@@ -2,7 +2,6 @@
 #define KERNEL_SRC_IO_PIPE_HPP_
 
 #include <data_structures/atomic_cyclic_buffer.hpp>
-#include <hal/spinlock.hpp>
 
 #include "io/stream.hpp"
 #include "macros.hpp"

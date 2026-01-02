@@ -14,19 +14,25 @@ struct alignas(hal::kCacheLineSizeBytes) CoreLocal : hal::CoreLocal {
     Sched::Thread *thread_control_block;
 };
 
-FAST_CALL CoreLocal &GetCoreLocalData()
-{
-    return *static_cast<CoreLocal *>(hal::GetCoreLocalData());
-}
+#define PREPARE_CORE_LOCAL_ACCESS(name, rv, field)                       \
+    FAST_CALL void SetCoreLocal##name(rv value)                          \
+    {                                                                    \
+        hal::SetCoreLocalField<rv, offsetof(CoreLocal, field)>(value);   \
+    }                                                                    \
+    NODISCARD FAST_CALL rv GetCoreLocal##name()                          \
+    {                                                                    \
+        return hal::GetCoreLocalField<rv, offsetof(CoreLocal, field)>(); \
+    }
 
-NODISCARD FAST_CALL Sched::Thread *GetCurrentTCB()
-{
-    return GetCoreLocalData().thread_control_block;
-}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Winvalid-offsetof"
+PREPARE_CORE_LOCAL_ACCESS(NestedInterrupts, u8, nested_interrupts);
+PREPARE_CORE_LOCAL_ACCESS(Lid, u16, lid);
+PREPARE_CORE_LOCAL_ACCESS(Tcb, Sched::Thread *, thread_control_block);
+PREPARE_CORE_LOCAL_ACCESS(Self, CoreLocal *, self);
+#pragma GCC diagnostic pop
 
-FAST_CALL void SetCurrentTCB(Sched::Thread *tcb) { GetCoreLocalData().thread_control_block = tcb; }
-
-NODISCARD FAST_CALL Sched::Pid GetRunningPid() { return GetCurrentTCB()->owner; }
+NODISCARD FAST_CALL Sched::Pid GetRunningPid() { return GetCoreLocalTcb()->owner; }
 
 }  // namespace hardware
 

@@ -7,6 +7,7 @@
 #include <data_structures/tagged_pointer.hpp>
 #include <span.hpp>
 
+#include "fs/costants.hpp"
 #include "hal/spinlock.hpp"
 #include "io/pipe.hpp"
 #include "io/stream.hpp"
@@ -40,15 +41,6 @@ enum class FdError {
 
 template <typename T = void>
 using FdResult = std::expected<T, FdError>;
-
-// ------------------------------
-// Constants
-// ------------------------------
-
-inline constexpr size_t kMaxFdsPerProcess = 128;
-inline constexpr size_t kMaxOpenFiles     = 1014;
-inline constexpr size_t kMaxActiveFiles   = 512;
-inline constexpr size_t kStdioBufferSize  = 4096;
 
 // ------------------------------
 // File Mode Flags

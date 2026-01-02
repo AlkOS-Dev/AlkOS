@@ -1,13 +1,11 @@
 #include "modules/scheduling.hpp"
-#include "modules/memory.hpp"
-
-#include <cpu/control_registers.hpp>
-#include <modules/memory.hpp>
-
+#include "cpu/control_registers.hpp"
 #include "cpu/utils.hpp"
 #include "hal/interrupt_params.hpp"
 #include "hardware/core_local.hpp"
 #include "mem/virt/addr_space.hpp"
+#include "modules/memory.hpp"
+#include "modules/timing.hpp"
 #include "scheduling/thread.hpp"
 
 #include <hal/debug_terminal.hpp>
@@ -51,7 +49,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
     }
 }
 
-FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalData().tss.rsp0 = rsp0; }
+FAST_CALL void SetTssRsp0(const u64 rsp0) { hardware::GetCoreLocalSelf()->tss.rsp0 = rsp0; }
 
 FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
@@ -97,16 +95,6 @@ FAST_CALL void SwapFsIfNeeded(Sched::Thread *current_tcb, Sched::Thread *next_tc
     }
 }
 
-FAST_CALL u64 GetThreadsPageTable(Sched::Thread *thread)
-{
-    ASSERT_NOT_NULL(thread);
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-
-    return reinterpret_cast<u64>(proc.value()->address_space->PageTableRoot());
-}
-
 FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
 {
     ASSERT_NOT_NULL(tcb);
@@ -114,10 +102,10 @@ FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
     const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(tcb->owner);
     ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
 
-    auto &current_as = MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
-    auto thread_as   = proc.value()->address_space;
+    const auto current_as = &MemoryModule::Get().GetVmm().GetCurrentAddressSpace();
+    const auto thread_as  = proc.value()->address_space;
 
-    if (&current_as != thread_as) {
+    if (current_as != thread_as) {
         MemoryModule::Get().GetVmm().SwitchAddrSpace(thread_as);
     }
 }
@@ -130,14 +118,16 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
 {
     SetNextThreadFs(thread);
     LoadFpStateIfNeeded(thread);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
+    // thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    SwapAsIfNeeded(thread);
     SwapGsIfJumpingToUserspace(thread);
 }
 
 extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 {
-    auto thread          = hardware::GetCurrentTCB();
+    auto thread          = hardware::GetCoreLocalTcb();
     thread->kernel_stack = thread->kernel_stack_bottom;
 
     frame->rip    = reinterpret_cast<u64>(addr);
@@ -146,18 +136,21 @@ extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
     frame->rsp    = reinterpret_cast<u64>(thread->user_stack_bottom);
     frame->ss     = static_cast<u64>(cpu::GDT::kUserDataSelector);
 
+    const u64 t            = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->kernel_time_ns = t - thread->timestamp;
+    thread->timestamp      = t;
+
     SetThreadGs(thread);
     __asm__ volatile("swapgs" ::: "memory");
-
-    const auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc), "Threads exists -> owner MUST exist");
-    MemoryModule::Get().GetVmm().SwitchAddrSpace(proc.value()->address_space);
 }
 
 extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
+    const auto current_tcb = hardware::GetCoreLocalTcb();
+    DumpFpStateIfNeeded(current_tcb);
+
     mem->error_code             = 0;
     mem->isr_stack_frame.rip    = rip;
     mem->isr_stack_frame.cs     = static_cast<u64>(cpu::GDT::kKernelCodeSelector);
@@ -165,46 +158,30 @@ extern "C" void cdecl_ContextSwitchEntry(
     mem->isr_stack_frame.rsp    = reinterpret_cast<u64>(mem) + sizeof(IsrErrorStackFrame);
     mem->isr_stack_frame.ss     = static_cast<u64>(cpu::GDT::kKernelDataSelector);
 
-    auto current_tcb = hardware::GetCurrentTCB();
     SwapFsIfNeeded(current_tcb, thread);
     current_tcb->kernel_stack = reinterpret_cast<void *>(mem);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
-    SwapGsIfJumpingToUserspace(thread);
+
+    const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    current_tcb->kernel_time_ns = t - current_tcb->timestamp;
+    thread->timestamp           = t;
+
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
+    SwapGsIfJumpingToUserspace(thread);
 }
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
-    auto current_tcb          = hardware::GetCurrentTCB();
+    const auto current_tcb = hardware::GetCoreLocalTcb();
+    DumpFpStateIfNeeded(current_tcb);
+
     current_tcb->kernel_stack = rsp;
     SwapFsIfNeeded(current_tcb, thread);
-    hardware::SetCurrentTCB(thread);
+    hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
+
+    LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
-}
-
-// ===========================
-
-extern "C" void cdecl_SetTssRsp0(const u64 rsp0) { SetTssRsp0(rsp0); }
-
-extern "C" void cdecl_SwapFsIfNeeded(Sched::Thread *thread)
-{
-    SwapFsIfNeeded(hardware::GetCurrentTCB(), thread);
-}
-
-extern "C" void cdecl_SetNextThreadFs(Sched::Thread *thread) { SetNextThreadFs(thread); }
-
-extern "C" void cdecl_DumpFpStateIfNeeded(Sched::Thread *thread) { DumpFpStateIfNeeded(thread); }
-
-extern "C" void cdecl_LoadFpStateIfNeeded(Sched::Thread *thread) { LoadFpStateIfNeeded(thread); }
-
-extern "C" Sched::Thread *cdecl_GetCurrentTCB() { return hardware::GetCurrentTCB(); }
-
-extern "C" void cdecl_SetCurrentTCB(Sched::Thread *tcb) { hardware::SetCurrentTCB(tcb); }
-
-extern "C" u64 cdecl_GetThreadsPageTable(Sched::Thread *thread)
-{
-    return GetThreadsPageTable(thread);
 }
