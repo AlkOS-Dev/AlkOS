@@ -26,6 +26,8 @@ namespace Sched
 struct PACK Pid {
     u16 id;
     u64 count : 48;
+
+    bool operator==(const Pid &other) const = default;
 };
 
 struct PACK ProcessFlags {

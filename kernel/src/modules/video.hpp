@@ -18,13 +18,7 @@ class VideoModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
 
     public:
-    /// Returns the Surface for the physical screen
-    Graphics::Surface &GetScreen() { return Framebuffer_.GetSurface(); }
-
-    /// Returns the format required by the hardware (used to init Painters)
-    const Graphics::PixelFormat &GetFormat() const { return Framebuffer_.GetFormat(); }
-
-    void Flush() { Framebuffer_.Flush(); }
+    // Wrappers removed as per request. Use GetFramebuffer() to access Framebuffer object.
 };
 
 }  // namespace internal

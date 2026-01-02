@@ -13,6 +13,7 @@
 #include "modules/timing.hpp"
 #include "modules/vfs.hpp"
 #include "modules/video.hpp"
+#include "modules/window.hpp"
 #include "trace_framework.hpp"
 
 #include "internal/stdio.hpp"
@@ -64,4 +65,5 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().GetCoresController().BootUpAllCores();
 
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
+    WindowModule::Init();
 }
