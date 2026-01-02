@@ -120,7 +120,7 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
     LoadFpStateIfNeeded(thread);
     hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
-    // thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     SwapAsIfNeeded(thread);
     SwapGsIfJumpingToUserspace(thread);
 }

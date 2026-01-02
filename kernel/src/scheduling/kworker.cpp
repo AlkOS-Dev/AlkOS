@@ -30,6 +30,7 @@ void Sched::KWorkerMain()
 void Sched::TraceDumperMain()
 {
     TRACE_INFO_SCHEDULING("Created new TraceDumper!");
+
     while (true) {
         trace::TraceDumperTask();
 
