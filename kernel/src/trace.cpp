@@ -11,16 +11,6 @@
 
 using namespace trace;
 
-// ------------------------------
-// Helper static functions
-// ------------------------------
-
-FAST_CALL void HardenFullString(const char *str)
-{
-    TODO_BY_THE_END_OF_MILESTONE0
-    hal::TerminalWriteString(str);
-}
-
 // ------------------------------------
 // Trace framework implementation
 // ------------------------------------
@@ -58,7 +48,7 @@ static struct TraceFramework {
 
     struct SmallTraceCyclicBuffer {
         static constexpr size_t kSize      = FeatureValue<FeatureFlag::kTraceBufferSize>;
-        static constexpr size_t kBatchSize = 256;
+        static constexpr size_t kBatchSize = 512;
 
         hal::Atomic32 bytes_left{.value = kSize};
         hal::Atomic32 head{};
@@ -266,7 +256,7 @@ static struct TraceFramework {
         SmallTraceCyclicBuffer &buffer, const size_t trace_size
     )
     {
-        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
+        const u8 nested_intrs = hardware::GetCoreLocalNestedInterrupts();
         const char *src       = nested_intrs == 0 ? single_core_env.main_execution_workspace
                                                   : single_core_env.interrupt_workspace[nested_intrs - 1];
 
@@ -275,7 +265,7 @@ static struct TraceFramework {
 
     char *GetWorkspaceSingleCoreInterrupts()
     {
-        const u8 nested_intrs = hardware::GetCoreLocalData().nested_interrupts;
+        const u8 nested_intrs = hardware::GetCoreLocalNestedInterrupts();
 
         if (nested_intrs == 0) {
             return single_core_env.main_execution_workspace;
@@ -412,7 +402,7 @@ int WriteTraceData(char *dst, TraceModule module, const TraceType type)
     }
 
     Sched::Pid pid{};
-    if (hal::GetCoreLocalData() != nullptr && hardware::GetCurrentTCB() != nullptr) {
+    if (hardware::GetCoreLocalTcb() != nullptr) {
         pid = hardware::GetRunningPid();
     }
 

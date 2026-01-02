@@ -2,6 +2,7 @@
 #define KERNEL_SRC_SCHEDULING_THREAD_HPP_
 
 #include <types.h>
+#include <array.hpp>
 #include <defines.hpp>
 
 #include "hal/tasks.hpp"
@@ -21,6 +22,14 @@ struct PACK ThreadFlags {
 };
 static_assert(sizeof(ThreadFlags) == 4);
 
+struct Task {
+    static constexpr size_t kMaxArgs = 6;
+
+    void *func;
+    std::array<u64, kMaxArgs> args;
+    size_t args_count;
+};
+
 struct Thread : hal::Thread {
     /* Management */
     Tid tid;
@@ -35,6 +44,11 @@ struct Thread : hal::Thread {
     void *kernel_stack_bottom;
     void *user_stack;
     void *user_stack_bottom;
+
+    /* Timing */
+    u64 kernel_time_ns;
+    u64 user_time_ns;
+    u64 timestamp;
 };
 }  // namespace Sched
 

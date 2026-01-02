@@ -15,13 +15,6 @@ struct Thread : ThreadAPI {
 
     u64 fs_base;
     u64 gs_base;
-
-    FORCE_INLINE_F void InitMem()
-    {
-        fs_base = 0;
-        gs_base = 0;
-        memset(fp_state, 0, sizeof(fp_state));
-    }
 };
 struct Process {
 };

@@ -35,7 +35,7 @@ Thread *Scheduler::Schedule()
     auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
     ASSERT_TRUE(static_cast<bool>(owner));
 
-    if (thread == hardware::GetCurrentTCB()) {
+    if (thread == hardware::GetCoreLocalTcb()) {
         return nullptr;
     }
 

@@ -41,7 +41,7 @@ constexpr const char *InstructionFetchDescription(bool instruction_fetch)
 }
 }  // namespace
 
-void *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
+Sched::Thread *PageFaultHandler(intr::LitExcEntry &, hal::ExceptionData *data)
 {
     ASSERT_NOT_NULL(data);
 

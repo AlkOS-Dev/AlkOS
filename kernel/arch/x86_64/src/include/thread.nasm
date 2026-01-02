@@ -14,4 +14,8 @@ struc Thread
     .kernel_stack_bottom: resq 1
     .user_stack:   resq 1
     .user_stack_bottom:   resq 1
+
+    .kernel_time_ns resq 1
+    .user_time_ns   resq 1
+    .timestamp      resq 1
 endstruc

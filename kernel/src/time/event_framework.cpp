@@ -6,7 +6,7 @@
 // statics
 // ------------------------------
 
-static void *TimerHandler(intr::LitHwEntry &)
+static Sched::Thread *TimerHandler(intr::LitHwEntry &)
 {
     return SchedulingModule::Get().GetScheduler().Schedule();
 }
