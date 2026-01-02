@@ -10,6 +10,7 @@
 #include "hal/panic.hpp"
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
+#include "trace_framework.hpp"
 
 #include <sys/video.h>
 #include "hardware/core_local.hpp"
@@ -45,7 +46,6 @@ NO_RET FORCE_INLINE_F void SysPanic(const char *msg)
  */
 FORCE_INLINE_F void SysCreateGraphicSession(GuiBufferInfo *user_info)
 {
-    // 1. Sanity check pointer (basic check)
     if (user_info == nullptr) {
         return;
     }
@@ -53,19 +53,18 @@ FORCE_INLINE_F void SysCreateGraphicSession(GuiBufferInfo *user_info)
     auto &wm = VideoModule::Get().GetWindowManager();
     auto &fb = VideoModule::Get().GetFramebuffer();
 
-    // 2. Create Session (Allocates PMM, Maps to VMM)
+    // Create Session (Allocates PMM, Maps to VMM)
     auto result = wm.CreateSession();
 
     if (result) {
-        // 3. Fill userspace struct
-        // Note: In a real OS, use copy_to_user to prevent kernel crashes on bad pointers
-        user_info->buffer_ptr = *result;  // The virtual address in User Space
+        // Fill userspace struct
+        user_info->buffer_ptr = *result;
 
         const auto fb_info = fb.GetInfo();
         user_info->width   = fb_info.width;
         user_info->height  = fb_info.height;
         user_info->pitch   = fb_info.pitch;
-        user_info->bpp     = 32;  // Assuming 32-bit based on NativePixel
+        user_info->bpp     = 32;
 
         user_info->format.red_pos         = fb_info.format.red_pos;
         user_info->format.red_mask_size   = fb_info.format.red_mask_size;
@@ -74,7 +73,6 @@ FORCE_INLINE_F void SysCreateGraphicSession(GuiBufferInfo *user_info)
         user_info->format.blue_pos        = fb_info.format.blue_pos;
         user_info->format.blue_mask_size  = fb_info.format.blue_mask_size;
     } else {
-        // Signal error (e.g., set buffer_ptr to null)
         user_info->buffer_ptr = nullptr;
     }
 }
@@ -85,9 +83,9 @@ FORCE_INLINE_F void SysCreateGraphicSession(GuiBufferInfo *user_info)
 FORCE_INLINE_F void SysBlit()
 {
     auto &wm = VideoModule::Get().GetWindowManager();
-    // Pid is implicitly the current running process
     auto pid = hardware::GetRunningPid();
 
+    DEBUG_INFO_GENERAL("SysBlit called by PID: %llu", pid);
     wm.Blit(pid);
 }
 

@@ -34,6 +34,5 @@ internal::VideoModule::VideoModule(const BootArguments &args, Heap &hp) noexcept
     Graphics::Painter p(screen, Framebuffer_.GetFormat());
     p.Clear(Graphics::Color::Black());
 
-    // Initialize WindowManager with the initialized Framebuffer
     WindowManager_.Init(Framebuffer_);
 }

@@ -16,13 +16,10 @@ extern "C" int main()
         return 1;
     }
 
-    // cast void* to something writable (assuming 32bpp / 4 bytes)
     u32 *fb = static_cast<u32 *>(info.buffer_ptr);
 
     u32 t = static_cast<u32>(time(NULL));
-    // Apply a bit-mixing hash (MurmurHash3 finalizer).
-    // This ensures that t and t+1 produce vastly different bit patterns,
-    // causing the color to jump drastically every second.
+
     t ^= t >> 16;
     t *= 0x85ebca6b;
     t ^= t >> 13;
@@ -31,15 +28,11 @@ extern "C" int main()
 
     int color_offset = static_cast<int>(t);
 
-    // Use pixel format info
     const auto &fmt = info.format;
 
     while (true) {
-        // Simple rendering pattern
         for (size_t y = 0; y < info.height; ++y) {
             for (size_t x = 0; x < info.width; ++x) {
-                // Calculate pixel index.
-                // Note: Pitch is in bytes, so we divide by 4 for u32 pointer arithmetic
                 size_t index = (y * (info.pitch / 4)) + x;
 
                 u8 r = (x + color_offset) & 0xFF;
@@ -59,7 +52,7 @@ extern "C" int main()
         // Blit to screen
         __platform_blit();
 
-        color_offset++;
+        color_offset += 1;
     }
 
     return 0;

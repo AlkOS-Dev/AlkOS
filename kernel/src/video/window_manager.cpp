@@ -51,6 +51,9 @@ std::expected<void *, Mem::MemError> WindowManager::CreateSession()
 
     // Switch focus to new app immediately
     SwitchSession(session_id);
+    DEBUG_INFO_GENERAL(
+        "CreateSession: Switched to session %zu. Active is now %zu", session_id, active_session_idx_
+    );
 
     page_guard.dismiss();
     return virt;
@@ -66,7 +69,10 @@ void WindowManager::SwitchSession(size_t index)
         return;
     }
 
-    DEBUG_INFO_GENERAL("Switching to Session %zu", index);
+    DEBUG_INFO_GENERAL(
+        "Switching Session: Old %zu -> New %zu (PID %llu)", active_session_idx_, index,
+        sessions_[index].owner_pid
+    );
     active_session_idx_ = index;
     RefreshScreen();
 }
@@ -94,10 +100,14 @@ void WindowManager::Blit(Sched::Pid pid)
     auto [session, target_idx] = FindSession(pid);
 
     if (!session) {
+        DEBUG_INFO_GENERAL("Blit skipped: No session for PID %llu", pid);
         return;
     }
 
     if (active_session_idx_ != target_idx) {
+        DEBUG_INFO_GENERAL(
+            "Blit skipped: Target %zu != Active %zu", target_idx, active_session_idx_
+        );
         // If not active, the data is safely sitting in the session.phys_buffer (RAM),
         // ready to be restored when the user switches back.
         return;

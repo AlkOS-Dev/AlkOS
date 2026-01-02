@@ -25,7 +25,7 @@ namespace Sched
 void TaskMgr::InitializeMultitasking()
 {
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
+    static constexpr size_t kNumKWorkers = 0;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -42,10 +42,9 @@ void TaskMgr::InitializeMultitasking()
     }
 
     // Spawn trace dumper
-    const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
-    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
+    // const auto result = SpawnKernelProcess("kworker-trace-dumper", {}, TraceDumperMain);
+    // R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
-    // Spawn hello world process
     const auto res1 = ExecuteElf64("/bin/gui_test", {});
     R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/hello process...");
 
