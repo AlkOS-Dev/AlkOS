@@ -23,6 +23,10 @@ enum SyscallNumber {
     /* Panic/Program termination */
     kSysPanic,
 
+    /* Video Syscalls */
+    kSysCreateGraphicSession,
+    kSysBlit,
+
     kSysMax,
 };
 

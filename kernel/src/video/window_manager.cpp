@@ -1,25 +1,28 @@
-#include "modules/window.hpp"
+#include "video/window_manager.hpp"
 
 #include <string.h>
-#include <cstddef>
 #include <template/scope_guard.hpp>
 
+#include "hardware/core_local.hpp"
+#include "modules/memory.hpp"
+#include "modules/scheduling.hpp"
 #include "trace_framework.hpp"
 
-namespace internal
+namespace Video
 {
 
 using namespace Mem;
 
-WindowModule::WindowModule() noexcept
+void WindowManager::Init(Framebuffer& fb)
 {
-    DEBUG_INFO_GENERAL("WindowModule Initialized. Active Session: 0 (Kernel)");
+    framebuffer_ = &fb;
+    DEBUG_INFO_GENERAL("WindowManager Initialized.");
 }
 
-std::expected<void *, Mem::MemError> WindowModule::CreateSession()
+std::expected<void*, Mem::MemError> WindowManager::CreateSession()
 {
-    auto &vmm = ::MemoryModule::Get().GetVmm();
-    auto &pmm = ::MemoryModule::Get().GetBuddyPmm();
+    auto& vmm = ::MemoryModule::Get().GetVmm();
+    auto& pmm = ::MemoryModule::Get().GetBuddyPmm();
     auto pid  = hardware::GetRunningPid();
 
     // Alloc the user buffer
@@ -36,10 +39,11 @@ std::expected<void *, Mem::MemError> WindowModule::CreateSession()
     // Map into User Space of the calling process
     auto proc_res = ::SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF(!proc_res, MemError::NotFound);
-    auto *proc = *proc_res;
+    auto* proc = *proc_res;
 
-    auto virt_res =
-        vmm.MapUserBackbuffer(proc->address_space, buffer.phys_buffer, buffer.size_bytes);
+    auto virt_res = vmm.MapUserBackbuffer(
+        proc->address_space, buffer.phys_buffer, buffer.size_bytes
+    );
     RET_UNEXPECTED_IF_ERR(virt_res);
     VPtr<void> virt = *virt_res;
 
@@ -53,9 +57,8 @@ std::expected<void *, Mem::MemError> WindowModule::CreateSession()
     return virt;
 }
 
-void WindowModule::SwitchSession(size_t index)
+void WindowManager::SwitchSession(size_t index)
 {
-    // Validate index (0 is kernel, 1..Size are user sessions)
     if (index >= sessions_.Size()) {
         return;
     }
@@ -69,20 +72,18 @@ void WindowModule::SwitchSession(size_t index)
     RefreshScreen();
 }
 
-void WindowModule::RefreshScreen()
+void WindowManager::RefreshScreen()
 {
-    if (active_session_idx_ == 0) {
-        // Kernel session is always drawing to the front buffer directly.
-        // We don't have a backbuffer for it to restore from currently.
+    if (active_session_idx_ == kInvalidSession || active_session_idx_ >= sessions_.Size()) {
         return;
     }
 
     // Restore User App
-    GraphicSession &session = sessions_[active_session_idx_];
+    GraphicSession& session = sessions_[active_session_idx_];
     BlitSession(session);
 }
 
-void WindowModule::Blit(Sched::Pid pid)
+void WindowManager::Blit(Sched::Pid pid)
 {
     // Find if this PID owns a session
     auto [session, target_idx] = FindSession(pid);
@@ -100,11 +101,12 @@ void WindowModule::Blit(Sched::Pid pid)
     BlitSession(*session);
 }
 
-std::expected<BufferInfo, Mem::MemError> WindowModule::AllocUserBuffer()
+std::expected<BufferInfo, Mem::MemError> WindowManager::AllocUserBuffer()
 {
-    auto &pmm = ::MemoryModule::Get().GetBuddyPmm();
+    auto& pmm = ::MemoryModule::Get().GetBuddyPmm();
 
-    size_t buffer_size = video_module_.GetFramebuffer().CalculateSize();
+    ASSERT_NOT_NULL(framebuffer_);
+    size_t buffer_size = framebuffer_->CalculateSize();
 
     u8 order      = Mem::BuddyPmm::SizeToPageOrder(buffer_size);
     auto phys_res = pmm.Alloc({.order = order});
@@ -113,12 +115,11 @@ std::expected<BufferInfo, Mem::MemError> WindowModule::AllocUserBuffer()
     return BufferInfo{.phys_buffer = *phys_res, .size_bytes = buffer_size};
 }
 
-size_t WindowModule::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
+size_t WindowManager::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
 {
     GraphicSession session;
     session.owner_pid   = pid;
-    session.phys_buffer = buffer.phys_buffer;
-    session.size_bytes  = buffer.size_bytes;
+    session.buffer_info = buffer;
     session.is_active   = false;
 
     sessions_.Push(session);
@@ -128,23 +129,24 @@ size_t WindowModule::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
     return session_id;
 }
 
-void WindowModule::BlitSession(const GraphicSession &session)
+void WindowManager::BlitSession(const GraphicSession& session)
 {
-    auto &screen = video_module_.GetFramebuffer().GetSurface();
+    ASSERT_NOT_NULL(framebuffer_);
+    auto& screen = framebuffer_->GetSurface();
 
     VPtr<void> vram_dst             = screen.GetRawBuffer();
-    const VPtr<void> backbuffer_src = Mem::PhysToVirt(session.phys_buffer);
-    memcpy(vram_dst, backbuffer_src, session.size_bytes);
+    const VPtr<void> backbuffer_src = Mem::PhysToVirt(session.buffer_info.phys_buffer);
+    memcpy(vram_dst, backbuffer_src, session.buffer_info.size_bytes);
 }
 
-std::tuple<GraphicSession *, size_t> WindowModule::FindSession(Sched::Pid pid)
+std::tuple<GraphicSession*, size_t> WindowManager::FindSession(Sched::Pid pid)
 {
     for (size_t i = 0; i < sessions_.Size(); ++i) {
         if (sessions_[i].owner_pid == pid) {
             return {&sessions_[i], i};
         }
     }
-    return {nullptr, 0};
+    return {nullptr, kInvalidSession};
 }
 
-}  // namespace internal
+}  // namespace Video

@@ -1,5 +1,6 @@
 #ifndef __ALKOS_KERNEL__
 
+#include <sys/video.h>
 #include "platform.h"
 #include "sys/calls.h"
 
@@ -15,5 +16,8 @@ DEFINE_SYSCALL(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t,
 DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
 
 DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
+
+DEFINE_SYSCALL_VOID(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info)
+DEFINE_SYSCALL_VOID(blit, kSysBlit)
 
 #endif  // __ALKOS_KERNEL__

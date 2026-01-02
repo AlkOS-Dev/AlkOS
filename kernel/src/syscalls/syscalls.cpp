@@ -23,6 +23,10 @@ constinit SyscallDispatchTable g_syscall_dispatch_table = []() consteval {
     // Panic syscall
     table.RegisterHandler<kSysPanic, SysPanic>();
 
+    // Video
+    table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
+    table.RegisterHandler<kSysBlit, SysBlit>();
+
     return table;
 }();
 

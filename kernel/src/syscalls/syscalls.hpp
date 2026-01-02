@@ -11,6 +11,10 @@
 #include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
 
+#include <sys/video.h>
+#include "hardware/core_local.hpp"
+#include "modules/video.hpp"
+
 #include <span.hpp>
 #include <sys/shell.hpp>
 
@@ -29,6 +33,62 @@ NO_RET FORCE_INLINE_F void SysPanic(const char *msg)
 {
     hal::KernelPanic(msg);
     __builtin_unreachable();
+}
+
+// ------------------------------
+// Video Syscalls
+// ------------------------------
+
+/**
+ * @brief Registers the current process as a graphics app, allocates a buffer,
+ * maps it to userspace, and fills the info struct.
+ */
+FORCE_INLINE_F void SysCreateGraphicSession(GuiBufferInfo *user_info)
+{
+    // 1. Sanity check pointer (basic check)
+    if (user_info == nullptr) {
+        return;
+    }
+
+    auto &wm = VideoModule::Get().GetWindowManager();
+    auto &fb = VideoModule::Get().GetFramebuffer();
+
+    // 2. Create Session (Allocates PMM, Maps to VMM)
+    auto result = wm.CreateSession();
+
+    if (result) {
+        // 3. Fill userspace struct
+        // Note: In a real OS, use copy_to_user to prevent kernel crashes on bad pointers
+        user_info->buffer_ptr = *result;  // The virtual address in User Space
+
+        const auto fb_info = fb.GetInfo();
+        user_info->width   = fb_info.width;
+        user_info->height  = fb_info.height;
+        user_info->pitch   = fb_info.pitch;
+        user_info->bpp     = 32;  // Assuming 32-bit based on NativePixel
+
+        user_info->format.red_pos         = fb_info.format.red_pos;
+        user_info->format.red_mask_size   = fb_info.format.red_mask_size;
+        user_info->format.green_pos       = fb_info.format.green_pos;
+        user_info->format.green_mask_size = fb_info.format.green_mask_size;
+        user_info->format.blue_pos        = fb_info.format.blue_pos;
+        user_info->format.blue_mask_size  = fb_info.format.blue_mask_size;
+    } else {
+        // Signal error (e.g., set buffer_ptr to null)
+        user_info->buffer_ptr = nullptr;
+    }
+}
+
+/**
+ * @brief Copies the current process's backbuffer to the physical screen
+ */
+FORCE_INLINE_F void SysBlit()
+{
+    auto &wm = VideoModule::Get().GetWindowManager();
+    // Pid is implicitly the current running process
+    auto pid = hardware::GetRunningPid();
+
+    wm.Blit(pid);
 }
 
 // ------------------------------

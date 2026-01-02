@@ -1,18 +1,20 @@
-#ifndef KERNEL_SRC_MODULES_WINDOW_HPP_
-#define KERNEL_SRC_MODULES_WINDOW_HPP_
+#ifndef KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_
+#define KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_
 
 #include <data_structures/array_structures.hpp>
 #include <expected.hpp>
-#include <template_lib.hpp>
 #include <tuple.hpp>
+#include <types.hpp>
 
-#include "modules/helpers.hpp"
-#include "modules/memory.hpp"
-#include "modules/scheduling.hpp"
-#include "modules/video.hpp"
+#include "drivers/video/framebuffer.hpp"
+#include "mem/types.hpp"
+#include "mem/page.hpp"
+#include "scheduling/process.hpp"
 
-namespace internal
+namespace Video
 {
+
+using Drivers::Video::Framebuffer;
 
 struct BufferInfo {
     Mem::PPtr<Mem::Page> phys_buffer;
@@ -25,18 +27,18 @@ struct GraphicSession {
 
     /// The backing store (Physical RAM)
     /// Kernel accesses this via Mem::PhysToVirt to copy to VRAM
-    Mem::PPtr<void> phys_buffer;
-    size_t size_bytes;
+    BufferInfo buffer_info;
 };
 
-class WindowModule : template_lib::StaticSingletonHelper
+class WindowManager
 {
-    protected:
-    WindowModule() noexcept;
-
     public:
+    WindowManager() = default;
+
+    void Init(Framebuffer& fb);
+
     /// Called by Syscall: Allocates a buffer, maps it to user, registers session
-    std::expected<void *, Mem::MemError> CreateSession();
+    std::expected<void*, Mem::MemError> CreateSession();
 
     /// Called by Syscall: If the caller is the active session, copy buffer to VRAM
     void Blit(Sched::Pid pid);
@@ -44,27 +46,21 @@ class WindowModule : template_lib::StaticSingletonHelper
     /// Switches screen to a specific session
     void SwitchSession(size_t index);
 
-    /// Returns true if the kernel console (Session 0) should be visible
-    bool IsKernelSessionActive() const { return active_session_idx_ == 0; }
-
     private:
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();
     size_t RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
-    void BlitSession(const GraphicSession &session);
-    std::tuple<GraphicSession *, size_t> FindSession(Sched::Pid pid);
-
+    void BlitSession(const GraphicSession& session);
+    std::tuple<GraphicSession*, size_t> FindSession(Sched::Pid pid);
     void RefreshScreen();
 
     static constexpr size_t kMaxSessions = 12;
+    static constexpr size_t kInvalidSession = size_t(-1);
     data_structures::StaticVector<GraphicSession, kMaxSessions> sessions_;
 
-    size_t active_session_idx_{0};
-
-    internal::VideoModule &video_module_;
+    size_t active_session_idx_{kInvalidSession};
+    Framebuffer* framebuffer_{nullptr};
 };
 
-}  // namespace internal
+}  // namespace Video
 
-using WindowModule = template_lib::StaticSingleton<internal::WindowModule>;
-
-#endif  // KERNEL_SRC_MODULES_WINDOW_HPP_
+#endif  // KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_

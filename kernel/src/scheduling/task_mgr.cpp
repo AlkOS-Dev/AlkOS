@@ -46,7 +46,7 @@ void TaskMgr::InitializeMultitasking()
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn hello world process
-    const auto res = ExecuteElf64("/bin/hello", {});
+    const auto res = ExecuteElf64("/bin/gui_test", {});
     R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/hello process...");
 }
 

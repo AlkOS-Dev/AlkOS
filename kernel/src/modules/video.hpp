@@ -6,6 +6,7 @@
 #include "boot_args.hpp"
 #include "drivers/video/framebuffer.hpp"
 #include "modules/helpers.hpp"
+#include "video/window_manager.hpp"
 
 namespace internal
 {
@@ -15,10 +16,9 @@ class VideoModule : template_lib::StaticSingletonHelper
     protected:
     explicit VideoModule(const BootArguments &args, Mem::Heap &hp) noexcept;
 
-    DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
-
     public:
-    // Wrappers removed as per request. Use GetFramebuffer() to access Framebuffer object.
+    DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
+    DEFINE_MODULE_FIELD(Video, WindowManager);
 };
 
 }  // namespace internal
