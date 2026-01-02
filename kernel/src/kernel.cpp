@@ -30,12 +30,6 @@ static void KernelRun()
 
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
-    // Spawn FD hierarchy dumper
-    R_ASSERT_TRUE(
-        task_mgr.SpawnKernelProcess("fd-hierarchy-dumper", {}, Sched::FdHierarchyDumperMain),
-        "Failed to spawn FD hierarchy dumper process..."
-    );
-
     // Spawn hello world process
     R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
 
