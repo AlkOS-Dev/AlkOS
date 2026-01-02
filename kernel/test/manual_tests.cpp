@@ -28,7 +28,7 @@ static void Task0()
             hal::Noop();
         }
 
-        const auto tcb = hardware::GetCurrentTCB();
+        const auto tcb = hardware::GetCoreLocalTcb();
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
         hal::ContextSwitch(tcb->next);
@@ -48,7 +48,7 @@ static void Task1()
             hal::Noop();
         }
 
-        const auto tcb = hardware::GetCurrentTCB();
+        const auto tcb = hardware::GetCoreLocalTcb();
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
