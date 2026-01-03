@@ -105,7 +105,7 @@ inline constexpr fd_t kStderrFd = kFdStdErr;
  * @brief File represents a file in filesystem
  *
  */
-class File : public data_structures::RefCounted<File, true>
+class File : public data_structures::RefCounted<File>
 {
     friend class FileTable;
 
