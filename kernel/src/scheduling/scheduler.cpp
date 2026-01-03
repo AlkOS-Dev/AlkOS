@@ -1,7 +1,6 @@
 #include "scheduling/scheduler.hpp"
 
 #include "autogen/feature_flags.h"
-#include "hal/scheduling.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
@@ -46,33 +45,41 @@ Thread *Scheduler::Schedule()
     }
 
     // TODO: IDLE
-    // TODO: self pick
     return nullptr;
 }
+
+Thread *Scheduler::ScheduleAndUpdateThreads()
+{
+    const auto thread = Schedule();
+    ASSERT_EQ(thread->state, ThreadState::kReady);
+    thread->state = ThreadState::kRunning;
+
+    ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+    hardware::GetCoreLocalTcb()->state = ThreadState::kReady;
+    AddReadyThread(hardware::GetCoreLocalTcb());
+
+    return thread;
+}
+
 void Scheduler::Yield()
 {
-    auto thread = Schedule();
-
-    if (thread != nullptr) {
-        hal::ContextSwitch(thread);
-    }
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    YieldUnguarded();
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 }
 
 void Scheduler::ConvertToScheduling()
 {
-    // HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-    //
-    // static constexpr u64 kPeriodicTime1Ms = kNanosInSecond / 1'000;
-    // TimingModule::Get().GetEventFramework().SetupPeriodic(kPeriodicTime1Ms);
-    //
-    // ASSERT_NOT_NULL(threads_);
-    //
-    // auto thread = GetNext_();
-    // ASSERT_NOT_NULL(thread);
-    //
-    // auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    // ASSERT_TRUE(static_cast<bool>(owner));
-    //
-    // hal::ConvertContext(thread);
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+    static constexpr u64 kPeriodicTime1Ms = kNanosInSecond / 1'000;
+    TimingModule::Get().GetEventFramework().SetupPeriodic(kPeriodicTime1Ms);
+
+    const auto thread = Schedule();
+    ASSERT_EQ(thread->state, ThreadState::kReady);
+    thread->state = ThreadState::kRunning;
+
+    hal::ConvertContext(thread);
 }
 }  // namespace Sched

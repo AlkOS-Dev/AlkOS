@@ -83,6 +83,7 @@ void UpdateTcbOnInterruptExit(Thread *thread)
     const auto current_thread = hardware::GetCoreLocalTcb();
 
     if (!current_thread) {
+        ASSERT_NULL(thread);
         return;
     }
 
@@ -92,7 +93,14 @@ void UpdateTcbOnInterruptExit(Thread *thread)
     current_thread->num_context_switches++;
 
     if (thread) {
+        /* Context Switch occurs */
         thread->timestamp = t;
+
+        ASSERT_EQ(current_thread->state, ThreadState::kReady);
+        ASSERT_EQ(thread->state, ThreadState::kRunning);
+    } else {
+        /* No context switch occurred */
+        ASSERT_EQ(current_thread->state, ThreadState::kRunning);
     }
 }
 

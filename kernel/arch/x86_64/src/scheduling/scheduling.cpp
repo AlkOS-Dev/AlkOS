@@ -8,8 +8,6 @@
 #include "modules/timing.hpp"
 #include "scheduling/thread.hpp"
 
-#include <hal/debug_terminal.hpp>
-
 // ------------------------------
 // statics
 // ------------------------------
@@ -110,6 +108,9 @@ FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
 
 extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
 {
+    ASSERT_NOT_NULL(thread);
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+
     SetNextThreadFs(thread);
     LoadFpStateIfNeeded(thread);
     hardware::SetCoreLocalTcb(thread);
@@ -142,6 +143,9 @@ extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
+
     const auto current_tcb = hardware::GetCoreLocalTcb();
     DumpFpStateIfNeeded(current_tcb);
 
@@ -169,6 +173,9 @@ extern "C" void cdecl_ContextSwitchEntry(
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
+
     const auto current_tcb = hardware::GetCoreLocalTcb();
     DumpFpStateIfNeeded(current_tcb);
 

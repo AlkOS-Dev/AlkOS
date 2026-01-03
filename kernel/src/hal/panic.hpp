@@ -29,7 +29,8 @@ WRAP_CALL void KernelPanic(const char *msg)
     TerminalWriteString(msg);
     TerminalWriteString("\n");
 
-    arch::KernelPanic();
+    OsHangNoInterrupts();
+    // arch::KernelPanic();
 }
 
 template <typename... Args>

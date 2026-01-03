@@ -3,10 +3,13 @@
 
 #include <array.hpp>
 #include <defines.hpp>
+#include <hardware/core_mask.hpp>
 
 #include "policy.hpp"
 #include "thread.hpp"
 
+#include "hal/scheduling.hpp"
+#include "hardware/core_local.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
 
@@ -31,7 +34,11 @@ class Scheduler
 
     Thread *Schedule();
 
+    Thread *ScheduleAndUpdateThreads();
+
     void Yield();
+
+    FORCE_INLINE_F void YieldUnguarded() { hal::ContextSwitch(ScheduleAndUpdateThreads()); }
 
     void ConvertToScheduling();
 
