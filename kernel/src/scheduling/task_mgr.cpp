@@ -31,7 +31,7 @@ void TaskMgr::InitializeMultitasking()
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
+    static constexpr size_t kNumKWorkers = 0;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -47,6 +47,15 @@ void TaskMgr::InitializeMultitasking()
             "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
+
+    const auto res1 = ExecuteElf64("/bin/gui_test", {});
+    R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/hello process...");
+
+    for (volatile size_t i = 0; i < 1'000'000; i = i + 1) {
+    }
+
+    const auto res2 = ExecuteElf64("/bin/gui_test", {});
+    R_ASSERT_TRUE(static_cast<bool>(res2), "Failed to spawn /bin/hello process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
