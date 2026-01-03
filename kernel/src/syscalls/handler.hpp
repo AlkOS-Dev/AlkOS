@@ -58,6 +58,12 @@ struct span_element_type<std::span<T, Extent>> {
 
 template <typename T>
 using span_element_type_t = span_element_type<T>::type;
+
+template <typename T>
+concept ConstructibleFromCString = requires(const char *str) {
+    { T(str) };
+};
+
 }  // namespace internal
 
 template <typename T>
@@ -65,8 +71,9 @@ concept SyscallRetType = std::is_integral_v<T> || std::is_pointer_v<T> || std::i
                          internal::is_expected_v<T>;
 
 template <typename T>
-concept SyscallArgType = std::is_integral_v<T> || std::is_pointer_v<T> || std::is_enum_v<T> ||
-                         std::is_reference_v<T> || internal::is_span_v<T>;
+concept SyscallArgType =
+    std::is_integral_v<T> || std::is_pointer_v<T> || std::is_enum_v<T> || std::is_reference_v<T> ||
+    internal::is_span_v<T> || internal::ConstructibleFromCString<std::remove_cvref_t<T>>;
 
 template <auto TargetFunc>
 class SyscallWrapper
@@ -126,14 +133,28 @@ class SyscallWrapper
         if constexpr (internal::is_span_v<T>) {
             // Span needs two consecutive registers: pointer and size
             using ElemType = internal::span_element_type_t<T>;
-            auto *ptr      = reinterpret_cast<ElemType *>(GetRawArg<RegIdx>(args));
-            auto size      = GetRawArg<RegIdx + 1>(args);
+
+            auto *ptr = reinterpret_cast<ElemType *>(GetRawArg<RegIdx>(args));
+            auto size = GetRawArg<RegIdx + 1>(args);
+
             return T(ptr, size);
         } else if constexpr (std::is_pointer_v<T>) {
             return reinterpret_cast<T>(GetRawArg<RegIdx>(args));
         } else if constexpr (std::is_reference_v<T>) {
             using BaseType = std::remove_reference_t<T>;
-            return *reinterpret_cast<BaseType *>(GetRawArg<RegIdx>(args));
+
+            if constexpr (internal::ConstructibleFromCString<BaseType>) {
+                // Special case: reference to type constructible from const char*
+                auto str                 = reinterpret_cast<const char *>(GetRawArg<RegIdx>(args));
+                static BaseType temp_obj = BaseType(str);
+                return temp_obj;
+            } else {
+                return *reinterpret_cast<BaseType *>(GetRawArg<RegIdx>(args));
+            }
+        } else if constexpr (internal::ConstructibleFromCString<T>) {
+            // Direct construction from const char* (e.g., vfs::Path from const char*)
+            auto str = reinterpret_cast<const char *>(GetRawArg<RegIdx>(args));
+            return T(str);
         } else {
             return static_cast<T>(GetRawArg<RegIdx>(args));
         }

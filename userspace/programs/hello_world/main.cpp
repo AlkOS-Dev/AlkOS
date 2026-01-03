@@ -8,18 +8,14 @@ extern "C" int main()
         "----------------------------------\n"
     );
 
-    printf("Formatting Test: %d + %d = %d\n", 2, 2, 4);
-
-    char buffer[64]{};
     FILE *fp = fopen("/docs/greet.txt", "r+");
     if (!fp) {
         printf("Failed to open /docs/greet.txt for reading!\n");
         return 1;
     }
 
-    int len        = snprintf(buffer, sizeof(buffer), "Hello AlkOS from User Space!");
-    size_t written = fwrite(buffer, 1, len, fp);
-    if (written != static_cast<size_t>(len)) {
+    int written = fprintf(fp, "Hello AlkOS from User Space!");
+    if (written < 0) {
         printf("Failed to write to /docs/greet.txt!\n");
         fclose(fp);
         return 1;
@@ -31,6 +27,7 @@ extern "C" int main()
         return 1;
     }
 
+    char buffer[128];
     size_t bytes_read = fread(buffer, 1, sizeof(buffer) - 1, fp);
     if (bytes_read == 0 && ferror(fp)) {
         printf("Failed to read from /docs/greet.txt!\n");

@@ -29,7 +29,7 @@ class FileTable;
 // ------------------------------
 
 enum class FdError {
-    kInvalidFd,
+    kInvalidFd = 1,
     kFdTableFull,
     kBadFileDescriptor,
     kNotOpen,

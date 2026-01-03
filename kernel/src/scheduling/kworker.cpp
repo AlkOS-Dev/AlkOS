@@ -40,94 +40,30 @@ void Sched::TraceDumperMain()
     }
 }
 
-void Sched::FdHierarchyDumperMain()
+void Sched::StdoutTracerMain(Pid pid)
 {
-    TRACE_INFO_SCHEDULING("Created new FdHierarchyDumper!");
+    TRACE_INFO_SCHEDULING("Created new StdoutTracer!");
 
+    // Find the hello_world process
+    auto &processes = SchedulingModule::Get().GetProcesses();
+    auto res        = processes.GetProcess(pid);
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to find hello_world process for tracing...");
+    auto *hello_process = res.value();
+
+    // Read from the stdout pipe and write to terminal
+    byte buffer[256];
     while (true) {
-        DEBUG_INFO_VFS("===== Three-Way FD Hierarchy Debug Info =====");
+        auto result = hello_process->stdout_pipe.Read(std::span<byte>(buffer, sizeof(buffer)));
 
-        auto &fd_manager      = VfsModule::Get().GetFdManager();
-        auto &file_table      = fd_manager.GetFileTable();
-        auto &open_file_table = fd_manager.GetOpenFileTable();
-
-        DEBUG_INFO_VFS("");
-        DEBUG_INFO_VFS("Level 1: Global File Table (Files system-wide)");
-        DEBUG_INFO_VFS("------------------------------------------------");
-
-        size_t file_count = 0;
-        for (size_t i = 0; i < Fs::kMaxActiveFiles; ++i) {
-            const Fs::File *file = file_table.GetFile(i);
-            if (file != nullptr && file->HasRefs()) {
-                DEBUG_INFO_VFS(
-                    "  File[%zu]: path='%s', size=%llu, mode=0x%08X, ref_count=%u", i,
-                    file->path.CString(), file->size, file->mode, file->GetRefCount()
-                );
-                file_count++;
+        if (result.has_value()) {
+            size_t bytes_read = result.value();
+            if (bytes_read > 0) {
+                size_t safe_size =
+                    bytes_read < sizeof(buffer) - 1 ? bytes_read : sizeof(buffer) - 1;
+                buffer[safe_size] = '\0';
+                hal::TerminalWriteString(reinterpret_cast<const char *>(buffer));
             }
         }
-        DEBUG_INFO_VFS("  Total active files: %zu", file_count);
-
-        DEBUG_INFO_VFS("");
-        DEBUG_INFO_VFS("Level 2: Global Open File Table (Open entries system-wide)");
-        DEBUG_INFO_VFS("----------------------------------------------------------");
-
-        size_t open_file_count = 0;
-        for (size_t i = 0; i < Fs::kMaxOpenFiles; ++i) {
-            const Fs::OpenFileEntry *entry = open_file_table.GetEntry(i);
-            if (entry != nullptr && entry->HasRefs()) {
-                const char *type_str = entry->IsFile() ? "File" : "Pipe";
-                DEBUG_INFO_VFS(
-                    "  OpenFile[%zu]: type=%s, flags=0x%08X, offset=%llu, ref_count=%u, "
-                    "is_append=%s",
-                    i, type_str, entry->flags, entry->offset, entry->GetRefCount(),
-                    entry->is_append ? "true" : "false"
-                );
-                open_file_count++;
-            }
-        }
-        DEBUG_INFO_VFS("  Total open file entries: %zu", open_file_count);
-
-        DEBUG_INFO_VFS("");
-        DEBUG_INFO_VFS("Level 3: Process FD Tables (Per-process file descriptors)");
-        DEBUG_INFO_VFS("-----------------------------------------------------------");
-
-        auto &processes      = SchedulingModule::Get().GetProcesses();
-        size_t total_fds     = 0;
-        size_t process_count = 0;
-
-        for (size_t pid = 0; pid < kMaxProcesses; ++pid) {
-            Pid current_pid;
-            current_pid.id    = static_cast<u16>(pid);
-            current_pid.count = 0;
-
-            auto process = processes.GetProcess(current_pid);
-            if (process && process.value()->fd_table != nullptr) {
-                Fs::FdTable *fd_table = process.value()->fd_table;
-                DEBUG_INFO_VFS(
-                    "  Process %s (pid=%zu): open_count=%zu", process.value()->name, pid,
-                    fd_table->GetOpenCount()
-                );
-
-                size_t process_fds = 0;
-                for (size_t fd = 0; fd < Fs::kMaxFdsPerProcess; ++fd) {
-                    Fs::OpenFileEntry *entry = fd_table->Get(fd);
-                    if (entry != nullptr) {
-                        const char *type_str = entry->IsFile() ? "File" : "Pipe";
-                        DEBUG_INFO_VFS("    fd=%zu -> type=%s, open_entry@%p", fd, type_str, entry);
-                        process_fds++;
-                    }
-                }
-                total_fds += process_fds;
-                process_count++;
-            }
-        }
-        DEBUG_INFO_VFS("  Total processes with FD tables: %zu", process_count);
-        DEBUG_INFO_VFS("  Total file descriptors across all processes: %zu", total_fds);
-
-        DEBUG_INFO_VFS("");
-        DEBUG_INFO_VFS("===== End of FD Hierarchy Debug Info =====");
-        DEBUG_INFO_VFS("");
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         SchedulingModule::Get().GetScheduler().Yield();
