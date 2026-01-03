@@ -41,7 +41,7 @@ struct Policy {
 
 struct PolicyImpl {
     NODISCARD Thread *PickNextTask() { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
-    void AddTask(Thread *thread) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
+    void AddTask(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
 };
 
 template <class T>

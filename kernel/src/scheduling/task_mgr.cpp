@@ -266,12 +266,12 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     return std::make_tuple(process.value(), thread.value());
 }
 
-std::expected<void, Error> TaskMgr::CommitMurder(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitThread(Tid tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
 }  // namespace Sched

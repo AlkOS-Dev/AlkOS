@@ -18,7 +18,7 @@ FAST_CALL void SetThreadGs(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    cpu::SetMSR(arch::kIa32GsKernelBase, thread->gs_base);
+    cpu::SetMSR(arch::kIa32GsKernelBase, thread->arch_data.gs_base);
 }
 
 FAST_CALL void DumpFpStateIfNeeded(Sched::Thread *thread)
@@ -26,7 +26,7 @@ FAST_CALL void DumpFpStateIfNeeded(Sched::Thread *thread)
     ASSERT_NOT_NULL(thread);
 
     if (thread->flags.PreserveFloats) {
-        u8 *mem = thread->fp_state;
+        u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xsave64 %0" : "=m"(*mem) : "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");
     }
@@ -37,7 +37,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
     ASSERT_NOT_NULL(thread);
 
     if (thread->flags.PreserveFloats) {
-        u8 *mem = thread->fp_state;
+        u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xrstor64 %0" : : "m"(*mem), "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");
     }
@@ -49,7 +49,7 @@ FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    cpu::SetMSR(arch::kIa32FsBase, thread->fs_base);
+    cpu::SetMSR(arch::kIa32FsBase, thread->arch_data.fs_base);
 }
 
 FAST_CALL void SwapGsIfJumpingToUserspace(Sched::Thread *thread)
@@ -84,8 +84,8 @@ FAST_CALL void SwapFsIfNeeded(Sched::Thread *current_tcb, Sched::Thread *next_tc
     ASSERT_NOT_NULL(current_tcb);
     ASSERT_NOT_NULL(next_tcb);
 
-    if (current_tcb->fs_base != next_tcb->fs_base) {
-        cpu::SetMSR(arch::kIa32FsBase, next_tcb->fs_base);
+    if (current_tcb->arch_data.fs_base != next_tcb->arch_data.fs_base) {
+        cpu::SetMSR(arch::kIa32FsBase, next_tcb->arch_data.fs_base);
     }
 }
 

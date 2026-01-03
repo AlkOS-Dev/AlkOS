@@ -28,7 +28,7 @@
     if (!(expr)) [[unlikely]] { \
         __ASSERT_FAIL(expr);    \
     }
-#define R_FAIL_ALWAYS(msg) __ASSERT_FAIL(false && msg)
+#define R_FAIL_ALWAYS(msg) __ASSERT_FAIL(false && msg) __builtin_unreachable();
 
 #define assert(expr) ASSERT(expr)
 

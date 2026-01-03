@@ -81,6 +81,16 @@ class IntrusiveList : template_lib::NoCopy
         return item;
     }
 
+    NODISCARD FORCE_INLINE_F T *Front() { return head_; }
+
+    NODISCARD FORCE_INLINE_F T *Back()
+    {
+        if (IsEmpty()) {
+            return nullptr;
+        }
+        return tail_;
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -188,6 +198,10 @@ class IntrusiveDoubleList : template_lib::NoCopy
         item->next = nullptr;
         return item;
     }
+
+    NODISCARD FORCE_INLINE_F T *Front() { return head_; }
+
+    NODISCARD FORCE_INLINE_F T *Back() { return tail_; }
 
     // ------------------------------
     // Private methods
