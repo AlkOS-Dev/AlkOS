@@ -8,17 +8,27 @@
 
 namespace Sched
 {
+Scheduler::Scheduler()
+{
+    policies_[static_cast<size_t>(SchedulingPolicy::kUberTask_PQ_P0)] =
+        PreparePolicy<PriorityQueuePolicy>(&policy0_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kDrivers_PQ_P1)] =
+        PreparePolicy<PriorityQueuePolicy>(&policy1_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kUrgentTasks_PQ_P2)] =
+        PreparePolicy<PriorityQueuePolicy>(&policy2_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_RR_P3)] =
+        PreparePolicy<RoundRobinPolicy>(&policy3_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
+        PreparePolicy<RoundRobinPolicy>(&policy4_);
+}
+
 void Scheduler::AddReadyThread(Thread *thread)
 {
-    // if (threads_ == nullptr) {
-    //     threads_     = thread;
-    //     thread->next = thread;
-    //     return;
-    // }
-    //
-    // thread->next   = threads_->next;
-    // threads_->next = thread;
-    // threads_       = thread;
+    const auto idx = static_cast<size_t>(thread->flags.policy);
+    ASSERT_LT(idx, static_cast<size_t>(SchedulingPolicy::kLast));
+
+    const auto policy = policies_[idx];
+    policy.cbs.add_task(policy.self, thread);
 }
 
 Thread *Scheduler::Schedule()
@@ -28,7 +38,7 @@ Thread *Scheduler::Schedule()
     }
 
     for (const auto &policy : policies_) {
-        if (const auto thread = policy.cbs.pick_thread(policy.self)) {
+        if (const auto thread = policy.cbs.pick_next_task(policy.self)) {
             return thread;
         }
     }

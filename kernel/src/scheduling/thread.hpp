@@ -6,21 +6,14 @@
 #include <defines.hpp>
 
 #include "hal/tasks.hpp"
+#include "policy.hpp"
 #include "process.hpp"
 
 namespace Sched
 {
-
-struct PACK Tid {
-    u16 id;
-    u64 count : 48;
-};
-
-struct PACK ThreadFlags {
-    bool PreserveFloats : 1;
-    u64 padding : 63;
-};
-static_assert(sizeof(ThreadFlags) == 8);
+// ------------------------------
+// Task
+// ------------------------------
 
 struct Task {
     static constexpr size_t kMaxArgs = 6;
@@ -30,11 +23,37 @@ struct Task {
     size_t args_count;
 };
 
+// ------------------------------
+// Thread
+// ------------------------------
+
+struct PACK Tid {
+    u16 id;
+    u64 count : 48;
+};
+
+struct PACK ThreadFlags {
+    bool PreserveFloats : 1;
+    SchedulingPolicy policy : 8;
+    u64 padding : 55;
+};
+static_assert(sizeof(ThreadFlags) == 8);
+
+enum class ThreadState : u64 {
+    kReady = 0,
+    kRunning,
+    kBlocked,
+    kTerminated,
+    kLast,
+};
+static_assert(sizeof(ThreadState) == sizeof(u64));
+
 struct Thread : hal::Thread {
     /* Management */
     Tid tid;
     Pid owner;
     ThreadFlags flags;
+    ThreadState state;
 
     /* Scheduler data */
     Thread *next;

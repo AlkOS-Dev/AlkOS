@@ -7,6 +7,9 @@
 #include "policy.hpp"
 #include "thread.hpp"
 
+#include "policies/priority_queue_policy.hpp"
+#include "policies/round_robin_policy.hpp"
+
 namespace Sched
 {
 
@@ -17,7 +20,7 @@ class Scheduler
     // Class creation
     // ------------------------------
 
-    Scheduler()  = default;
+    Scheduler();
     ~Scheduler() = default;
 
     // ------------------------------
@@ -41,6 +44,14 @@ class Scheduler
     // Class fields
     // ------------------------------
 
+    // Policies
+    PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
+    PriorityQueuePolicy policy1_{};  // kDrivers_PQ_P1
+    PriorityQueuePolicy policy2_{};  // kUrgentTasks_PQ_P2
+    RoundRobinPolicy policy3_{};     // kNormalTasks_RR_P3
+    RoundRobinPolicy policy4_{};     // kBackgroundTasks_RR_P4
+
+    // Abstraction
     std::array<Policy, static_cast<size_t>(SchedulingPolicy::kLast)> policies_{};
 };
 }  // namespace Sched
