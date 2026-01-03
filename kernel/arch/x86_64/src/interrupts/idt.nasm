@@ -137,7 +137,7 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     call cdecl_UpdateTcbOnSyscallEntry
 
     ; Get pointer to syscall_dispatch_table and dispatch
-    mov qword rax, [rsp + _rax]
+    pop_sysv_regs
     call qword [rel g_syscall_dispatch_table + rax*8]
     mov qword [rsp + _rax], rax
     jmp .return
