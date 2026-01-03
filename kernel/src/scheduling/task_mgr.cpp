@@ -104,6 +104,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
 
     flags.PreserveFloats = process.value()->flags.PreserveFloats;
     flags.policy         = SchedulingPolicy::kNormalTasks_RR_P3;
+    flags.priority       = 0;
 
     return SpawnThread(process.value(), flags, task);
 }
