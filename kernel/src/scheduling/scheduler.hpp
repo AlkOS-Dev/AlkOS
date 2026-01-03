@@ -9,6 +9,7 @@
 #include "thread.hpp"
 
 #include "hal/scheduling.hpp"
+#include "hal/spinlock.hpp"
 #include "hardware/core_local.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
@@ -50,6 +51,10 @@ class Scheduler
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    // Locking
+    hal::Spinlock spinlock_{};
+    OPTIONAL_FIELD(FeatureEnabled<FeatureFlag::kDebugSpinlock>, u64) local_lock_ {};
 
     // Policies
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
