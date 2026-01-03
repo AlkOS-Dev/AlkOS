@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_VFS_IO_IN_MEMORY_HPP_
-#define KERNEL_SRC_VFS_IO_IN_MEMORY_HPP_
+#ifndef KERNEL_SRC_FS_VFS_IO_IN_MEMORY_HPP_
+#define KERNEL_SRC_FS_VFS_IO_IN_MEMORY_HPP_
 
 #include <string.h>
 #include <fs/vfs/interface.hpp>
@@ -101,4 +101,4 @@ static_assert(VFSIO<InMemory>, "InMemory does not implement VFSIO");
 
 }  // namespace vfs::io
 
-#endif  // KERNEL_SRC_VFS_IO_IN_MEMORY_HPP_
+#endif  // KERNEL_SRC_FS_VFS_IO_IN_MEMORY_HPP_

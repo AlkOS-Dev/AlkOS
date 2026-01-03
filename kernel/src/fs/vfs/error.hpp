@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_VFS_ERROR_HPP_
-#define KERNEL_SRC_VFS_ERROR_HPP_
+#ifndef KERNEL_SRC_FS_VFS_ERROR_HPP_
+#define KERNEL_SRC_FS_VFS_ERROR_HPP_
 
 #include <expected.hpp>
 
@@ -30,4 +30,4 @@ using Result = std::expected<T, VfsError>;
 
 }  // namespace vfs
 
-#endif  // KERNEL_SRC_VFS_ERROR_HPP_
+#endif  // KERNEL_SRC_FS_VFS_ERROR_HPP_

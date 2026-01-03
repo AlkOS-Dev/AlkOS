@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_VFS_TYPES_HPP_
-#define KERNEL_SRC_VFS_TYPES_HPP_
+#ifndef KERNEL_SRC_FS_VFS_TYPES_HPP_
+#define KERNEL_SRC_FS_VFS_TYPES_HPP_
 
 #include <types.h>
 #include <data_structures/critbit_tree.hpp>
@@ -183,4 +183,4 @@ using Mounts = data_structures::CritBitTree<MountPoint>;
 
 }  // namespace vfs
 
-#endif  // KERNEL_SRC_VFS_TYPES_HPP_
+#endif  // KERNEL_SRC_FS_VFS_TYPES_HPP_

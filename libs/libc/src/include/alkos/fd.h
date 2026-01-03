@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_FD_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_FD_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_FD_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_FD_H_
 
 typedef int fd_t;
 
@@ -21,4 +21,4 @@ typedef enum { kFdBufferNone = 0, kFdBufferLine = 1, kFdBufferFull = 2 } FdBuffe
 
 typedef enum { kFdSeekSet = 0, kFdSeekCurrent = 1, kFdSeekEnd = 2 } FdSeek;
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_FD_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_FD_H_

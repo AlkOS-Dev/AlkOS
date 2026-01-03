@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_VFS_FAT_FAT16_HPP_
-#define KERNEL_SRC_VFS_FAT_FAT16_HPP_
+#ifndef KERNEL_SRC_FS_VFS_FAT_FAT16_HPP_
+#define KERNEL_SRC_FS_VFS_FAT_FAT16_HPP_
 
 #include <bit.hpp>
 #include <internal/math.hpp>
@@ -132,4 +132,4 @@ struct FatTraits<Fat16, IO> {
 
 }  // namespace vfs
 
-#endif  // KERNEL_SRC_VFS_FAT_FAT16_HPP_
+#endif  // KERNEL_SRC_FS_VFS_FAT_FAT16_HPP_

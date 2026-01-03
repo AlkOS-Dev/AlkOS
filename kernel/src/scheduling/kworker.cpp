@@ -44,7 +44,7 @@ void Sched::StdoutTracerMain(Pid pid)
 {
     TRACE_INFO_SCHEDULING("Created new StdoutTracer!");
 
-    // Find the hello_world process
+    // Get hello process
     auto &processes = SchedulingModule::Get().GetProcesses();
     auto res        = processes.GetProcess(pid);
     R_ASSERT_TRUE(static_cast<bool>(res), "Failed to find hello_world process for tracing...");
