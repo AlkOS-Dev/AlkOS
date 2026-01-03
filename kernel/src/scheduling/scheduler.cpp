@@ -10,15 +10,15 @@ namespace Sched
 {
 void Scheduler::AddReadyThread(Thread *thread)
 {
-    if (threads_ == nullptr) {
-        threads_     = thread;
-        thread->next = thread;
-        return;
-    }
-
-    thread->next   = threads_->next;
-    threads_->next = thread;
-    threads_       = thread;
+    // if (threads_ == nullptr) {
+    //     threads_     = thread;
+    //     thread->next = thread;
+    //     return;
+    // }
+    //
+    // thread->next   = threads_->next;
+    // threads_->next = thread;
+    // threads_       = thread;
 }
 
 Thread *Scheduler::Schedule()
@@ -27,19 +27,15 @@ Thread *Scheduler::Schedule()
         return nullptr;
     }
 
-    ASSERT_NOT_NULL(threads_);
-
-    auto thread = GetNext_();
-    ASSERT_NOT_NULL(thread);
-
-    auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(owner));
-
-    if (thread == hardware::GetCoreLocalTcb()) {
-        return nullptr;
+    for (const auto &policy : policies_) {
+        if (const auto thread = policy.cbs.pick_thread(policy.self)) {
+            return thread;
+        }
     }
 
-    return thread;
+    // TODO: IDLE
+    // TODO: self pick
+    return nullptr;
 }
 void Scheduler::Yield()
 {
@@ -52,26 +48,19 @@ void Scheduler::Yield()
 
 void Scheduler::ConvertToScheduling()
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-
-    static constexpr u64 kPeriodicTime1Ms = kNanosInSecond / 1'000;
-    TimingModule::Get().GetEventFramework().SetupPeriodic(kPeriodicTime1Ms);
-
-    ASSERT_NOT_NULL(threads_);
-
-    auto thread = GetNext_();
-    ASSERT_NOT_NULL(thread);
-
-    auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(owner));
-
-    hal::ConvertContext(thread);
-}
-
-Thread *Scheduler::GetNext_()
-{
-    Thread *thread = threads_;
-    threads_       = threads_->next;
-    return thread;
+    // HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    //
+    // static constexpr u64 kPeriodicTime1Ms = kNanosInSecond / 1'000;
+    // TimingModule::Get().GetEventFramework().SetupPeriodic(kPeriodicTime1Ms);
+    //
+    // ASSERT_NOT_NULL(threads_);
+    //
+    // auto thread = GetNext_();
+    // ASSERT_NOT_NULL(thread);
+    //
+    // auto owner = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
+    // ASSERT_TRUE(static_cast<bool>(owner));
+    //
+    // hal::ConvertContext(thread);
 }
 }  // namespace Sched

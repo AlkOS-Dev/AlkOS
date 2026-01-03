@@ -1,7 +1,10 @@
 #ifndef KERNEL_SRC_SCHEDULING_SCHEDULER_HPP_
 #define KERNEL_SRC_SCHEDULING_SCHEDULER_HPP_
 
+#include <array.hpp>
 #include <defines.hpp>
+
+#include "policy.hpp"
 #include "thread.hpp"
 
 namespace Sched
@@ -34,13 +37,11 @@ class Scheduler
     // ------------------------------
 
     protected:
-    NODISCARD FORCE_INLINE_F Thread *GetNext_();
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
-    Thread *threads_{};
+    std::array<Policy, static_cast<size_t>(SchedulingPolicy::kLast)> policies_{};
 };
 }  // namespace Sched
 
