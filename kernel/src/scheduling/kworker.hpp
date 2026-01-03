@@ -3,9 +3,12 @@
 
 namespace Sched
 {
+struct Pid;
+
 void KWorkerMain();
 void TraceDumperMain();
 void FdHierarchyDumperMain();
+void StdoutTracerMain(Pid pid);
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_KWORKER_HPP_

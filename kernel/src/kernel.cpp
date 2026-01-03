@@ -1,26 +1,13 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
-#include <string.hpp>
 #include <test_module/test_module.hpp>
-#include "trace_framework.hpp"
 
 /* internal includes */
-#include <hal/debug.hpp>
-#include <hal/terminal.hpp>
-#include <scheduling/kworker.hpp>
-
-#include "graphics/font/psf2_font.hpp"
-#include "graphics/fonts/drdos8x8.hpp"
-#include "graphics/painter.hpp"
-#include "modules/hardware.hpp"
-#include "modules/video.hpp"
-#include "sys/shell.hpp"
-
-#include "drivers/apic/local_apic.hpp"
 #include "hal/boot_args.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
-#include "todo.hpp"
+#include "scheduling/kworker.hpp"
+#include "trace_framework.hpp"
 
 extern void KernelInit(const hal::RawBootArguments &);
 
@@ -30,8 +17,20 @@ static void KernelRun()
 
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
-    // Spawn hello world process
-    R_ASSERT_TRUE(task_mgr.ExecuteElf64("/bin/hello", {}), "Failed to spawn /bin/hello process...");
+    auto res = task_mgr.ExecuteElf64("/bin/hello", {});
+    R_ASSERT_TRUE(res, "Failed to spawn /bin/hello process...");
+    auto [pid, _] = res.value();
+
+    Sched::Task tracer_task;
+    tracer_task.func       = reinterpret_cast<void *>(Sched::StdoutTracerMain);
+    tracer_task.args_count = 1;
+    tracer_task.args       = {*reinterpret_cast<u64 *>(&pid)};
+
+    // Spawn StdoutTracer KWorker to monitor hello_world's stdout
+    R_ASSERT_TRUE(
+        task_mgr.SpawnKernelProcess("stdout-tracer", {}, tracer_task),
+        "Failed to spawn stdout tracer process..."
+    );
 
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }

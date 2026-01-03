@@ -1,8 +1,9 @@
-#ifndef LIBS_LIBC_INCLUDE_TODO_H_
-#define LIBS_LIBC_INCLUDE_TODO_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_TODO_H_
+#define LIBS_LIBC_SRC_INCLUDE_TODO_H_
 
 /* Should be adjusted when userspace version of libc is implemented */
 #define TODO_USERSPACE
+#define TODO_USERSPACE_MEMORY_MANAGEMENT
 
 /* should be changed when kernel allows querying clocks */
 #define TODO_CLOCKS
@@ -33,4 +34,4 @@
 
 #define TODO_RANDOM
 
-#endif  // LIBS_LIBC_INCLUDE_TODO_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_TODO_H_

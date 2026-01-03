@@ -6,11 +6,11 @@
 #include <limits.hpp>
 #include <span.hpp>
 
+#include "../../../sync/spinlock.hpp"
 #include "hal/constants.hpp"
 #include "mem/page_meta.hpp"
 #include "mem/phys/mngr/buddy.hpp"
 #include "mem/types.hpp"
-#include "sync/kernel/spinlock.hpp"
 
 namespace Mem
 {
