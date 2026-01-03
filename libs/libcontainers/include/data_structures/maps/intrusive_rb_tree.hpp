@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <concepts.hpp>
+#include <data_structures/intrusive_linked_list.hpp>
 #include <defines.hpp>
 #include <template/special_members.hpp>
 
@@ -29,7 +30,10 @@ struct IntrusiveRbNode {
 };
 
 template <class T, class KeyT>
-    requires std::derived_from<T, IntrusiveRbNode<T, KeyT>>
+    requires(
+        std::derived_from<T, IntrusiveRbNode<T, KeyT>> and
+        std::derived_from<T, IntrusiveListNode<T>>
+    )
 class IntrusiveRBTree : template_lib::NoCopy
 {
     public:
@@ -44,6 +48,22 @@ class IntrusiveRBTree : template_lib::NoCopy
     // Class interaction
     // ------------------------------
 
+    void Insert(T *item) {}
+
+    void Delete(T *item) {}
+
+    void Delete(KeyT key) {}
+
+    void Contains(T *item) {}
+
+    void Contains(KeyT key) {}
+
+    NODISCARD T *Min() {}
+
+    NODISCARD T *Max() {}
+
+    NODISCARD T *Find(KeyT key) {}
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -53,7 +73,9 @@ class IntrusiveRBTree : template_lib::NoCopy
     // Class fields
     // ------------------------------
 
-    T *root{};
+    T *root_{};
+    T *min_{};
+    T *max_{};
 };
 }  // namespace data_structures
 
