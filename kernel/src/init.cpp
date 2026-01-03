@@ -52,7 +52,7 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     TimingModule::Init();
 
     /* Register interrupt handlers */
-    HardwareModule::Get().RegisterPageFaultHandler();
+    HardwareModule::Get().RegisterInterruptHandlers();
 
     /* Fully Initialize ACPI subsystem */
     HardwareModule::Get().GetACPIController().Init();
@@ -66,5 +66,4 @@ void KernelInit(const hal::RawBootArguments &raw_args)
 
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
     InputModule::Init();
-    InputModule::Get().RegisterHardwareInterrupts();
 }

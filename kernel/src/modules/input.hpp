@@ -16,23 +16,6 @@ class InputModule : public template_lib::StaticSingletonHelper
     InputModule() noexcept = default;
 
     public:
-    static Sched::Thread *KeyboardInterruptHandler(intr::LitHwEntry &)
-    {
-        ::HardwareModule::Get().GetPs2Keyboard().OnInterrupt();
-        return nullptr;
-    }
-
-    void RegisterHardwareInterrupts()
-    {
-        DEBUG_INFO_GENERAL("Registering Ps2 Keyboard Handler via InputManager");
-        auto &hw = ::HardwareModule::Get();
-        hw.GetInterrupts()
-            .GetLit()
-            .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
-                1, intr::HwHandler{.handler = KeyboardInterruptHandler}
-            );
-    }
-
     void RouteKey(char c)
     {
         auto &wm              = ::VideoModule::Get().GetWindowManager();

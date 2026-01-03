@@ -35,7 +35,7 @@ class HardwareModule : template_lib::StaticSingletonHelper
     DEFINE_MODULE_FIELD(Drivers::Input, Ps2Keyboard)
 
     public:
-    void RegisterPageFaultHandler();
+    void RegisterInterruptHandlers();
 };
 }  // namespace internal
 

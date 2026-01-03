@@ -131,7 +131,9 @@ void Ps2Keyboard::OnInterrupt()
         }
 
         if (scancode == kScanCodeTab) {
-            VideoModule::Get().GetWindowManager().SwitchToNextSession();
+            if (VideoModule::IsInited()) {
+                VideoModule::Get().GetWindowManager().SwitchToNextSession();
+            }
             return;
         }
 
@@ -145,7 +147,9 @@ void Ps2Keyboard::OnInterrupt()
             const char c = TranslateScancode(scancode);
             if (c != 0) {
                 // Route to the central input module
-                InputModule::Get().RouteKey(c);
+                if (InputModule::IsInited()) {
+                    InputModule::Get().RouteKey(c);
+                }
             }
         }
 
