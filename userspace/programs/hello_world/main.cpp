@@ -1,61 +1,47 @@
-#include <alkos/calls.h>
-#include <platform.h>
 #include <stdio.h>
-
-template <typename... Args>
-void my_printf(const char *format, Args... args)
-{
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), format, args...);
-    __platform_debug_write(buffer);
-}
 
 extern "C" int main()
 {
-    my_printf(
+    printf(
         "\n----------------------------------\n"
         "Hello from User Space via Syscall!\n"
         "----------------------------------\n"
     );
 
-    my_printf("Formatting Test: %d + %d = %d\n", 2, 2, 4);
-
-    Timezone tz;
-    __platform_get_timezone(&tz);
-    my_printf("Timezone offset (minutes): %d\n", tz.west_offset_minutes);
-
-    u64 ticks = __platform_get_clock_ticks_in_second(kTimeUtc);
-    my_printf("Ticks per second (UTC): %llu\n", ticks);
-
-    TimeVal tv;
-    __platform_get_clock_value(kTimeUtc, &tv, &tz);
-    my_printf("Current Timestamp: %llu\n", tv.seconds);
+    printf("Formatting Test: %d + %d = %d\n", 2, 2, 4);
 
     char buffer[64]{};
-    fd_t fd = __platform_open("/docs/greet.txt", kFdFlagReadWrite);
-    if (fd < 3) {
-        my_printf("KWorker failed to open /docs/greet.txt for reading!");
+    FILE *fp = fopen("/docs/greet.txt", "r+");
+    if (!fp) {
+        printf("Failed to open /docs/greet.txt for reading!\n");
+        return 1;
     }
 
-    int len         = snprintf(buffer, sizeof(buffer), "Hello AlkOS from User Space!");
-    ssize_t written = __platform_write(fd, buffer, len);
-    if (written == -1) {
-        my_printf("KWorker failed to write to /docs/greet.txt!");
+    int len        = snprintf(buffer, sizeof(buffer), "Hello AlkOS from User Space!");
+    size_t written = fwrite(buffer, 1, len, fp);
+    if (written != static_cast<size_t>(len)) {
+        printf("Failed to write to /docs/greet.txt!\n");
+        fclose(fp);
+        return 1;
     }
 
-    ssize_t pos = __platform_seek(fd, 0, kFdSeekSet);
-    if (pos == -1) {
-        my_printf("KWorker failed to seek to start of /docs/greet.txt!");
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        printf("Failed to seek to start of /docs/greet.txt!\n");
+        fclose(fp);
+        return 1;
     }
 
-    ssize_t read = __platform_read(fd, buffer, 64);
-    if (read == -1) {
-        my_printf("KWorker failed to read from /docs/greet.txt!");
+    size_t bytes_read = fread(buffer, 1, sizeof(buffer) - 1, fp);
+    if (bytes_read == 0 && ferror(fp)) {
+        printf("Failed to read from /docs/greet.txt!\n");
+        fclose(fp);
+        return 1;
     }
+    buffer[bytes_read] = '\0';
 
-    my_printf("KWorker: '%.*s'", static_cast<int>(written), buffer);
+    printf("Read from file: '%s'\n", buffer);
 
-    __platform_close(fd);
+    fclose(fp);
 
     return 0;
 }

@@ -30,6 +30,7 @@ template <class T>
 concept LibCxxCompatibleMutex = requires(T m) {
     { m.lock() } -> std::same_as<void>;
     { m.unlock() } -> std::same_as<void>;
+    { m.try_lock() } -> std::same_as<bool>;
 };
 }  // namespace concepts_ext
 

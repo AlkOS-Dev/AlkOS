@@ -4,11 +4,11 @@
 #include <data_structures/data_structures.hpp>
 #include <template_lib.hpp>
 
+#include "../sync/spinlock.hpp"
 #include "mem/cyclic_allocator.hpp"
 #include "mem/virt/addr_space.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"
-#include "sync/kernel/spinlock.hpp"
 
 // ------------------------------
 // Module

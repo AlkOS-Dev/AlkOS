@@ -29,6 +29,8 @@ enum SyscallNumber {
     kSysRead,
     kSysWrite,
     kSysSeek,
+    kSysDup,
+    kSysDupTo,
 
     /* Threads, processes */
     kThreadCreate,

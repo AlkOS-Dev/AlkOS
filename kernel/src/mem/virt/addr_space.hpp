@@ -97,7 +97,7 @@ class AddressSpace
     /// @brief Sorted list of pointers to VMA objects. We own these objects.
     /// @note The list is sorted by the start address of the VMA objects.
     data_structures::DoubleLinkedList<VMemArea *> area_list_;
-    hal::Spinlock area_list_lock_;
+    Spinlock area_list_lock_;
 
     // Dependencies
     KernelMmuContext *ctx_;

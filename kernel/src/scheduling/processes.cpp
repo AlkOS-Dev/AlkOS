@@ -53,36 +53,21 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
     auto stdin_entry_result = open_file_table.OpenPipe(process->stdin_pipe);
     RET_UNEXPECTED_IF(!stdin_entry_result, Error::OutOfMemory);
 
-    auto *stdin_entry = *stdin_entry_result;
-    template_lib::BatchedScopeGuard stdin_guard(dismiss, [&]() {
-        open_file_table.CloseEntry(stdin_entry);
-    });
-
-    auto stdin_fd_result = fd_table->AllocateFdAt(stdin_entry, Fs::kStdinFd);
+    auto stdin_fd_result = fd_table->AllocateAt(std::move(*stdin_entry_result), Fs::kStdinFd);
     RET_UNEXPECTED_IF(!stdin_fd_result, Error::OutOfMemory);
 
     // Open stdout pipe in the global open file table
     auto stdout_entry_result = open_file_table.OpenPipe(process->stdout_pipe);
     RET_UNEXPECTED_IF(!stdout_entry_result, Error::OutOfMemory);
 
-    auto *stdout_entry = *stdout_entry_result;
-    template_lib::BatchedScopeGuard stdout_guard(dismiss, [&]() {
-        open_file_table.CloseEntry(stdout_entry);
-    });
-
-    auto stdout_fd_result = fd_table->AllocateFdAt(stdout_entry, Fs::kStdoutFd);
+    auto stdout_fd_result = fd_table->AllocateAt(std::move(*stdout_entry_result), Fs::kStdoutFd);
     RET_UNEXPECTED_IF(!stdout_fd_result, Error::OutOfMemory);
 
     // Open stderr pipe in the global open file table
     auto stderr_entry_result = open_file_table.OpenPipe(process->stderr_pipe);
     RET_UNEXPECTED_IF(!stderr_entry_result, Error::OutOfMemory);
 
-    auto *stderr_entry = *stderr_entry_result;
-    template_lib::BatchedScopeGuard stderr_guard(dismiss, [&]() {
-        open_file_table.CloseEntry(stderr_entry);
-    });
-
-    auto stderr_fd_result = fd_table->AllocateFdAt(stderr_entry, Fs::kStderrFd);
+    auto stderr_fd_result = fd_table->AllocateAt(std::move(*stderr_entry_result), Fs::kStderrFd);
     RET_UNEXPECTED_IF(!stderr_fd_result, Error::OutOfMemory);
 
     dismiss = true;

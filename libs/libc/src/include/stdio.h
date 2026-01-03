@@ -14,6 +14,10 @@
 #define _IOLBF kFdBufferLine
 #define _IONBF kFdBufferNone
 
+#define SEEK_SET kFdSeekSet
+#define SEEK_CUR kFdSeekCurrent
+#define SEEK_END kFdSeekEnd
+
 typedef struct {
     // File descriptor
     fd_t fd;  // Underlying file descriptor
@@ -92,10 +96,28 @@ int setvbuf(FILE *stream, char *buf, int mode, size_t size);
  */
 int fseek(FILE *stream, long offset, int whence);
 
+/**
+ *  Tests the error indicator for the given stream
+ */
+int ferror(FILE *stream);
+
+/**
+ *  Tests the end-of-file indicator for the given stream
+ */
+int feof(FILE *stream);
+
+/**
+ *  Clears the end-of-file and error indicators for the given stream
+ */
+void clearerr(FILE *stream);
+
 // Standard streams
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
+extern FILE _stdin;
+extern FILE _stdout;
+extern FILE _stderr;
+#define stdin  (&_stdin)
+#define stdout (&_stdout)
+#define stderr (&_stderr)
 
 END_DECL_C
 

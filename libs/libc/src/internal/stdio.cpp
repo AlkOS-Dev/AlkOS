@@ -9,10 +9,6 @@ FILE _stdin;
 FILE _stdout;
 FILE _stderr;
 
-FILE *stdin  = &_stdin;
-FILE *stdout = &_stdout;
-FILE *stderr = &_stderr;
-
 // FILE allocator pool
 static FileNode file_pool[FILE_POOL_SIZE];
 static FileNode *free_list        = nullptr;

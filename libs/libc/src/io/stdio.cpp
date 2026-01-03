@@ -469,3 +469,28 @@ int fseek(FILE *stream, long offset, int whence)
 
     return 0;
 }
+
+int ferror(FILE *stream)
+{
+    if (stream == nullptr) {
+        return 0;
+    }
+    return stream->flags.error ? 1 : 0;
+}
+
+int feof(FILE *stream)
+{
+    if (stream == nullptr) {
+        return 0;
+    }
+    return stream->flags.eof ? 1 : 0;
+}
+
+void clearerr(FILE *stream)
+{
+    if (stream == nullptr) {
+        return;
+    }
+    stream->flags.error = false;
+    stream->flags.eof   = false;
+}
