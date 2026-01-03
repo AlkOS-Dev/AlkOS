@@ -84,5 +84,8 @@ void Scheduler::ConvertToScheduling()
     hal::ConvertContext(thread);
 }
 
-void Scheduler::NanoSleepUntil(u64 systime_ns) {}
+void Scheduler::NanoSleepUntil(u64 systime_ns)
+{
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+}
 }  // namespace Sched

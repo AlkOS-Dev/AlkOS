@@ -43,6 +43,7 @@ class Scheduler
 
     void ConvertToScheduling();
 
+    /* Should only be called inside syscall code or kernel thread code */
     void NanoSleepUntil(u64 systime_ns);
 
     // ------------------------------
@@ -56,7 +57,6 @@ class Scheduler
 
     // Locking
     hal::Spinlock spinlock_{};
-    OPTIONAL_FIELD(FeatureEnabled<FeatureFlag::kDebugSpinlock>, u64) local_lock_ {};
 
     // Policies
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
