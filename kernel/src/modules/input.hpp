@@ -50,15 +50,6 @@ class InputModule : public template_lib::StaticSingletonHelper
 
         auto *proc = *proc_res;
 
-        // Validate process pointer to prevent crashes if the map is corrupted or returns invalid
-        // ptr
-        if (reinterpret_cast<uintptr_t>(proc) < 0xffff800000000000) {
-            DEBUG_WARN_GENERAL(
-                "InputModule: Invalid process pointer %p for PID %llu", proc, target_pid.id
-            );
-            return;
-        }
-
         byte b = static_cast<byte>(c);
         (void)proc->stdin_pipe.Write(std::span<const byte>(&b, 1));
     }
