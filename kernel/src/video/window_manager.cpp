@@ -83,6 +83,42 @@ void WindowManager::SwitchToNextSession()
     SwitchSession(new_index);
 }
 
+void WindowManager::SetFocus(Sched::Pid pid)
+{
+    auto caller = hardware::GetRunningPid();
+    for (size_t i = 0; i < sessions_.Size(); ++i) {
+        if (sessions_[i].owner_pid == caller || sessions_[i].focused_pid == caller) {
+            sessions_[i].focused_pid = pid;
+            DEBUG_INFO_GENERAL(
+                "WindowManager: Transferred focus in session %zu to PID %llu", i, pid
+            );
+            return;
+        }
+    }
+}
+
+Sched::Pid WindowManager::GetActiveSessionFocusedPid()
+{
+    if (active_session_idx_ == kInvalidSession) {
+        return {0, 0};
+    }
+    return sessions_[active_session_idx_].focused_pid;
+}
+
+void WindowManager::ReleaseFocus(Sched::Pid pid)
+{
+    for (size_t i = 0; i < sessions_.Size(); ++i) {
+        if (sessions_[i].focused_pid == pid) {
+            sessions_[i].focused_pid = sessions_[i].owner_pid;
+            DEBUG_INFO_GENERAL(
+                "WindowManager: Returned focus in session %zu to owner PID %llu", i,
+                sessions_[i].owner_pid
+            );
+            return;
+        }
+    }
+}
+
 void WindowManager::RefreshScreen()
 {
     if (active_session_idx_ == kInvalidSession || active_session_idx_ >= sessions_.Size()) {
@@ -134,6 +170,7 @@ size_t WindowManager::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
 {
     GraphicSession session;
     session.owner_pid   = pid;
+    session.focused_pid = pid;
     session.buffer_info = buffer;
     session.is_active   = false;
 
