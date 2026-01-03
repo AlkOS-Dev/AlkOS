@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "types.hpp"
+#include "types.h"
 
 // ------------------------------
 // Environment checks

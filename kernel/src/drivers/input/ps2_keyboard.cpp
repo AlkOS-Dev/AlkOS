@@ -1,4 +1,5 @@
 #include "drivers/input/ps2_keyboard.hpp"
+#include "modules/video.hpp"
 #include "trace_framework.hpp"
 
 namespace Drivers::Input
@@ -126,6 +127,10 @@ void Ps2Keyboard::OnInterrupt()
             // Reset prefix on key release as well
             is_e0_prefix_ = false;
             return;
+        }
+
+        if (scancode == kScanCodeTab) {
+            VideoModule::Get().GetWindowManager().SwitchToNextSession();
         }
 
         // Handle Make Code (Key Press)
