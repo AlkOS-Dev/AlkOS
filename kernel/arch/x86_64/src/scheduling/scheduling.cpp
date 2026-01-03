@@ -8,8 +8,6 @@
 #include "modules/timing.hpp"
 #include "scheduling/thread.hpp"
 
-#include <hal/debug_terminal.hpp>
-
 // ------------------------------
 // statics
 // ------------------------------
@@ -18,18 +16,15 @@ FAST_CALL void SetThreadGs(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    cpu::SetMSR(arch::kIa32GsKernelBase, thread->gs_base);
+    cpu::SetMSR(arch::kIa32GsKernelBase, thread->arch_data.gs_base);
 }
 
 FAST_CALL void DumpFpStateIfNeeded(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc));
-
-    if (proc.value()->flags.PreserveFloats) {
-        u8 *mem = thread->fp_state;
+    if (thread->flags.PreserveFloats) {
+        u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xsave64 %0" : "=m"(*mem) : "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");
     }
@@ -39,11 +34,8 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    auto proc = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
-    ASSERT_TRUE(static_cast<bool>(proc));
-
-    if (proc.value()->flags.PreserveFloats) {
-        u8 *mem = thread->fp_state;
+    if (thread->flags.PreserveFloats) {
+        u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xrstor64 %0" : : "m"(*mem), "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");
     }
@@ -55,7 +47,7 @@ FAST_CALL void SetNextThreadFs(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    cpu::SetMSR(arch::kIa32FsBase, thread->fs_base);
+    cpu::SetMSR(arch::kIa32FsBase, thread->arch_data.fs_base);
 }
 
 FAST_CALL void SwapGsIfJumpingToUserspace(Sched::Thread *thread)
@@ -90,8 +82,8 @@ FAST_CALL void SwapFsIfNeeded(Sched::Thread *current_tcb, Sched::Thread *next_tc
     ASSERT_NOT_NULL(current_tcb);
     ASSERT_NOT_NULL(next_tcb);
 
-    if (current_tcb->fs_base != next_tcb->fs_base) {
-        cpu::SetMSR(arch::kIa32FsBase, next_tcb->fs_base);
+    if (current_tcb->arch_data.fs_base != next_tcb->arch_data.fs_base) {
+        cpu::SetMSR(arch::kIa32FsBase, next_tcb->arch_data.fs_base);
     }
 }
 
@@ -116,6 +108,9 @@ FAST_CALL void SwapAsIfNeeded(Sched::Thread *tcb)
 
 extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
 {
+    ASSERT_NOT_NULL(thread);
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+
     SetNextThreadFs(thread);
     LoadFpStateIfNeeded(thread);
     hardware::SetCoreLocalTcb(thread);
@@ -148,6 +143,9 @@ extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
+
     const auto current_tcb = hardware::GetCoreLocalTcb();
     DumpFpStateIfNeeded(current_tcb);
 
@@ -165,7 +163,8 @@ extern "C" void cdecl_ContextSwitchEntry(
 
     const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     current_tcb->kernel_time_ns = t - current_tcb->timestamp;
-    thread->timestamp           = t;
+    current_tcb->num_context_switches++;
+    thread->timestamp = t;
 
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);
@@ -174,6 +173,9 @@ extern "C" void cdecl_ContextSwitchEntry(
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
+    ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
+
     const auto current_tcb = hardware::GetCoreLocalTcb();
     DumpFpStateIfNeeded(current_tcb);
 

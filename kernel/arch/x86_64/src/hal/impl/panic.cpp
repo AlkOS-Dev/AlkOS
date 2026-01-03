@@ -15,7 +15,7 @@ extern "C" void NO_RET KernelPanic()
         test::OnKernelPanic();
     } else {
         trace::DumpAllBuffersOnFailure();
-        OsHang();
+        OsHangNoInterrupts();
     }
 }
 

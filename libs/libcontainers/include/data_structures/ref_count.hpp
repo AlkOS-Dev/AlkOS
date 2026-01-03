@@ -38,7 +38,7 @@ class RefCounted
     {
         CounterType old_count = ref_count_.fetch_sub(1, std::memory_order_acq_rel);
 
-        ASSERT_GT(old_count, 0, "Releasing ref_count that is already zero");
+        ASSERT_GT(old_count, 0u, "Releasing ref_count that is already zero");
 
         if (old_count == 1) {
             T *ptr = static_cast<T *>(this);

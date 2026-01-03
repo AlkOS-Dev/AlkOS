@@ -28,6 +28,14 @@ class TaskMgr
 
     NODISCARD std::expected<Thread *, Error> SpawnThread(Pid pid, const Task &task);
 
+    NODISCARD std::expected<Thread *, Error> SpawnThread(
+        Pid pid, ThreadFlags flags, const Task &task
+    );
+
+    NODISCARD std::expected<Thread *, Error> SpawnThread(
+        const Process *process, ThreadFlags flags, const Task &task
+    );
+
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> SpawnKernelProcess(
         const char *name, ProcessFlags flags, const Task &task
     );

@@ -261,6 +261,54 @@ class PACK BitArray final
         return FindFirst<false>();
     }
 
+    // std::numeric_limits<size_t>::max() for failure
+    template <bool value = false>
+    NODISCARD FORCE_INLINE_F size_t FindLast()
+    {
+        const StorageT empty_unit =
+            value ? std::numeric_limits<StorageT>::min() : std::numeric_limits<StorageT>::max();
+
+        for (auto i = static_cast<ssize_t>(kNumStorage - 1); i < static_cast<ssize_t>(kNumStorage);
+             --i) {
+            if (storage_[i] == empty_unit) {
+                continue;
+            }
+
+            const size_t start = static_cast<size_t>(i) * kStorageBits;
+            const size_t local_offset =
+                value ? std::countl_zero(storage_[i]) : std::countl_one(storage_[i]);
+            return start + local_offset;
+        }
+
+        return std::numeric_limits<size_t>::max();
+    }
+
+    NODISCARD FORCE_INLINE_F size_t FindLast(const bool value = false)
+    {
+        if (value) {
+            return FindLast<true>();
+        }
+        return FindLast<false>();
+    }
+
+    template <bool value = false>
+    NODISCARD FORCE_INLINE_F bool IsAllSet()
+    {
+        return FindFirst<!value>() == std::numeric_limits<size_t>::max();
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsAllSet(const bool value = false)
+    {
+        if (value) {
+            return IsAllSet<true>();
+        }
+        return IsAllSet<false>();
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsAllTrue() { return IsAllSet<true>(); }
+
+    NODISCARD FORCE_INLINE_F bool IsAllFalse() { return IsAllSet<false>(); }
+
     // ------------------------------
     // Class fields
     // ------------------------------
