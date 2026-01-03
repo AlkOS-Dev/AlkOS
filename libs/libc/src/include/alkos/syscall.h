@@ -43,6 +43,8 @@ enum SyscallNumber {
     kThreadDetach,
     kProcExit,
     kProcAbort,
+    kNanoSleep,
+    kNanoSleepUntil,
 
     kSysMax,
 };

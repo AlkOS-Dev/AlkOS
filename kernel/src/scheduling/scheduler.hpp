@@ -43,6 +43,8 @@ class Scheduler
 
     void ConvertToScheduling();
 
+    void NanoSleepUntil(u64 systime_ns);
+
     // ------------------------------
     // Private methods
     // ------------------------------

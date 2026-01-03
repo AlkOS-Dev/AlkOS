@@ -83,4 +83,6 @@ void Scheduler::ConvertToScheduling()
 
     hal::ConvertContext(thread);
 }
+
+void Scheduler::NanoSleepUntil(u64 systime_ns) {}
 }  // namespace Sched
