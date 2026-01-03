@@ -1,8 +1,8 @@
+#include <alkos/video.h>
 #include <platform.h>
 #include <stdio.h>
-#include <sys/video.h>
 #include <time.h>
-#include <types.hpp>
+#include <types.h>
 
 extern "C" int main()
 {

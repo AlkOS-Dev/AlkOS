@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT2_H_
 #define KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT2_H_
 
-#include <types.hpp>
+#include <types.h>
 
 namespace Multiboot
 {

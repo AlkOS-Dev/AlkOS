@@ -1,6 +1,6 @@
 #include <string.h>
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include "hw/vga.hpp"
 

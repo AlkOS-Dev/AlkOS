@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_DRIVERS_INPUT_PS2_KEYBOARD_HPP_
 #define KERNEL_SRC_DRIVERS_INPUT_PS2_KEYBOARD_HPP_
 
+#include <types.h>
 #include <drivers/input/keyboard.hpp>
 #include <io/register.hpp>
-#include <types.hpp>
 
 namespace Drivers::Input
 {

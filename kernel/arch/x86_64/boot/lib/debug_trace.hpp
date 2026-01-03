@@ -2,7 +2,6 @@
 #define KERNEL_ARCH_X86_64_BOOT_LIB_DEBUG_TRACE_HPP_
 
 #include <autogen/feature_flags.h>
-#include <todo.hpp>
 
 #include "platform.h"
 

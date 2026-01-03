@@ -1,9 +1,9 @@
 #ifndef KERNEL_SRC_MEM_TYPES_HPP_
 #define KERNEL_SRC_MEM_TYPES_HPP_
 
+#include <types.h>
 #include <expected.hpp>
 #include <type_traits.hpp>
-#include <types.hpp>
 #include "constants.hpp"
 #include "hal/constants.hpp"
 
@@ -23,7 +23,7 @@ template <typename T>
 using PPtr = PhysicalPtr<T>;
 
 template <typename T>
-VPtr<T> PhysToVirt(PPtr<T> physAddr)
+FORCE_INLINE_F VPtr<T> PhysToVirt(PPtr<T> physAddr)
 {
     return reinterpret_cast<VPtr<T>>(
         reinterpret_cast<uintptr_t>(physAddr) + hal::kDirectMapAddrStart
@@ -31,7 +31,7 @@ VPtr<T> PhysToVirt(PPtr<T> physAddr)
 }
 
 template <typename T>
-PPtr<T> VirtToPhys(VPtr<T> virtAddr)
+FORCE_INLINE_F PPtr<T> VirtToPhys(VPtr<T> virtAddr)
 {
     uintptr_t vaddr = reinterpret_cast<uintptr_t>(virtAddr);
     if (vaddr >= hal::kDirectMapAddrStart) {
@@ -42,13 +42,13 @@ PPtr<T> VirtToPhys(VPtr<T> virtAddr)
 }
 
 template <typename T>
-uptr PtrToUptr(T *ptr)
+FORCE_INLINE_F uptr PtrToUptr(T *ptr)
 {
     return reinterpret_cast<uptr>(ptr);
 }
 
 template <typename T>
-T *UptrToPtr(uptr uptr)
+FORCE_INLINE_F T *UptrToPtr(uptr uptr)
 {
     return reinterpret_cast<T *>(uptr);
 }

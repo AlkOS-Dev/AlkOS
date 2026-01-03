@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_MODULES_TIMING_CONSTANTS_HPP_
 #define KERNEL_SRC_MODULES_TIMING_CONSTANTS_HPP_
 
-#include <sys/time.h>
+#include <alkos/time.h>
 
 namespace timing_constants
 {

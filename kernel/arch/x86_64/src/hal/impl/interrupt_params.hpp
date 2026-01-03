@@ -2,8 +2,9 @@
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_INTERRUPT_PARAMS_HPP_
 
 #include <defines.h>
+#include <types.h>
 #include <hal/api/interrupts_params.hpp>
-#include <types.hpp>
+#include "cpu/gdt.hpp"
 
 struct PACK IsrRegisters {
     uint64_t rax;
@@ -47,6 +48,11 @@ static constexpr size_t kNumX86_64Irqs          = 16;
 
 struct ExceptionData : IsrErrorStackFrame {
 };
+
+NODISCARD FAST_CALL bool IsInterruptFromUserSpace(const ExceptionData &data)
+{
+    return (data.isr_stack_frame.cs & 3) != 0;
+}
 
 /* Mapping params */
 static constexpr u16 kTimerHwLirq      = 0;

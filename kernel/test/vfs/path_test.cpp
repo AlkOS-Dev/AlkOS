@@ -1,6 +1,6 @@
 #include <test_module/test.hpp>
 
-#include <vfs/path.hpp>
+#include <fs/vfs/path.hpp>
 
 class VFSPathTest : public TestGroupBase
 {

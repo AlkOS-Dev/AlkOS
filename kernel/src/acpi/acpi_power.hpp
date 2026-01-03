@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_ACPI_ACPI_POWER_HPP_
 #define KERNEL_SRC_ACPI_ACPI_POWER_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 namespace ACPI
 {

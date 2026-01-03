@@ -1,10 +1,10 @@
 #ifndef KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_
 #define KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_
 
+#include <types.h>
 #include <data_structures/array_structures.hpp>
 #include <expected.hpp>
 #include <tuple.hpp>
-#include <types.hpp>
 
 #include "drivers/video/framebuffer.hpp"
 #include "mem/page.hpp"

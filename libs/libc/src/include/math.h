@@ -1,9 +1,9 @@
-#ifndef LIBS_LIBC_INCLUDE_MATH_H_
-#define LIBS_LIBC_INCLUDE_MATH_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_MATH_H_
+#define LIBS_LIBC_SRC_INCLUDE_MATH_H_
 
 #include <defines.h>
 #include <stdint.h>
-#include <types.hpp>
+#include <types.h>
 
 /**********************************************
  * Constants
@@ -40,4 +40,4 @@ union __DoubleBits {
 #include <math/checks.h>
 #include <math/operations.hpp>
 
-#endif  // LIBS_LIBC_INCLUDE_MATH_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_MATH_H_

@@ -10,6 +10,7 @@
 #include "scheduling/error.hpp"
 #include "scheduling/process.hpp"
 
+#include <hardware/core_local.hpp>
 #include <trace_framework.hpp>
 
 namespace Sched
@@ -30,6 +31,8 @@ class Processes
 
     NODISCARD std::expected<Process *, Error> PrepareProcess();
 
+    void CleanupProcess(Process *process);
+
     NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
     {
         const u16 id = pid.id;
@@ -42,6 +45,12 @@ class Processes
         return ptr;
     }
 
+    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetCurrentProcess()
+    {
+        const Pid pid = hardware::GetRunningPid();
+        return GetProcess(pid);
+    }
+
     FORCE_INLINE_F std::expected<void, Error> Free(const Pid pid)
     {
         const u16 id = pid.id;
@@ -50,6 +59,7 @@ class Processes
             return std::unexpected(Error::ProcessNotFound);
         }
 
+        CleanupProcess(processes_.Get(id));
         processes_.Free(id);
         return {};
     }

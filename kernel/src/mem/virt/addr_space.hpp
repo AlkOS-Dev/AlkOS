@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
 #define KERNEL_SRC_MEM_VIRT_ADDR_SPACE_HPP_
 
+#include <types.h>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include <data_structures/linked_list.hpp>
 #include "hal/interrupt_params.hpp"
@@ -97,7 +97,7 @@ class AddressSpace
     /// @brief Sorted list of pointers to VMA objects. We own these objects.
     /// @note The list is sorted by the start address of the VMA objects.
     data_structures::DoubleLinkedList<VMemArea *> area_list_;
-    hal::Spinlock area_list_lock_;
+    Spinlock area_list_lock_;
 
     // Dependencies
     KernelMmuContext *ctx_;
@@ -105,7 +105,7 @@ class AddressSpace
 
     // Friends
     friend class VirtualMemoryManager;
-    friend void *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
+    friend Sched::Thread *PageFaultHandler(intr::LitExcEntry &entry, hal::ExceptionData *data);
 
     public:
 };

@@ -1,10 +1,10 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_CONSTANTS_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <data_structures/array_structures.hpp>
 #include <todo.hpp>
-#include <types.hpp>
 
 namespace arch
 {

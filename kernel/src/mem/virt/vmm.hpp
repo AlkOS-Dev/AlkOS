@@ -1,8 +1,8 @@
 #ifndef KERNEL_SRC_MEM_VIRT_VMM_HPP_
 #define KERNEL_SRC_MEM_VIRT_VMM_HPP_
 
+#include <types.h>
 #include <expected.hpp>
-#include <types.hpp>
 
 #include "hal/mmu.hpp"
 #include "hal/tlb.hpp"

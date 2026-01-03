@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_SETTINGS_SETTINGS_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_SETTINGS_SETTINGS_HPP_
 
+#include <types.h>
 #include <bit.hpp>
-#include <types.hpp>
 
 static constexpr u64 kKernelVirtualAddressStart = kBitMaskLeft<u64, 33>;
 static constexpr u64 kDirectMemMapAddrStart     = kBitMaskLeft<u64, 17>;

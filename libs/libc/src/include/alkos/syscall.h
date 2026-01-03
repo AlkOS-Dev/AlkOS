@@ -1,8 +1,8 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_
 
+#include <syscall.h>
 #include "macro.hpp"
-#include "syscall.h"
 
 /**
  * @brief Syscall numbers
@@ -27,27 +27,41 @@ enum SyscallNumber {
     kSysCreateGraphicSession,
     kSysBlit,
 
+    /* File descriptor syscalls */
+    kSysOpen,
+    kSysClose,
+    kSysRead,
+    kSysWrite,
+    kSysSeek,
+    kSysDup,
+    kSysDupTo,
+
+    /* Threads, processes */
+    kThreadCreate,
+    kThreadExit,
+    kThreadJoin,
+    kThreadDetach,
+    kProcExit,
+    kProcAbort,
+
     kSysMax,
 };
 
+#define SYSCALL_NAME(name, num, ret_type, ...) \
+    ret_type __platform_##name(FOR_EACH_PAIR(MERGE, __VA_ARGS__))
+
+#define SYSCALL_VOID_NAME(name, num, ...) void __platform_##name(FOR_EACH_PAIR(MERGE, __VA_ARGS__))
+
 #define DEFINE_SYSCALL(name, num, ret_type, ...)                                             \
-    ret_type __platform_##name(FOR_EACH_PAIR(MERGE, __VA_ARGS__))                            \
+    SYSCALL_NAME(name, num, ret_type __VA_OPT__(, ) __VA_ARGS__)                             \
     {                                                                                        \
         return (ret_type)_SYSCALL_DISPATCH(num, FOR_EACH_PAIR(GET_SECOND_ARG, __VA_ARGS__)); \
     }
 
 #define DEFINE_SYSCALL_VOID(name, num, ...)                                       \
-    void __platform_##name(FOR_EACH_PAIR(MERGE, __VA_ARGS__))                     \
+    SYSCALL_VOID_NAME(name, num __VA_OPT__(, ) __VA_ARGS__)                       \
     {                                                                             \
         (void)_SYSCALL_DISPATCH(num, FOR_EACH_PAIR(GET_SECOND_ARG, __VA_ARGS__)); \
     }
 
-/**
- * @brief This file collects all the system calls that are used by the libc.
- *
- * Calls should be specified in other header files and then included here.
- */
-
-#include <sys/calls/time.h>
-
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_

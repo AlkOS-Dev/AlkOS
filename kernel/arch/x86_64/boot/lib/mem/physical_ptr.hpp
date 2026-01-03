@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PHYSICAL_PTR_HPP_
 
+#include <types.h>
 #include <type_traits.hpp>
-#include <types.hpp>
 
 template <class T>
 class PhysicalPtr

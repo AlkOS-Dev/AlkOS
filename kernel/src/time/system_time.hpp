@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
 #define KERNEL_SRC_TIME_SYSTEM_TIME_HPP_
 
-#include <sys/time.h>
+#include <alkos/time.h>
 #include <time.h>
 #include <time.hpp>
 
@@ -30,7 +30,7 @@ class SystemTime
 
     void SyncWithHardware();
 
-    NODISCARD timezone GetTimezone() const { return time_zone_; }
+    NODISCARD Timezone GetTimezone() const { return time_zone_; }
 
     // ------------------------------
     // Class fields
@@ -45,7 +45,7 @@ class SystemTime
     /* Hard coded Poland */
     static constexpr uint64_t kPolandOffset = 1;
 
-    timezone time_zone_{
+    Timezone time_zone_{
         .west_offset_minutes     = kPolandOffset * kMinutesInHour,
         .dst_time_offset_minutes = 0,
         .dst_time_start_seconds  = static_cast<u16>(-1),

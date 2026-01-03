@@ -1,12 +1,10 @@
 /// This file provides the kernel's implementation of the libc platform ABI.
 #ifdef __ALKOS_KERNEL__
+
 #include <assert.h>
 #include <platform.h>
 
-#include "hal/debug_terminal.hpp"
 #include "hal/panic.hpp"
-#include "hal/spinlock.hpp"
-#include "modules/timing.hpp"
 #include "modules/timing_constants.hpp"
 #include "syscalls/syscalls.hpp"
 

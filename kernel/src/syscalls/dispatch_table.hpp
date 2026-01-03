@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_SYSCALLS_DISPATCH_TABLE_HPP_
 #define KERNEL_SRC_SYSCALLS_DISPATCH_TABLE_HPP_
 
-#include <sys/calls.h>
+#include <alkos/calls.h>
 #include <defines.hpp>
 
 #include "hal/types.hpp"
@@ -12,11 +12,12 @@ namespace Syscall
 
 inline constexpr auto kNotImplemented = static_cast<hal::reg_t>(-1);
 
+template <size_t kSize>
 struct SyscallDispatchTable {
-    consteval SyscallDispatchTable()
+    constexpr SyscallDispatchTable()
     {
-        for (size_t i = 0; i < kSysMax; ++i) {
-            handlers_[i] = kDefaultHandler;
+        for (size_t i = 0; i < kSize; ++i) {
+            handlers_[i] = nullptr;
         }
     }
 
@@ -25,18 +26,33 @@ struct SyscallDispatchTable {
     consteval void RegisterHandler()
     {
         constexpr auto kIdx = static_cast<size_t>(num);
-        static_assert(kIdx < kSysMax, "Syscall number out of bounds");
+        static_assert(kIdx < kSize, "Syscall number out of bounds");
 
         handlers_[kIdx] = &SyscallWrapper<kHandler>::Invoke;
     }
 
-    private:
-    static constexpr auto kDefaultHandler = [](hal::reg_t, hal::reg_t, hal::reg_t, hal::reg_t,
-                                               hal::reg_t, hal::reg_t) -> hal::reg_t {
-        return kNotImplemented;
-    };
+    template <auto kFun>
+    static consteval auto Create()
+    {
+        constexpr SyscallDispatchTable table = kFun();
+#ifndef NDEBUG
+        static_assert(table.IsAllHandlersRegistered(), "Not all syscall handlers are registered");
+#endif  // NDEBUG
+        return table;
+    }
 
-    SyscallHandler handlers_[kSysMax];
+    private:
+    consteval bool IsAllHandlersRegistered() const
+    {
+        for (size_t i = 0; i < kSize; ++i) {
+            if (handlers_[i] == nullptr) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    SyscallHandler handlers_[kSize];
 };
 
 }  // namespace Syscall

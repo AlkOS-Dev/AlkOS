@@ -1,16 +1,16 @@
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_BUDDY_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <expected.hpp>
-#include <types.hpp>
 
+#include "../../../sync/spinlock.hpp"
 #include "mem/error.hpp"
 #include "mem/page.hpp"
 #include "mem/page_meta.hpp"
 #include "mem/page_meta_table.hpp"
 #include "mem/types.hpp"
-#include "sync/kernel/spinlock.hpp"
 
 // Forward declaration for test access (test class is in global namespace)
 class BuddyPmmTest;

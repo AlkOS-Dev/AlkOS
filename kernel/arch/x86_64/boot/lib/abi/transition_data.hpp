@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_ABI_TRANSITION_DATA_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 
 #include "mem/pmm.hpp"
 #include "mem/vmm.hpp"

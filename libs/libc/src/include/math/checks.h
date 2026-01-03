@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_INCLUDE_MATH_CHECKS_H_
-#define LIBS_LIBC_INCLUDE_MATH_CHECKS_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_MATH_CHECKS_H_
+#define LIBS_LIBC_SRC_INCLUDE_MATH_CHECKS_H_
 
 #include <defines.h>
 #include <stdint.h>
@@ -20,4 +20,4 @@ CONSTEXPR int isinf(const double num)
 
 END_DECL_C
 
-#endif  // LIBS_LIBC_INCLUDE_MATH_CHECKS_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_MATH_CHECKS_H_

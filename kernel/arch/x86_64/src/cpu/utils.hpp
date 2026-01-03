@@ -1,13 +1,11 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 #define KERNEL_ARCH_X86_64_SRC_CPU_UTILS_HPP_
 
+#include <types.h>
 #include <bits_ext.hpp>
-#include <defines.hpp>
 #include <template/rolled_switch.hpp>
-#include <types.hpp>
 
 #include "array.hpp"
-#include "include/io.hpp"
 
 /**
  * @file arch_utils.hpp

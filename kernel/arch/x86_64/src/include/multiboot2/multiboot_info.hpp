@@ -1,9 +1,9 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
 #define KERNEL_ARCH_X86_64_SRC_INCLUDE_MULTIBOOT2_MULTIBOOT_INFO_HPP_
 
+#include <types.h>
 #include <bit.hpp>
 #include <concepts.hpp>
-#include <types.hpp>
 
 #include <todo.hpp>
 #include "include/models/memory_span.hpp"

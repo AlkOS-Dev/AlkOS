@@ -6,7 +6,7 @@
 #include "assert.h"
 #include "bit.hpp"
 #include "string.h"
-#include "types.hpp"
+#include "types.h"
 
 // TODO: Minimal changes would be required to make this
 // https://en.cppreference.com/w/cpp/utility/bitset.html

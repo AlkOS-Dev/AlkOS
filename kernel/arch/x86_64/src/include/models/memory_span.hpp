@@ -1,7 +1,7 @@
 #ifndef KERNEL_ARCH_X86_64_SRC_INCLUDE_MODELS_MEMORY_SPAN_HPP_
 #define KERNEL_ARCH_X86_64_SRC_INCLUDE_MODELS_MEMORY_SPAN_HPP_
 
-#include <types.hpp>
+#include <types.h>
 class MemorySpan
 {
     public:

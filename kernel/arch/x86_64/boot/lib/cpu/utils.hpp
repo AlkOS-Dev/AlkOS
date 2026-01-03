@@ -1,8 +1,8 @@
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_CPU_UTILS_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_CPU_UTILS_HPP_
 
+#include <types.h>
 #include <defines.hpp>
-#include <types.hpp>
 #include "hw/io.hpp"
 
 /**

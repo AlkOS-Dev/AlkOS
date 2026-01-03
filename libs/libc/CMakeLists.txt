@@ -13,6 +13,7 @@
 message(STATUS "Configuring LibC interface...")
 
 alkos_find_sources(ALKOS_LIBC_SOURCES)
+list(FILTER ALKOS_LIBC_SOURCES EXCLUDE REGEX "crt0\\.cpp$")
 set(ALKOS_LIBC_SOURCES ${ALKOS_LIBC_SOURCES} CACHE INTERNAL "Source files for libc")
 
 add_library(alkos.libc.interface INTERFACE)
