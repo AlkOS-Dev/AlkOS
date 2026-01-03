@@ -3,7 +3,7 @@
 ; ------------------------------------------------------------
 
 struc Thread
-    .next:                  resq 1
+    .intrusive_data         resb 48
 
     .tid:                   resq 1
     .owner:                 resq 1

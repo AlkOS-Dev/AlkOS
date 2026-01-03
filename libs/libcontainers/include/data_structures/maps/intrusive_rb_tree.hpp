@@ -29,6 +29,7 @@ struct IntrusiveRbNode {
     Color color;
     KeyT key;
 };
+static_assert(sizeof(IntrusiveRbNode<u64, u64>) == 5 * 8);
 
 template <class T, class KeyT>
     requires(

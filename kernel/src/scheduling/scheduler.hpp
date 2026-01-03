@@ -8,6 +8,7 @@
 #include "policy.hpp"
 #include "thread.hpp"
 
+#include "data_structures/maps/intrusive_rb_tree.hpp"
 #include "hal/scheduling.hpp"
 #include "hal/spinlock.hpp"
 #include "hardware/core_local.hpp"
@@ -31,6 +32,8 @@ class Scheduler
     // Class interaction
     // ------------------------------
 
+    void InstallInterruptHandler();
+
     void AddReadyThread(Thread *thread);
 
     Thread *Schedule();
@@ -51,9 +54,14 @@ class Scheduler
     // ------------------------------
 
     protected:
+    void SetupPeriodic(u64 time_ns);
+
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    // Sleeping queue
+    data_structures::IntrusiveRBTree<Thread, u64> sleep_queue_{};
 
     // Locking
     hal::Spinlock spinlock_{};

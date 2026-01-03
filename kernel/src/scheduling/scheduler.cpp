@@ -6,6 +6,24 @@
 #include "modules/timing.hpp"
 #include "scheduling/scheduler_lock.hpp"
 
+// ------------------------------
+// statics
+// ------------------------------
+
+static Sched::Thread *TimerHandler(intr::LitHwEntry &)
+{
+    if (hardware::GetCoreLocalTcb() == nullptr) {
+        // Not yet converted to scheduling
+        return nullptr;
+    }
+
+    return SchedulingModule::Get().GetScheduler().ScheduleAndUpdateThreads();
+}
+
+// ------------------------------
+// Implementations
+// ------------------------------
+
 namespace Sched
 {
 Scheduler::Scheduler()
@@ -20,6 +38,16 @@ Scheduler::Scheduler()
         PreparePolicy<RoundRobinPolicy>(&policy3_);
     policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
         PreparePolicy<RoundRobinPolicy>(&policy4_);
+}
+
+void Scheduler::InstallInterruptHandler()
+{
+    HardwareModule::Get()
+        .GetInterrupts()
+        .GetLit()
+        .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(
+            hal::kTimerHwLirq, intr::HwHandler{.handler = TimerHandler}
+        );
 }
 
 void Scheduler::AddReadyThread(Thread *thread)
@@ -65,9 +93,8 @@ Thread *Scheduler::ScheduleAndUpdateThreads()
 
 void Scheduler::Yield()
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    SchedulerLock lock{};
     YieldUnguarded();
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 }
 
 void Scheduler::ConvertToScheduling()
@@ -84,8 +111,45 @@ void Scheduler::ConvertToScheduling()
     hal::ConvertContext(thread);
 }
 
-void Scheduler::NanoSleepUntil(u64 systime_ns)
+void Scheduler::NanoSleepUntil(const u64 systime_ns)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    static constexpr u64 kMinDelta = 2'000;
+
+    u64 time;
+    {
+        SchedulerLock lock{};
+        time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+        if (systime_ns < time) {
+            return;
+        }
+    }
+
+    if (systime_ns - time < kMinDelta) {
+        /* Do busy wait if windo to scheduler irq is too small */
+        while (systime_ns - TimingModule::Get().GetSystemTime().ReadLifeTimeNs() < kMinDelta) {
+        }
+        return;
+    }
+    {
+        SchedulerLock lock{};
+
+        hardware::GetCoreLocalTcb()->key   = systime_ns;
+        hardware::GetCoreLocalTcb()->state = ThreadState::kSleeping;
+        sleep_queue_.Insert(hardware::GetCoreLocalTcb());
+
+        auto thread = Schedule();
+        ASSERT_EQ(thread->state, ThreadState::kReady);
+        thread->state = ThreadState::kRunning;
+        hal::ContextSwitch(thread);
+    }
+}
+
+void Scheduler::SetupPeriodic(u64 time_ns)
+{
+    ASSERT_TRUE(HardwareModule::Get().GetEventClockRegistry().IsSelectedPicked());
+
+    auto event_clock = HardwareModule::Get().GetEventClockRegistry().GetSelected();
+    event_clock.cbs.set_periodic(&event_clock);
+    event_clock.cbs.next_event(&event_clock, time_ns);
 }
 }  // namespace Sched
