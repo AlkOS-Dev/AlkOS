@@ -23,30 +23,6 @@ using std::unexpected;
 using IoResult = expected<size_t, Error>;
 
 /**
- * @brief Abstract interface for reading bytes.
- */
-class IReader
-{
-    public:
-    virtual ~IReader() = default;
-
-    /// Read bytes into the provided buffer.
-    /// Returns the actual number of bytes read.
-    virtual IoResult Read(std::span<byte> buffer) = 0;
-
-    /// Helper for single char (convenience)
-    /// Returns error if buffer empty
-    virtual expected<char, Error> GetChar()
-    {
-        byte c;
-        auto res = Read(std::span<byte>(&c, 1));
-        RET_UNEXPECTED_IF_ERR(res);
-        RET_UNEXPECTED_IF(*res == 0, Error::Retry);
-        return static_cast<char>(c);
-    }
-};
-
-/**
  * @brief Abstract interface for writing bytes.
  */
 class IWriter
@@ -75,15 +51,6 @@ class IWriter
         }
         return Write(std::span<const byte>(reinterpret_cast<const byte *>(str), len));
     }
-};
-
-/**
- * @brief A Stream is a bidirectional device (e.g., Serial Port, TCP Socket).
- */
-class IStream : public IReader, public IWriter
-{
-    public:
-    virtual ~IStream() = default;
 };
 
 }  // namespace IO
