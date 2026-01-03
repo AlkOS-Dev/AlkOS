@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_INCLUDE_ASSERT_H_
-#define LIBS_LIBC_INCLUDE_ASSERT_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ASSERT_H_
+#define LIBS_LIBC_SRC_INCLUDE_ASSERT_H_
 
 #include "platform.h"
 #include "todo.h"
@@ -103,4 +103,4 @@
 
 #endif  // __cplusplus
 
-#endif  // LIBS_LIBC_INCLUDE_ASSERT_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ASSERT_H_

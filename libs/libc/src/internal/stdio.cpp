@@ -1,62 +1,76 @@
 #include "stdio.hpp"
-#include "alkos/sys/fd.h"
-#include "stdio.h"
-#include "string.h"
 
-// Static fixed buffers for standard streams
-static byte _stdin_buffer[BUFSIZ];
-static byte _stdout_buffer[BUFSIZ];
-static byte _stderr_buffer[BUFSIZ];
+// Fixed buffers for standard streams
+byte _stdin_buffer[BUFSIZ];
+byte _stdout_buffer[BUFSIZ];
+byte _stderr_buffer[BUFSIZ];
 
-static FILE _stdin;
-static FILE _stdout;
-static FILE _stderr;
+FILE _stdin;
+FILE _stdout;
+FILE _stderr;
 
-FILE *stdin  = &_stdin;
-FILE *stdout = &_stdout;
-FILE *stderr = &_stderr;
+// FILE allocator pool
+static FileNode file_pool[FILE_POOL_SIZE];
+static FileNode *free_list        = nullptr;
+static bool allocator_initialized = false;
 
-void InitStdio()
+/**
+ * @brief Initialize the FILE allocator
+ */
+static void InitFileAllocator()
 {
-    memset(&_stdin, 0, sizeof(FILE));
-    _stdin.fd                    = kFdStdIn;
-    _stdin.flags.open_mode       = kFdFlagRead;
-    _stdin.flags.buffer_mode     = kFdBufferLine;
-    _stdin.flags.eof             = false;
-    _stdin.flags.error           = false;
-    _stdin.flags.closed          = false;
-    _stdin.flags.is_buffer_owner = false;
-    _stdin.buffer                = _stdin_buffer;
-    _stdin.buffer_size           = sizeof(_stdin_buffer);
-    _stdin.buffer_pos            = 0;
-    _stdin.buffer_level          = 0;
-    _stdin.file_pos              = 0;
+    if (allocator_initialized) {
+        return;
+    }
 
-    memset(&_stdout, 0, sizeof(FILE));
-    _stdout.fd                    = kFdStdOut;
-    _stdout.flags.open_mode       = kFdFlagWrite;
-    _stdout.flags.buffer_mode     = kFdBufferLine;
-    _stdout.flags.eof             = false;
-    _stdout.flags.error           = false;
-    _stdout.flags.closed          = false;
-    _stdout.flags.is_buffer_owner = false;
-    _stdout.buffer                = _stdout_buffer;
-    _stdout.buffer_size           = sizeof(_stdout_buffer);
-    _stdout.buffer_pos            = 0;
-    _stdout.buffer_level          = 0;
-    _stdout.file_pos              = 0;
+    // Build the free list
+    for (size_t i = 0; i < FILE_POOL_SIZE - 1; i++) {
+        file_pool[i].next = &file_pool[i + 1];
+    }
+    file_pool[FILE_POOL_SIZE - 1].next = nullptr;
 
-    memset(&_stderr, 0, sizeof(FILE));
-    _stderr.fd                    = kFdStdErr;
-    _stderr.flags.open_mode       = kFdFlagWrite;
-    _stderr.flags.buffer_mode     = kFdBufferNone;
-    _stderr.flags.eof             = false;
-    _stderr.flags.error           = false;
-    _stderr.flags.closed          = false;
-    _stderr.flags.is_buffer_owner = false;
-    _stderr.buffer                = _stderr_buffer;
-    _stderr.buffer_size           = sizeof(_stderr_buffer);
-    _stderr.buffer_pos            = 0;
-    _stderr.buffer_level          = 0;
-    _stderr.file_pos              = 0;
+    free_list             = &file_pool[0];
+    allocator_initialized = true;
+}
+
+FILE *AllocFile()
+{
+    if (!allocator_initialized) {
+        InitFileAllocator();
+    }
+
+    if (free_list == nullptr) {
+        // Pool exhausted
+        return nullptr;
+    }
+
+    // Pop from free list
+    FileNode *node = free_list;
+    free_list      = node->next;
+
+    // Clear the FILE structure
+    memset(&node->file, 0, sizeof(FILE));
+
+    return &node->file;
+}
+
+void FreeFile(FILE *file)
+{
+    if (file == nullptr) {
+        return;
+    }
+
+    // Ensure we only free files from our pool
+    if (file < &file_pool[0].file || file > &file_pool[FILE_POOL_SIZE - 1].file) {
+        // Not from our pool (might be stdin/stdout/stderr or invalid)
+        return;
+    }
+
+    // Find the containing FileNode
+    // Since FILE is the first member of FileNode, we can cast directly
+    FileNode *node = reinterpret_cast<FileNode *>(file);
+
+    // Push back to free list
+    node->next = free_list;
+    free_list  = node;
 }

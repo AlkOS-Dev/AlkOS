@@ -2,7 +2,6 @@
 #define KERNEL_SRC_SYSCALLS_CALLS_FD_HPP_
 
 #include <defines.h>
-
 #include "modules/vfs.hpp"
 
 namespace Syscall
@@ -19,9 +18,7 @@ namespace Syscall
  */
 FORCE_INLINE_F Fs::FdResult<fd_t> SysOpen(const vfs::Path &path, const Fs::OpenMode mode)
 {
-    auto result = ::VfsModule::Get().GetFdManager().Open(path, mode);
-    RET_UNEXPECTED_IF_ERR(result);
-    return result.value();
+    return ::VfsModule::Get().GetFdManager().Open(path, mode);
 }
 
 /**
@@ -31,9 +28,7 @@ FORCE_INLINE_F Fs::FdResult<fd_t> SysOpen(const vfs::Path &path, const Fs::OpenM
  */
 FORCE_INLINE_F Fs::FdResult<> SysClose(fd_t fd)
 {
-    auto result = ::VfsModule::Get().GetFdManager().Close(fd);
-    RET_UNEXPECTED_IF_ERR(result);
-    return {};
+    return ::VfsModule::Get().GetFdManager().Close(fd);
 }
 
 /**
@@ -44,9 +39,7 @@ FORCE_INLINE_F Fs::FdResult<> SysClose(fd_t fd)
  */
 FORCE_INLINE_F Fs::FdResult<size_t> SysRead(fd_t fd, std::span<byte> buffer)
 {
-    auto result = ::VfsModule::Get().GetFdManager().Read(fd, buffer);
-    RET_UNEXPECTED_IF_ERR(result);
-    return result.value();
+    return ::VfsModule::Get().GetFdManager().Read(fd, buffer);
 }
 
 /**
@@ -57,9 +50,7 @@ FORCE_INLINE_F Fs::FdResult<size_t> SysRead(fd_t fd, std::span<byte> buffer)
  */
 FORCE_INLINE_F Fs::FdResult<size_t> SysWrite(fd_t fd, std::span<const byte> buffer)
 {
-    auto result = ::VfsModule::Get().GetFdManager().Write(fd, buffer);
-    RET_UNEXPECTED_IF_ERR(result);
-    return result.value();
+    return ::VfsModule::Get().GetFdManager().Write(fd, buffer);
 }
 
 /**
@@ -71,9 +62,28 @@ FORCE_INLINE_F Fs::FdResult<size_t> SysWrite(fd_t fd, std::span<const byte> buff
  */
 FORCE_INLINE_F Fs::FdResult<i64> SysSeek(fd_t fd, const i64 offset, const Fs::FdSeek whence)
 {
-    auto result = ::VfsModule::Get().GetFdManager().Seek(fd, offset, whence);
-    RET_UNEXPECTED_IF_ERR(result);
-    return result.value();
+    return ::VfsModule::Get().GetFdManager().Seek(fd, offset, whence);
+}
+
+/**
+ * @brief Duplicate a file descriptor
+ * @param fd File descriptor to duplicate
+ * @return New file descriptor on success, or error
+ */
+FORCE_INLINE_F Fs::FdResult<fd_t> SysDup(fd_t fd)
+{
+    return ::VfsModule::Get().GetFdManager().Duplicate(fd);
+}
+
+/**
+ * @brief Duplicate a file descriptor to a specific new descriptor
+ * @param old_fd File descriptor to duplicate
+ * @param new_fd New file descriptor
+ * @return New file descriptor on success, or error
+ */
+FORCE_INLINE_F Fs::FdResult<fd_t> SysDupTo(fd_t old_fd, fd_t new_fd)
+{
+    return ::VfsModule::Get().GetFdManager().Duplicate(old_fd, new_fd);
 }
 
 }  // namespace Syscall

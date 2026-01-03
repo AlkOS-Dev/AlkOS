@@ -3,11 +3,9 @@
 
 #include <types.h>
 #include <bits_ext.hpp>
-#include <defines.hpp>
 #include <template/rolled_switch.hpp>
 
 #include "array.hpp"
-#include "include/io.hpp"
 
 /**
  * @file arch_utils.hpp

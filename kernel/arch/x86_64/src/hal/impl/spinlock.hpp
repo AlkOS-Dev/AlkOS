@@ -33,9 +33,6 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
     // ABI implementations
     // ------------------------------
 
-    FORCE_INLINE_F void lock() { Lock(); }
-    FORCE_INLINE_F void unlock() { Unlock(); }
-
     FORCE_INLINE_F void Lock()
     {
         if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {

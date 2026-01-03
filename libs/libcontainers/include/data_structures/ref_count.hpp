@@ -184,8 +184,6 @@ class RefPtr
     NODISCARD bool operator!=(const RefPtr &other) const noexcept { return ptr_ != other.ptr_; }
     NODISCARD bool operator==(T *ptr) const noexcept { return ptr_ == ptr; }
     NODISCARD bool operator!=(T *ptr) const noexcept { return ptr_ != ptr; }
-    NODISCARD bool operator==(std::nullptr_t) const noexcept { return ptr_ == nullptr; }
-    NODISCARD bool operator!=(std::nullptr_t) const noexcept { return ptr_ != nullptr; }
 
     private:
     T *ptr_;

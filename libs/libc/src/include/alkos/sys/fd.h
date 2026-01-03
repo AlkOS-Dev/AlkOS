@@ -1,9 +1,9 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_FD_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_FD_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_
 
+#include "alkos/fd.h"
 #include "defines.h"
 #include "platform.h"
-#include "alkos/fd.h"
 #include "types.h"
 
 BEGIN_DECL_C
@@ -50,6 +50,33 @@ FAST_CALL ssize_t WriteToFd(fd_t fd, const void *buf, size_t count)
     return __platform_write(fd, buf, count);
 }
 
+/**
+ * @brief Seek to a position in a file descriptor
+ * @param fd File descriptor to seek
+ * @param offset Offset to seek to
+ * @param whence Reference point for offset
+ * @return New offset on success, -1 on failure
+ */
+FAST_CALL ssize_t SeekFd(fd_t fd, ssize_t offset, FdSeek whence)
+{
+    return __platform_seek(fd, offset, whence);
+}
+
+/**
+ * @brief Duplicate a file descriptor
+ * @param fd File descriptor to duplicate
+ * @return New file descriptor on success, -1 on failure
+ */
+FAST_CALL fd_t DuplicateFd(fd_t fd) { return __platform_dup(fd); }
+
+/**
+ * @brief Duplicate a file descriptor to a specific value
+ * @param old_fd File descriptor to duplicate
+ * @param new_fd Desired new file descriptor value
+ * @return New file descriptor on success, -1 on failure
+ */
+FAST_CALL fd_t DuplicateFdTo(fd_t old_fd, fd_t new_fd) { return __platform_dup_to(old_fd, new_fd); }
+
 END_DECL_C
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_CALLS_FD_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_

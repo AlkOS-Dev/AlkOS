@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_TIME_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_TIME_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_TIME_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_TIME_H_
 
 #include <stdint.h>
 #include <types.h>
@@ -31,4 +31,4 @@ typedef struct {
     u64 remainder;
 } TimeVal;
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_TIME_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_TIME_H_

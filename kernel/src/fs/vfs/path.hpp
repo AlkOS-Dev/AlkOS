@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_VFS_PATH_HPP_
-#define KERNEL_SRC_VFS_PATH_HPP_
+#ifndef KERNEL_SRC_FS_VFS_PATH_HPP_
+#define KERNEL_SRC_FS_VFS_PATH_HPP_
 
 #include <array.hpp>
 #include <concepts.hpp>
@@ -429,4 +429,4 @@ inline const Path Path::kRoot       = Path(std::string_view(&kPathSeparator, 1))
 
 }  // namespace vfs
 
-#endif  // KERNEL_SRC_VFS_PATH_HPP_
+#endif  // KERNEL_SRC_FS_VFS_PATH_HPP_

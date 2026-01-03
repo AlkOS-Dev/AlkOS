@@ -43,10 +43,10 @@ struct Process : hal::Process {
     ProcessFlags flags;
 
     /* Process resources */
-    Mem::VirtualPtr<Mem::AddressSpace> address_space;
+    Mem::VPtr<Mem::AddressSpace> address_space;
 
     /* File descriptor table */
-    Mem::VirtualPtr<Fs::FdTable> fd_table;
+    Mem::VPtr<Fs::FdTable> fd_table;
 
     /* Standard I/O pipes (owned by process) */
     IO::Pipe<Fs::kStdioBufferSize> stdin_pipe;
