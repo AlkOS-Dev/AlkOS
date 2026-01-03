@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include <array.hpp>
+#include <data_structures/intrusive_linked_list.hpp>
 #include <defines.hpp>
 
 #include "hal/tasks.hpp"
@@ -49,15 +50,12 @@ enum class ThreadState : u64 {
 };
 static_assert(sizeof(ThreadState) == sizeof(u64));
 
-struct Thread : hal::Thread {
+struct Thread : data_structures::IntrusiveListNode<Thread> {
     /* Management */
     Tid tid;
     Pid owner;
     ThreadFlags flags;
     ThreadState state;
-
-    /* Scheduler data */
-    Thread *next;
 
     /* Thread resources */
     void *kernel_stack;
@@ -72,7 +70,12 @@ struct Thread : hal::Thread {
     u64 num_interrupts;
     u64 num_syscalls;
     u64 num_context_switches;
+    u64 padding0;
+
+    /* Arch */
+    hal::Thread arch_data;
 };
+static_assert(sizeof(Thread) == (128 + sizeof(hal::Thread)));
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_THREAD_HPP_

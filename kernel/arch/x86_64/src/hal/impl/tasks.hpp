@@ -5,16 +5,14 @@
 #include <types.h>
 #include <defines.hpp>
 
-#include "hal/api/tasks.hpp"
-
 namespace arch
 {
 
-struct Thread : ThreadAPI {
-    alignas(64) byte fp_state[4096];
-
+struct Thread {
     u64 fs_base;
     u64 gs_base;
+
+    alignas(64) byte fp_state[4096];
 };
 struct Process {
 };

@@ -8,7 +8,7 @@
 
 namespace Sched
 {
-class Thread;
+struct Thread;
 
 // ------------------------------
 // SchedulingPolicy
