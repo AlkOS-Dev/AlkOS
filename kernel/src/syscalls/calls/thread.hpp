@@ -6,13 +6,13 @@
 
 namespace Syscall
 {
-FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t f, void *arg) { return 0; }
+FAST_CALL int SysThreadCreate(Thread *, thread_func_t, void *) { return 0; }
 
-FAST_CALL int SysThreadJoin(Thread *thread) { return 0; }
+FAST_CALL int SysThreadJoin(Thread *) { return 0; }
 
-FAST_CALL int SysThreadDetach(Thread *thread) { return 0; }
+FAST_CALL int SysThreadDetach(Thread *) { return 0; }
 
-FAST_CALL void SysThreadExit(void *retval) {}
+FAST_CALL void SysThreadExit(void *) {}
 }  // namespace Syscall
 
 #endif  // KERNEL_SRC_SYSCALLS_CALLS_THREAD_HPP_

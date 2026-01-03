@@ -12,8 +12,6 @@
 #include "mem/types.hpp"
 #include "scheduling/process.hpp"
 
-#include <geometry.hpp>
-
 namespace Video
 {
 
@@ -26,6 +24,7 @@ struct BufferInfo {
 
 struct GraphicSession {
     Sched::Pid owner_pid;
+    Sched::Pid focused_pid;
     bool is_active = false;
 
     /// The backing store (Physical RAM)
@@ -46,18 +45,18 @@ class WindowManager
     /// Called by Syscall: If the caller is the active session, copy buffer to VRAM
     void Blit(Sched::Pid pid);
 
-    /// Called by Syscall: If the caller is the active session, copy rect to VRAM
-    void BlitRect(Sched::Pid pid, Graphics::Rect rect);
-
     /// Switches screen to a specific session
     void SwitchSession(size_t index);
     void SwitchToNextSession();
+
+    void SetFocus(Sched::Pid pid);
+    void ReleaseFocus(Sched::Pid pid);
+    Sched::Pid GetActiveSessionFocusedPid();
 
     private:
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();
     size_t RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
     void BlitSession(const GraphicSession &session);
-    void BlitSessionRect(const GraphicSession &session, Graphics::Rect rect);
     std::tuple<GraphicSession *, size_t> FindSession(Sched::Pid pid);
     void RefreshScreen();
 

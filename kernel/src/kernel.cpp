@@ -33,13 +33,13 @@ static void KernelRun()
     );
 
     const auto res1 = task_mgr.ExecuteElf64("/bin/shell", {});
-    R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/hello process...");
+    R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/shell process...");
 
     for (volatile size_t i = 0; i < 1'000'000; i = i + 1) {
     }
 
     const auto res2 = task_mgr.ExecuteElf64("/bin/gui_test", {});
-    R_ASSERT_TRUE(static_cast<bool>(res2), "Failed to spawn /bin/hello process...");
+    R_ASSERT_TRUE(static_cast<bool>(res2), "Failed to spawn /bin/gui process...");
 
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }

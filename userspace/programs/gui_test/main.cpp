@@ -2,6 +2,7 @@
 #include <platform.h>
 #include <stdio.h>
 #include <time.h>
+#include <types.h>
 
 extern "C" int main()
 {

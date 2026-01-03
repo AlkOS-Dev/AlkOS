@@ -5,6 +5,7 @@
 #include <template/scope_guard.hpp>
 #include "fs/file_descriptor.hpp"
 #include "modules/vfs.hpp"
+#include "modules/video.hpp"
 
 // ------------------------------
 // statics
@@ -78,6 +79,8 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
 void Sched::Processes::CleanupProcess(Process *process)
 {
     ASSERT_NOT_NULL(process);
+
+    VideoModule::Get().GetWindowManager().ReleaseFocus(process->pid);
 
     auto fd_table = process->fd_table;
     ASSERT_NOT_NULL(fd_table);

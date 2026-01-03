@@ -4,13 +4,6 @@
 #include <types.h>
 
 typedef struct {
-    i32 x;
-    i32 y;
-    i32 w;
-    i32 h;
-} Rect;
-
-typedef struct {
     u8 red_pos;
     u8 red_mask_size;
     u8 green_pos;

@@ -3,24 +3,18 @@
 
 #include <types.h>
 #include <array.hpp>
+#include <data_structures/intrusive_linked_list.hpp>
 #include <defines.hpp>
 
 #include "hal/tasks.hpp"
+#include "policy.hpp"
 #include "process.hpp"
 
 namespace Sched
 {
-
-struct PACK Tid {
-    u16 id;
-    u64 count : 48;
-};
-
-struct PACK ThreadFlags {
-    bool PreserveFloats : 1;
-    u64 padding : 63;
-};
-static_assert(sizeof(ThreadFlags) == 8);
+// ------------------------------
+// Task
+// ------------------------------
 
 struct Task {
     static constexpr size_t kMaxArgs = 6;
@@ -30,14 +24,38 @@ struct Task {
     size_t args_count;
 };
 
-struct Thread : hal::Thread {
+// ------------------------------
+// Thread
+// ------------------------------
+
+struct PACK Tid {
+    u16 id;
+    u64 count : 48;
+};
+
+struct PACK ThreadFlags {
+    SchedulingPolicy policy : 8;
+    u8 priority : 8;
+    bool PreserveFloats : 1;
+    u64 padding : 47;
+};
+static_assert(sizeof(ThreadFlags) == 8);
+
+enum class ThreadState : u64 {
+    kReady = 0,
+    kRunning,
+    kBlocked,
+    kTerminated,
+    kLast,
+};
+static_assert(sizeof(ThreadState) == sizeof(u64));
+
+struct Thread : data_structures::IntrusiveListNode<Thread> {
     /* Management */
     Tid tid;
     Pid owner;
     ThreadFlags flags;
-
-    /* Scheduler data */
-    Thread *next;
+    ThreadState state;
 
     /* Thread resources */
     void *kernel_stack;
@@ -45,11 +63,19 @@ struct Thread : hal::Thread {
     void *user_stack;
     void *user_stack_bottom;
 
-    /* Timing */
+    /* Statistics */
     u64 kernel_time_ns;
     u64 user_time_ns;
     u64 timestamp;
+    u64 num_interrupts;
+    u64 num_syscalls;
+    u64 num_context_switches;
+    u64 padding0;
+
+    /* Arch */
+    hal::Thread arch_data;
 };
+static_assert(sizeof(Thread) == (128 + sizeof(hal::Thread)));
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_THREAD_HPP_

@@ -23,6 +23,10 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     // Panic syscall
     table.RegisterHandler<kSysPanic, SysPanic>();
 
+    // Video
+    table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
+    table.RegisterHandler<kSysBlit, SysBlit>();
+
     // File Descriptor syscalls
     table.RegisterHandler<kSysOpen, SysOpen>();
     table.RegisterHandler<kSysClose, SysClose>();

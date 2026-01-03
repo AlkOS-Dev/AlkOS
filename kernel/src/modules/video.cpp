@@ -29,11 +29,11 @@ internal::VideoModule::VideoModule(const BootArguments &args, Heap &hp) noexcept
     };
 
     Framebuffer_.Init(s, pf);
-    Surface &screen = Framebuffer_.GetSurface();
+    Graphics::Surface &screen = Framebuffer_.GetSurface();
     R_ASSERT_TRUE(screen.IsValid());
 
-    Painter p(screen, Framebuffer_.GetFormat());
-    p.Clear(Color::Black());
+    Graphics::Painter p(screen, Framebuffer_.GetFormat());
+    p.Clear(Graphics::Color::Black());
 
     WindowManager_.Init(Framebuffer_);
 }

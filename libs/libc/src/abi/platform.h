@@ -40,7 +40,6 @@ SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 // Video
 SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);
 SYSCALL_VOID_NAME(blit, kSysBlit);
-SYSCALL_VOID_NAME(blit_rect, kSysBlitRect, Rect *, rect);
 
 // Power Management
 SYSCALL_VOID_NAME(power, kSysPower, PowerAction, action);

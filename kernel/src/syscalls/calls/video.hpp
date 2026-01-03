@@ -1,11 +1,18 @@
 #ifndef KERNEL_SRC_SYSCALLS_CALLS_VIDEO_HPP_
 #define KERNEL_SRC_SYSCALLS_CALLS_VIDEO_HPP_
 
+#include <alkos/video.h>
+#include <defines.h>
 #include "hardware/core_local.hpp"
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
-#include <geometry.hpp>
+namespace Syscall
+{
+
+// ------------------------------
+// Video Syscalls
+// ------------------------------
 
 /**
  * @brief Registers the current process as a graphics app, allocates a buffer,
@@ -55,5 +62,7 @@ FORCE_INLINE_F void SysBlit()
     DEBUG_INFO_GENERAL("SysBlit called by PID: %llu", pid);
     wm.Blit(pid);
 }
+
+}  // namespace Syscall
 
 #endif  // KERNEL_SRC_SYSCALLS_CALLS_VIDEO_HPP_

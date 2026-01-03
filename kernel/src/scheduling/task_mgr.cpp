@@ -4,6 +4,7 @@
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
+#include "modules/video.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
@@ -97,16 +98,39 @@ std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const Pro
 
 std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &task)
 {
-    bool dismiss = false;
-
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));
+
+    ThreadFlags flags{};
+
+    flags.PreserveFloats = process.value()->flags.PreserveFloats;
+    flags.policy         = SchedulingPolicy::kNormalTasks_RR_P3;
+    flags.priority       = 0;
+
+    return SpawnThread(process.value(), flags, task);
+}
+
+std::expected<Thread *, Error> TaskMgr::SpawnThread(
+    const Pid pid, const ThreadFlags flags, const Task &task
+)
+{
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    ASSERT_TRUE(static_cast<bool>(process));
+
+    return SpawnThread(process.value(), flags, task);
+}
+
+std::expected<Thread *, Error> TaskMgr::SpawnThread(
+    const Process *process, const ThreadFlags flags, const Task &task
+)
+{
+    bool dismiss = false;
 
     // 1. Prepare internal structure for execution unit - thread:
     auto thread = SchedulingModule::Get().GetThreads().PrepareThread();
     if (!thread) {
         DEBUG_WARN_SCHEDULING(
-            "Failed to create thread for %llu. Failed on struct allocation: %s", pid,
+            "Failed to create thread for %llu. Failed on struct allocation: %s", process->pid,
             to_string(thread.error())
         );
 
@@ -119,13 +143,15 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
     });
 
     // 2. Allocate process resources and prepare the struct
-    thread.value()->owner = pid;
+    thread.value()->owner = process->pid;
+    thread.value()->flags = flags;
+    thread.value()->state = ThreadState::kReady;
 
     // 2.1 Kernel Stack
     const auto kernel_stack = Mem::KMallocAligned({kKernelStackSize, kStackAlignment});
     if (!kernel_stack) {
         DEBUG_WARN_SCHEDULING(
-            "Failed to create thread for %llu. Failed on kernel stack allocation: %s", pid,
+            "Failed to create thread for %llu. Failed on kernel stack allocation: %s", process->pid,
             to_string(kernel_stack.error())
         );
 
@@ -138,13 +164,13 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
     thread.value()->kernel_stack_bottom = kernel_stack.value();
 
     // 2.2 Thread Stack
-    if (!process.value()->flags.KernelSpaceOnly) {
+    if (!process->flags.KernelSpaceOnly) {
         const auto thread_stack =
-            MemoryModule::Get().GetVmm().AllocUserStack(process.value()->address_space, kStackSize);
+            MemoryModule::Get().GetVmm().AllocUserStack(process->address_space, kStackSize);
         if (!thread_stack) {
             DEBUG_WARN_SCHEDULING(
-                "Failed to create thread for %llu. Failed on thread stack allocation: %s", pid,
-                to_string(thread_stack.error())
+                "Failed to create thread for %llu. Failed on thread stack allocation: %s",
+                process->pid, to_string(thread_stack.error())
             );
 
             return std::unexpected(Error::OutOfMemory);
@@ -238,16 +264,18 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
 
+    VideoModule::Get().GetWindowManager().SetFocus(process.value());
+
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());
 }
 
-std::expected<void, Error> TaskMgr::CommitMurder(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitProcess(Pid pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitThread(Tid tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
 }  // namespace Sched
