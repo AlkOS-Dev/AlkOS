@@ -90,3 +90,7 @@ extern void FloatExtensionTest();
  * @note This test is architecture dependent, simply invokes floating point instructions
  */
 TEST(FloatOperationsTest) { FloatExtensionTest(); }
+
+// ------------------------------
+// Test random gen
+// ------------------------------
