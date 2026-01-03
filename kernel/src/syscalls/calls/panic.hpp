@@ -4,6 +4,10 @@
 #include <defines.h>
 
 #include "hal/panic.hpp"
+#include "hardware/core_local.hpp"
+#include "modules/hardware.hpp"
+#include "modules/scheduling.hpp"
+#include "trace_framework.hpp"
 
 namespace Syscall
 {
@@ -18,7 +22,16 @@ namespace Syscall
  */
 NO_RET FORCE_INLINE_F void SysPanic(const char *msg)
 {
-    hal::KernelPanic(msg);
+    auto pid = hardware::GetRunningPid();
+
+    if (msg == nullptr || *msg == '\0') {
+        TRACE_WARN_GENERAL("User Panic in PID %llu: No message provided", pid.id);
+    } else {
+        TRACE_WARN_GENERAL("User Panic in PID %llu: %s", pid.id, msg);
+    }
+
+    SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+
     __builtin_unreachable();
 }
 
