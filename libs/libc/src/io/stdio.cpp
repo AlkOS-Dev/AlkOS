@@ -2,6 +2,7 @@
 #include "internal/stdio.hpp"
 
 #include <assert.h>
+#include <algorithm.hpp>
 
 #include "platform.h"
 #include "string.h"
@@ -110,15 +111,16 @@ int vfprintf(FILE *stream, const char *format, va_list va)
     }
 
     // Format the string into a buffer
-    static constexpr size_t kTempBufferSize = 4096;
+    static constexpr size_t kTempBufferSize = 2048;
     char buffer[kTempBufferSize];
-    int len = vsnprintf(buffer, sizeof(buffer), format, va);
+    const int len = vsnprintf(buffer, sizeof(buffer), format, va);
     if (len < 0) {
         return len;
     }
 
     // Write the formatted string to the stream
-    size_t written = fwrite(buffer, 1, len, stream);
+    const size_t written =
+        fwrite(buffer, 1, std::min(static_cast<size_t>(len), kTempBufferSize), stream);
     return static_cast<int>(written);
 }
 
@@ -456,14 +458,12 @@ int fseek(FILE *stream, long offset, int whence)
     stream->buffer_pos   = 0;
     stream->buffer_level = 0;
 
-    // Perform the seek
     ssize_t result = __platform_seek(stream->fd, offset, static_cast<FdSeek>(whence));
     if (result < 0) {
         stream->flags.error = true;
         return -1;
     }
 
-    // Update position and clear EOF flag
     stream->file_pos  = result;
     stream->flags.eof = false;
 

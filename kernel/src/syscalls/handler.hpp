@@ -144,6 +144,7 @@ class SyscallWrapper
             using BaseType = std::remove_reference_t<T>;
 
             if constexpr (internal::ConstructibleFromCString<BaseType>) {
+                // TODO: Fix for multithreading scenarios
                 // Special case: reference to type constructible from const char*
                 auto str                 = reinterpret_cast<const char *>(GetRawArg<RegIdx>(args));
                 static BaseType temp_obj = BaseType(str);

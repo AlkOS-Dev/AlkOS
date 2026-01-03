@@ -1,8 +1,7 @@
 /* internal includes */
 
 #include <assert.h>
-#include <../src/sync/spinlock.hpp>
-#include <mutex.hpp>
+#include <sync/spinlock.hpp>
 #include <test_module/test.hpp>
 
 class SpinlockTest : public TestGroupBase
