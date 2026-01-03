@@ -165,7 +165,8 @@ extern "C" void cdecl_ContextSwitchEntry(
 
     const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     current_tcb->kernel_time_ns = t - current_tcb->timestamp;
-    thread->timestamp           = t;
+    current_tcb->num_context_switches++;
+    thread->timestamp = t;
 
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);

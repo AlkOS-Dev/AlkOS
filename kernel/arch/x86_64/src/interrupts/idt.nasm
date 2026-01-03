@@ -134,7 +134,7 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     jae .invalid_syscall
 
     swapgs
-;    call cdecl_UpdateTcbOnSyscallEntry
+    call cdecl_UpdateTcbOnSyscallEntry
 
     ; Get pointer to syscall_dispatch_table and dispatch
     mov qword rax, [rsp + _rax]
@@ -147,7 +147,7 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 
 .return:
 
-;    call cdecl_UpdateTcbOnSyscallExit
+    call cdecl_UpdateTcbOnSyscallExit
 
     call cdecl_SetKernelGs
     swapgs
