@@ -6,6 +6,7 @@
 #include "boot_args.hpp"
 #include "drivers/video/framebuffer.hpp"
 #include "modules/helpers.hpp"
+#include "video/window_manager.hpp"
 
 namespace internal
 {
@@ -15,16 +16,9 @@ class VideoModule : template_lib::StaticSingletonHelper
     protected:
     explicit VideoModule(const BootArguments &args, Mem::Heap &hp) noexcept;
 
-    DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
-
     public:
-    /// Returns the Surface for the physical screen
-    Graphics::Surface &GetScreen() { return Framebuffer_.GetSurface(); }
-
-    /// Returns the format required by the hardware (used to init Painters)
-    const Graphics::PixelFormat &GetFormat() const { return Framebuffer_.GetFormat(); }
-
-    void Flush() { Framebuffer_.Flush(); }
+    DEFINE_MODULE_FIELD(Drivers::Video, Framebuffer);
+    DEFINE_MODULE_FIELD(Video, WindowManager);
 };
 
 }  // namespace internal

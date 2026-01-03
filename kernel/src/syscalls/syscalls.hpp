@@ -13,5 +13,6 @@
 #include "calls/proc.hpp"
 #include "calls/thread.hpp"
 #include "calls/time.hpp"
+#include "calls/video.hpp"
 
 #endif  // KERNEL_SRC_SYSCALLS_SYSCALLS_HPP_

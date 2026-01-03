@@ -41,6 +41,10 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kThreadJoin, SysThreadJoin>();
     table.RegisterHandler<kThreadDetach, SysThreadDetach>();
 
+    // Video
+    table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
+    table.RegisterHandler<kSysBlit, SysBlit>();
+
     return table;
 }>();
 

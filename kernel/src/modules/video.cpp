@@ -27,11 +27,12 @@ internal::VideoModule::VideoModule(const BootArguments &args, Heap &hp) noexcept
         .blue_mask_size  = fb_args.blue_mask_size,
     };
 
-    Framebuffer_.Init(s, pf, hp);
-    Graphics::Surface &screen = GetScreen();
+    Framebuffer_.Init(s, pf);
+    Graphics::Surface &screen = Framebuffer_.GetSurface();
     R_ASSERT_TRUE(screen.IsValid());
 
     Graphics::Painter p(screen, Framebuffer_.GetFormat());
     p.Clear(Graphics::Color::Black());
-    Flush();
+
+    WindowManager_.Init(Framebuffer_);
 }

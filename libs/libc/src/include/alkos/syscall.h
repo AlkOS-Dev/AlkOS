@@ -40,6 +40,10 @@ enum SyscallNumber {
     kProcExit,
     kProcAbort,
 
+    /* Video Syscalls */
+    kSysCreateGraphicSession,
+    kSysBlit,
+
     kSysMax,
 };
 
