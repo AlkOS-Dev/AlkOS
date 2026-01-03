@@ -30,11 +30,24 @@ target_compile_options(crt0.userspace PRIVATE
 )
 
 ################################################################################
-# Userspace Standard Library (libc)
+# Userspace Standard Library
 ################################################################################
 add_library(c.userspace STATIC ${ALKOS_LIBC_SOURCES})
 target_link_libraries(c.userspace PUBLIC alkos.libc.interface gcc)
 target_compile_options(c.userspace PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:
+        -fno-builtin
+        -fno-rtti
+        -fno-exceptions
+        -fno-stack-protector
+        -mcmodel=small
+        -mno-red-zone
+    >
+)
+
+add_library(cpp.userspace STATIC ${ALKOS_LIBCPP_SOURCES})
+target_link_libraries(cpp.userspace PUBLIC alkos.libcpp.interface gcc)
+target_compile_options(cpp.userspace PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:
         -fno-builtin
         -fno-rtti
@@ -73,6 +86,7 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     target_link_libraries(${PROG_NAME} PRIVATE
         crt0.userspace
         c.userspace
+        cpp.userspace
     )
 
     add_custom_command(TARGET ${PROG_NAME} POST_BUILD

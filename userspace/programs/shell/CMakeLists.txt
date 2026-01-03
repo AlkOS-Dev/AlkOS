@@ -8,8 +8,18 @@ target_link_libraries(shell.libgraphics PUBLIC
     alkos.libc.interface
 )
 
+target_compile_options(shell.libgraphics PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:
+        -fno-builtin
+        -fno-rtti
+        -fno-exceptions
+        -fno-stack-protector
+        -mcmodel=small
+        -mno-red-zone
+    >
+)
+
 target_link_libraries(shell PUBLIC
     alkos.libcontainers.interface
-    alkos.libcpp.interface
     shell.libgraphics
 )

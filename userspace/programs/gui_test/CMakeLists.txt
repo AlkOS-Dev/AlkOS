@@ -8,6 +8,17 @@ target_link_libraries(gui_test.libgraphics PUBLIC
     alkos.libc.interface
 )
 
+target_compile_options(gui_test.libgraphics PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:
+        -fno-builtin
+        -fno-rtti
+        -fno-exceptions
+        -fno-stack-protector
+        -mcmodel=small
+        -mno-red-zone
+    >
+)
+
 target_link_libraries(gui_test PRIVATE
     gui_test.libgraphics
 )
