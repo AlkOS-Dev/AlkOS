@@ -33,7 +33,6 @@ DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
 
 DEFINE_SYSCALL_VOID(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info)
 DEFINE_SYSCALL_VOID(blit, kSysBlit)
-DEFINE_SYSCALL_VOID(blit_rect, kSysBlitRect, const Rect *, rect)
 
 DEFINE_SYSCALL_VOID(power, kSysPower, PowerAction, action)
 

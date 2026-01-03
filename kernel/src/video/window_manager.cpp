@@ -116,28 +116,6 @@ void WindowManager::Blit(Sched::Pid pid)
     BlitSession(*session);
 }
 
-void WindowManager::BlitRect(Sched::Pid pid, Graphics::Rect rect)
-{
-    // Find if this PID owns a session
-    auto [session, target_idx] = FindSession(pid);
-
-    if (!session) {
-        DEBUG_INFO_GENERAL("BlitRect skipped: No session for PID %llu", pid);
-        return;
-    }
-
-    if (active_session_idx_ != target_idx) {
-        DEBUG_INFO_GENERAL(
-            "BlitRect skipped: Target %zu != Active %zu", target_idx, active_session_idx_
-        );
-        // If not active, the data is safely sitting in the session.phys_buffer (RAM),
-        // ready to be restored when the user switches back.
-        return;
-    }
-
-    BlitSessionRect(*session, rect);
-}
-
 std::expected<BufferInfo, Mem::MemError> WindowManager::AllocUserBuffer()
 {
     auto &pmm = ::MemoryModule::Get().GetBuddyPmm();
@@ -174,44 +152,6 @@ void WindowManager::BlitSession(const GraphicSession &session)
     VPtr<void> vram_dst             = screen.GetRawBuffer();
     const VPtr<void> backbuffer_src = Mem::PhysToVirt(session.buffer_info.phys_buffer);
     memcpy(vram_dst, backbuffer_src, session.buffer_info.size_bytes);
-}
-
-void WindowManager::BlitSessionRect(const GraphicSession &session, Graphics::Rect rect)
-{
-    ASSERT_NOT_NULL(framebuffer_);
-    auto &screen = framebuffer_->GetSurface();
-
-    // Clip rect to screen bounds
-    if (rect.x < 0) {
-        rect.w += rect.x;
-        rect.x = 0;
-    }
-    if (rect.y < 0) {
-        rect.h += rect.y;
-        rect.y = 0;
-    }
-    if (rect.x + rect.w > static_cast<i32>(screen.GetWidth())) {
-        rect.w = static_cast<i32>(screen.GetWidth()) - rect.x;
-    }
-    if (rect.y + rect.h > static_cast<i32>(screen.GetHeight())) {
-        rect.h = static_cast<i32>(screen.GetHeight()) - rect.y;
-    }
-    if (rect.w <= 0 || rect.h <= 0) {
-        return;  // Nothing to blit
-    }
-
-    u8 *vram_base = reinterpret_cast<u8 *>(screen.GetRawBuffer());
-    u8 *bb_base   = reinterpret_cast<u8 *>(Mem::PhysToVirt(session.buffer_info.phys_buffer));
-
-    u32 pitch = screen.GetPitch();
-
-    for (i32 row = 0; row < rect.h; ++row) {
-        u8 *vram_row =
-            vram_base + ((rect.y + row) * pitch) + (rect.x * sizeof(Graphics::NativePixel));
-        u8 *bb_row = bb_base + ((rect.y + row) * pitch) + (rect.x * sizeof(Graphics::NativePixel));
-
-        memcpy(vram_row, bb_row, static_cast<size_t>(rect.w) * sizeof(Graphics::NativePixel));
-    }
 }
 
 std::tuple<GraphicSession *, size_t> WindowManager::FindSession(Sched::Pid pid)

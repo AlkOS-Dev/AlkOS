@@ -43,7 +43,6 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     // Video
     table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
     table.RegisterHandler<kSysBlit, SysBlit>();
-    table.RegisterHandler<kSysBlitRect, SysBlitRect>();
 
     // Power Management
     table.RegisterHandler<kSysPower, SysPower>();

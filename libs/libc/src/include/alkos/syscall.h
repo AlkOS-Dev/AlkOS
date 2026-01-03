@@ -42,7 +42,6 @@ enum SyscallNumber {
     /* Video Syscalls */
     kSysCreateGraphicSession,
     kSysBlit,
-    kSysBlitRect,
 
     /* Power Management Syscalls */
     kSysPower,
