@@ -32,7 +32,15 @@ PREPARE_CORE_LOCAL_ACCESS(Tcb, Sched::Thread *, thread_control_block);
 PREPARE_CORE_LOCAL_ACCESS(Self, CoreLocal *, self);
 #pragma GCC diagnostic pop
 
-NODISCARD FAST_CALL Sched::Pid GetRunningPid() { return GetCoreLocalTcb()->owner; }
+NODISCARD FAST_CALL Sched::Pid GetRunningPid()
+{
+    // During boot, TCB is null. Return {0,0} (Kernel PID) in that case.
+    auto *tcb = GetCoreLocalTcb();
+    if (tcb == nullptr) {
+        return {0, 0};
+    }
+    return GetCoreLocalTcb()->owner;
+}
 
 }  // namespace hardware
 

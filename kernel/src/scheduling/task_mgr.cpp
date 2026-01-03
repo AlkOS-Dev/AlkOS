@@ -4,6 +4,7 @@
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
+#include "modules/video.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
@@ -46,6 +47,10 @@ void TaskMgr::InitializeMultitasking()
         TRACE_INFO_SCHEDULING(
             "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
+    }
+
+    if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
+        return;
     }
 
     const auto res1 = ExecuteElf64("/bin/gui_test", {});
@@ -271,6 +276,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     });
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
+
+    VideoModule::Get().GetWindowManager().SetFocus(process.value());
 
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());
