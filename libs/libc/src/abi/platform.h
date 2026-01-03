@@ -38,6 +38,11 @@ SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
 SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
 SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 
+// Video
+struct GuiBufferInfo;
+void __platform_create_graphic_session(struct GuiBufferInfo *info);
+void __platform_blit(void);
+
 END_DECL_C
 
 #endif  // LIBS_LIBC_SRC_ABI_PLATFORM_H_

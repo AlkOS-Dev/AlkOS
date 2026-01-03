@@ -66,6 +66,10 @@ class VirtualMemoryManager
 
     expected<VPtr<void>, MemError> AllocKernelHeap(size_t size);
 
+    expected<VPtr<void>, MemError> MapUserBackbuffer(
+        VPtr<AddressSpace> as, PPtr<void> buffer, size_t size_bytes
+    );
+
     private:
     // ------------------------------
     // Class fields

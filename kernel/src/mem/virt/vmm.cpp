@@ -170,4 +170,33 @@ expected<VPtr<void>, MemError> Vmm::AllocKernelHeap(size_t size)
     return AllocAnonymous(&kernel_as_, size, flags, kernel_start, nullptr);
 }
 
+expected<VPtr<void>, MemError> Vmm::MapUserBackbuffer(
+    VPtr<AddressSpace> as, PPtr<void> buffer, size_t size_bytes
+)
+{
+    R_ASSERT_TRUE(IsAligned(buffer, hal::kPageSizeBytes));
+    size_t al_size = AlignUp(size_bytes, hal::kPageSizeBytes);
+
+    auto gap_res = as->FindGap(
+        al_size, UptrToPtr<void>(kUserSpaceStart), UptrToPtr<void>(kUserSpaceEndExclusive)
+    );
+    RET_UNEXPECTED_IF_ERR(gap_res);
+
+    VMemAreaFlags flags{.readable = true, .writable = true, .executable = true};
+    auto vma_res = KNew<DirectMappingVMemArea>(gap_res->start, gap_res->size, flags, buffer);
+    RET_UNEXPECTED_IF(!vma_res, MemError::OutOfMemory);
+    auto *vma = *vma_res;
+
+    template_lib::ScopeGuard vma_guard([&]() {
+        KDelete(vma);
+    });
+
+    auto add_res = as->AddArea(vma);
+    RET_UNEXPECTED_IF_ERR(add_res);
+
+    vma_guard.dismiss();
+
+    return gap_res->start;
+}
+
 }  // namespace Mem
