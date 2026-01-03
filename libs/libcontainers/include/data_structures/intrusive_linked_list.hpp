@@ -3,6 +3,7 @@
 
 #include <concepts.hpp>
 #include <defines.hpp>
+#include <template/special_members.hpp>
 
 namespace data_structures
 {
@@ -85,7 +86,7 @@ class IntrusiveList : template_lib::NoCopy
     // ------------------------------
 
     private:
-    FAST_CALL void InitList_(T *item)
+    FORCE_INLINE_F void InitList_(T *item)
     {
         head_      = item;
         tail_      = item;
@@ -193,7 +194,7 @@ class IntrusiveDoubleList : template_lib::NoCopy
     // ------------------------------
 
     private:
-    FAST_CALL void InitList_(T *item)
+    FORCE_INLINE_F void InitList_(T *item)
     {
         head_      = item;
         tail_      = item;

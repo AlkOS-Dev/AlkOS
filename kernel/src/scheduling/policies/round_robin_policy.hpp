@@ -1,9 +1,12 @@
 #ifndef KERNEL_SRC_SCHEDULING_POLICIES_ROUND_ROBIN_POLICY_HPP_
 #define KERNEL_SRC_SCHEDULING_POLICIES_ROUND_ROBIN_POLICY_HPP_
 
+#include <assert.h>
+#include <data_structures/intrusive_linked_list.hpp>
 #include <defines.hpp>
 
 #include "scheduling/policy.hpp"
+#include "scheduling/thread.hpp"
 
 namespace Sched
 {
@@ -22,9 +25,13 @@ class RoundRobinPolicy : public PolicyImpl
     // Class interaction
     // ------------------------------
 
-    NODISCARD Thread *PickNextTask();
+    NODISCARD FORCE_INLINE_F Thread *PickNextTask() { return threads_.PopFront(); }
 
-    void AddTask(Thread *thread);
+    FORCE_INLINE_F void AddTask(Thread *thread)
+    {
+        ASSERT_EQ(thread->state, ThreadState::kReady);
+        threads_.PushBack(thread);
+    }
 
     // ------------------------------
     // Private methods
@@ -35,8 +42,7 @@ class RoundRobinPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    Thread *head_ = nullptr;
-    Thread *tail_ = nullptr;
+    data_structures::IntrusiveList<Thread> threads_{};
 };
 
 }  // namespace Sched
