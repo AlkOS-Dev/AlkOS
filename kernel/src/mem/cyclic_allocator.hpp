@@ -6,7 +6,7 @@
 #include <data_structures/bit_array.hpp>
 #include <new.hpp>
 #include <todo.hpp>
-#include "../sync/spinlock.hpp"
+#include "sync/spinlock.hpp"
 
 TODO_WHEN_VMEM_WORKS
 /* TODO: STATIC MEMORY ALLOCATOR!!! */
