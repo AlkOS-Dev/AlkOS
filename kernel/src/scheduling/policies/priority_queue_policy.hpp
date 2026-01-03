@@ -1,6 +1,7 @@
 #ifndef KERNEL_SRC_SCHEDULING_POLICIES_PRIORITY_QUEUE_POLICY_HPP_
 #define KERNEL_SRC_SCHEDULING_POLICIES_PRIORITY_QUEUE_POLICY_HPP_
 
+#include "array.hpp"
 #include "scheduling/policy.hpp"
 
 namespace Sched
@@ -8,7 +9,14 @@ namespace Sched
 
 class PriorityQueuePolicy : public PolicyImpl
 {
+    struct queue {
+        Thread *head;
+        Thread *tail;
+    };
+
     public:
+    static constexpr u8 kMaxPriority = 64;
+
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -32,6 +40,8 @@ class PriorityQueuePolicy : public PolicyImpl
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    std::array<queue, kMaxPriority> queue_;
 };
 
 }  // namespace Sched

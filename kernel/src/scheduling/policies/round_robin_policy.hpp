@@ -35,7 +35,8 @@ class RoundRobinPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    Thread *head = nullptr;
+    Thread *head_ = nullptr;
+    Thread *tail_ = nullptr;
 };
 
 }  // namespace Sched

@@ -33,9 +33,10 @@ struct PACK Tid {
 };
 
 struct PACK ThreadFlags {
-    bool PreserveFloats : 1;
     SchedulingPolicy policy : 8;
-    u64 padding : 55;
+    u8 priority : 8;
+    bool PreserveFloats : 1;
+    u64 padding : 47;
 };
 static_assert(sizeof(ThreadFlags) == 8);
 

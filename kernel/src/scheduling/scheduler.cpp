@@ -24,6 +24,8 @@ Scheduler::Scheduler()
 
 void Scheduler::AddReadyThread(Thread *thread)
 {
+    ASSERT_EQ(thread->state, ThreadState::kReady);
+
     const auto idx = static_cast<size_t>(thread->flags.policy);
     ASSERT_LT(idx, static_cast<size_t>(SchedulingPolicy::kLast));
 
