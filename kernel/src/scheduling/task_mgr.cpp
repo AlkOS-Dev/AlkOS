@@ -49,6 +49,10 @@ void TaskMgr::InitializeMultitasking()
         );
     }
 
+    if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
+        return;
+    }
+
     const auto res1 = ExecuteElf64("/bin/gui_test", {});
     R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/hello process...");
 
