@@ -7,9 +7,12 @@
 #include <tuple.hpp>
 
 #include "drivers/video/framebuffer.hpp"
+#include "mem/error.hpp"
 #include "mem/page.hpp"
 #include "mem/types.hpp"
 #include "scheduling/process.hpp"
+
+#include <geometry.hpp>
 
 namespace Video
 {
@@ -43,6 +46,9 @@ class WindowManager
     /// Called by Syscall: If the caller is the active session, copy buffer to VRAM
     void Blit(Sched::Pid pid);
 
+    /// Called by Syscall: If the caller is the active session, copy rect to VRAM
+    void BlitRect(Sched::Pid pid, Graphics::Rect rect);
+
     /// Switches screen to a specific session
     void SwitchSession(size_t index);
     void SwitchToNextSession();
@@ -51,11 +57,12 @@ class WindowManager
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();
     size_t RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
     void BlitSession(const GraphicSession &session);
+    void BlitSessionRect(const GraphicSession &session, Graphics::Rect rect);
     std::tuple<GraphicSession *, size_t> FindSession(Sched::Pid pid);
     void RefreshScreen();
 
     static constexpr size_t kMaxSessions    = 12;
-    static constexpr size_t kInvalidSession = size_t(-1);
+    static constexpr size_t kInvalidSession = static_cast<size_t>(-1);
     data_structures::StaticVector<GraphicSession, kMaxSessions> sessions_;
 
     size_t active_session_idx_{kInvalidSession};

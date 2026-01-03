@@ -83,12 +83,6 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     add_dependencies(userspace_apps ${PROG_NAME})
 endfunction()
 
-################################### Libraries ##################################
-
-# Configure libraries used by userspace programs
-message(STATUS "  -> Configuring Libraries...")
-alkos_add_subdirs(libs)
-
 #################################### Programs ##################################
 
 # Register all user programs

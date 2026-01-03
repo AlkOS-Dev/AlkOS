@@ -1,5 +1,6 @@
 #include "shell.hpp"
 
+#include <stdio.h>
 #include <string.h>
 #include <string.hpp>
 
@@ -8,15 +9,7 @@
 namespace System
 {
 
-GraphicsConsole *g_active_console = nullptr;
-
-Shell::Shell(GraphicsConsole &console, IO::IReader &input_reader)
-    : console_(console), input_reader_(input_reader)
-{
-    // !!! TEMPORARY !!!
-    g_active_console = &console_;
-    // !!! TEMPORARY !!!
-}
+Shell::Shell(GraphicsConsole &console) : console_(console) {}
 
 void Shell::Init()
 {
@@ -36,10 +29,12 @@ void Shell::PrintPrompt()
 
 void Shell::Update()
 {
-    auto result = input_reader_.GetChar();
-    if (result.has_value()) {
-        OnInput(result.value());
+    char c;
+    auto read = fread(&c, 1, 1, stdin);
+    if (read != 1) {
+        return;  // No input
     }
+    OnInput(c);
 }
 
 void Shell::OnInput(char c)
@@ -180,30 +175,32 @@ void Shell::CmdCd(std::string_view args)
 
     Path new_path = ResolvePath(args);
 
-    // Check if path exists and is a directory
-    auto &vfs         = VfsModule::Get();
-    auto exists_check = vfs.DirectoryExists(new_path);
+    // // Check if path exists and is a directory
+    // auto &vfs         = VfsModule::Get();
+    // auto exists_check = vfs.DirectoryExists(new_path);
+    //
+    // if (!exists_check.has_value()) {
+    //     const char *err = "cd: path not found: ";
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+    //     console_.Write(
+    //         std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+    //     );
+    //     console_.PutChar('\n');
+    //     return;
+    // }
+    //
+    // if (!exists_check.value()) {
+    //     const char *err = "cd: not a directory: ";
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+    //     console_.Write(
+    //         std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+    //     );
+    //     console_.PutChar('\n');
+    //     return;
+    // }
 
-    if (!exists_check.has_value()) {
-        const char *err = "cd: path not found: ";
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-        console_.Write(
-            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
-        );
-        console_.PutChar('\n');
-        return;
-    }
-
-    if (!exists_check.value()) {
-        const char *err = "cd: not a directory: ";
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-        console_.Write(
-            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
-        );
-        console_.PutChar('\n');
-        return;
-    }
-
+    // For now, just accept any path as a directory
+    // TODO: Implement proper directory checking when stat() is available
     current_dir_ = new_path;
 }
 
@@ -218,33 +215,37 @@ void Shell::CmdLs(std::string_view args)
     }
 
     Path path = args.empty() ? current_dir_ : ResolvePath(args);
+    //
+    // auto &vfs = VfsModule::Get();
+    //
+    // // Check if the path exists
+    // auto exists_check = vfs.DirectoryExists(path);
+    // if (!exists_check.has_value() || !exists_check.value()) {
+    //     const char *err = "ls: cannot access '";
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+    //     const char *p = path.CString();
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
+    //     const char *err2 = "': No such directory\n";
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2),
+    //     strlen(err2))); return;
+    // }
+    //
+    // // List directory contents
+    // vfs.ListDirectory(path, [this](const char *name, bool is_dir) {
+    //     if (is_dir) {
+    //         console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
+    //     }
+    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(name),
+    //     strlen(name))); if (is_dir) {
+    //         console_.PutChar('/');
+    //         console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+    //     }
+    //     console_.PutChar('\n');
+    // });
 
-    auto &vfs = VfsModule::Get();
-
-    // Check if the path exists
-    auto exists_check = vfs.DirectoryExists(path);
-    if (!exists_check.has_value() || !exists_check.value()) {
-        const char *err = "ls: cannot access '";
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-        const char *p = path.CString();
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
-        const char *err2 = "': No such directory\n";
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
-        return;
-    }
-
-    // List directory contents
-    vfs.ListDirectory(path, [this](const char *name, bool is_dir) {
-        if (is_dir) {
-            console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
-        }
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(name), strlen(name)));
-        if (is_dir) {
-            console_.PutChar('/');
-            console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
-        }
-        console_.PutChar('\n');
-    });
+    // TODO: Implement directory listing when opendir/readdir are available
+    const char *msg = "ls: directory listing not yet implemented in userspace\n";
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
 void Shell::CmdCat(std::string_view args)
@@ -265,57 +266,39 @@ void Shell::CmdCat(std::string_view args)
 
     Path path = ResolvePath(args);
 
-    auto &vfs = VfsModule::Get();
-
-    // Check if file exists
-    auto exists_check = vfs.FileExists(path);
-    if (!exists_check.has_value() || !exists_check.value()) {
+    // Open file for reading
+    FILE *file = fopen(path.CString(), "r");
+    if (!file) {
         const char *err = "cat: ";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
         );
-        const char *err2 = ": No such file\n";
+        const char *err2 = ": No such file or directory\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
         return;
-    }
-
-    // Get file size
-    auto size_result = vfs.GetFileSize(path);
-    if (!size_result.has_value()) {
-        const char *err = "cat: cannot read file size\n";
-        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-        return;
-    }
-
-    size_t file_size = size_result.value();
-    if (file_size == 0) {
-        return;  // Empty file, nothing to print
     }
 
     // Read and display file contents in chunks
     static constexpr size_t kBufferSize = 512;
     char buffer[kBufferSize];
-    size_t offset = 0;
 
-    while (offset < file_size) {
-        size_t to_read   = (file_size - offset) < kBufferSize ? (file_size - offset) : kBufferSize;
-        auto read_result = vfs.ReadFile(path, buffer, to_read, offset);
-
-        if (!read_result.has_value()) {
-            const char *err = "\ncat: error reading file\n";
-            console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-            return;
-        }
-
-        size_t bytes_read = read_result.value();
+    while (true) {
+        size_t bytes_read = fread(buffer, 1, kBufferSize, file);
         if (bytes_read == 0) {
+            if (ferror(file)) {
+                const char *err = "\ncat: error reading file\n";
+                console_.Write(
+                    std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err))
+                );
+            }
             break;
         }
 
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buffer), bytes_read));
-        offset += bytes_read;
     }
+
+    fclose(file);
 
     // Ensure we end with a newline
     console_.PutChar('\n');
@@ -337,29 +320,9 @@ void Shell::CmdExec(std::string_view args)
         return;
     }
 
-    // Path programPath = ResolvePath(args);
-    //
-    // auto &as       = MemoryModule::Get().GetKernelAddressSpace();
-    // auto entry_res = ElfLoader::Load(programPath, as);
-    //
-    // if (entry_res) {
-    //     console_.Write(
-    //         std::span<const byte>(reinterpret_cast<const byte *>("Executing user program...\n"), 26)
-    //     );
-    //
-    //     // Execute the program
-    //
-    //
-    //     console_.Write(
-    //         std::span<const byte>(reinterpret_cast<const byte *>("User program returned.\n"), 23)
-    //     );
-    // } else {
-    //     console_.Write(
-    //         std::span<const byte>(
-    //             reinterpret_cast<const byte *>("Failed to load executable.\n"), 27
-    //         )
-    //     );
-    // }
+    Path programPath = ResolvePath(args);
+
+    // TODO: Implement program execution
 }
 
 }  // namespace System

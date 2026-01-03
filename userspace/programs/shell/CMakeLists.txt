@@ -4,7 +4,7 @@ alkos_register_userspace_app(shell "${SHELL_SOURCES}")
 
 add_library(shell.libgraphics STATIC ${LIBGRAPHICS_SOURCES})
 target_link_libraries(shell.libgraphics PUBLIC
-    userspace.libgraphics.interface
+    alkos.libgraphics.interface
     alkos.libc.interface
 )
 

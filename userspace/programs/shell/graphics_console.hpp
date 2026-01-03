@@ -1,12 +1,12 @@
-#ifndef KERNEL_SRC_SYS_GRAPHICS_CONSOLE_HPP_
-#define KERNEL_SRC_SYS_GRAPHICS_CONSOLE_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_GRAPHICS_CONSOLE_HPP_
+#define USERSPACE_PROGRAMS_SHELL_GRAPHICS_CONSOLE_HPP_
 
 #include <color.hpp>
 #include <font/psf2_font.hpp>
-#include <io/stream.hpp>
-#include <painter.hpp>
 #include <span.hpp>
 
+#include "painter.hpp"
+#include "stream.hpp"
 
 namespace System
 {
@@ -67,4 +67,4 @@ class GraphicsConsole : public IO::IWriter
 
 }  // namespace System
 
-#endif  // KERNEL_SRC_SYS_GRAPHICS_CONSOLE_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_GRAPHICS_CONSOLE_HPP_

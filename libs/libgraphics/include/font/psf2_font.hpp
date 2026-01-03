@@ -7,8 +7,8 @@
 #include <span.hpp>
 #include <string.hpp>
 
-#include "graphics/font/glyph.hpp"
-#include "graphics/geometry.hpp"
+#include "font/glyph.hpp"
+#include "geometry.hpp"
 
 namespace Graphics
 {

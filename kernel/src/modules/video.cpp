@@ -2,8 +2,8 @@
 #include "mem/types.hpp"
 #include "trace_framework.hpp"
 
-#include <graphics/native_pixel.hpp>
-#include <graphics/painter.hpp>
+#include <native_pixel.hpp>
+#include <painter.hpp>
 
 using namespace Graphics;
 using namespace Drivers;

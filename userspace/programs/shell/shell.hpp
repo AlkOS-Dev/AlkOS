@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_SYS_SHELL_HPP_
-#define KERNEL_SRC_SYS_SHELL_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_SHELL_HPP_
+#define USERSPACE_PROGRAMS_SHELL_SHELL_HPP_
 
 #include <data_structures/array_structures.hpp>
 #include <span.hpp>
@@ -7,12 +7,9 @@
 
 #include "graphics_console.hpp"
 #include "path.hpp"
-#include "stream.hpp"
 
 namespace System
 {
-
-extern GraphicsConsole *g_active_console;
 
 // --------------------------------------------------------------------------------
 // Shell
@@ -21,7 +18,7 @@ extern GraphicsConsole *g_active_console;
 class Shell
 {
     public:
-    explicit Shell(GraphicsConsole &console, IO::IReader &input_reader);
+    explicit Shell(GraphicsConsole &console);
 
     // -------------------------------------------------------------------------
     // Public Interface
@@ -70,7 +67,6 @@ class Shell
 
     // Data
     GraphicsConsole &console_;
-    IO::IReader &input_reader_;
     Path current_dir_{Path::kRoot};
 
     static constexpr size_t kMaxInput = 128;
@@ -79,4 +75,4 @@ class Shell
 
 }  // namespace System
 
-#endif  // KERNEL_SRC_SYS_SHELL_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_SHELL_HPP_

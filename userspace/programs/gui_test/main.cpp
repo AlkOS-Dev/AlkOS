@@ -1,4 +1,4 @@
-#include <alkos/sys/video.h>
+#include <alkos/video.h>
 #include <platform.h>
 #include <stdio.h>
 #include <time.h>

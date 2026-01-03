@@ -5,6 +5,8 @@
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
+#include <geometry.hpp>
+
 /**
  * @brief Registers the current process as a graphics app, allocates a buffer,
  * maps it to userspace, and fills the info struct.
@@ -58,7 +60,7 @@ FORCE_INLINE_F void SysBlit()
  * @brief Copies only a specific rectangle of the backbuffer to the physical screen
  * @param user_rect Pointer to the rectangle to blit (in userspace)
  */
-FORCE_INLINE_F void SysBlitRect(const GuiRect *user_rect)
+FORCE_INLINE_F void SysBlitRect(const Rect *user_rect)
 {
     if (user_rect == nullptr) {
         return;
@@ -73,7 +75,7 @@ FORCE_INLINE_F void SysBlitRect(const GuiRect *user_rect)
     );
 
     // Convert GuiRect to Graphics::Rect
-    Graphics::Rect rect{
+    const Graphics::Rect rect{
         .x = user_rect->x,
         .y = user_rect->y,
         .w = user_rect->w,
