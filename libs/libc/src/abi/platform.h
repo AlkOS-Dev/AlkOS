@@ -18,7 +18,6 @@ SYSCALL_VOID_NAME(get_timezone, kSysGetTimezone, Timezone *, time_zone);
 
 SYSCALL_VOID_NAME(debug_write, kSysDebugWrite, const char *, buffer);
 SYSCALL_NAME(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size);
-SYSCALL_VOID_NAME(write_console, kSysWriteConsole, const char *, buffer);
 
 SYSCALL_VOID_NAME(panic, kSysPanic, const char *, msg);
 
@@ -41,6 +40,9 @@ SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 // Video
 SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);
 SYSCALL_VOID_NAME(blit, kSysBlit);
+
+// Power Management
+SYSCALL_VOID_NAME(power, kSysPower, PowerAction, action);
 
 END_DECL_C
 

@@ -8,7 +8,7 @@
 #include <mem/types.hpp>
 #include <trace_framework.hpp>
 #include "boot_args.hpp"
-#include "macros.hpp"
+#include "internal/macros.hpp"
 
 using namespace vfs;
 

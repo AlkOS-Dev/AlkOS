@@ -1,19 +1,22 @@
 #ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_VIDEO_H_
 #define LIBS_LIBC_SRC_INCLUDE_ALKOS_VIDEO_H_
 
-#include <defines.h>
-#include <stddef.h>
-#include <stdint.h>
-
-BEGIN_DECL_C
+#include <types.h>
 
 typedef struct {
-    uint8_t red_pos;
-    uint8_t red_mask_size;
-    uint8_t green_pos;
-    uint8_t green_mask_size;
-    uint8_t blue_pos;
-    uint8_t blue_mask_size;
+    i32 x;
+    i32 y;
+    i32 w;
+    i32 h;
+} Rect;
+
+typedef struct {
+    u8 red_pos;
+    u8 red_mask_size;
+    u8 green_pos;
+    u8 green_mask_size;
+    u8 blue_pos;
+    u8 blue_mask_size;
 } GuiPixelFormat;
 
 typedef struct {
@@ -24,7 +27,5 @@ typedef struct {
     size_t bpp;    // Bits per pixel (usually 32)
     GuiPixelFormat format;
 } GuiBufferInfo;
-
-END_DECL_C
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_VIDEO_H_

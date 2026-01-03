@@ -1,12 +1,9 @@
-#include "sys/shell.hpp"
+#include "shell.hpp"
 
 #include <string.h>
 #include <string.hpp>
 
-#include "acpi/acpi_power.hpp"
-#include "modules/memory.hpp"
-#include "modules/vfs.hpp"
-#include "sys/loader.hpp"
+#include "alkos/sys/power.h"
 
 namespace System
 {
@@ -103,9 +100,9 @@ void Shell::ProcessCommand()
     } else if (cmd == "exec") {
         CmdExec(args);
     } else if (cmd == "shutdown") {
-        ACPI::SystemShutdown();
+        Shutdown();
     } else if (cmd == "reboot") {
-        ACPI::SystemReboot();
+        Reboot();
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -143,13 +140,13 @@ void Shell::CmdEcho(std::string_view args)
     console_.PutChar('\n');
 }
 
-vfs::Path Shell::ResolvePath(std::string_view path_str)
+Path Shell::ResolvePath(std::string_view path_str)
 {
     if (path_str.empty()) {
         return current_dir_;
     }
 
-    vfs::Path path(path_str);
+    Path path(path_str);
     if (path.IsAbsolute()) {
         return path.GetNormalized();
     }
@@ -177,11 +174,11 @@ void Shell::CmdCd(std::string_view args)
 
     if (args.empty()) {
         // cd with no args goes to root
-        current_dir_ = vfs::Path::kRoot;
+        current_dir_ = Path::kRoot;
         return;
     }
 
-    vfs::Path new_path = ResolvePath(args);
+    Path new_path = ResolvePath(args);
 
     // Check if path exists and is a directory
     auto &vfs         = VfsModule::Get();
@@ -220,7 +217,7 @@ void Shell::CmdLs(std::string_view args)
         args.remove_suffix(1);
     }
 
-    vfs::Path path = args.empty() ? current_dir_ : ResolvePath(args);
+    Path path = args.empty() ? current_dir_ : ResolvePath(args);
 
     auto &vfs = VfsModule::Get();
 
@@ -266,7 +263,7 @@ void Shell::CmdCat(std::string_view args)
         return;
     }
 
-    vfs::Path path = ResolvePath(args);
+    Path path = ResolvePath(args);
 
     auto &vfs = VfsModule::Get();
 
@@ -340,32 +337,29 @@ void Shell::CmdExec(std::string_view args)
         return;
     }
 
-    vfs::Path programPath = ResolvePath(args);
-
-    auto &as       = MemoryModule::Get().GetKernelAddressSpace();
-    auto entry_res = ElfLoader::Load(programPath, as);
-
-    if (entry_res) {
-        Mem::VPtr<void> entry_addr = entry_res.value();
-        auto user_main             = reinterpret_cast<void (*)()>(entry_addr);
-
-        console_.Write(
-            std::span<const byte>(reinterpret_cast<const byte *>("Executing user program...\n"), 26)
-        );
-
-        // Execute the program
-        user_main();
-
-        console_.Write(
-            std::span<const byte>(reinterpret_cast<const byte *>("User program returned.\n"), 23)
-        );
-    } else {
-        console_.Write(
-            std::span<const byte>(
-                reinterpret_cast<const byte *>("Failed to load executable.\n"), 27
-            )
-        );
-    }
+    // Path programPath = ResolvePath(args);
+    //
+    // auto &as       = MemoryModule::Get().GetKernelAddressSpace();
+    // auto entry_res = ElfLoader::Load(programPath, as);
+    //
+    // if (entry_res) {
+    //     console_.Write(
+    //         std::span<const byte>(reinterpret_cast<const byte *>("Executing user program...\n"), 26)
+    //     );
+    //
+    //     // Execute the program
+    //
+    //
+    //     console_.Write(
+    //         std::span<const byte>(reinterpret_cast<const byte *>("User program returned.\n"), 23)
+    //     );
+    // } else {
+    //     console_.Write(
+    //         std::span<const byte>(
+    //             reinterpret_cast<const byte *>("Failed to load executable.\n"), 27
+    //         )
+    //     );
+    // }
 }
 
 }  // namespace System

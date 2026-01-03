@@ -1,10 +1,12 @@
 #ifndef KERNEL_SRC_SYS_GRAPHICS_CONSOLE_HPP_
 #define KERNEL_SRC_SYS_GRAPHICS_CONSOLE_HPP_
 
-#include <graphics/color.hpp>
-#include <graphics/font/psf2_font.hpp>
-#include <graphics/painter.hpp>
+#include <color.hpp>
+#include <font/psf2_font.hpp>
 #include <io/stream.hpp>
+#include <painter.hpp>
+#include <span.hpp>
+
 
 namespace System
 {

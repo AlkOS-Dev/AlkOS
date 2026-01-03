@@ -12,7 +12,6 @@ DEFINE_SYSCALL_VOID(get_timezone, kSysGetTimezone, Timezone *, time_zone)
 
 DEFINE_SYSCALL_VOID(debug_write, kSysDebugWrite, const char *, buffer)
 DEFINE_SYSCALL(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size)
-DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
 
 DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
 
@@ -34,5 +33,8 @@ DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
 
 DEFINE_SYSCALL_VOID(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info)
 DEFINE_SYSCALL_VOID(blit, kSysBlit)
+DEFINE_SYSCALL_VOID(blit_rect, kSysBlitRect, const Rect *, rect)
+
+DEFINE_SYSCALL_VOID(power, kSysPower, PowerAction, action)
 
 #endif  // __ALKOS_KERNEL__

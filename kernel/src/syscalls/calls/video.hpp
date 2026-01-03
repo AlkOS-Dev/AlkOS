@@ -54,4 +54,33 @@ FORCE_INLINE_F void SysBlit()
     wm.Blit(pid);
 }
 
+/**
+ * @brief Copies only a specific rectangle of the backbuffer to the physical screen
+ * @param user_rect Pointer to the rectangle to blit (in userspace)
+ */
+FORCE_INLINE_F void SysBlitRect(const GuiRect *user_rect)
+{
+    if (user_rect == nullptr) {
+        return;
+    }
+
+    auto &wm = VideoModule::Get().GetWindowManager();
+    auto pid = hardware::GetRunningPid();
+
+    DEBUG_INFO_GENERAL(
+        "SysBlitRect called by PID: %llu, rect: (%d, %d, %d, %d)", pid, user_rect->x, user_rect->y,
+        user_rect->w, user_rect->h
+    );
+
+    // Convert GuiRect to Graphics::Rect
+    Graphics::Rect rect{
+        .x = user_rect->x,
+        .y = user_rect->y,
+        .w = user_rect->w,
+        .h = user_rect->h,
+    };
+
+    wm.BlitRect(pid, rect);
+}
+
 #endif  // KERNEL_SRC_SYSCALLS_CALLS_VIDEO_HPP_

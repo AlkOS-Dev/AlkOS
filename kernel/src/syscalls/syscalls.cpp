@@ -19,7 +19,6 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     // Debug IO syscalls
     table.RegisterHandler<kSysDebugWrite, SysDebugWrite>();
     table.RegisterHandler<kSysDebugReadLine, SysDebugReadLine>();
-    table.RegisterHandler<kSysWriteConsole, SysWriteConsole>();
 
     // Panic syscall
     table.RegisterHandler<kSysPanic, SysPanic>();
@@ -44,6 +43,10 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     // Video
     table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
     table.RegisterHandler<kSysBlit, SysBlit>();
+    table.RegisterHandler<kSysBlitRect, SysBlitRect>();
+
+    // Power Management
+    table.RegisterHandler<kSysPower, SysPower>();
 
     return table;
 }>();

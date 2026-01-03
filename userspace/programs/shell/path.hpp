@@ -1,13 +1,10 @@
-#ifndef KERNEL_SRC_FS_VFS_PATH_HPP_
-#define KERNEL_SRC_FS_VFS_PATH_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_PATH_HPP_
+#define USERSPACE_PROGRAMS_SHELL_PATH_HPP_
 
 #include <array.hpp>
 #include <concepts.hpp>
 #include <string.hpp>
 #include <type_traits.hpp>
-
-namespace vfs
-{
 
 // Constants
 inline constexpr size_t kMaxPathSize      = 1024;
@@ -427,6 +424,4 @@ inline const Path Path::kCurrentDir = Path(".");
 inline const Path Path::kParentDir  = Path("..");
 inline const Path Path::kRoot       = Path(std::string_view(&kPathSeparator, 1));
 
-}  // namespace vfs
-
-#endif  // KERNEL_SRC_FS_VFS_PATH_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_PATH_HPP_

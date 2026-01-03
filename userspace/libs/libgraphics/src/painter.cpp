@@ -1,4 +1,5 @@
-#include "graphics/painter.hpp"
+#include "painter.hpp"
+
 #include <string.h>
 #include <algorithm.hpp>
 

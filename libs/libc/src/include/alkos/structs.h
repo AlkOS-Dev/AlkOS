@@ -2,6 +2,7 @@
 #define LIBS_LIBC_SRC_INCLUDE_ALKOS_STRUCTS_H_
 
 #include "alkos/fd.h"
+#include "alkos/power.h"
 #include "alkos/proc.h"
 #include "alkos/thread.h"
 #include "alkos/time.h"

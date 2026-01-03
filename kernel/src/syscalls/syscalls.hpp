@@ -10,6 +10,7 @@
 #include "calls/fd.hpp"
 #include "calls/io.hpp"
 #include "calls/panic.hpp"
+#include "calls/power.hpp"
 #include "calls/proc.hpp"
 #include "calls/thread.hpp"
 #include "calls/time.hpp"

@@ -1,7 +1,7 @@
 #include "hal/impl/mmu.hpp"
 
 #include <string.h>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 
 #include "cpu/control_registers.hpp"
 #include "mem/page_map.hpp"

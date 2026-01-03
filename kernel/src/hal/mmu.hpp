@@ -2,7 +2,7 @@
 #define KERNEL_SRC_HAL_MMU_HPP_
 
 #include <hal/impl/mmu.hpp>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/mmu/contexts.hpp"

@@ -1,4 +1,4 @@
-message(STATUS "Configuring Userspace programs...")
+message(STATUS "Configuring Userspace...")
 
 # Directory where we collect user binaries
 set(USERSPACE_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
@@ -83,5 +83,14 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     add_dependencies(userspace_apps ${PROG_NAME})
 endfunction()
 
+################################### Libraries ##################################
+
+# Configure libraries used by userspace programs
+message(STATUS "  -> Configuring Libraries...")
+alkos_add_subdirs(libs)
+
+#################################### Programs ##################################
+
 # Register all user programs
+message(STATUS "  -> Configuring Programs...")
 alkos_add_subdirs(${CMAKE_CURRENT_SOURCE_DIR}/programs)

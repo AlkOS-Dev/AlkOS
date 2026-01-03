@@ -3,7 +3,8 @@
 
 #include <types.h>
 #include <defines.hpp>
-#include "graphics/color.hpp"
+
+#include "color.hpp"
 
 namespace Graphics
 {

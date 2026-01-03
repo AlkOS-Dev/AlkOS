@@ -5,9 +5,9 @@
 #include <span.hpp>
 #include <string.hpp>
 
-#include "fs/vfs/path.hpp"
-#include "io/stream.hpp"
-#include "sys/graphics_console.hpp"
+#include "graphics_console.hpp"
+#include "path.hpp"
+#include "stream.hpp"
 
 namespace System
 {
@@ -50,7 +50,6 @@ class Shell
     void CmdHelp();
     void CmdClear();
     void CmdEcho(std::string_view args);
-    void CmdMem();
     void CmdCd(std::string_view args);
     void CmdLs(std::string_view args);
     void CmdCat(std::string_view args);
@@ -61,7 +60,7 @@ class Shell
     // Path utilities
     // -------------------------------------------------------------------------
 
-    vfs::Path ResolvePath(std::string_view path_str);
+    Path ResolvePath(std::string_view path_str);
 
     // -------------------------------------------------------------------------
     // Internal Helpers
@@ -72,7 +71,7 @@ class Shell
     // Data
     GraphicsConsole &console_;
     IO::IReader &input_reader_;
-    vfs::Path current_dir_{vfs::Path::kRoot};
+    Path current_dir_{Path::kRoot};
 
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;

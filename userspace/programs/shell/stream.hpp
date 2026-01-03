@@ -1,16 +1,21 @@
-#ifndef KERNEL_SRC_IO_STREAM_HPP_
-#define KERNEL_SRC_IO_STREAM_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_STREAM_HPP_
+#define USERSPACE_PROGRAMS_SHELL_STREAM_HPP_
 
 #include <expected.hpp>
 #include <span.hpp>
 
 #include "internal/macros.hpp"
 
-#include "io/error.hpp"
-#include "mem/types.hpp"
-
 namespace IO
 {
+
+enum class Error {
+    None,
+    Retry,        // Resource busy/buffer full (Non-blocking)
+    EndOfFile,    // Connection closed
+    DeviceError,  // Hardware fault
+    InvalidInput
+};
 
 using std::expected;
 using std::unexpected;
@@ -83,4 +88,4 @@ class IStream : public IReader, public IWriter
 
 }  // namespace IO
 
-#endif  // KERNEL_SRC_IO_STREAM_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_STREAM_HPP_

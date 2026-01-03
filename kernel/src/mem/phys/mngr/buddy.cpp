@@ -1,7 +1,7 @@
 #include "mem/phys/mngr/buddy.hpp"
 
 #include <algorithm.hpp>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 #include <mutex.hpp>
 
 #include "mem/page_meta_table.hpp"
