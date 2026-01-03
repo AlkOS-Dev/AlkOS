@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string.hpp>
 
+#include "alkos/sys/fd.h"
 #include "alkos/sys/power.h"
 
 namespace System
@@ -175,32 +176,30 @@ void Shell::CmdCd(std::string_view args)
 
     Path new_path = ResolvePath(args);
 
-    // // Check if path exists and is a directory
-    // auto &vfs         = VfsModule::Get();
-    // auto exists_check = vfs.DirectoryExists(new_path);
-    //
-    // if (!exists_check.has_value()) {
-    //     const char *err = "cd: path not found: ";
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-    //     console_.Write(
-    //         std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
-    //     );
-    //     console_.PutChar('\n');
-    //     return;
-    // }
-    //
-    // if (!exists_check.value()) {
-    //     const char *err = "cd: not a directory: ";
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-    //     console_.Write(
-    //         std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
-    //     );
-    //     console_.PutChar('\n');
-    //     return;
-    // }
+    // Check if path exists and is a directory
+    FileInfo info;
+    int result = GetFileInfo(new_path.CString(), &info);
 
-    // For now, just accept any path as a directory
-    // TODO: Implement proper directory checking when stat() is available
+    if (result != 0) {
+        const char *err = "cd: path not found: ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+        );
+        console_.PutChar('\n');
+        return;
+    }
+
+    if (info.type != kFileTypeDirectory) {
+        const char *err = "cd: not a directory: ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
+        );
+        console_.PutChar('\n');
+        return;
+    }
+
     current_dir_ = new_path;
 }
 
@@ -215,37 +214,45 @@ void Shell::CmdLs(std::string_view args)
     }
 
     Path path = args.empty() ? current_dir_ : ResolvePath(args);
-    //
-    // auto &vfs = VfsModule::Get();
-    //
-    // // Check if the path exists
-    // auto exists_check = vfs.DirectoryExists(path);
-    // if (!exists_check.has_value() || !exists_check.value()) {
-    //     const char *err = "ls: cannot access '";
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-    //     const char *p = path.CString();
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
-    //     const char *err2 = "': No such directory\n";
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2),
-    //     strlen(err2))); return;
-    // }
-    //
-    // // List directory contents
-    // vfs.ListDirectory(path, [this](const char *name, bool is_dir) {
-    //     if (is_dir) {
-    //         console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
-    //     }
-    //     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(name),
-    //     strlen(name))); if (is_dir) {
-    //         console_.PutChar('/');
-    //         console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
-    //     }
-    //     console_.PutChar('\n');
-    // });
 
-    // TODO: Implement directory listing when opendir/readdir are available
-    const char *msg = "ls: directory listing not yet implemented in userspace\n";
-    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+    // Allocate buffer for directory entries
+    static constexpr size_t kMaxEntries = 128;
+    DirEntry entries[kMaxEntries];
+    size_t num_entries = 0;
+
+    // Call ReadDirectory syscall
+    int result = ReadDirectory(path.CString(), entries, kMaxEntries, &num_entries);
+
+    if (result != 0) {
+        const char *err = "ls: cannot access '";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        const char *p = path.CString();
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(p), strlen(p)));
+        const char *err2 = "': No such directory\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
+        return;
+    }
+
+    // Display entries
+    for (size_t i = 0; i < num_entries; i++) {
+        const auto &entry = entries[i];
+
+        // Color directories blue
+        if (entry.type == kFileTypeDirectory) {
+            console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
+        }
+
+        console_.Write(
+            std::span<const byte>(reinterpret_cast<const byte *>(entry.name), strlen(entry.name))
+        );
+
+        if (entry.type == kFileTypeDirectory) {
+            console_.PutChar('/');
+            console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+        }
+
+        console_.PutChar('\n');
+    }
 }
 
 void Shell::CmdCat(std::string_view args)

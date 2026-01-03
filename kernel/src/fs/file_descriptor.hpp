@@ -33,10 +33,11 @@ enum class FdError {
     kFdTableFull,
     kBadFileDescriptor,
     kNotOpen,
+    kNotFound,
     kAlreadyClosed,
     kPermissionDenied,
     kInvalidArgument,
-    kIoError
+    kIoError,
 };
 
 template <typename T = void>

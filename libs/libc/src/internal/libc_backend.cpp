@@ -22,6 +22,11 @@ DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, c
 DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
 DEFINE_SYSCALL(dup, kSysDup, fd_t, fd_t, fd)
 DEFINE_SYSCALL(dup_to, kSysDupTo, fd_t, fd_t, old_fd, fd_t, new_fd)
+DEFINE_SYSCALL(
+    read_directory, kSysReadDirectory, int, const char *, path, DirEntry *, entries, size_t,
+    max_entries, size_t *, num_entries
+)
+DEFINE_SYSCALL(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info)
 
 /* Thread, processes */
 DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)

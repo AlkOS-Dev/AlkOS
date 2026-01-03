@@ -30,6 +30,8 @@ enum SyscallNumber {
     kSysSeek,
     kSysDup,
     kSysDupTo,
+    kSysReadDirectory,
+    kSysFileInfo,
 
     /* Threads, processes */
     kThreadCreate,
