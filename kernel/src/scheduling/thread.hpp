@@ -44,7 +44,7 @@ static_assert(sizeof(ThreadFlags) == 8);
 enum class ThreadState : u64 {
     kReady = 0,
     kRunning,
-    kBlocked,
+    kSleeping,
     kTerminated,
     kLast,
 };

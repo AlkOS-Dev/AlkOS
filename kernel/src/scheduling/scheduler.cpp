@@ -4,6 +4,7 @@
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
+#include "scheduling/scheduler_lock.hpp"
 
 namespace Sched
 {
