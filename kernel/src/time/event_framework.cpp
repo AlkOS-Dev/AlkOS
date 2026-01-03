@@ -8,7 +8,12 @@
 
 static Sched::Thread *TimerHandler(intr::LitHwEntry &)
 {
-    return SchedulingModule::Get().GetScheduler().Schedule();
+    if (hardware::GetCoreLocalTcb() == nullptr) {
+        // Not yet converted to scheduling
+        return nullptr;
+    }
+
+    return SchedulingModule::Get().GetScheduler().ScheduleAndUpdateThreads();
 }
 
 // ------------------------------

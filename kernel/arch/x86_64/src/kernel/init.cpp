@@ -54,7 +54,7 @@ TODO_WHEN_MULTICORE
 // TODO: replace when core
 extern "C" void cdecl_SetKernelGs()
 {
-    cpu::SetMSR(arch::kIa32GsKernelBase, g_CoreLocal.thread_control_block->gs_base);
+    cpu::SetMSR(arch::kIa32GsKernelBase, g_CoreLocal.thread_control_block->arch_data.gs_base);
 }
 
 namespace arch

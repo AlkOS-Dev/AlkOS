@@ -33,10 +33,7 @@ void Sched::TraceDumperMain()
 
     while (true) {
         trace::TraceDumperTask();
-
-        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         SchedulingModule::Get().GetScheduler().Yield();
-        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     }
 }
 
@@ -65,8 +62,6 @@ void Sched::StdoutTracerMain(Pid pid)
             }
         }
 
-        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         SchedulingModule::Get().GetScheduler().Yield();
-        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     }
 }

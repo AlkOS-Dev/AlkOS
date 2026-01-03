@@ -75,6 +75,7 @@ void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
     }
 
     thread->timestamp = t;
+    thread->num_interrupts++;
 }
 
 void UpdateTcbOnInterruptExit(Thread *thread)
@@ -82,15 +83,24 @@ void UpdateTcbOnInterruptExit(Thread *thread)
     const auto current_thread = hardware::GetCoreLocalTcb();
 
     if (!current_thread) {
+        ASSERT_NULL(thread);
         return;
     }
 
     const u64 t = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     current_thread->kernel_time_ns += t - current_thread->timestamp;
     current_thread->timestamp = t;
+    current_thread->num_context_switches++;
 
     if (thread) {
+        /* Context Switch occurs */
         thread->timestamp = t;
+
+        ASSERT_EQ(current_thread->state, ThreadState::kReady);
+        ASSERT_EQ(thread->state, ThreadState::kRunning);
+    } else {
+        /* No context switch occurred */
+        ASSERT_EQ(current_thread->state, ThreadState::kRunning);
     }
 }
 
@@ -102,6 +112,7 @@ void cdecl_UpdateTcbOnSyscallEntry()
     const u64 t       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     thread->user_time_ns += t - thread->timestamp;
     thread->timestamp = t;
+    thread->num_syscalls++;
 }
 
 void cdecl_UpdateTcbOnSyscallExit()
