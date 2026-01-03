@@ -23,6 +23,7 @@ struct BufferInfo {
 
 struct GraphicSession {
     Sched::Pid owner_pid;
+    Sched::Pid focused_pid;
     bool is_active = false;
 
     /// The backing store (Physical RAM)
@@ -46,6 +47,10 @@ class WindowManager
     /// Switches screen to a specific session
     void SwitchSession(size_t index);
     void SwitchToNextSession();
+
+    void SetFocus(Sched::Pid pid);
+    void ReleaseFocus(Sched::Pid pid);
+    Sched::Pid GetActiveSessionFocusedPid();
 
     private:
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();

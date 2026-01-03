@@ -4,6 +4,7 @@
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
+#include "modules/video.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
@@ -246,6 +247,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     });
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
+
+    VideoModule::Get().GetWindowManager().SetFocus(process.value());
 
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());

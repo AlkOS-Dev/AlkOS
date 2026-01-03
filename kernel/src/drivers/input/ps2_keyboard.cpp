@@ -1,4 +1,5 @@
 #include "drivers/input/ps2_keyboard.hpp"
+#include "modules/input.hpp"
 #include "modules/video.hpp"
 #include "trace_framework.hpp"
 
@@ -131,6 +132,7 @@ void Ps2Keyboard::OnInterrupt()
 
         if (scancode == kScanCodeTab) {
             VideoModule::Get().GetWindowManager().SwitchToNextSession();
+            return;
         }
 
         // Handle Make Code (Key Press)
@@ -142,7 +144,8 @@ void Ps2Keyboard::OnInterrupt()
             // Translate and push regular characters
             const char c = TranslateScancode(scancode);
             if (c != 0) {
-                PushKey(c);
+                // Route to the central input module
+                InputModule::Get().RouteKey(c);
             }
         }
 
