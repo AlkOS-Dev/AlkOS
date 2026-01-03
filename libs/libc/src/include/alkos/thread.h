@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_SYS_THREAD_H_
-#define LIBS_LIBC_SRC_INCLUDE_SYS_THREAD_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_THREAD_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_THREAD_H_
 
 #include <defines.h>
 #include <stdbool.h>
@@ -17,4 +17,4 @@ typedef struct {
     ThreadFlags flags;
 } Thread;
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_SYS_THREAD_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_THREAD_H_

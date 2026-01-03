@@ -30,6 +30,8 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kSysRead, SysRead>();
     table.RegisterHandler<kSysWrite, SysWrite>();
     table.RegisterHandler<kSysSeek, SysSeek>();
+    table.RegisterHandler<kSysDup, SysDup>();
+    table.RegisterHandler<kSysDupTo, SysDupTo>();
 
     /* Thread, processes */
     table.RegisterHandler<kProcAbort, SysAbort>();

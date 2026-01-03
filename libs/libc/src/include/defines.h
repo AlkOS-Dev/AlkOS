@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_INCLUDE_DEFINES_H_
-#define LIBS_LIBC_INCLUDE_DEFINES_H_
+#ifndef LIBS_LIBC_SRC_INCLUDE_DEFINES_H_
+#define LIBS_LIBC_SRC_INCLUDE_DEFINES_H_
 
 // ------------------------------
 // C++ defines
@@ -45,8 +45,14 @@ static constexpr bool kIsKernel = false;
 /* Marks a function or variable as unused */
 #define UNUSED __attribute__((unused))
 
+/* Marks a function or variable as used (prevents removal) */
+#define USED __attribute__((used))
+
 /* Marks a function as naked (no prologue/epilogue) */
 #define NAKED __attribute__((naked))
+
+/* Marks a variable or function to be placed in a specific section */
+#define SECTION(name) __attribute__((section(#name)))
 
 // ------------------------------
 // Useful macros
@@ -90,4 +96,4 @@ static constexpr bool kIsKernel = false;
 #define CONSTEXPR static inline
 #endif  // __cplusplus
 
-#endif  // LIBS_LIBC_INCLUDE_DEFINES_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_DEFINES_H_

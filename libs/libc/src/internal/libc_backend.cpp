@@ -1,6 +1,5 @@
 #ifndef __ALKOS_KERNEL__
 
-#include "alkos/calls.h"
 #include "alkos/structs.h"
 #include "platform.h"
 
@@ -17,11 +16,13 @@ DEFINE_SYSCALL_VOID(write_console, kSysWriteConsole, const char *, buffer)
 
 DEFINE_SYSCALL_VOID(panic, kSysPanic, const char *, msg)
 
-DEFINE_SYSCALL(open, kSysOpen, int, const char *, pathname, int, flags)
+DEFINE_SYSCALL(open, kSysOpen, fd_t, const char *, pathname, int, flags)
 DEFINE_SYSCALL(close, kSysClose, int, fd_t, fd)
 DEFINE_SYSCALL(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count)
 DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count)
 DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
+DEFINE_SYSCALL(dup, kSysDup, fd_t, fd_t, fd)
+DEFINE_SYSCALL(dup_to, kSysDupTo, fd_t, fd_t, old_fd, fd_t, new_fd)
 
 /* Thread, processes */
 DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)

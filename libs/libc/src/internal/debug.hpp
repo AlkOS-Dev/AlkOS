@@ -1,5 +1,5 @@
-#ifndef LIBS_LIBC_INTERNAL_DEBUG_HPP_
-#define LIBS_LIBC_INTERNAL_DEBUG_HPP_
+#ifndef LIBS_LIBC_SRC_INTERNAL_DEBUG_HPP_
+#define LIBS_LIBC_SRC_INTERNAL_DEBUG_HPP_
 
 #include <autogen/feature_flags.h>
 #include <todo.hpp>
@@ -57,4 +57,4 @@ void FormatTrace(const char *format, Args... args)
 #define TRACE_SUCCESS(message, ...) \
     TRACE(TRACE_FORMAT_SUCCESS(message), 0ull __VA_OPT__(, ) __VA_ARGS__)
 
-#endif  // LIBS_LIBC_INTERNAL_DEBUG_HPP_
+#endif  // LIBS_LIBC_SRC_INTERNAL_DEBUG_HPP_

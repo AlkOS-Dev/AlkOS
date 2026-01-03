@@ -8,7 +8,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "modules/global_state_constants.hpp"
 #include "modules/helpers.hpp"
-#include "sync/kernel/spinlock.hpp"
+#include "sync/spinlock.hpp"
 
 // ------------------------------
 // Module

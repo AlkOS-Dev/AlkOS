@@ -27,6 +27,8 @@ SYSCALL_NAME(close, kSysClose, int, fd_t, fd);
 SYSCALL_NAME(read, kSysRead, ssize_t, fd_t, fd, void *, buf, size_t, count);
 SYSCALL_NAME(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, count);
 SYSCALL_NAME(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence);
+SYSCALL_NAME(dup, kSysDup, fd_t, fd_t, fd);
+SYSCALL_NAME(dup_to, kSysDupTo, fd_t, fd_t, old_fd, fd_t, new_fd);
 
 /* Thread, processes */
 SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);

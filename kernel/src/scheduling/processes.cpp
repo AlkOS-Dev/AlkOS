@@ -16,7 +16,13 @@
 
 std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
 {
+    bool dismiss = false;
+
     const size_t idx = processes_.Allocate();
+
+    template_lib::BatchedScopeGuard process_guard(dismiss, [&]() {
+        processes_.Free(idx);
+    });
 
     if (idx == std::numeric_limits<size_t>::max()) {
         return std::unexpected(Error::ExceededMaxAllowedInstances);
@@ -27,15 +33,17 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
     ASSERT_LE(idx, std::numeric_limits<u16>::max());
     process->pid = AssignNewPid(static_cast<u16>(idx));
 
-    auto fd_table = Mem::KMalloc<Fs::FdTable>();
-    RET_UNEXPECTED_IF(!fd_table, Error::OutOfMemory);
+    // ----------------------------------------------------------
+    // Initialize standard I/O pipes
+    // ----------------------------------------------------------
 
-    auto fd_table_ptr = new (*fd_table) Fs::FdTable();
-    process->fd_table = fd_table_ptr;
+    // Create the process's file descriptor table
+    auto fd_table_ptr = Mem::KNew<Fs::FdTable>();
+    RET_UNEXPECTED_IF(!fd_table_ptr, Error::OutOfMemory);
 
-    template_lib::ScopeGuard fd_table_guard([&]() {
-        fd_table_ptr->~FdTable();
-        Mem::KFree(fd_table_ptr);
+    auto *fd_table = process->fd_table = *fd_table_ptr;
+    template_lib::BatchedScopeGuard fd_table_guard(dismiss, [&]() {
+        Mem::KDelete(fd_table);
     });
 
     // Get the global OpenFileTable
@@ -44,50 +52,25 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
     // Open stdin pipe in the global open file table
     auto stdin_entry_result = open_file_table.OpenPipe(process->stdin_pipe);
     RET_UNEXPECTED_IF(!stdin_entry_result, Error::OutOfMemory);
-    auto *stdin_entry = *stdin_entry_result;
 
-    // Allocate stdin file descriptor
-    auto stdin_fd_result = fd_table_ptr->AllocateFdAt(stdin_entry, Fs::kStdinFd);
-    if (!stdin_fd_result) {
-        open_file_table.CloseFile(stdin_entry);
-        return std::unexpected(Error::OutOfMemory);
-    }
+    auto stdin_fd_result = fd_table->AllocateAt(std::move(*stdin_entry_result), Fs::kStdinFd);
+    RET_UNEXPECTED_IF(!stdin_fd_result, Error::OutOfMemory);
 
     // Open stdout pipe in the global open file table
     auto stdout_entry_result = open_file_table.OpenPipe(process->stdout_pipe);
-    if (!stdout_entry_result) {
-        open_file_table.CloseFile(stdin_entry);
-        return std::unexpected(Error::OutOfMemory);
-    }
-    auto *stdout_entry = *stdout_entry_result;
+    RET_UNEXPECTED_IF(!stdout_entry_result, Error::OutOfMemory);
 
-    // Allocate stdout file descriptor
-    auto stdout_fd_result = fd_table_ptr->AllocateFdAt(stdout_entry, Fs::kStdoutFd);
-    if (!stdout_fd_result) {
-        open_file_table.CloseFile(stdin_entry);
-        open_file_table.CloseFile(stdout_entry);
-        return std::unexpected(Error::OutOfMemory);
-    }
+    auto stdout_fd_result = fd_table->AllocateAt(std::move(*stdout_entry_result), Fs::kStdoutFd);
+    RET_UNEXPECTED_IF(!stdout_fd_result, Error::OutOfMemory);
 
     // Open stderr pipe in the global open file table
     auto stderr_entry_result = open_file_table.OpenPipe(process->stderr_pipe);
-    if (!stderr_entry_result) {
-        open_file_table.CloseFile(stdin_entry);
-        open_file_table.CloseFile(stdout_entry);
-        return std::unexpected(Error::OutOfMemory);
-    }
-    auto *stderr_entry = *stderr_entry_result;
+    RET_UNEXPECTED_IF(!stderr_entry_result, Error::OutOfMemory);
 
-    // Allocate stderr file descriptor
-    auto stderr_fd_result = fd_table_ptr->AllocateFdAt(stderr_entry, Fs::kStderrFd);
-    if (!stderr_fd_result) {
-        open_file_table.CloseFile(stdin_entry);
-        open_file_table.CloseFile(stdout_entry);
-        open_file_table.CloseFile(stderr_entry);
-        return std::unexpected(Error::OutOfMemory);
-    }
+    auto stderr_fd_result = fd_table->AllocateAt(std::move(*stderr_entry_result), Fs::kStderrFd);
+    RET_UNEXPECTED_IF(!stderr_fd_result, Error::OutOfMemory);
 
-    fd_table_guard.dismiss();
+    dismiss = true;
 
     return process;
 }
@@ -99,6 +82,5 @@ void Sched::Processes::CleanupProcess(Process *process)
     auto fd_table = process->fd_table;
     ASSERT_NOT_NULL(fd_table);
 
-    fd_table->~FdTable();
-    Mem::KFree(fd_table);
+    Mem::KDelete(fd_table);
 }

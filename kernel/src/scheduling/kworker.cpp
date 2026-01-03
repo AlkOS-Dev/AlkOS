@@ -39,3 +39,34 @@ void Sched::TraceDumperMain()
         HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     }
 }
+
+void Sched::StdoutTracerMain(Pid pid)
+{
+    TRACE_INFO_SCHEDULING("Created new StdoutTracer!");
+
+    // Get hello process
+    auto &processes = SchedulingModule::Get().GetProcesses();
+    auto res        = processes.GetProcess(pid);
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to find hello_world process for tracing...");
+    auto *hello_process = res.value();
+
+    // Read from the stdout pipe and write to terminal
+    byte buffer[256];
+    while (true) {
+        auto result = hello_process->stdout_pipe.Read(std::span<byte>(buffer, sizeof(buffer)));
+
+        if (result.has_value()) {
+            size_t bytes_read = result.value();
+            if (bytes_read > 0) {
+                size_t safe_size =
+                    bytes_read < sizeof(buffer) - 1 ? bytes_read : sizeof(buffer) - 1;
+                buffer[safe_size] = '\0';
+                hal::TerminalWriteString(reinterpret_cast<const char *>(buffer));
+            }
+        }
+
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        SchedulingModule::Get().GetScheduler().Yield();
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+    }
+}
