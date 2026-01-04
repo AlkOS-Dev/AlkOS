@@ -209,9 +209,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
         return std::unexpected(thread.error());
     }
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_SCHEDULING(
         "Created kernel process with pid: %llu, name: %s and initial thread with tid: %llu",
@@ -234,9 +232,7 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
     auto thread = SpawnThread(pid, PrepareElf64LoaderTask(pid, path));
     RET_UNEXPECTED_IF_ERR(thread);
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_SCHEDULING(
         "Created userspace process with pid: %llu and initial thread with tid: %llu", pid,
@@ -356,7 +352,7 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
            thread.value()->state != ThreadState::kTerminated) {
         static constexpr u64 kWaitTime = 50'000'000;  // 50 ms
 
-        SchedulingModule::Get().GetScheduler().NanoSleepUntilUnguarded(
+        SchedulingModule::Get().GetScheduler().NanoSleepUntil(
             TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + kWaitTime
         );
     }
@@ -370,4 +366,6 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
 
     return std::unexpected(Error::AlreadyJoined);
 }
+
+std::expected<Pid, Error> TaskMgr::Exec(const char *path) { LocalCoreLock lock{}; }
 }  // namespace Sched

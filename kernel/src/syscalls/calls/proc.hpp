@@ -7,10 +7,13 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int) {}
+FAST_CALL void SysExit(int status) {}
+
 FAST_CALL void SysAbort() {}
 
-FORCE_INLINE_F void SysFocusTransfer(Sched::Pid target_child)
+FAST_CALL void SysExec(const char *path, u64 *pid) {}
+
+FAST_CALL void SysFocusTransfer(Sched::Pid target_child)
 {
     auto &wm = VideoModule::Get().GetWindowManager();
     wm.SetFocus(target_child);

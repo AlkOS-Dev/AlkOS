@@ -6,6 +6,34 @@
 
 namespace arch
 {
+using CpuInterruptFlags = u64;
+
+FAST_CALL void RestoreCpuInterruptFlags(const CpuInterruptFlags &flags)
+{
+    __asm__ volatile(
+        "pushq %0\n\t"
+        "popfq"
+        :
+        : "r"(flags)
+        : "memory", "cc"
+    );
+}
+
+FAST_CALL CpuInterruptFlags GetCpuInterruptFlags()
+{
+    CpuInterruptFlags flags;
+
+    __asm__ volatile(
+        "pushfq\n\t"
+        "popq %0"
+        : "=r"(flags)
+        :
+        : "memory"
+    );
+
+    return flags;
+}
+
 FAST_CALL void FullMemFence() { __asm__ volatile("mfence" ::: "memory"); }
 
 FAST_CALL void LoadMemFence() { __asm__ volatile("lfence" ::: "memory"); }

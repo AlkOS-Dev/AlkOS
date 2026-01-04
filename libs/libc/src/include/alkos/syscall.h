@@ -42,6 +42,7 @@ enum SyscallNumber {
     kProcAbort,
     kNanoSleep,
     kNanoSleepUntil,
+    kExec,
 
     /* Video Syscalls */
     kSysCreateGraphicSession,
