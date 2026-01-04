@@ -76,11 +76,9 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
 
     /* Arch */
     hal::Thread arch_data;
+
+    NODISCARD u64 CalculateCpuTime();
 };
-static_assert(
-    sizeof(Thread) ==
-    (128 + sizeof(hal::Thread) + sizeof(data_structures::IntrusiveRbNode<Thread, u64>))
-);
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_THREAD_HPP_

@@ -25,6 +25,8 @@ namespace Sched
 {
 void TaskMgr::InitializeMultitasking()
 {
+    SchedulingModule::Get().GetScheduler().InstallInterruptHandler();
+
     // Spawn trace dumper
     const auto result =
         SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));

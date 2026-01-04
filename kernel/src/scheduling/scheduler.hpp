@@ -20,6 +20,8 @@ namespace Sched
 
 class Scheduler
 {
+    static constexpr u64 kMinDelta = 2'000;
+
     public:
     // ------------------------------
     // Class creation
@@ -54,7 +56,19 @@ class Scheduler
     // ------------------------------
 
     protected:
-    void SetupPeriodic(u64 time_ns);
+    void PrepareNextTimerInterruptBeforeSwitchUnguarded_(Thread *next_thread);
+
+    NODISCARD FORCE_INLINE_F const Policy &GetPolicy_(Thread *thread) const
+    {
+        ASSERT_NOT_NULL(thread);
+        ASSERT_LT(
+            static_cast<size_t>(thread->flags.policy), static_cast<size_t>(SchedulingPolicy::kLast)
+        );
+
+        return policies_[static_cast<size_t>(thread->flags.policy)];
+    }
+
+    void SetupNextTimeEvent_(u64 time_ns);
 
     // ------------------------------
     // Class fields

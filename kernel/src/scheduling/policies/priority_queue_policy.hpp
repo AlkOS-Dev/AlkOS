@@ -37,6 +37,17 @@ class PriorityQueuePolicy : public PolicyImpl
         priority_queue_.Insert(thread, thread->flags.priority);
     }
 
+    NODISCARD FORCE_INLINE_F u64 GetPreemptTime(Thread *thread)
+    {
+        static constexpr u64 kPreemptTimeNs = 5'000'000;  // 5ms
+
+        ASSERT_NOT_NULL(thread);
+        ASSERT(thread->state == ThreadState::kReady || thread->state == ThreadState::kRunning);
+
+        const u64 cpu_time_ns = thread->CalculateCpuTime();
+        return cpu_time_ns < kPreemptTimeNs ? kPreemptTimeNs - cpu_time_ns : 0;
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------

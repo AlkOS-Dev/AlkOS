@@ -5,7 +5,7 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int status) {}
+FAST_CALL void SysExit(int) {}
 FAST_CALL void SysAbort() {}
 }  // namespace Syscall
 
