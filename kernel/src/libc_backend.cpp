@@ -10,7 +10,7 @@
 
 using namespace Syscall;
 
-void __platform_panic(const char *msg) { SysPanic(msg); }
+void __platform_panic(const char *msg) { hal::KernelPanic(msg); }
 
 void __platform_get_clock_value(const ClockType type, TimeVal *time, Timezone *time_zone)
 {
