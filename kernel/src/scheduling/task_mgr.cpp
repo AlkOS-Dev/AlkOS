@@ -322,6 +322,7 @@ std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
 void TaskMgr::ThreadExit(void *retval)
 {
     const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_NOT_NULL(tcb);
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
 
     tcb->retval = retval;
@@ -340,6 +341,7 @@ void TaskMgr::ThreadExit(void *retval)
 std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
 {
     const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_NOT_NULL(tcb);
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
 
     if (tcb->tid == tid) {

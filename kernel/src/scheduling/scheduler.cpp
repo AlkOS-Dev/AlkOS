@@ -47,6 +47,8 @@ void Scheduler::InstallInterruptHandler()
 
 void Scheduler::AddReadyThread(Thread *thread)
 {
+    ASSERT_NOT_NULL(thread);
+
     ASSERT_EQ(thread->state, ThreadState::kReady);
 
     const auto idx = static_cast<size_t>(thread->flags.policy);
@@ -90,6 +92,8 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     u64 preempt_time_ns = GetPreemptTime_(hardware::GetCoreLocalTcb());
     if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
         const auto next_thread = Schedule();
+        ASSERT_NOT_NULL(next_thread);
+
         ASSERT_EQ(next_thread->state, ThreadState::kReady);
         preempt_time_ns    = GetPreemptTime_(next_thread);
         next_thread->state = ThreadState::kRunning;
@@ -144,6 +148,8 @@ void Scheduler::ConvertToScheduling()
     event_clock.cbs.set_oneshot(&event_clock);
 
     const auto thread = Schedule();
+    ASSERT_NOT_NULL(thread);
+
     ASSERT_EQ(thread->state, ThreadState::kReady);
 
     const u64 preempt_time_ns = GetPreemptTime_(thread);
@@ -228,6 +234,8 @@ bool Scheduler::WakeUpTasks()
         }
 
         const auto thread = sleep_queue_.Min();
+        ASSERT_NOT_NULL(thread);
+
         should_preempt |= IsFirstHigherPriority_(thread, hardware::GetCoreLocalTcb());
 
         sleep_queue_.Delete(thread);
