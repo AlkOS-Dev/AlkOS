@@ -4,7 +4,7 @@
 #include <expected.hpp>
 #include <span.hpp>
 
-#include "macros.hpp"
+#include "internal/macros.hpp"
 
 #include "io/error.hpp"
 #include "mem/types.hpp"

@@ -7,6 +7,7 @@
 #include <tuple.hpp>
 
 #include "drivers/video/framebuffer.hpp"
+#include "mem/error.hpp"
 #include "mem/page.hpp"
 #include "mem/types.hpp"
 #include "scheduling/process.hpp"
@@ -23,6 +24,7 @@ struct BufferInfo {
 
 struct GraphicSession {
     Sched::Pid owner_pid;
+    Sched::Pid focused_pid;
     bool is_active = false;
 
     /// The backing store (Physical RAM)
@@ -47,6 +49,10 @@ class WindowManager
     void SwitchSession(size_t index);
     void SwitchToNextSession();
 
+    void SetFocus(Sched::Pid pid);
+    void ReleaseFocus(Sched::Pid pid);
+    Sched::Pid GetActiveSessionFocusedPid();
+
     private:
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();
     size_t RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
@@ -55,7 +61,7 @@ class WindowManager
     void RefreshScreen();
 
     static constexpr size_t kMaxSessions    = 12;
-    static constexpr size_t kInvalidSession = size_t(-1);
+    static constexpr size_t kInvalidSession = static_cast<size_t>(-1);
     data_structures::StaticVector<GraphicSession, kMaxSessions> sessions_;
 
     size_t active_session_idx_{kInvalidSession};

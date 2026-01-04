@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_
-#define KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_GEOMETRY_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_GEOMETRY_HPP_
 
 #include <types.h>
 #include <string.hpp>
@@ -40,4 +40,4 @@ struct Size {
 
 }  // namespace Graphics
 
-#endif  // KERNEL_SRC_GRAPHICS_GEOMETRY_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_GEOMETRY_HPP_

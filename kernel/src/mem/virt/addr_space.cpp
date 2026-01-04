@@ -1,6 +1,6 @@
 #include "mem/virt/addr_space.hpp"
 
-#include <macros.hpp>
+#include <internal/macros.hpp>
 #include <mutex.hpp>
 
 #include <template/scope_guard.hpp>

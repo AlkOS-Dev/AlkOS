@@ -2,7 +2,7 @@
 #define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYSCALL_H_
 
 #include <syscall.h>
-#include "macro.hpp"
+#include "internal/macro.hpp"
 
 /**
  * @brief Syscall numbers
@@ -18,14 +18,9 @@ enum SyscallNumber {
     /* Debug IO */
     kSysDebugWrite,
     kSysDebugReadLine,
-    kSysWriteConsole,
 
     /* Panic/Program termination */
     kSysPanic,
-
-    /* Video Syscalls */
-    kSysCreateGraphicSession,
-    kSysBlit,
 
     /* File descriptor syscalls */
     kSysOpen,
@@ -35,6 +30,8 @@ enum SyscallNumber {
     kSysSeek,
     kSysDup,
     kSysDupTo,
+    kSysReadDirectory,
+    kSysFileInfo,
 
     /* Threads, processes */
     kThreadCreate,
@@ -45,6 +42,13 @@ enum SyscallNumber {
     kProcAbort,
     kNanoSleep,
     kNanoSleepUntil,
+
+    /* Video Syscalls */
+    kSysCreateGraphicSession,
+    kSysBlit,
+
+    /* Power Management Syscalls */
+    kSysPower,
 
     kSysMax,
 };

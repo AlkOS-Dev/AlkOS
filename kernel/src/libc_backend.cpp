@@ -10,7 +10,7 @@
 
 using namespace Syscall;
 
-void __platform_panic(const char *msg) { SysPanic(msg); }
+void __platform_panic(const char *msg) { hal::KernelPanic(msg); }
 
 void __platform_get_clock_value(const ClockType type, TimeVal *time, Timezone *time_zone)
 {
@@ -30,7 +30,5 @@ size_t __platform_debug_read_line(char *buffer, const size_t buffer_size)
 {
     return SysDebugReadLine(buffer, buffer_size);
 }
-
-void __platform_write_console(const char *buffer) { SysWriteConsole(buffer); }
 
 #endif

@@ -14,6 +14,7 @@
 #include <bit.hpp>
 #include <hal/terminal.hpp>
 
+#include "modules/scheduling.hpp"
 #include "trace_framework.hpp"
 
 static constexpr u32 kStubTableSize = 144;
@@ -94,9 +95,7 @@ static void FormatIsrRegisters(
     }
 }
 
-NO_RET FAST_CALL void DefaultExceptionHandler(
-    const IsrErrorStackFrame *stack_frame, const u8 idt_idx
-)
+NO_RET FAST_CALL void KernelExceptionPanic(const IsrErrorStackFrame *stack_frame, const u8 idt_idx)
 {
     static constexpr size_t kStateMsgSize = 1024;
 
@@ -119,8 +118,23 @@ NO_RET FAST_CALL void DefaultExceptionHandler(
 
 Sched::Thread *DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionData *data)
 {
-    DefaultExceptionHandler(data, entry.hardware_irq);
-    return nullptr;
+    if (hal::IsInterruptFromUserSpace(*data)) {
+        // Userspace Crash
+        auto pid                  = hardware::GetRunningPid();
+        const char *exception_msg = GetExceptionMsg(entry.hardware_irq);
+
+        TRACE_FATAL_GENERAL(
+            "Process %llu crashed: Exception %u (%s) at RIP=0x%016llx", pid.id, entry.hardware_irq,
+            exception_msg ? exception_msg : "Unknown", data->isr_stack_frame.rip
+        );
+
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+        return nullptr;
+    } else {
+        // Kernel Panic
+        KernelExceptionPanic(data, entry.hardware_irq);
+        return nullptr;
+    }
 }
 
 FAST_CALL void LogIrqReceived(const u16 idt_idx, const u16 lirq)

@@ -15,7 +15,7 @@ inline constexpr size_t kMaxComponents    = 64;
 inline constexpr size_t kMaxComponentSize = 128;
 inline constexpr char kPathSeparator      = '/';
 
-// Ccncepts
+// Concepts
 template <typename T>
 concept PathStringLike = std::convertible_to<T, std::string_view>;
 

@@ -1,18 +1,15 @@
-#ifndef KERNEL_SRC_SYS_SHELL_HPP_
-#define KERNEL_SRC_SYS_SHELL_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_SHELL_HPP_
+#define USERSPACE_PROGRAMS_SHELL_SHELL_HPP_
 
 #include <data_structures/array_structures.hpp>
 #include <span.hpp>
 #include <string.hpp>
 
-#include "fs/vfs/path.hpp"
-#include "io/stream.hpp"
-#include "sys/graphics_console.hpp"
+#include "graphics_console.hpp"
+#include "path.hpp"
 
 namespace System
 {
-
-extern GraphicsConsole *g_active_console;
 
 // --------------------------------------------------------------------------------
 // Shell
@@ -21,7 +18,7 @@ extern GraphicsConsole *g_active_console;
 class Shell
 {
     public:
-    explicit Shell(GraphicsConsole &console, IO::IReader &input_reader);
+    explicit Shell(GraphicsConsole &console);
 
     // -------------------------------------------------------------------------
     // Public Interface
@@ -50,7 +47,6 @@ class Shell
     void CmdHelp();
     void CmdClear();
     void CmdEcho(std::string_view args);
-    void CmdMem();
     void CmdCd(std::string_view args);
     void CmdLs(std::string_view args);
     void CmdCat(std::string_view args);
@@ -61,7 +57,7 @@ class Shell
     // Path utilities
     // -------------------------------------------------------------------------
 
-    vfs::Path ResolvePath(std::string_view path_str);
+    Path ResolvePath(std::string_view path_str);
 
     // -------------------------------------------------------------------------
     // Internal Helpers
@@ -71,8 +67,7 @@ class Shell
 
     // Data
     GraphicsConsole &console_;
-    IO::IReader &input_reader_;
-    vfs::Path current_dir_{vfs::Path::kRoot};
+    Path current_dir_{Path::kRoot};
 
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;
@@ -80,4 +75,4 @@ class Shell
 
 }  // namespace System
 
-#endif  // KERNEL_SRC_SYS_SHELL_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_SHELL_HPP_

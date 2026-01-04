@@ -4,6 +4,7 @@
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/vfs.hpp"
+#include "modules/video.hpp"
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
@@ -49,15 +50,6 @@ void TaskMgr::InitializeMultitasking()
             "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
         );
     }
-
-    const auto res1 = ExecuteElf64("/bin/gui_test", {});
-    R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/hello process...");
-
-    for (volatile size_t i = 0; i < 1'000'000; i = i + 1) {
-    }
-
-    const auto res2 = ExecuteElf64("/bin/gui_test", {});
-    R_ASSERT_TRUE(static_cast<bool>(res2), "Failed to spawn /bin/hello process...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
@@ -273,6 +265,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     });
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
+
+    VideoModule::Get().GetWindowManager().SetFocus(process.value());
 
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());

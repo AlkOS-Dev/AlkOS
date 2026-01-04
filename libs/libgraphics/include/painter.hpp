@@ -1,14 +1,14 @@
-#ifndef KERNEL_SRC_GRAPHICS_PAINTER_HPP_
-#define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_
 
 #include <concepts.hpp>
 #include <span.hpp>
-#include <string.hpp>
-#include "graphics/color.hpp"
-#include "graphics/font/glyph.hpp"
-#include "graphics/geometry.hpp"
-#include "graphics/native_pixel.hpp"
-#include "graphics/surface.hpp"
+
+#include "color.hpp"
+#include "font/glyph.hpp"
+#include "geometry.hpp"
+#include "native_pixel.hpp"
+#include "surface.hpp"
 
 namespace Graphics
 {
@@ -66,6 +66,6 @@ class Painter
 
 }  // namespace Graphics
 
-#include "graphics/painter.tpp"
+#include "painter.tpp"
 
-#endif  // KERNEL_SRC_GRAPHICS_PAINTER_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_

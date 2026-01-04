@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_FONT_PSF2_FONT_HPP_
-#define KERNEL_SRC_GRAPHICS_FONT_PSF2_FONT_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_FONT_PSF2_FONT_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_FONT_PSF2_FONT_HPP_
 
 #include <assert.h>
 #include <types.h>
@@ -7,8 +7,8 @@
 #include <span.hpp>
 #include <string.hpp>
 
-#include "graphics/font/glyph.hpp"
-#include "graphics/geometry.hpp"
+#include "font/glyph.hpp"
+#include "geometry.hpp"
 
 namespace Graphics
 {
@@ -131,4 +131,4 @@ class Psf2Font
 
 }  // namespace Graphics
 
-#endif  // KERNEL_SRC_GRAPHICS_FONT_PSF2_FONT_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_FONT_PSF2_FONT_HPP_

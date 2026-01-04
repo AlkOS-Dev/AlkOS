@@ -5,6 +5,7 @@
 
 #include "boot_args.hpp"
 #include "drivers/video/framebuffer.hpp"
+#include "mem/heap.hpp"
 #include "modules/helpers.hpp"
 #include "video/window_manager.hpp"
 

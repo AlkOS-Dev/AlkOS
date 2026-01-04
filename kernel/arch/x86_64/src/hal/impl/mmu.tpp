@@ -2,7 +2,7 @@
 #define KERNEL_ARCH_X86_64_SRC_HAL_IMPL_MMU_TPP_
 
 #include "hal/impl/mmu.hpp"
-#include "macros.hpp"
+#include "internal/macros.hpp"
 #include "mem/page_map.hpp"
 
 #include <string.h>

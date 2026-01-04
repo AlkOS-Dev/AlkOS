@@ -8,6 +8,7 @@
 #include "hal/terminal.hpp"
 #include "modules/global_state.hpp"
 #include "modules/hardware.hpp"
+#include "modules/input.hpp"
 #include "modules/memory.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
@@ -64,4 +65,5 @@ void KernelInit(const hal::RawBootArguments &raw_args)
     HardwareModule::Get().GetCoresController().BootUpAllCores();
 
     VideoModule::Init(args, MemoryModule::Get().GetHeap());
+    InputModule::Init();
 }

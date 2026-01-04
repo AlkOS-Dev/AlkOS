@@ -1,6 +1,6 @@
 #include "mem/heap.hpp"
 
-#include <macros.hpp>
+#include <internal/macros.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"

@@ -18,7 +18,6 @@ SYSCALL_VOID_NAME(get_timezone, kSysGetTimezone, Timezone *, time_zone);
 
 SYSCALL_VOID_NAME(debug_write, kSysDebugWrite, const char *, buffer);
 SYSCALL_NAME(debug_read_line, kSysDebugReadLine, size_t, char *, buff, size_t, size);
-SYSCALL_VOID_NAME(write_console, kSysWriteConsole, const char *, buffer);
 
 SYSCALL_VOID_NAME(panic, kSysPanic, const char *, msg);
 
@@ -29,6 +28,11 @@ SYSCALL_NAME(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, cou
 SYSCALL_NAME(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence);
 SYSCALL_NAME(dup, kSysDup, fd_t, fd_t, fd);
 SYSCALL_NAME(dup_to, kSysDupTo, fd_t, fd_t, old_fd, fd_t, new_fd);
+SYSCALL_NAME(
+    read_directory, kSysReadDirectory, int, const char *, path, DirEntry *, entries, size_t,
+    max_entries, size_t *, num_entries
+);
+SYSCALL_NAME(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info);
 
 /* Thread, processes */
 SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
@@ -41,9 +45,11 @@ SYSCALL_VOID_NAME(nanosleep, kNanoSleep, u64, time_ns);
 SYSCALL_VOID_NAME(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
 
 // Video
-struct GuiBufferInfo;
-void __platform_create_graphic_session(struct GuiBufferInfo *info);
-void __platform_blit(void);
+SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);
+SYSCALL_VOID_NAME(blit, kSysBlit);
+
+// Power Management
+SYSCALL_VOID_NAME(power, kSysPower, PowerAction, action);
 
 END_DECL_C
 
