@@ -67,7 +67,7 @@ class Shell
 
     // Data
     GraphicsConsole &console_;
-    Path current_dir_{Path(std::string_view(&kPathSeparator, 1))};
+    Path current_dir_{Path::kRoot};
 
     static constexpr size_t kMaxInput = 128;
     data_structures::StaticVector<char, kMaxInput> input_buffer_;

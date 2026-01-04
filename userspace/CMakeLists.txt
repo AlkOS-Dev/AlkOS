@@ -4,29 +4,47 @@ message(STATUS "Configuring Userspace...")
 set(USERSPACE_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 alkos_add_to_bash_config("CONF_USERSPACE_BIN_DIR" "${USERSPACE_BIN_DIR}")
 
-set(USER_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/build/linker.ld")
+################################ Linker Script #################################
+
+set(USER_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/build/${ARCH}/linker.ld")
 
 ################################################################################
-# CRT0 - C Runtime Startup Object Library
+# CRT Object Files for C++ Global Constructors
 ################################################################################
-#
-# The CRT0 (C Runtime 0) contains the _start entry point for userspace programs.
-# It MUST be compiled as a separate OBJECT library and linked FIRST to ensure
-# that _start is placed at the program's base address.
-#
-add_library(crt0.userspace OBJECT
-    "${CMAKE_SOURCE_DIR}/libs/libc/src/internal/crt0.cpp"
+
+# Get the architecture-specific CRTI/CRTN objects from the libc configuration
+get_property(CRT0_OBJ_PATH TARGET alkos.libc.config PROPERTY CRT0_OBJ)
+get_property(CRTI_OBJ_PATH TARGET alkos.libc.config PROPERTY CRTI_OBJ)
+get_property(CRTN_OBJ_PATH TARGET alkos.libc.config PROPERTY CRTN_OBJ)
+alkos_ensure_defined(
+    VARS CRT0_OBJ_PATH CRTI_OBJ_PATH CRTN_OBJ_PATH
+    MESSAGE "CRT0_OBJ/CRTI_OBJ/CRTN_OBJ properties were not set by the libc architecture-specific CMake file."
 )
-target_link_libraries(crt0.userspace PUBLIC alkos.libc.interface)
-target_compile_options(crt0.userspace PRIVATE
-    $<$<COMPILE_LANGUAGE:CXX>:
-        -fno-builtin
-        -fno-rtti
-        -fno-exceptions
-        -fno-stack-protector
-        -mcmodel=small
-        -mno-red-zone
-    >
+
+# Find the compiler's CRT object files at configure-time.
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
+    OUTPUT_VARIABLE CRTBEGIN_OBJ_PATH
+    ERROR_VARIABLE CRTBEGIN_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
+    OUTPUT_VARIABLE CRTEND_OBJ_PATH
+    ERROR_VARIABLE CRTEND_ERROR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+alkos_ensure_defined(
+    VARS CRTBEGIN_OBJ_PATH CRTEND_OBJ_PATH
+    MESSAGE "Could not find compiler's crtbegin.o/crtend.o files."
+)
+
+# Configure the linker rule for userspace executables to properly support
+# C++ global constructors by linking CRT objects in the correct order:
+# crt0 -> crti -> crtbegin -> <program objects> -> crtend -> crtn
+set(CMAKE_CXX_LINK_EXECUTABLE
+    "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRT0_OBJ_PATH} ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
 )
 
 ################################################################################
@@ -84,7 +102,6 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     )
     
     target_link_libraries(${PROG_NAME} PRIVATE
-        crt0.userspace
         c.userspace
         cpp.userspace
     )
@@ -93,7 +110,8 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROG_NAME}> ${USERSPACE_BIN_DIR}/${PROG_NAME}
         COMMENT "Installing ${PROG_NAME} to ${USERSPACE_BIN_DIR}"
     )
-    
+
+    add_dependencies(${PROG_NAME} alkos.libc.crt0 alkos.libc.crti alkos.libc.crtn)
     add_dependencies(userspace_apps ${PROG_NAME})
 endfunction()
 

@@ -126,9 +126,6 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     push_sysv_regs       ; Save registers
     cld                              ; Clear direction flag for string operations.
 
-    ; Syscall to Sys V ABI conversion
-    mov rcx, r10
-
     ; Check syscall number bounds
     cmp rax, [rel g_syscall_count]
     jae .invalid_syscall
@@ -138,6 +135,10 @@ isr_wrapper_128:  ; Syscall interrupt (128)
 
     ; Get pointer to syscall_dispatch_table and dispatch
     pop_sysv_regs
+
+    ; Syscall to Sys V ABI conversion
+    xchg r10, rcx                    ; arg3
+
     call qword [rel g_syscall_dispatch_table + rax*8]
     mov qword [rsp + _rax], rax
     jmp .return
@@ -152,7 +153,7 @@ isr_wrapper_128:  ; Syscall interrupt (128)
     call cdecl_SetKernelGs
     swapgs
 
-    pop_sysv_regs        ; Restore registers
+    pop_sysv_regs                    ; Restore registers.
     add rsp, _sysv_reg_size          ; Deallocate register save space.
     iretq                            ; Return from interrupt.
 
