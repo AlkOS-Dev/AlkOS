@@ -60,6 +60,7 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
     Pid owner;
     ThreadFlags flags;
     ThreadState state;
+    void *retval;
 
     /* Thread resources */
     void *kernel_stack;

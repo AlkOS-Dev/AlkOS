@@ -327,4 +327,21 @@ std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
     HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     return {};
 }
+
+void TaskMgr::ThreadExit(void *retval)
+{
+    const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_EQ(tcb->state, ThreadState::kRunning);
+
+    tcb->retval = retval;
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    ThreadState state{};
+    if (tcb->flags.detached) {
+        state = ThreadState::kTerminated;
+        threads_to_clean_.Push(tcb->tid.id);
+    } else {
+        state = ThreadState::kWaitingForJoin;
+    }
+    SchedulingModule::Get().GetScheduler().ExitThreadUnguarded(state);
+}
 }  // namespace Sched

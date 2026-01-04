@@ -122,6 +122,11 @@ void Scheduler::Yield()
     hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kReady));
 }
 
+void Scheduler::ExitThreadUnguarded(const ThreadState state)
+{
+    hal::ContextSwitch(ScheduleAndUpdateThreads(true, state));
+}
+
 void Scheduler::ConvertToScheduling()
 {
     TRACE_INFO_SCHEDULING("Converting to scheduling!");

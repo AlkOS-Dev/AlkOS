@@ -44,6 +44,8 @@ class Scheduler
 
     void Yield();
 
+    void ExitThreadUnguarded(ThreadState state);
+
     void ConvertToScheduling();
 
     // True if should preempt

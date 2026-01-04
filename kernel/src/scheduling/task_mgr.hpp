@@ -76,6 +76,8 @@ class TaskMgr
 
     NODISCARD std::expected<void, Error> DetachThread(Tid tid);
 
+    NODISCARD void ThreadExit(void *retval);
+
     // ------------------------------
     // Private methods
     // ------------------------------
