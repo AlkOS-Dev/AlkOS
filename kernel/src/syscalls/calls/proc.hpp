@@ -11,7 +11,12 @@ FAST_CALL void SysExit(int status) {}
 
 FAST_CALL void SysAbort() {}
 
-FAST_CALL void SysExec(const char *path, u64 *pid) {}
+FAST_CALL void SysExec(const char *path, u64 *pid)
+{
+    if (path == nullptr) {
+        return;
+    }
+}
 
 FAST_CALL void SysFocusTransfer(Sched::Pid target_child)
 {
