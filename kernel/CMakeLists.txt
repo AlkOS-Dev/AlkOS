@@ -68,6 +68,17 @@ target_link_libraries(cpp PUBLIC
 target_compile_definitions(c PRIVATE __ALKOS_KERNEL_LIBC__)
 target_compile_definitions(cpp PRIVATE __ALKOS_KERNEL_LIBCPP__)
 
+########################### Graphics Library #################################
+
+add_library(kernel.libgraphics STATIC ${LIBGRAPHICS_SOURCES})
+
+target_link_libraries(kernel.libgraphics PUBLIC
+    alkos.libgraphics.interface
+    alkos.target.properties.interface
+)
+
+target_compile_definitions(kernel.libgraphics PRIVATE __ALKOS_KERNEL_LIBGRAPHICS__)
+
 ########################## Configure for given Arch ##########################
 
 add_subdirectory(arch/${ARCH})
@@ -89,6 +100,7 @@ target_link_libraries(alkos.kernel PRIVATE
     alkos.autogen.interface
     c
     cpp
+    kernel.libgraphics
 )
 
 ############## Linker Configuration for CXX Global Constructors ##############

@@ -1,7 +1,7 @@
 #include "mem/virt/vmm.hpp"
 
 #include <bits_ext.hpp>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 #include <template/scope_guard.hpp>
 
 #include "constants.hpp"

@@ -19,14 +19,9 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     // Debug IO syscalls
     table.RegisterHandler<kSysDebugWrite, SysDebugWrite>();
     table.RegisterHandler<kSysDebugReadLine, SysDebugReadLine>();
-    table.RegisterHandler<kSysWriteConsole, SysWriteConsole>();
 
     // Panic syscall
     table.RegisterHandler<kSysPanic, SysPanic>();
-
-    // Video
-    table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
-    table.RegisterHandler<kSysBlit, SysBlit>();
 
     // File Descriptor syscalls
     table.RegisterHandler<kSysOpen, SysOpen>();
@@ -36,6 +31,8 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kSysSeek, SysSeek>();
     table.RegisterHandler<kSysDup, SysDup>();
     table.RegisterHandler<kSysDupTo, SysDupTo>();
+    table.RegisterHandler<kSysReadDirectory, SysReadDirectory>();
+    table.RegisterHandler<kSysFileInfo, SysFileInfo>();
 
     /* Thread, processes */
     table.RegisterHandler<kProcAbort, SysAbort>();
@@ -44,6 +41,13 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kThreadExit, SysThreadExit>();
     table.RegisterHandler<kThreadJoin, SysThreadJoin>();
     table.RegisterHandler<kThreadDetach, SysThreadDetach>();
+
+    // Video
+    table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
+    table.RegisterHandler<kSysBlit, SysBlit>();
+
+    // Power Management
+    table.RegisterHandler<kSysPower, SysPower>();
 
     return table;
 }>();

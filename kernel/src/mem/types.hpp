@@ -2,8 +2,7 @@
 #define KERNEL_SRC_MEM_TYPES_HPP_
 
 #include <types.h>
-#include <expected.hpp>
-#include <type_traits.hpp>
+
 #include "constants.hpp"
 #include "hal/constants.hpp"
 

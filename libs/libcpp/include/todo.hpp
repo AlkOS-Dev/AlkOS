@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_TODO_HPP_
-#define KERNEL_SRC_TODO_HPP_
+#ifndef LIBS_LIBCPP_INCLUDE_TODO_HPP_
+#define LIBS_LIBCPP_INCLUDE_TODO_HPP_
 
 /**
  * @brief This file's purpose is to define a set of macros used as placeholders
@@ -34,4 +34,4 @@
 
 #define TODO_WHEN_MULTICORE
 
-#endif  // KERNEL_SRC_TODO_HPP_
+#endif  // LIBS_LIBCPP_INCLUDE_TODO_HPP_

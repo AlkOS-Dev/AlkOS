@@ -1,6 +1,7 @@
-#include "sys/graphics_console.hpp"
+#include "graphics_console.hpp"
 
 #include <string.h>
+#include <types.h>
 #include <algorithm.hpp>
 
 namespace System

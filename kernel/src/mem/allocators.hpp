@@ -1,7 +1,7 @@
 #ifndef KERNEL_SRC_MEM_ALLOCATORS_HPP_
 #define KERNEL_SRC_MEM_ALLOCATORS_HPP_
 
-#include <macros.hpp>
+#include <internal/macros.hpp>
 #include "bits_ext.hpp"
 #include "mem/heap.hpp"
 

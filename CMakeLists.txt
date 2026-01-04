@@ -22,6 +22,7 @@ include(ValidationHelpers)
 include(SourceHelpers)
 include(RuntimeHelpers)
 include(BashConfigHelpers)
+include(MiscHelpers)
 
 add_library(alkos.target.properties.interface INTERFACE) # Populated by the toolchain file
 
@@ -94,7 +95,7 @@ file(MAKE_DIRECTORY ${CMAKE_SYSROOT}/boot/grub)
 
 set(SYSTEM_LIB_TYPE k)
 
-add_subdirectory(libs)
+alkos_add_subdirs(libs)
 add_subdirectory(generated)
 add_subdirectory(kernel)
 add_subdirectory(userspace)

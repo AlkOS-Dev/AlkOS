@@ -54,6 +54,9 @@ static constexpr bool kIsKernel = false;
 /* Marks a variable or function to be placed in a specific section */
 #define SECTION(name) __attribute__((section(#name)))
 
+/* Marks a variable or function as weakly linked */
+#define WEAK __attribute__((weak))
+
 // ------------------------------
 // Useful macros
 // ------------------------------

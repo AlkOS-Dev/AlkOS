@@ -5,7 +5,6 @@
 #include <types.h>
 
 #include "hal/debug_terminal.hpp"
-#include "sys/shell.hpp"
 #include "trace_framework.hpp"
 
 namespace Syscall
@@ -30,16 +29,6 @@ FORCE_INLINE_F void SysDebugWrite(const char *buffer) { DEBUG_INFO_GENERAL(buffe
 FORCE_INLINE_F u64 SysDebugReadLine(char *buffer, size_t buffer_size)
 {
     return hal::DebugTerminalReadLine(buffer, buffer_size);
-}
-
-// !!! TEMPORARY !!!
-FORCE_INLINE_F void SysWriteConsole(const char *buffer)
-{
-    if (System::g_active_console) {
-        System::g_active_console->Write(
-            std::span<const byte>(reinterpret_cast<const byte *>(buffer), strlen(buffer))
-        );
-    }
 }
 
 }  // namespace Syscall

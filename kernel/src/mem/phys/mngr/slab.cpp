@@ -1,7 +1,7 @@
 #include "mem/phys/mngr/slab.hpp"
 
+#include <internal/macros.hpp>
 #include <limits.hpp>
-#include <macros.hpp>
 #include <mutex.hpp>
 
 #include "mem/page_meta_table.hpp"

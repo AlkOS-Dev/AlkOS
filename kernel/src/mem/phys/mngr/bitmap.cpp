@@ -2,7 +2,7 @@
 
 #include <data_structures/bit_array.hpp>
 #include <expected.hpp>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 #include "hal/constants.hpp"
 #include "mem/page_meta.hpp"
 #include "mem/types.hpp"
