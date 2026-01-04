@@ -33,16 +33,21 @@ class RoundRobinPolicy : public PolicyImpl
         threads_.PushBack(thread);
     }
 
-    FORCE_INLINE_F NODISCARD u64 GetPreemptTime(Thread *thread)
+    NODISCARD FORCE_INLINE_F u64 GetPreemptTime(Thread *thread)
     {
         static constexpr u64 kPreemptTimeNs = 20'000'000;  // 20ms
 
         ASSERT_NOT_NULL(thread);
-        ASSERT(thread->state == ThreadState::kReady || thread->state == ThreadState::kRunning);
+
+        if (thread->state != ThreadState::kRunning) {
+            return kPreemptTimeNs;
+        }
 
         const u64 cpu_time_ns = thread->CalculateCpuTime();
         return cpu_time_ns < kPreemptTimeNs ? kPreemptTimeNs - cpu_time_ns : 0;
     }
+
+    NODISCARD FORCE_INLINE_F bool IsFirstHigherPriority(Thread *, Thread *) { return false; }
 
     // ------------------------------
     // Private methods

@@ -69,9 +69,7 @@ static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_
     const u64 divided_freq = lapic_freq / kTimerDivider;
 
     LocalApic::DisableTimer();
-
     LocalApic::SetTimerDivider(kTimerDivider);
-    LocalApic::SetTimerCounter((time_ns * kNanosInSecond) / divided_freq);
 
     LocalApic::LocalVectorTableTimerRegister reg{};
     reg.mask       = LocalApic::LocalVectorTableTimerRegister::Mask::kEnabled;
@@ -81,6 +79,13 @@ static u32 NextEventCb(hardware::EventClockRegistryEntry *entry, const u64 time_
     reg.vector     = arch::kTimerHwInt;
 
     LocalApic::WriteRegister(LocalApic::kLvtTimerRegRW, reg);
+
+    u64 ticks = (time_ns * divided_freq) / kNanosInSecond;
+    if (ticks == 0)
+        ticks = 1;
+
+    LocalApic::SetTimerCounter(static_cast<u32>(ticks));
+
     return 0;
 }
 

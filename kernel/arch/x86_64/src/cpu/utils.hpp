@@ -58,7 +58,7 @@ FAST_CALL NO_RET void OsHang()
  * Disables interrupts and enters an infinite halt loop.
  * System cannot be woken up from this state.
  */
-FAST_CALL void OsHangNoInterrupts()
+FAST_CALL NO_RET void OsHangNoInterrupts()
 {
     BlockHardwareInterrupts();
     OsHang();

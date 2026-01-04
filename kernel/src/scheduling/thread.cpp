@@ -1,5 +1,7 @@
 #include "thread.hpp"
+
 #include "modules/timing.hpp"
+#include "trace_framework.hpp"
 
 namespace Sched
 {

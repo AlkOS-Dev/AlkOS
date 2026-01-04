@@ -40,16 +40,19 @@ class Scheduler
 
     Thread *Schedule();
 
-    Thread *ScheduleAndUpdateThreads();
+    Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
 
     void Yield();
-
-    FORCE_INLINE_F void YieldUnguarded() { hal::ContextSwitch(ScheduleAndUpdateThreads()); }
 
     void ConvertToScheduling();
 
     /* Should only be called inside syscall code or kernel thread code */
     void NanoSleepUntil(u64 systime_ns);
+
+    // True if should preempt
+    NODISCARD bool WakeUpTasks();
+
+    NODISCARD Thread *TimerRoutine();
 
     // ------------------------------
     // Private methods
@@ -68,7 +71,33 @@ class Scheduler
         return policies_[static_cast<size_t>(thread->flags.policy)];
     }
 
+    NODISCARD FORCE_INLINE_F u64 GetPreemptTime_(Thread *thread) const
+    {
+        const auto &policy = GetPolicy_(thread);
+        return policy.cbs.get_preempt_time(policy.self, thread);
+    }
+
     void SetupNextTimeEvent_(u64 time_ns);
+
+    NODISCARD FORCE_INLINE_F bool ShouldPreempt_(Thread *thread) const
+    {
+        return ShouldPreempt_(GetPreemptTime_(thread));
+    }
+
+    NODISCARD FORCE_INLINE_F bool IsFirstHigherPriority_(Thread *first, Thread *second) const
+    {
+        if (first->flags.policy == second->flags.policy) {
+            const auto policy = GetPolicy_(first);
+            return policy.cbs.is_first_higher_priority(policy.self, first, second);
+        }
+
+        return first->flags.policy > second->flags.policy;
+    }
+
+    NODISCARD FAST_CALL bool ShouldPreempt_(const u64 preempt_time_ns)
+    {
+        return preempt_time_ns == 0 || preempt_time_ns < kMinDelta;
+    }
 
     // ------------------------------
     // Class fields
