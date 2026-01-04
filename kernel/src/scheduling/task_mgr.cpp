@@ -280,7 +280,22 @@ std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEM
 
 std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<Tid, Error> TaskMgr::CreateThread(ThreadFlags flags, const Task &task) {}
+std::expected<Tid, Error> TaskMgr::CreateThread(const ThreadFlags flags, const Task &task)
+{
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    const auto thread = SpawnThread(hardware::GetRunningPid(), flags, task);
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+
+    return thread.value()->tid;
+}
 
 std::expected<Tid, Error> TaskMgr::CreateUserThread(
     const ThreadFlags flags, const thread_func_t func, void *arg

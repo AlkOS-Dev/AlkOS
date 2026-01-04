@@ -44,6 +44,7 @@ JumpToUserSpace:
     ; aligned properly
 
     mov rsi, rsp
+    add rsi, 8
     call cdecl_JumpToUserSpaceEntry
 
     xor rax, rax

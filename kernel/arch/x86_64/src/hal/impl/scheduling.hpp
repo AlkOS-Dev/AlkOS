@@ -7,7 +7,7 @@
 
 extern "C" void ConvertContext(Sched::Thread *thread);
 extern "C" void ContextSwitch(Sched::Thread *thread);
-extern "C" void JumpToUserSpace(void (*f)(), void *arg);
+extern "C" void JumpToUserSpace(void *, void *arg);
 
 namespace arch
 {

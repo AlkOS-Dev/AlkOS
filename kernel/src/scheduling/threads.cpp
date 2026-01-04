@@ -54,11 +54,14 @@ void Elf64EntryPoint(const Pid pid, const char *path)
         SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
     }
 
-    const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
+    const auto entry = static_cast<void *>(entry_res.value());
     hal::JumpToUserSpace(entry, nullptr);
 }
 
-void UserThreadEntryPoint(thread_func_t func, void *arg) {}
+void UserThreadEntryPoint(const thread_func_t func, void *arg)
+{
+    hal::JumpToUserSpace(reinterpret_cast<void *>(func), arg);
+}
 
 void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
 {
