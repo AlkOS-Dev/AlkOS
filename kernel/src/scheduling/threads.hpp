@@ -79,6 +79,7 @@ void KThreadEntrypoint(void (*f)());
 void OnKThreadExit();
 
 void Elf64EntryPoint(Pid pid, const char *path);
+void UserThreadEntryPoint(thread_func_t func, void *arg);
 
 void UpdateTcbOnInterruptEntry(hal::ExceptionData *data);
 void UpdateTcbOnInterruptExit(Thread *thread);
@@ -99,6 +100,16 @@ NODISCARD FAST_CALL Task PrepareElf64LoaderTask(Pid pid, const char *path)
     task.func       = reinterpret_cast<void *>(Elf64EntryPoint);
     task.args_count = 2;
     task.args       = {*reinterpret_cast<u64 *>(&pid), reinterpret_cast<u64>(path)};
+
+    return task;
+}
+
+NODISCARD FAST_CALL Task PrepareUserThreadTask(thread_func_t func, void *arg)
+{
+    Task task{};
+    task.func       = reinterpret_cast<void *>(UserThreadEntryPoint);
+    task.args_count = 2;
+    task.args       = {reinterpret_cast<u64>(func), reinterpret_cast<u64>(arg)};
 
     return task;
 }

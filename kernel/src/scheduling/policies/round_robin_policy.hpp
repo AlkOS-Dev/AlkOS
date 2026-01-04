@@ -49,6 +49,8 @@ class RoundRobinPolicy : public PolicyImpl
 
     NODISCARD FORCE_INLINE_F bool IsFirstHigherPriority(Thread *, Thread *) { return false; }
 
+    NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { return false; }
+
     // ------------------------------
     // Private methods
     // ------------------------------

@@ -46,13 +46,23 @@ class Scheduler
 
     void ConvertToScheduling();
 
-    /* Should only be called inside syscall code or kernel thread code */
-    void NanoSleepUntil(u64 systime_ns);
-
     // True if should preempt
     NODISCARD bool WakeUpTasks();
 
     NODISCARD Thread *TimerRoutine();
+
+    NODISCARD FORCE_INLINE_F bool ValidateThreadFlags(const ThreadFlags flags)
+    {
+        const auto policy = GetPolicy_(flags);
+        return policy.cbs.validate_flags(policy.self, &flags);
+    }
+
+    // ------------------------------
+    // Syscalls
+    // ------------------------------
+    /* Should only be called inside syscall code or kernel thread code */
+
+    void NanoSleepUntil(u64 systime_ns);
 
     // ------------------------------
     // Private methods
@@ -61,14 +71,17 @@ class Scheduler
     protected:
     void PrepareNextTimerInterruptBeforeSwitchUnguarded_(Thread *next_thread);
 
+    NODISCARD FORCE_INLINE_F const Policy &GetPolicy_(const ThreadFlags flags) const
+    {
+        ASSERT_LT(static_cast<size_t>(flags.policy), static_cast<size_t>(SchedulingPolicy::kLast));
+
+        return policies_[static_cast<size_t>(flags.policy)];
+    }
+
     NODISCARD FORCE_INLINE_F const Policy &GetPolicy_(Thread *thread) const
     {
         ASSERT_NOT_NULL(thread);
-        ASSERT_LT(
-            static_cast<size_t>(thread->flags.policy), static_cast<size_t>(SchedulingPolicy::kLast)
-        );
-
-        return policies_[static_cast<size_t>(thread->flags.policy)];
+        return GetPolicy_(thread->flags);
     }
 
     NODISCARD FORCE_INLINE_F u64 GetPreemptTime_(Thread *thread) const

@@ -105,9 +105,9 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
 
     ThreadFlags flags{};
 
-    flags.PreserveFloats = process.value()->flags.PreserveFloats;
-    flags.policy         = SchedulingPolicy::kNormalTasks_RR_P3;
-    flags.priority       = 0;
+    flags.preserve_floats = process.value()->flags.PreserveFloats;
+    flags.policy          = SchedulingPolicy::kNormalTasks_RR_P3;
+    flags.priority        = 0;
 
     return SpawnThread(process.value(), flags, task);
 }
@@ -279,5 +279,15 @@ void TaskMgr::CommitSuicide(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
 std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+
+std::expected<Tid, Error> TaskMgr::CreateThread(ThreadFlags flags, const Task &task) {}
+
+std::expected<Tid, Error> TaskMgr::CreateUserThread(
+    const ThreadFlags flags, const thread_func_t func, void *arg
+)
+{
+    const Task task = PrepareUserThreadTask(func, arg);
+    return CreateThread(flags, task);
+}
 
 }  // namespace Sched

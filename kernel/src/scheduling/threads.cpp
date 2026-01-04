@@ -55,8 +55,10 @@ void Elf64EntryPoint(const Pid pid, const char *path)
     }
 
     const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
-    hal::JumpToUserSpace(entry);
+    hal::JumpToUserSpace(entry, nullptr);
 }
+
+void UserThreadEntryPoint(thread_func_t func, void *arg) {}
 
 void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)
 {
