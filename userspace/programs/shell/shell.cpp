@@ -281,7 +281,7 @@ void Shell::CmdCat(std::string_view args)
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>(args.data()), args.size())
         );
-        const char *err2 = ": No such file or directory\n";
+        const char *err2 = ": No such file\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err2), strlen(err2)));
         return;
     }

@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_FONTS_DRDOS8X8_HPP_
-#define KERNEL_SRC_GRAPHICS_FONTS_DRDOS8X8_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_FONTS_DRDOS8X8_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_FONTS_DRDOS8X8_HPP_
 
 // Converted via `xxd -i`
 static constexpr unsigned char drdos8x8_psfu[] = {
@@ -318,4 +318,4 @@ static constexpr unsigned char drdos8x8_psfu[] = {
 };
 static constexpr unsigned int drdos8x8_psfu_len = 4983;
 
-#endif  // KERNEL_SRC_GRAPHICS_FONTS_DRDOS8X8_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_FONTS_DRDOS8X8_HPP_

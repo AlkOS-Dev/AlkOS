@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_NATIVE_PIXEL_HPP_
-#define KERNEL_SRC_GRAPHICS_NATIVE_PIXEL_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_NATIVE_PIXEL_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_NATIVE_PIXEL_HPP_
 
 #include <types.h>
 #include <defines.hpp>
@@ -45,4 +45,4 @@ static_assert(sizeof(NativePixel) == sizeof(u32), "NativePixel must be 32-bit");
 
 }  // namespace Graphics
 
-#endif  // KERNEL_SRC_GRAPHICS_NATIVE_PIXEL_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_NATIVE_PIXEL_HPP_

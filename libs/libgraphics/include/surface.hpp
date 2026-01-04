@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_SURFACE_HPP_
-#define KERNEL_SRC_GRAPHICS_SURFACE_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_SURFACE_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_SURFACE_HPP_
 
 #include <assert.h>
 #include <types.h>
@@ -19,7 +19,7 @@ class Surface
     public:
     Surface() = default;
 
-    Surface(NativePixel* buffer, u32 width, u32 height, u32 pitch_bytes)
+    Surface(NativePixel *buffer, u32 width, u32 height, u32 pitch_bytes)
         : buffer_(buffer), width_(width), height_(height), pitch_bytes_(pitch_bytes)
     {
         R_ASSERT_NOT_NULL(buffer_);
@@ -57,7 +57,7 @@ class Surface
         ASSERT_LT(y, height_);
         // Pointer arithmetic on byte level for pitch
         uptr addr = reinterpret_cast<uptr>(buffer_) + (static_cast<size_t>(y) * pitch_bytes_);
-        NativePixel* ptr = reinterpret_cast<NativePixel*>(addr);
+        NativePixel *ptr = reinterpret_cast<NativePixel *>(addr);
         return std::span<NativePixel>(ptr, width_);
     }
 
@@ -65,7 +65,7 @@ class Surface
     {
         ASSERT_LT(y, height_);
         uptr addr = reinterpret_cast<uptr>(buffer_) + (static_cast<size_t>(y) * pitch_bytes_);
-        NativePixel* ptr = reinterpret_cast<NativePixel*>(addr);
+        NativePixel *ptr = reinterpret_cast<NativePixel *>(addr);
         return std::span<const NativePixel>(ptr, width_);
     }
 
@@ -79,7 +79,7 @@ class Surface
      * @brief Gets the unsafe raw buffer pointer.
      * @warning Use only for high-performance code where bounds are checked manually.
      */
-    NODISCARD FORCE_INLINE_F NativePixel* GetRawBuffer() { return buffer_; }
+    NODISCARD FORCE_INLINE_F NativePixel *GetRawBuffer() { return buffer_; }
 
     // -------------------------------------------------------------------------
     // Properties
@@ -91,7 +91,7 @@ class Surface
     NODISCARD FORCE_INLINE_F bool IsValid() const { return buffer_ != nullptr; }
 
     private:
-    NativePixel* buffer_{nullptr};
+    NativePixel *buffer_{nullptr};
     u32 width_{0};
     u32 height_{0};
     u32 pitch_bytes_{0};  // Stride in bytes
@@ -99,4 +99,4 @@ class Surface
 
 }  // namespace Graphics
 
-#endif  // KERNEL_SRC_GRAPHICS_SURFACE_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_SURFACE_HPP_

@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_PAINTER_HPP_
-#define KERNEL_SRC_GRAPHICS_PAINTER_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_
 
 #include <concepts.hpp>
 #include <span.hpp>
@@ -68,4 +68,4 @@ class Painter
 
 #include "painter.tpp"
 
-#endif  // KERNEL_SRC_GRAPHICS_PAINTER_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_PAINTER_HPP_
