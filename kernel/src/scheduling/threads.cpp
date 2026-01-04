@@ -51,11 +51,16 @@ void Elf64EntryPoint(const Pid pid, const char *path)
         DEBUG_WARN_SCHEDULING(
             "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
         );
-        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide();
     }
 
-    const auto entry = reinterpret_cast<void (*)()>(entry_res.value());
-    hal::JumpToUserSpace(entry);
+    const auto entry = static_cast<void *>(entry_res.value());
+    hal::JumpToUserSpace(entry, nullptr);
+}
+
+void UserThreadEntryPoint(const thread_func_t func, void *arg)
+{
+    hal::JumpToUserSpace(reinterpret_cast<void *>(func), arg);
 }
 
 void UpdateTcbOnInterruptEntry(hal::ExceptionData *data)

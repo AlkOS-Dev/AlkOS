@@ -9,6 +9,7 @@
 namespace Sched
 {
 struct Thread;
+struct ThreadFlags;
 
 // ------------------------------
 // SchedulingPolicy
@@ -33,6 +34,7 @@ struct Policy {
         void (*add_task)(void *, Thread *);
         u64 (*get_preempt_time)(void *, Thread *);
         bool (*is_first_higher_priority)(void *, Thread *, Thread *);
+        bool (*validate_flags)(void *, const ThreadFlags *);
     } cbs;
     void *self;
 };
@@ -46,6 +48,7 @@ struct PolicyImpl {
     void AddTask(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD u64 GetPreemptTime(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD bool IsFirstHigherPriority(Thread *, Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
+    NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
 };
 
 template <class T>
@@ -82,6 +85,14 @@ bool IsFirstHigherPriorityImpl(void *self, Thread *first, Thread *second)
 
 template <class T>
     requires std::derived_from<T, PolicyImpl>
+bool ValidateThreadFlagsImpl(void *self, const ThreadFlags *flags)
+{
+    const auto rr = static_cast<T *>(self);
+    return rr->ValidateThreadFlags(flags);
+}
+
+template <class T>
+    requires std::derived_from<T, PolicyImpl>
 NODISCARD FAST_CALL Policy PreparePolicy(T *self)
 {
     Policy policy{};
@@ -91,6 +102,7 @@ NODISCARD FAST_CALL Policy PreparePolicy(T *self)
     policy.cbs.add_task                 = AddTaskImpl<T>;
     policy.cbs.get_preempt_time         = GetPreemptTimeImpl<T>;
     policy.cbs.is_first_higher_priority = IsFirstHigherPriorityImpl<T>;
+    policy.cbs.validate_flags           = ValidateThreadFlagsImpl<T>;
 
     return policy;
 }

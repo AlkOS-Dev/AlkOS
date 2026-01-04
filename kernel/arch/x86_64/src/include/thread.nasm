@@ -9,6 +9,8 @@ struc Thread
     .owner:                 resq 1
     .flags                  resq 1
     .state                  resq 1
+    .retval                 resq 1
+
     .kernel_stack:          resq 1
     .kernel_stack_bottom:   resq 1
     .user_stack:            resq 1

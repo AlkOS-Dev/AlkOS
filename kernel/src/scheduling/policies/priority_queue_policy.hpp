@@ -59,6 +59,11 @@ class PriorityQueuePolicy : public PolicyImpl
         return first->flags.priority > second->flags.priority;
     }
 
+    NODISCARD bool ValidateThreadFlags(const ThreadFlags *flags)
+    {
+        return flags->priority >= kMaxPriority;
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------

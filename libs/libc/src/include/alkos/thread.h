@@ -7,9 +7,21 @@
 
 typedef void (*thread_func_t)(void *);
 
+enum SchedulingPolicy {
+    kUberTask_PQ_P0 = 0,
+    kDrivers_PQ_P1,
+    kUrgentTasks_PQ_P2,
+    kNormalTasks_RR_P3,
+    kBackgroundTasks_RR_P4,
+    kLast,
+};
+
 typedef struct PACK {
-    bool PreserveFloats : 1;
-    u32 padding : 31;
+    enum SchedulingPolicy policy : 8;
+    u8 priority : 8;
+    bool preserve_floats : 1;
+    bool detached : 1;
+    u64 padding : 46;
 } ThreadFlags;
 
 typedef struct {

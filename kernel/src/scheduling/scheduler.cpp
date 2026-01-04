@@ -4,7 +4,7 @@
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
-#include "scheduling/scheduler_lock.hpp"
+#include "scheduling/local_lock.hpp"
 
 // ------------------------------
 // statics
@@ -118,8 +118,13 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
 
 void Scheduler::Yield()
 {
-    SchedulerLock lock{};
+    LocalCoreLock lock{};
     hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kReady));
+}
+
+void Scheduler::ExitThreadUnguarded(const ThreadState state)
+{
+    hal::ContextSwitch(ScheduleAndUpdateThreads(true, state));
 }
 
 void Scheduler::ConvertToScheduling()
@@ -151,7 +156,7 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
 {
     u64 time;
     {
-        SchedulerLock lock{};
+        LocalCoreLock lock{};
         time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
         if (systime_ns < time) {
             return;
@@ -166,13 +171,32 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
     }
 
     {
-        SchedulerLock lock{};
+        LocalCoreLock lock{};
 
         hardware::GetCoreLocalTcb()->key = systime_ns;
         sleep_queue_.Insert(hardware::GetCoreLocalTcb());
 
         hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
     }
+}
+
+void Scheduler::NanoSleepUntilUnguarded(const u64 systime_ns)
+{
+    const u64 time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    if (systime_ns < time) {
+        return;
+    }
+
+    if (systime_ns - time < kMinDelta) {
+        /* Do busy wait if window to scheduler irq is too small */
+        while (systime_ns - TimingModule::Get().GetSystemTime().ReadLifeTimeNs() < kMinDelta) {
+        }
+        return;
+    }
+    hardware::GetCoreLocalTcb()->key = systime_ns;
+    sleep_queue_.Insert(hardware::GetCoreLocalTcb());
+
+    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
 }
 
 void Scheduler::SetupNextTimeEvent_(const u64 time_ns)

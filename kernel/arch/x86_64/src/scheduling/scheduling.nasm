@@ -33,14 +33,18 @@ ConvertContext:
     iretq
 
 ; c_decl
-; void JumpToUserSpace(void (*func)())
+; void JumpToUserSpace(void (*func)(), void* arg)
 ;   RDI = func
+;   RSI = arg
 ; Note: Caller is responsible for ensuring proper environment before calling (disabling IRQs)
 ; Note: FS already should be changed during contex switch
 JumpToUserSpace:
     sub rsp, _jump_userspace_stack_space
+    push rsi
+    ; aligned properly
 
     mov rsi, rsp
+    add rsi, 8
     call cdecl_JumpToUserSpaceEntry
 
     xor rax, rax
@@ -50,6 +54,8 @@ JumpToUserSpace:
     mov fs, ax
     mov gs, ax
 
+    pop rsi
+    mov rdi, rsi ; prepare void* arg for func if needed
     iretq
 
 ; c_decl

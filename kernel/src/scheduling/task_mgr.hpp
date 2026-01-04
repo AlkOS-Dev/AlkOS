@@ -19,10 +19,14 @@ class TaskMgr
     ~TaskMgr() = default;
 
     // ------------------------------
-    // Class interaction
+    // Initialization
     // ------------------------------
 
     void InitializeMultitasking();
+
+    // ------------------------------
+    // Spawning
+    // ------------------------------
 
     NODISCARD std::expected<Pid, Error> SpawnEmptyProcess(const char *name, ProcessFlags flags);
 
@@ -42,19 +46,37 @@ class TaskMgr
 
     NODISCARD std::expected<Pid, Error> CloneProcess(Pid pid);
 
+    // ------------------------------
+    // Execute
+    // ------------------------------
+
     NODISCARD std::expected<Tid, Error> ExecuteElf64(Pid pid, const char *path);
 
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> ExecuteElf64(
         const char *path, ProcessFlags flags
     );
 
+    // ------------------------------
+    // Syscalls
+    // ------------------------------
+
     NODISCARD std::expected<void, Error> CommitMurder(Pid pid);
 
-    void CommitSuicide(Pid pid);
+    void CommitSuicide();
 
-    NODISCARD std::expected<void, Error> ExitProcess(Pid pid);
+    NODISCARD std::expected<void, Error> ExitProcess();
 
-    NODISCARD std::expected<void, Error> ExitThread(Tid tid);
+    NODISCARD std::expected<Tid, Error> CreateThread(ThreadFlags flags, const Task &task);
+
+    NODISCARD std::expected<Tid, Error> CreateUserThread(
+        ThreadFlags flags, thread_func_t func, void *arg
+    );
+
+    NODISCARD std::expected<void, Error> DetachThread(Tid tid);
+
+    void ThreadExit(void *retval);
+
+    NODISCARD std::expected<void *, Error> JoinThread(Tid tid);
 
     // ------------------------------
     // Private methods
@@ -64,6 +86,8 @@ class TaskMgr
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    AtomicArraySingleTypeStaticStack<u32, kMaxThreads> threads_to_clean_{};
 };
 }  // namespace Sched
 
