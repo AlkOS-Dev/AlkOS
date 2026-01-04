@@ -41,6 +41,8 @@ SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread);
 SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
 SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
 SYSCALL_VOID_NAME(proc_abort, kProcAbort);
+SYSCALL_VOID_NAME(nanosleep, kNanoSleep, u64, time_ns);
+SYSCALL_VOID_NAME(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
 
 // Video
 SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);

@@ -40,6 +40,8 @@ enum SyscallNumber {
     kThreadDetach,
     kProcExit,
     kProcAbort,
+    kNanoSleep,
+    kNanoSleepUntil,
 
     /* Video Syscalls */
     kSysCreateGraphicSession,

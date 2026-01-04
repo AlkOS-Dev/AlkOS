@@ -14,7 +14,6 @@ extern "C" void NO_RET KernelPanic()
     if constexpr (FeatureEnabled<FeatureFlag::kRunTestMode>) {
         test::OnKernelPanic();
     } else {
-        trace::DumpAllBuffersOnFailure();
         OsHangNoInterrupts();
     }
 }

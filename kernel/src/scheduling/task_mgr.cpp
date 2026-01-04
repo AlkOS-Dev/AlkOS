@@ -26,13 +26,15 @@ namespace Sched
 {
 void TaskMgr::InitializeMultitasking()
 {
+    SchedulingModule::Get().GetScheduler().InstallInterruptHandler();
+
     // Spawn trace dumper
     const auto result =
         SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 0;
+    static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 

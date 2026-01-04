@@ -23,6 +23,10 @@ FAST_CALL int ThreadDetach(Thread *thread) { return __platform_thread_detach(thr
 
 FAST_CALL void ThreadExit(void *retval) { __platform_thread_exit(retval); }
 
+FAST_CALL void NanoSleepUntil(u64 systime_ns) { __platform_nanosleep_until(systime_ns); }
+
+FAST_CALL void NanoSleep(u64 time_ns) { __platform_nanosleep(time_ns); }
+
 END_DECL_C
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_THREAD_H_

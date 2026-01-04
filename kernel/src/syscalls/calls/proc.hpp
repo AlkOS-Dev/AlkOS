@@ -7,7 +7,7 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int status) {}
+FAST_CALL void SysExit(int) {}
 FAST_CALL void SysAbort() {}
 
 FORCE_INLINE_F void SysFocusTransfer(Sched::Pid target_child)

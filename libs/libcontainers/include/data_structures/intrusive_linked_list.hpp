@@ -20,6 +20,62 @@ struct IntrusiveDoubleListNode {
 
 template <class T>
     requires std::derived_from<T, IntrusiveListNode<T>>
+class FrontIntrusiveList : template_lib::NoCopy
+{
+    public:
+    // ------------------------------
+    // Class creation
+    // ------------------------------
+
+    FrontIntrusiveList() = default;
+    explicit FrontIntrusiveList(T *item) : head_(item) {}
+    ~FrontIntrusiveList() = default;
+
+    // ------------------------------
+    // Class interaction
+    // ------------------------------
+
+    NODISCARD FORCE_INLINE_F bool IsEmpty() const { return head_ == nullptr; }
+
+    FORCE_INLINE_F void PushFront(T *item)
+    {
+        ASSERT_NOT_NULL(item);
+
+        if (IsEmpty()) {
+            head_      = item;
+            item->next = nullptr;
+            return;
+        }
+
+        item->next = head_;
+        head_      = item;
+    }
+
+    NODISCARD FORCE_INLINE_F T *PopFront()
+    {
+        if (IsEmpty()) {
+            return nullptr;
+        }
+
+        T *item    = head_;
+        head_      = item->next;
+        item->next = nullptr;
+
+        return item;
+    }
+
+    NODISCARD FORCE_INLINE_F T *Front() { return head_; }
+
+    // ------------------------------
+    // Class fields
+    // ------------------------------
+
+    private:
+    T *head_{};
+};
+
+template <class T>
+    requires std::derived_from<T, IntrusiveListNode<T>>
 class IntrusiveList : template_lib::NoCopy
 {
     public:
