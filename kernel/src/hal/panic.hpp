@@ -16,14 +16,15 @@ namespace hal
  *       to help diagnose the issue.
  * @param msg A message providing additional information about the panic.
  */
-WRAP_CALL void KernelPanic(const char *msg)
+FAST_CALL void KernelPanic(const char *msg)
 {
     if (HardwareModule::IsInited()) {
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         HardwareModule::Get().GetCoresController().PanicAllCores();
     }
 
-    // For some reason trace::DumpAllBuffersOnFailure() must be called before and after printing
+    trace::DumpAllBuffersOnFailure();
+
     // BYPASS TRACE FRAMEWORK AS this function is used inside of it
     TerminalWriteString("[ KERNEL PANIC ]");
     TerminalWriteString(msg);

@@ -4,6 +4,7 @@
 #include <types.h>
 #include <array.hpp>
 #include <data_structures/intrusive_linked_list.hpp>
+#include <data_structures/maps/intrusive_rb_tree.hpp>
 #include <defines.hpp>
 
 #include "hal/tasks.hpp"
@@ -44,13 +45,14 @@ static_assert(sizeof(ThreadFlags) == 8);
 enum class ThreadState : u64 {
     kReady = 0,
     kRunning,
-    kBlocked,
+    kSleeping,
     kTerminated,
     kLast,
 };
 static_assert(sizeof(ThreadState) == sizeof(u64));
 
-struct Thread : data_structures::IntrusiveListNode<Thread> {
+struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
+                data_structures::IntrusiveListNode<Thread> {
     /* Management */
     Tid tid;
     Pid owner;
@@ -74,8 +76,9 @@ struct Thread : data_structures::IntrusiveListNode<Thread> {
 
     /* Arch */
     hal::Thread arch_data;
+
+    NODISCARD u64 CalculateCpuTime();
 };
-static_assert(sizeof(Thread) == (128 + sizeof(hal::Thread)));
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_THREAD_HPP_

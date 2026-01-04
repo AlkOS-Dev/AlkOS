@@ -2,6 +2,9 @@
 #include <test_module/test.hpp>
 #include <trace_framework.hpp>
 
+#include <array.hpp>
+#include <random.hpp>
+
 // ------------------------------
 // Test Framework Test
 // ------------------------------
@@ -90,3 +93,28 @@ extern void FloatExtensionTest();
  * @note This test is architecture dependent, simply invokes floating point instructions
  */
 TEST(FloatOperationsTest) { FloatExtensionTest(); }
+
+// ------------------------------
+// Test random gen
+// ------------------------------
+
+std::array<u32, 32768> gRandomStats{};
+TEST(SimpleRandomGen)
+{
+    static constexpr size_t kNumRetriesPerValue = 100;
+    static constexpr size_t kMaxDeriv           = 50;
+    static constexpr size_t kNumSamples         = 32768 * kNumRetriesPerValue;
+
+    gRandomStats.fill(0);
+    SimpleRandom random(32);
+
+    for (size_t i = 0; i < kNumSamples; i++) {
+        u32 sample = random.next();
+        gRandomStats[sample]++;
+    }
+
+    for (size_t i = 0; i < 32768; ++i) {
+        EXPECT_LT(gRandomStats[i], kNumRetriesPerValue + kMaxDeriv);
+        EXPECT_GT(gRandomStats[i], kNumRetriesPerValue - kMaxDeriv);
+    }
+}

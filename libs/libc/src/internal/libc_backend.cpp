@@ -35,6 +35,8 @@ DEFINE_SYSCALL(thread_join, kThreadJoin, int, Thread *, thread)
 DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)
 DEFINE_SYSCALL_VOID(proc_exit, kProcExit, int, status)
 DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
+DEFINE_SYSCALL_VOID(nanosleep, kNanoSleep, u64, time_ns);
+DEFINE_SYSCALL_VOID(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
 
 DEFINE_SYSCALL_VOID(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info)
 DEFINE_SYSCALL_VOID(blit, kSysBlit)

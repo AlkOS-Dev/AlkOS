@@ -24,6 +24,10 @@ void Sched::KWorkerMain()
             hal::Noop();
             hal::Noop();
         }
+
+        SchedulingModule::Get().GetScheduler().Yield();
+        // const auto pid = hardware::GetRunningPid();
+        // TRACE_INFO_SCHEDULING("ACK FROM PID: %llu", pid);
     }
 }
 
