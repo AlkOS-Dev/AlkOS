@@ -40,9 +40,9 @@ class Scheduler
 
     void AddReadyThread(Thread *thread);
 
-    Thread *Schedule();
+    NODISCARD Thread *Schedule();
 
-    Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
+    NODISCARD Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
 
     void Yield();
 
@@ -60,6 +60,8 @@ class Scheduler
         const auto policy = GetPolicy_(flags);
         return policy.cbs.validate_flags(policy.self, &flags);
     }
+
+    NODISCARD Thread *Idle();
 
     // ------------------------------
     // Syscalls
@@ -140,7 +142,8 @@ class Scheduler
     // ------------------------------
 
     // Sleeping queue
-    data_structures::IntrusiveRBTree<Thread, u64> sleep_queue_{};
+    data_structures::IntrusiveRBTree<Thread, u64, 0> sleep_queue_{};
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 0>::HookT;
 
     // Locking
     hal::Spinlock spinlock_{};

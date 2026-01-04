@@ -58,7 +58,8 @@ enum class ThreadState : u64 {
 };
 static_assert(sizeof(ThreadState) == sizeof(u64));
 
-struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
+struct Thread : data_structures::IntrusiveRbNode<Thread, u64, 0>,
+                data_structures::IntrusiveRbNode<Thread, u64, 1>,
                 data_structures::IntrusiveListNode<Thread> {
     /* Management */
     Tid tid;

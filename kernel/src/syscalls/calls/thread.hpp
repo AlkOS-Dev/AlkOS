@@ -81,6 +81,7 @@ FAST_CALL void SysNanoSleepUntil(const u64 systime_ns)
 
 FAST_CALL void SysNanoSleep(const u64 time_ns)
 {
+    // TODO: NO CORRECTION FROM KERNEL SPACE
     static constexpr u64 kSyscallCorrection = 200;
     SysNanoSleepUntil(
         TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + time_ns - kSyscallCorrection

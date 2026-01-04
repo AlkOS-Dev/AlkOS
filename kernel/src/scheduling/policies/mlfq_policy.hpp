@@ -75,7 +75,7 @@ class MLFQPolicy : public PolicyImpl
         ASSERT_NOT_NULL(thread);
         ASSERT_EQ(thread->state, ThreadState::kReady);
 
-        thread->key = min_vruntime_;
+        thread->HookT::key = min_vruntime_;
 
         thread->flags.priority = 0;
         queues_[0].Insert(thread);
@@ -115,7 +115,7 @@ class MLFQPolicy : public PolicyImpl
         }
 
         // Compare by vruntime if same level
-        return first->key < second->key;
+        return first->HookT::key < second->HookT::key;
     }
 
     NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { return false; }
@@ -180,11 +180,11 @@ class MLFQPolicy : public PolicyImpl
     {
         ASSERT_NOT_NULL(thread);
 
-        thread->key += delta_ns * kWeights[static_cast<size_t>(UserPriority::kMedium)] /
-                       kWeights[static_cast<size_t>(thread->flags.user_priority)];
+        thread->HookT::key += delta_ns * kWeights[static_cast<size_t>(UserPriority::kMedium)] /
+                              kWeights[static_cast<size_t>(thread->flags.user_priority)];
 
-        if (thread->key < min_vruntime_ || min_vruntime_ == 0) {
-            min_vruntime_ = thread->key;
+        if (thread->HookT::key < min_vruntime_ || min_vruntime_ == 0) {
+            min_vruntime_ = thread->HookT::key;
         }
     }
 
@@ -192,7 +192,9 @@ class MLFQPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    data_structures::IntrusiveRBTree<Thread, u64> queues_[kNumLevels];
+    data_structures::IntrusiveRBTree<Thread, u64, 1> queues_[kNumLevels];
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 1>::HookT;
+
     u64 last_boost_time_ns_{0};
     u64 min_vruntime_{0};
 };
