@@ -78,7 +78,7 @@ void HandleUnresolvableFault(const PageFaultData &pfd, const hal::ExceptionData 
             TRACE_FATAL_GENERAL("Reason: Page not present");
         }
 
-        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide();
     } else {
         PanicPageFault(pfd, data);
     }

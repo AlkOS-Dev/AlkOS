@@ -66,7 +66,7 @@ FAST_CALL int SysThreadDetach(Thread *thread)
     const auto result = SchedulingModule::Get().GetTaskMgr().DetachThread(
         *reinterpret_cast<Sched::Tid *>(&thread->tid)
     );
-    return !result ? -1 : result;
+    return result ? 0 : -1;
 }
 
 FAST_CALL void SysThreadExit(void *retval)

@@ -51,7 +51,7 @@ void Elf64EntryPoint(const Pid pid, const char *path)
         DEBUG_WARN_SCHEDULING(
             "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
         );
-        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide();
     }
 
     const auto entry = static_cast<void *>(entry_res.value());

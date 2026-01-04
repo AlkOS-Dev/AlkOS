@@ -23,7 +23,6 @@ typedef struct PACK {
     bool detached : 1;
     u64 padding : 46;
 } ThreadFlags;
-static_assert(sizeof(ThreadFlags) == 8);
 
 typedef struct {
     u64 tid;
