@@ -36,7 +36,13 @@ FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
 
 FAST_CALL int SysThreadJoin(Thread *) { return 0; }
 
-FAST_CALL int SysThreadDetach(Thread *) { return 0; }
+FAST_CALL int SysThreadDetach(Thread *thread)
+{
+    const auto result = SchedulingModule::Get().GetTaskMgr().DetachThread(
+        *reinterpret_cast<Sched::Tid *>(&thread->tid)
+    );
+    return !result ? -1 : result;
+}
 
 FAST_CALL void SysThreadExit(void *) {}
 

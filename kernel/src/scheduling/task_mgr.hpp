@@ -74,6 +74,8 @@ class TaskMgr
         ThreadFlags flags, thread_func_t func, void *arg
     );
 
+    NODISCARD std::expected<void, Error> DetachThread(Tid tid);
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -82,6 +84,8 @@ class TaskMgr
     // ------------------------------
     // Class fields
     // ------------------------------
+
+    AtomicArraySingleTypeStaticStack<u32, kMaxThreads> threads_to_clean_{};
 };
 }  // namespace Sched
 

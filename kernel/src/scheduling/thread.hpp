@@ -38,7 +38,8 @@ struct PACK ThreadFlags {
     SchedulingPolicy policy : 8;
     u8 priority : 8;
     bool preserve_floats : 1;
-    u64 padding : 47;
+    bool detached : 1;
+    u64 padding : 46;
 };
 static_assert(sizeof(ThreadFlags) == 8);
 
@@ -46,6 +47,7 @@ enum class ThreadState : u64 {
     kReady = 0,
     kRunning,
     kSleeping,
+    kWaitingForJoin,
     kTerminated,
     kLast,
 };

@@ -305,4 +305,26 @@ std::expected<Tid, Error> TaskMgr::CreateUserThread(
     return CreateThread(flags, task);
 }
 
+std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
+{
+    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
+
+    if (!thread) {
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+        return std::unexpected(thread.error());
+    }
+
+    if (thread.value()->state == ThreadState::kWaitingForJoin) {
+        thread.value()->state = ThreadState::kTerminated;
+        threads_to_clean_.Push(thread.value()->tid.id);
+
+        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+        return {};
+    }
+
+    thread.value()->flags.detached = true;
+    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
+    return {};
+}
 }  // namespace Sched
