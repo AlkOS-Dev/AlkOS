@@ -43,7 +43,6 @@ void FreeFile(FILE *file);
  */
 FORCE_INLINE_F void InitStdio()
 {
-    memset(&_stdin, 0, sizeof(FILE));
     _stdin.fd                    = kFdStdIn;
     _stdin.flags.open_mode       = kFdFlagRead;
     _stdin.flags.buffer_mode     = kFdBufferLine;
@@ -57,7 +56,6 @@ FORCE_INLINE_F void InitStdio()
     _stdin.buffer_level          = 0;
     _stdin.file_pos              = 0;
 
-    memset(&_stdout, 0, sizeof(FILE));
     _stdout.fd                    = kFdStdOut;
     _stdout.flags.open_mode       = kFdFlagWrite;
     _stdout.flags.buffer_mode     = kFdBufferLine;
@@ -71,7 +69,6 @@ FORCE_INLINE_F void InitStdio()
     _stdout.buffer_level          = 0;
     _stdout.file_pos              = 0;
 
-    memset(&_stderr, 0, sizeof(FILE));
     _stderr.fd                    = kFdStdErr;
     _stderr.flags.open_mode       = kFdFlagWrite;
     _stderr.flags.buffer_mode     = kFdBufferNone;

@@ -1,5 +1,5 @@
-#ifndef KERNEL_SRC_GRAPHICS_COLOR_HPP_
-#define KERNEL_SRC_GRAPHICS_COLOR_HPP_
+#ifndef LIBS_LIBGRAPHICS_INCLUDE_COLOR_HPP_
+#define LIBS_LIBGRAPHICS_INCLUDE_COLOR_HPP_
 
 #include <types.h>
 #include <defines.hpp>
@@ -32,4 +32,4 @@ struct PixelFormat {
 
 }  // namespace Graphics
 
-#endif  // KERNEL_SRC_GRAPHICS_COLOR_HPP_
+#endif  // LIBS_LIBGRAPHICS_INCLUDE_COLOR_HPP_

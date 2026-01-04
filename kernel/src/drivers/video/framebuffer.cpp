@@ -1,7 +1,6 @@
 #include "drivers/video/framebuffer.hpp"
-#include "defines.hpp"
-#include "graphics/native_pixel.hpp"
-#include "trace_framework.hpp"
+
+#include "native_pixel.hpp"
 
 using namespace Drivers::Video;
 

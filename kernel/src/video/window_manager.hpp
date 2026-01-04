@@ -7,6 +7,7 @@
 #include <tuple.hpp>
 
 #include "drivers/video/framebuffer.hpp"
+#include "mem/error.hpp"
 #include "mem/page.hpp"
 #include "mem/types.hpp"
 #include "scheduling/process.hpp"
@@ -60,7 +61,7 @@ class WindowManager
     void RefreshScreen();
 
     static constexpr size_t kMaxSessions    = 12;
-    static constexpr size_t kInvalidSession = size_t(-1);
+    static constexpr size_t kInvalidSession = static_cast<size_t>(-1);
     data_structures::StaticVector<GraphicSession, kMaxSessions> sessions_;
 
     size_t active_session_idx_{kInvalidSession};

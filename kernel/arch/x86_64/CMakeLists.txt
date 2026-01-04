@@ -58,7 +58,7 @@ alkos_register_runtime_environment(
     QEMU_COMMAND
         "qemu-system-x86_64"
     QEMU_NORMAL_FLAGS
-        "-serial stdio -enable-kvm -cpu max,+invtsc,migratable=off -machine type=q35,accel=kvm -display default,show-cursor=on -k en-us -m 4G -smp sockets=1,cores=4,threads=1  -no-reboot"
+        "-serial stdio -enable-kvm -cpu max,+invtsc,migratable=off -machine type=q35,accel=kvm -display default,show-cursor=on -k en-us -m 4G -smp sockets=1,cores=4,threads=1 -no-reboot"
     QEMU_TEST_FLAGS
         "-serial stdio -enable-kvm -cpu max,+invtsc,migratable=off -machine type=q35,accel=kvm -display none -m 4G -smp sockets=1,cores=4,threads=1 -no-reboot"
     MODULES

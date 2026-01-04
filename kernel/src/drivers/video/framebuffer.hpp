@@ -1,11 +1,10 @@
 #ifndef KERNEL_SRC_DRIVERS_VIDEO_FRAMEBUFFER_HPP_
 #define KERNEL_SRC_DRIVERS_VIDEO_FRAMEBUFFER_HPP_
 
+#include <color.hpp>
+#include <surface.hpp>
+
 #include <expected.hpp>
-#include "graphics/color.hpp"
-#include "graphics/native_pixel.hpp"
-#include "graphics/surface.hpp"
-#include "mem/heap.hpp"
 
 namespace Drivers::Video
 {

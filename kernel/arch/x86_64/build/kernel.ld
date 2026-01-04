@@ -8,14 +8,14 @@ SECTIONS
 	. = kKernelBase;
 
 	.init BLOCK(4K) : ALIGN(4K)
-          {
-                    *(.init)
-          }
+    {
+        *(.init)
+    }
 
-          .fini BLOCK(4K) : ALIGN(4K)
-          {
-                    *(.fini)
-          }
+    .fini BLOCK(4K) : ALIGN(4K)
+    {
+        *(.fini)
+    }
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{

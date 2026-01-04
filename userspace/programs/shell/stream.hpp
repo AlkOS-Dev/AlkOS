@@ -1,45 +1,26 @@
-#ifndef KERNEL_SRC_IO_STREAM_HPP_
-#define KERNEL_SRC_IO_STREAM_HPP_
+#ifndef USERSPACE_PROGRAMS_SHELL_STREAM_HPP_
+#define USERSPACE_PROGRAMS_SHELL_STREAM_HPP_
 
 #include <expected.hpp>
 #include <span.hpp>
 
 #include "internal/macros.hpp"
 
-#include "io/error.hpp"
-#include "mem/types.hpp"
-
 namespace IO
 {
+
+enum class Error {
+    None,
+    Retry,        // Resource busy/buffer full (Non-blocking)
+    EndOfFile,    // Connection closed
+    DeviceError,  // Hardware fault
+    InvalidInput
+};
 
 using std::expected;
 using std::unexpected;
 
 using IoResult = expected<size_t, Error>;
-
-/**
- * @brief Abstract interface for reading bytes.
- */
-class IReader
-{
-    public:
-    virtual ~IReader() = default;
-
-    /// Read bytes into the provided buffer.
-    /// Returns the actual number of bytes read.
-    virtual IoResult Read(std::span<byte> buffer) = 0;
-
-    /// Helper for single char (convenience)
-    /// Returns error if buffer empty
-    virtual expected<char, Error> GetChar()
-    {
-        byte c;
-        auto res = Read(std::span<byte>(&c, 1));
-        RET_UNEXPECTED_IF_ERR(res);
-        RET_UNEXPECTED_IF(*res == 0, Error::Retry);
-        return static_cast<char>(c);
-    }
-};
 
 /**
  * @brief Abstract interface for writing bytes.
@@ -72,15 +53,6 @@ class IWriter
     }
 };
 
-/**
- * @brief A Stream is a bidirectional device (e.g., Serial Port, TCP Socket).
- */
-class IStream : public IReader, public IWriter
-{
-    public:
-    virtual ~IStream() = default;
-};
-
 }  // namespace IO
 
-#endif  // KERNEL_SRC_IO_STREAM_HPP_
+#endif  // USERSPACE_PROGRAMS_SHELL_STREAM_HPP_

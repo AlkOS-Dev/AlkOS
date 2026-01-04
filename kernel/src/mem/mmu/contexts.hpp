@@ -2,8 +2,7 @@
 #define KERNEL_SRC_MEM_MMU_CONTEXTS_HPP_
 
 #include <expected.hpp>
-#include <hal/api/mmu.hpp>
-#include <macros.hpp>
+#include <internal/macros.hpp>
 
 #include "hal/constants.hpp"
 #include "mem/page_meta_table.hpp"
@@ -32,8 +31,7 @@ class KernelMmuContext
     std::expected<Mem::PPtr<void>, Mem::MemError> AllocateTable(uint8_t level)
     {
         auto res = pmm_->Alloc({.order = 0});
-        if (!res)
-            return std::unexpected(res.error());
+        RET_UNEXPECTED_IF_ERR(res);
         auto ptr = *res;
         memset(Mem::PhysToVirt(ptr), 0, hal::kPageSizeBytes);
 

@@ -3,8 +3,8 @@
 
 #include <data_structures/atomic_cyclic_buffer.hpp>
 
+#include "internal/macros.hpp"
 #include "io/stream.hpp"
-#include "macros.hpp"
 
 namespace IO
 {
