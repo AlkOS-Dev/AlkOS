@@ -67,7 +67,7 @@ bool AnonymousVMemArea::HandleFault(
         return false;
     }
 
-    TRACE_INFO_MEMORY("Handling Anonymous Fault at %p", fault_addr);
+    TRACE_FREQ_INFO_MEMORY("Handling Anonymous Fault at %p", fault_addr);
 
     auto &pmm = MemoryModule::Get().GetBitmapPmm();
 
@@ -99,7 +99,7 @@ bool DirectMappingVMemArea::HandleFault(
         return false;
     }
 
-    TRACE_INFO_MEMORY("Handling Direct Mapping Fault at %p", fault_addr);
+    TRACE_FREQ_INFO_MEMORY("Handling Direct Mapping Fault at %p", fault_addr);
 
     // Calculate physical address based on offset
     u64 offset         = Mem::PtrToUptr(fault_addr) - Mem::PtrToUptr(start_);

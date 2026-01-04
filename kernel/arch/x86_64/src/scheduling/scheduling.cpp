@@ -122,6 +122,10 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
 
 extern "C" void cdecl_JumpToUserSpaceEntry(void *addr, IsrStackFrame *frame)
 {
+    ASSERT_NOT_NULL(addr);
+    ASSERT_NOT_NULL(frame);
+    ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+
     auto thread          = hardware::GetCoreLocalTcb();
     thread->kernel_stack = thread->kernel_stack_bottom;
 
@@ -143,8 +147,12 @@ extern "C" void cdecl_ContextSwitchEntry(
     Sched::Thread *thread, IsrErrorStackFrame *mem, const u64 rip
 )
 {
+    ASSERT_NOT_NULL(thread);
+    ASSERT_NOT_NULL(mem);
+    ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+
     ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
-    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
+    ASSERT_NEQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kRunning);
 
     const auto current_tcb = hardware::GetCoreLocalTcb();
     DumpFpStateIfNeeded(current_tcb);
@@ -173,6 +181,10 @@ extern "C" void cdecl_ContextSwitchEntry(
 
 extern "C" void cdecl_ContextSwitchOnInterrupt(Sched::Thread *thread, void *rsp)
 {
+    ASSERT_NOT_NULL(thread);
+    ASSERT_NOT_NULL(rsp);
+    ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+
     ASSERT_EQ(thread->state, Sched::ThreadState::kRunning);
     ASSERT_EQ(hardware::GetCoreLocalTcb()->state, Sched::ThreadState::kReady);
 
