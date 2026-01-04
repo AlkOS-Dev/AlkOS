@@ -13,6 +13,9 @@ enum class Error {
     ThreadNotFound,
     ProcessNameTooLong,
     ExecPathNotFound,
+    JoiningDetachedThread,
+    SelfJoin,
+    AlreadyJoined,
 };
 
 }  // namespace Sched
@@ -32,6 +35,12 @@ static constexpr const char *to_string(const Sched::Error &error)
             return "ProcessNameTooLong";
         case Sched::Error::ExecPathNotFound:
             return "ExecPathNotFound";
+        case Sched::Error::JoiningDetachedThread:
+            return "JoiningDetachedThread";
+        case Sched::Error::SelfJoin:
+            return "SelfJoin";
+        case Sched::Error::AlreadyJoined:
+            return "AlreadyJoined";
     }
 
     return "unknown error";

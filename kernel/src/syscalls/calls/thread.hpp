@@ -9,13 +9,70 @@
 
 namespace Syscall
 {
-FAST_CALL int SysThreadCreate(Thread *, thread_func_t, void *) { return 0; }
+FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
+{
+    if (thread == nullptr || func == nullptr) {
+        return -1;
+    }
 
-FAST_CALL int SysThreadJoin(Thread *) { return 0; }
+    Sched::ThreadFlags flags{};
+    flags.policy          = static_cast<Sched::SchedulingPolicy>(thread->flags.policy);
+    flags.priority        = thread->flags.priority;
+    flags.preserve_floats = thread->flags.preserve_floats;
 
-FAST_CALL int SysThreadDetach(Thread *) { return 0; }
+    if (flags.policy < Sched::SchedulingPolicy::kNormalTasks_RR_P3) {
+        return -1;  // User may only spawn normal and background tasks
+    }
 
-FAST_CALL void SysThreadExit(void *) {}
+    if (SchedulingModule::Get().GetScheduler().ValidateThreadFlags(flags)) {
+        return -1;  // Invalid thrad flags for given policy
+    }
+
+    const auto result = SchedulingModule::Get().GetTaskMgr().CreateUserThread(flags, func, arg);
+    if (!result) {
+        return -1;
+    }
+
+    const Sched::Tid tid = result.value();
+    thread->tid          = *reinterpret_cast<const u64 *>(&tid);
+    return 0;
+}
+
+FAST_CALL int SysThreadJoin(Thread *thread, void **retval)
+{
+    if (thread == nullptr) {
+        return -1;
+    }
+
+    const auto result = SchedulingModule::Get().GetTaskMgr().JoinThread(
+        *reinterpret_cast<Sched::Tid *>(&thread->tid)
+    );
+
+    if (!result) {
+        *retval = nullptr;
+        return -1;
+    }
+
+    *retval = result.value();
+    return 0;
+}
+
+FAST_CALL int SysThreadDetach(Thread *thread)
+{
+    if (thread == nullptr) {
+        return -1;
+    }
+
+    const auto result = SchedulingModule::Get().GetTaskMgr().DetachThread(
+        *reinterpret_cast<Sched::Tid *>(&thread->tid)
+    );
+    return result ? 0 : -1;
+}
+
+FAST_CALL void SysThreadExit(void *retval)
+{
+    SchedulingModule::Get().GetTaskMgr().ThreadExit(retval);
+}
 
 FAST_CALL void SysNanoSleepUntil(const u64 systime_ns)
 {

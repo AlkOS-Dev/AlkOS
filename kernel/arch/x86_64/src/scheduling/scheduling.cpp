@@ -23,7 +23,7 @@ FAST_CALL void DumpFpStateIfNeeded(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    if (thread->flags.PreserveFloats) {
+    if (thread->flags.preserve_floats) {
         u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xsave64 %0" : "=m"(*mem) : "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");
@@ -34,7 +34,7 @@ FAST_CALL void LoadFpStateIfNeeded(Sched::Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
 
-    if (thread->flags.PreserveFloats) {
+    if (thread->flags.preserve_floats) {
         u8 *mem = thread->arch_data.fp_state;
 
         __asm__ volatile("xrstor64 %0" : : "m"(*mem), "a"(0xFFFFFFFF), "d"(0xFFFFFFFF) : "memory");

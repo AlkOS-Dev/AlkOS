@@ -8,11 +8,10 @@
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
-#include <hal/panic.hpp>
-
-#include "trace_framework.hpp"
-
 #include "hal/scheduling.hpp"
+#include "modules/timing.hpp"
+#include "scheduling/local_lock.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // statics
@@ -105,9 +104,9 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
 
     ThreadFlags flags{};
 
-    flags.PreserveFloats = process.value()->flags.PreserveFloats;
-    flags.policy         = SchedulingPolicy::kNormalTasks_RR_P3;
-    flags.priority       = 0;
+    flags.preserve_floats = process.value()->flags.PreserveFloats;
+    flags.policy          = SchedulingPolicy::kNormalTasks_RR_P3;
+    flags.priority        = 0;
 
     return SpawnThread(process.value(), flags, task);
 }
@@ -274,10 +273,101 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
 
 std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<Tid, Error> TaskMgr::CreateThread(const ThreadFlags flags, const Task &task)
+{
+    LocalCoreLock lock{};
+    const auto thread = SpawnThread(hardware::GetRunningPid(), flags, task);
 
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
+    return thread.value()->tid;
+}
+
+std::expected<Tid, Error> TaskMgr::CreateUserThread(
+    const ThreadFlags flags, const thread_func_t func, void *arg
+)
+{
+    const Task task = PrepareUserThreadTask(func, arg);
+    return CreateThread(flags, task);
+}
+
+std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
+{
+    LocalCoreLock core_lock{};
+    auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
+
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    if (thread.value()->state == ThreadState::kWaitingForJoin) {
+        thread.value()->state = ThreadState::kTerminated;
+        threads_to_clean_.Push(thread.value()->tid.id);
+
+        return {};
+    }
+
+    thread.value()->flags.detached = true;
+    return {};
+}
+
+void TaskMgr::ThreadExit(void *retval)
+{
+    const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_EQ(tcb->state, ThreadState::kRunning);
+
+    tcb->retval = retval;
+
+    LocalCoreLock core_lock{};
+    ThreadState state{};
+    if (tcb->flags.detached) {
+        state = ThreadState::kTerminated;
+        threads_to_clean_.Push(tcb->tid.id);
+    } else {
+        state = ThreadState::kWaitingForJoin;
+    }
+    SchedulingModule::Get().GetScheduler().ExitThreadUnguarded(state);
+}
+
+std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
+{
+    const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_EQ(tcb->state, ThreadState::kRunning);
+
+    if (tcb->tid == tid) {
+        return std::unexpected(Error::SelfJoin);
+    }
+
+    LocalCoreLock lock{};
+    auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
+
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    while (thread.value()->state != ThreadState::kWaitingForJoin ||
+           thread.value()->state != ThreadState::kTerminated) {
+        static constexpr u64 kWaitTime = 50'000'000;  // 50 ms
+
+        SchedulingModule::Get().GetScheduler().NanoSleepUntilUnguarded(
+            TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + kWaitTime
+        );
+    }
+
+    if (thread.value()->state == ThreadState::kWaitingForJoin) {
+        thread.value()->state = ThreadState::kTerminated;
+        threads_to_clean_.Push(thread.value()->tid.id);
+
+        return {thread.value()->retval};
+    }
+
+    return std::unexpected(Error::AlreadyJoined);
+}
 }  // namespace Sched

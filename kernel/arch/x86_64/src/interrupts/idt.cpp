@@ -128,7 +128,7 @@ Sched::Thread *DefaultExceptionHandler(intr::LitExcEntry &entry, hal::ExceptionD
             exception_msg ? exception_msg : "Unknown", data->isr_stack_frame.rip
         );
 
-        SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide();
         return nullptr;
     } else {
         // Kernel Panic

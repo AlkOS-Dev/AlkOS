@@ -30,7 +30,7 @@ NO_RET FORCE_INLINE_F void SysPanic(const char *msg)
         TRACE_WARN_GENERAL("User Panic in PID %llu: %s", pid.id, msg);
     }
 
-    SchedulingModule::Get().GetTaskMgr().CommitSuicide(pid);
+    SchedulingModule::Get().GetTaskMgr().CommitSuicide();
 
     __builtin_unreachable();
 }

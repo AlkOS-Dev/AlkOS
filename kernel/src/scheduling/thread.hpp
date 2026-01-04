@@ -32,13 +32,16 @@ struct Task {
 struct PACK Tid {
     u16 id;
     u64 count : 48;
+
+    bool operator==(const Tid &other) const = default;
 };
 
 struct PACK ThreadFlags {
     SchedulingPolicy policy : 8;
     u8 priority : 8;
-    bool PreserveFloats : 1;
-    u64 padding : 47;
+    bool preserve_floats : 1;
+    bool detached : 1;
+    u64 padding : 46;
 };
 static_assert(sizeof(ThreadFlags) == 8);
 
@@ -46,6 +49,7 @@ enum class ThreadState : u64 {
     kReady = 0,
     kRunning,
     kSleeping,
+    kWaitingForJoin,
     kTerminated,
     kLast,
 };
@@ -58,6 +62,7 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
     Pid owner;
     ThreadFlags flags;
     ThreadState state;
+    void *retval;
 
     /* Thread resources */
     void *kernel_stack;

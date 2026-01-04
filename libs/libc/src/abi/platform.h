@@ -37,7 +37,7 @@ SYSCALL_NAME(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info)
 /* Thread, processes */
 SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
 SYSCALL_VOID_NAME(thread_exit, kThreadExit, void *, retval);
-SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread);
+SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread, void **, retval);
 SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
 SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
 SYSCALL_VOID_NAME(proc_abort, kProcAbort);
