@@ -22,17 +22,10 @@ namespace Sched
  * - Prevents starvation through periodic priority boosting
  * - Within each queue, schedules by minimum vruntime for fairness
  *
- * Time slice per level:
- * - Level 0: 5ms
- * - Level 1: 10ms
- * - Level 2: 20ms
- * - Level 3: 40ms
- * - Level 4: 80ms
- *
  * Vruntime scaling:
  * - Used to adjust how quickly a thread's vruntime increases based on its priority level
- * - Higher priority (lower level) threads have slower vruntime growth, favoring responsiveness
- * - Lower priority (higher level) threads have faster vruntime growth, ensuring CPU time
+ * - Higher priority threads have slower vruntime growth, favoring responsiveness
+ * - Lower priority threads have faster vruntime growth, ensuring CPU time
  *
  * Priority Boosting:
  * - All threads are boosted to highest priority level every kBoostIntervalNs to prevent starvation
@@ -40,17 +33,20 @@ namespace Sched
 class MLFQPolicy : public PolicyImpl
 {
     public:
-    static constexpr u8 kNumLevels                        = 5;
-    static constexpr u64 kBaseTimeSliceNs                 = 5'000'000;    // 5ms
-    static constexpr u64 kBoostIntervalNs                 = 100'000'000;  // 100ms
-    static constexpr u64 kVruntimeScale                   = 256;
-    static constexpr std::array<u64, kNumLevels> kWeights = [] constexpr {
-        std::array<u64, kNumLevels> weights = {};
-        for (u8 level = 0; level < kNumLevels; ++level) {
-            weights[level] = 1ULL << (kNumLevels - level);
-        }
-        return weights;
-    }();
+    static constexpr u8 kNumLevels        = 4;
+    static constexpr u64 kBaseTimeSliceNs = 5'000'000;    // 5ms
+    static constexpr u64 kBoostIntervalNs = 150'000'000;  // 150ms
+    static constexpr u64 kVruntimeScale   = 1024;
+    static constexpr std::array<u64, static_cast<size_t>(UserPriority::kLast)> kWeights =
+        [] constexpr {
+            static constexpr size_t kNumPriorities  = static_cast<size_t>(UserPriority::kLast);
+            std::array<u64, kNumPriorities> weights = {};
+            weights[0]                              = kVruntimeScale;
+            for (u8 level = 1; level < kNumPriorities; ++level) {
+                weights[level] = weights[level - 1] * 1.25;
+            }
+            return weights;
+        }();
 
     // ------------------------------
     // Class creation
@@ -79,13 +75,10 @@ class MLFQPolicy : public PolicyImpl
         ASSERT_NOT_NULL(thread);
         ASSERT_EQ(thread->state, ThreadState::kReady);
 
-        // Initialize vruntime to minimum system-wide vruntime
-        // This guarantees new threads start fairly
         thread->key = min_vruntime_;
 
-        const u8 level = thread->flags.priority;
-        ASSERT_LT(level, kNumLevels);
-        queues_[level].Insert(thread);
+        thread->flags.priority = 0;
+        queues_[0].Insert(thread);
     }
 
     NODISCARD u64 GetPreemptTime(Thread *thread)
@@ -125,13 +118,13 @@ class MLFQPolicy : public PolicyImpl
         return first->key < second->key;
     }
 
+    NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { return false; }
+
     void OnThreadYield(Thread *thread)
     {
         ASSERT_NOT_NULL(thread);
 
-        const u8 current_level = thread->flags.priority;
-
-        if (current_level > 0) {
+        if (thread->flags.priority > 0) {
             // Move up one level
             --thread->flags.priority;
         }
@@ -143,8 +136,6 @@ class MLFQPolicy : public PolicyImpl
 
     void OnThreadQuantumExpired(Thread *thread)
     {
-        ASSERT_NOT_NULL(thread);
-
         const u8 current_level = thread->flags.priority;
 
         // Demote to lower priority if not already at lowest level
@@ -169,7 +160,6 @@ class MLFQPolicy : public PolicyImpl
                 while (!queues_[level].IsEmpty()) {
                     auto *thread           = queues_[level].DeleteMin();
                     thread->flags.priority = 0;
-                    thread->key            = thread->vruntime;
                     queues_[0].Insert(thread);
                 }
             }
@@ -190,7 +180,8 @@ class MLFQPolicy : public PolicyImpl
     {
         ASSERT_NOT_NULL(thread);
 
-        thread->key += (delta_ns * kVruntimeScale) / kWeights[thread->flags.priority];
+        thread->key += delta_ns * kWeights[static_cast<size_t>(UserPriority::kMedium)] /
+                       kWeights[static_cast<size_t>(thread->flags.user_priority)];
 
         if (thread->key < min_vruntime_ || min_vruntime_ == 0) {
             min_vruntime_ = thread->key;
@@ -201,7 +192,7 @@ class MLFQPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    std::array<data_structures::IntrusiveRBTree<Thread, u64>, kNumLevels> queues_{};
+    data_structures::IntrusiveRBTree<Thread, u64> queues_[kNumLevels];
     u64 last_boost_time_ns_{0};
     u64 min_vruntime_{0};
 };

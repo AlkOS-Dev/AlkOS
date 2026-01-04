@@ -190,6 +190,20 @@ class IntrusiveRBTree : template_lib::NoCopy
         return nullptr;
     }
 
+    NODISCARD FORCE_INLINE_F T *DeleteMin()
+    {
+        T *min_node = Min();
+        Delete(min_node);
+        return min_node;
+    }
+
+    NODISCARD FORCE_INLINE_F T *DeleteMax()
+    {
+        T *max_node = Max();
+        Delete(max_node);
+        return max_node;
+    }
+
     // ------------------------------
     // Private methods
     // ------------------------------

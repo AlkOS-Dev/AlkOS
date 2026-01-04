@@ -1,3 +1,5 @@
+#include <alkos/sys/thread.h>
+
 #include "fonts/drdos8x8.hpp"
 #include "shell.hpp"
 
@@ -22,9 +24,7 @@ extern "C" int main()
         shell.Update();
         Blit();
 
-        // TODO: Replace with CpuHalt or smth like scheduler sleep.
-        for (volatile i32 i = 0; i < 10000; ++i) {
-        }
+        NanoSleep(16'000'000);
     }
 
     return 0;

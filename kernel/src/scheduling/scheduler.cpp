@@ -180,6 +180,9 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
         hardware::GetCoreLocalTcb()->key = systime_ns;
         sleep_queue_.Insert(hardware::GetCoreLocalTcb());
 
+        // Notify policy that thread is going to sleep
+        OnThreadYield_(hardware::GetCoreLocalTcb());
+
         hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
     }
 }

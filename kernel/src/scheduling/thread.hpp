@@ -29,6 +29,8 @@ struct Task {
 // Thread
 // ------------------------------
 
+enum class UserPriority : u8 { kLow = 0, kMediumLow, kMedium, kMediumHigh, kHigh, kLast };
+
 struct PACK Tid {
     u16 id;
     u64 count : 48;
@@ -39,9 +41,10 @@ struct PACK Tid {
 struct PACK ThreadFlags {
     SchedulingPolicy policy : 8;
     u8 priority : 8;
+    UserPriority user_priority : 3;
     bool preserve_floats : 1;
     bool detached : 1;
-    u64 padding : 46;
+    u64 padding : 43;
 };
 static_assert(sizeof(ThreadFlags) == 8);
 

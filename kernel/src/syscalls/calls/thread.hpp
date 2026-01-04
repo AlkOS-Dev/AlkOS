@@ -20,7 +20,7 @@ FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
     flags.priority        = thread->flags.priority;
     flags.preserve_floats = thread->flags.preserve_floats;
 
-    if (flags.policy < Sched::SchedulingPolicy::kNormalTasks_RR_P3) {
+    if (flags.policy < Sched::SchedulingPolicy::kNormalTasks_MLFQ_P3) {
         return -1;  // User may only spawn normal and background tasks
     }
 

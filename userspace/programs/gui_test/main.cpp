@@ -1,3 +1,4 @@
+#include <alkos/sys/thread.h>
 #include <alkos/video.h>
 #include <platform.h>
 #include <stdio.h>
@@ -53,6 +54,8 @@ extern "C" int main()
         __platform_blit();
 
         color_offset += 1;
+
+        NanoSleep(16'000'000);
     }
 
     return 0;

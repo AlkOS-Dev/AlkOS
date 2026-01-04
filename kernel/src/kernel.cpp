@@ -17,26 +17,23 @@ static void KernelRun()
 
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
 
-    auto res = task_mgr.ExecuteElf64("/bin/hello", {});
-    R_ASSERT_TRUE(res, "Failed to spawn /bin/hello process...");
-    auto [pid, _] = res.value();
-
-    Sched::Task tracer_task;
-    tracer_task.func       = reinterpret_cast<void *>(Sched::StdoutTracerMain);
-    tracer_task.args_count = 1;
-    tracer_task.args       = {*reinterpret_cast<u64 *>(&pid)};
-
-    // Spawn StdoutTracer KWorker to monitor hello_world's stdout
-    R_ASSERT_TRUE(
-        task_mgr.SpawnKernelProcess("stdout-tracer", {}, tracer_task),
-        "Failed to spawn stdout tracer process..."
-    );
+    // auto res = task_mgr.ExecuteElf64("/bin/hello", {});
+    // R_ASSERT_TRUE(res, "Failed to spawn /bin/hello process...");
+    // auto [pid, _] = res.value();
+    //
+    // Sched::Task tracer_task;
+    // tracer_task.func       = reinterpret_cast<void *>(Sched::StdoutTracerMain);
+    // tracer_task.args_count = 1;
+    // tracer_task.args       = {*reinterpret_cast<u64 *>(&pid)};
+    //
+    // // Spawn StdoutTracer KWorker to monitor hello_world's stdout
+    // R_ASSERT_TRUE(
+    //     task_mgr.SpawnKernelProcess("stdout-tracer", {}, tracer_task),
+    //     "Failed to spawn stdout tracer process..."
+    // );
 
     const auto res1 = task_mgr.ExecuteElf64("/bin/gui_test", {});
     R_ASSERT_TRUE(static_cast<bool>(res1), "Failed to spawn /bin/gui process...");
-
-    for (volatile size_t i = 0; i < 1'000'000; i = i + 1) {
-    }
 
     const auto res2 = task_mgr.ExecuteElf64("/bin/shell", {});
     R_ASSERT_TRUE(static_cast<bool>(res2), "Failed to spawn /bin/shell process...");
