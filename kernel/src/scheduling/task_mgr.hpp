@@ -62,11 +62,9 @@ class TaskMgr
 
     NODISCARD std::expected<void, Error> CommitMurder(Pid pid);
 
-    void CommitSuicide(Pid pid);
+    void CommitSuicide();
 
-    NODISCARD std::expected<void, Error> ExitProcess(Pid pid);
-
-    NODISCARD std::expected<void, Error> ExitThread(Tid tid);
+    NODISCARD std::expected<void, Error> ExitProcess();
 
     NODISCARD std::expected<Tid, Error> CreateThread(ThreadFlags flags, const Task &task);
 
@@ -76,7 +74,9 @@ class TaskMgr
 
     NODISCARD std::expected<void, Error> DetachThread(Tid tid);
 
-    NODISCARD void ThreadExit(void *retval);
+    void ThreadExit(void *retval);
+
+    NODISCARD std::expected<void *, Error> JoinThread(Tid tid);
 
     // ------------------------------
     // Private methods

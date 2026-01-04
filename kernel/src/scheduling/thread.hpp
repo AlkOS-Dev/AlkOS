@@ -32,6 +32,8 @@ struct Task {
 struct PACK Tid {
     u16 id;
     u64 count : 48;
+
+    bool operator==(const Tid &other) const = default;
 };
 
 struct PACK ThreadFlags {

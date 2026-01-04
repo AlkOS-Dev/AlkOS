@@ -21,7 +21,10 @@ FAST_CALL int ThreadDetach(Thread *thread) { return __platform_thread_detach(thr
 
 FAST_CALL void ThreadExit(void *retval) { __platform_thread_exit(retval); }
 
-FAST_CALL int ThreadJoin(Thread *thread) { return __platform_thread_join(thread); }
+FAST_CALL int ThreadJoin(Thread *thread, void **retval)
+{
+    return __platform_thread_join(thread, retval);
+}
 
 FAST_CALL void NanoSleepUntil(u64 systime_ns) { __platform_nanosleep_until(systime_ns); }
 

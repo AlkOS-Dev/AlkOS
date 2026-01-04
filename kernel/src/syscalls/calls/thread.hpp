@@ -11,6 +11,10 @@ namespace Syscall
 {
 FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
 {
+    if (thread == nullptr || func == nullptr) {
+        return -1;
+    }
+
     Sched::ThreadFlags flags{};
     flags.policy          = static_cast<Sched::SchedulingPolicy>(thread->flags.policy);
     flags.priority        = thread->flags.priority;
@@ -34,17 +38,41 @@ FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
     return 0;
 }
 
-FAST_CALL int SysThreadJoin(Thread *) { return 0; }
+FAST_CALL int SysThreadJoin(Thread *thread, void **retval)
+{
+    if (thread == nullptr) {
+        return -1;
+    }
+
+    const auto result = SchedulingModule::Get().GetTaskMgr().JoinThread(
+        *reinterpret_cast<Sched::Tid *>(&thread->tid)
+    );
+
+    if (!result) {
+        *retval = nullptr;
+        return -1;
+    }
+
+    *retval = result.value();
+    return 0;
+}
 
 FAST_CALL int SysThreadDetach(Thread *thread)
 {
+    if (thread == nullptr) {
+        return -1;
+    }
+
     const auto result = SchedulingModule::Get().GetTaskMgr().DetachThread(
         *reinterpret_cast<Sched::Tid *>(&thread->tid)
     );
     return !result ? -1 : result;
 }
 
-FAST_CALL void SysThreadExit(void *) {}
+FAST_CALL void SysThreadExit(void *retval)
+{
+    SchedulingModule::Get().GetTaskMgr().ThreadExit(retval);
+}
 
 FAST_CALL void SysNanoSleepUntil(const u64 systime_ns)
 {

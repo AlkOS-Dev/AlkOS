@@ -8,11 +8,10 @@
 #include "scheduling/kworker.hpp"
 #include "task_mgr.hpp"
 
-#include <hal/panic.hpp>
-
-#include "trace_framework.hpp"
-
 #include "hal/scheduling.hpp"
+#include "modules/timing.hpp"
+#include "scheduling/local_lock.hpp"
+#include "trace_framework.hpp"
 
 // ------------------------------
 // statics
@@ -274,26 +273,20 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
 
 std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-std::expected<void, Error> TaskMgr::ExitProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
-
-std::expected<void, Error> TaskMgr::ExitThread(Tid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
 std::expected<Tid, Error> TaskMgr::CreateThread(const ThreadFlags flags, const Task &task)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    LocalCoreLock lock{};
     const auto thread = SpawnThread(hardware::GetRunningPid(), flags, task);
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     if (!thread) {
         return std::unexpected(thread.error());
     }
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
-
     return thread.value()->tid;
 }
 
@@ -307,11 +300,10 @@ std::expected<Tid, Error> TaskMgr::CreateUserThread(
 
 std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    LocalCoreLock core_lock{};
     auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
 
     if (!thread) {
-        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
         return std::unexpected(thread.error());
     }
 
@@ -319,12 +311,10 @@ std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
         thread.value()->state = ThreadState::kTerminated;
         threads_to_clean_.Push(thread.value()->tid.id);
 
-        HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
         return {};
     }
 
     thread.value()->flags.detached = true;
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
     return {};
 }
 
@@ -334,7 +324,8 @@ void TaskMgr::ThreadExit(void *retval)
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
 
     tcb->retval = retval;
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+    LocalCoreLock core_lock{};
     ThreadState state{};
     if (tcb->flags.detached) {
         state = ThreadState::kTerminated;
@@ -343,5 +334,40 @@ void TaskMgr::ThreadExit(void *retval)
         state = ThreadState::kWaitingForJoin;
     }
     SchedulingModule::Get().GetScheduler().ExitThreadUnguarded(state);
+}
+
+std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
+{
+    const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_EQ(tcb->state, ThreadState::kRunning);
+
+    if (tcb->tid == tid) {
+        return std::unexpected(Error::SelfJoin);
+    }
+
+    LocalCoreLock lock{};
+    auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
+
+    if (!thread) {
+        return std::unexpected(thread.error());
+    }
+
+    while (thread.value()->state != ThreadState::kWaitingForJoin ||
+           thread.value()->state != ThreadState::kTerminated) {
+        static constexpr u64 kWaitTime = 50'000'000;  // 50 ms
+
+        SchedulingModule::Get().GetScheduler().NanoSleepUntilUnguarded(
+            TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + kWaitTime
+        );
+    }
+
+    if (thread.value()->state == ThreadState::kWaitingForJoin) {
+        thread.value()->state = ThreadState::kTerminated;
+        threads_to_clean_.Push(thread.value()->tid.id);
+
+        return {thread.value()->retval};
+    }
+
+    return std::unexpected(Error::AlreadyJoined);
 }
 }  // namespace Sched

@@ -5,14 +5,14 @@
 
 #include "modules/hardware.hpp"
 
-class SchedulerLock
+class LocalCoreLock
 {
     public:
-    FORCE_INLINE_F SchedulerLock()
+    FORCE_INLINE_F LocalCoreLock()
     {
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     }
-    ~SchedulerLock() { HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts(); }
+    ~LocalCoreLock() { HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts(); }
 };
 
 #endif  // KERNEL_SRC_SCHEDULING_SCHEDULER_LOCK_HPP_
