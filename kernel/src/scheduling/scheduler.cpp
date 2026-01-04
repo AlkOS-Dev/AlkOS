@@ -29,8 +29,8 @@ Scheduler::Scheduler()
         PreparePolicy<PriorityQueuePolicy>(&policy1_);
     policies_[static_cast<size_t>(SchedulingPolicy::kUrgentTasks_PQ_P2)] =
         PreparePolicy<PriorityQueuePolicy>(&policy2_);
-    policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_RR_P3)] =
-        PreparePolicy<RoundRobinPolicy>(&policy3_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_MLFQ_P3)] =
+        PreparePolicy<MLFQPolicy>(&policy3_);
     policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
         PreparePolicy<RoundRobinPolicy>(&policy4_);
 }
@@ -119,6 +119,10 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
 void Scheduler::Yield()
 {
     LocalCoreLock lock{};
+
+    // Notify policy that thread is voluntarily yielding
+    OnThreadYield_(hardware::GetCoreLocalTcb());
+
     hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kReady));
 }
 
@@ -239,6 +243,9 @@ Thread *Scheduler::TimerRoutine()
         // Not yet converted to scheduling
         return nullptr;
     }
+
+    // Notify all policies of periodic update
+    OnPeriodicUpdate_(hardware::GetCoreLocalTcb());
 
     // TODO: Idle
     return ScheduleAndUpdateThreads(false, ThreadState::kReady);
