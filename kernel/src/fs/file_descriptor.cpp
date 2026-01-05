@@ -2,6 +2,7 @@
 
 #include "modules/scheduling.hpp"
 #include "mutex.hpp"
+#include "scheduling/local_lock.hpp"
 #include "scheduling/processes.hpp"
 #include "vfs.hpp"
 
@@ -44,6 +45,7 @@ FdResult<fd_t> FdTable::AllocateAt(data_structures::RefPtr<OpenFileEntry> global
     RET_UNEXPECTED_IF(!IsValidFd(fd), FdError::kInvalidFd);
 
     std::lock_guard lock(lock_);
+    LocalCoreLock local_lock{};
 
     RET_UNEXPECTED_IF(entries_[fd] != nullptr, FdError::kBadFileDescriptor);
 
@@ -221,6 +223,7 @@ FdResult<data_structures::RefPtr<OpenFileEntry>> OpenFileTable::OpenPipe(
 )
 {
     std::lock_guard lock(lock_);
+    LocalCoreLock local_lock{};
 
     const size_t idx = entries_.Allocate();
     if (idx == std::numeric_limits<size_t>::max()) {

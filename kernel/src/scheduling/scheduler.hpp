@@ -70,8 +70,6 @@ class Scheduler
 
     void NanoSleepUntil(u64 systime_ns);
 
-    void NanoSleepUntilUnguarded(u64 systime_ns);
-
     // ------------------------------
     // Private methods
     // ------------------------------

@@ -5,6 +5,13 @@
 
 namespace hal
 {
+using arch::CpuInterruptFlags;
+WRAP_CALL CpuInterruptFlags GetCpuInterruptFlags() { return arch::GetCpuInterruptFlags(); }
+WRAP_CALL void RestoreCpuInterruptFlags(const CpuInterruptFlags &flags)
+{
+    arch::RestoreCpuInterruptFlags(flags);
+}
+
 WRAP_CALL void FullMemFence() { arch::FullMemFence(); }
 
 WRAP_CALL void LoadMemFence() { arch::LoadMemFence(); }

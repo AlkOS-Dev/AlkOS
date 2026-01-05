@@ -78,6 +78,8 @@ class TaskMgr
 
     NODISCARD std::expected<void *, Error> JoinThread(Tid tid);
 
+    NODISCARD std::expected<Pid, Error> Exec(const char *path);
+
     // ------------------------------
     // Private methods
     // ------------------------------

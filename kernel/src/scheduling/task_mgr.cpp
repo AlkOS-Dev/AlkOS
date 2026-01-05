@@ -33,7 +33,7 @@ void TaskMgr::InitializeMultitasking()
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 0;
+    static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -53,6 +53,8 @@ void TaskMgr::InitializeMultitasking()
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
 {
+    LocalCoreLock local_lock{};
+
     if (strnlen(name, Process::kMaxNameLength) == Process::kMaxNameLength) {
         return std::unexpected(Error::ProcessNameTooLong);
     }
@@ -99,6 +101,7 @@ std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const Pro
 
 std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &task)
 {
+    LocalCoreLock local_lock{};
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));
 
@@ -116,6 +119,8 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
     const Pid pid, const ThreadFlags flags, const Task &task
 )
 {
+    LocalCoreLock local_lock{};
+
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));
 
@@ -126,6 +131,8 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
     const Process *process, const ThreadFlags flags, const Task &task
 )
 {
+    LocalCoreLock local_lock{};
+
     bool dismiss = false;
 
     // 1. Prepare internal structure for execution unit - thread:
@@ -193,6 +200,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
     const char *name, ProcessFlags flags, const Task &task
 )
 {
+    LocalCoreLock local_lock{};
+
     flags.KernelSpaceOnly = true;
 
     auto process = SpawnEmptyProcess(name, flags);
@@ -210,9 +219,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
         return std::unexpected(thread.error());
     }
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_SCHEDULING(
         "Created kernel process with pid: %llu, name: %s and initial thread with tid: %llu",
@@ -227,23 +234,37 @@ std::expected<Pid, Error> TaskMgr::CloneProcess(Pid) { R_FAIL_ALWAYS("NOT IMPLEM
 
 std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
 {
+    LocalCoreLock local_lock{};
+
     auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
+    template_lib::ScopeGuard process_guard([&] {
+        const auto result = SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    });
+
     // TODO: KILL ALL EXISTING THREADS FROM THIS PROCESS
 
-    auto thread = SpawnThread(pid, PrepareElf64LoaderTask(pid, path));
+    const size_t path_size = strlen(path);
+    const auto mem         = Mem::KMalloc(path_size);
+    if (!mem) {
+        return std::unexpected(Error::OutOfMemory);
+    }
+    memcpy(mem.value(), path, path_size);
+
+    auto thread =
+        SpawnThread(pid, PrepareElf64LoaderTask(pid, static_cast<const char *>(mem.value())));
     RET_UNEXPECTED_IF_ERR(thread);
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
-    HardwareModule::Get().GetInterrupts().EnableHardwareInterrupts();
 
     DEBUG_INFO_SCHEDULING(
         "Created userspace process with pid: %llu and initial thread with tid: %llu", pid,
         thread.value()->tid
     );
 
+    process_guard.dismiss();
     return thread.value()->tid;
 }
 
@@ -251,6 +272,8 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     const char *path, const ProcessFlags flags
 )
 {
+    LocalCoreLock local_lock{};
+
     const auto exists_res = VfsModule::Get().FileExists(vfs::Path(path));
     if (!exists_res.has_value() || !exists_res.value()) {
         return std::unexpected(Error::ExecPathNotFound);
@@ -274,7 +297,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
 
 std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("CommitSuicide NOT IMPLEMENTED"); }
 
 std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
@@ -359,7 +382,7 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
            thread.value()->state != ThreadState::kTerminated) {
         static constexpr u64 kWaitTime = 50'000'000;  // 50 ms
 
-        SchedulingModule::Get().GetScheduler().NanoSleepUntilUnguarded(
+        SchedulingModule::Get().GetScheduler().NanoSleepUntil(
             TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + kWaitTime
         );
     }
@@ -372,5 +395,22 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
     }
 
     return std::unexpected(Error::AlreadyJoined);
+}
+
+std::expected<Pid, Error> TaskMgr::Exec(const char *path)
+{
+    ASSERT_NOT_NULL(path);
+
+    ProcessFlags flags{};
+    flags.KernelSpaceOnly = false;
+    flags.PreserveFloats  = true;
+
+    LocalCoreLock lock{};
+    const auto result = ExecuteElf64(path, flags);
+    if (!result) {
+        return std::unexpected(result.error());
+    }
+
+    return std::get<Pid>(result.value());
 }
 }  // namespace Sched
