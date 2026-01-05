@@ -7,6 +7,7 @@
 #include "mem/phys/mngr/buddy.hpp"
 #include "mem/phys/mngr/slab.hpp"
 #include "modules/memory.hpp"
+#include "scheduling/local_lock.hpp"
 
 namespace Mem
 {
@@ -124,12 +125,14 @@ void Heap::FreeAligned(VPtr<void> ptr)
 
 expected<VPtr<void>, MemError> KMalloc(size_t size)
 {
+    LocalCoreLock lock{};
     return MemoryModule::Get().GetHeap().Malloc(size);
 }
 
 template <>
 void KFree(VPtr<void> ptr)
 {
+    LocalCoreLock lock{};
     MemoryModule::Get().GetHeap().Free(ptr);
 }
 
@@ -139,12 +142,14 @@ void KFree(VPtr<void> ptr)
 
 expected<VPtr<void>, MemError> KMallocAligned(KMallocRequest r)
 {
+    LocalCoreLock lock{};
     return MemoryModule::Get().GetHeap().MallocAligned(r);
 }
 
 template <>
 void KFreeAligned(VPtr<void> ptr)
 {
+    LocalCoreLock lock{};
     MemoryModule::Get().GetHeap().FreeAligned(ptr);
 }
 

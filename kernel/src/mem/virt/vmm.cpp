@@ -12,6 +12,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "mem/virt/area.hpp"
 #include "modules/memory.hpp"
+#include "scheduling/local_lock.hpp"
 #include "trace_framework.hpp"
 
 namespace Mem
@@ -45,6 +46,8 @@ void Vmm::Init(
 
 expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
 {
+    LocalCoreLock local_lock{};
+
     auto as_res = KNew<AddressSpace>();
     RET_UNEXPECTED_IF_ERR(as_res);
     auto as = *as_res;

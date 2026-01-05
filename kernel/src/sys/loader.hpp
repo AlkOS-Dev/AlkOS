@@ -12,6 +12,22 @@ using std::expected;
 
 enum class LoadError : u8 { FileNotFound, InvalidElf, IoError, MemoryError };
 
+static constexpr const char *to_string(const LoadError &error)
+{
+    switch (error) {
+        case LoadError::FileNotFound:
+            return "FileNotFound";
+        case LoadError::IoError:
+            return "IoError";
+        case LoadError::MemoryError:
+            return "MemoryError";
+        case LoadError::InvalidElf:
+            return "InvalidElf";
+        default:
+            return "Unknown";
+    }
+}
+
 class ElfLoader
 {
     public:

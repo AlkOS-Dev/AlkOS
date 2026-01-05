@@ -48,8 +48,9 @@ void Scheduler::InstallInterruptHandler()
 void Scheduler::AddReadyThread(Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
-
     ASSERT_EQ(thread->state, ThreadState::kReady);
+
+    LocalCoreLock lock{};
 
     const auto idx = static_cast<size_t>(thread->flags.policy);
     ASSERT_LT(idx, static_cast<size_t>(SchedulingPolicy::kLast));
@@ -156,7 +157,7 @@ void Scheduler::ConvertToScheduling()
 {
     TRACE_INFO_SCHEDULING("Converting to scheduling!");
 
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+    LocalCoreLock lock{};
 
     ASSERT_TRUE(HardwareModule::Get().GetEventClockRegistry().IsSelectedPicked());
 
@@ -211,25 +212,6 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
 
         hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
     }
-}
-
-void Scheduler::NanoSleepUntilUnguarded(const u64 systime_ns)
-{
-    const u64 time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-    if (systime_ns < time) {
-        return;
-    }
-
-    if (systime_ns - time < kMinDelta) {
-        /* Do busy wait if window to scheduler irq is too small */
-        while (systime_ns - TimingModule::Get().GetSystemTime().ReadLifeTimeNs() < kMinDelta) {
-        }
-        return;
-    }
-    hardware::GetCoreLocalTcb()->HookT::key = systime_ns;
-    sleep_queue_.Insert(hardware::GetCoreLocalTcb());
-
-    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
 }
 
 void Scheduler::SetupNextTimeEvent_(const u64 time_ns)
