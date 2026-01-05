@@ -335,6 +335,9 @@ void Shell::CmdExec(std::string_view args)
         const char *err = "exec: invalid filename or not enough resources\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
     }
+
+    const char *msg = "Successfully executed program!\n";
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
 }  // namespace System
