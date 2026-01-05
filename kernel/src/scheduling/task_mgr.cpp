@@ -391,8 +391,12 @@ std::expected<Pid, Error> TaskMgr::Exec(const char *path)
     flags.KernelSpaceOnly = false;
     flags.PreserveFloats  = true;
 
-    const auto result = SchedulingModule::Get().GetTaskMgr().ExecuteElf64(path, flags);
+    LocalCoreLock lock{};
+    const auto result = ExecuteElf64(path, flags);
     if (!result) {
+        return std::unexpected(result.error());
     }
+
+    return std::get<Pid>(result.value());
 }
 }  // namespace Sched

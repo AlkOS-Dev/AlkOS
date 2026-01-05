@@ -8,6 +8,7 @@
 #include "mem/virt/addr_space.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/timing.hpp"
+#include "scheduling/local_lock.hpp"
 #include "sys/loader.hpp"
 
 namespace Sched
@@ -40,6 +41,8 @@ void OnKThreadExit()
 
 void Elf64EntryPoint(const Pid pid, const char *path)
 {
+    LocalCoreLock core_lock{};
+
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));  // TODO: CAN IT BE MISSING HERE????
 
