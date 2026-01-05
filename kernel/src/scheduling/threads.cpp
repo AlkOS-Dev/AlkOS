@@ -41,6 +41,7 @@ void OnKThreadExit()
 
 void Elf64EntryPoint(const Pid pid, const char *path)
 {
+    ASSERT_NOT_NULL(path);
     LocalCoreLock core_lock{};
 
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
@@ -50,9 +51,12 @@ void Elf64EntryPoint(const Pid pid, const char *path)
     ASSERT_NOT_NULL(as);
 
     const auto entry_res = System::ElfLoader::Load(vfs::Path(path), *as);
+    Mem::KFree(reinterpret_cast<void *>(reinterpret_cast<u64>(path)));
+
     if (!entry_res) {
         DEBUG_WARN_SCHEDULING(
-            "Failed to execute ELF64 for process %llu. Failed on ELF loading.", pid
+            "Failed to execute ELF64 for process %llu. Failed on ELF loading: %s.", pid,
+            to_string(entry_res.error())
         );
         SchedulingModule::Get().GetTaskMgr().CommitSuicide();
     }

@@ -33,7 +33,7 @@ void TaskMgr::InitializeMultitasking()
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 0;
+    static constexpr size_t kNumKWorkers = 3;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -239,9 +239,22 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
     auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
+    template_lib::ScopeGuard process_guard([&] {
+        const auto result = SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    });
+
     // TODO: KILL ALL EXISTING THREADS FROM THIS PROCESS
 
-    auto thread = SpawnThread(pid, PrepareElf64LoaderTask(pid, path));
+    const size_t path_size = strlen(path);
+    const auto mem         = Mem::KMalloc(path_size);
+    if (!mem) {
+        return std::unexpected(Error::OutOfMemory);
+    }
+    memcpy(mem.value(), path, path_size);
+
+    auto thread =
+        SpawnThread(pid, PrepareElf64LoaderTask(pid, static_cast<const char *>(mem.value())));
     RET_UNEXPECTED_IF_ERR(thread);
 
     SchedulingModule::Get().GetScheduler().AddReadyThread(thread.value());
@@ -251,6 +264,7 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
         thread.value()->tid
     );
 
+    process_guard.dismiss();
     return thread.value()->tid;
 }
 
@@ -283,7 +297,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
 
 std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("CommitSuicide NOT IMPLEMENTED"); }
 
 std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 

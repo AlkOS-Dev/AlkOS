@@ -4,6 +4,7 @@
 #include <string.h>
 #include <string.hpp>
 
+#include "alkos/calls.h"
 #include "alkos/sys/fd.h"
 #include "alkos/sys/power.h"
 
@@ -328,8 +329,12 @@ void Shell::CmdExec(std::string_view args)
     }
 
     Path programPath = ResolvePath(args);
+    int result       = Exec(programPath.CString(), nullptr);
 
-    // TODO: Implement program execution
+    if (result != 0) {
+        const char *err = "exec: invalid filename or not enough resources\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+    }
 }
 
 }  // namespace System
