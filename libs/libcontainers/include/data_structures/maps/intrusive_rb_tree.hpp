@@ -10,7 +10,7 @@
 
 namespace data_structures
 {
-template <class T, class KeyT>
+template <class T, class KeyT, int kIntrusiveLevel>
 struct IntrusiveRbNode {
     enum class Color : u8 {
         kBlack = 0,
@@ -29,18 +29,20 @@ struct IntrusiveRbNode {
     Color color;
     KeyT key;
 };
-static_assert(sizeof(IntrusiveRbNode<u64, u64>) == 5 * 8);
+static_assert(sizeof(IntrusiveRbNode<u64, u64, 0>) == 5 * 8);
 
-template <class T, class KeyT>
+template <class T, class KeyT, int kIntrusiveLevel>
     requires(
-        std::derived_from<T, IntrusiveRbNode<T, KeyT>> and
+        std::derived_from<T, IntrusiveRbNode<T, KeyT, kIntrusiveLevel>> and
         std::derived_from<T, IntrusiveListNode<T>>
     )
 class IntrusiveRBTree : template_lib::NoCopy
 {
-    using Color = typename IntrusiveRbNode<T, KeyT>::Color;
+    using Color = typename IntrusiveRbNode<T, KeyT, kIntrusiveLevel>::Color;
 
     public:
+    using HookT = IntrusiveRbNode<T, KeyT, kIntrusiveLevel>;
+
     // ------------------------------
     // Class creation
     // ------------------------------
@@ -60,14 +62,14 @@ class IntrusiveRBTree : template_lib::NoCopy
     {
         ASSERT_NOT_NULL(item);
 
-        item->left   = nullptr;
-        item->right  = nullptr;
-        item->parent = nullptr;
-        item->color  = Color::kRed;
-        item->next   = nullptr;
+        item->HookT::left   = nullptr;
+        item->HookT::right  = nullptr;
+        item->HookT::parent = nullptr;
+        item->HookT::color  = Color::kRed;
+        item->next          = nullptr;
 
         // 1. Check if key already exists
-        T *existing = Find(item->key);
+        T *existing = Find(item->HookT::key);
         if (existing != nullptr) {
             item->next     = existing->next;
             existing->next = item;
@@ -80,27 +82,27 @@ class IntrusiveRBTree : template_lib::NoCopy
 
         while (x != nullptr) {
             y = x;
-            if (item->key < x->key) {
-                x = x->left;
+            if (item->HookT::key < x->HookT::key) {
+                x = x->HookT::left;
             } else {
-                x = x->right;
+                x = x->HookT::right;
             }
         }
 
-        item->parent = y;
+        item->HookT::parent = y;
 
         if (y == nullptr) {
             root_ = item;
-        } else if (item->key < y->key) {
-            y->left = item;
+        } else if (item->HookT::key < y->HookT::key) {
+            y->HookT::left = item;
         } else {
-            y->right = item;
+            y->HookT::right = item;
         }
 
-        if (min_ == nullptr || item->key < min_->key) {
+        if (min_ == nullptr || item->HookT::key < min_->HookT::key) {
             min_ = item;
         }
-        if (max_ == nullptr || item->key > max_->key) {
+        if (max_ == nullptr || item->HookT::key > max_->HookT::key) {
             max_ = item;
         }
 
@@ -113,7 +115,7 @@ class IntrusiveRBTree : template_lib::NoCopy
 
         // Case A: The item is NOT part of the RB tree structure,
 
-        T *node_in_tree = Find(item->key);
+        T *node_in_tree = Find(item->HookT::key);
         if (node_in_tree == nullptr) {
             return;
         }
@@ -154,7 +156,7 @@ class IntrusiveRBTree : template_lib::NoCopy
     {
         ASSERT_NOT_NULL(item);
 
-        T *found = Find(item->key);
+        T *found = Find(item->HookT::key);
         if (!found) {
             return false;
         }
@@ -179,15 +181,29 @@ class IntrusiveRBTree : template_lib::NoCopy
     {
         T *current = root_;
         while (current != nullptr) {
-            if (key == current->key) {
+            if (key == current->HookT::key) {
                 return current;
-            } else if (key < current->key) {
-                current = current->left;
+            } else if (key < current->HookT::key) {
+                current = current->HookT::left;
             } else {
-                current = current->right;
+                current = current->HookT::right;
             }
         }
         return nullptr;
+    }
+
+    NODISCARD FORCE_INLINE_F T *DeleteMin()
+    {
+        T *min_node = Min();
+        Delete(min_node);
+        return min_node;
+    }
+
+    NODISCARD FORCE_INLINE_F T *DeleteMax()
+    {
+        T *max_node = Max();
+        Delete(max_node);
+        return max_node;
     }
 
     // ------------------------------
@@ -204,11 +220,11 @@ class IntrusiveRBTree : template_lib::NoCopy
         }
 
         T *curr = root_;
-        while (curr->left) curr = curr->left;
+        while (curr->HookT::left) curr = curr->HookT::left;
         min_ = curr;
 
         curr = root_;
-        while (curr->right) curr = curr->right;
+        while (curr->HookT::right) curr = curr->HookT::right;
         max_ = curr;
     }
 
@@ -218,26 +234,26 @@ class IntrusiveRBTree : template_lib::NoCopy
         ASSERT_NOT_NULL(replacement);
 
         // Copy RB properties
-        replacement->parent = item->parent;
-        replacement->left   = item->left;
-        replacement->right  = item->right;
-        replacement->color  = item->color;
+        replacement->HookT::parent = item->HookT::parent;
+        replacement->HookT::left   = item->HookT::left;
+        replacement->HookT::right  = item->HookT::right;
+        replacement->HookT::color  = item->HookT::color;
 
         // Update parent's child pointer
-        if (item->parent == nullptr) {
+        if (item->HookT::parent == nullptr) {
             root_ = replacement;
-        } else if (item == item->parent->left) {
-            item->parent->left = replacement;
+        } else if (item == item->HookT::parent->HookT::left) {
+            item->HookT::parent->HookT::left = replacement;
         } else {
-            item->parent->right = replacement;
+            item->HookT::parent->HookT::right = replacement;
         }
 
         // Update children's parent pointer
-        if (item->left) {
-            item->left->parent = replacement;
+        if (item->HookT::left) {
+            item->HookT::left->HookT::parent = replacement;
         }
-        if (item->right) {
-            item->right->parent = replacement;
+        if (item->HookT::right) {
+            item->HookT::right->HookT::parent = replacement;
         }
 
         // Update Cached Min/Max if necessary
@@ -249,122 +265,122 @@ class IntrusiveRBTree : template_lib::NoCopy
         }
 
         // Clear item's pointers
-        item->parent = nullptr;
-        item->left   = nullptr;
-        item->right  = nullptr;
-        item->next   = nullptr;
+        item->HookT::parent = nullptr;
+        item->HookT::left   = nullptr;
+        item->HookT::right  = nullptr;
+        item->next          = nullptr;
     }
 
     void RotateLeft_(T *x)
     {
-        T *y     = x->right;
-        x->right = y->left;
+        T *y            = x->HookT::right;
+        x->HookT::right = y->HookT::left;
 
-        if (y->left != nullptr) {
-            y->left->parent = x;
+        if (y->HookT::left != nullptr) {
+            y->HookT::left->HookT::parent = x;
         }
 
-        y->parent = x->parent;
+        y->HookT::parent = x->HookT::parent;
 
-        if (x->parent == nullptr) {
+        if (x->HookT::parent == nullptr) {
             root_ = y;
-        } else if (x == x->parent->left) {
-            x->parent->left = y;
+        } else if (x == x->HookT::parent->HookT::left) {
+            x->HookT::parent->HookT::left = y;
         } else {
-            x->parent->right = y;
+            x->HookT::parent->HookT::right = y;
         }
 
-        y->left   = x;
-        x->parent = y;
+        y->HookT::left   = x;
+        x->HookT::parent = y;
     }
 
     void RotateRight_(T *x)
     {
-        T *y    = x->left;
-        x->left = y->right;
+        T *y           = x->HookT::left;
+        x->HookT::left = y->HookT::right;
 
-        if (y->right != nullptr) {
-            y->right->parent = x;
+        if (y->HookT::right != nullptr) {
+            y->HookT::right->HookT::parent = x;
         }
 
-        y->parent = x->parent;
+        y->HookT::parent = x->HookT::parent;
 
-        if (x->parent == nullptr) {
+        if (x->HookT::parent == nullptr) {
             root_ = y;
-        } else if (x == x->parent->right) {
-            x->parent->right = y;
+        } else if (x == x->HookT::parent->HookT::right) {
+            x->HookT::parent->HookT::right = y;
         } else {
-            x->parent->left = y;
+            x->HookT::parent->HookT::left = y;
         }
 
-        y->right  = x;
-        x->parent = y;
+        y->HookT::right  = x;
+        x->HookT::parent = y;
     }
 
     void InsertFixup_(T *z)
     {
-        while (z->parent != nullptr && z->parent->color == Color::kRed) {
-            if (z->parent == z->parent->parent->left) {
-                T *y = z->parent->parent->right;  // Uncle
+        while (z->HookT::parent != nullptr && z->HookT::parent->HookT::color == Color::kRed) {
+            if (z->HookT::parent == z->HookT::parent->HookT::parent->HookT::left) {
+                T *y = z->HookT::parent->HookT::parent->HookT::right;  // Uncle
 
-                if (y != nullptr && y->color == Color::kRed) {
+                if (y != nullptr && y->HookT::color == Color::kRed) {
                     // Case 1: Uncle is Red
-                    z->parent->color         = Color::kBlack;
-                    y->color                 = Color::kBlack;
-                    z->parent->parent->color = Color::kRed;
-                    z                        = z->parent->parent;
+                    z->HookT::parent->HookT::color                = Color::kBlack;
+                    y->HookT::color                               = Color::kBlack;
+                    z->HookT::parent->HookT::parent->HookT::color = Color::kRed;
+                    z                                             = z->HookT::parent->HookT::parent;
                 } else {
                     // Case 2: Uncle is Black (Triangle)
-                    if (z == z->parent->right) {
-                        z = z->parent;
+                    if (z == z->HookT::parent->HookT::right) {
+                        z = z->HookT::parent;
                         RotateLeft_(z);
                     }
                     // Case 3: Uncle is Black (Line)
-                    z->parent->color         = Color::kBlack;
-                    z->parent->parent->color = Color::kRed;
-                    RotateRight_(z->parent->parent);
+                    z->HookT::parent->HookT::color                = Color::kBlack;
+                    z->HookT::parent->HookT::parent->HookT::color = Color::kRed;
+                    RotateRight_(z->HookT::parent->HookT::parent);
                 }
             } else {
                 // Symmetric to above
-                T *y = z->parent->parent->left;
+                T *y = z->HookT::parent->HookT::parent->HookT::left;
 
-                if (y != nullptr && y->color == Color::kRed) {
-                    z->parent->color         = Color::kBlack;
-                    y->color                 = Color::kBlack;
-                    z->parent->parent->color = Color::kRed;
-                    z                        = z->parent->parent;
+                if (y != nullptr && y->HookT::color == Color::kRed) {
+                    z->HookT::parent->HookT::color                = Color::kBlack;
+                    y->HookT::color                               = Color::kBlack;
+                    z->HookT::parent->HookT::parent->HookT::color = Color::kRed;
+                    z                                             = z->HookT::parent->HookT::parent;
                 } else {
-                    if (z == z->parent->left) {
-                        z = z->parent;
+                    if (z == z->HookT::parent->HookT::left) {
+                        z = z->HookT::parent;
                         RotateRight_(z);
                     }
-                    z->parent->color         = Color::kBlack;
-                    z->parent->parent->color = Color::kRed;
-                    RotateLeft_(z->parent->parent);
+                    z->HookT::parent->HookT::color                = Color::kBlack;
+                    z->HookT::parent->HookT::parent->HookT::color = Color::kRed;
+                    RotateLeft_(z->HookT::parent->HookT::parent);
                 }
             }
         }
-        root_->color = Color::kBlack;
+        root_->HookT::color = Color::kBlack;
     }
 
     void RBTransplant_(T *u, T *v)
     {
-        if (u->parent == nullptr) {
+        if (u->HookT::parent == nullptr) {
             root_ = v;
-        } else if (u == u->parent->left) {
-            u->parent->left = v;
+        } else if (u == u->HookT::parent->HookT::left) {
+            u->HookT::parent->HookT::left = v;
         } else {
-            u->parent->right = v;
+            u->HookT::parent->HookT::right = v;
         }
         if (v != nullptr) {
-            v->parent = u->parent;
+            v->HookT::parent = u->HookT::parent;
         }
     }
 
     T *TreeMinimum_(T *node)
     {
-        while (node->left != nullptr) {
-            node = node->left;
+        while (node->HookT::left != nullptr) {
+            node = node->HookT::left;
         }
         return node;
     }
@@ -373,45 +389,45 @@ class IntrusiveRBTree : template_lib::NoCopy
     {
         T *y                   = z;
         T *x                   = nullptr;
-        Color y_original_color = y->color;
+        Color y_original_color = y->HookT::color;
 
         T *x_parent = nullptr;
 
-        if (z->left == nullptr) {
-            x        = z->right;
-            x_parent = z->parent;
-            RBTransplant_(z, z->right);
-        } else if (z->right == nullptr) {
-            x        = z->left;
-            x_parent = z->parent;
-            RBTransplant_(z, z->left);
+        if (z->HookT::left == nullptr) {
+            x        = z->HookT::right;
+            x_parent = z->HookT::parent;
+            RBTransplant_(z, z->HookT::right);
+        } else if (z->HookT::right == nullptr) {
+            x        = z->HookT::left;
+            x_parent = z->HookT::parent;
+            RBTransplant_(z, z->HookT::left);
         } else {
-            y                = TreeMinimum_(z->right);
-            y_original_color = y->color;
-            x                = y->right;
+            y                = TreeMinimum_(z->HookT::right);
+            y_original_color = y->HookT::color;
+            x                = y->HookT::right;
 
-            if (y->parent == z) {
+            if (y->HookT::parent == z) {
                 x_parent = y;
             } else {
-                x_parent = y->parent;
-                RBTransplant_(y, y->right);
-                y->right         = z->right;
-                y->right->parent = y;
+                x_parent = y->HookT::parent;
+                RBTransplant_(y, y->HookT::right);
+                y->HookT::right                = z->HookT::right;
+                y->HookT::right->HookT::parent = y;
             }
 
             RBTransplant_(z, y);
-            y->left         = z->left;
-            y->left->parent = y;
-            y->color        = z->color;
+            y->HookT::left                = z->HookT::left;
+            y->HookT::left->HookT::parent = y;
+            y->HookT::color               = z->HookT::color;
         }
 
         if (y_original_color == Color::kBlack) {
             DeleteFixup_(x, x_parent);
         }
 
-        z->parent = nullptr;
-        z->left   = nullptr;
-        z->right  = nullptr;
+        z->HookT::parent = nullptr;
+        z->HookT::left   = nullptr;
+        z->HookT::right  = nullptr;
 
         if (z == min_ || z == max_) {
             RecalculateMinMax_();
@@ -420,65 +436,69 @@ class IntrusiveRBTree : template_lib::NoCopy
 
     void DeleteFixup_(T *x, T *x_parent)
     {
-        while (x != root_ && (x == nullptr || x->color == Color::kBlack)) {
-            if (x == (x_parent ? x_parent->left : nullptr)) {  // x is left child
-                T *w = x_parent->right;                        // Sibling
+        while (x != root_ && (x == nullptr || x->HookT::color == Color::kBlack)) {
+            if (x == (x_parent ? x_parent->HookT::left : nullptr)) {  // x is left child
+                T *w = x_parent->HookT::right;                        // Sibling
 
-                if (w->color == Color::kRed) {
-                    w->color        = Color::kBlack;
-                    x_parent->color = Color::kRed;
+                if (w->HookT::color == Color::kRed) {
+                    w->HookT::color        = Color::kBlack;
+                    x_parent->HookT::color = Color::kRed;
                     RotateLeft_(x_parent);
-                    w = x_parent->right;
+                    w = x_parent->HookT::right;
                 }
 
-                if ((w->left == nullptr || w->left->color == Color::kBlack) &&
-                    (w->right == nullptr || w->right->color == Color::kBlack)) {
-                    w->color = Color::kRed;
-                    x        = x_parent;
-                    x_parent = x ? x->parent : nullptr;
+                if ((w->HookT::left == nullptr || w->HookT::left->HookT::color == Color::kBlack) &&
+                    (w->HookT::right == nullptr ||
+                     w->HookT::right->HookT::color == Color::kBlack)) {
+                    w->HookT::color = Color::kRed;
+                    x               = x_parent;
+                    x_parent        = x ? x->HookT::parent : nullptr;
                 } else {
-                    if (w->right == nullptr || w->right->color == Color::kBlack) {
-                        if (w->left)
-                            w->left->color = Color::kBlack;
-                        w->color = Color::kRed;
+                    if (w->HookT::right == nullptr ||
+                        w->HookT::right->HookT::color == Color::kBlack) {
+                        if (w->HookT::left)
+                            w->HookT::left->HookT::color = Color::kBlack;
+                        w->HookT::color = Color::kRed;
                         RotateRight_(w);
-                        w = x_parent->right;
+                        w = x_parent->HookT::right;
                     }
-                    w->color        = x_parent->color;
-                    x_parent->color = Color::kBlack;
-                    if (w->right)
-                        w->right->color = Color::kBlack;
+                    w->HookT::color        = x_parent->HookT::color;
+                    x_parent->HookT::color = Color::kBlack;
+                    if (w->HookT::right)
+                        w->HookT::right->HookT::color = Color::kBlack;
                     RotateLeft_(x_parent);
                     x        = root_;
                     x_parent = nullptr;
                 }
             } else {  // x is right child (symmetric)
-                T *w = x_parent->left;
+                T *w = x_parent->HookT::left;
 
-                if (w->color == Color::kRed) {
-                    w->color        = Color::kBlack;
-                    x_parent->color = Color::kRed;
+                if (w->HookT::color == Color::kRed) {
+                    w->HookT::color        = Color::kBlack;
+                    x_parent->HookT::color = Color::kRed;
                     RotateRight_(x_parent);
-                    w = x_parent->left;
+                    w = x_parent->HookT::left;
                 }
 
-                if ((w->right == nullptr || w->right->color == Color::kBlack) &&
-                    (w->left == nullptr || w->left->color == Color::kBlack)) {
-                    w->color = Color::kRed;
-                    x        = x_parent;
-                    x_parent = x ? x->parent : nullptr;
+                if ((w->HookT::right == nullptr ||
+                     w->HookT::right->HookT::color == Color::kBlack) &&
+                    (w->HookT::left == nullptr || w->HookT::left->HookT::color == Color::kBlack)) {
+                    w->HookT::color = Color::kRed;
+                    x               = x_parent;
+                    x_parent        = x ? x->HookT::parent : nullptr;
                 } else {
-                    if (w->left == nullptr || w->left->color == Color::kBlack) {
-                        if (w->right)
-                            w->right->color = Color::kBlack;
-                        w->color = Color::kRed;
+                    if (w->HookT::left == nullptr ||
+                        w->HookT::left->HookT::color == Color::kBlack) {
+                        if (w->HookT::right)
+                            w->HookT::right->HookT::color = Color::kBlack;
+                        w->HookT::color = Color::kRed;
                         RotateLeft_(w);
-                        w = x_parent->left;
+                        w = x_parent->HookT::left;
                     }
-                    w->color        = x_parent->color;
-                    x_parent->color = Color::kBlack;
-                    if (w->left)
-                        w->left->color = Color::kBlack;
+                    w->HookT::color        = x_parent->HookT::color;
+                    x_parent->HookT::color = Color::kBlack;
+                    if (w->HookT::left)
+                        w->HookT::left->HookT::color = Color::kBlack;
                     RotateRight_(x_parent);
                     x        = root_;
                     x_parent = nullptr;
@@ -486,7 +506,7 @@ class IntrusiveRBTree : template_lib::NoCopy
             }
         }
         if (x != nullptr) {
-            x->color = Color::kBlack;
+            x->HookT::color = Color::kBlack;
         }
     }
 

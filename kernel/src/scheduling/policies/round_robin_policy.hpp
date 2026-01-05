@@ -29,6 +29,7 @@ class RoundRobinPolicy : public PolicyImpl
 
     FORCE_INLINE_F void AddTask(Thread *thread)
     {
+        ASSERT_NOT_NULL(thread);
         ASSERT_EQ(thread->state, ThreadState::kReady);
         threads_.PushBack(thread);
     }

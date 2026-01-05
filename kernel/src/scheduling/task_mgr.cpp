@@ -33,7 +33,7 @@ void TaskMgr::InitializeMultitasking()
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
 
     // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
+    static constexpr size_t kNumKWorkers = 0;
     for (size_t i = 0; i < kNumKWorkers; ++i) {
         char name[] = "kworker-0";
 
@@ -105,8 +105,9 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
     ThreadFlags flags{};
 
     flags.preserve_floats = process.value()->flags.PreserveFloats;
-    flags.policy          = SchedulingPolicy::kNormalTasks_RR_P3;
+    flags.policy          = SchedulingPolicy::kNormalTasks_MLFQ_P3;
     flags.priority        = 0;
+    flags.user_priority   = UserPriority::kMedium;
 
     return SpawnThread(process.value(), flags, task);
 }
@@ -321,6 +322,7 @@ std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
 void TaskMgr::ThreadExit(void *retval)
 {
     const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_NOT_NULL(tcb);
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
 
     tcb->retval = retval;
@@ -339,6 +341,7 @@ void TaskMgr::ThreadExit(void *retval)
 std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
 {
     const auto tcb = hardware::GetCoreLocalTcb();
+    ASSERT_NOT_NULL(tcb);
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
 
     if (tcb->tid == tid) {

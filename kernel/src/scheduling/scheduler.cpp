@@ -29,8 +29,8 @@ Scheduler::Scheduler()
         PreparePolicy<PriorityQueuePolicy>(&policy1_);
     policies_[static_cast<size_t>(SchedulingPolicy::kUrgentTasks_PQ_P2)] =
         PreparePolicy<PriorityQueuePolicy>(&policy2_);
-    policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_RR_P3)] =
-        PreparePolicy<RoundRobinPolicy>(&policy3_);
+    policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_MLFQ_P3)] =
+        PreparePolicy<MLFQPolicy>(&policy3_);
     policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
         PreparePolicy<RoundRobinPolicy>(&policy4_);
 }
@@ -47,6 +47,8 @@ void Scheduler::InstallInterruptHandler()
 
 void Scheduler::AddReadyThread(Thread *thread)
 {
+    ASSERT_NOT_NULL(thread);
+
     ASSERT_EQ(thread->state, ThreadState::kReady);
 
     const auto idx = static_cast<size_t>(thread->flags.policy);
@@ -68,7 +70,6 @@ Thread *Scheduler::Schedule()
         }
     }
 
-    // TODO: IDLE
     return nullptr;
 }
 
@@ -82,27 +83,42 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     // 2. Check for sleepers time
     const u64 time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     if (!sleep_queue_.IsEmpty()) {
-        min_time_ns = sleep_queue_.Min()->key - time;
+        min_time_ns = sleep_queue_.Min()->HookT::key - time;
     }
 
     // 3. Scheduling new thread if needed and update structs
     Thread *thread{};
     u64 preempt_time_ns = GetPreemptTime_(hardware::GetCoreLocalTcb());
     if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
-        const auto next_thread = Schedule();
-        ASSERT_EQ(next_thread->state, ThreadState::kReady);
-        preempt_time_ns    = GetPreemptTime_(next_thread);
-        next_thread->state = ThreadState::kRunning;
+        auto next_thread = Schedule();
 
-        ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
-        ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
-        hardware::GetCoreLocalTcb()->state = thread_state;
+        if (!next_thread && thread_state == ThreadState::kReady) {
+            // Prevent preemption as we are only one running thread...
+            hardware::GetCoreLocalTcb()->state = ThreadState::kReady;
+            preempt_time_ns                    = GetPreemptTime_(hardware::GetCoreLocalTcb());
+            hardware::GetCoreLocalTcb()->state = ThreadState::kRunning;
+        } else {
+            if (!next_thread) {
+                // We are blocking current thread so we have no threads to scheduler -> idle
+                next_thread = Idle();
+            }
 
-        if (thread_state == ThreadState::kReady) {
-            AddReadyThread(hardware::GetCoreLocalTcb());
+            ASSERT_NOT_NULL(next_thread);
+
+            ASSERT_EQ(next_thread->state, ThreadState::kReady);
+            preempt_time_ns    = GetPreemptTime_(next_thread);
+            next_thread->state = ThreadState::kRunning;
+
+            ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+            ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+            hardware::GetCoreLocalTcb()->state = thread_state;
+
+            if (thread_state == ThreadState::kReady) {
+                AddReadyThread(hardware::GetCoreLocalTcb());
+            }
+
+            thread = next_thread;
         }
-
-        thread = next_thread;
     }
 
     // 4. Check with preempt time
@@ -119,7 +135,16 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
 void Scheduler::Yield()
 {
     LocalCoreLock lock{};
-    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kReady));
+
+    // Notify policy that thread is voluntarily yielding
+    OnThreadYield_(hardware::GetCoreLocalTcb());
+
+    const auto thread = ScheduleAndUpdateThreads(true, ThreadState::kReady);
+    if (thread == nullptr) {
+        return;
+    }
+
+    hal::ContextSwitch(thread);
 }
 
 void Scheduler::ExitThreadUnguarded(const ThreadState state)
@@ -140,6 +165,9 @@ void Scheduler::ConvertToScheduling()
     event_clock.cbs.set_oneshot(&event_clock);
 
     const auto thread = Schedule();
+    ASSERT_NOT_NULL(thread);
+    TODO_WHEN_MULTICORE
+
     ASSERT_EQ(thread->state, ThreadState::kReady);
 
     const u64 preempt_time_ns = GetPreemptTime_(thread);
@@ -151,6 +179,8 @@ void Scheduler::ConvertToScheduling()
     TRACE_INFO_SCHEDULING("Converting to thread: %llu!", thread->tid);
     hal::ConvertContext(thread);
 }
+
+Thread *Scheduler::Idle() { R_FAIL_ALWAYS("IDLE NOT IMPLEMENTED!"); }
 
 void Scheduler::NanoSleepUntil(const u64 systime_ns)
 {
@@ -173,8 +203,11 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
     {
         LocalCoreLock lock{};
 
-        hardware::GetCoreLocalTcb()->key = systime_ns;
+        hardware::GetCoreLocalTcb()->HookT::key = systime_ns;
         sleep_queue_.Insert(hardware::GetCoreLocalTcb());
+
+        // Notify policy that thread is going to sleep
+        OnThreadYield_(hardware::GetCoreLocalTcb());
 
         hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
     }
@@ -193,7 +226,7 @@ void Scheduler::NanoSleepUntilUnguarded(const u64 systime_ns)
         }
         return;
     }
-    hardware::GetCoreLocalTcb()->key = systime_ns;
+    hardware::GetCoreLocalTcb()->HookT::key = systime_ns;
     sleep_queue_.Insert(hardware::GetCoreLocalTcb());
 
     hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kSleeping));
@@ -214,13 +247,15 @@ bool Scheduler::WakeUpTasks()
     bool should_preempt = false;
     while (!sleep_queue_.IsEmpty()) {
         const u64 time       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
-        const u64 sleep_time = sleep_queue_.Min()->key;
+        const u64 sleep_time = sleep_queue_.Min()->HookT::key;
 
-        if (sleep_time > time && sleep_time - time > kMinDelta) {
+        if (sleep_time > time && sleep_time - time > 2 * kMinDelta) {
             break;
         }
 
         const auto thread = sleep_queue_.Min();
+        ASSERT_NOT_NULL(thread);
+
         should_preempt |= IsFirstHigherPriority_(thread, hardware::GetCoreLocalTcb());
 
         sleep_queue_.Delete(thread);
@@ -239,6 +274,9 @@ Thread *Scheduler::TimerRoutine()
         // Not yet converted to scheduling
         return nullptr;
     }
+
+    // Notify all policies of periodic update
+    OnPeriodicUpdate_(hardware::GetCoreLocalTcb());
 
     // TODO: Idle
     return ScheduleAndUpdateThreads(false, ThreadState::kReady);

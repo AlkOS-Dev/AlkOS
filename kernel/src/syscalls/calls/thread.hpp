@@ -20,7 +20,7 @@ FAST_CALL int SysThreadCreate(Thread *thread, thread_func_t func, void *arg)
     flags.priority        = thread->flags.priority;
     flags.preserve_floats = thread->flags.preserve_floats;
 
-    if (flags.policy < Sched::SchedulingPolicy::kNormalTasks_RR_P3) {
+    if (flags.policy < Sched::SchedulingPolicy::kNormalTasks_MLFQ_P3) {
         return -1;  // User may only spawn normal and background tasks
     }
 
@@ -81,6 +81,7 @@ FAST_CALL void SysNanoSleepUntil(const u64 systime_ns)
 
 FAST_CALL void SysNanoSleep(const u64 time_ns)
 {
+    // TODO: NO CORRECTION FROM KERNEL SPACE
     static constexpr u64 kSyscallCorrection = 200;
     SysNanoSleepUntil(
         TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + time_ns - kSyscallCorrection

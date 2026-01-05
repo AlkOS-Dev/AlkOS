@@ -29,6 +29,8 @@ struct Task {
 // Thread
 // ------------------------------
 
+enum class UserPriority : u8 { kLow = 0, kMediumLow, kMedium, kMediumHigh, kHigh, kLast };
+
 struct PACK Tid {
     u16 id;
     u64 count : 48;
@@ -39,9 +41,10 @@ struct PACK Tid {
 struct PACK ThreadFlags {
     SchedulingPolicy policy : 8;
     u8 priority : 8;
+    UserPriority user_priority : 3;
     bool preserve_floats : 1;
     bool detached : 1;
-    u64 padding : 46;
+    u64 padding : 43;
 };
 static_assert(sizeof(ThreadFlags) == 8);
 
@@ -55,7 +58,8 @@ enum class ThreadState : u64 {
 };
 static_assert(sizeof(ThreadState) == sizeof(u64));
 
-struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
+struct Thread : data_structures::IntrusiveRbNode<Thread, u64, 0>,
+                data_structures::IntrusiveRbNode<Thread, u64, 1>,
                 data_structures::IntrusiveListNode<Thread> {
     /* Management */
     Tid tid;
@@ -74,10 +78,10 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64>,
     u64 kernel_time_ns;
     u64 user_time_ns;
     u64 timestamp;
+    u64 timestamp_execution_start_ns;
     u64 num_interrupts;
     u64 num_syscalls;
     u64 num_context_switches;
-    u64 padding0;
 
     /* Arch */
     hal::Thread arch_data;

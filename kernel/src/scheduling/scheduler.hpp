@@ -12,6 +12,8 @@
 #include "hal/scheduling.hpp"
 #include "hal/spinlock.hpp"
 #include "hardware/core_local.hpp"
+#include "modules/timing.hpp"
+#include "policies/mlfq_policy.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
 
@@ -20,7 +22,7 @@ namespace Sched
 
 class Scheduler
 {
-    static constexpr u64 kMinDelta = 2'000;
+    static constexpr u64 kMinDelta = 3'000;
 
     public:
     // ------------------------------
@@ -38,9 +40,9 @@ class Scheduler
 
     void AddReadyThread(Thread *thread);
 
-    Thread *Schedule();
+    NODISCARD Thread *Schedule();
 
-    Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
+    NODISCARD Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
 
     void Yield();
 
@@ -58,6 +60,8 @@ class Scheduler
         const auto policy = GetPolicy_(flags);
         return policy.cbs.validate_flags(policy.self, &flags);
     }
+
+    NODISCARD Thread *Idle();
 
     // ------------------------------
     // Syscalls
@@ -111,6 +115,23 @@ class Scheduler
         return first->flags.policy > second->flags.policy;
     }
 
+    FORCE_INLINE_F void OnThreadYield_(Thread *thread) const
+    {
+        const auto &policy = GetPolicy_(thread);
+        if (policy.cbs.on_thread_yield != nullptr) {
+            policy.cbs.on_thread_yield(policy.self, thread);
+        }
+    }
+
+    FORCE_INLINE_F void OnPeriodicUpdate_(Thread *thread) const
+    {
+        const u64 time     = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+        const auto &policy = GetPolicy_(thread);
+        if (policy.cbs.on_periodic_update != nullptr) {
+            policy.cbs.on_periodic_update(policy.self, time);
+        }
+    }
+
     NODISCARD FAST_CALL bool ShouldPreempt_(const u64 preempt_time_ns)
     {
         return preempt_time_ns == 0 || preempt_time_ns < kMinDelta;
@@ -121,7 +142,8 @@ class Scheduler
     // ------------------------------
 
     // Sleeping queue
-    data_structures::IntrusiveRBTree<Thread, u64> sleep_queue_{};
+    data_structures::IntrusiveRBTree<Thread, u64, 0> sleep_queue_{};
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 0>::HookT;
 
     // Locking
     hal::Spinlock spinlock_{};
@@ -130,7 +152,7 @@ class Scheduler
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
     PriorityQueuePolicy policy1_{};  // kDrivers_PQ_P1
     PriorityQueuePolicy policy2_{};  // kUrgentTasks_PQ_P2
-    RoundRobinPolicy policy3_{};     // kNormalTasks_RR_P3
+    MLFQPolicy policy3_{};           // kNormalTasks_MLFQ_P3
     RoundRobinPolicy policy4_{};     // kBackgroundTasks_RR_P4
 
     // Abstraction
