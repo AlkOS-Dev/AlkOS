@@ -19,7 +19,7 @@ enum class SchedulingPolicy : u8 {
     kUberTask_PQ_P0 = 0,
     kDrivers_PQ_P1,
     kUrgentTasks_PQ_P2,
-    kNormalTasks_RR_P3,
+    kNormalTasks_MLFQ_P3,
     kBackgroundTasks_RR_P4,
     kLast,
 };
@@ -35,6 +35,8 @@ struct Policy {
         u64 (*get_preempt_time)(void *, Thread *);
         bool (*is_first_higher_priority)(void *, Thread *, Thread *);
         bool (*validate_flags)(void *, const ThreadFlags *);
+        void (*on_thread_yield)(void *, Thread *);
+        void (*on_periodic_update)(void *, u64 current_time_ns);
     } cbs;
     void *self;
 };
@@ -49,6 +51,10 @@ struct PolicyImpl {
     NODISCARD u64 GetPreemptTime(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD bool IsFirstHigherPriority(Thread *, Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
+
+    // Event callbacks
+    void OnThreadYield(Thread *) {}
+    void OnPeriodicUpdate(u64) {}
 };
 
 template <class T>
@@ -93,6 +99,22 @@ bool ValidateThreadFlagsImpl(void *self, const ThreadFlags *flags)
 
 template <class T>
     requires std::derived_from<T, PolicyImpl>
+void OnThreadYieldImpl(void *self, Thread *thread)
+{
+    const auto policy = static_cast<T *>(self);
+    policy->OnThreadYield(thread);
+}
+
+template <class T>
+    requires std::derived_from<T, PolicyImpl>
+void OnPeriodicUpdateImpl(void *self, u64 current_time_ns)
+{
+    const auto policy = static_cast<T *>(self);
+    policy->OnPeriodicUpdate(current_time_ns);
+}
+
+template <class T>
+    requires std::derived_from<T, PolicyImpl>
 NODISCARD FAST_CALL Policy PreparePolicy(T *self)
 {
     Policy policy{};
@@ -103,6 +125,8 @@ NODISCARD FAST_CALL Policy PreparePolicy(T *self)
     policy.cbs.get_preempt_time         = GetPreemptTimeImpl<T>;
     policy.cbs.is_first_higher_priority = IsFirstHigherPriorityImpl<T>;
     policy.cbs.validate_flags           = ValidateThreadFlagsImpl<T>;
+    policy.cbs.on_thread_yield          = OnThreadYieldImpl<T>;
+    policy.cbs.on_periodic_update       = OnPeriodicUpdateImpl<T>;
 
     return policy;
 }

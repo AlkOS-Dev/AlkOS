@@ -59,7 +59,7 @@ FORCE_INLINE_F void SysBlit()
     auto &wm = VideoModule::Get().GetWindowManager();
     auto pid = hardware::GetRunningPid();
 
-    DEBUG_INFO_GENERAL("SysBlit called by PID: %llu", pid);
+    DEBUG_FREQ_INFO_GENERAL("SysBlit called by PID: %llu", pid);
     wm.Blit(pid);
 }
 

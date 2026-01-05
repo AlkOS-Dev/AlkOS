@@ -31,6 +31,8 @@ static void Task0()
         const auto tcb = hardware::GetCoreLocalTcb();
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
+        tcb->state       = Sched::ThreadState::kReady;
+        tcb->next->state = Sched::ThreadState::kRunning;
         hal::ContextSwitch(tcb->next);
     }
 }
@@ -52,6 +54,9 @@ static void Task1()
 
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
+
+        tcb->state       = Sched::ThreadState::kReady;
+        tcb->next->state = Sched::ThreadState::kRunning;
         hal::ContextSwitch(tcb->next);
     }
 }
@@ -83,5 +88,7 @@ MTEST(KernelTaskSwitchTest)
     t1.value()->next = t0.value();
 
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+
+    t0.value()->state = Sched::ThreadState::kRunning;
     hal::ConvertContext(t0.value());
 }
