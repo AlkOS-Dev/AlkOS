@@ -115,7 +115,11 @@ extern "C" void cdecl_ConvertContextEntry(Sched::Thread *thread)
     LoadFpStateIfNeeded(thread);
     hardware::SetCoreLocalTcb(thread);
     SetTssRsp0(reinterpret_cast<u64>(thread->kernel_stack_bottom));
-    thread->timestamp = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+
+    const auto t                         = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
+    thread->timestamp                    = t;
+    thread->timestamp_execution_start_ns = t;
+
     SwapAsIfNeeded(thread);
     SwapGsIfJumpingToUserspace(thread);
 }
@@ -172,7 +176,8 @@ extern "C" void cdecl_ContextSwitchEntry(
     const u64 t                 = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     current_tcb->kernel_time_ns = t - current_tcb->timestamp;
     current_tcb->num_context_switches++;
-    thread->timestamp = t;
+    thread->timestamp                    = t;
+    thread->timestamp_execution_start_ns = t;
 
     LoadFpStateIfNeeded(thread);
     SwapAsIfNeeded(thread);

@@ -78,10 +78,10 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64, 0>,
     u64 kernel_time_ns;
     u64 user_time_ns;
     u64 timestamp;
+    u64 timestamp_execution_start_ns;
     u64 num_interrupts;
     u64 num_syscalls;
     u64 num_context_switches;
-    u64 padding0;
 
     /* Arch */
     hal::Thread arch_data;

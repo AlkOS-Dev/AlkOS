@@ -99,7 +99,8 @@ void UpdateTcbOnInterruptExit(Thread *thread)
 
     if (thread) {
         /* Context Switch occurs */
-        thread->timestamp = t;
+        thread->timestamp                    = t;
+        thread->timestamp_execution_start_ns = t;
 
         ASSERT_EQ(current_thread->state, ThreadState::kReady);
         ASSERT_EQ(thread->state, ThreadState::kRunning);

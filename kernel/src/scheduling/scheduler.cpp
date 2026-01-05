@@ -92,7 +92,6 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
         auto next_thread = Schedule();
 
-        // TODO: Refactor
         if (!next_thread && thread_state == ThreadState::kReady) {
             // Prevent preemption as we are only one running thread...
             hardware::GetCoreLocalTcb()->state = ThreadState::kReady;
@@ -140,7 +139,12 @@ void Scheduler::Yield()
     // Notify policy that thread is voluntarily yielding
     OnThreadYield_(hardware::GetCoreLocalTcb());
 
-    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kReady));
+    const auto thread = ScheduleAndUpdateThreads(true, ThreadState::kReady);
+    if (thread == nullptr) {
+        return;
+    }
+
+    hal::ContextSwitch(thread);
 }
 
 void Scheduler::ExitThreadUnguarded(const ThreadState state)
@@ -202,11 +206,6 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
         hardware::GetCoreLocalTcb()->HookT::key = systime_ns;
         sleep_queue_.Insert(hardware::GetCoreLocalTcb());
 
-        TRACE_INFO_SCHEDULING(
-            "Sleeping TID: %llu until %llu (for %llu)", hardware::GetCoreLocalTcb()->tid,
-            systime_ns, systime_ns - TimingModule::Get().GetSystemTime().ReadLifeTimeNs()
-        );
-
         // Notify policy that thread is going to sleep
         OnThreadYield_(hardware::GetCoreLocalTcb());
 
@@ -250,14 +249,12 @@ bool Scheduler::WakeUpTasks()
         const u64 time       = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
         const u64 sleep_time = sleep_queue_.Min()->HookT::key;
 
-        if (sleep_time > time && sleep_time - time > kMinDelta) {
+        if (sleep_time > time && sleep_time - time > 2 * kMinDelta) {
             break;
         }
 
         const auto thread = sleep_queue_.Min();
         ASSERT_NOT_NULL(thread);
-
-        TRACE_INFO_SCHEDULING("Waking up thread with tid: %llu", thread->tid);
 
         should_preempt |= IsFirstHigherPriority_(thread, hardware::GetCoreLocalTcb());
 
@@ -266,9 +263,6 @@ bool Scheduler::WakeUpTasks()
 
         thread->state = ThreadState::kReady;
         AddReadyThread(thread);
-
-        trace::DumpAllBuffersOnFailure();
-        OsHangNoInterrupts();
     }
 
     return should_preempt;

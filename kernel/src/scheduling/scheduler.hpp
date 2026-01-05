@@ -22,7 +22,7 @@ namespace Sched
 
 class Scheduler
 {
-    static constexpr u64 kMinDelta = 2'000;
+    static constexpr u64 kMinDelta = 3'000;
 
     public:
     // ------------------------------
