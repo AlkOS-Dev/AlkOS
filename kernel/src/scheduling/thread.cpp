@@ -10,6 +10,6 @@ u64 Thread::CalculateCpuTime()
     const u64 time = TimingModule::Get().GetSystemTime().ReadLifeTimeNs();
     kernel_time_ns += (time - timestamp);
 
-    return kernel_time_ns + user_time_ns;
+    return (kernel_time_ns + user_time_ns) - (time - timestamp_execution_start_ns);
 }
 }  // namespace Sched

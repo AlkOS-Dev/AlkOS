@@ -6,6 +6,7 @@
 #include "trace_framework.hpp"
 
 #include <stdio.h>
+#include "scheduling/local_lock.hpp"
 
 namespace hal
 {
@@ -22,7 +23,6 @@ FAST_CALL void KernelPanic(const char *msg)
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         HardwareModule::Get().GetCoresController().PanicAllCores();
     }
-
     trace::DumpAllBuffersOnFailure();
 
     // BYPASS TRACE FRAMEWORK AS this function is used inside of it
@@ -31,20 +31,29 @@ FAST_CALL void KernelPanic(const char *msg)
     TerminalWriteString("\n");
 
     arch::KernelPanic();
+    __builtin_unreachable();
 }
 
 template <typename... Args>
 FAST_CALL NO_RET void KernelPanicFormat(const char *fmt, Args... args)
 {
-    HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
-    HardwareModule::Get().GetCoresController().PanicAllCores();
+    static constexpr size_t kMaxSize = 2048;
+    char buff[kMaxSize];
+
+    if (HardwareModule::IsInited()) {
+        HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
+        HardwareModule::Get().GetCoresController().PanicAllCores();
+    }
 
     // For some reason trace::DumpAllBuffersOnFailure() must be called before and after printing
     trace::DumpAllBuffersOnFailure();
-    TRACE_FATAL_GENERAL("[ KERNEL PANIC ]");
-    TRACE_FATAL_GENERAL(fmt, args...);
-    arch::KernelPanic();
 
+    TerminalWriteString("[ KERNEL PANIC ] ");
+    snprintf(buff, kMaxSize, fmt, args...);
+    TerminalWriteString(buff);
+    TerminalWriteString("\n");
+
+    arch::KernelPanic();
     __builtin_unreachable();
 }
 

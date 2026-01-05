@@ -8,7 +8,7 @@
 namespace data_structures::test
 {
 
-struct TestNode : IntrusiveRbNode<TestNode, int>, IntrusiveListNode<TestNode> {
+struct TestNode : IntrusiveRbNode<TestNode, int, 0>, IntrusiveListNode<TestNode> {
     TestNode *tracking_next = nullptr;
     TestNode *tracking_prev = nullptr;
 
@@ -32,7 +32,7 @@ struct TestNode : IntrusiveRbNode<TestNode, int>, IntrusiveListNode<TestNode> {
 class IntrusiveRBTreeTest : public TestGroupBase
 {
     public:
-    using TreeType = IntrusiveRBTree<TestNode, int>;
+    using TreeType = IntrusiveRBTree<TestNode, int, 0>;
 
     TreeType tree{};
     TestNode *tracking_head = nullptr;
