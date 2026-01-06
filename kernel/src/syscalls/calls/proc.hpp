@@ -19,7 +19,7 @@ FAST_CALL void SysAbort() { SchedulingModule::Get().GetTaskMgr().CommitSuicide()
 FAST_CALL int SysKill(const u64 pid)
 {
     const auto result = SchedulingModule::Get().GetTaskMgr().CommitMurder(
-        *reinterpret_cast<const Sched::Pid *>(pid)
+        *reinterpret_cast<const Sched::Pid *>(&pid)
     );
     return result ? 0 : -1;
 }

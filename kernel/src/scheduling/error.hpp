@@ -16,6 +16,7 @@ enum class Error {
     JoiningDetachedThread,
     SelfJoin,
     AlreadyJoined,
+    NoPermission,
 };
 
 }  // namespace Sched
@@ -41,6 +42,8 @@ static constexpr const char *to_string(const Sched::Error &error)
             return "SelfJoin";
         case Sched::Error::AlreadyJoined:
             return "AlreadyJoined";
+        case Sched::Error::NoPermission:
+            return "NoPermission";
     }
 
     return "unknown error";

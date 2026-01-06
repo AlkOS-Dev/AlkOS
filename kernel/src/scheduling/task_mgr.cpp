@@ -354,6 +354,17 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Pid pid)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
+    const auto current_process = SchedulingModule::Get().GetProcesses().GetCurrentProcess();
+    ASSERT_TRUE(static_cast<bool>(current_process));
+
+    if (!current_process.value()->flags.KernelSpaceOnly && process.value()->flags.KernelSpaceOnly) {
+        TRACE_INFO_SCHEDULING(
+            "Userspace process (PID: %llu) tried to murder kernel process (PID: %llu)",
+            current_process.value()->pid, process.value()->pid
+        );
+        return std::unexpected(Error::NoPermission);
+    }
+
     DEBUG_INFO_SCHEDULING(
         "Process with PID: %llu is commiting murder on PID: %llu", hardware::GetRunningPid(), pid
     );
@@ -653,9 +664,9 @@ void TaskMgr::ThreadRipperClean_(const u32 id)
     const auto thread = SchedulingModule::Get().GetThreads().GetThread(id);
     ASSERT_NOT_NULL(thread);
 
-    TRACE_FATAL_ACPI("ThreadRipper cleaning: %llu", thread.value()->tid);
+    DEBUG_INFO_SCHEDULING("ThreadRipper cleaning: %llu", thread.value()->tid);
 
-    // Mem::KFreeAligned(thread.value()->kernel_stack_bottom);
+    // Mem::KFreeAligned(thread.value()->kernel_stack_bottom); // TODO
 
     if (thread.value()->user_stack != nullptr) {
         // TODO: remove
@@ -668,7 +679,7 @@ void TaskMgr::ThreadRipperClean_(const u32 id)
     const auto result = SchedulingModule::Get().GetThreads().Free(thread.value()->tid);
     ASSERT_TRUE(static_cast<bool>(result));
 
-    TRACE_FATAL_ACPI("ThreadRipper cleaned: %llu", thread.value()->tid);
+    DEBUG_INFO_SCHEDULING("ThreadRipper cleaned: %llu", thread.value()->tid);
     trace::TraceDumperTask();
 }
 

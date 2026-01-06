@@ -440,13 +440,12 @@ void Shell::CmdKill(std::string_view args)
     const int result = Kill(pid);
 
     if (result) {
-        const char *err = "kill: failed to kill process";
+        const char *err = "kill: failed to kill process...\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
         return;
     }
 
-    const char *err = "Successfully killed the process...";
+    const char *err = "Successfully killed the process...\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
-    return;
 }
 }  // namespace System
