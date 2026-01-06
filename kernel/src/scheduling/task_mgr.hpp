@@ -66,7 +66,7 @@ class TaskMgr
 
     void CommitSuicide();
 
-    void ExitProcess();
+    void ExitProcess(int status);
 
     NODISCARD std::expected<Tid, Error> CreateThread(ThreadFlags flags, const Task &task);
 
@@ -81,6 +81,8 @@ class TaskMgr
     NODISCARD std::expected<void *, Error> JoinThread(Tid tid);
 
     NODISCARD std::expected<Pid, Error> Exec(const char *path);
+
+    NODISCARD std::expected<int, Error> JoinProcess(Pid pid);
 
     // ------------------------------
     // Cleanups

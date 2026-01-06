@@ -333,15 +333,42 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
     return {};
 }
 
-std::expected<void, Error> TaskMgr::CommitMurder(Pid)
+std::expected<void, Error> TaskMgr::CommitMurder(const Pid pid)
 {
-    R_FAIL_ALWAYS("CommitMurder() NOT IMPLEMENTED");
+    if (hardware::GetRunningPid() == pid) {
+        ExitProcess(-2);
+    }
+
+    LocalCoreLock local_lock{};
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    RET_UNEXPECTED_IF_ERR(process);
+
+    DEBUG_INFO_SCHEDULING(
+        "Process with PID: %llu is commiting murder on PID: %llu", hardware::GetRunningPid(), pid
+    );
+
+    // 1. Kill all running threads
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel> threads(
+        process.value()->threads
+    );
+    while (!threads.IsEmpty()) {
+        const auto thread = threads.PopFront();
+        const auto result = CommitMurder(thread->tid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    }
+
+    // 2. Mark target as terminated
+    process.value()->state  = ProcessState::kTerminated;
+    process.value()->status = -2;
+    processes_to_clean_.Push(process.value()->pid.id);
+
+    return {};
 }
 
 void TaskMgr::CommitSuicide()
 {
     // TODO: replace with urgent action
-    ExitProcess();
+    ExitProcess(-1);
 
     const auto process =
         SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
@@ -351,7 +378,7 @@ void TaskMgr::CommitSuicide()
     processes_to_clean_.Push(process.value()->pid.id);
 }
 
-void TaskMgr::ExitProcess()
+void TaskMgr::ExitProcess(const int status)
 {
     LocalCoreLock lock{};
 
@@ -378,7 +405,8 @@ void TaskMgr::ExitProcess()
     threads.PushFront(hardware::GetCoreLocalTcb());
 
     // 2. Mark self as waiting
-    process.value()->state = ProcessState::kWaitingForJoin;
+    process.value()->state  = ProcessState::kWaitingForJoin;
+    process.value()->status = status;
 
     ThreadExit(nullptr);
 }
@@ -474,10 +502,7 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
 
     LocalCoreLock lock{};
     auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
-
-    if (!thread) {
-        return std::unexpected(thread.error());
-    }
+    RET_UNEXPECTED_IF_ERR(thread);
 
     while (thread.value()->state != ThreadState::kWaitingForJoin ||
            thread.value()->state != ThreadState::kTerminated) {
@@ -521,6 +546,21 @@ std::expected<Pid, Error> TaskMgr::Exec(const char *path)
 
     const auto pid = std::get<Pid>(result.value());
     return pid;
+}
+
+std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
+{
+    if (hardware::GetRunningPid() == pid) {
+        return std::unexpected(Error::SelfJoin);
+    }
+
+    LocalCoreLock lock{};
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
+    RET_UNEXPECTED_IF_ERR(process);
+
+    while (process.value()->state != ProcessState::kWaitingForJoin ||
+           process.value()->state != ProcessState::kTerminated) {
+    }
 }
 
 void TaskMgr::ThreadRipperWork()

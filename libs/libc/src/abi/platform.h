@@ -44,6 +44,8 @@ SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
 SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 SYSCALL_VOID_NAME(nanosleep, kNanoSleep, u64, time_ns);
 SYSCALL_VOID_NAME(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
+SYSCALL_NAME(kill, kKill, int, u64, pid);
+SYSCALL_NAME(wait, kWait, int, u64, pid);
 
 // Video
 SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);

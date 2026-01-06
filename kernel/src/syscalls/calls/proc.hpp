@@ -13,6 +13,22 @@ FAST_CALL void SysExit(int status) { SchedulingModule::Get().GetTaskMgr().ExitPr
 
 FAST_CALL void SysAbort() { SchedulingModule::Get().GetTaskMgr().CommitSuicide(); }
 
+FAST_CALL int SysKill(const u64 pid)
+{
+    const auto result = SchedulingModule::Get().GetTaskMgr().CommitMurder(
+        *reinterpret_cast<const Sched::Pid *>(pid)
+    );
+    return result ? 0 : -1;
+}
+
+FAST_CALL int SysWait(const u64 pid)
+{
+    const auto result = SchedulingModule::Get().GetTaskMgr().JoinProcess(
+        *reinterpret_cast<const Sched::Pid *>(pid)
+    );
+    return result ? result.value() : std::numeric_limits<int>::max();
+}
+
 FAST_CALL int SysExec(const char *path, u64 *pid)
 {
     if (path == nullptr) {

@@ -27,6 +27,8 @@ DEFINE_SYSCALL(
     max_entries, size_t *, num_entries
 )
 DEFINE_SYSCALL(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info)
+DEFINE_SYSCALL(kill, kKill, int, u64, pid);
+DEFINE_SYSCALL(wait, kWait, int, u64, pid);
 
 /* Thread, processes */
 DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)

@@ -1,0 +1,9 @@
+#ifndef KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_
+#define KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_
+
+namespace Sched
+{
+
+}  // namespace Sched
+
+#endif  // KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_

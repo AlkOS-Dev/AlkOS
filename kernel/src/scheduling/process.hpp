@@ -57,6 +57,7 @@ struct Process : hal::Process {
     u64 live_threads;
     u64 threads_to_clean;
     ProcessState state;
+    int status;
 
     /* Process resources */
     Mem::VPtr<Mem::AddressSpace> address_space;

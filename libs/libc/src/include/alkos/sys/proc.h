@@ -16,6 +16,10 @@ FAST_CALL void Abort() { __platform_proc_abort(); }
 
 FAST_CALL int Exec(const char *path, u64 *pid) { return __platform_exec(path, pid); }
 
+FAST_CALL int kill(u64 pid) { return __platform_kill(pid); }
+
+FAST_CALL int wait(u64 pid) { return __platform_wait(pid); }
+
 END_DECL_C
 
 #endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_PROC_H_
