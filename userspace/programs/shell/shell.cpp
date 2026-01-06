@@ -329,7 +329,8 @@ void Shell::CmdExec(std::string_view args)
     }
 
     Path programPath = ResolvePath(args);
-    int result       = Exec(programPath.CString(), nullptr);
+    u64 pid;
+    int result = Exec(programPath.CString(), &pid);
 
     if (result != 0) {
         const char *err = "exec: invalid filename or not enough resources\n";
@@ -337,8 +338,13 @@ void Shell::CmdExec(std::string_view args)
         return;
     }
 
-    const char *msg = "Successfully executed program!\n";
+    char buff[128];
+    snprintf(buff, 128, "%llu", pid);
+
+    const char *msg = "Created new process with PID: ";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
+    console_.PutChar('\n');
 }
 
 }  // namespace System

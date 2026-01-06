@@ -12,19 +12,23 @@
 #include "scheduling/processes.hpp"
 #include "trace_framework.hpp"
 
+static void BusyWaitHackForScheduler()
+{
+    static size_t kSpins = 1'000'000;
+    for (size_t i = 0; i < kSpins; i++) {
+        hal::Noop();
+        hal::Noop();
+        hal::Noop();
+        hal::Noop();
+    }
+}
+
 void Sched::KWorkerMain()
 {
     TRACE_INFO_SCHEDULING("Created new KWorker!");
 
     while (true) {
-        static size_t kSpins = 1'000;
-        for (size_t i = 0; i < kSpins; i++) {
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-        }
-
+        BusyWaitHackForScheduler();
         SchedulingModule::Get().GetScheduler().Yield();
     }
 }
@@ -34,6 +38,7 @@ void Sched::TraceDumperMain()
     TRACE_INFO_SCHEDULING("Created new TraceDumper!");
 
     while (true) {
+        BusyWaitHackForScheduler();
         trace::TraceDumperTask();
         SchedulingModule::Get().GetScheduler().Yield();
     }
@@ -44,8 +49,11 @@ void Sched::ThreadRipperMain()
     TRACE_INFO_SCHEDULING("Created new ThreadRipper!");
 
     while (true) {
+        BusyWaitHackForScheduler();
         SchedulingModule::Get().GetTaskMgr().ThreadRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
+
+        DEBUG_INFO_SCHEDULING("ACK THREAD RIPPER");
     }
 }
 
@@ -54,8 +62,11 @@ void Sched::ProcessRipperMain()
     TRACE_INFO_SCHEDULING("Created new ProcessRipper!");
 
     while (true) {
+        BusyWaitHackForScheduler();
         SchedulingModule::Get().GetTaskMgr().ProcessRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
+
+        DEBUG_INFO_SCHEDULING("ACK PROCESS RIPPER");
     }
 }
 

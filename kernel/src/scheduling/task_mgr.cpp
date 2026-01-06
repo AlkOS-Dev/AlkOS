@@ -299,6 +299,10 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
 
     LocalCoreLock local_lock{};
 
+    DEBUG_INFO_SCHEDULING(
+        "Thread with TID: %llu commiting murder on TID: %llu", hardware::GetCoreLocalTcb()->tid, tid
+    );
+
     const auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
     RET_UNEXPECTED_IF_ERR(thread);
 
@@ -354,6 +358,8 @@ void TaskMgr::ExitProcess()
     const auto process =
         SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
     ASSERT_TRUE(static_cast<bool>(process));
+
+    DEBUG_INFO_SCHEDULING("Process with PID: %llu exiting...", process.value()->pid);
 
     // 1. Kill all running threads except us
     data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel> threads(
@@ -428,6 +434,8 @@ void TaskMgr::ThreadExit(void *retval)
     const auto tcb = hardware::GetCoreLocalTcb();
     ASSERT_NOT_NULL(tcb);
     ASSERT_EQ(tcb->state, ThreadState::kRunning);
+
+    DEBUG_INFO_SCHEDULING("Thread with tid: %llu exiting...", tcb->tid);
 
     tcb->retval = retval;
 
@@ -512,7 +520,6 @@ std::expected<Pid, Error> TaskMgr::Exec(const char *path)
     }
 
     const auto pid = std::get<Pid>(result.value());
-    VideoModule::Get().GetWindowManager().SetFocus(pid);
     return pid;
 }
 
@@ -538,6 +545,8 @@ void TaskMgr::ThreadRipperClean_(const u32 id)
     const auto thread = SchedulingModule::Get().GetThreads().GetThread(id);
     ASSERT_NOT_NULL(thread);
 
+    DEBUG_INFO_SCHEDULING("ThreadRipper cleaning: %llu", thread.value()->tid);
+
     Mem::KFree(thread.value()->kernel_stack);
 
     if (thread.value()->user_stack != nullptr) {
@@ -555,6 +564,8 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
 {
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(id);
     ASSERT_TRUE(static_cast<bool>(process));
+
+    DEBUG_INFO_SCHEDULING("ProcessRipper cleaning: %llu", process.value()->pid);
 
     ASSERT_ZERO(process.value()->live_threads);
 
