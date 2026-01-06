@@ -28,35 +28,18 @@ void TaskMgr::InitializeMultitasking()
     SchedulingModule::Get().GetScheduler().InstallInterruptHandler();
 
     // Spawn trace dumper
-    auto result =
+    const auto result0 =
         SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));
-    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
+    R_ASSERT_TRUE(static_cast<bool>(result0), "Failed to spawn trace dumper process...");
 
     // Spawn thread ripper
-    result = SpawnKernelProcess("kworker-thread-ripper", {}, PrepareKThreadTask(ThreadRipperMain));
-    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn thread ripper...");
+    const auto result1 =
+        SpawnKernelProcess("kworker-thread-ripper", {}, PrepareKThreadTask(ThreadRipperMain));
+    R_ASSERT_TRUE(static_cast<bool>(result1), "Failed to spawn thread ripper...");
 
-    result =
+    const auto result2 =
         SpawnKernelProcess("kworker-process-ripper", {}, PrepareKThreadTask(ProcessRipperMain));
-    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn process ripper...");
-
-    // Spawn 3 Kernel Workers
-    static constexpr size_t kNumKWorkers = 3;
-    for (size_t i = 0; i < kNumKWorkers; ++i) {
-        char name[] = "kworker-0";
-
-        name[sizeof(name) - 2] = static_cast<char>('0' + i);
-
-        auto result = SpawnKernelProcess(name, {}, PrepareKThreadTask(KWorkerMain));
-        R_ASSERT_TRUE(
-            static_cast<bool>(result),
-            "Failed to spawn kernel workers. Not enough resources for the system"
-        );
-
-        TRACE_INFO_SCHEDULING(
-            "Created initial Kernel Worker process with Pid: %llu", result.value().get<0>()
-        );
-    }
+    R_ASSERT_TRUE(static_cast<bool>(result2), "Failed to spawn process ripper...");
 }
 
 std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const ProcessFlags flags)
@@ -458,7 +441,9 @@ void TaskMgr::ThreadExit(void *retval)
         .Remove(tcb);
 
     ThreadState state{};
-    if (tcb->flags.detached) {
+    if (tcb->flags.detached || process.value()->live_threads == 1) {
+        ASSERT_NOT_ZERO(process.value()->live_threads);
+
         state = ThreadState::kTerminated;
         threads_to_clean_.Push(tcb->tid.id);
         process.value()->threads_to_clean++;
@@ -577,11 +562,16 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
         SchedulingModule::Get().GetScheduler().Yield();
     }
 
-    // 1. Clean Pipes
+    // 1. Clean FD Table
+    Mem::KDelete(process.value()->fd_table);
 
-    // 2. Clean FdDescriptor table
+    // 2. Remove address space
+    const auto result =
+        MemoryModule::Get().GetVmm().DestroyUserAddrSpace(process.value()->address_space);
+    ASSERT_TRUE(static_cast<bool>(result));
 
-    // 3. Remove address space
+    const auto proc_result = SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
+    ASSERT_TRUE(static_cast<bool>(proc_result));
 }
 }  // namespace Sched
 ;
