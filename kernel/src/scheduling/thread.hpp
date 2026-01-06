@@ -58,9 +58,16 @@ enum class ThreadState : u64 {
 };
 static_assert(sizeof(ThreadState) == sizeof(u64));
 
-struct Thread : data_structures::IntrusiveRbNode<Thread, u64, 0>,
-                data_structures::IntrusiveRbNode<Thread, u64, 1>,
-                data_structures::IntrusiveListNode<Thread> {
+static constexpr int kSchedulingIntrusiveLevel  = 0;
+static constexpr int kSleepingIntrusiveLevel    = 1;
+static constexpr int kProcessListIntrusiveLevel = 2;
+
+struct Thread : data_structures::IntrusiveRbNode<Thread, u64, kSchedulingIntrusiveLevel>,
+                data_structures::IntrusiveRbNode<Thread, u64, kSleepingIntrusiveLevel>,
+                data_structures::IntrusiveListNode<Thread, kSchedulingIntrusiveLevel>,
+                data_structures::IntrusiveListNode<Thread, kSleepingIntrusiveLevel>,
+                data_structures::IntrusiveDoubleListNode<Thread, kSchedulingIntrusiveLevel>,
+                data_structures::IntrusiveDoubleListNode<Thread, kProcessListIntrusiveLevel> {
     /* Management */
     Tid tid;
     Pid owner;

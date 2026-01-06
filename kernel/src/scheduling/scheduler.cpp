@@ -35,6 +35,19 @@ Scheduler::Scheduler()
         PreparePolicy<RoundRobinPolicy>(&policy4_);
 }
 
+void Scheduler::RemoveThread(Thread *thread)
+{
+    ASSERT_NOT_NULL(thread);
+    ASSERT(thread->state == ThreadState::kSleeping || thread->state == ThreadState::kReady);
+
+    if (thread->state == ThreadState::kSleeping) {
+        ASSERT_TRUE(sleep_queue_.Contains(thread));
+        sleep_queue_.Delete(thread);
+    } else if (thread->state == ThreadState::kReady) {
+        RemoveFromPolicy_(thread);
+    }
+}
+
 void Scheduler::InstallInterruptHandler()
 {
     HardwareModule::Get()

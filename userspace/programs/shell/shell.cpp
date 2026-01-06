@@ -334,6 +334,7 @@ void Shell::CmdExec(std::string_view args)
     if (result != 0) {
         const char *err = "exec: invalid filename or not enough resources\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
     }
 
     const char *msg = "Successfully executed program!\n";

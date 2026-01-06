@@ -52,6 +52,8 @@ class RoundRobinPolicy : public PolicyImpl
 
     NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { return false; }
 
+    void RemoveTask(Thread *thread) { threads_.Remove(thread); }
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -61,7 +63,7 @@ class RoundRobinPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    data_structures::IntrusiveList<Thread> threads_{};
+    data_structures::IntrusiveDoubleList<Thread, kSchedulingIntrusiveLevel> threads_{};
 };
 
 }  // namespace Sched

@@ -36,6 +36,8 @@ class Scheduler
     // Class interaction
     // ------------------------------
 
+    void RemoveThread(Thread *thread);
+
     void InstallInterruptHandler();
 
     void AddReadyThread(Thread *thread);
@@ -96,6 +98,12 @@ class Scheduler
         return policy.cbs.get_preempt_time(policy.self, thread);
     }
 
+    NODISCARD FORCE_INLINE_F void RemoveFromPolicy_(Thread *thread) const
+    {
+        const auto &policy = GetPolicy_(thread);
+        policy.cbs.remove_task(policy.self, thread);
+    }
+
     void SetupNextTimeEvent_(u64 time_ns);
 
     NODISCARD FORCE_INLINE_F bool ShouldPreempt_(Thread *thread) const
@@ -140,8 +148,8 @@ class Scheduler
     // ------------------------------
 
     // Sleeping queue
-    data_structures::IntrusiveRBTree<Thread, u64, 0> sleep_queue_{};
-    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 0>::HookT;
+    data_structures::IntrusiveRBTree<Thread, u64, kSleepingIntrusiveLevel> sleep_queue_{};
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, kSleepingIntrusiveLevel>::HookT;
 
     // Locking
     hal::Spinlock spinlock_{};

@@ -128,7 +128,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
 }
 
 std::expected<Thread *, Error> TaskMgr::SpawnThread(
-    const Process *process, const ThreadFlags flags, const Task &task
+    Process *process, const ThreadFlags flags, const Task &task
 )
 {
     LocalCoreLock local_lock{};
@@ -192,6 +192,12 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
     }
 
     hal::InitializeThreadStack(&thread.value()->kernel_stack, task);
+
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel>(
+        process->threads
+    )
+        .PushFront(thread.value());
+
     dismiss = true;
     return thread.value();
 }
@@ -289,15 +295,47 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
 
-    VideoModule::Get().GetWindowManager().SetFocus(process.value());
-
     process_guard.dismiss();
     return std::make_tuple(process.value(), thread.value());
 }
 
+std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
+{
+    if (tid == hardware::GetCoreLocalTcb()->tid) {
+        ThreadExit(nullptr);
+    }
+
+    LocalCoreLock local_lock{};
+
+    const auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
+    RET_UNEXPECTED_IF_ERR(thread);
+
+    if (thread.value()->state == ThreadState::kTerminated) {
+        return {};
+    }
+
+    // 1. Remove from process thread list
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
+    RET_UNEXPECTED_IF_ERR(process);
+
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel>(
+        process.value()->threads
+    )
+        .Remove(thread.value());
+
+    // 2. Remove thread from scheduler
+    if (thread.value()->state != ThreadState::kWaitingForJoin) {
+        SchedulingModule::Get().GetScheduler().RemoveThread(thread.value());
+    }
+
+    // 3. Mark for removal
+    thread.value()->state = ThreadState::kTerminated;
+    threads_to_clean_.Push(thread.value()->tid.id);
+}
+
 std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
-void TaskMgr::CommitSuicide() { R_FAIL_ALWAYS("CommitSuicide NOT IMPLEMENTED"); }
+void TaskMgr::CommitSuicide() { ExitProcess(); }
 
 std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
 
@@ -351,6 +389,14 @@ void TaskMgr::ThreadExit(void *retval)
     tcb->retval = retval;
 
     LocalCoreLock core_lock{};
+
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(tcb->owner);
+    ASSERT_TRUE(static_cast<bool>(process));
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel>(
+        process.value()->threads
+    )
+        .Remove(tcb);
+
     ThreadState state{};
     if (tcb->flags.detached) {
         state = ThreadState::kTerminated;
@@ -411,6 +457,8 @@ std::expected<Pid, Error> TaskMgr::Exec(const char *path)
         return std::unexpected(result.error());
     }
 
-    return std::get<Pid>(result.value());
+    const auto pid = std::get<Pid>(result.value());
+    VideoModule::Get().GetWindowManager().SetFocus(pid);
+    return pid;
 }
 }  // namespace Sched

@@ -37,7 +37,7 @@ class TaskMgr
     );
 
     NODISCARD std::expected<Thread *, Error> SpawnThread(
-        const Process *process, ThreadFlags flags, const Task &task
+        Process *process, ThreadFlags flags, const Task &task
     );
 
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> SpawnKernelProcess(
@@ -59,6 +59,8 @@ class TaskMgr
     // ------------------------------
     // Syscalls
     // ------------------------------
+
+    NODISCARD std::expected<void, Error> CommitMurder(Tid tid);
 
     NODISCARD std::expected<void, Error> CommitMurder(Pid pid);
 

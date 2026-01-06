@@ -37,6 +37,7 @@ struct Policy {
         bool (*validate_flags)(void *, const ThreadFlags *);
         void (*on_thread_yield)(void *, Thread *);
         void (*on_periodic_update)(void *, u64 current_time_ns);
+        void (*remove_task)(void *, Thread *);
     } cbs;
     void *self;
 };
@@ -51,6 +52,7 @@ struct PolicyImpl {
     NODISCARD u64 GetPreemptTime(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD bool IsFirstHigherPriority(Thread *, Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
     NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
+    void RemoveTask(Thread *) { R_FAIL_ALWAYS("NOT_IMPLEMENTED"); }
 
     // Event callbacks
     void OnThreadYield(Thread *) {}
@@ -115,6 +117,14 @@ void OnPeriodicUpdateImpl(void *self, u64 current_time_ns)
 
 template <class T>
     requires std::derived_from<T, PolicyImpl>
+void RemoveTaskImpl(void *self, Thread *thread)
+{
+    const auto policy = static_cast<T *>(self);
+    policy->RemoveTask(thread);
+}
+
+template <class T>
+    requires std::derived_from<T, PolicyImpl>
 NODISCARD FAST_CALL Policy PreparePolicy(T *self)
 {
     Policy policy{};
@@ -127,6 +137,7 @@ NODISCARD FAST_CALL Policy PreparePolicy(T *self)
     policy.cbs.validate_flags           = ValidateThreadFlagsImpl<T>;
     policy.cbs.on_thread_yield          = OnThreadYieldImpl<T>;
     policy.cbs.on_periodic_update       = OnPeriodicUpdateImpl<T>;
+    policy.cbs.remove_task              = RemoveTaskImpl<T>;
 
     return policy;
 }

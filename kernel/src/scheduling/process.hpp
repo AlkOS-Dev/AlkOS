@@ -23,6 +23,8 @@ class FdTable;
 
 namespace Sched
 {
+struct Thread;
+
 struct PACK Pid {
     u16 id;
     u64 count : 48;
@@ -43,6 +45,7 @@ struct Process : hal::Process {
     char name[kMaxNameLength];
     Pid pid;
     ProcessFlags flags;
+    Thread *threads{};
 
     /* Process resources */
     Mem::VPtr<Mem::AddressSpace> address_space;
