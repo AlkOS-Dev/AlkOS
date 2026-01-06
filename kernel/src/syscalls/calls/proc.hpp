@@ -9,9 +9,9 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int status) {}
+FAST_CALL void SysExit(int status) { SchedulingModule::Get().GetTaskMgr().ExitProcess(); }
 
-FAST_CALL void SysAbort() {}
+FAST_CALL void SysAbort() { SchedulingModule::Get().GetTaskMgr().CommitSuicide(); }
 
 FAST_CALL int SysExec(const char *path, u64 *pid)
 {

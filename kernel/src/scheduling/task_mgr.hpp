@@ -66,7 +66,7 @@ class TaskMgr
 
     void CommitSuicide();
 
-    NODISCARD std::expected<void, Error> ExitProcess();
+    void ExitProcess();
 
     NODISCARD std::expected<Tid, Error> CreateThread(ThreadFlags flags, const Task &task);
 
@@ -92,6 +92,7 @@ class TaskMgr
     // ------------------------------
 
     AtomicArraySingleTypeStaticStack<u32, kMaxThreads> threads_to_clean_{};
+    AtomicArraySingleTypeStaticStack<u32, kMaxProcesses> processes_to_clean_{};
 };
 }  // namespace Sched
 

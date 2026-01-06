@@ -331,13 +331,57 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
     // 3. Mark for removal
     thread.value()->state = ThreadState::kTerminated;
     threads_to_clean_.Push(thread.value()->tid.id);
+
+    return {};
 }
 
-std::expected<void, Error> TaskMgr::CommitMurder(Pid) { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+std::expected<void, Error> TaskMgr::CommitMurder(Pid)
+{
+    R_FAIL_ALWAYS("CommitMurder() NOT IMPLEMENTED");
+}
 
-void TaskMgr::CommitSuicide() { ExitProcess(); }
+void TaskMgr::CommitSuicide()
+{
+    // TODO: replace with urgent action
+    ExitProcess();
 
-std::expected<void, Error> TaskMgr::ExitProcess() { R_FAIL_ALWAYS("NOT IMPLEMENTED"); }
+    const auto process =
+        SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
+    ASSERT_TRUE(static_cast<bool>(process));
+
+    process.value()->state = ProcessState::kTerminated;
+    processes_to_clean_.Push(process.value()->pid.id);
+}
+
+void TaskMgr::ExitProcess()
+{
+    LocalCoreLock lock{};
+
+    const auto process =
+        SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
+    ASSERT_TRUE(static_cast<bool>(process));
+
+    // 1. Kill all running threads except us
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel> threads(
+        process.value()->threads
+    );
+    while (!threads.IsEmpty()) {
+        const auto thread = threads.PopFront();
+
+        if (thread == hardware::GetCoreLocalTcb()) {
+            continue;
+        }
+
+        const auto result = CommitMurder(thread->tid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    }
+    threads.PushFront(hardware::GetCoreLocalTcb());
+
+    // 2. Mark self as waiting
+    process.value()->state = ProcessState::kWaitingForJoin;
+
+    ThreadExit(nullptr);
+}
 
 std::expected<Tid, Error> TaskMgr::CreateThread(const ThreadFlags flags, const Task &task)
 {

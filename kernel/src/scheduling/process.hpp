@@ -38,6 +38,14 @@ struct PACK ProcessFlags {
 };
 static_assert(sizeof(ProcessFlags) == 1);
 
+enum class ProcessState : u64 {
+    kReady = 0,
+    kWaitingForJoin,
+    kTerminated,
+    kLast,
+};
+static_assert(sizeof(ProcessState) == sizeof(u64));
+
 struct Process : hal::Process {
     static constexpr size_t kMaxNameLength = vfs::kMaxComponentSize;
 
@@ -45,7 +53,8 @@ struct Process : hal::Process {
     char name[kMaxNameLength];
     Pid pid;
     ProcessFlags flags;
-    Thread *threads{};
+    Thread *threads;
+    ProcessState state;
 
     /* Process resources */
     Mem::VPtr<Mem::AddressSpace> address_space;
