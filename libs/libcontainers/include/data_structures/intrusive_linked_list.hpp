@@ -109,7 +109,7 @@ class FronIntrusiveDoubleListView : template_lib::NoCopy
         return false;
     }
 
-    NODISCARD FORCE_INLINE_F void Remove(T *item)
+    FORCE_INLINE_F void Remove(T *item)
     {
         ASSERT_NOT_NULL(item);
         ASSERT_FALSE(IsEmpty());
@@ -332,7 +332,7 @@ class IntrusiveDoubleList : template_lib::NoCopy
         return false;
     }
 
-    NODISCARD FORCE_INLINE_F void Remove(T *item)
+    FORCE_INLINE_F void Remove(T *item)
     {
         ASSERT_NOT_NULL(item);
         ASSERT_FALSE(IsEmpty());

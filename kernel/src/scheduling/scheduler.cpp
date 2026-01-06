@@ -37,7 +37,7 @@ Scheduler::Scheduler()
 
 void Scheduler::BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq)
 {
-    ASSERT_EQ(hardware::GetCoreLocalTcb(), ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
     ASSERT_NOT_NULL(wq);
 
     LocalCoreLock core_lock{};
@@ -50,25 +50,34 @@ void Scheduler::ReleaseAndProcessAllBeforeProcessing(
     WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq
 )
 {
-    ASSERT_EQ(hardware::GetCoreLocalTcb(), ThreadState::kRunning);
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
     ASSERT_NOT_NULL(wq);
 
     LocalCoreLock core_lock{};
     while (!wq->IsEmpty()) {
+        /* Wake up all waiting processes before proceeding */
+
         auto thread = wq->Dequeue();
+        hal::ContextSwitch(ScheduleAndUpdateThreads(false, ThreadState::kReady, thread));
     }
 }
 
 void Scheduler::RemoveThread(Thread *thread)
 {
     ASSERT_NOT_NULL(thread);
-    ASSERT(thread->state == ThreadState::kSleeping || thread->state == ThreadState::kReady);
+    ASSERT(
+        thread->state == ThreadState::kSleeping || thread->state == ThreadState::kReady ||
+        thread->state == ThreadState::kBlockedOnWaitQueue
+    );
 
     if (thread->state == ThreadState::kSleeping) {
         ASSERT_TRUE(sleep_queue_.Contains(thread));
         sleep_queue_.Delete(thread);
     } else if (thread->state == ThreadState::kReady) {
         RemoveFromPolicy_(thread);
+    } else if (thread->state == ThreadState::kBlockedOnWaitQueue) {
+        using wq = WaitQueue<Thread, kWaitQueueIntrusiveLevel>;
+        wq::Remove(thread);
     }
 }
 
@@ -111,7 +120,9 @@ Thread *Scheduler::Schedule()
     return nullptr;
 }
 
-Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadState thread_state)
+Thread *Scheduler::ScheduleAndUpdateThreads(
+    const bool preempt, const ThreadState thread_state, Thread *forced_next_thread
+)
 {
     u64 min_time_ns = std::numeric_limits<u64>::max();
 
@@ -127,7 +138,22 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     // 3. Scheduling new thread if needed and update structs
     Thread *thread{};
     u64 preempt_time_ns = GetPreemptTime_(hardware::GetCoreLocalTcb());
-    if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
+    if (forced_next_thread) {
+        /* Forced picked next thread */
+
+        forced_next_thread->state = ThreadState::kReady;
+        preempt_time_ns           = GetPreemptTime_(forced_next_thread);
+        forced_next_thread->state = ThreadState::kRunning;
+
+        ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+        ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+        hardware::GetCoreLocalTcb()->state = thread_state;
+
+        if (thread_state == ThreadState::kReady) {
+            AddReadyThread(hardware::GetCoreLocalTcb());
+        }
+
+    } else if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
         auto next_thread = Schedule();
 
         if (!next_thread && thread_state == ThreadState::kReady) {

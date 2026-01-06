@@ -49,7 +49,9 @@ class Scheduler
 
     NODISCARD Thread *Schedule();
 
-    NODISCARD Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
+    NODISCARD Thread *ScheduleAndUpdateThreads(
+        bool preempt, ThreadState thread_state, Thread *next_thread = nullptr
+    );
 
     void Yield();
 
@@ -103,7 +105,7 @@ class Scheduler
         return policy.cbs.get_preempt_time(policy.self, thread);
     }
 
-    NODISCARD FORCE_INLINE_F void RemoveFromPolicy_(Thread *thread) const
+    FORCE_INLINE_F void RemoveFromPolicy_(Thread *thread) const
     {
         const auto &policy = GetPolicy_(thread);
         policy.cbs.remove_task(policy.self, thread);

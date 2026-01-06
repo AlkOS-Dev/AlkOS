@@ -122,6 +122,10 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
     Process *process, const ThreadFlags flags, const Task &task
 )
 {
+    ASSERT_NOT_NULL(process);
+    ASSERT_NEQ(process->state, ProcessState::kTerminated);
+    ASSERT_NEQ(process->state, ProcessState::kWaitingForJoin);
+
     LocalCoreLock local_lock{};
 
     bool dismiss = false;
@@ -324,7 +328,12 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
         SchedulingModule::Get().GetScheduler().RemoveThread(thread.value());
     }
 
-    // 3. Mark for removal
+    // 3. Wake up all joining threads
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
+        thread.value()->wait_queue
+    );
+
+    // 4. Mark for removal
     thread.value()->state = ThreadState::kTerminated;
     threads_to_clean_.Push(thread.value()->tid.id);
     process.value()->threads_to_clean++;
@@ -357,7 +366,12 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Pid pid)
         ASSERT_TRUE(static_cast<bool>(result));
     }
 
-    // 2. Mark target as terminated
+    // 2. Wake up all joining threads
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
+        process.value()->wait_queue
+    );
+
+    // 3. Mark target as terminated
     process.value()->state  = ProcessState::kTerminated;
     process.value()->status = -2;
     processes_to_clean_.Push(process.value()->pid.id);
@@ -408,6 +422,12 @@ void TaskMgr::ExitProcess(const int status)
     process.value()->state  = ProcessState::kWaitingForJoin;
     process.value()->status = status;
 
+    // 3. Wake up all joining threads
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
+        process.value()->wait_queue
+    );
+
+    // 4. Kill current thread
     ThreadExit(nullptr);
 }
 
@@ -469,6 +489,7 @@ void TaskMgr::ThreadExit(void *retval)
 
     LocalCoreLock core_lock{};
 
+    // 1. Remove from active thread list
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(tcb->owner);
     ASSERT_TRUE(static_cast<bool>(process));
     data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel>(
@@ -476,6 +497,10 @@ void TaskMgr::ThreadExit(void *retval)
     )
         .Remove(tcb);
 
+    // 2. Wake up all joining threads
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(tcb->wait_queue);
+
+    // 3. Update thread state
     ThreadState state{};
     if (tcb->flags.detached || process.value()->live_threads == 1) {
         ASSERT_NOT_ZERO(process.value()->live_threads);

@@ -82,13 +82,13 @@ expected<void, MemError> AS::AddArea(VMemArea *vma)
                 pos->prev ? area_list_.InsertAfter(pos->prev, vma) : area_list_.PushFront(vma);
 
             RET_UNEXPECTED_IF(!new_node, MemError::OutOfMemory);
-            vma_guard.dismiss();
+            vma_guard.Dismiss();
             return {};
         }
     }
 
     RET_UNEXPECTED_IF(!area_list_.PushBack(vma), MemError::OutOfMemory);
-    vma_guard.dismiss();
+    vma_guard.Dismiss();
 
     return {};
 }

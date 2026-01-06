@@ -31,6 +31,15 @@ class WaitQueue
     // Class interaction
     // ------------------------------
 
+    FAST_CALL void Remove(T *item)
+    {
+        item->HookT::prev->HookT::next = item->HookT::next;
+        item->HookT::next->HookT::prev = item->HookT::prev;
+
+        item->HookT::next = nullptr;
+        item->HookT::prev = nullptr;
+    }
+
     NODISCARD FORCE_INLINE_F bool Contains(T *item) { return wait_list_.Contains(item); }
 
     NODISCARD FORCE_INLINE_F bool IsEmpty()
