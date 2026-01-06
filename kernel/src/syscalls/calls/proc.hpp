@@ -9,7 +9,7 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int status) { SchedulingModule::Get().GetTaskMgr().ExitProcess(); }
+FAST_CALL void SysExit(int status) { SchedulingModule::Get().GetTaskMgr().ExitProcess(status); }
 
 FAST_CALL void SysAbort() { SchedulingModule::Get().GetTaskMgr().CommitSuicide(); }
 

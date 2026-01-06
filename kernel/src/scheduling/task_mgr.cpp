@@ -85,7 +85,7 @@ std::expected<Pid, Error> TaskMgr::SpawnEmptyProcess(const char *name, const Pro
     }
 
     process.value()->address_space = address_space;
-    process_guard.dismiss();
+    process_guard.Dismiss();
 
     return process.value()->pid;
 }
@@ -224,7 +224,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::SpawnKernelProcess(
         process.value(), name, thread.value()->tid
     );
 
-    process_guard.dismiss();
+    process_guard.Dismiss();
     return std::make_tuple(process.value(), thread.value()->tid);
 }
 
@@ -262,7 +262,7 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
         thread.value()->tid
     );
 
-    process_guard.dismiss();
+    process_guard.Dismiss();
     return thread.value()->tid;
 }
 
@@ -287,7 +287,7 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
 
-    process_guard.dismiss();
+    process_guard.Dismiss();
     return std::make_tuple(process.value(), thread.value());
 }
 
@@ -609,14 +609,10 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
 
     ASSERT_ZERO(process.value()->live_threads);
 
-    if (process.value()->threads_to_clean != 0) {
+    while (process.value()->threads_to_clean != 0) {
         SchedulingModule::Get().GetScheduler().Yield();
     }
 
-    // 1. Clean FD Table
-    Mem::KDelete(process.value()->fd_table);
-
-    // 2. Remove address space
     const auto result =
         MemoryModule::Get().GetVmm().DestroyUserAddrSpace(process.value()->address_space);
     ASSERT_TRUE(static_cast<bool>(result));

@@ -10,6 +10,7 @@
 #include "hal/tasks.hpp"
 #include "policy.hpp"
 #include "process.hpp"
+#include "wait_queue.hpp"
 
 namespace Sched
 {
@@ -52,6 +53,7 @@ enum class ThreadState : u64 {
     kReady = 0,
     kRunning,
     kSleeping,
+    kBlockedOnWaitQueue,
     kWaitingForJoin,
     kTerminated,
     kLast,
@@ -61,12 +63,14 @@ static_assert(sizeof(ThreadState) == sizeof(u64));
 static constexpr int kSchedulingIntrusiveLevel  = 0;
 static constexpr int kSleepingIntrusiveLevel    = 1;
 static constexpr int kProcessListIntrusiveLevel = 2;
+static constexpr int kWaitQueueIntrusiveLevel   = 3;
 
 struct Thread : data_structures::IntrusiveRbNode<Thread, u64, kSchedulingIntrusiveLevel>,
                 data_structures::IntrusiveRbNode<Thread, u64, kSleepingIntrusiveLevel>,
                 data_structures::IntrusiveListNode<Thread, kSchedulingIntrusiveLevel>,
                 data_structures::IntrusiveListNode<Thread, kSleepingIntrusiveLevel>,
                 data_structures::IntrusiveDoubleListNode<Thread, kSchedulingIntrusiveLevel>,
+                data_structures::IntrusiveDoubleListNode<Thread, kWaitQueueIntrusiveLevel>,
                 data_structures::IntrusiveDoubleListNode<Thread, kProcessListIntrusiveLevel> {
     /* Management */
     Tid tid;
@@ -74,6 +78,7 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64, kSchedulingIntrusi
     ThreadFlags flags;
     ThreadState state;
     void *retval;
+    WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wait_queue;
 
     /* Thread resources */
     void *kernel_stack;

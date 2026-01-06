@@ -10,12 +10,16 @@
 #include "modules/timing.hpp"
 #include "scheduling/local_lock.hpp"
 #include "sys/loader.hpp"
+#include "template/scope_guard.hpp"
 
 namespace Sched
 {
 std::expected<Thread *, Error> Threads::PrepareThread()
 {
     const size_t idx = threads_.Allocate();
+    template_lib::ScopeGuard thread_guard([&]() {
+        threads_.Free(idx);
+    });
 
     if (idx == std::numeric_limits<size_t>::max()) {
         return std::unexpected(Error::ExceededMaxAllowedInstances);
@@ -25,7 +29,31 @@ std::expected<Thread *, Error> Threads::PrepareThread()
     ASSERT_LE(idx, std::numeric_limits<u16>::max());
     thread->tid = AssignNewTid(static_cast<u16>(idx));
 
+    // Allocate wait queue
+    const auto wait_queue = Mem::KNew<WaitQueue<Thread, kWaitQueueIntrusiveLevel>>();
+    if (!wait_queue) {
+        return std::unexpected(Error::OutOfMemory);
+    }
+    thread->wait_queue = wait_queue.value();
+
+    thread_guard.Dismiss();
     return thread;
+}
+
+std::expected<void, Error> Threads::Free(const Tid tid)
+{
+    const u16 id = tid.id;
+
+    const auto thread = threads_.Get(id);
+    if (thread == nullptr) {
+        return std::unexpected(Error::ThreadNotFound);
+    }
+
+    ASSERT_NOT_NULL(thread->wait_queue);
+    ASSERT_TRUE(thread->wait_queue->IsEmpty());
+    Mem::KDelete(thread->wait_queue);
+    threads_.Free(id);
+    return {};
 }
 
 void KThreadEntrypoint(void (*f)())

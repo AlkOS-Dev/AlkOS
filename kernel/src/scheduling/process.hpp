@@ -9,6 +9,7 @@
 #include "hal/tasks.hpp"
 #include "io/pipe.hpp"
 #include "mem/types.hpp"
+#include "wait_queue.hpp"
 
 namespace Mem
 {
@@ -57,6 +58,7 @@ struct Process : hal::Process {
     u64 live_threads;
     u64 threads_to_clean;
     ProcessState state;
+    WaitQueue<Thread, 3> *wait_queue;
     int status;
 
     /* Process resources */

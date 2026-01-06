@@ -3,13 +3,14 @@
 ; ------------------------------------------------------------
 
 struc Thread
-    .intrusive_data         resb 128
+    .intrusive_data         resb 144
 
     .tid:                   resq 1
     .owner:                 resq 1
     .flags                  resq 1
     .state                  resq 1
     .retval                 resq 1
+    .wait_queue             resq 1
 
     .kernel_stack:          resq 1
     .kernel_stack_bottom:   resq 1
