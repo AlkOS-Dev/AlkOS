@@ -51,6 +51,8 @@ class Shell
     void CmdLs(std::string_view args);
     void CmdCat(std::string_view args);
     void CmdExec(std::string_view args);
+    void CmdExecAsync(std::string_view args);
+    void CmdKill(std::string_view args);
     void CmdPwd();
 
     // -------------------------------------------------------------------------

@@ -53,6 +53,8 @@ std::expected<void, Error> Threads::Free(const Tid tid)
     ASSERT_TRUE(thread->wait_queue->IsEmpty());
     Mem::KDelete(thread->wait_queue);
     threads_.Free(id);
+
+    TRACE_INFO_SCHEDULING("Fully freed thread with TID: %llu", tid);
     return {};
 }
 

@@ -36,7 +36,7 @@ class RoundRobinPolicy : public PolicyImpl
 
     NODISCARD FORCE_INLINE_F u64 GetPreemptTime(Thread *thread)
     {
-        static constexpr u64 kPreemptTimeNs = 20'000'00;  // 20ms
+        static constexpr u64 kPreemptTimeNs = 20'000'000;  // 20ms
 
         ASSERT_NOT_NULL(thread);
 

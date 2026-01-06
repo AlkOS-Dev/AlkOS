@@ -363,8 +363,7 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Pid pid)
         process.value()->threads
     );
     while (!threads.IsEmpty()) {
-        const auto thread = threads.PopFront();
-        const auto result = CommitMurder(thread->tid);
+        const auto result = CommitMurder(threads.Front()->tid);
         ASSERT_TRUE(static_cast<bool>(result));
     }
 

@@ -65,6 +65,8 @@ class Processes
 
         CleanupProcess(processes_.Get(id));
         processes_.Free(id);
+
+        TRACE_INFO_SCHEDULING("Fully freed process with PID: %llu", pid);
         return {};
     }
 
