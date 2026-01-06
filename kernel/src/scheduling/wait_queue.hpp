@@ -1,30 +1,26 @@
 #ifndef KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_
 #define KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_
 
-#include <data_structures/intrusive_linked_list.hpp>
-
 #include <concepts.hpp>
-
+#include <data_structures/intrusive_linked_list.hpp>
+#include <template/special_members.hpp>
 #include "alkos/sys/proc.h"
 
 namespace Sched
 {
 
 template <class T, int kIntrusiveLevel>
-class WaitQueue
+class WaitQueue : template_lib::NoCopy
 {
-    using HookT = data_structures::IntrusiveDoubleListNode<T, kIntrusiveLevel>;
+    using NodeT = data_structures::IntrusiveDoubleListNode<T, kIntrusiveLevel>;
 
     public:
-    // ------------------------------
-    // Class creation
-    // ------------------------------
-
     WaitQueue()
     {
-        wait_list_.PushFront(&sentinel_front);
-        wait_list_.PushBack(&sentinel_back);
+        root_.NodeT::next = &root_;
+        root_.NodeT::prev = &root_;
     }
+
     ~WaitQueue() = default;
 
     // ------------------------------
@@ -33,50 +29,61 @@ class WaitQueue
 
     FAST_CALL void Remove(T *item)
     {
-        item->HookT::prev->HookT::next = item->HookT::next;
-        item->HookT::next->HookT::prev = item->HookT::prev;
+        item->NodeT::prev->NodeT::next = item->NodeT::next;
+        item->NodeT::next->NodeT::prev = item->NodeT::prev;
 
-        item->HookT::next = nullptr;
-        item->HookT::prev = nullptr;
+        item->NodeT::next = nullptr;
+        item->NodeT::prev = nullptr;
     }
 
-    NODISCARD FORCE_INLINE_F bool Contains(T *item) { return wait_list_.Contains(item); }
-
-    NODISCARD FORCE_INLINE_F bool IsEmpty()
+    NODISCARD FORCE_INLINE_F bool Contains(T *item)
     {
-        return wait_list_.Front()->HookT::next == &sentinel_back;
+        T *current = root_.NodeT::next;
+        T *end     = &root_;
+
+        while (current != end) {
+            if (current == item) {
+                return true;
+            }
+            current = current->NodeT::next;
+        }
+        return false;
     }
 
-    FORCE_INLINE_F void EnqueueFirst(T *item)
+    NODISCARD FORCE_INLINE_F bool IsEmpty() const { return root_.NodeT::next == &root_; }
+
+    FORCE_INLINE_F void EnqueueFirst(T *item) { InsertBetween_(&root_, root_.NodeT::next, item); }
+
+    FORCE_INLINE_F void EnqueueLast(T *item) { InsertBetween_(root_.NodeT::prev, &root_, item); }
+
+    NODISCARD FORCE_INLINE_F T *Dequeue()
     {
-        wait_list_.PopFront();
-        wait_list_.PushFront(item);
-        wait_list_.PushFront(&sentinel_front);
+        if (IsEmpty()) {
+            return nullptr;
+        }
+
+        T *item = root_.NodeT::next;
+        Remove(item);
+        return item;
     }
 
-    FORCE_INLINE_F void EnqueueLast(T *item)
+    private:
+    FORCE_INLINE_F void InsertBetween_(T *prev_node, T *next_node, T *item)
     {
-        wait_list_.PopBack();
-        wait_list_.PushBack(item);
-        wait_list_.PushBack(&sentinel_back);
-    }
+        item->NodeT::prev = prev_node;
+        item->NodeT::next = next_node;
 
-    FORCE_INLINE_F NODISCARD T *Dequeue()
-    {
-        wait_list_.PopFront();
-        T *result = wait_list_.PopFront();
-        wait_list_.PushFront(&sentinel_front);
-        return result;
+        prev_node->NodeT::next = item;
+        next_node->NodeT::prev = item;
     }
 
     // ------------------------------
     // Class fields
     // ------------------------------
 
-    T sentinel_front;
-    T sentinel_back;
-    data_structures::IntrusiveDoubleList<T, kIntrusiveLevel> wait_list_;
+    T root_;
 };
+
 }  // namespace Sched
 
 #endif  // KERNEL_SRC_SCHEDULING_WAIT_QUEUE_HPP_

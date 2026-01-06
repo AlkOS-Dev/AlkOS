@@ -329,19 +329,35 @@ void Shell::CmdExec(std::string_view args)
     }
 
     Path programPath = ResolvePath(args);
-    u64 pid;
-    int result = Exec(programPath.CString(), &pid);
+    const u64 pid    = Exec(programPath.CString());
 
-    if (result != 0) {
+    if (pid == 0) {
         const char *err = "exec: invalid filename or not enough resources\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
         return;
     }
 
+    int result = Wait(pid);
+    if (result == std::numeric_limits<int>::max()) {
+        const char *err = "exec: failed during waiting unknown issue\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    if (result != 0) {
+        const char *err = "exec: process failed with status:";
+        char buff[128];
+        snprintf(buff, 128, "%d", result);
+
+        const char *msg = "Process failed with status ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
+        console_.PutChar('\n');
+    }
     char buff[128];
     snprintf(buff, 128, "%llu", pid);
 
-    const char *msg = "Created new process with PID: ";
+    const char *msg = "Correctly processed process with PID: ";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
     console_.PutChar('\n');

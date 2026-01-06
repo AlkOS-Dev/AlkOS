@@ -32,7 +32,7 @@ DEFINE_SYSCALL(wait, kWait, int, u64, pid);
 
 /* Thread, processes */
 DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)
-DEFINE_SYSCALL(exec, kExec, int, const char *, path, u64 *, pid)
+DEFINE_SYSCALL(exec, kExec, u64, const char *, path)
 DEFINE_SYSCALL_VOID(thread_exit, kThreadExit, void *, retval)
 DEFINE_SYSCALL(thread_join, kThreadJoin, int, Thread *, thread, void **, retval)
 DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)

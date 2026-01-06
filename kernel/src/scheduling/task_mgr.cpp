@@ -329,15 +329,17 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
     }
 
     // 3. Wake up all joining threads
-    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProceeding(
         thread.value()->wait_queue
     );
 
-    // 4. Mark for removal
-    thread.value()->state = ThreadState::kTerminated;
-    threads_to_clean_.Push(thread.value()->tid.id);
-    process.value()->threads_to_clean++;
-    process.value()->live_threads--;
+    // 4. Mark for removal if not marked by any of waiting
+    if (thread.value()->state != ThreadState::kTerminated) {
+        thread.value()->state = ThreadState::kTerminated;
+        threads_to_clean_.Push(thread.value()->tid.id);
+        process.value()->threads_to_clean++;
+        process.value()->live_threads--;
+    }
 
     return {};
 }
@@ -367,29 +369,64 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Pid pid)
     }
 
     // 2. Wake up all joining threads
-    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProceeding(
         process.value()->wait_queue
     );
 
-    // 3. Mark target as terminated
-    process.value()->state  = ProcessState::kTerminated;
-    process.value()->status = -2;
-    processes_to_clean_.Push(process.value()->pid.id);
+    // 3. Mark target as terminated if not waited by no one
+    if (process.value()->state != ProcessState::kTerminated) {
+        process.value()->state  = ProcessState::kTerminated;
+        process.value()->status = -2;
+        processes_to_clean_.Push(process.value()->pid.id);
+    }
 
     return {};
 }
 
 void TaskMgr::CommitSuicide()
 {
-    // TODO: replace with urgent action
-    ExitProcess(-1);
+    LocalCoreLock lock{};
 
     const auto process =
         SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
     ASSERT_TRUE(static_cast<bool>(process));
 
-    process.value()->state = ProcessState::kTerminated;
-    processes_to_clean_.Push(process.value()->pid.id);
+    DEBUG_INFO_SCHEDULING("Process with PID: %llu exiting...", process.value()->pid);
+
+    // 1. Kill all running threads except us
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel> threads(
+        process.value()->threads
+    );
+    while (!threads.IsEmpty()) {
+        const auto thread = threads.PopFront();
+
+        if (thread == hardware::GetCoreLocalTcb()) {
+            continue;
+        }
+
+        const auto result = CommitMurder(thread->tid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    }
+    threads.PushFront(hardware::GetCoreLocalTcb());
+
+    // 2. Mark self as waiting
+    process.value()->state  = ProcessState::kWaitingForJoin;
+    process.value()->status = -1;
+
+    // 3. Wake up all joining threads
+    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProceeding(
+        process.value()->wait_queue
+    );
+
+    // 4. Mark to delete if not joined
+    if (process.value()->state != ProcessState::kTerminated) {
+        process.value()->state  = ProcessState::kTerminated;
+        process.value()->status = -1;
+        processes_to_clean_.Push(process.value()->pid.id);
+    }
+
+    // 5. Kill current thread
+    ThreadExit(nullptr);
 }
 
 void TaskMgr::ExitProcess(const int status)
@@ -423,9 +460,7 @@ void TaskMgr::ExitProcess(const int status)
     process.value()->status = status;
 
     // 3. Wake up all joining threads
-    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(
-        process.value()->wait_queue
-    );
+    SchedulingModule::Get().GetScheduler().ReleaseAll(process.value()->wait_queue);
 
     // 4. Kill current thread
     ThreadExit(nullptr);
@@ -497,12 +532,13 @@ void TaskMgr::ThreadExit(void *retval)
     )
         .Remove(tcb);
 
-    // 2. Wake up all joining threads
-    SchedulingModule::Get().GetScheduler().ReleaseAndProcessAllBeforeProcessing(tcb->wait_queue);
+    // 2. Wake up all joining threads after exiting this one
+    SchedulingModule::Get().GetScheduler().ReleaseAll(tcb->wait_queue);
 
     // 3. Update thread state
     ThreadState state{};
     if (tcb->flags.detached || process.value()->live_threads == 1) {
+        TRACE_FATAL_ACPI("SELF CLEAN");
         ASSERT_NOT_ZERO(process.value()->live_threads);
 
         state = ThreadState::kTerminated;
@@ -548,6 +584,7 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
         return {thread.value()->retval};
     }
 
+    ASSERT_EQ(thread.value()->state, ThreadState::kTerminated);
     return std::unexpected(Error::AlreadyJoined);
 }
 
@@ -579,6 +616,7 @@ std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
+    TRACE_FATAL_ACPI("WAITING ON PROC: %llu (%s)", process.value()->pid, process.value()->name);
     if (process.value()->state != ProcessState::kWaitingForJoin ||
         process.value()->state != ProcessState::kTerminated) {
         SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(process.value()->wait_queue);
@@ -591,6 +629,7 @@ std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
         return {process.value()->status};
     }
 
+    ASSERT_EQ(process.value()->state, ProcessState::kTerminated);
     return std::unexpected(Error::AlreadyJoined);
 }
 
@@ -606,7 +645,6 @@ void TaskMgr::ProcessRipperWork()
 {
     while (processes_to_clean_.Size() != 0) {
         LocalCoreLock lock{};
-
         ProcessRipperClean_(processes_to_clean_.Pop());
     }
 }
@@ -616,19 +654,23 @@ void TaskMgr::ThreadRipperClean_(const u32 id)
     const auto thread = SchedulingModule::Get().GetThreads().GetThread(id);
     ASSERT_NOT_NULL(thread);
 
-    DEBUG_INFO_SCHEDULING("ThreadRipper cleaning: %llu", thread.value()->tid);
+    TRACE_FATAL_ACPI("ThreadRipper cleaning: %llu", thread.value()->tid);
 
-    Mem::KFree(thread.value()->kernel_stack);
+    // Mem::KFreeAligned(thread.value()->kernel_stack_bottom);
 
     if (thread.value()->user_stack != nullptr) {
         // TODO: remove
     }
 
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
+    ASSERT_NOT_ZERO(process.value()->threads_to_clean);
     process.value()->threads_to_clean--;
 
     const auto result = SchedulingModule::Get().GetThreads().Free(thread.value()->tid);
     ASSERT_TRUE(static_cast<bool>(result));
+
+    TRACE_FATAL_ACPI("ThreadRipper cleaned: %llu", thread.value()->tid);
+    trace::TraceDumperTask();
 }
 
 void TaskMgr::ProcessRipperClean_(const u32 id)
@@ -638,9 +680,7 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
 
     DEBUG_INFO_SCHEDULING("ProcessRipper cleaning: %llu", process.value()->pid);
 
-    ASSERT_ZERO(process.value()->live_threads);
-
-    while (process.value()->threads_to_clean != 0) {
+    while (process.value()->threads_to_clean != 0 && process.value()->live_threads != 0) {
         SchedulingModule::Get().GetScheduler().Yield();
     }
 
@@ -650,6 +690,8 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
 
     const auto proc_result = SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
     ASSERT_TRUE(static_cast<bool>(proc_result));
+
+    DEBUG_INFO_SCHEDULING("ProcessRipper cleaned: %llu", process.value()->pid);
 }
 }  // namespace Sched
 ;

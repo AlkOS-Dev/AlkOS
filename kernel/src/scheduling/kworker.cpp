@@ -50,10 +50,9 @@ void Sched::ThreadRipperMain()
 
     while (true) {
         BusyWaitHackForScheduler();
+
         SchedulingModule::Get().GetTaskMgr().ThreadRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
-
-        // DEBUG_INFO_SCHEDULING("ACK THREAD RIPPER");
     }
 }
 
@@ -63,10 +62,9 @@ void Sched::ProcessRipperMain()
 
     while (true) {
         BusyWaitHackForScheduler();
+
         SchedulingModule::Get().GetTaskMgr().ProcessRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
-
-        // DEBUG_INFO_SCHEDULING("ACK PROCESS RIPPER");
     }
 }
 

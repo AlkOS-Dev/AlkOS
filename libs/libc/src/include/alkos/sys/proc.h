@@ -14,11 +14,11 @@ FAST_CALL void Exit(int status) { __platform_proc_exit(status); }
 
 FAST_CALL void Abort() { __platform_proc_abort(); }
 
-FAST_CALL int Exec(const char *path, u64 *pid) { return __platform_exec(path, pid); }
+FAST_CALL u64 Exec(const char *path) { return __platform_exec(path); }
 
-FAST_CALL int kill(u64 pid) { return __platform_kill(pid); }
+FAST_CALL int Kill(u64 pid) { return __platform_kill(pid); }
 
-FAST_CALL int wait(u64 pid) { return __platform_wait(pid); }
+FAST_CALL int Wait(const u64 pid) { return __platform_wait(pid); }
 
 END_DECL_C
 

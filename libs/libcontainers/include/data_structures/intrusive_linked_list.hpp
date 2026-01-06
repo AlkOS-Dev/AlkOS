@@ -116,8 +116,10 @@ class FronIntrusiveDoubleListView : template_lib::NoCopy
         ASSERT_TRUE(Contains(item));
 
         if (head_ == item) {
-            head_              = item->NodeT::next;
-            head_->NodeT::prev = nullptr;
+            head_ = item->NodeT::next;
+            if (head_) {
+                head_->NodeT::prev = nullptr;
+            }
 
             item->NodeT::next = nullptr;
             item->NodeT::prev = nullptr;
@@ -187,7 +189,7 @@ class FronIntrusiveDoubleListView : template_lib::NoCopy
     // Class fields
     // ------------------------------
 
-    T *&head_{};
+    T *&head_;
 };
 
 template <class T, int kIntrusiveLevel>
@@ -341,6 +343,10 @@ class IntrusiveDoubleList : template_lib::NoCopy
         if (head_ == tail_) {
             ASSERT_EQ(head_, item);
             head_ = tail_ = nullptr;
+
+            item->NodeT::next = nullptr;
+            item->NodeT::prev = nullptr;
+            return;
         }
 
         if (head_ == item) {

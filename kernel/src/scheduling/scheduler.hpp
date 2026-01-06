@@ -39,7 +39,9 @@ class Scheduler
 
     void BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
 
-    void ReleaseAndProcessAllBeforeProcessing(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+    void ReleaseAndProcessAllBeforeProceeding(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+
+    void ReleaseAll(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
 
     void RemoveThread(Thread *thread);
 
@@ -84,6 +86,12 @@ class Scheduler
     // ------------------------------
 
     protected:
+    void DebugTraceContextSwitch_(Thread *thread);
+
+    void DebugTraceOmitYield_();
+
+    void DebugTraceWaitQueue_(const Thread *popped_thread);
+
     void PrepareNextTimerInterruptBeforeSwitchUnguarded_(Thread *next_thread);
 
     NODISCARD FORCE_INLINE_F const Policy &GetPolicy_(const ThreadFlags flags) const
