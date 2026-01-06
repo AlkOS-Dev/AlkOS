@@ -7,6 +7,8 @@ struct Pid;
 
 void KWorkerMain();
 void TraceDumperMain();
+void ThreadRipperMain();
+void ProcessRipperMain();
 void FdHierarchyDumperMain();
 void StdoutTracerMain(Pid pid);
 }  // namespace Sched

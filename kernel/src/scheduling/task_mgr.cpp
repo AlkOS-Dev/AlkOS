@@ -28,9 +28,17 @@ void TaskMgr::InitializeMultitasking()
     SchedulingModule::Get().GetScheduler().InstallInterruptHandler();
 
     // Spawn trace dumper
-    const auto result =
+    auto result =
         SpawnKernelProcess("kworker-trace-dumper", {}, PrepareKThreadTask(TraceDumperMain));
     R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn trace dumper process...");
+
+    // Spawn thread ripper
+    result = SpawnKernelProcess("kworker-thread-ripper", {}, PrepareKThreadTask(ThreadRipperMain));
+    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn thread ripper...");
+
+    result =
+        SpawnKernelProcess("kworker-process-ripper", {}, PrepareKThreadTask(ProcessRipperMain));
+    R_ASSERT_TRUE(static_cast<bool>(result), "Failed to spawn process ripper...");
 
     // Spawn 3 Kernel Workers
     static constexpr size_t kNumKWorkers = 3;
@@ -193,6 +201,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(
 
     hal::InitializeThreadStack(&thread.value()->kernel_stack, task);
 
+    process->live_threads++;
     data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel>(
         process->threads
     )
@@ -331,6 +340,8 @@ std::expected<void, Error> TaskMgr::CommitMurder(const Tid tid)
     // 3. Mark for removal
     thread.value()->state = ThreadState::kTerminated;
     threads_to_clean_.Push(thread.value()->tid.id);
+    process.value()->threads_to_clean++;
+    process.value()->live_threads--;
 
     return {};
 }
@@ -417,6 +428,11 @@ std::expected<void, Error> TaskMgr::DetachThread(const Tid tid)
         thread.value()->state = ThreadState::kTerminated;
         threads_to_clean_.Push(thread.value()->tid.id);
 
+        auto process = SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
+        ASSERT_TRUE(static_cast<bool>(process));
+        process.value()->threads_to_clean++;
+        process.value()->live_threads--;
+
         return {};
     }
 
@@ -445,6 +461,8 @@ void TaskMgr::ThreadExit(void *retval)
     if (tcb->flags.detached) {
         state = ThreadState::kTerminated;
         threads_to_clean_.Push(tcb->tid.id);
+        process.value()->threads_to_clean++;
+        process.value()->live_threads--;
     } else {
         state = ThreadState::kWaitingForJoin;
     }
@@ -481,6 +499,13 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
         thread.value()->state = ThreadState::kTerminated;
         threads_to_clean_.Push(thread.value()->tid.id);
 
+        const auto process =
+            SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
+        ASSERT_TRUE(static_cast<bool>(process));
+
+        process.value()->threads_to_clean++;
+        process.value()->live_threads--;
+
         return {thread.value()->retval};
     }
 
@@ -505,4 +530,58 @@ std::expected<Pid, Error> TaskMgr::Exec(const char *path)
     VideoModule::Get().GetWindowManager().SetFocus(pid);
     return pid;
 }
+
+void TaskMgr::ThreadRipperWork()
+{
+    while (threads_to_clean_.Size() != 0) {
+        LocalCoreLock lock{};
+        ThreadRipperClean_(threads_to_clean_.Pop());
+    }
+}
+
+void TaskMgr::ProcessRipperWork()
+{
+    while (processes_to_clean_.Size() != 0) {
+        LocalCoreLock lock{};
+
+        ProcessRipperClean_(processes_to_clean_.Pop());
+    }
+}
+
+void TaskMgr::ThreadRipperClean_(const u32 id)
+{
+    const auto thread = SchedulingModule::Get().GetThreads().GetThread(id);
+    ASSERT_NOT_NULL(thread);
+
+    Mem::KFree(thread.value()->kernel_stack);
+
+    if (thread.value()->user_stack != nullptr) {
+        // TODO: remove
+    }
+
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
+    process.value()->threads_to_clean--;
+
+    const auto result = SchedulingModule::Get().GetThreads().Free(thread.value()->tid);
+    ASSERT_TRUE(static_cast<bool>(result));
+}
+
+void TaskMgr::ProcessRipperClean_(const u32 id)
+{
+    const auto process = SchedulingModule::Get().GetProcesses().GetProcess(id);
+    ASSERT_TRUE(static_cast<bool>(process));
+
+    ASSERT_ZERO(process.value()->live_threads);
+
+    if (process.value()->threads_to_clean != 0) {
+        SchedulingModule::Get().GetScheduler().Yield();
+    }
+
+    // 1. Clean Pipes
+
+    // 2. Clean FdDescriptor table
+
+    // 3. Remove address space
+}
 }  // namespace Sched
+;

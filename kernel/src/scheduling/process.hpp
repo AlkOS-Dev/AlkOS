@@ -54,6 +54,8 @@ struct Process : hal::Process {
     Pid pid;
     ProcessFlags flags;
     Thread *threads;
+    u64 live_threads;
+    u64 threads_to_clean;
     ProcessState state;
 
     /* Process resources */

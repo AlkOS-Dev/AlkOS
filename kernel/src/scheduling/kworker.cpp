@@ -39,6 +39,26 @@ void Sched::TraceDumperMain()
     }
 }
 
+void Sched::ThreadRipperMain()
+{
+    TRACE_INFO_SCHEDULING("Created new ThreadRipper!");
+
+    while (true) {
+        SchedulingModule::Get().GetTaskMgr().ThreadRipperWork();
+        SchedulingModule::Get().GetScheduler().Yield();
+    }
+}
+
+void Sched::ProcessRipperMain()
+{
+    TRACE_INFO_SCHEDULING("Created new ProcessRipper!");
+
+    while (true) {
+        SchedulingModule::Get().GetTaskMgr().ProcessRipperWork();
+        SchedulingModule::Get().GetScheduler().Yield();
+    }
+}
+
 void Sched::StdoutTracerMain(Pid pid)
 {
     TRACE_INFO_SCHEDULING("Created new StdoutTracer!");

@@ -29,16 +29,20 @@ class Threads
 
     std::expected<Thread *, Error> PrepareThread();
 
-    NODISCARD FORCE_INLINE_F std::expected<Thread *, Error> GetThread(const Tid tid)
+    NODISCARD FORCE_INLINE_F std::expected<Thread *, Error> GetThread(const u32 id)
     {
-        const u16 id = tid.id;
-        auto ptr     = threads_.Get(id);
+        auto ptr = threads_.Get(id);
 
         if (ptr == nullptr) {
             return std::unexpected(Error::ThreadNotFound);
         }
 
         return ptr;
+    }
+
+    NODISCARD FORCE_INLINE_F std::expected<Thread *, Error> GetThread(const Tid tid)
+    {
+        return GetThread(tid.id);
     }
 
     FORCE_INLINE_F std::expected<void, Error> Free(const Tid tid)

@@ -83,10 +83,21 @@ class TaskMgr
     NODISCARD std::expected<Pid, Error> Exec(const char *path);
 
     // ------------------------------
+    // Cleanups
+    // ------------------------------
+
+    void ThreadRipperWork();
+
+    void ProcessRipperWork();
+
+    // ------------------------------
     // Private methods
     // ------------------------------
 
     protected:
+    void ThreadRipperClean_(u32 id);
+    void ProcessRipperClean_(u32 id);
+
     // ------------------------------
     // Class fields
     // ------------------------------
