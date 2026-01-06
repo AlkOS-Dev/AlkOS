@@ -53,7 +53,7 @@ void Sched::ThreadRipperMain()
         SchedulingModule::Get().GetTaskMgr().ThreadRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
 
-        DEBUG_INFO_SCHEDULING("ACK THREAD RIPPER");
+        // DEBUG_INFO_SCHEDULING("ACK THREAD RIPPER");
     }
 }
 
@@ -66,7 +66,7 @@ void Sched::ProcessRipperMain()
         SchedulingModule::Get().GetTaskMgr().ProcessRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
 
-        DEBUG_INFO_SCHEDULING("ACK PROCESS RIPPER");
+        // DEBUG_INFO_SCHEDULING("ACK PROCESS RIPPER");
     }
 }
 

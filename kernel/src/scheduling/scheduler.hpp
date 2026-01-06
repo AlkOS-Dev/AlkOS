@@ -165,7 +165,7 @@ class Scheduler
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
     PriorityQueuePolicy policy1_{};  // kDrivers_PQ_P1
     PriorityQueuePolicy policy2_{};  // kUrgentTasks_PQ_P2
-    MLFQPolicy policy3_{};           // kNormalTasks_MLFQ_P3
+    RoundRobinPolicy policy3_{};     // kNormalTasks_MLFQ_P3
     RoundRobinPolicy policy4_{};     // kBackgroundTasks_RR_P4
 
     // Abstraction

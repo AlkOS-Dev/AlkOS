@@ -30,7 +30,7 @@ Scheduler::Scheduler()
     policies_[static_cast<size_t>(SchedulingPolicy::kUrgentTasks_PQ_P2)] =
         PreparePolicy<PriorityQueuePolicy>(&policy2_);
     policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_MLFQ_P3)] =
-        PreparePolicy<MLFQPolicy>(&policy3_);
+        PreparePolicy<RoundRobinPolicy>(&policy3_);
     policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
         PreparePolicy<RoundRobinPolicy>(&policy4_);
 }
