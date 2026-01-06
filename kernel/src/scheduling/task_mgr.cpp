@@ -504,13 +504,9 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
     auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
     RET_UNEXPECTED_IF_ERR(thread);
 
-    while (thread.value()->state != ThreadState::kWaitingForJoin ||
-           thread.value()->state != ThreadState::kTerminated) {
-        static constexpr u64 kWaitTime = 50'000'000;  // 50 ms
-
-        SchedulingModule::Get().GetScheduler().NanoSleepUntil(
-            TimingModule::Get().GetSystemTime().ReadLifeTimeNs() + kWaitTime
-        );
+    if (thread.value()->state != ThreadState::kWaitingForJoin ||
+        thread.value()->state != ThreadState::kTerminated) {
+        SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(thread.value()->wait_queue);
     }
 
     if (thread.value()->state == ThreadState::kWaitingForJoin) {
@@ -558,9 +554,19 @@ std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
-    while (process.value()->state != ProcessState::kWaitingForJoin ||
-           process.value()->state != ProcessState::kTerminated) {
+    if (process.value()->state != ProcessState::kWaitingForJoin ||
+        process.value()->state != ProcessState::kTerminated) {
+        SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(process.value()->wait_queue);
     }
+
+    if (process.value()->state == ProcessState::kWaitingForJoin) {
+        process.value()->state = ProcessState::kTerminated;
+        processes_to_clean_.Push(process.value()->pid.id);
+
+        return {process.value()->status};
+    }
+
+    return std::unexpected(Error::AlreadyJoined);
 }
 
 void TaskMgr::ThreadRipperWork()

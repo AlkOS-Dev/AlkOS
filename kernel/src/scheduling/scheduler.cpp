@@ -35,6 +35,30 @@ Scheduler::Scheduler()
         PreparePolicy<RoundRobinPolicy>(&policy4_);
 }
 
+void Scheduler::BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq)
+{
+    ASSERT_EQ(hardware::GetCoreLocalTcb(), ThreadState::kRunning);
+    ASSERT_NOT_NULL(wq);
+
+    LocalCoreLock core_lock{};
+    wq->EnqueueLast(hardware::GetCoreLocalTcb());
+    OnThreadYield_(hardware::GetCoreLocalTcb());
+    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kBlockedOnWaitQueue));
+}
+
+void Scheduler::ReleaseAndProcessAllBeforeProcessing(
+    WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq
+)
+{
+    ASSERT_EQ(hardware::GetCoreLocalTcb(), ThreadState::kRunning);
+    ASSERT_NOT_NULL(wq);
+
+    LocalCoreLock core_lock{};
+    while (!wq->IsEmpty()) {
+        auto thread = wq->Dequeue();
+    }
+}
+
 void Scheduler::RemoveThread(Thread *thread)
 {
     ASSERT_NOT_NULL(thread);

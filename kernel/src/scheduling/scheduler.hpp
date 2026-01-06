@@ -16,6 +16,7 @@
 #include "policies/mlfq_policy.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
+#include "wait_queue.hpp"
 
 namespace Sched
 {
@@ -35,6 +36,10 @@ class Scheduler
     // ------------------------------
     // Class interaction
     // ------------------------------
+
+    void BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+
+    void ReleaseAndProcessAllBeforeProcessing(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
 
     void RemoveThread(Thread *thread);
 

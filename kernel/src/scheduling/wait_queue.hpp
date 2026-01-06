@@ -31,23 +31,28 @@ class WaitQueue
     // Class interaction
     // ------------------------------
 
-    NODISCARD bool IsEmpty() { return wait_list_.Front()->HookT::next == &sentinel_back; }
+    NODISCARD FORCE_INLINE_F bool Contains(T *item) { return wait_list_.Contains(item); }
 
-    void EnqueueFirst(T *item)
+    NODISCARD FORCE_INLINE_F bool IsEmpty()
+    {
+        return wait_list_.Front()->HookT::next == &sentinel_back;
+    }
+
+    FORCE_INLINE_F void EnqueueFirst(T *item)
     {
         wait_list_.PopFront();
         wait_list_.PushFront(item);
         wait_list_.PushFront(&sentinel_front);
     }
 
-    void EnqueueLast(T *item)
+    FORCE_INLINE_F void EnqueueLast(T *item)
     {
         wait_list_.PopBack();
         wait_list_.PushBack(item);
         wait_list_.PushBack(&sentinel_back);
     }
 
-    NODISCARD T *Dequeue()
+    FORCE_INLINE_F NODISCARD T *Dequeue()
     {
         wait_list_.PopFront();
         T *result = wait_list_.PopFront();
