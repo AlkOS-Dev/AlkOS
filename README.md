@@ -76,6 +76,22 @@ To attach GDB to a running QEMU instance:
 ./scripts/install/attach_to_qemu_gdb.bash build/alkos/sysroot/boot/alkos.kernel
 ```
 
+### Tests
+
+To run UT:
+
+Build AlkOS in test mode
+```bash
+./scripts/actions/build_and_run_tests.bash
+```
+
+Run tests
+```
+./scripts/actions/run_tests.bash
+```
+
+```
+
 ### 📄 License
 
 MIT License. See [LICENSE](LICENSE).
