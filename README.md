@@ -40,10 +40,9 @@ Generates CMake configuration and feature flags.
 Compiles the kernel, userspace apps, generates the ISO, and launches QEMU.
 ```bash
 ./scripts/alkos_cli.bash --run
-
-> **Note:** If something doesn't work: append the --verbose flag to see the exact error
-
 ```
+
+> **Note:** If something doesn't work during the quickstart: append the --verbose flag to see the exact error
 
 ### 🛠 CLI Tooling
 
