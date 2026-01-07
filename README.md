@@ -45,7 +45,7 @@ Compiles the kernel, userspace apps, generates the ISO, and launches QEMU.
 ```
 
 > [!TIP]
-> If something doesn't work during the quickstart: append the --verbose flag to see the exact error
+> If something doesn't work during the quickstart: append the `--verbose` flag to see the exact error
 
 ### 🛠 CLI Tooling
 
