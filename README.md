@@ -1,4 +1,8 @@
 # AlkOS
+[![License](https://img.shields.io/github/license/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/blob/main/LICENSE)
+[![Stars](https://img.shields.io/github/stars/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/stargazers)
+[![Issues](https://img.shields.io/github/issues/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/issues)
+[![Contributors](https://img.shields.io/github/contributors/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/graphs/contributors)
 
 A modern operating system kernel written in **C++23**. Built on a **Hardware Abstraction Layer (HAL)** to separate core logic from architecture specifics. Currently implementing **x86_64**.
 
