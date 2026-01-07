@@ -9,7 +9,7 @@ A modern kernel written in **C++23**. Can run doom.
 ### ⚡ Capabilities
 
 *   **Architecture:** Portable HAL-based core (x86_64 implemented), Higher Half, SMP-ready.
-*   **Memory:** PMM (Buddy/Bitmap), VMM (Recursive mapping, VMA), Heap (Slab).
+*   **Memory:** PMM (Buddy/Bitmap), VMM (Higher Half Direct Map, VMA), Heap (Slab).
 *   **Scheduling:** Preemptive Multitasking via MLFQ and Round Robin policies.
 *   **Userspace:** Ring 3 isolation, ELF64 loader, Syscall interface (`int 0x80`).
 *   **Filesystem:** VFS abstraction with FAT12/16/32 and Initrd support.
