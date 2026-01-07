@@ -4,19 +4,17 @@
 [![Issues](https://img.shields.io/github/issues/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/issues)
 [![Contributors](https://img.shields.io/github/contributors/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/graphs/contributors)
 
-A modern operating system kernel written in **C++23**. Built on a **Hardware Abstraction Layer (HAL)** to separate core logic from architecture specifics. Currently implementing **x86_64**.
-
-Features a custom C/C++ standard library, preemptive multitasking, and a windowing system.
+A modern kernel written in **C++23**, Currently targeting **x86_64**, it features a custom standard library, preemptive multitasking, and a compositing window manager.
 
 ### ⚡ Capabilities
 
-*   **Core:** x86_64, Higher Half Kernel, SMP-ready architecture.
-*   **Memory:** PMM (Buddy/Bitmap), VMM (Recursive mapping, VMA/mmap-style), Heap (Slab Allocator).
-*   **Scheduling:** Preemptive Multitasking with MLFQ (Multi-Level Feedback Queue) and Round Robin policies.
+*   **Architecture:** Portable HAL-based core (x86_64 implemented), Higher Half, SMP-ready.
+*   **Memory:** PMM (Buddy/Bitmap), VMM (Recursive mapping, VMA), Heap (Slab).
+*   **Scheduling:** Preemptive Multitasking via MLFQ and Round Robin policies.
 *   **Userspace:** Ring 3 isolation, ELF64 loader, Syscall interface (`int 0x80`).
-*   **Filesystem:** Virtual File System (VFS) with FAT12/16/32 and Initrd support.
+*   **Filesystem:** VFS abstraction with FAT12/16/32 and Initrd support.
 *   **Graphics:** Linear Framebuffer, Compositor/Window Manager, Double Buffering.
-*   **Hardware:** ACPI (via uACPI), IO/Local APIC, HPET, PCI, PS/2, Serial (16550).
+*   **Hardware:** ACPI (via uACPI), IO/Local APIC, HPET, PCI, PS/2, Serial.
 *   **Runtime:** Custom `libc` and `libcpp` implementation (no upstream deps).
 *   **Apps:** Shell, GUI Demo, **Doom**.
 
