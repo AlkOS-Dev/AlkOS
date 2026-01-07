@@ -8,6 +8,18 @@
 #include "alkos/sys/fd.h"
 #include "alkos/sys/power.h"
 
+static u64 ParsePid(const std::string_view str)
+{
+    unsigned long long res = 0;
+    for (const char c : str) {
+        if (c < '0' || c > '9') {
+            return 0;
+        }
+        res = res * 10 + (c - '0');
+    }
+    return res;
+}
+
 namespace System
 {
 
@@ -96,10 +108,14 @@ void Shell::ProcessCommand()
         CmdExec(cmd.substr(2));
     } else if (cmd == "exec") {
         CmdExec(args);
+    } else if (cmd == "exec_async") {
+        CmdExecAsync(args);
     } else if (cmd == "shutdown") {
         Shutdown();
     } else if (cmd == "reboot") {
         Reboot();
+    } else if (cmd == "kill") {
+        CmdKill(args);
     } else {
         console_.Write(
             std::span<const byte>(reinterpret_cast<const byte *>("Unknown command: "), 17)
@@ -329,15 +345,107 @@ void Shell::CmdExec(std::string_view args)
     }
 
     Path programPath = ResolvePath(args);
-    int result       = Exec(programPath.CString(), nullptr);
+    const u64 pid    = Exec(programPath.CString());
 
-    if (result != 0) {
+    if (pid == 0) {
         const char *err = "exec: invalid filename or not enough resources\n";
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
     }
 
-    const char *msg = "Successfully executed program!\n";
+    int result = Wait(pid);
+    if (result == std::numeric_limits<int>::max()) {
+        const char *err = "exec: failed during waiting unknown issue\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    if (result != 0) {
+        const char *err = "exec: process failed with status:";
+        char buff[128];
+        snprintf(buff, 128, "%d", result);
+
+        const char *msg = "Process failed with status ";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
+        console_.PutChar('\n');
+    }
+    char buff[128];
+    snprintf(buff, 128, "%llu", pid);
+
+    const char *msg = "Correctly processed process with PID: ";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
+    console_.PutChar('\n');
 }
 
+void Shell::CmdExecAsync(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    if (args.empty()) {
+        const char *err = "exec: missing file operand\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    Path programPath = ResolvePath(args);
+    const u64 pid    = Exec(programPath.CString());
+
+    if (pid == 0) {
+        const char *err = "exec: invalid filename or not enough resources\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    char buff[128];
+    snprintf(buff, 128, "%llu", pid);
+
+    const char *msg = "Started process in background. PID: ";
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
+    console_.PutChar('\n');
+}
+
+void Shell::CmdKill(std::string_view args)
+{
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
+    if (args.empty()) {
+        const char *err = "kill: missing PID operand\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    const u64 pid = ParsePid(args);
+
+    if (pid == 0) {
+        const char *err = "kill: PID must be unsigned integer\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    const int result = Kill(pid);
+
+    if (result) {
+        const char *err = "kill: failed to kill process...\n";
+        console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+        return;
+    }
+
+    const char *err = "Successfully killed the process...\n";
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(err), strlen(err)));
+}
 }  // namespace System

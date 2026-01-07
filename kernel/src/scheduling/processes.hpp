@@ -33,16 +33,20 @@ class Processes
 
     void CleanupProcess(Process *process);
 
-    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
+    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const u32 id)
     {
-        const u16 id = pid.id;
-        auto ptr     = processes_.Get(id);
+        auto ptr = processes_.Get(id);
 
         if (ptr == nullptr) {
             return std::unexpected(Error::ProcessNotFound);
         }
 
         return ptr;
+    }
+
+    NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetProcess(const Pid pid)
+    {
+        return GetProcess(pid.id);
     }
 
     NODISCARD FORCE_INLINE_F std::expected<Process *, Error> GetCurrentProcess()
@@ -61,6 +65,8 @@ class Processes
 
         CleanupProcess(processes_.Get(id));
         processes_.Free(id);
+
+        TRACE_INFO_SCHEDULING("Fully freed process with PID: %llu", pid);
         return {};
     }
 

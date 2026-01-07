@@ -38,8 +38,18 @@ std::expected<Sched::Process *, Sched::Error> Sched::Processes::PrepareProcess()
     // Initialize standard I/O pipes
     // ----------------------------------------------------------
 
+    // Allocate wait queue
+    const auto wait_queue = Mem::KNew<WaitQueue<Thread, kWaitQueueIntrusiveLevel>>();
+    if (!wait_queue) {
+        return std::unexpected(Error::OutOfMemory);
+    }
+    template_lib::BatchedScopeGuard wait_queue_guard(dismiss, [&]() {
+        Mem::KDelete(wait_queue.value());
+    });
+    process->wait_queue = wait_queue.value();
+
     // Create the process's file descriptor table
-    auto fd_table_ptr = Mem::KNew<Fs::FdTable>();
+    const auto fd_table_ptr = Mem::KNew<Fs::FdTable>();
     RET_UNEXPECTED_IF(!fd_table_ptr, Error::OutOfMemory);
 
     auto *fd_table = process->fd_table = *fd_table_ptr;
@@ -80,10 +90,12 @@ void Sched::Processes::CleanupProcess(Process *process)
 {
     ASSERT_NOT_NULL(process);
 
-    VideoModule::Get().GetWindowManager().ReleaseFocus(process->pid);
-
     auto fd_table = process->fd_table;
     ASSERT_NOT_NULL(fd_table);
 
     Mem::KDelete(fd_table);
+
+    ASSERT_NOT_NULL(process->wait_queue);
+    ASSERT_TRUE(process->wait_queue->IsEmpty());
+    Mem::KDelete(process->wait_queue);
 }

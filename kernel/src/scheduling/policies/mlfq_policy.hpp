@@ -166,6 +166,8 @@ class MLFQPolicy : public PolicyImpl
         }
     }
 
+    void RemoveTask(Thread *thread) { queues_[thread->flags.priority].Delete(thread); }
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -192,8 +194,8 @@ class MLFQPolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    data_structures::IntrusiveRBTree<Thread, u64, 1> queues_[kNumLevels];
-    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 1>::HookT;
+    data_structures::IntrusiveRBTree<Thread, u64, kSchedulingIntrusiveLevel> queues_[kNumLevels];
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, kSchedulingIntrusiveLevel>::HookT;
 
     u64 last_boost_time_ns_{0};
     u64 min_vruntime_{0};

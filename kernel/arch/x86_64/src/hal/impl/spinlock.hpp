@@ -35,33 +35,33 @@ class alignas(kCacheLineSizeBytes) Spinlock : public SpinlockAPI
 
     FORCE_INLINE_F void Lock()
     {
-        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
-            LockDebug_();
-            return;
-        }
-
-        while (__builtin_expect(__sync_lock_test_and_set(&lock_, 1), 0)) {
-            Pause_();
-        }
+        // if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
+        //     LockDebug_();
+        //     return;
+        // }
+        //
+        // while (__builtin_expect(__sync_lock_test_and_set(&lock_, 1), 0)) {
+        //     Pause_();
+        // }
     }
 
     FORCE_INLINE_F void Unlock()
     {
-        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
-            UnlockDebug_();
-            return;
-        }
-
-        __sync_lock_release(&lock_);
+        // if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
+        //     UnlockDebug_();
+        //     return;
+        // }
+        //
+        // __sync_lock_release(&lock_);
     }
 
     FORCE_INLINE_F NODISCARD bool TryLock()
     {
-        if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
-            return TryLockDebug_();
-        }
-
-        return !__sync_lock_test_and_set(&lock_, 1);
+        // if constexpr (FeatureEnabled<FeatureFlag::kDebugSpinlock>) {
+        //     return TryLockDebug_();
+        // }
+        //
+        // return !__sync_lock_test_and_set(&lock_, 1);
     }
 
     FORCE_INLINE_F NODISCARD bool IsLocked() const { return lock_ != 0; }

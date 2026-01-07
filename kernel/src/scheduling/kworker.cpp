@@ -24,7 +24,6 @@ void Sched::KWorkerMain()
             hal::Noop();
             hal::Noop();
         }
-
         SchedulingModule::Get().GetScheduler().Yield();
     }
 }
@@ -35,6 +34,26 @@ void Sched::TraceDumperMain()
 
     while (true) {
         trace::TraceDumperTask();
+        SchedulingModule::Get().GetScheduler().Yield();
+    }
+}
+
+void Sched::ThreadRipperMain()
+{
+    TRACE_INFO_SCHEDULING("Created new ThreadRipper!");
+
+    while (true) {
+        SchedulingModule::Get().GetTaskMgr().ThreadRipperWork();
+        SchedulingModule::Get().GetScheduler().Yield();
+    }
+}
+
+void Sched::ProcessRipperMain()
+{
+    TRACE_INFO_SCHEDULING("Created new ProcessRipper!");
+
+    while (true) {
+        SchedulingModule::Get().GetTaskMgr().ProcessRipperWork();
         SchedulingModule::Get().GetScheduler().Yield();
     }
 }

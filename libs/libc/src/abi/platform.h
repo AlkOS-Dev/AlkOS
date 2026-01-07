@@ -36,7 +36,7 @@ SYSCALL_NAME(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info)
 
 /* Thread, processes */
 SYSCALL_NAME(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg);
-SYSCALL_NAME(exec, kExec, int, const char *, path, u64 *, pid);
+SYSCALL_NAME(exec, kExec, u64, const char *, path);
 SYSCALL_VOID_NAME(thread_exit, kThreadExit, void *, retval);
 SYSCALL_NAME(thread_join, kThreadJoin, int, Thread *, thread, void **, retval);
 SYSCALL_NAME(thread_detach, kThreadDetach, int, Thread *, thread);
@@ -44,6 +44,8 @@ SYSCALL_VOID_NAME(proc_exit, kProcExit, int, status);
 SYSCALL_VOID_NAME(proc_abort, kProcAbort);
 SYSCALL_VOID_NAME(nanosleep, kNanoSleep, u64, time_ns);
 SYSCALL_VOID_NAME(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
+SYSCALL_NAME(kill, kKill, int, u64, pid);
+SYSCALL_NAME(wait, kWait, int, u64, pid);
 
 // Video
 SYSCALL_VOID_NAME(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info);

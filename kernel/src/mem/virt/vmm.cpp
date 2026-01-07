@@ -69,7 +69,7 @@ expected<VPtr<AddressSpace>, MemError> Vmm::CreateUserAddrSpace()
     auto res = as->AddArea(*kernel_sync_vma);
     RET_UNEXPECTED_IF_ERR(res);
 
-    as_guard.dismiss();
+    as_guard.Dismiss();
     return as;
 }
 
@@ -197,7 +197,7 @@ expected<VPtr<void>, MemError> Vmm::MapUserBackbuffer(
     auto add_res = as->AddArea(vma);
     RET_UNEXPECTED_IF_ERR(add_res);
 
-    vma_guard.dismiss();
+    vma_guard.Dismiss();
 
     return gap_res->start;
 }
