@@ -90,8 +90,6 @@ Run tests
 ./scripts/actions/run_tests.bash
 ```
 
-```
-
 ### 📄 License
 
 MIT License. See [LICENSE](LICENSE).
