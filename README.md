@@ -4,7 +4,7 @@
 [![Issues](https://img.shields.io/github/issues/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/issues)
 [![Contributors](https://img.shields.io/github/contributors/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/graphs/contributors)
 
-A modern kernel written in **C++23**.
+A modern kernel written in **C++23**. Can run doom.
 
 ### ⚡ Capabilities
 
