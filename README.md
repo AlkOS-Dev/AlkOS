@@ -23,10 +23,12 @@ A modern kernel written in **C++23**, Currently targeting **x86_64**, it feature
 **Prerequisites:** Linux (Arch/Ubuntu recommended) or Docker.
 
 **1. Setup Environment**
-This installs dependencies and builds the custom GCC 15.1.0 cross-toolchain.
+Builds the custom GCC 15.1.0 cross-toolchain. System dependency installation is automated for **Arch** and **Ubuntu**.
+
 ```bash
 ./scripts/alkos_cli.bash --install all --verbose
 ```
+> **Note:** On other distributions, install prerequisites manually (see `scripts/env/`), then run with `--install toolchain`.
 
 **2. Configure Build**
 Generates CMake configuration and feature flags.
