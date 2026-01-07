@@ -28,7 +28,9 @@ Builds the custom GCC 15.1.0 cross-toolchain. System dependency installation is 
 ```bash
 ./scripts/alkos_cli.bash --install all --verbose
 ```
-> **Note:** On other distributions, install prerequisites manually (see `scripts/env/`), then run with `--install toolchain`.
+
+> [!NOTE]
+> On other distributions, install prerequisites manually (see `scripts/env/`), then run with `--install toolchain`.
 
 **2. Configure Build**
 Generates CMake configuration and feature flags.
@@ -42,7 +44,8 @@ Compiles the kernel, userspace apps, generates the ISO, and launches QEMU.
 ./scripts/alkos_cli.bash --run
 ```
 
-> **Note:** If something doesn't work during the quickstart: append the --verbose flag to see the exact error
+> [!TIP]
+> If something doesn't work during the quickstart: append the --verbose flag to see the exact error
 
 ### 🛠 CLI Tooling
 
