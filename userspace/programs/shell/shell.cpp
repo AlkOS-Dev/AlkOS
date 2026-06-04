@@ -131,17 +131,19 @@ void Shell::CmdHelp()
 {
     const char *msg =
         "Available commands:\n"
-        "  help        - Show this message\n"
-        "  clear       - Clear the screen\n"
-        "  echo <text> - Print arguments\n"
-        "  pwd         - Print working directory\n"
-        "  cd <path>   - Change directory\n"
-        "  ls [path]   - List directory contents\n"
-        "  cat <file>  - Display file contents\n"
-        "  exec <file> - Execute a user program\n"
-        "  ./<file>    - Execute a user program\n"
-        "  shutdown    - Shutdown the system\n"
-        "  reboot      - Reboot the system\n";
+        "  help              - Show this message\n"
+        "  clear             - Clear the screen\n"
+        "  echo <text>       - Print arguments\n"
+        "  pwd               - Print working directory\n"
+        "  cd <path>         - Change directory\n"
+        "  ls [path]         - List directory contents\n"
+        "  cat <file>        - Display file contents\n"
+        "  exec <file>       - Execute a program and wait for it to finish\n"
+        "  ./<file>          - Execute a program and wait for it to finish\n"
+        "  exec_async <file> - Execute a program in background (no wait)\n"
+        "  kill <pid>        - Kill a running process by PID\n"
+        "  shutdown          - Shutdown the system\n"
+        "  reboot            - Reboot the system\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 

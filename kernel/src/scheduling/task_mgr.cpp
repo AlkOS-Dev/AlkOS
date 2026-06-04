@@ -246,7 +246,13 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
         ASSERT_TRUE(static_cast<bool>(result));
     });
 
-    // TODO: KILL ALL EXISTING THREADS FROM THIS PROCESS
+    data_structures::FronIntrusiveDoubleListView<Thread, kProcessListIntrusiveLevel> threads(
+        process.value()->threads
+    );
+    while (!threads.IsEmpty()) {
+        const auto result = CommitMurder(threads.Front()->tid);
+        ASSERT_TRUE(static_cast<bool>(result));
+    }
 
     const size_t path_size = strlen(path);
     const auto mem         = Mem::KMalloc(path_size);
@@ -548,7 +554,6 @@ void TaskMgr::ThreadExit(void *retval)
     // 3. Update thread state
     ThreadState state{};
     if (tcb->flags.detached || process.value()->live_threads == 1) {
-        TRACE_FATAL_ACPI("SELF CLEAN");
         ASSERT_NOT_ZERO(process.value()->live_threads);
 
         state = ThreadState::kTerminated;
@@ -575,7 +580,7 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
     auto thread = SchedulingModule::Get().GetThreads().GetThread(tid);
     RET_UNEXPECTED_IF_ERR(thread);
 
-    if (thread.value()->state != ThreadState::kWaitingForJoin ||
+    if (thread.value()->state != ThreadState::kWaitingForJoin &&
         thread.value()->state != ThreadState::kTerminated) {
         SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(thread.value()->wait_queue);
     }
@@ -626,8 +631,7 @@ std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
-    TRACE_FATAL_ACPI("WAITING ON PROC: %llu (%s)", process.value()->pid, process.value()->name);
-    if (process.value()->state != ProcessState::kWaitingForJoin ||
+    if (process.value()->state != ProcessState::kWaitingForJoin &&
         process.value()->state != ProcessState::kTerminated) {
         SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(process.value()->wait_queue);
     }
@@ -690,7 +694,7 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
 
     DEBUG_INFO_SCHEDULING("ProcessRipper cleaning: %llu", process.value()->pid);
 
-    while (process.value()->threads_to_clean != 0 && process.value()->live_threads != 0) {
+    while (process.value()->threads_to_clean != 0 || process.value()->live_threads != 0) {
         SchedulingModule::Get().GetScheduler().Yield();
     }
 
