@@ -30,9 +30,80 @@ Scheduler::Scheduler()
     policies_[static_cast<size_t>(SchedulingPolicy::kUrgentTasks_PQ_P2)] =
         PreparePolicy<PriorityQueuePolicy>(&policy2_);
     policies_[static_cast<size_t>(SchedulingPolicy::kNormalTasks_MLFQ_P3)] =
-        PreparePolicy<MLFQPolicy>(&policy3_);
+        PreparePolicy<RoundRobinPolicy>(&policy3_);
     policies_[static_cast<size_t>(SchedulingPolicy::kBackgroundTasks_RR_P4)] =
         PreparePolicy<RoundRobinPolicy>(&policy4_);
+}
+
+void Scheduler::BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq)
+{
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+    ASSERT_NOT_NULL(wq);
+
+    LocalCoreLock core_lock{};
+
+    if constexpr (FeatureEnabled<FeatureFlag::kDebugTraces>) {
+        DebugTraceWaitQueue_(nullptr);
+    }
+
+    wq->EnqueueLast(hardware::GetCoreLocalTcb());
+    OnThreadYield_(hardware::GetCoreLocalTcb());
+    hal::ContextSwitch(ScheduleAndUpdateThreads(true, ThreadState::kBlockedOnWaitQueue));
+}
+
+void Scheduler::ReleaseAndProcessAllBeforeProceeding(
+    WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq
+)
+{
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+    ASSERT_NOT_NULL(wq);
+
+    LocalCoreLock core_lock{};
+
+    while (!wq->IsEmpty()) {
+        /* Wake up all waiting processes before proceeding */
+
+        auto thread = wq->Dequeue();
+
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugTraces>) {
+            DebugTraceWaitQueue_(thread);
+        }
+
+        hal::ContextSwitch(ScheduleAndUpdateThreads(false, ThreadState::kReady, thread));
+    }
+}
+
+void Scheduler::ReleaseAll(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq)
+{
+    ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+    ASSERT_NOT_NULL(wq);
+
+    LocalCoreLock core_lock{};
+
+    while (!wq->IsEmpty()) {
+        auto thread   = wq->Dequeue();
+        thread->state = ThreadState::kReady;
+        AddReadyThread(thread);
+    }
+}
+
+void Scheduler::RemoveThread(Thread *thread)
+{
+    ASSERT_NOT_NULL(thread);
+    ASSERT(
+        thread->state == ThreadState::kSleeping || thread->state == ThreadState::kReady ||
+        thread->state == ThreadState::kBlockedOnWaitQueue
+    );
+
+    if (thread->state == ThreadState::kSleeping) {
+        ASSERT_TRUE(sleep_queue_.Contains(thread));
+        sleep_queue_.Delete(thread);
+    } else if (thread->state == ThreadState::kReady) {
+        RemoveFromPolicy_(thread);
+    } else if (thread->state == ThreadState::kBlockedOnWaitQueue) {
+        using wq = WaitQueue<Thread, kWaitQueueIntrusiveLevel>;
+        wq::Remove(thread);
+    }
 }
 
 void Scheduler::InstallInterruptHandler()
@@ -74,7 +145,9 @@ Thread *Scheduler::Schedule()
     return nullptr;
 }
 
-Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadState thread_state)
+Thread *Scheduler::ScheduleAndUpdateThreads(
+    const bool preempt, const ThreadState thread_state, Thread *forced_next_thread
+)
 {
     u64 min_time_ns = std::numeric_limits<u64>::max();
 
@@ -90,7 +163,23 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     // 3. Scheduling new thread if needed and update structs
     Thread *thread{};
     u64 preempt_time_ns = GetPreemptTime_(hardware::GetCoreLocalTcb());
-    if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
+    if (forced_next_thread) {
+        /* Forced picked next thread */
+
+        forced_next_thread->state = ThreadState::kReady;
+        preempt_time_ns           = GetPreemptTime_(forced_next_thread);
+        forced_next_thread->state = ThreadState::kRunning;
+
+        ASSERT_NOT_NULL(hardware::GetCoreLocalTcb());
+        ASSERT_EQ(hardware::GetCoreLocalTcb()->state, ThreadState::kRunning);
+        hardware::GetCoreLocalTcb()->state = thread_state;
+
+        if (thread_state == ThreadState::kReady) {
+            AddReadyThread(hardware::GetCoreLocalTcb());
+        }
+
+        thread = forced_next_thread;
+    } else if (preempt || force_preempt || ShouldPreempt_(preempt_time_ns)) {
         auto next_thread = Schedule();
 
         if (!next_thread && thread_state == ThreadState::kReady) {
@@ -130,6 +219,10 @@ Thread *Scheduler::ScheduleAndUpdateThreads(const bool preempt, const ThreadStat
     ASSERT_GT(min_time_ns, kMinDelta);
     SetupNextTimeEvent_(min_time_ns);
 
+    if (FeatureEnabled<FeatureFlag::kDebugTraces> && thread) {
+        DebugTraceContextSwitch_(thread);
+    }
+
     return thread;
 }
 
@@ -142,6 +235,10 @@ void Scheduler::Yield()
 
     const auto thread = ScheduleAndUpdateThreads(true, ThreadState::kReady);
     if (thread == nullptr) {
+        if constexpr (FeatureEnabled<FeatureFlag::kDebugTraces>) {
+            DebugTraceOmitYield_();
+        }
+
         return;
     }
 
@@ -214,6 +311,57 @@ void Scheduler::NanoSleepUntil(const u64 systime_ns)
     }
 }
 
+void Scheduler::DebugTraceContextSwitch_(Thread *thread)
+{
+    ASSERT_NOT_NULL(thread);
+
+    const auto curr_process =
+        SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
+    ASSERT_TRUE(curr_process);
+
+    const auto next_process = SchedulingModule::Get().GetProcesses().GetProcess(thread->owner);
+    ASSERT_TRUE(next_process);
+
+    DEBUG_FREQ_INFO_SCHEDULING(
+        "Switching context from TID: %llu (%s) to TID: %llu (%s)", hardware::GetCoreLocalTcb()->tid,
+        curr_process.value()->name, thread->tid, next_process.value()->name
+    );
+}
+
+void Scheduler::DebugTraceOmitYield_()
+{
+    const auto process =
+        SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
+    ASSERT_TRUE(process);
+
+    DEBUG_FREQ_INFO_SCHEDULING(
+        "Omitting yield for TID: %llu (%s)", hardware::GetCoreLocalTcb()->tid, process.value()->name
+    );
+}
+
+void Scheduler::DebugTraceWaitQueue_(const Thread *popped_thread)
+{
+    if (popped_thread) {
+        const auto process =
+            SchedulingModule::Get().GetProcesses().GetProcess(popped_thread->owner);
+        ASSERT_TRUE(process);
+
+        DEBUG_FREQ_INFO_SCHEDULING(
+            "Woken up thread from wait queue with TID: %llu (%s)", popped_thread->tid,
+            process.value()->name
+        );
+    } else {
+        const auto process =
+            SchedulingModule::Get().GetProcesses().GetProcess(hardware::GetCoreLocalTcb()->owner);
+        ASSERT_TRUE(process);
+
+        DEBUG_FREQ_INFO_SCHEDULING(
+            "Placing thread with TID: %llu (%s) on waiting queue", hardware::GetCoreLocalTcb()->tid,
+            process.value()->name
+        );
+    }
+}
+
 void Scheduler::SetupNextTimeEvent_(const u64 time_ns)
 {
     ASSERT_TRUE(HardwareModule::Get().GetEventClockRegistry().IsSelectedPicked());
@@ -221,6 +369,7 @@ void Scheduler::SetupNextTimeEvent_(const u64 time_ns)
     auto &event_clock = HardwareModule::Get().GetEventClockRegistry().GetSelected();
     ASSERT_TRUE(event_clock.flags.IsCoreLocal, "Scheduler supports only core local event clocks");
 
+    event_clock.cbs.set_periodic(&event_clock);
     event_clock.cbs.next_event(&event_clock, time_ns);
 }
 

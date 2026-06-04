@@ -78,6 +78,13 @@ feature_flags:
     min: 0
     max: 3
 
+  - name: scheduling_trace_level
+    description: Level of Scheduling module tracing
+    type: integer
+    default: 2
+    min: 0
+    max: 3
+
   - name: ramdisk
     description: Load root filesystem from ramdisk instead of block device.
     default: true

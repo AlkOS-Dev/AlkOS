@@ -9,27 +9,43 @@
 
 namespace Syscall
 {
-FAST_CALL void SysExit(int status) {}
+FAST_CALL void SysExit(const int status)
+{
+    SchedulingModule::Get().GetTaskMgr().ExitProcess(status);
+}
 
-FAST_CALL void SysAbort() {}
+FAST_CALL void SysAbort() { SchedulingModule::Get().GetTaskMgr().CommitSuicide(); }
 
-FAST_CALL int SysExec(const char *path, u64 *pid)
+FAST_CALL int SysKill(const u64 pid)
+{
+    const auto result = SchedulingModule::Get().GetTaskMgr().CommitMurder(
+        *reinterpret_cast<const Sched::Pid *>(&pid)
+    );
+    return result ? 0 : -1;
+}
+
+FAST_CALL int SysWait(const u64 pid)
+{
+    const auto result = SchedulingModule::Get().GetTaskMgr().JoinProcess(
+        *reinterpret_cast<const Sched::Pid *>(&pid)
+    );
+    return result ? result.value() : std::numeric_limits<int>::max();
+}
+
+FAST_CALL u64 SysExec(const char *path)
 {
     if (path == nullptr) {
-        return -1;
+        return 0;
     }
 
     const auto result = SchedulingModule::Get().GetTaskMgr().Exec(path);
 
     if (!result) {
-        return -1;
+        return 0;
     }
 
-    if (pid != nullptr) {
-        *pid = *reinterpret_cast<const u64 *>(&result.value());
-    }
-
-    return 0;
+    const auto pid = result.value();
+    return *reinterpret_cast<const u64 *>(&pid);
 }
 
 FAST_CALL void SysFocusTransfer(Sched::Pid target_child)

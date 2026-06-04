@@ -34,14 +34,15 @@ static_assert(sizeof(IntrusiveRbNode<u64, u64, 0>) == 5 * 8);
 template <class T, class KeyT, int kIntrusiveLevel>
     requires(
         std::derived_from<T, IntrusiveRbNode<T, KeyT, kIntrusiveLevel>> and
-        std::derived_from<T, IntrusiveListNode<T>>
+        std::derived_from<T, IntrusiveListNode<T, kIntrusiveLevel>>
     )
 class IntrusiveRBTree : template_lib::NoCopy
 {
     using Color = typename IntrusiveRbNode<T, KeyT, kIntrusiveLevel>::Color;
 
     public:
-    using HookT = IntrusiveRbNode<T, KeyT, kIntrusiveLevel>;
+    using HookT     = IntrusiveRbNode<T, KeyT, kIntrusiveLevel>;
+    using ListHookT = IntrusiveListNode<T, kIntrusiveLevel>;
 
     // ------------------------------
     // Class creation
@@ -62,17 +63,17 @@ class IntrusiveRBTree : template_lib::NoCopy
     {
         ASSERT_NOT_NULL(item);
 
-        item->HookT::left   = nullptr;
-        item->HookT::right  = nullptr;
-        item->HookT::parent = nullptr;
-        item->HookT::color  = Color::kRed;
-        item->next          = nullptr;
+        item->HookT::left     = nullptr;
+        item->HookT::right    = nullptr;
+        item->HookT::parent   = nullptr;
+        item->HookT::color    = Color::kRed;
+        item->ListHookT::next = nullptr;
 
         // 1. Check if key already exists
         T *existing = Find(item->HookT::key);
         if (existing != nullptr) {
-            item->next     = existing->next;
-            existing->next = item;
+            item->ListHookT::next     = existing->ListHookT::next;
+            existing->ListHookT::next = item;
             return;
         }
 
@@ -112,6 +113,7 @@ class IntrusiveRBTree : template_lib::NoCopy
     void Delete(T *item)
     {
         ASSERT_NOT_NULL(item);
+        ASSERT_TRUE(Contains(item));
 
         // Case A: The item is NOT part of the RB tree structure,
 
@@ -122,19 +124,19 @@ class IntrusiveRBTree : template_lib::NoCopy
 
         if (node_in_tree != item) {
             T *prev = node_in_tree;
-            while (prev->next != nullptr && prev->next != item) {
-                prev = prev->next;
+            while (prev->ListHookT::next != nullptr && prev->ListHookT::next != item) {
+                prev = prev->ListHookT::next;
             }
 
-            if (prev->next == item) {
-                prev->next = item->next;
-                item->next = nullptr;
+            if (prev->ListHookT::next == item) {
+                prev->ListHookT::next = item->ListHookT::next;
+                item->ListHookT::next = nullptr;
             }
             return;
         }
 
         // Case B: item IS the node in the RB Tree.
-        if (item->next != nullptr) {
+        if (item->ListHookT::next != nullptr) {
             ReplaceWithNext_(item);
             return;
         }
@@ -166,7 +168,7 @@ class IntrusiveRBTree : template_lib::NoCopy
             if (curr == item) {
                 return true;
             }
-            curr = curr->next;
+            curr = curr->ListHookT::next;
         }
         return false;
     }
@@ -230,7 +232,7 @@ class IntrusiveRBTree : template_lib::NoCopy
 
     void ReplaceWithNext_(T *item)
     {
-        T *replacement = item->next;
+        T *replacement = item->ListHookT::next;
         ASSERT_NOT_NULL(replacement);
 
         // Copy RB properties
@@ -265,10 +267,10 @@ class IntrusiveRBTree : template_lib::NoCopy
         }
 
         // Clear item's pointers
-        item->HookT::parent = nullptr;
-        item->HookT::left   = nullptr;
-        item->HookT::right  = nullptr;
-        item->next          = nullptr;
+        item->HookT::parent   = nullptr;
+        item->HookT::left     = nullptr;
+        item->HookT::right    = nullptr;
+        item->ListHookT::next = nullptr;
     }
 
     void RotateLeft_(T *x)

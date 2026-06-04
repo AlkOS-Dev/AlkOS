@@ -68,7 +68,7 @@ void HandleUnresolvableFault(const PageFaultData &pfd, const hal::ExceptionData 
     if (hal::IsInterruptFromUserSpace(data)) {
         auto pid = hardware::GetRunningPid();
         TRACE_FATAL_GENERAL(
-            "Process %llu Segmentation Fault at %p (RIP=%p)", pid.id, pfd.faulting_ptr,
+            "Process %llu Segmentation Fault at %p (RIP=%p)", pid, pfd.faulting_ptr,
             data.isr_stack_frame.rip
         );
 

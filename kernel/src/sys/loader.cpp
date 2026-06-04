@@ -181,7 +181,7 @@ expected<Mem::VPtr<void>, LoadError> ElfLoader::Load(const vfs::Path &path, Addr
         }
     }
 
-    vma_cleanup_guard.dismiss();
+    vma_cleanup_guard.Dismiss();
     u64 entry_point = header.entry;
     return Mem::UptrToPtr<void>(entry_point);
 }

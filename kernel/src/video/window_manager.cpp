@@ -55,7 +55,7 @@ std::expected<void *, Mem::MemError> WindowManager::CreateSession()
         "CreateSession: Switched to session %zu. Active is now %zu", session_id, active_session_idx_
     );
 
-    page_guard.dismiss();
+    page_guard.Dismiss();
     return virt;
 }
 

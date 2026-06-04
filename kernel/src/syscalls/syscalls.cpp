@@ -44,6 +44,8 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kThreadDetach, SysThreadDetach>();
     table.RegisterHandler<kNanoSleep, SysNanoSleep>();
     table.RegisterHandler<kNanoSleepUntil, SysNanoSleepUntil>();
+    table.RegisterHandler<kKill, SysKill>();
+    table.RegisterHandler<kWait, SysWait>();
 
     // Video
     table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();

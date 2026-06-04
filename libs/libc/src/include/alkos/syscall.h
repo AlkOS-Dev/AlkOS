@@ -43,6 +43,8 @@ enum SyscallNumber {
     kNanoSleep,
     kNanoSleepUntil,
     kExec,
+    kKill,
+    kWait,
 
     /* Video Syscalls */
     kSysCreateGraphicSession,

@@ -9,8 +9,8 @@
 
 namespace data_structures
 {
-template <class T, size_t kSize>
-    requires std::derived_from<T, IntrusiveListNode<T>>
+template <class T, size_t kSize, int kIntrusiveLevel>
+    requires std::derived_from<T, IntrusiveDoubleListNode<T, kIntrusiveLevel>>
 class BitmapPriorityQueue
 {
     public:
@@ -85,6 +85,12 @@ class BitmapPriorityQueue
         queues_[priority].PushBack(item);
     }
 
+    FORCE_INLINE_F void Remove(T *item, const size_t priority)
+    {
+        ASSERT_LT(priority, kSize);
+        queues_[priority].Remove(item);
+    }
+
     NODISCARD FORCE_INLINE_F bool IsEmpty() const { return bits_.IsAllFalse(); }
 
     // ------------------------------
@@ -97,7 +103,7 @@ class BitmapPriorityQueue
     // ------------------------------
 
     BitArray<kSize> bits_{};
-    IntrusiveList<T> queues_[kSize]{};
+    IntrusiveDoubleList<T, kIntrusiveLevel> queues_[kSize]{};
 };
 
 }  // namespace data_structures

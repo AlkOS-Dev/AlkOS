@@ -15,6 +15,8 @@ MTEST(AssertSnprintfTest) { ASSERT_EQ(2 + 2, 3 + 3, "Values used in the test: %d
 // KernelTaskSwitchTest
 // ------------------------------
 
+using NodeT = data_structures::IntrusiveListNode<Sched::Thread, Sched::kSchedulingIntrusiveLevel>;
+
 static void Task0()
 {
     while (true) {
@@ -32,8 +34,8 @@ static void Task0()
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
         tcb->state       = Sched::ThreadState::kReady;
-        tcb->next->state = Sched::ThreadState::kRunning;
-        hal::ContextSwitch(tcb->next);
+        tcb->NodeT::next->state = Sched::ThreadState::kRunning;
+        hal::ContextSwitch(tcb->NodeT::next);
     }
 }
 
@@ -56,8 +58,8 @@ static void Task1()
         trace::DumpAllBuffersOnFailure();
 
         tcb->state       = Sched::ThreadState::kReady;
-        tcb->next->state = Sched::ThreadState::kRunning;
-        hal::ContextSwitch(tcb->next);
+        tcb->NodeT::next->state = Sched::ThreadState::kRunning;
+        hal::ContextSwitch(tcb->NodeT::next);
     }
 }
 
@@ -84,8 +86,8 @@ MTEST(KernelTaskSwitchTest)
     const auto t1 = SchedulingModule::Get().GetThreads().GetThread(tid1);
     ASSERT_TRUE(static_cast<bool>(t1));
 
-    t0.value()->next = t1.value();
-    t1.value()->next = t0.value();
+    t0.value()->NodeT::next = t1.value();
+    t1.value()->NodeT::next = t0.value();
 
     HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
 

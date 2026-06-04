@@ -16,6 +16,7 @@
 #include "policies/mlfq_policy.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
+#include "wait_queue.hpp"
 
 namespace Sched
 {
@@ -36,13 +37,23 @@ class Scheduler
     // Class interaction
     // ------------------------------
 
+    void BlockOnWaitQueue(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+
+    void ReleaseAndProcessAllBeforeProceeding(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+
+    void ReleaseAll(WaitQueue<Thread, kWaitQueueIntrusiveLevel> *wq);
+
+    void RemoveThread(Thread *thread);
+
     void InstallInterruptHandler();
 
     void AddReadyThread(Thread *thread);
 
     NODISCARD Thread *Schedule();
 
-    NODISCARD Thread *ScheduleAndUpdateThreads(bool preempt, ThreadState thread_state);
+    NODISCARD Thread *ScheduleAndUpdateThreads(
+        bool preempt, ThreadState thread_state, Thread *next_thread = nullptr
+    );
 
     void Yield();
 
@@ -75,6 +86,12 @@ class Scheduler
     // ------------------------------
 
     protected:
+    void DebugTraceContextSwitch_(Thread *thread);
+
+    void DebugTraceOmitYield_();
+
+    void DebugTraceWaitQueue_(const Thread *popped_thread);
+
     void PrepareNextTimerInterruptBeforeSwitchUnguarded_(Thread *next_thread);
 
     NODISCARD FORCE_INLINE_F const Policy &GetPolicy_(const ThreadFlags flags) const
@@ -94,6 +111,12 @@ class Scheduler
     {
         const auto &policy = GetPolicy_(thread);
         return policy.cbs.get_preempt_time(policy.self, thread);
+    }
+
+    FORCE_INLINE_F void RemoveFromPolicy_(Thread *thread) const
+    {
+        const auto &policy = GetPolicy_(thread);
+        policy.cbs.remove_task(policy.self, thread);
     }
 
     void SetupNextTimeEvent_(u64 time_ns);
@@ -140,8 +163,8 @@ class Scheduler
     // ------------------------------
 
     // Sleeping queue
-    data_structures::IntrusiveRBTree<Thread, u64, 0> sleep_queue_{};
-    using HookT = data_structures::IntrusiveRBTree<Thread, u64, 0>::HookT;
+    data_structures::IntrusiveRBTree<Thread, u64, kSleepingIntrusiveLevel> sleep_queue_{};
+    using HookT = data_structures::IntrusiveRBTree<Thread, u64, kSleepingIntrusiveLevel>::HookT;
 
     // Locking
     hal::Spinlock spinlock_{};
@@ -150,7 +173,7 @@ class Scheduler
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
     PriorityQueuePolicy policy1_{};  // kDrivers_PQ_P1
     PriorityQueuePolicy policy2_{};  // kUrgentTasks_PQ_P2
-    MLFQPolicy policy3_{};           // kNormalTasks_MLFQ_P3
+    RoundRobinPolicy policy3_{};     // kNormalTasks_MLFQ_P3
     RoundRobinPolicy policy4_{};     // kBackgroundTasks_RR_P4
 
     // Abstraction

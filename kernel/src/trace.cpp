@@ -344,6 +344,10 @@ static struct TraceFramework {
         rv[static_cast<size_t>(TraceModule::kTime)] =
             static_cast<TraceLevel>(FeatureValue<FeatureFlag::kTimeTraceLevel>);
 
+        /* scheduling module */
+        rv[static_cast<size_t>(TraceModule::kScheduling)] =
+            static_cast<TraceLevel>(FeatureValue<FeatureFlag::kSchedulingTraceLevel>);
+
         return rv;
     }();
 

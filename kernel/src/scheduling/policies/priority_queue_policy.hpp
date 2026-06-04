@@ -64,6 +64,8 @@ class PriorityQueuePolicy : public PolicyImpl
         return flags->priority >= kMaxPriority;
     }
 
+    void RemoveTask(Thread *thread) { priority_queue_.Remove(thread, thread->flags.priority); }
+
     // ------------------------------
     // Private methods
     // ------------------------------
@@ -73,7 +75,8 @@ class PriorityQueuePolicy : public PolicyImpl
     // Class fields
     // ------------------------------
 
-    data_structures::BitmapPriorityQueue<Thread, kMaxPriority> priority_queue_{};
+    data_structures::BitmapPriorityQueue<Thread, kMaxPriority, kSchedulingIntrusiveLevel>
+        priority_queue_{};
 };
 
 }  // namespace Sched
