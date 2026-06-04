@@ -9,6 +9,7 @@
 #include "hal/tasks.hpp"
 #include "io/pipe.hpp"
 #include "mem/types.hpp"
+#include "wait_queue.hpp"
 
 namespace Mem
 {
@@ -23,6 +24,8 @@ class FdTable;
 
 namespace Sched
 {
+struct Thread;
+
 struct PACK Pid {
     u16 id;
     u64 count : 48;
@@ -36,6 +39,14 @@ struct PACK ProcessFlags {
 };
 static_assert(sizeof(ProcessFlags) == 1);
 
+enum class ProcessState : u64 {
+    kReady = 0,
+    kWaitingForJoin,
+    kTerminated,
+    kLast,
+};
+static_assert(sizeof(ProcessState) == sizeof(u64));
+
 struct Process : hal::Process {
     static constexpr size_t kMaxNameLength = vfs::kMaxComponentSize;
 
@@ -43,6 +54,12 @@ struct Process : hal::Process {
     char name[kMaxNameLength];
     Pid pid;
     ProcessFlags flags;
+    Thread *threads;
+    u64 live_threads;
+    u64 threads_to_clean;
+    ProcessState state;
+    WaitQueue<Thread, 3> *wait_queue;
+    int status;
 
     /* Process resources */
     Mem::VPtr<Mem::AddressSpace> address_space;

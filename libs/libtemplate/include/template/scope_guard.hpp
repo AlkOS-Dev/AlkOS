@@ -36,7 +36,7 @@ class ScopeGuard
     // Class interaction
     // ------------------------------
 
-    void dismiss() { dismissed_ = true; }
+    void Dismiss() { dismissed_ = true; }
 
     // ------------------------------
     // Class Fields

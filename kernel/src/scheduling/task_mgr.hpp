@@ -37,7 +37,7 @@ class TaskMgr
     );
 
     NODISCARD std::expected<Thread *, Error> SpawnThread(
-        const Process *process, ThreadFlags flags, const Task &task
+        Process *process, ThreadFlags flags, const Task &task
     );
 
     NODISCARD std::expected<std::tuple<Pid, Tid>, Error> SpawnKernelProcess(
@@ -60,11 +60,13 @@ class TaskMgr
     // Syscalls
     // ------------------------------
 
+    NODISCARD std::expected<void, Error> CommitMurder(Tid tid);
+
     NODISCARD std::expected<void, Error> CommitMurder(Pid pid);
 
     void CommitSuicide();
 
-    NODISCARD std::expected<void, Error> ExitProcess();
+    void ExitProcess(int status);
 
     NODISCARD std::expected<Tid, Error> CreateThread(ThreadFlags flags, const Task &task);
 
@@ -80,16 +82,30 @@ class TaskMgr
 
     NODISCARD std::expected<Pid, Error> Exec(const char *path);
 
+    NODISCARD std::expected<int, Error> JoinProcess(Pid pid);
+
+    // ------------------------------
+    // Cleanups
+    // ------------------------------
+
+    void ThreadRipperWork();
+
+    void ProcessRipperWork();
+
     // ------------------------------
     // Private methods
     // ------------------------------
 
     protected:
+    void ThreadRipperClean_(u32 id);
+    void ProcessRipperClean_(u32 id);
+
     // ------------------------------
     // Class fields
     // ------------------------------
 
     AtomicArraySingleTypeStaticStack<u32, kMaxThreads> threads_to_clean_{};
+    AtomicArraySingleTypeStaticStack<u32, kMaxProcesses> processes_to_clean_{};
 };
 }  // namespace Sched
 

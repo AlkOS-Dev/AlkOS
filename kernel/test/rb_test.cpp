@@ -8,7 +8,7 @@
 namespace data_structures::test
 {
 
-struct TestNode : IntrusiveRbNode<TestNode, int, 0>, IntrusiveListNode<TestNode> {
+struct TestNode : IntrusiveRbNode<TestNode, int, 0>, IntrusiveListNode<TestNode, 0> {
     TestNode *tracking_next = nullptr;
     TestNode *tracking_prev = nullptr;
 

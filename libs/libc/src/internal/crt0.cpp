@@ -56,14 +56,7 @@ USED NO_RET SECTION(.text.start) void _start()
     const int res = main();  // Call the user program's main function
     FinalizeRuntime();       // Finalize runtime and global destructors
 
-    // TODO : Handle program exit properly
-    __platform_proc_exit(res);  // Not implemented
-    while (true) {
-        size_t i = 0;
-        for (i = 0; i < 1'000'000;) {
-            ++i;
-        }
-    }
+    __platform_proc_exit(res);
     __builtin_unreachable();
 }
 
