@@ -30,8 +30,13 @@ enum SyscallNumber {
     kSysSeek,
     kSysDup,
     kSysDupTo,
+
+    /* File system syscalls */
     kSysReadDirectory,
     kSysFileInfo,
+    kSysCreateDirectory,
+    kSysDeleteFile,
+    kSysMoveFile,
 
     /* Threads, processes */
     kThreadCreate,
@@ -45,10 +50,14 @@ enum SyscallNumber {
     kExec,
     kKill,
     kWait,
+    kGetHeapAddr,
 
     /* Video Syscalls */
     kSysCreateGraphicSession,
     kSysBlit,
+
+    /* Input Syscalls */
+    kSysGetKeyState,
 
     /* Power Management Syscalls */
     kSysPower,

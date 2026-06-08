@@ -23,7 +23,8 @@ struc Thread
     .num_interrupts         resq 1
     .num_syscalls           resq 1
     .num_context_switches   resq 1
-    .padding0               resb 8
+    .avg_burst_ns           resq 1
+    .last_burst_ns          resq 1
 
     .fs_base                resq 1
     .gs_base                resq 1

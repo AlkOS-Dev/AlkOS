@@ -2,6 +2,8 @@
 
 #include <hal/debug_terminal.hpp>
 #include <hal/scheduling.hpp>
+#include <mem/virt/vmm.hpp>
+#include <modules/memory.hpp>
 
 #include "fs/vfs/path.hpp"
 #include "hardware/core_local.hpp"
@@ -77,7 +79,7 @@ void Elf64EntryPoint(const Pid pid, const char *path)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     ASSERT_TRUE(static_cast<bool>(process));  // TODO: CAN IT BE MISSING HERE????
 
-    auto &as = process.value()->address_space;
+    auto as = process.value()->address_space;
     ASSERT_NOT_NULL(as);
 
     const auto entry_res = System::ElfLoader::Load(vfs::Path(path), *as);
@@ -92,6 +94,16 @@ void Elf64EntryPoint(const Pid pid, const char *path)
     }
 
     const auto entry = static_cast<void *>(entry_res.value());
+
+    auto &vmm           = MemoryModule::Get().GetVmm();
+    const auto heap_res = vmm.AllocUserHeap(as, kHeapSize);
+    if (!heap_res) {
+        DEBUG_WARN_SCHEDULING(
+            "Failed to execute ELF64 for process %llu. Failed on heap allocation.", pid
+        );
+        SchedulingModule::Get().GetTaskMgr().CommitSuicide();
+    }
+    process.value()->heap_start = *heap_res;
     hal::JumpToUserSpace(entry, nullptr);
 }
 

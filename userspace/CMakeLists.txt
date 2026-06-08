@@ -47,6 +47,10 @@ set(CMAKE_CXX_LINK_EXECUTABLE
     "${CMAKE_CXX_COMPILER} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> ${CRT0_OBJ_PATH} ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
 )
 
+set(CMAKE_C_LINK_EXECUTABLE
+    "${CMAKE_C_COMPILER} <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> ${CRT0_OBJ_PATH} ${CRTI_OBJ_PATH} ${CRTBEGIN_OBJ_PATH} <OBJECTS> ${CRTEND_OBJ_PATH} ${CRTN_OBJ_PATH} -o <TARGET> <LINK_LIBRARIES>"
+)
+
 ################################################################################
 # Userspace Standard Library
 ################################################################################

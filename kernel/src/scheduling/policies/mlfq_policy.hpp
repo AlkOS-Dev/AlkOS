@@ -2,7 +2,7 @@
 #define KERNEL_SRC_SCHEDULING_POLICIES_MLFQ_POLICY_HPP_
 
 #include <assert.h>
-#include <data_structures/maps/intrusive_rb_tree.hpp>
+#include <data_structures/priority_queues/bitmap_pq.hpp>
 #include <defines.hpp>
 
 #include "scheduling/policy.hpp"
@@ -20,12 +20,7 @@ namespace Sched
  * - Tasks that use their full time slice are demoted to lower priority
  * - Tasks that yield early (interactive) may be boosted to higher priority
  * - Prevents starvation through periodic priority boosting
- * - Within each queue, schedules by minimum vruntime for fairness
- *
- * Vruntime scaling:
- * - Used to adjust how quickly a thread's vruntime increases based on its priority level
- * - Higher priority threads have slower vruntime growth, favoring responsiveness
- * - Lower priority threads have faster vruntime growth, ensuring CPU time
+ * - Within each queue, schedules in FIFO order
  *
  * Priority Boosting:
  * - All threads are boosted to highest priority level every kBoostIntervalNs to prevent starvation
@@ -33,20 +28,11 @@ namespace Sched
 class MLFQPolicy : public PolicyImpl
 {
     public:
-    static constexpr u8 kNumLevels        = 4;
-    static constexpr u64 kBaseTimeSliceNs = 5'000'000;    // 5ms
-    static constexpr u64 kBoostIntervalNs = 150'000'000;  // 150ms
-    static constexpr u64 kVruntimeScale   = 1024;
-    static constexpr std::array<u64, static_cast<size_t>(UserPriority::kLast)> kWeights =
-        [] constexpr {
-            static constexpr size_t kNumPriorities  = static_cast<size_t>(UserPriority::kLast);
-            std::array<u64, kNumPriorities> weights = {};
-            weights[0]                              = kVruntimeScale;
-            for (u8 level = 1; level < kNumPriorities; ++level) {
-                weights[level] = weights[level - 1] * 1.25;
-            }
-            return weights;
-        }();
+    // MLFQ configuration constants
+    static constexpr u8 kNumLevels        = 3;
+    static constexpr u8 kMaxPriority      = static_cast<u8>(UserPriority::kLast);
+    static constexpr u64 kBaseTimeSliceNs = 10'000'000;   // 10ms
+    static constexpr u64 kBoostIntervalNs = 100'000'000;  // 100ms
 
     // ------------------------------
     // Class creation
@@ -75,10 +61,8 @@ class MLFQPolicy : public PolicyImpl
         ASSERT_NOT_NULL(thread);
         ASSERT_EQ(thread->state, ThreadState::kReady);
 
-        thread->HookT::key = min_vruntime_;
-
-        thread->flags.priority = 0;
-        queues_[0].Insert(thread);
+        const auto weight = static_cast<u64>(thread->flags.user_priority);
+        queues_[thread->flags.priority].Insert(thread, weight);
     }
 
     NODISCARD u64 GetPreemptTime(Thread *thread)
@@ -107,15 +91,15 @@ class MLFQPolicy : public PolicyImpl
         ASSERT_NOT_NULL(first);
         ASSERT_NOT_NULL(second);
 
-        const u8 first_level  = first->flags.priority;
-        const u8 second_level = second->flags.priority;
-
-        if (first_level != second_level) {
-            return first_level < second_level;
+        if (first->flags.priority == second->flags.priority) {
+            // Same level, use user priority as tiebreaker
+            const auto first_weight  = static_cast<u64>(first->flags.user_priority);
+            const auto second_weight = static_cast<u64>(second->flags.user_priority);
+            return first_weight < second_weight;
         }
 
-        // Compare by vruntime if same level
-        return first->HookT::key < second->HookT::key;
+        // Lower level number = higher priority
+        return first->flags.priority < second->flags.priority;
     }
 
     NODISCARD bool ValidateThreadFlags(const ThreadFlags *) { return false; }
@@ -124,28 +108,20 @@ class MLFQPolicy : public PolicyImpl
     {
         ASSERT_NOT_NULL(thread);
 
+        // Boost thread by moving up one level for interactive behavior
         if (thread->flags.priority > 0) {
-            // Move up one level
             --thread->flags.priority;
         }
-
-        // Update vruntime based on time used (scaled by priority level)
-        const u64 time_used_ns = thread->CalculateCpuTime();
-        UpdateVruntime(thread, time_used_ns);
     }
 
     void OnThreadQuantumExpired(Thread *thread)
     {
-        const u8 current_level = thread->flags.priority;
+        ASSERT_NOT_NULL(thread);
 
         // Demote to lower priority if not already at lowest level
-        if (current_level < kNumLevels - 1) {
+        if (thread->flags.priority < kNumLevels - 1) {
             ++thread->flags.priority;
         }
-
-        // Update vruntime based on full slice used
-        const u64 quantum_ns = GetTimeSliceForLevel(current_level);
-        UpdateVruntime(thread, quantum_ns);
     }
 
     void OnPeriodicUpdate(u64 current_time_ns)
@@ -160,13 +136,18 @@ class MLFQPolicy : public PolicyImpl
                 while (!queues_[level].IsEmpty()) {
                     auto *thread           = queues_[level].DeleteMin();
                     thread->flags.priority = 0;
-                    queues_[0].Insert(thread);
+                    queues_[0].Insert(thread, 0);
                 }
             }
         }
     }
 
-    void RemoveTask(Thread *thread) { queues_[thread->flags.priority].Delete(thread); }
+    void RemoveTask(Thread *thread)
+    {
+        queues_[thread->flags.priority].Remove(
+            thread, static_cast<u64>(thread->flags.user_priority)
+        );
+    }
 
     // ------------------------------
     // Private methods
@@ -178,27 +159,13 @@ class MLFQPolicy : public PolicyImpl
         return kBaseTimeSliceNs * (1ULL << level);
     }
 
-    FORCE_INLINE_F void UpdateVruntime(Thread *thread, u64 delta_ns)
-    {
-        ASSERT_NOT_NULL(thread);
-
-        thread->HookT::key += delta_ns * kWeights[static_cast<size_t>(UserPriority::kMedium)] /
-                              kWeights[static_cast<size_t>(thread->flags.user_priority)];
-
-        if (thread->HookT::key < min_vruntime_ || min_vruntime_ == 0) {
-            min_vruntime_ = thread->HookT::key;
-        }
-    }
-
     // ------------------------------
     // Class fields
     // ------------------------------
 
-    data_structures::IntrusiveRBTree<Thread, u64, kSchedulingIntrusiveLevel> queues_[kNumLevels];
-    using HookT = data_structures::IntrusiveRBTree<Thread, u64, kSchedulingIntrusiveLevel>::HookT;
-
+    data_structures::BitmapPriorityQueue<Thread, kMaxPriority, kSchedulingIntrusiveLevel>
+        queues_[kNumLevels];
     u64 last_boost_time_ns_{0};
-    u64 min_vruntime_{0};
 };
 
 }  // namespace Sched

@@ -234,7 +234,7 @@ class PACK BitArray final
 
     // std::numeric_limits<size_t>::max() for failure
     template <bool value = false>
-    NODISCARD FORCE_INLINE_F size_t FindFirst()
+    NODISCARD FORCE_INLINE_F size_t FindFirst() const
     {
         const StorageT empty_unit =
             value ? std::numeric_limits<StorageT>::min() : std::numeric_limits<StorageT>::max();
@@ -292,12 +292,12 @@ class PACK BitArray final
     }
 
     template <bool value = false>
-    NODISCARD FORCE_INLINE_F bool IsAllSet()
+    NODISCARD FORCE_INLINE_F bool IsAllSet() const
     {
         return FindFirst<!value>() == std::numeric_limits<size_t>::max();
     }
 
-    NODISCARD FORCE_INLINE_F bool IsAllSet(const bool value = false)
+    NODISCARD FORCE_INLINE_F bool IsAllSet(const bool value = false) const
     {
         if (value) {
             return IsAllSet<true>();
@@ -305,9 +305,9 @@ class PACK BitArray final
         return IsAllSet<false>();
     }
 
-    NODISCARD FORCE_INLINE_F bool IsAllTrue() { return IsAllSet<true>(); }
+    NODISCARD FORCE_INLINE_F bool IsAllTrue() const { return IsAllSet<true>(); }
 
-    NODISCARD FORCE_INLINE_F bool IsAllFalse() { return IsAllSet<false>(); }
+    NODISCARD FORCE_INLINE_F bool IsAllFalse() const { return IsAllSet<false>(); }
 
     // ------------------------------
     // Class fields

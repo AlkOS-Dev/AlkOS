@@ -2,6 +2,8 @@
 #define KERNEL_SRC_SYSCALLS_SYSCALLS_HPP_
 
 #include "calls/fd.hpp"
+#include "calls/fs.hpp"
+#include "calls/input.hpp"
 #include "calls/io.hpp"
 #include "calls/panic.hpp"
 #include "calls/power.hpp"

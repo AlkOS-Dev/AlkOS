@@ -2,7 +2,9 @@
 #define KERNEL_SRC_DRIVERS_INPUT_PS2_KEYBOARD_HPP_
 
 #include <types.h>
+#include <array.hpp>
 #include <drivers/input/keyboard.hpp>
+#include <drivers/input/virtual_key.hpp>
 #include <io/register.hpp>
 
 namespace Drivers::Input
@@ -52,6 +54,8 @@ class Ps2Keyboard final : public Keyboard
 
     static constexpr int kResetTimeout = 1000000;
 
+    static constexpr size_t kNumVirtualKeys = 256;
+
     /**
      * @brief Construct a new Ps2 Keyboard driver.
      * @param data_addr I/O address of the data register.
@@ -72,18 +76,27 @@ class Ps2Keyboard final : public Keyboard
      */
     void OnInterrupt();
 
+    /* @brief Get the current state of a key.
+     * @param vk Virtual key code to query.
+     * @return true if the key is currently pressed, false otherwise.
+     */
+    bool GetKeyState(VirtualKey vk) const { return key_states_[static_cast<u8>(vk)]; }
+
     private:
     // I/O Abstractions
     IO::Register data_reg_;
     IO::Register status_reg_;
 
+    // Key State Tracking
+    std::array<bool, kNumVirtualKeys> key_states_{};
+    KeyModifiers modifiers_;
+
     // Translation State Machine
     bool is_e0_prefix_{false};  // Processing an extended scancode?
-    bool shift_pressed_{false};
-    bool caps_lock_{false};
 
     // Helpers
-    NODISCARD char TranslateScancode(u8 scancode);
+    NODISCARD VirtualKey ScancodeToVirtualKey(u8 scancode, bool is_extended);
+    void UpdateKeyState(u8 scancode, bool is_pressed);
 };
 
 }  // namespace Drivers::Input

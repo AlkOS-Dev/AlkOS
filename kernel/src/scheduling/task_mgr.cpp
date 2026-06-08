@@ -99,7 +99,7 @@ std::expected<Thread *, Error> TaskMgr::SpawnThread(const Pid pid, const Task &t
     ThreadFlags flags{};
 
     flags.preserve_floats = process.value()->flags.PreserveFloats;
-    flags.policy          = SchedulingPolicy::kNormalTasks_MLFQ_P3;
+    flags.policy          = SchedulingPolicy::kNormalTasks_MQAPS_P3;
     flags.priority        = 0;
     flags.user_priority   = UserPriority::kMedium;
 
@@ -254,7 +254,7 @@ std::expected<Tid, Error> TaskMgr::ExecuteElf64(const Pid pid, const char *path)
         ASSERT_TRUE(static_cast<bool>(result));
     }
 
-    const size_t path_size = strlen(path);
+    const size_t path_size = strlen(path) + 1;
     const auto mem         = Mem::KMalloc(path_size);
     if (!mem) {
         return std::unexpected(Error::OutOfMemory);
@@ -296,6 +296,11 @@ std::expected<std::tuple<Pid, Tid>, Error> TaskMgr::ExecuteElf64(
     });
     auto thread = ExecuteElf64(process.value(), path);
     RET_UNEXPECTED_IF_ERR(thread);
+
+    auto thread_res = SchedulingModule::Get().GetThreads().GetThread(thread.value());
+    RET_UNEXPECTED_IF_ERR(thread_res);
+
+    thread_res.value()->flags.detached = flags.Async;
 
     process_guard.Dismiss();
     return std::make_tuple(process.value(), thread.value());
@@ -560,6 +565,11 @@ void TaskMgr::ThreadExit(void *retval)
         threads_to_clean_.Push(tcb->tid.id);
         process.value()->threads_to_clean++;
         process.value()->live_threads--;
+
+        if (tcb->flags.detached && process.value()->live_threads == 0) {
+            process.value()->state = ProcessState::kTerminated;
+            processes_to_clean_.Push(process.value()->pid.id);
+        }
     } else {
         state = ThreadState::kWaitingForJoin;
     }
@@ -603,13 +613,14 @@ std::expected<void *, Error> TaskMgr::JoinThread(const Tid tid)
     return std::unexpected(Error::AlreadyJoined);
 }
 
-std::expected<Pid, Error> TaskMgr::Exec(const char *path)
+std::expected<Pid, Error> TaskMgr::Exec(const char *path, bool async)
 {
     ASSERT_NOT_NULL(path);
 
     ProcessFlags flags{};
     flags.KernelSpaceOnly = false;
     flags.PreserveFloats  = true;
+    flags.Async           = async;
 
     LocalCoreLock lock{};
     const auto result = ExecuteElf64(path, flags);
@@ -631,6 +642,7 @@ std::expected<int, Error> TaskMgr::JoinProcess(const Pid pid)
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(pid);
     RET_UNEXPECTED_IF_ERR(process);
 
+    TRACE_FATAL_ACPI("WAITING ON PROC: %llu (%s)", process.value()->pid, process.value()->name);
     if (process.value()->state != ProcessState::kWaitingForJoin &&
         process.value()->state != ProcessState::kTerminated) {
         SchedulingModule::Get().GetScheduler().BlockOnWaitQueue(process.value()->wait_queue);
@@ -677,11 +689,13 @@ void TaskMgr::ThreadRipperClean_(const u32 id)
     }
 
     const auto process = SchedulingModule::Get().GetProcesses().GetProcess(thread.value()->owner);
-    ASSERT_NOT_ZERO(process.value()->threads_to_clean);
-    process.value()->threads_to_clean--;
+    ASSERT_TRUE(static_cast<bool>(process));
 
     const auto result = SchedulingModule::Get().GetThreads().Free(thread.value()->tid);
     ASSERT_TRUE(static_cast<bool>(result));
+
+    ASSERT_NOT_ZERO(process.value()->threads_to_clean);
+    process.value()->threads_to_clean--;
 
     DEBUG_INFO_SCHEDULING("ThreadRipper cleaned: %llu", thread.value()->tid);
     trace::TraceDumperTask();
@@ -697,10 +711,6 @@ void TaskMgr::ProcessRipperClean_(const u32 id)
     while (process.value()->threads_to_clean != 0 || process.value()->live_threads != 0) {
         SchedulingModule::Get().GetScheduler().Yield();
     }
-
-    const auto result =
-        MemoryModule::Get().GetVmm().DestroyUserAddrSpace(process.value()->address_space);
-    ASSERT_TRUE(static_cast<bool>(result));
 
     const auto proc_result = SchedulingModule::Get().GetProcesses().Free(process.value()->pid);
     ASSERT_TRUE(static_cast<bool>(proc_result));

@@ -22,3 +22,7 @@ void __platform_debug_write(const char *buffer)
         QemuTerminalWriteString(buffer);
     }
 }
+
+void __platform_proc_abort() {}
+
+void *__platform_get_heap_start() { return nullptr; }

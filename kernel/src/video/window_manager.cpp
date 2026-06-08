@@ -47,51 +47,93 @@ std::expected<void *, Mem::MemError> WindowManager::CreateSession()
     VPtr<void> virt = *virt_res;
 
     // Store Session Metadata
-    size_t session_id = RegisterGraphicsSession(pid, buffer);
+    GraphicSessionNode *node = RegisterGraphicsSession(pid, buffer);
 
     // Switch focus to new app immediately
-    SwitchSession(session_id);
+    SwitchSession(node);
     DEBUG_INFO_GENERAL(
-        "CreateSession: Switched to session %zu. Active is now %zu", session_id, active_session_idx_
+        "CreateSession: Switched to session (PID %llu). Active node is now %p", pid, active_session_
     );
 
     page_guard.Dismiss();
     return virt;
 }
 
-void WindowManager::SwitchSession(size_t index)
+void WindowManager::SwitchSession(GraphicSessionNode *node)
 {
-    if (index >= sessions_.Size()) {
+    if (!node) {
         return;
     }
 
-    if (active_session_idx_ == index) {
+    if (active_session_ == node) {
         return;
     }
 
     DEBUG_INFO_GENERAL(
-        "Switching Session: Old %zu -> New %zu (PID %llu)", active_session_idx_, index,
-        sessions_[index].owner_pid
+        "Switching Session: Old %p -> New %p (PID %llu)", active_session_, node,
+        node->data.owner_pid
     );
-    active_session_idx_ = index;
+    active_session_ = node;
     RefreshScreen();
 }
 
 void WindowManager::SwitchToNextSession()
 {
-    size_t new_index = (active_session_idx_ + 1) % sessions_.Size();
-    SwitchSession(new_index);
+    if (sessions_.Empty()) {
+        return;
+    }
+
+    // If no active session, switch to the first one
+    if (!active_session_) {
+        SwitchSession(sessions_.GetHead());
+        return;
+    }
+
+    // Use active_session_ node pointer directly for fast navigation
+    if (active_session_->next) {
+        SwitchSession(active_session_->next);
+    } else {
+        // Wrap around to the first session
+        SwitchSession(sessions_.GetHead());
+    }
+}
+
+void WindowManager::ReleaseSession(Sched::Pid pid)
+{
+    for (auto it = sessions_.begin(); it != sessions_.end(); ++it) {
+        auto &session = *it;
+        if (session.owner_pid == pid) {
+            DEBUG_INFO_GENERAL("Releasing Session owned by PID %llu", pid);
+
+            auto *node = it.GetNode();
+
+            // If active, switch to next session
+            if (active_session_ == node) {
+                SwitchToNextSession();
+                // If we switched to ourselves (only session), clear active
+                if (active_session_ == node) {
+                    active_session_ = nullptr;
+                }
+            }
+
+            // Free backing store
+            auto &pmm = ::MemoryModule::Get().GetBuddyPmm();
+            pmm.Free(session.buffer_info.phys_buffer);
+
+            // Remove session from list
+            sessions_.Remove(node);
+            return;
+        }
+    }
 }
 
 void WindowManager::SetFocus(Sched::Pid pid)
 {
     auto caller = hardware::GetRunningPid();
-    for (size_t i = 0; i < sessions_.Size(); ++i) {
-        if (sessions_[i].owner_pid == caller || sessions_[i].focused_pid == caller) {
-            sessions_[i].focused_pid = pid;
-            DEBUG_INFO_GENERAL(
-                "WindowManager: Transferred focus in session %zu to PID %llu", i, pid
-            );
+    for (auto &session : sessions_) {
+        if (session.owner_pid == caller || session.focused_pid == caller) {
+            session.focused_pid = pid;
+            DEBUG_INFO_GENERAL("WindowManager: Transferred focus to PID %llu", pid);
             return;
         }
     }
@@ -99,20 +141,19 @@ void WindowManager::SetFocus(Sched::Pid pid)
 
 Sched::Pid WindowManager::GetActiveSessionFocusedPid()
 {
-    if (active_session_idx_ == kInvalidSession) {
+    if (!active_session_) {
         return {0, 0};
     }
-    return sessions_[active_session_idx_].focused_pid;
+    return active_session_->data.focused_pid;
 }
 
 void WindowManager::ReleaseFocus(Sched::Pid pid)
 {
-    for (size_t i = 0; i < sessions_.Size(); ++i) {
-        if (sessions_[i].focused_pid == pid) {
-            sessions_[i].focused_pid = sessions_[i].owner_pid;
+    for (auto &session : sessions_) {
+        if (session.focused_pid == pid) {
+            session.focused_pid = session.owner_pid;
             DEBUG_INFO_GENERAL(
-                "WindowManager: Returned focus in session %zu to owner PID %llu", i,
-                sessions_[i].owner_pid
+                "WindowManager: Returned focus to owner PID %llu", session.owner_pid
             );
             return;
         }
@@ -121,31 +162,30 @@ void WindowManager::ReleaseFocus(Sched::Pid pid)
 
 void WindowManager::RefreshScreen()
 {
-    if (active_session_idx_ == kInvalidSession || active_session_idx_ >= sessions_.Size()) {
+    if (!active_session_) {
         return;
     }
 
     // Restore User App
-    GraphicSession &session = sessions_[active_session_idx_];
-    BlitSession(session);
+    BlitSession(active_session_->data);
 }
 
 void WindowManager::Blit(Sched::Pid pid)
 {
     // Find if this PID owns a session
-    auto [session, target_idx] = FindSession(pid);
+    auto *node = FindSession(pid);
 
-    if (!session) {
+    if (!node) {
         return;
     }
 
-    if (active_session_idx_ != target_idx) {
+    if (active_session_ != node) {
         // If not active, the data is safely sitting in the session.phys_buffer (RAM),
         // ready to be restored when the user switches back.
         return;
     }
 
-    BlitSession(*session);
+    BlitSession(node->data);
 }
 
 std::expected<BufferInfo, Mem::MemError> WindowManager::AllocUserBuffer()
@@ -162,7 +202,7 @@ std::expected<BufferInfo, Mem::MemError> WindowManager::AllocUserBuffer()
     return BufferInfo{.phys_buffer = *phys_res, .size_bytes = buffer_size};
 }
 
-size_t WindowManager::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
+GraphicSessionNode *WindowManager::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
 {
     GraphicSession session;
     session.owner_pid   = pid;
@@ -170,11 +210,11 @@ size_t WindowManager::RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer)
     session.buffer_info = buffer;
     session.is_active   = false;
 
-    sessions_.Push(session);
-    size_t session_id = sessions_.Size() - 1;
+    auto *node = sessions_.PushBack(session);
+    ASSERT_NOT_NULL(node);
 
-    DEBUG_INFO_GENERAL("Created Graphic Session %zu for PID %llu", session_id, pid);
-    return session_id;
+    DEBUG_INFO_GENERAL("Created Graphic Session for PID %llu", pid);
+    return node;
 }
 
 void WindowManager::BlitSession(const GraphicSession &session)
@@ -187,14 +227,14 @@ void WindowManager::BlitSession(const GraphicSession &session)
     memcpy(vram_dst, backbuffer_src, session.buffer_info.size_bytes);
 }
 
-std::tuple<GraphicSession *, size_t> WindowManager::FindSession(Sched::Pid pid)
+GraphicSessionNode *WindowManager::FindSession(Sched::Pid pid)
 {
-    for (size_t i = 0; i < sessions_.Size(); ++i) {
-        if (sessions_[i].owner_pid == pid) {
-            return {&sessions_[i], i};
+    for (auto it = sessions_.begin(); it != sessions_.end(); ++it) {
+        if (it->owner_pid == pid) {
+            return it.GetNode();
         }
     }
-    return {nullptr, kInvalidSession};
+    return nullptr;
 }
 
 }  // namespace Video

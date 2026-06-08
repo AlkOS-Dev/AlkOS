@@ -61,6 +61,11 @@ char *strchr(const char *str, int c);
 char *strrchr(const char *str, int c);
 
 /**
+ *  Returns a pointer to the first occurrence of `str2` in `str1`, or NULL if not found
+ */
+char *strstr(const char *str1, const char *str2);
+
+/**
  * @brief Copy memory area
  *
  * @param dest Destination memory area
