@@ -2,10 +2,10 @@
 #define KERNEL_SRC_FS_VFS_FAT_FAT16_HPP_
 
 #include <bit.hpp>
+#include <fs/vfs/fat/fat.hpp>
+#include <fs/vfs/interface.hpp>
 #include <internal/math.hpp>
 #include <internal/span.hpp>
-#include <vfs/fat/fat.hpp>
-#include <vfs/interface.hpp>
 
 namespace vfs
 {
@@ -31,8 +31,7 @@ class Fat16 : public Fat<Fat16, IO>
 
     Fat16() = delete;
 
-    explicit Fat16(IO &io)
-        : BaseT(io), boot_sector_(internal::get<const BootSector>(io.ReadSector(0)))
+    explicit Fat16(IO &io) : BaseT(io)
     {
         BaseT::io_.SetSectorSize(boot_sector_.fat.bytes_per_sector);
 
@@ -116,12 +115,10 @@ class Fat16 : public Fat<Fat16, IO>
 
     static constexpr u16 kEOC                 = 0xFFF8;  // End of cluster chain marker for FAT16
     static constexpr ClusterNumT kClusterMask = kFullMask<ClusterNumT>;
-    static constexpr ClusterNumT kCleanShutdownMarker =
-        kSingleBit<ClusterNumT, sizeof(ClusterNumT) * 8 - 1>;
-    static constexpr ClusterNumT kHardwareErrorMarker =
-        kSingleBit<ClusterNumT, sizeof(ClusterNumT) * 8 - 2>;
+    static constexpr ClusterNumT kCleanShutdownMarkerBit = sizeof(ClusterNumT) * 8 - 1;
+    static constexpr ClusterNumT kHardwareErrorMarkerBit = sizeof(ClusterNumT) * 8 - 2;
 
-    const BootSector boot_sector_{};
+    BootSector boot_sector_;
 };
 
 template <typename IO>

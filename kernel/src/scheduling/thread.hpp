@@ -30,7 +30,7 @@ struct Task {
 // Thread
 // ------------------------------
 
-enum class UserPriority : u8 { kLow = 0, kMediumLow, kMedium, kMediumHigh, kHigh, kLast };
+enum class UserPriority : u8 { kHigh = 0, kMediumHigh, kMedium, kMediumLow, kLow, kLast };
 
 struct PACK Tid {
     u16 id;
@@ -94,6 +94,10 @@ struct Thread : data_structures::IntrusiveRbNode<Thread, u64, kSchedulingIntrusi
     u64 num_interrupts;
     u64 num_syscalls;
     u64 num_context_switches;
+
+    /* Burst Statistics for MQAPS */
+    u64 avg_burst_ns{10'000'000};  // Default 10ms
+    u64 last_burst_ns{0};
 
     /* Arch */
     hal::Thread arch_data;

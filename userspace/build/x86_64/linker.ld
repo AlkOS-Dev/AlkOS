@@ -14,6 +14,12 @@ SECTIONS
 {
     . = kUserSpaceBase;
 
+    .text : ALIGN(4K) {
+        KEEP(*(.text._start))
+        *(.text)
+        *(.text.*)
+    }
+
     .init BLOCK(4K) : ALIGN(4K)
     {
         *(.init)
@@ -22,12 +28,6 @@ SECTIONS
     .fini BLOCK(4K) : ALIGN(4K)
     {
         *(.fini)
-    }
-
-    .text : ALIGN(4K) {
-        KEEP(*(.text._start))
-        *(.text)
-        *(.text.*)
     }
 
     .rodata : ALIGN(4K) {

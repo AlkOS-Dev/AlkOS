@@ -2,12 +2,10 @@
 #define KERNEL_SRC_FS_VFS_FAT_FAT32_HPP_
 
 #include <bit.hpp>
+#include <fs/vfs/fat/fat.hpp>
+#include <fs/vfs/interface.hpp>
 #include <internal/math.hpp>
 #include <internal/span.hpp>
-#include <span.hpp>
-#include <vfs/fat/fat.hpp>
-#include <vfs/interface.hpp>
-#include <vfs/io/in_memory.hpp>
 
 namespace vfs
 {
@@ -33,8 +31,7 @@ class Fat32 : public Fat<Fat32, IO>
 
     Fat32() = delete;
 
-    explicit Fat32(IO &io)
-        : BaseT(io), boot_sector_(internal::get<const BootSector>(io.ReadSector(0)))
+    explicit Fat32(IO &io) : BaseT(io)
     {
         BaseT::io_.SetSectorSize(boot_sector_.fat.bytes_per_sector);
 
@@ -147,8 +144,8 @@ class Fat32 : public Fat<Fat32, IO>
     // Data Members
     // ------------------------------
 
-    const BootSector boot_sector_;
-    const FSInfo fs_info_;
+    BootSector boot_sector_;
+    FSInfo fs_info_;
 };
 
 template <typename IO>

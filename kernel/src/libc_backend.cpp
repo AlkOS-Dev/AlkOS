@@ -31,4 +31,8 @@ size_t __platform_debug_read_line(char *buffer, const size_t buffer_size)
     return SysDebugReadLine(buffer, buffer_size);
 }
 
+void __platform_proc_abort() { SysAbort(); }
+
+void *__platform_get_heap_start() { return SysGetHeapAddr(); }
+
 #endif

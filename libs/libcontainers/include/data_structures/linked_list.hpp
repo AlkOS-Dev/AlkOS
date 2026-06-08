@@ -83,7 +83,7 @@ class LinkedList
         bool operator==(const Iterator &other) const { return node_ == other.node_; }
         bool operator!=(const Iterator &other) const { return node_ != other.node_; }
 
-        Node *GetNode() const { return node_; }
+        NODISCARD FORCE_INLINE_F Node *GetNode() const { return node_; }
 
         private:
         Node *node_;
@@ -205,8 +205,8 @@ class LinkedList
     ConstIterator cbegin() const { return ConstIterator(head_); }
     ConstIterator cend() const { return ConstIterator(nullptr); }
 
-    Node *PushFront(const T &value) { return EmplaceFront(value); }
-    Node *PushFront(T &&value) { return EmplaceFront(std::move(value)); }
+    NODISCARD FORCE_INLINE_F Node *PushFront(const T &value) { return EmplaceFront(value); }
+    NODISCARD FORCE_INLINE_F Node *PushFront(T &&value) { return EmplaceFront(std::move(value)); }
 
     template <typename... Args>
     Node *EmplaceFront(Args &&...args)
@@ -265,8 +265,14 @@ class LinkedList
         return node;
     }
 
-    Node *InsertAfter(Node *after, const T &value) { return EmplaceAfter(after, value); }
-    Node *InsertAfter(Node *after, T &&value) { return EmplaceAfter(after, std::move(value)); }
+    NODISCARD FORCE_INLINE_F Node *InsertAfter(Node *after, const T &value)
+    {
+        return EmplaceAfter(after, value);
+    }
+    NODISCARD FORCE_INLINE_F Node *InsertAfter(Node *after, T &&value)
+    {
+        return EmplaceAfter(after, std::move(value));
+    }
 
     template <typename... Args>
     Node *EmplaceAfter(Node *after, Args &&...args)
@@ -356,9 +362,6 @@ class LinkedList
             tail_ = node->prev;
         }
 
-        node->prev = nullptr;
-        node->next = nullptr;
-
         DeallocateNode(node);
         --size_;
     }
@@ -445,9 +448,9 @@ class LinkedList
         size_ = 0;
     }
 
-    Node *GetHead() const { return head_; }
+    NODISCARD FORCE_INLINE_F Node *GetHead() const { return head_; }
 
-    Node *GetTail() const
+    NODISCARD FORCE_INLINE_F Node *GetTail() const
         requires(kIsDoubleLinked)
     {
         return tail_;
@@ -459,12 +462,12 @@ class LinkedList
 
     private:
     template <typename... Args>
-    Node *AllocateNode(Args &&...args)
+    NODISCARD FORCE_INLINE_F Node *AllocateNode(Args &&...args)
     {
         return allocator_.template Allocate<Node>(std::forward<Args>(args)...);
     }
 
-    void DeallocateNode(Node *node)
+    FORCE_INLINE_F void DeallocateNode(Node *node)
     {
         if (node) {
             node->~Node();

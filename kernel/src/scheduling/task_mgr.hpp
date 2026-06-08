@@ -80,7 +80,7 @@ class TaskMgr
 
     NODISCARD std::expected<void *, Error> JoinThread(Tid tid);
 
-    NODISCARD std::expected<Pid, Error> Exec(const char *path);
+    NODISCARD std::expected<Pid, Error> Exec(const char *path, bool async = false);
 
     NODISCARD std::expected<int, Error> JoinProcess(Pid pid);
 

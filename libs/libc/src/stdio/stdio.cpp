@@ -140,6 +140,18 @@ int printf(const char *format, ...)
 
 int vprintf(const char *format, va_list va) { return vfprintf(stdout, format, va); }
 
+int puts(const char *s)
+{
+    if (!s) {
+        return EOF;
+    }
+
+    int result = printf("%s\n", s);
+    return (result < 0) ? EOF : result;
+}
+
+int putchar(int c) { return printf("%c", c); }
+
 // ============================================================================
 // File Operations
 // ============================================================================
@@ -493,4 +505,210 @@ void clearerr(FILE *stream)
     }
     stream->flags.error = false;
     stream->flags.eof   = false;
+}
+
+long ftell(FILE *stream)
+{
+    if (!stream) {
+        return -1L;
+    }
+    return static_cast<long>(stream->file_pos);
+}
+
+int remove(const char *pathname) { return __platform_delete_file(pathname); }
+
+int rename(const char *oldname, const char *newname)
+{
+    return __platform_move_file(oldname, newname);
+}
+
+int sscanf(const char *str, const char *format, ...)
+{
+    if (!str || !format) {
+        return -1;
+    }
+
+    va_list args;
+    va_start(args, format);
+
+    int count     = 0;
+    const char *s = str;
+    const char *f = format;
+
+    while (*f && *s) {
+        if (*f == '%') {
+            f++;
+            if (*f == '%') {
+                // Literal '%'
+                if (*s == '%') {
+                    s++;
+                } else {
+                    break;
+                }
+                f++;
+                continue;
+            }
+
+            // Skip optional width modifier
+            while (*f >= '0' && *f <= '9') {
+                f++;
+            }
+
+            // Skip length modifiers
+            if (*f == 'h' || *f == 'l' || *f == 'L') {
+                f++;
+            }
+
+            if (*f == 'd' || *f == 'i') {
+                // Parse integer
+                while (*s == ' ' || *s == '\t' || *s == '\n') {
+                    s++;
+                }
+
+                int sign = 1;
+                int val  = 0;
+
+                if (*s == '-') {
+                    sign = -1;
+                    s++;
+                } else if (*s == '+') {
+                    s++;
+                }
+
+                while (*s >= '0' && *s <= '9') {
+                    val = val * 10 + (*s - '0');
+                    s++;
+                }
+
+                int *ptr = va_arg(args, int *);
+                if (ptr) {
+                    *ptr = sign * val;
+                    count++;
+                }
+            } else if (*f == 'u') {
+                // Parse unsigned integer
+                while (*s == ' ' || *s == '\t' || *s == '\n') {
+                    s++;
+                }
+
+                unsigned int val = 0;
+
+                while (*s >= '0' && *s <= '9') {
+                    val = val * 10 + (*s - '0');
+                    s++;
+                }
+
+                unsigned int *ptr = va_arg(args, unsigned int *);
+                if (ptr) {
+                    *ptr = val;
+                    count++;
+                }
+            } else if (*f == 'x' || *f == 'X') {
+                // Parse hexadecimal integer
+                while (*s == ' ' || *s == '\t' || *s == '\n') {
+                    s++;
+                }
+
+                unsigned int val = 0;
+
+                while (*s) {
+                    int digit;
+                    if (*s >= '0' && *s <= '9') {
+                        digit = *s - '0';
+                    } else if (*s >= 'a' && *s <= 'f') {
+                        digit = 10 + (*s - 'a');
+                    } else if (*s >= 'A' && *s <= 'F') {
+                        digit = 10 + (*s - 'A');
+                    } else {
+                        break;
+                    }
+                    val = val * 16 + digit;
+                    s++;
+                }
+
+                unsigned int *ptr = va_arg(args, unsigned int *);
+                if (ptr) {
+                    *ptr = val;
+                    count++;
+                }
+            } else if (*f == 's') {
+                // Parse string
+                while (*s == ' ' || *s == '\t' || *s == '\n') {
+                    s++;
+                }
+
+                char *ptr = va_arg(args, char *);
+                if (ptr) {
+                    char *p = ptr;
+                    while (*s && *s != ' ' && *s != '\t' && *s != '\n') {
+                        *p++ = *s++;
+                    }
+                    *p = '\0';
+                    count++;
+                }
+            } else if (*f == 'c') {
+                // Parse character
+                char *ptr = va_arg(args, char *);
+                if (ptr) {
+                    *ptr = *s++;
+                    count++;
+                }
+            } else if (*f == 'f') {
+                // Parse float (basic implementation)
+                while (*s == ' ' || *s == '\t' || *s == '\n') {
+                    s++;
+                }
+
+                double sign = 1.0;
+                double val  = 0.0;
+
+                if (*s == '-') {
+                    sign = -1.0;
+                    s++;
+                } else if (*s == '+') {
+                    s++;
+                }
+
+                while (*s >= '0' && *s <= '9') {
+                    val = val * 10.0 + (*s - '0');
+                    s++;
+                }
+
+                if (*s == '.') {
+                    s++;
+                    double divisor = 10.0;
+                    while (*s >= '0' && *s <= '9') {
+                        val += (*s - '0') / divisor;
+                        divisor *= 10.0;
+                        s++;
+                    }
+                }
+
+                float *ptr = va_arg(args, float *);
+                if (ptr) {
+                    *ptr = static_cast<float>(sign * val);
+                    count++;
+                }
+            }
+
+            f++;
+        } else if (*f == ' ' || *f == '\t' || *f == '\n') {
+            // Whitespace in format matches any whitespace in input
+            f++;
+            while (*s == ' ' || *s == '\t' || *s == '\n') {
+                s++;
+            }
+        } else {
+            // Literal character match
+            if (*f == *s) {
+                f++;
+                s++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    va_end(args);
+    return count;
 }

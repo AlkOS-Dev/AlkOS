@@ -4,9 +4,7 @@
 #include <string.h>
 #include <string.hpp>
 
-#include "alkos/calls.h"
-#include "alkos/sys/fd.h"
-#include "alkos/sys/power.h"
+#include <alkos/calls.h>
 
 static u64 ParsePid(const std::string_view str)
 {
@@ -90,6 +88,14 @@ void Shell::ProcessCommand()
     std::string_view cmd = (space_pos == std::string_view::npos) ? line : line.substr(0, space_pos);
     std::string_view args = (space_pos == std::string_view::npos) ? "" : line.substr(space_pos + 1);
 
+    // Trim leading/trailing spaces
+    while (!args.empty() && args.front() == ' ') {
+        args.remove_prefix(1);
+    }
+    while (!args.empty() && args.back() == ' ') {
+        args.remove_suffix(1);
+    }
+
     if (cmd == "help") {
         CmdHelp();
     } else if (cmd == "clear") {
@@ -105,7 +111,11 @@ void Shell::ProcessCommand()
     } else if (cmd == "pwd") {
         CmdPwd();
     } else if (cmd.starts_with("./")) {
-        CmdExec(cmd.substr(2));
+        if (args == "&") {
+            CmdExecAsync(cmd.substr(2));
+        } else {
+            CmdExec(cmd.substr(2));
+        }
     } else if (cmd == "exec") {
         CmdExec(args);
     } else if (cmd == "exec_async") {
@@ -131,19 +141,19 @@ void Shell::CmdHelp()
 {
     const char *msg =
         "Available commands:\n"
-        "  help              - Show this message\n"
-        "  clear             - Clear the screen\n"
-        "  echo <text>       - Print arguments\n"
-        "  pwd               - Print working directory\n"
-        "  cd <path>         - Change directory\n"
-        "  ls [path]         - List directory contents\n"
-        "  cat <file>        - Display file contents\n"
-        "  exec <file>       - Execute a program and wait for it to finish\n"
-        "  ./<file>          - Execute a program and wait for it to finish\n"
-        "  exec_async <file> - Execute a program in background (no wait)\n"
-        "  kill <pid>        - Kill a running process by PID\n"
-        "  shutdown          - Shutdown the system\n"
-        "  reboot            - Reboot the system\n";
+        "  help        - Show this message\n"
+        "  clear       - Clear the screen\n"
+        "  echo <text> - Print arguments\n"
+        "  pwd         - Print working directory\n"
+        "  cd <path>   - Change directory\n"
+        "  ls [path]   - List directory contents\n"
+        "  cat <file>  - Display file contents\n"
+        "  exec <file> - Execute a user program\n"
+        "  ./<file>    - Execute a user program\n"
+        "  ./<file> &  - Execute a program asynchronously\n"
+        "  kill <pid>  - Kill a running process by PID\n"
+        "  shutdown    - Shutdown the system\n"
+        "  reboot      - Reboot the system\n";
     console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
 }
 
@@ -371,7 +381,9 @@ void Shell::CmdExec(std::string_view args)
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(msg), strlen(msg)));
         console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(buff), strlen(buff)));
         console_.PutChar('\n');
+        return;
     }
+
     char buff[128];
     snprintf(buff, 128, "%llu", pid);
 
@@ -398,7 +410,7 @@ void Shell::CmdExecAsync(std::string_view args)
     }
 
     Path programPath = ResolvePath(args);
-    const u64 pid    = Exec(programPath.CString());
+    const u64 pid    = ExecAsync(programPath.CString());
 
     if (pid == 0) {
         const char *err = "exec: invalid filename or not enough resources\n";

@@ -63,6 +63,7 @@ class VirtualMemoryManager
     );
 
     expected<VPtr<void>, MemError> AllocUserStack(VPtr<AddressSpace> as, size_t size);
+    expected<VPtr<void>, MemError> AllocUserHeap(VPtr<AddressSpace> as, size_t size);
 
     expected<VPtr<void>, MemError> AllocKernelHeap(size_t size);
 

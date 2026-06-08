@@ -45,7 +45,7 @@ static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
     u32 eax, ebx, ecx, unused;
     __get_cpuid(tsc::kIA32CpuidClockInfo, &eax, &ebx, &ecx, &unused);
 
-    if (ebx == 0 || eax == 0) {
+    if (ebx == 0 || ecx == 0) {
         /* According to 19.17.4 of Intel SDM, EBX might be 0 */
         AlternativeTscCheck(entry);
         return;

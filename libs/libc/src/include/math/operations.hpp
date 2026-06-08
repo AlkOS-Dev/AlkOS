@@ -9,7 +9,8 @@ double modf(double num, double *integralPart);
 
 CONSTEXPR double fabs(const double num)
 {
-    __DoubleBits bits{.d = num};
+    union __DoubleBits bits;
+    bits.d = num;
     bits.u &= ~(1ULL << 63);
     return bits.d;
 }

@@ -31,8 +31,13 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kSysSeek, SysSeek>();
     table.RegisterHandler<kSysDup, SysDup>();
     table.RegisterHandler<kSysDupTo, SysDupTo>();
+
+    // File System syscalls
     table.RegisterHandler<kSysReadDirectory, SysReadDirectory>();
     table.RegisterHandler<kSysFileInfo, SysFileInfo>();
+    table.RegisterHandler<kSysCreateDirectory, SysCreateDirectory>();
+    table.RegisterHandler<kSysDeleteFile, SysDeleteFile>();
+    table.RegisterHandler<kSysMoveFile, SysMoveFile>();
 
     /* Thread, processes */
     table.RegisterHandler<kProcAbort, SysAbort>();
@@ -46,10 +51,14 @@ constinit auto g_syscall_dispatch_table = SyscallDispatchTable<kSysMax>::Create<
     table.RegisterHandler<kNanoSleepUntil, SysNanoSleepUntil>();
     table.RegisterHandler<kKill, SysKill>();
     table.RegisterHandler<kWait, SysWait>();
+    table.RegisterHandler<kGetHeapAddr, SysGetHeapAddr>();
 
     // Video
     table.RegisterHandler<kSysCreateGraphicSession, SysCreateGraphicSession>();
     table.RegisterHandler<kSysBlit, SysBlit>();
+
+    // Input
+    table.RegisterHandler<kSysGetKeyState, SysGetKeyState>();
 
     // Power Management
     table.RegisterHandler<kSysPower, SysPower>();

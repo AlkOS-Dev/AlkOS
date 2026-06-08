@@ -2,9 +2,8 @@
 #define KERNEL_SRC_VIDEO_WINDOW_MANAGER_HPP_
 
 #include <types.h>
-#include <data_structures/array_structures.hpp>
+#include <data_structures/linked_list.hpp>
 #include <expected.hpp>
-#include <tuple.hpp>
 
 #include "drivers/video/framebuffer.hpp"
 #include "mem/error.hpp"
@@ -21,6 +20,9 @@ struct BufferInfo {
     Mem::PPtr<Mem::Page> phys_buffer;
     size_t size_bytes;
 };
+
+struct GraphicSession;
+using GraphicSessionNode = data_structures::internal::LinkedListNode<GraphicSession>;
 
 struct GraphicSession {
     Sched::Pid owner_pid;
@@ -46,8 +48,9 @@ class WindowManager
     void Blit(Sched::Pid pid);
 
     /// Switches screen to a specific session
-    void SwitchSession(size_t index);
+    void SwitchSession(GraphicSessionNode *node);
     void SwitchToNextSession();
+    void ReleaseSession(Sched::Pid pid);
 
     void SetFocus(Sched::Pid pid);
     void ReleaseFocus(Sched::Pid pid);
@@ -55,16 +58,15 @@ class WindowManager
 
     private:
     std::expected<BufferInfo, Mem::MemError> AllocUserBuffer();
-    size_t RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
+    GraphicSessionNode *RegisterGraphicsSession(Sched::Pid pid, BufferInfo buffer);
     void BlitSession(const GraphicSession &session);
-    std::tuple<GraphicSession *, size_t> FindSession(Sched::Pid pid);
+    GraphicSessionNode *FindSession(Sched::Pid pid);
     void RefreshScreen();
 
-    static constexpr size_t kMaxSessions    = 12;
-    static constexpr size_t kInvalidSession = static_cast<size_t>(-1);
-    data_structures::StaticVector<GraphicSession, kMaxSessions> sessions_;
+    static constexpr size_t kMaxSessions = 12;
+    data_structures::StaticDoubleLinkedList<GraphicSession, kMaxSessions> sessions_;
 
-    size_t active_session_idx_{kInvalidSession};
+    GraphicSessionNode *active_session_{nullptr};
     Framebuffer *framebuffer_{nullptr};
 };
 
