@@ -1,95 +1,74 @@
-# AlkOS
+<div align="center">
+
+<img src="docs/assets/banner.png" alt="AlkOS" width="480">
+
 [![License](https://img.shields.io/github/license/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/blob/main/LICENSE)
 [![Stars](https://img.shields.io/github/stars/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/stargazers)
 [![Issues](https://img.shields.io/github/issues/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/issues)
-[![Contributors](https://img.shields.io/github/contributors/AlkOS-Dev/AlkOS)](https://github.com/AlkOS-Dev/AlkOS/graphs/contributors)
+[![Devlog](https://img.shields.io/badge/devlog-blazeddev.com-1f6feb)](https://blazeddev.com/)
 
-A modern kernel written in **C++23**. Can run doom.
+</div>
 
-### ⚡ Capabilities
+AlkOS is a hobby operating system built from the ground up for x86_64. It boots into a
+monolithic higher-half kernel, runs its own C library instead of an upstream one, and reaches
+a userspace real enough to run DOOM. We share the journey and break down how to build an OS in
+plain terms at [blazeddev.com](https://blazeddev.com/).
 
-*   **Architecture:** Portable HAL-based core (x86_64 implemented), Higher Half, SMP-ready.
-*   **Memory:** PMM (Buddy/Bitmap), VMM (Higher Half Direct Map, VMA), Heap (Slab).
-*   **Scheduling:** Preemptive Multitasking via MLFQ and Round Robin policies.
-*   **Userspace:** Ring 3 isolation, ELF64 loader, Syscall interface (`int 0x80`).
-*   **Filesystem:** VFS abstraction with FAT12/16/32 and Initrd support.
-*   **Graphics:** Linear Framebuffer, Compositor/Window Manager, Double Buffering.
-*   **Hardware:** ACPI (via uACPI), IO/Local APIC, HPET, PCI, PS/2, Serial.
-*   **Runtime:** Custom `libc` and `libcpp` implementation (no upstream deps).
-*   **Apps:** Shell, GUI Demo, **Doom**.
+<div align="center">
+<img src="docs/assets/doom.gif" alt="DOOM running on AlkOS" width="600">
+</div>
 
-### 🚀 Quick Start
+## Building and running
 
-**Prerequisites:** Linux (Arch/Ubuntu recommended) or Docker.
-
-**1. Setup Environment**
-Builds the custom GCC 15.1.0 cross-toolchain. System dependency installation is automated for **Arch** and **Ubuntu**.
+You need Linux (Arch or Ubuntu recommended) or Docker. Dependency installation is automated
+for Arch and Ubuntu. The toolchain step builds a dedicated GCC cross-compiler, so the first
+run takes a while.
 
 ```bash
-./scripts/alkos_cli.bash --install all --verbose
-```
+# Install system dependencies and build the cross-toolchain.
+./scripts/alkos_cli.bash --install all
 
-> [!NOTE]
-> On other distributions, install prerequisites manually (see `scripts/env/`), then run with `--install toolchain`.
-
-**2. Configure Build**
-Generates CMake configuration and feature flags.
-```bash
+# Generate the build configuration.
 ./scripts/alkos_cli.bash --configure
-```
 
-**3. Build & Run**
-Compiles the kernel, userspace apps, generates the ISO, and launches QEMU.
-```bash
+# Build the kernel and userspace, make the ISO, boot it in QEMU.
 ./scripts/alkos_cli.bash --run
 ```
 
-> [!TIP]
-> If something doesn't work during the quickstart: append the `--verbose` flag to see the exact error
+Run `./scripts/alkos_cli.bash --help` for the full command list. Append `--verbose` to any
+command to see the exact error if something breaks.
 
-### 🛠 CLI Tooling
+If everything went right, QEMU drops you into the AlkOS shell:
 
-The project is managed via `scripts/alkos_cli.bash`.
-
-| Command | Description |
-| :--- | :--- |
-| `-i`, `--install [all/deps/toolchain]` | Sets up the dev environment. |
-| `-c`, `--configure` | Generates CMake configs and feature flags. |
-| `-r`, `--run` | Builds the ISO and boots QEMU. |
-| `-g`, `--git-hooks` | Installs pre-commit hooks (clang-format). |
-
-### 📂 Structure
-
-*   `kernel/` - Core kernel source (Arch specific, MM, Sched, Drivers).
-*   `libs/` - Custom implementation of `libc`, `libcpp`, and containers.
-*   `userspace/` - Ring 3 applications (Shell, Doom, GUI tests).
-*   `scripts/` - Build system, CI/CD, and environment automation.
-
-### 🔧 Debugging
-
-To attach GDB to a running QEMU instance:
-```bash
-# Terminal 1
-./scripts/alkos_cli.bash --run --gdb
-
-# Terminal 2
-./scripts/install/attach_to_qemu_gdb.bash build/alkos/sysroot/boot/alkos.kernel
-```
+<div align="center">
+<img src="docs/assets/shell.png" alt="AlkOS shell" width="600">
+</div>
 
 ### Tests
 
-To run UT:
-
-Build AlkOS in test mode
 ```bash
 ./scripts/actions/build_and_run_tests.bash
-```
-
-Run tests
-```
 ./scripts/actions/run_tests.bash
 ```
 
-### 📄 License
+## Features
 
-MIT License. See [LICENSE](LICENSE).
+| Capability | Status |
+| :--- | :---: |
+| 64-bit higher-half kernel (x86_64) | x |
+| Physical, virtual, and heap memory management | x |
+| Preemptive multitasking and scheduling | x |
+| Ring 3 userspace with syscalls and ELF64 loading | x |
+| Virtual filesystem with FAT support | x |
+| Framebuffer graphics with a window manager | x |
+| ACPI and PCI device support | x |
+| Running real applications (DOOM) | x |
+| Symmetric multiprocessing (SMP) | |
+| Networking stack | |
+| USB support | |
+| Persistent storage and disk drivers | |
+| Additional architecture ports (ARM, RISC-V) | |
+
+## License
+
+MIT. See [LICENSE](LICENSE).
