@@ -36,6 +36,7 @@ struct PACK Pid {
 struct PACK ProcessFlags {
     bool KernelSpaceOnly : 1;
     bool PreserveFloats : 1;
+    bool Async : 1;
 };
 static_assert(sizeof(ProcessFlags) == 1);
 
@@ -63,11 +64,12 @@ struct Process : hal::Process {
 
     /* Process resources */
     Mem::VPtr<Mem::AddressSpace> address_space;
+    Mem::VPtr<void> heap_start;
 
     /* File descriptor table */
     Mem::VPtr<Fs::FdTable> fd_table;
 
-    /* Standard I/O pipes (owned by process) */
+    /* Standard I/O pipes */
     IO::Pipe<Fs::kStdioBufferSize> stdin_pipe;
     IO::Pipe<Fs::kStdioBufferSize> stdout_pipe;
     IO::Pipe<Fs::kStdioBufferSize> stderr_pipe;

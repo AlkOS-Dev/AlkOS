@@ -31,8 +31,7 @@ class Fat12 : public Fat<Fat12, IO>
 
     Fat12() = delete;
 
-    explicit Fat12(IO &io)
-        : BaseT(io), boot_sector_(internal::get<const BootSector>(io.ReadSector(0)))
+    explicit Fat12(IO &io) : BaseT(io)
     {
         BaseT::io_.SetSectorSize(boot_sector_.fat.bytes_per_sector);
 
@@ -167,7 +166,7 @@ class Fat12 : public Fat<Fat12, IO>
     static constexpr ClusterNumT kEOC         = 0x0FF8;  // End of cluster chain marker for FAT12
     static constexpr ClusterNumT kClusterMask = kBitMaskRight<ClusterNumT, 12>;
 
-    const BootSector boot_sector_{};
+    BootSector boot_sector_;
 };
 
 template <typename IO>

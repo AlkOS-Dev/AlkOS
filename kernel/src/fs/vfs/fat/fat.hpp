@@ -36,8 +36,9 @@ class Fat
 
     explicit Fat(IO &io) : io_(io)
     {
-        if constexpr (requires { ImplT::kCleanShutdownMarker; }) {
-            if (!IsBitEnabled<ImplT::kCleanShutdownMarker>(GetFATEntry_(1))) {
+        GetImpl_().boot_sector_ = internal::get<typename ImplT::BootSector>(io.ReadSector(0));
+        if constexpr (requires { ImplT::kCleanShutdownMarkerBit; }) {
+            if (!IsBitEnabled<ImplT::kCleanShutdownMarkerBit>(GetImpl_().GetFATEntry_(1))) {
                 TRACE_WARN_VFS(
                     "Filesystem has not been shut down properly, some data may be lost!"
                 );
@@ -465,7 +466,7 @@ class Fat
                (cluster - kFirstClusterNumber) * GetBootSector_().sectors_per_cluster;
     }
 
-    NODISCARD FORCE_INLINE_F ClusterNumT GetFATEntry_(ClusterNumT cluster)
+    NODISCARD FORCE_INLINE_F ClusterNumT GetFATEntry_(ClusterNumT cluster) const
     {
         auto boot_sector     = GetBootSector_();
         size_t fat_offset    = cluster * sizeof(ClusterNumT);

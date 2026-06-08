@@ -2,6 +2,7 @@
 #define KERNEL_SRC_MODULES_INPUT_HPP_
 
 #include <template_lib.hpp>
+#include "drivers/input/virtual_key.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "modules/video.hpp"
@@ -16,8 +17,16 @@ class InputModule : public template_lib::StaticSingletonHelper
     InputModule() noexcept = default;
 
     public:
-    void RouteKey(char c)
+    void RouteKey(VirtualKey vk, KeyModifiers modifiers)
     {
+        // Try to convert virtual key to ASCII
+        auto ascii_opt = Drivers::Input::VirtualKeyToAscii(vk, modifiers);
+        if (!ascii_opt) {
+            return;  // Key has no ASCII representation, ignore for now
+        }
+
+        char c = *ascii_opt;
+
         auto &wm              = ::VideoModule::Get().GetWindowManager();
         Sched::Pid target_pid = wm.GetActiveSessionFocusedPid();
 

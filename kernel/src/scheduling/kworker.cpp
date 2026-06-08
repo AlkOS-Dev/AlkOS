@@ -5,28 +5,13 @@
 #include <modules/scheduling.hpp>
 #include <modules/vfs.hpp>
 #include <sys/loader.hpp>
+#include <syscalls/calls/thread.hpp>
 
 #include "hal/debug.hpp"
 #include "modules/hardware.hpp"
 #include "modules/scheduling.hpp"
 #include "scheduling/processes.hpp"
 #include "trace_framework.hpp"
-
-void Sched::KWorkerMain()
-{
-    TRACE_INFO_SCHEDULING("Created new KWorker!");
-
-    while (true) {
-        static size_t kSpins = 1'000'000;
-        for (size_t i = 0; i < kSpins; i++) {
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-            hal::Noop();
-        }
-        SchedulingModule::Get().GetScheduler().Yield();
-    }
-}
 
 void Sched::TraceDumperMain()
 {
@@ -65,7 +50,7 @@ void Sched::StdoutTracerMain(Pid pid)
     // Get hello process
     auto &processes = SchedulingModule::Get().GetProcesses();
     auto res        = processes.GetProcess(pid);
-    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to find hello_world process for tracing...");
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to find process for tracing...");
     auto *hello_process = res.value();
 
     // Read from the stdout pipe and write to terminal

@@ -32,13 +32,13 @@ FAST_CALL int SysWait(const u64 pid)
     return result ? result.value() : std::numeric_limits<int>::max();
 }
 
-FAST_CALL u64 SysExec(const char *path)
+FAST_CALL u64 SysExec(const char *path, bool async)
 {
     if (path == nullptr) {
         return 0;
     }
 
-    const auto result = SchedulingModule::Get().GetTaskMgr().Exec(path);
+    const auto result = SchedulingModule::Get().GetTaskMgr().Exec(path, async);
 
     if (!result) {
         return 0;
@@ -53,6 +53,15 @@ FAST_CALL void SysFocusTransfer(Sched::Pid target_child)
     auto &wm = VideoModule::Get().GetWindowManager();
     wm.SetFocus(target_child);
 }
+
+FORCE_INLINE_F void *SysGetHeapAddr()
+{
+    const auto process = SchedulingModule::Get().GetProcesses().GetCurrentProcess();
+    ASSERT_TRUE(static_cast<bool>(process));
+
+    return process.value()->heap_start;
+}
+
 }  // namespace Syscall
 
 #endif  // KERNEL_SRC_SYSCALLS_CALLS_PROC_HPP_

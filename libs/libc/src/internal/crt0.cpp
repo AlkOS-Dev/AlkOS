@@ -3,48 +3,15 @@
  * @brief C Runtime Startup (CRT0) for userspace programs
  */
 
-#include "defines.h"
+#include "internal/crt0.hpp"
 #include "internal/stdio.hpp"
 
 BEGIN_DECL_C
 
-extern void (*__preinit_array_start[])(void) WEAK;
-extern void (*__preinit_array_end[])(void) WEAK;
-extern void (*__init_array_start[])(void) WEAK;
-extern void (*__init_array_end[])(void) WEAK;
-extern void (*__fini_array_start[])(void) WEAK;
-extern void (*__fini_array_end[])(void) WEAK;
-
-void _init(void);
-void _fini(void);
 int main();
 
-FORCE_INLINE_F void InitializeRuntime()
-{
-    // Call pre-initialization functions
-    for (size_t i = 0; i < static_cast<size_t>(__preinit_array_end - __preinit_array_start); ++i) {
-        __preinit_array_start[i]();
-    }
-
-    // Call the main initialization function
-    _init();
-
-    // Call initialization functions
-    for (size_t i = 0; i < static_cast<size_t>(__init_array_end - __init_array_start); ++i) {
-        __init_array_start[i]();
-    }
-}
-
-FORCE_INLINE_F void FinalizeRuntime()
-{
-    // Call finalization functions in reverse order
-    for (size_t i = static_cast<size_t>(__fini_array_end - __fini_array_start); i > 0; --i) {
-        __fini_array_start[i - 1]();
-    }
-
-    // Call the main finalization function
-    _fini();
-}
+void (*atexit_funcs[MAX_ATEXIT_FUNCS])(void);
+size_t atexit_func_count = 0;
 
 /**
  * @brief Program entry point

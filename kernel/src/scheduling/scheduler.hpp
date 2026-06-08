@@ -14,6 +14,7 @@
 #include "hardware/core_local.hpp"
 #include "modules/timing.hpp"
 #include "policies/mlfq_policy.hpp"
+#include "policies/mqaps_policy.hpp"
 #include "policies/priority_queue_policy.hpp"
 #include "policies/round_robin_policy.hpp"
 #include "wait_queue.hpp"
@@ -173,7 +174,7 @@ class Scheduler
     PriorityQueuePolicy policy0_{};  // kUberTask_PQ_P0
     PriorityQueuePolicy policy1_{};  // kDrivers_PQ_P1
     PriorityQueuePolicy policy2_{};  // kUrgentTasks_PQ_P2
-    RoundRobinPolicy policy3_{};     // kNormalTasks_MLFQ_P3
+    RoundRobinPolicy policy3_{};     // kNormalTasks_MQAPS_P3
     RoundRobinPolicy policy4_{};     // kBackgroundTasks_RR_P4
 
     // Abstraction

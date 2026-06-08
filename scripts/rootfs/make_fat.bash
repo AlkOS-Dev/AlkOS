@@ -7,8 +7,8 @@ source "${MAKE_FAT_IMAGE_SCRIPT_DIR}/../utils/argparse.bash"
 
 # FAT filesystem default configurations
 declare -A MAKE_FAT_DEFAULT_CONFIG=(
-    [type]="fat12"
-    [size]="1M"
+    [type]="fat16"
+    [size]="16M"
     [label]="ALKOS"
     [sector_size]=512
     [sectors_per_cluster]=2

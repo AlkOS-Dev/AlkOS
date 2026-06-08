@@ -14,8 +14,9 @@ extern void KernelInit(const hal::RawBootArguments &);
 static void KernelRun()
 {
     TRACE_INFO_GENERAL("Hello from AlkOS!");
-    const auto res = SchedulingModule::Get().GetTaskMgr().ExecuteElf64("/bin/shell", {});
-    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to spawn /bin/shell process...");
+    auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
+    auto res       = task_mgr.ExecuteElf64("/bin/shell", {});
+    R_ASSERT_TRUE(static_cast<bool>(res), "Failed to launch initial shell process");
 
     SchedulingModule::Get().GetScheduler().ConvertToScheduling();
 }

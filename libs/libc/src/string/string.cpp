@@ -1,4 +1,6 @@
 #include "string.h"
+#include "stdlib.h"
+#include "strings.h"
 
 size_t strlen(const char *str)
 {
@@ -111,4 +113,75 @@ char *strrchr(const char *str, int c)
     }
 
     return const_cast<char *>(last);
+}
+
+char *strdup(const char *s)
+{
+    if (!s) {
+        return nullptr;
+    }
+
+    size_t len = strlen(s) + 1;
+    char *dup  = static_cast<char *>(malloc(len));
+    if (dup) {
+        memcpy(dup, s, len);
+    }
+    return dup;
+}
+
+char *strstr(const char *str1, const char *str2)
+{
+    size_t len = strlen(str2);
+    if (len == 0) {
+        return const_cast<char *>(str1);
+    }
+
+    while (*str1) {
+        if (!strncmp(str1, str2, len)) {
+            return const_cast<char *>(str1);
+        }
+        ++str1;
+    }
+
+    return nullptr;
+}
+
+static int charIgnoreCase(int c)
+{
+    if (c >= 'A' && c <= 'Z') {
+        return c + ('a' - 'A');
+    }
+    return c;
+}
+
+int strcasecmp(const char *s1, const char *s2)
+{
+    while (*s1 && *s2) {
+        int c1 = charIgnoreCase(*s1);
+        int c2 = charIgnoreCase(*s2);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+        ++s1;
+        ++s2;
+    }
+    return charIgnoreCase(*s1) - charIgnoreCase(*s2);
+}
+
+int strncasecmp(const char *s1, const char *s2, size_t n)
+{
+    while (n > 0 && *s1 && *s2) {
+        int c1 = charIgnoreCase(*s1);
+        int c2 = charIgnoreCase(*s2);
+        if (c1 != c2) {
+            return c1 - c2;
+        }
+        ++s1;
+        ++s2;
+        --n;
+    }
+    if (n == 0) {
+        return 0;
+    }
+    return charIgnoreCase(*s1) - charIgnoreCase(*s2);
 }

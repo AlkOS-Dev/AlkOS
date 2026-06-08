@@ -162,6 +162,18 @@ expected<VPtr<void>, MemError> Vmm::AllocUserStack(VPtr<AddressSpace> as, size_t
     }
 }
 
+expected<VPtr<void>, MemError> Vmm::AllocUserHeap(VPtr<AddressSpace> as, size_t size)
+{
+    auto user_start = UptrToPtr<void>(kUserSpaceStart);
+    auto user_end   = UptrToPtr<void>(kUserSpaceEndExclusive);
+
+    VirtualMemAreaFlags flags = {
+        .readable = true, .writable = true, .executable = false, .cache_disable = false
+    };
+
+    return AllocAnonymous(as, size, flags, user_start, user_end);
+}
+
 expected<VPtr<void>, MemError> Vmm::AllocKernelHeap(size_t size)
 {
     auto kernel_start = UptrToPtr<void>(kKernelSpaceStart);

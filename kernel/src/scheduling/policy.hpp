@@ -19,7 +19,7 @@ enum class SchedulingPolicy : u8 {
     kUberTask_PQ_P0 = 0,
     kDrivers_PQ_P1,
     kUrgentTasks_PQ_P2,
-    kNormalTasks_MLFQ_P3,
+    kNormalTasks_MQAPS_P3,
     kBackgroundTasks_RR_P4,
     kLast,
 };

@@ -5,7 +5,6 @@ namespace Sched
 {
 struct Pid;
 
-void KWorkerMain();
 void TraceDumperMain();
 void ThreadRipperMain();
 void ProcessRipperMain();

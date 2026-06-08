@@ -192,16 +192,12 @@ OpenFileTable::~OpenFileTable() { FAIL_ALWAYS("Should never be called"); }
 
 FdResult<data_structures::RefPtr<OpenFileEntry>> OpenFileTable::OpenFile(File *file, OpenMode flags)
 {
-    if (file == nullptr) {
-        return std::unexpected(FdError::kInvalidArgument);
-    }
+    RET_UNEXPECTED_IF(file == nullptr, FdError::kInvalidArgument);
 
     std::lock_guard lock(lock_);
 
     const size_t idx = entries_.Allocate();
-    if (idx == std::numeric_limits<size_t>::max()) {
-        return std::unexpected(FdError::kIoError);
-    }
+    RET_UNEXPECTED_IF(idx == std::numeric_limits<size_t>::max(), FdError::kIoError);
 
     OpenFileEntry *entry = entries_.Get(idx);
     ASSERT_NOT_NULL(entry);
@@ -274,23 +270,22 @@ FdResult<> OpenFileTable::SetOffset(OpenFileEntry *entry, u64 offset) const
 
 FdResult<fd_t> FdManager::Open(const vfs::Path &path, OpenMode flags)
 {
+    // Check if file exists in VFS
+    auto exists_result = VfsModule::Get().FileExists(path);
+    RET_UNEXPECTED_IF(!exists_result, FdError::kIoError);
+    RET_UNEXPECTED_IF(!(*exists_result), FdError::kNotFound);
+
     auto file_result = file_table_.GetOrCreate(path);
     RET_UNEXPECTED_IF_ERR(file_result);
 
     auto open_result = open_file_table_.OpenFile(file_result->Get(), flags);
-    if (!open_result) {
-        return std::unexpected(open_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(open_result);
 
     FdTable *fd_table = GetCurrentProcessFdTable();
-    if (fd_table == nullptr) {
-        return std::unexpected(FdError::kIoError);
-    }
+    RET_UNEXPECTED_IF(fd_table == nullptr, FdError::kIoError);
 
     auto fd_result = fd_table->Allocate(std::move(*open_result));
-    if (!fd_result) {
-        return std::unexpected(fd_result.error());
-    }
+    RET_UNEXPECTED_IF_ERR(fd_result);
 
     return *fd_result;
 }
@@ -406,9 +401,11 @@ FdResult<ssize_t> FdManager::Seek(fd_t fd, ssize_t offset, FdSeek whence)
             return std::unexpected(FdError::kInvalidArgument);
     }
 
-    RET_UNEXPECTED_IF(
-        new_offset > static_cast<ssize_t>(file->size) || new_offset < 0, FdError::kInvalidArgument
-    );
+    // TODO: Re-enable bounds checking once file size management is implemented
+    // RET_UNEXPECTED_IF(
+    //     new_offset > static_cast<ssize_t>(file->size) || new_offset < 0,
+    //     FdError::kInvalidArgument
+    // );
 
     entry->offset = static_cast<u64>(new_offset);
     return new_offset;

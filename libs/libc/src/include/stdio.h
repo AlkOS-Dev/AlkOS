@@ -1,7 +1,7 @@
 #ifndef LIBS_LIBC_SRC_INCLUDE_STDIO_H_
 #define LIBS_LIBC_SRC_INCLUDE_STDIO_H_
 
-#include "alkos/sys/fd.h"
+#include "alkos/sys/fs/fd.h"
 #include "defines.h"
 #include "stdarg.h"
 #include "stdbool.h"
@@ -50,6 +50,11 @@ int snprintf(char *str, size_t size, const char *format, ...);
 int vsnprintf(char *str, size_t size, const char *format, va_list va);
 
 /**
+ *  Reads formatted input from a string
+ */
+int sscanf(const char *str, const char *format, ...);
+
+/**
  *  Writes formatted output to a FILE pointer (stream)
  */
 int fprintf(FILE *stream, const char *format, ...);
@@ -60,6 +65,16 @@ int vfprintf(FILE *stream, const char *format, va_list va);
  */
 int printf(const char *format, ...);
 int vprintf(const char *format, va_list va);
+
+/**
+ *  Writes a string to stdout followed by a newline
+ */
+int puts(const char *s);
+
+/**
+ *  Writes a character to stdout
+ */
+int putchar(int c);
 
 /**
  *  Opens a file and returns a FILE pointer
@@ -110,6 +125,21 @@ int feof(FILE *stream);
  *  Clears the end-of-file and error indicators for the given stream
  */
 void clearerr(FILE *stream);
+
+/**
+ *  Returns the current file position of the given stream
+ */
+long ftell(FILE *stream);
+
+/**
+ *  Removes a file
+ */
+int remove(const char *pathname);
+
+/**
+ *  Renames a file
+ */
+int rename(const char *oldname, const char *newname);
 
 // Standard streams
 extern FILE _stdin;

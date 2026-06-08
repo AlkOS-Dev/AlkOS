@@ -2,6 +2,7 @@
 #include "error.hpp"
 
 #include <data_structures/tagged_pointer.hpp>
+#include <modules/memory.hpp>
 #include <template/scope_guard.hpp>
 #include "fs/file_descriptor.hpp"
 #include "modules/vfs.hpp"
@@ -92,10 +93,14 @@ void Sched::Processes::CleanupProcess(Process *process)
 
     auto fd_table = process->fd_table;
     ASSERT_NOT_NULL(fd_table);
-
     Mem::KDelete(fd_table);
 
     ASSERT_NOT_NULL(process->wait_queue);
     ASSERT_TRUE(process->wait_queue->IsEmpty());
     Mem::KDelete(process->wait_queue);
+
+    const auto result = MemoryModule::Get().GetVmm().DestroyUserAddrSpace(process->address_space);
+    ASSERT_TRUE(static_cast<bool>(result));
+
+    ::VideoModule::Get().GetWindowManager().ReleaseSession(process->pid);
 }

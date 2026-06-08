@@ -22,17 +22,19 @@ DEFINE_SYSCALL(write, kSysWrite, ssize_t, fd_t, fd, const void *, buf, size_t, c
 DEFINE_SYSCALL(seek, kSysSeek, ssize_t, fd_t, fd, ssize_t, offset, FdSeek, whence)
 DEFINE_SYSCALL(dup, kSysDup, fd_t, fd_t, fd)
 DEFINE_SYSCALL(dup_to, kSysDupTo, fd_t, fd_t, old_fd, fd_t, new_fd)
+
 DEFINE_SYSCALL(
     read_directory, kSysReadDirectory, int, const char *, path, DirEntry *, entries, size_t,
     max_entries, size_t *, num_entries
 )
 DEFINE_SYSCALL(file_info, kSysFileInfo, int, const char *, path, FileInfo *, info)
-DEFINE_SYSCALL(kill, kKill, int, u64, pid);
-DEFINE_SYSCALL(wait, kWait, int, u64, pid);
+DEFINE_SYSCALL(create_directory, kSysCreateDirectory, int, const char *, path)
+DEFINE_SYSCALL(delete_file, kSysDeleteFile, int, const char *, path)
+DEFINE_SYSCALL(move_file, kSysMoveFile, int, const char *, old_path, const char *, new_path)
 
 /* Thread, processes */
 DEFINE_SYSCALL(thread_create, kThreadCreate, int, Thread *, thread, thread_func_t, f, void *, arg)
-DEFINE_SYSCALL(exec, kExec, u64, const char *, path)
+DEFINE_SYSCALL(exec, kExec, u64, const char *, path, bool, async)
 DEFINE_SYSCALL_VOID(thread_exit, kThreadExit, void *, retval)
 DEFINE_SYSCALL(thread_join, kThreadJoin, int, Thread *, thread, void **, retval)
 DEFINE_SYSCALL(thread_detach, kThreadDetach, int, Thread *, thread)
@@ -40,9 +42,15 @@ DEFINE_SYSCALL_VOID(proc_exit, kProcExit, int, status)
 DEFINE_SYSCALL_VOID(proc_abort, kProcAbort)
 DEFINE_SYSCALL_VOID(nanosleep, kNanoSleep, u64, time_ns);
 DEFINE_SYSCALL_VOID(nanosleep_until, kNanoSleepUntil, u64, systime_ns);
+DEFINE_SYSCALL(kill, kKill, int, u64, pid);
+DEFINE_SYSCALL(wait, kWait, int, u64, pid);
+DEFINE_SYSCALL(get_heap_start, kGetHeapAddr, void *);
 
 DEFINE_SYSCALL_VOID(create_graphic_session, kSysCreateGraphicSession, GuiBufferInfo *, info)
 DEFINE_SYSCALL_VOID(blit, kSysBlit)
+
+/* Input Syscalls */
+DEFINE_SYSCALL(get_key_state, kSysGetKeyState, bool, VirtualKey, vk)
 
 DEFINE_SYSCALL_VOID(power, kSysPower, PowerAction, action)
 
