@@ -39,6 +39,8 @@ class Shell
 
     void ProcessCommand();
     void PrintPrompt();
+    void PrintWelcome();
+    void WriteCStr(const char *str);
 
     // -------------------------------------------------------------------------
     // Command Handlers

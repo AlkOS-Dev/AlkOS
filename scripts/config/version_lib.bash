@@ -54,6 +54,18 @@ version_parse() {
     return 1
   fi
 
+  local build_date=""
+  local build_time=""
+  if [[ "${official}" -eq 0 ]]; then
+    local now
+    if ! now="$(date '+%Y-%m-%d %H:%M:%S')"; then
+      _version_lib_err "failed to determine build date/time"
+      return 1
+    fi
+    build_date="${now%% *}"
+    build_time="${now#* }"
+  fi
+
   local version
   if ! version="$(version_read)"; then
     _version_lib_err "failed to read version from ${VERSION_LIB_VERSION_FILE}"
@@ -115,6 +127,8 @@ version_parse() {
   _version_out[build_type]="${build_type}"
   _version_out[arch]="${arch}"
   _version_out[official]="${official}"
+  _version_out[build_date]="${build_date}"
+  _version_out[build_time]="${build_time}"
 }
 
 version_generate_header() {
@@ -163,6 +177,11 @@ version_generate_header() {
 // 0 for internal builds.
 #define ALKOS_OFFICIAL_BUILD ${info[official]}
 
+// Build date (YYYY-MM-DD) and time (HH:MM:SS) for development builds;
+// empty for official builds.
+#define ALKOS_BUILD_DATE "${info[build_date]}"
+#define ALKOS_BUILD_TIME "${info[build_time]}"
+
 // ------------------------------------------------------------- C++ helpers ---
 
 #ifdef __cplusplus
@@ -182,6 +201,8 @@ inline constexpr bool        kGitDirty  = (ALKOS_GIT_DIRTY != 0);
 inline constexpr const char* kBuildType = ALKOS_BUILD_TYPE;
 inline constexpr const char* kArch      = ALKOS_ARCH;
 inline constexpr bool        kOfficial  = (ALKOS_OFFICIAL_BUILD != 0);
+inline constexpr const char* kBuildDate = ALKOS_BUILD_DATE;
+inline constexpr const char* kBuildTime = ALKOS_BUILD_TIME;
 }  // namespace alkos::version
 
 #endif  // __cplusplus

@@ -14,9 +14,18 @@ extern void KernelInit(const hal::RawBootArguments &);
 
 static void KernelRun()
 {
-    TRACE_INFO_GENERAL(
-        "Hello from %s %s (%s, %s)!", ALKOS_NAME, ALKOS_VERSION_FULL, ALKOS_ARCH, ALKOS_BUILD_TYPE
-    );
+    if constexpr (alkos::version::kOfficial) {
+        TRACE_INFO_GENERAL(
+            "Hello from %s %s (official, %s, %s)!", ALKOS_NAME, ALKOS_VERSION_STRING, ALKOS_ARCH,
+            ALKOS_BUILD_TYPE
+        );
+    } else {
+        TRACE_INFO_GENERAL(
+            "Hello from %s %s (development, %s, %s, commit %s%s, built %s %s)!", ALKOS_NAME,
+            ALKOS_VERSION_FULL, ALKOS_ARCH, ALKOS_BUILD_TYPE, ALKOS_GIT_HASH,
+            (ALKOS_GIT_DIRTY ? " dirty" : ""), ALKOS_BUILD_DATE, ALKOS_BUILD_TIME
+        );
+    }
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
     auto res       = task_mgr.ExecuteElf64("/bin/shell", {});
     R_ASSERT_TRUE(static_cast<bool>(res), "Failed to launch initial shell process");

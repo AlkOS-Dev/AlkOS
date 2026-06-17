@@ -5,6 +5,7 @@
 #include <string.hpp>
 
 #include <alkos/calls.h>
+#include <autogen/version.hpp>
 
 static u64 ParsePid(const std::string_view str)
 {
@@ -23,11 +24,42 @@ namespace System
 
 Shell::Shell(GraphicsConsole &console) : console_(console) {}
 
+void Shell::WriteCStr(const char *str)
+{
+    console_.Write(std::span<const byte>(reinterpret_cast<const byte *>(str), strlen(str)));
+}
+
+void Shell::PrintWelcome()
+{
+    char buf[256];
+
+    if constexpr (alkos::version::kOfficial) {
+        console_.SetColors(Graphics::Color::Green(), Graphics::Color::Black());
+        WriteCStr("================================================\n");
+        snprintf(buf, sizeof(buf), "            Welcome to AlkOS %s\n", ALKOS_VERSION_STRING);
+        WriteCStr(buf);
+        WriteCStr("              official release build\n");
+        WriteCStr("================================================\n");
+        console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+    } else {
+        console_.SetColors(Graphics::Color::Blue(), Graphics::Color::Black());
+        snprintf(buf, sizeof(buf), "AlkOS %s (development build)\n", ALKOS_VERSION_FULL);
+        WriteCStr(buf);
+        console_.SetColors(Graphics::Color::White(), Graphics::Color::Black());
+        snprintf(
+            buf, sizeof(buf), "  commit : %s%s\n  build  : %s / %s\n  date   : %s %s\n",
+            ALKOS_GIT_HASH, (ALKOS_GIT_DIRTY ? " (dirty)" : ""), ALKOS_BUILD_TYPE, ALKOS_ARCH,
+            ALKOS_BUILD_DATE, ALKOS_BUILD_TIME
+        );
+        WriteCStr(buf);
+    }
+
+    WriteCStr("Type 'help' for a list of commands.\n");
+}
+
 void Shell::Init()
 {
-    console_.Write(
-        std::span<const byte>(reinterpret_cast<const byte *>("Welcome to AlkOS Shell!\n"), 24)
-    );
+    PrintWelcome();
     PrintPrompt();
 }
 
