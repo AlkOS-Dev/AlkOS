@@ -3,10 +3,25 @@
 VERSION_LIB_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 VERSION_LIB_ROOT_DIR="${VERSION_LIB_DIR}/../.."
 VERSION_LIB_VERSION_FILE="${VERSION_LIB_ROOT_DIR}/VERSION"
+VERSION_LIB_AUTHORS_FILE="${VERSION_LIB_ROOT_DIR}/AUTHORS"
 VERSION_LIB_HEADER_PATH="${VERSION_LIB_ROOT_DIR}/generated/include/autogen/version.hpp"
 
 _version_lib_err() {
   echo "version_lib: $*" >&2
+}
+
+_version_lib_trim() {
+  local s="$1"
+  s="${s#"${s%%[![:space:]]*}"}"
+  s="${s%"${s##*[![:space:]]}"}"
+  printf '%s' "${s}"
+}
+
+_version_lib_cstr_escape() {
+  local s="$1"
+  s="${s//\\/\\\\}"
+  s="${s//\"/\\\"}"
+  printf '%s' "${s}"
 }
 
 # Normalize a boolean-ish value to 1/0. Returns non-zero on an unrecognized value.
@@ -30,6 +45,52 @@ version_read() {
   fi
 
   echo "${value}"
+}
+
+# Read the AUTHORS file and echo one tab-separated record per contributor:
+#     name<TAB>email<TAB>github
+# Comment (#) and blank lines are ignored. Returns non-zero if the file is
+# missing or holds no valid entries. Reusable by other scripts.
+version_read_authors() {
+  if [[ ! -f "${VERSION_LIB_AUTHORS_FILE}" ]]; then
+    _version_lib_err "authors file not found: ${VERSION_LIB_AUTHORS_FILE}"
+    return 1
+  fi
+
+  local line name email github rest found=0
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line="$(_version_lib_trim "${line}")"
+    [[ -z "${line}" || "${line}" == \#* ]] && continue
+
+    # Expected form: Name <email> (@github)
+    if [[ "${line}" != *"<"*">"* ]]; then
+      _version_lib_err "malformed author entry (missing <email>): ${line}"
+      return 1
+    fi
+
+    name="$(_version_lib_trim "${line%%<*}")"
+    rest="${line#*<}"
+    email="$(_version_lib_trim "${rest%%>*}")"
+
+    github=""
+    if [[ "${line}" == *"(@"*")"* ]]; then
+      github="${line##*(@}"
+      github="${github%%)*}"
+    fi
+
+    if [[ -z "${name}" || -z "${email}" ]]; then
+      _version_lib_err "malformed author entry (empty name or email): ${line}"
+      return 1
+    fi
+
+    printf '%s\t%s\t%s\n' "${name}" "${email}" "${github}"
+    found=1
+  done < "${VERSION_LIB_AUTHORS_FILE}"
+
+  if [[ "${found}" -eq 0 ]]; then
+    _version_lib_err "no valid author entries in ${VERSION_LIB_AUTHORS_FILE}"
+    return 1
+  fi
 }
 
 # Parse all version data into the caller's associative array.
@@ -115,8 +176,14 @@ version_parse() {
     [[ ${git_dirty} -eq 1 ]] && version_full="${version_full}-dirty"
   fi
 
+  if [[ "${official}" -eq 1 && "${version_full}" != "${version}" ]]; then
+    _version_lib_err \
+      "official build requires a clean checkout tagged '${version}' (resolved '${version_full}'); commit everything and run 'git tag v${version}'"
+    return 1
+  fi
+
   _version_out[name]="AlkOS"
-  _version_out[author]="ALK Organisation"
+  _version_out[author]="The AlkOS Authors"
   _version_out[version]="${version}"
   _version_out[major]="${major}"
   _version_out[minor]="${minor}"
@@ -141,6 +208,20 @@ version_generate_header() {
   if ! version_parse info "${arch}" "${build_type}" "${official}"; then
     return 1
   fi
+
+  local authors_tsv
+  if ! authors_tsv="$(version_read_authors)"; then
+    return 1
+  fi
+
+  local authors_cpp="" authors_count=0
+  local a_name a_email a_github
+  while IFS=$'\t' read -r a_name a_email a_github; do
+    [[ -z "${a_name}" ]] && continue
+    authors_cpp+="    {\"$(_version_lib_cstr_escape "${a_name}")\", \"$(_version_lib_cstr_escape "${a_email}")\", \"$(_version_lib_cstr_escape "${a_github}")\"},"$'\n'
+    authors_count=$((authors_count + 1))
+  done <<< "${authors_tsv}"
+  authors_cpp="${authors_cpp%$'\n'}"
 
   local tmp
   if ! tmp="$(mktemp)"; then
@@ -177,10 +258,11 @@ version_generate_header() {
 // 0 for internal builds.
 #define ALKOS_OFFICIAL_BUILD ${info[official]}
 
-// Build date (YYYY-MM-DD) and time (HH:MM:SS) for development builds;
-// empty for official builds.
 #define ALKOS_BUILD_DATE "${info[build_date]}"
 #define ALKOS_BUILD_TIME "${info[build_time]}"
+
+// Number of contributors listed in the AUTHORS file.
+#define ALKOS_AUTHORS_COUNT ${authors_count}
 
 // ------------------------------------------------------------- C++ helpers ---
 
@@ -203,6 +285,17 @@ inline constexpr const char* kArch      = ALKOS_ARCH;
 inline constexpr bool        kOfficial  = (ALKOS_OFFICIAL_BUILD != 0);
 inline constexpr const char* kBuildDate = ALKOS_BUILD_DATE;
 inline constexpr const char* kBuildTime = ALKOS_BUILD_TIME;
+
+struct Author {
+    const char* name;
+    const char* email;
+    const char* github;
+};
+
+inline constexpr Author kAuthors[] = {
+${authors_cpp}
+};
+inline constexpr unsigned kAuthorsCount = ALKOS_AUTHORS_COUNT;
 }  // namespace alkos::version
 
 #endif  // __cplusplus
