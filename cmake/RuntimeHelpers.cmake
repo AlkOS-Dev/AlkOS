@@ -57,7 +57,7 @@ function(alkos_register_runtime_environment)
     set(MAKE_ISO_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/make_iso.bash)
     set(RUN_ALKOS_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/run_alkos.bash)
     set(RUN_TESTS_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/run_tests.bash)
-    set(ALKOS_ISO_PATH ${CMAKE_BINARY_DIR}/alkos-${ARG_ARCH_NAME}.iso)
+    set(ALKOS_ISO_PATH ${CMAKE_BINARY_DIR}/alkos-${ARG_ARCH_NAME}-${PROJECT_VERSION}.iso)
     alkos_ensure_path_exists(
         PATHS ${MAKE_ISO_SCRIPT_PATH} ${RUN_ALKOS_SCRIPT_PATH} ${RUN_TESTS_SCRIPT_PATH}
     )

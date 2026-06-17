@@ -7,7 +7,8 @@ CONFIGURE_TOOLCHAIN_DIR="${CONFIGURE_DIR}/../../toolchains"
 
 source "${CONFIGURE_DIR}/../utils/pretty_print.bash"
 source "${CONFIGURE_DIR}/../utils/helpers.bash"
-source "${CONFIGURE_DIR}/../utils/feature_flag_lib.bash"
+source "${CONFIGURE_DIR}/feature_flag_lib.bash"
+source "${CONFIGURE_DIR}/version_lib.bash"
 source "${CONFIGURE_DIR}/../utils/argparse.bash"
 
 declare -A CONFIGURE_TOOLCHAINS=(
@@ -102,10 +103,20 @@ configure_script_cmake_config() {
   feature_flags_generate_cmake
 }
 
+configure_script_version() {
+  pretty_info "Generating version header..."
+  if ! version_generate_header \
+    "$(argparse_get "arch")" \
+    "${CONFIGURE_CMAKE_BUILD_TYPES[$(argparse_get "build")]}"; then
+    dump_error "Failed to generate version header"
+  fi
+}
+
 run() {
   configure_script_welcome
   configure_script_feature_flags
   configure_script_cmake_config
+  configure_script_version
 
   pretty_info "Preparing build directory..."
   base_runner "Failed to create build directory" "$(argparse_get "v|verbose")" mkdir -p "$(argparse_get "b|build-dir")"

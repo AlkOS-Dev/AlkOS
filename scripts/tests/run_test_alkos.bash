@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-source "${SCRIPT_DIR}/../utils/conf_handlers.bash"
+source "${SCRIPT_DIR}/../config/conf_handlers.bash"
 source_conf_file
 verify_conf_var_exists CONF_QEMU_COMMAND
 verify_conf_var_exists CONF_QEMU_TEST_FLAGS

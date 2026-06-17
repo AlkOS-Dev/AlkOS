@@ -4,13 +4,21 @@
 MAKE_ISO_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 MAKE_ISO_SCRIPT_PATH="${MAKE_ISO_SCRIPT_DIR}/$(basename "$0")"
 
+# Project version (single source of truth: repo root VERSION file)
+MAKE_ISO_SCRIPT_VERSION_FILE="${MAKE_ISO_SCRIPT_DIR}/../../VERSION"
+if [ -f "${MAKE_ISO_SCRIPT_VERSION_FILE}" ]; then
+  MAKE_ISO_SCRIPT_ALKOS_VERSION="$(tr -d '[:space:]' < "${MAKE_ISO_SCRIPT_VERSION_FILE}")"
+else
+  MAKE_ISO_SCRIPT_ALKOS_VERSION="unknown"
+fi
+
 # GRUB config placeholders and default values
 MAKE_ISO_SCRIPT_BOOTABLE_TOKEN="BOOTABLE_KERNEL_PLACEHOLDER"
 MAKE_ISO_SCRIPT_MODULES_TOKEN="MODULES_PLACEHOLDER"
 MAKE_ISO_SCRIPT_GRUB_CONTENTS="
 set timeout=0
 set default=0
-menuentry \"AlkOS\" {
+menuentry \"AlkOS ${MAKE_ISO_SCRIPT_ALKOS_VERSION}\" {
   multiboot2 /boot/${MAKE_ISO_SCRIPT_BOOTABLE_TOKEN}
   ${MAKE_ISO_SCRIPT_MODULES_TOKEN}
   boot

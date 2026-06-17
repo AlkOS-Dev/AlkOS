@@ -1,7 +1,7 @@
 #!/bin/bash
 
 FIND_FAILING_LINE_ACTION_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-source "${FIND_FAILING_LINE_ACTION_DIR}/../utils/conf_handlers.bash"
+source "${FIND_FAILING_LINE_ACTION_DIR}/../config/conf_handlers.bash"
 
 source_conf_file
 verify_conf_var_exists CONF_SYSROOT

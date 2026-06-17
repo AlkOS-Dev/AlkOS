@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.30)
-project(AlkOS LANGUAGES C CXX ASM_NASM)
+
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" ALKOS_VERSION_RAW)
+string(STRIP "${ALKOS_VERSION_RAW}" ALKOS_VERSION)
+
+project(AlkOS VERSION ${ALKOS_VERSION} LANGUAGES C CXX ASM_NASM)
 enable_language(ASM_NASM)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -8,8 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(PROJECT_NAME AlkOS)
-set(PROJECT_VERSION "0.0")
 set(PROJECT_AUTHOR "ALK Organisation")
 
 ################################################################################

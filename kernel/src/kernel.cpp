@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <autogen/feature_flags.h>
+#include <autogen/version.hpp>
 #include <test_module/test_module.hpp>
 
 /* internal includes */
@@ -13,7 +14,9 @@ extern void KernelInit(const hal::RawBootArguments &);
 
 static void KernelRun()
 {
-    TRACE_INFO_GENERAL("Hello from AlkOS!");
+    TRACE_INFO_GENERAL(
+        "Hello from %s %s (%s, %s)!", ALKOS_NAME, ALKOS_VERSION_FULL, ALKOS_ARCH, ALKOS_BUILD_TYPE
+    );
     auto &task_mgr = SchedulingModule::Get().GetTaskMgr();
     auto res       = task_mgr.ExecuteElf64("/bin/shell", {});
     R_ASSERT_TRUE(static_cast<bool>(res), "Failed to launch initial shell process");

@@ -40,6 +40,8 @@ endif ()
 
 add_executable(alkos.kernel ${KERNEL_SOURCES})
 
+add_dependencies(alkos.kernel alkos.version)
+
 ############################### Adding Headers ###############################
 
 target_include_directories(alkos.kernel PUBLIC

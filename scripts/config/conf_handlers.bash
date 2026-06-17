@@ -3,7 +3,7 @@
 CONF_HANDLER_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONF_HANDLER_CONF_FILE_PATH="${CONF_HANDLER_SCRIPT_DIR}/../../config/conf.generated.bash"
 
-source "${CONF_HANDLER_SCRIPT_DIR}/pretty_print.bash"
+source "${CONF_HANDLER_SCRIPT_DIR}/../utils/pretty_print.bash"
 
 verify_conf_file_exists() {
   if [ ! -f "${CONF_HANDLER_CONF_FILE_PATH}" ] ; then
