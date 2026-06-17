@@ -365,22 +365,29 @@ version_generate() {
   local a_name a_email a_github entry
   while IFS=$'\t' read -r a_name a_email a_github; do
     [[ -z "${a_name}" ]] && continue
+
     authors_cpp+="    {\"$(_version_lib_cstr_escape "${a_name}")\", \"$(_version_lib_cstr_escape "${a_email}")\", \"$(_version_lib_cstr_escape "${a_github}")\"},"$'\n'
+
     entry="${a_name} <${a_email}>"
     [[ -n "${a_github}" ]] && entry+=" (@${a_github})"
+
     [[ -n "${authors_blob}" ]] && authors_blob+="; "
     authors_blob+="${entry}"
+
     authors_count=$((authors_count + 1))
   done <<< "${authors_tsv}"
+
   authors_cpp="${authors_cpp%$'\n'}"
   authors_blob="$(_version_lib_cstr_escape "${authors_blob}")"
 
   local banner="ALKOS_BUILD_INFO name=${info[name]} version=${info[version_full]}"
   banner+=" arch=${info[arch]} build=${info[build_type]} official=${info[official]}"
   banner+=" commit=${info[git_hash]} dirty=${info[git_dirty]}"
+
   if [[ -n "${info[build_date]}" ]]; then
     banner+=" date=${info[build_date]} time=${info[build_time]}"
   fi
+
   banner="$(_version_lib_cstr_escape "${banner}")"
 
   _version_render_header info "${authors_cpp}" "${authors_count}" "${banner}" "${authors_blob}" \
