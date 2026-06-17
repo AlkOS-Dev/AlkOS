@@ -9,6 +9,15 @@ _version_lib_err() {
   echo "version_lib: $*" >&2
 }
 
+# Normalize a boolean-ish value to 1/0. Returns non-zero on an unrecognized value.
+_version_lib_normalize_bool() {
+  case "${1,,}" in
+    1 | true | on | yes) echo 1 ;;
+    0 | false | off | no | "") echo 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 version_read() {
   local value=""
   if [[ -f "${VERSION_LIB_VERSION_FILE}" ]]; then
@@ -24,9 +33,9 @@ version_read() {
 }
 
 # Parse all version data into the caller's associative array.
-# Usage: declare -A info; version_parse info [arch] [build_type]
+# Usage: declare -A info; version_parse info [arch] [build_type] [official]
 # Populated keys: name author version major minor patch git_hash git_dirty
-#                 version_full build_type arch
+#                 version_full build_type arch official
 # Returns non-zero on any failure (unreadable/invalid version, missing git, etc.).
 version_parse() {
   if [[ -z "${1:-}" ]]; then
@@ -37,6 +46,13 @@ version_parse() {
   local -n _version_out="$1"
   local arch="${2:-unknown}"
   local build_type="${3:-unknown}"
+  local official_raw="${4:-0}"
+
+  local official
+  if ! official="$(_version_lib_normalize_bool "${official_raw}")"; then
+    _version_lib_err "invalid official flag '${official_raw}' (expected 0/1/true/false)"
+    return 1
+  fi
 
   local version
   if ! version="$(version_read)"; then
@@ -98,15 +114,17 @@ version_parse() {
   _version_out[version_full]="${version_full}"
   _version_out[build_type]="${build_type}"
   _version_out[arch]="${arch}"
+  _version_out[official]="${official}"
 }
 
 version_generate_header() {
   local arch="${1:-unknown}"
   local build_type="${2:-unknown}"
-  local output="${3:-${VERSION_LIB_HEADER_PATH}}"
+  local official="${3:-0}"
+  local output="${4:-${VERSION_LIB_HEADER_PATH}}"
 
   local -A info
-  if ! version_parse info "${arch}" "${build_type}"; then
+  if ! version_parse info "${arch}" "${build_type}" "${official}"; then
     return 1
   fi
 
@@ -124,7 +142,6 @@ version_generate_header() {
 #define GENERATED_INCLUDE_AUTOGEN_VERSION_HPP_
 
 // ------------------------------------------------------------------ macros ---
-// Macro forms are usable from both C and C++ translation units.
 
 #define ALKOS_NAME "${info[name]}"
 #define ALKOS_AUTHOR "${info[author]}"
@@ -133,12 +150,7 @@ version_generate_header() {
 #define ALKOS_VERSION_MINOR ${info[minor]}
 #define ALKOS_VERSION_PATCH ${info[patch]}
 
-// Canonical release number, e.g. "0.1.0".
 #define ALKOS_VERSION_STRING "${info[version]}"
-
-// Descriptive build identifier. On a tagged commit this equals the release
-// number; otherwise it carries the git suffix, e.g. "0.1.0-5-gabc123-dirty"
-// (or "0.1.0+gabc123-dirty" before the first tag exists).
 #define ALKOS_VERSION_FULL "${info[version_full]}"
 
 #define ALKOS_GIT_HASH "${info[git_hash]}"
@@ -146,6 +158,10 @@ version_generate_header() {
 
 #define ALKOS_BUILD_TYPE "${info[build_type]}"
 #define ALKOS_ARCH "${info[arch]}"
+
+// 1 for official release builds.
+// 0 for internal builds.
+#define ALKOS_OFFICIAL_BUILD ${info[official]}
 
 // ------------------------------------------------------------- C++ helpers ---
 
@@ -165,6 +181,7 @@ inline constexpr const char* kGitHash   = ALKOS_GIT_HASH;
 inline constexpr bool        kGitDirty  = (ALKOS_GIT_DIRTY != 0);
 inline constexpr const char* kBuildType = ALKOS_BUILD_TYPE;
 inline constexpr const char* kArch      = ALKOS_ARCH;
+inline constexpr bool        kOfficial  = (ALKOS_OFFICIAL_BUILD != 0);
 }  // namespace alkos::version
 
 #endif  // __cplusplus

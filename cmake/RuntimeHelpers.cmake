@@ -65,6 +65,7 @@ function(alkos_register_runtime_environment)
     # Add architecture-specific variables to the bash config
     alkos_add_to_bash_config("CONF_ARCH" "${ARG_ARCH_NAME}")
     alkos_add_to_bash_config("CONF_BUILD_TYPE" "${CMAKE_BUILD_TYPE}")
+    alkos_add_to_bash_config("CONF_OFFICIAL_BUILD" "${ALKOS_OFFICIAL_BUILD}")
     alkos_add_to_bash_config("CONF_SYSROOT" "${CMAKE_SYSROOT}")
     alkos_add_to_bash_config("CONF_BOOTABLE_KERNEL_EXEC" "${ARG_BOOTABLE_EXECUTABLE}")
     alkos_add_to_bash_config("CONF_ISO_PATH" "${ALKOS_ISO_PATH}")

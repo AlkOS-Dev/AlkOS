@@ -22,11 +22,13 @@ declare -A CONFIGURE_FLAGS=(
 declare -A CONFIGURE_BUILD_TYPES_DESC=(
   ["debug"]="Build in debug. Capable of running on real hardware."
   ["release"]="Build in release. Capable of running on real hardware."
+  ["release_official"]="Same as release, but marked as an official build."
 )
 
 declare -A CONFIGURE_CMAKE_BUILD_TYPES=(
   ["debug"]="Debug"
   ["release"]="Release"
+  ["release_official"]="Release"
 )
 
 declare -A CONFIGURE_FEATURE_FLAGS_PRESETS=(
@@ -51,12 +53,16 @@ help_addition() {
 parse_args() {
   argparse_init "${CONFIGURE_SCRIPT_PATH}" "Configure AlkOS build" help_addition
   argparse_add_positional "arch" "Target architecture" true "x86_64" "string"
-  argparse_add_positional "build" "Build type" true "debug|release" "string"
+  argparse_add_positional "build" "Build type" true "debug|release|release_official" "string"
   argparse_add_option "b|build-dir" "Directory to store build files" false "${CONFIGURE_DIR}/../../build" "" "directory"
   argparse_add_option "t|tool" "Directory to store tool binaries" false "${CONFIGURE_DIR}/../../tools" "" "directory"
   argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "p|preset" "Feature flag preset to use" false "" "test_mode|default|regression_mode" "string"
   argparse_parse "$@"
+}
+
+configure_is_official_build() {
+  [[ "$(argparse_get "build")" == "release_official" ]] && echo 1 || echo 0
 }
 
 configure_script_welcome() {
@@ -100,6 +106,8 @@ configure_script_cmake_config() {
   echo "set(TOOL_BINARIES_DIR \"$(argparse_get "t|tool")\")" >> "$conf_cmake"
   echo "set(CMAKE_BUILD_DIR \"$(argparse_get "b|build-dir")\")" >> "$conf_cmake"
 
+  echo "set(ALKOS_OFFICIAL_BUILD $(configure_is_official_build))" >> "$conf_cmake"
+
   feature_flags_generate_cmake
 }
 
@@ -107,7 +115,8 @@ configure_script_version() {
   pretty_info "Generating version header..."
   if ! version_generate_header \
     "$(argparse_get "arch")" \
-    "${CONFIGURE_CMAKE_BUILD_TYPES[$(argparse_get "build")]}"; then
+    "${CONFIGURE_CMAKE_BUILD_TYPES[$(argparse_get "build")]}" \
+    "$(configure_is_official_build)"; then
     dump_error "Failed to generate version header"
   fi
 }
