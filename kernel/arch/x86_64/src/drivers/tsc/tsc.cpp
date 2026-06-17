@@ -42,6 +42,11 @@ static void AlternativeTscCheck(hardware::ClockRegistryEntry &entry)
 
 static void PrepareTscInfo(hardware::ClockRegistryEntry &entry)
 {
+    /* Quick fix: CPUID leaf 0x15 crystal freq is bogus under QEMU (TSC ran ~10x fast). */
+    /* Always calibrate against the HPET, which measures the real TSC frequency. */
+    AlternativeTscCheck(entry);
+    return;
+
     u32 eax, ebx, ecx, unused;
     __get_cpuid(tsc::kIA32CpuidClockInfo, &eax, &ebx, &ecx, &unused);
 
