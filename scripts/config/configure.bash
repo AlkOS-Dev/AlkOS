@@ -112,12 +112,12 @@ configure_script_cmake_config() {
 }
 
 configure_script_version() {
-  pretty_info "Generating version header..."
-  if ! version_generate_header \
+  pretty_info "Generating version files..."
+  if ! version_generate \
     "$(argparse_get "arch")" \
     "${CONFIGURE_CMAKE_BUILD_TYPES[$(argparse_get "build")]}" \
     "$(configure_is_official_build)"; then
-    dump_error "Failed to generate version header"
+    dump_error "Failed to generate version files"
   fi
 }
 

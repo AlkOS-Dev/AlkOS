@@ -85,7 +85,9 @@ add_custom_target(userspace_apps COMMENT "Building all userspace applications")
 
 function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     add_executable(${PROG_NAME} ${SRC_FILES})
-    
+
+    target_sources(${PROG_NAME} PRIVATE ${ALKOS_VERSION_SOURCE})
+
     # Temporarily hardcode flags for x86_64
     target_compile_options(${PROG_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:
