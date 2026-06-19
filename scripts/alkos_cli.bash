@@ -12,6 +12,7 @@ readonly ALK_OS_CLI_QEMU_RUN_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/actions/run_a
 readonly ALK_OS_CLI_CONFIGURE_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/config/configure.bash"
 readonly ALK_OS_CLI_CONF_PATH="${ALK_OS_CLI_SCRIPT_DIR}/../config/conf.generated.bash"
 readonly ALK_OS_CLI_SETUP_HOOKS_SCRIPT_PATH="${ALK_OS_CLI_SCRIPT_DIR}/git-hooks/setup-hooks.bash"
+readonly ALK_OS_CLI_VERSION_FILE="${ALK_OS_CLI_SCRIPT_DIR}/../VERSION"
 
 # Import utilities
 source "${ALK_OS_CLI_SCRIPT_DIR}/utils/pretty_print.bash"
@@ -26,6 +27,14 @@ declare -A ALK_OS_CLI_INSTALL_DEPS_SCRIPT_PATH_DICT=(
     [ubuntu]="env/install_deps_ubuntu.bash"
 )
 
+alkos_cli_version() {
+    if [[ -f "${ALK_OS_CLI_VERSION_FILE}" ]]; then
+        tr -d '[:space:]' < "${ALK_OS_CLI_VERSION_FILE}"
+    else
+        echo "unknown"
+    fi
+}
+
 print_banner() {
     cat << "EOF"
     _    _ _    _____ _____
@@ -35,7 +44,7 @@ print_banner() {
 /_/   \_\_|_|\_\_____|_____| CLI
 EOF
     echo "AlkOS Environment Setup Tool"
-    echo "Version: 0.0.0"
+    echo "Version: $(alkos_cli_version)"
     echo
 }
 
@@ -43,12 +52,13 @@ parse_args() {
   argparse_init "${ALK_OS_CLI_SCRIPT_PATH}" "AlkOS CLI Tool"
   argparse_add_option "r|run" "Build and run AlkOS" false false "" "flag"
   argparse_add_option "i|install" "Install components" false "" "toolchain|deps|all" "string"
-  argparse_add_option "v|verbose" "Enable verbose output" false false "" "flag"
+  argparse_add_option "verbose" "Enable verbose output" false false "" "flag"
   argparse_add_option "c|configure" "Run default configuration" false false "" "flag"
   argparse_add_option "g|git-hooks" "Setup git hooks" false false "" "flag"
+  argparse_add_option "v|version" "Print the AlkOS version and exit" false false "" "flag"
   argparse_parse "$@"
 
-  if [[ $(argparse_get "v|verbose") == true ]]; then
+  if [[ $(argparse_get "verbose") == true ]]; then
     ALK_OS_CLI_VERBOSE_FLAG="--verbose"
   fi
 
@@ -125,8 +135,14 @@ setup_git_hooks() {
 }
 
 main() {
-    print_banner
     parse_args "$@"
+
+    if [[ $(argparse_get "v|version") == true ]]; then
+        echo "$(alkos_cli_version)"
+        exit 0
+    fi
+
+    print_banner
     validate_args
     install_dependencies
     run_default_configuration

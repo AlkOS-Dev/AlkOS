@@ -5,7 +5,7 @@ RUN_ALKOS_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/nul
 RUN_ALKOS_SCRIPT_PATH="${RUN_ALKOS_SCRIPT_DIR}/$(basename "$0")"
 RUN_ALKOS_SCRIPT_SOURCE_DIR="${RUN_ALKOS_SCRIPT_DIR}/../.."
 
-source "${RUN_ALKOS_SCRIPT_DIR}/../utils/conf_handlers.bash"
+source "${RUN_ALKOS_SCRIPT_DIR}/../config/conf_handlers.bash"
 
 source_conf_file
 verify_conf_var_exists CONF_QEMU_COMMAND

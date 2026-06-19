@@ -1,0 +1,13 @@
+name: License headers
+
+on: [push]
+
+jobs:
+  License:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check license headers
+        run: scripts/cicd/check_license_headers.bash

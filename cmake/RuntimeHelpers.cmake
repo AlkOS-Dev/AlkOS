@@ -57,7 +57,13 @@ function(alkos_register_runtime_environment)
     set(MAKE_ISO_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/make_iso.bash)
     set(RUN_ALKOS_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/run_alkos.bash)
     set(RUN_TESTS_SCRIPT_PATH ${CMAKE_ROOT_DIR}/scripts/actions/run_tests.bash)
-    set(ALKOS_ISO_PATH ${CMAKE_BINARY_DIR}/alkos-${ARG_ARCH_NAME}.iso)
+
+    set(_alkos_iso_suffix "")
+    if (NOT ALKOS_OFFICIAL_BUILD)
+        string(TIMESTAMP _alkos_build_stamp "%Y-%m-%d_%H%M%S")
+        set(_alkos_iso_suffix "-dev-${_alkos_build_stamp}")
+    endif ()
+    set(ALKOS_ISO_PATH ${CMAKE_BINARY_DIR}/alkos-${ARG_ARCH_NAME}-${PROJECT_VERSION}${_alkos_iso_suffix}.iso)
     alkos_ensure_path_exists(
         PATHS ${MAKE_ISO_SCRIPT_PATH} ${RUN_ALKOS_SCRIPT_PATH} ${RUN_TESTS_SCRIPT_PATH}
     )
@@ -65,6 +71,7 @@ function(alkos_register_runtime_environment)
     # Add architecture-specific variables to the bash config
     alkos_add_to_bash_config("CONF_ARCH" "${ARG_ARCH_NAME}")
     alkos_add_to_bash_config("CONF_BUILD_TYPE" "${CMAKE_BUILD_TYPE}")
+    alkos_add_to_bash_config("CONF_OFFICIAL_BUILD" "${ALKOS_OFFICIAL_BUILD}")
     alkos_add_to_bash_config("CONF_SYSROOT" "${CMAKE_SYSROOT}")
     alkos_add_to_bash_config("CONF_BOOTABLE_KERNEL_EXEC" "${ARG_BOOTABLE_EXECUTABLE}")
     alkos_add_to_bash_config("CONF_ISO_PATH" "${ALKOS_ISO_PATH}")
