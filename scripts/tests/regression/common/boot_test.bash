@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
 
 BOOT_TEST_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
@@ -21,7 +24,7 @@ boot_test() {
     fi
 
     local output=$(<"$output_file")
-    verify_output_contains "$output" "Hello from AlkOS!"
+    verify_output_contains "$output" "Hello from AlkOS"
     verify_output_not_contains "$output" "ERROR"
     verify_output_not_contains "$output" "WARNING"
 }

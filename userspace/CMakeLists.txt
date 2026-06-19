@@ -85,7 +85,9 @@ add_custom_target(userspace_apps COMMENT "Building all userspace applications")
 
 function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     add_executable(${PROG_NAME} ${SRC_FILES})
-    
+
+    target_sources(${PROG_NAME} PRIVATE ${ALKOS_VERSION_SOURCE})
+
     # Temporarily hardcode flags for x86_64
     target_compile_options(${PROG_NAME} PRIVATE
         $<$<COMPILE_LANGUAGE:CXX>:
@@ -108,6 +110,7 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
     target_link_libraries(${PROG_NAME} PRIVATE
         c.userspace
         cpp.userspace
+        alkos.autogen.interface
     )
 
     add_custom_command(TARGET ${PROG_NAME} POST_BUILD
@@ -115,7 +118,7 @@ function(alkos_register_userspace_app PROG_NAME SRC_FILES)
         COMMENT "Installing ${PROG_NAME} to ${USERSPACE_BIN_DIR}"
     )
 
-    add_dependencies(${PROG_NAME} alkos.libc.crt0 alkos.libc.crti alkos.libc.crtn)
+    add_dependencies(${PROG_NAME} alkos.libc.crt0 alkos.libc.crti alkos.libc.crtn alkos.version)
     add_dependencies(userspace_apps ${PROG_NAME})
 endfunction()
 

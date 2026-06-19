@@ -2,7 +2,7 @@
 
 APPLY_ALL_HOOKS_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$APPLY_ALL_HOOKS_DIR/../git-hooks/helpers.bash"
-source "$APPLY_ALL_HOOKS_DIR/../utils/conf_handlers.bash"
+source "$APPLY_ALL_HOOKS_DIR/../config/conf_handlers.bash"
 source_conf_file
 
 # ===============================

@@ -5,7 +5,7 @@ readonly MAKE_ROOTFS_SCRIPT_PATH="${MAKE_ROOTFS_SCRIPT_DIR}/$(basename "$0")"
 readonly MAKE_ROOTFS_IMPL_DIR="${MAKE_ROOTFS_SCRIPT_DIR}/../rootfs"
 
 source "${MAKE_ROOTFS_SCRIPT_DIR}/../utils/helpers.bash"
-source "${MAKE_ROOTFS_SCRIPT_DIR}/../utils/conf_handlers.bash"
+source "${MAKE_ROOTFS_SCRIPT_DIR}/../config/conf_handlers.bash"
 source "${MAKE_ROOTFS_SCRIPT_DIR}/../utils/argparse.bash"
 
 source_conf_file

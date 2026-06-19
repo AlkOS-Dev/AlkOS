@@ -1,0 +1,10 @@
+# AlkOS authors — the source of truth for the contributor list embedded in
+# autogen/version.hpp. One contributor per line, in the form:
+#
+#     Name <email> (@github)
+#
+# Lines starting with '#' and blank lines are ignored. Keep sorted by surname.
+
+Łukasz Kryczka <lukasz.kryczka000@gmail.com> (@kryczkal)
+Jakub Lisowski <jakub.lisowski.biz@gmail.com> (@Jlisowskyy)
+Adam Ogieniewski <ogieniewski.dev@gmail.com> (@F1r3d3v)

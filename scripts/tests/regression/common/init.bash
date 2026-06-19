@@ -2,7 +2,7 @@
 
 REGRESSION_INIT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-source "${REGRESSION_INIT_DIR}/../../../utils/conf_handlers.bash"
+source "${REGRESSION_INIT_DIR}/../../../config/conf_handlers.bash"
 source "${REGRESSION_INIT_DIR}/../../../utils/helpers.bash"
 
 init() {

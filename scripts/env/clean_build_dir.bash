@@ -4,7 +4,7 @@ CLEAN_BUILD_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null 
 CLEAN_BUILD_SCRIPT_PATH="${CLEAN_BUILD_SCRIPT_DIR}/$(basename "$0")"
 CONF_BUILD_DIR="${CLEAN_BUILD_SCRIPT_DIR}/../../build"
 
-source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/conf_handlers.bash"
+source "${CLEAN_BUILD_SCRIPT_DIR}/../config/conf_handlers.bash"
 
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/pretty_print.bash"
 source "${CLEAN_BUILD_SCRIPT_DIR}/../utils/helpers.bash"
