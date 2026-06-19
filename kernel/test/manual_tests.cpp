@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include <assert.h>
 
 #include <test_module/test.hpp>
@@ -33,7 +37,7 @@ static void Task0()
         const auto tcb = hardware::GetCoreLocalTcb();
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
-        tcb->state       = Sched::ThreadState::kReady;
+        tcb->state              = Sched::ThreadState::kReady;
         tcb->NodeT::next->state = Sched::ThreadState::kRunning;
         hal::ContextSwitch(tcb->NodeT::next);
     }
@@ -57,7 +61,7 @@ static void Task1()
         HardwareModule::Get().GetInterrupts().BlockHardwareInterrupts();
         trace::DumpAllBuffersOnFailure();
 
-        tcb->state       = Sched::ThreadState::kReady;
+        tcb->state              = Sched::ThreadState::kReady;
         tcb->NodeT::next->state = Sched::ThreadState::kRunning;
         hal::ContextSwitch(tcb->NodeT::next);
     }

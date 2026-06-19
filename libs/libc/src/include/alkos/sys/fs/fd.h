@@ -1,5 +1,9 @@
-#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_
-#define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
+#ifndef LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FS_FD_H_
+#define LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FS_FD_H_
 
 #include "alkos/fd.h"
 #include "defines.h"
@@ -77,7 +81,6 @@ FAST_CALL fd_t DuplicateFd(fd_t fd) { return __platform_dup(fd); }
  */
 FAST_CALL fd_t DuplicateFdTo(fd_t old_fd, fd_t new_fd) { return __platform_dup_to(old_fd, new_fd); }
 
-
 END_DECL_C
 
-#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FD_H_
+#endif  // LIBS_LIBC_SRC_INCLUDE_ALKOS_SYS_FS_FD_H_

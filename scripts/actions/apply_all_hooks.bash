@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
 
 APPLY_ALL_HOOKS_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$APPLY_ALL_HOOKS_DIR/../git-hooks/helpers.bash"

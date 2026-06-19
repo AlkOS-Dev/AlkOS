@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
 #define KERNEL_ARCH_X86_64_BOOT_LIB_MEM_PMM_HPP_
 
@@ -52,7 +56,9 @@ class PhysicalMemoryManager
     //==============================================================================
 
     explicit PhysicalMemoryManager(const PmmState &state)
-        : bitmap_view_{reinterpret_cast<void *>(state.bitmap_addr), static_cast<size_t>(state.total_pages)},
+        : bitmap_view_{
+              reinterpret_cast<void *>(state.bitmap_addr), static_cast<size_t>(state.total_pages)
+          },
           iteration_state_{state.iteration_index, state.iteration_index_32}
     {
     }

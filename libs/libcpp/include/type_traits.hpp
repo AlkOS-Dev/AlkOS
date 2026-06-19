@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_HPP_
 #define LIBS_LIBCPP_INCLUDE_TYPE_TRAITS_HPP_
 
@@ -1506,8 +1510,8 @@ struct invoke_mem_obj<Result Class::*, Arg> {
     using arg_t     = std::remove_cvref_t<Arg>;
     using mem_ptr_t = Result Class::*;
     using type      = typename std::conditional_t<
-             std::is_same_v<arg_t, Class> || std::is_base_of_v<Class, arg_t>,
-             invoke_mem_obj_ref<mem_ptr_t, arg_t>, invoke_mem_obj_deref<mem_ptr_t, arg_t>>::type;
+        std::is_same_v<arg_t, Class> || std::is_base_of_v<Class, arg_t>,
+        invoke_mem_obj_ref<mem_ptr_t, arg_t>, invoke_mem_obj_deref<mem_ptr_t, arg_t>>::type;
 };
 
 template <class Fn, class Arg>
@@ -1588,8 +1592,8 @@ struct invoke_mem_fun<Result Class::*, Arg, Args...> {
     using arg_t     = std::remove_reference_t<Arg>;
     using mem_ptr_t = Result Class::*;
     using type      = typename std::conditional_t<
-             std::is_base_of_v<Class, arg_t>, invoke_mem_fun_ref<mem_ptr_t, arg_t, Args...>,
-             invoke_mem_fun_deref<mem_ptr_t, arg_t, Args...>>::type;
+        std::is_base_of_v<Class, arg_t>, invoke_mem_fun_ref<mem_ptr_t, arg_t, Args...>,
+        invoke_mem_fun_deref<mem_ptr_t, arg_t, Args...>>::type;
 };
 
 template <class Fn, class Arg, class... Args>

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 /**
  * @file crt0.cpp
  * @brief C Runtime Startup (CRT0) for userspace programs

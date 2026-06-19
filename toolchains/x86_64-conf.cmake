@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 set(CMAKE_C_FLAGS_RELEASE "" CACHE STRING "Release C flags" FORCE)
 set(CMAKE_CXX_FLAGS_RELEASE "" CACHE STRING "Release C++ flags" FORCE)
 

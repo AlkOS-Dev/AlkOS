@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 message(STATUS "    -> gui_test")
 alkos_find_sources(GUI_TEST_SOURCES)
 alkos_register_userspace_app(gui_test "${GUI_TEST_SOURCES}")

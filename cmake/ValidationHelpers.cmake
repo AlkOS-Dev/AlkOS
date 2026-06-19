@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 #
 # This module provides functions to validate that critical CMake variables
 # are defined, halting or warning the user if they are not.

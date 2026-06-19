@@ -1,4 +1,7 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
 
 FEATURE_FLAGS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 FEATURE_FLAGS_PATH="${FEATURE_FLAGS_DIR}/../../config/feature_flags_config.yaml"

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef KERNEL_SRC_MEM_PHYS_MNGR_SLAB_EFFICIENCY_HPP_
 #define KERNEL_SRC_MEM_PHYS_MNGR_SLAB_EFFICIENCY_HPP_
 
@@ -22,11 +26,13 @@ struct SlabEfficiencyInfo {
     using FreeListItemType = decltype([] {
         if constexpr (kBlockSize / (ObjectSize + sizeof(u8)) < std::numeric_limits<u8>::max()) {
             return u8{};
-        } else if constexpr (kBlockSize / (ObjectSize + sizeof(u16)) <
-                             std::numeric_limits<u16>::max()) {
+        } else if constexpr (
+            kBlockSize / (ObjectSize + sizeof(u16)) < std::numeric_limits<u16>::max()
+        ) {
             return u16{};
-        } else if constexpr (kBlockSize / (ObjectSize + sizeof(u32)) <
-                             std::numeric_limits<u32>::max()) {
+        } else if constexpr (
+            kBlockSize / (ObjectSize + sizeof(u32)) < std::numeric_limits<u32>::max()
+        ) {
             return u32{};
         } else {
             return u64{};
