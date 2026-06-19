@@ -1,4 +1,7 @@
 #!/bin/python
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
 
 import test_framework.main as tf
 import os

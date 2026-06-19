@@ -1,4 +1,8 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 declare -A ARGPARSE_OPTIONS=()
 declare -A ARGPARSE_POSITIONAL=()
 declare -A ARGPARSE_VALUES=()

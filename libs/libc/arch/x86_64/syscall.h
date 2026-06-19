@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef LIBS_LIBC_ARCH_X86_64_SYSCALL_H_
 #define LIBS_LIBC_ARCH_X86_64_SYSCALL_H_
 
@@ -98,8 +102,8 @@
         __ret;                                                                           \
     })
 
-#define _SYSCALL_PP_NARG(...)                             _SYSCALL_PP_NARG_(__VA_ARGS__ __VA_OPT__(, ) _SYSCALL_PP_RSEQ_N())
-#define _SYSCALL_PP_NARG_(...)                            _SYSCALL_PP_ARG_N(__VA_ARGS__)
+#define _SYSCALL_PP_NARG(...)  _SYSCALL_PP_NARG_(__VA_ARGS__ __VA_OPT__(, ) _SYSCALL_PP_RSEQ_N())
+#define _SYSCALL_PP_NARG_(...) _SYSCALL_PP_ARG_N(__VA_ARGS__)
 #define _SYSCALL_PP_ARG_N(_1, _2, _3, _4, _5, _6, N, ...) N
 #define _SYSCALL_PP_RSEQ_N()                              6, 5, 4, 3, 2, 1, 0
 

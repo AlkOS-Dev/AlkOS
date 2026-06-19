@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include "stdio.h"
 
 #include <stdarg.h>
@@ -193,8 +197,9 @@ int vsnprintf(char *str, size_t size, const char *format, va_list va)
                     auto modifier = static_cast<LengthModifier>(*iter);
                     if (modifier == LengthModifier::h && length_modifier == LengthModifier::h) {
                         length_modifier = LengthModifier::hh;
-                    } else if (modifier == LengthModifier::l &&
-                               length_modifier == LengthModifier::l) {
+                    } else if (
+                        modifier == LengthModifier::l && length_modifier == LengthModifier::l
+                    ) {
                         length_modifier = LengthModifier::ll;
                     } else if (length_modifier == LengthModifier::None) {
                         length_modifier = modifier;

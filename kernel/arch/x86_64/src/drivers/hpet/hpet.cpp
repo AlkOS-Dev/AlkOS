@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include "drivers/hpet/hpet.hpp"
 #include "cpu/utils.hpp"
 #include "hal/interrupt_params.hpp"

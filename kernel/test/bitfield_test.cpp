@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include <types.h>
 #include <data_structures/bitfield.hpp>
 #include <test_module/test.hpp>

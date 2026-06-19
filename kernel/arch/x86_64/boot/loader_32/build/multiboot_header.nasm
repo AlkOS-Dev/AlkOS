@@ -1,3 +1,7 @@
+; SPDX-License-Identifier: MIT
+; Copyright (c) 2025-2026 The AlkOS Authors
+; See the AUTHORS file for the full list of contributors.
+
           bits 32
           ; This file defines the multiboot header for the 32-bit loader
           ; It is directly included in the linker script and is placed at the beginning of the kernel image

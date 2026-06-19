@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 cmake_minimum_required(VERSION 3.30)
 project(AlkOS_Host_Tests LANGUAGES C CXX)
 

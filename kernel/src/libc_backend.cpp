@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 /// This file provides the kernel's implementation of the libc platform ABI.
 #ifdef __ALKOS_KERNEL__
 

@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 TEST_COMMAND_SPECIFIER = "[TEST]"
 
 TEST_DISPLAY_STOP_COMMAND_IN = f"{TEST_COMMAND_SPECIFIER} [LISTEND]\n"
