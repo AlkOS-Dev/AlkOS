@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include <algorithm.hpp>
 
 #include "hardware/core_local.hpp"
@@ -257,8 +261,8 @@ static struct TraceFramework {
     )
     {
         const u8 nested_intrs = hardware::GetCoreLocalNestedInterrupts();
-        const char *src       = nested_intrs == 0 ? single_core_env.main_execution_workspace
-                                                  : single_core_env.interrupt_workspace[nested_intrs - 1];
+        const char *src = nested_intrs == 0 ? single_core_env.main_execution_workspace
+                                            : single_core_env.interrupt_workspace[nested_intrs - 1];
 
         CommitToLogPtrSingleCore(buffer, trace_size, src);
     }

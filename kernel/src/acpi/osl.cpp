@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include "osl.tpp"
 
 #include <string.h>
@@ -226,10 +230,10 @@ uacpi_status uacpi_kernel_install_interrupt_handler(
         .GetLit()
         .InstallInterruptHandler<intr::InterruptType::kHardwareInterrupt>(irq, handler);
 
-    auto &entry = HardwareModule::Get()
-                      .GetInterrupts()
-                      .GetLit()
-                      .GetEntry<intr::InterruptType::kHardwareInterrupt>(irq);
+    auto &entry     = HardwareModule::Get()
+                          .GetInterrupts()
+                          .GetLit()
+                          .GetEntry<intr::InterruptType::kHardwareInterrupt>(irq);
     *out_irq_handle = reinterpret_cast<void *>(&entry);
     return UACPI_STATUS_OK;
 }

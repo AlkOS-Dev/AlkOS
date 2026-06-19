@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
 #define KERNEL_TEST_TEST_MODULE_EXPECT_HPP_
 

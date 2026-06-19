@@ -1,3 +1,7 @@
+; SPDX-License-Identifier: MIT
+; Copyright (c) 2025-2026 The AlkOS Authors
+; See the AUTHORS file for the full list of contributors.
+
           ; This file defines the GDT for the 64-bit loader
           ; It is used to switch to 64-bit mode and set up the data segments
 

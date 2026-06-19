@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef ALKOS_BOOT_LIB_MEM_VMM_TPP_
 #define ALKOS_BOOT_LIB_MEM_VMM_TPP_
 

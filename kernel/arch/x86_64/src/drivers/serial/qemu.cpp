@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 /**
  * Implementation of serial port communication for QEMU.
  * For detailed implementation reference, see: https://wiki.osdev.org/Serial_Ports

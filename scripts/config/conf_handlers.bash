@@ -1,4 +1,7 @@
 #! /bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
 
 CONF_HANDLER_SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 CONF_HANDLER_CONF_FILE_PATH="${CONF_HANDLER_SCRIPT_DIR}/../../config/conf.generated.bash"

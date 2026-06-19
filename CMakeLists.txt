@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2025-2026 The AlkOS Authors
+# See the AUTHORS file for the full list of contributors.
+
 cmake_minimum_required(VERSION 3.30)
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" ALKOS_VERSION_RAW)

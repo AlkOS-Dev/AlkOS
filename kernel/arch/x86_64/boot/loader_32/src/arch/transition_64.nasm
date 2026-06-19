@@ -1,3 +1,7 @@
+; SPDX-License-Identifier: MIT
+; Copyright (c) 2025-2026 The AlkOS Authors
+; See the AUTHORS file for the full list of contributors.
+
           [bits 32]
           ; This is a function that switches to 64-bit mode and jumps to some program entry point while
           ; preserving the loader_data pointer.

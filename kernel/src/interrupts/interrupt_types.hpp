@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #ifndef KERNEL_SRC_INTERRUPTS_INTERRUPT_TYPES_HPP_
 #define KERNEL_SRC_INTERRUPTS_INTERRUPT_TYPES_HPP_
 
@@ -20,7 +24,7 @@ struct InterruptHandlerEntry {
     using InterruptHandlerException = Sched::Thread *(*)(InterruptHandlerEntry & entry,
                                                          hal::ExceptionData *data);
     using HandlerType               = std::conditional_t<
-                      kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
+        kInterruptType == InterruptType::kException, InterruptHandlerException, InterruptHandler>;
 
     /* Interrupt driver */
     struct InterruptDriver {

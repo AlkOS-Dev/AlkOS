@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include <data_structures/linked_list.hpp>
 #include <data_structures/maps/intrusive_rb_tree.hpp>
 #include <mem/heap.hpp>

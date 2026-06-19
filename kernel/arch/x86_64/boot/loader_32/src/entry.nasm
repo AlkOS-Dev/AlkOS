@@ -1,3 +1,7 @@
+; SPDX-License-Identifier: MIT
+; Copyright (c) 2025-2026 The AlkOS Authors
+; See the AUTHORS file for the full list of contributors.
+
           bits 32
           ; This file defines an entry point for the 32-bit loader
           ; The bootloader has loaded us into 32-bit protected mode on a x86

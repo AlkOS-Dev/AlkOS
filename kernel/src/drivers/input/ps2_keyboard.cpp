@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025-2026 The AlkOS Authors
+// See the AUTHORS file for the full list of contributors.
+
 #include "drivers/input/ps2_keyboard.hpp"
 #include "modules/input.hpp"
 #include "modules/video.hpp"
