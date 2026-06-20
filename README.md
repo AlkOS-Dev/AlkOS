@@ -28,7 +28,7 @@ run takes a while.
 # Install system dependencies and build the cross-toolchain.
 ./scripts/alkos_cli.bash --install all
 
-# Generate the build configuration.
+# Generate the build configuration (defaults to a release build).
 ./scripts/alkos_cli.bash --configure
 
 # Build the kernel and userspace, make the ISO, boot it in QEMU.
@@ -37,6 +37,10 @@ run takes a while.
 
 Run `./scripts/alkos_cli.bash --help` for the full command list. Append `--verbose` to any
 command to see the exact error if something breaks.
+
+`--configure` picks the build type automatically: `release_official` on a clean checkout
+sitting on a release tag, otherwise `release`. For a debug build, run `configure.bash`
+directly: `./scripts/config/configure.bash x86_64 debug`.
 
 If everything went right, QEMU drops you into the AlkOS shell:
 

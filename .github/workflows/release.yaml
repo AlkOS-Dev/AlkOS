@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  Release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare environment for x86_64
+        uses: ./.github/actions/prepare_env
+        with:
+          arch: x86_64
+
+      - name: Configure official release build
+        run: sudo "$GITHUB_WORKSPACE/scripts/config/configure.bash" x86_64 release_official -v -p regression_mode
+
+      - name: Build AlkOS
+        run: sudo "$GITHUB_WORKSPACE/scripts/actions/build_alkos.bash" -v
+
+      - name: Build ISO
+        run: sudo "$GITHUB_WORKSPACE/scripts/actions/make_iso.bash"
+
+      - name: Locate ISO
+        id: iso
+        run: |
+          iso="$(find build -name 'alkos-*.iso' | head -n1)"
+          if [[ -z "$iso" ]]; then
+            echo "No ISO produced under build/"
+            exit 1
+          fi
+          echo "Found ISO: $iso"
+          echo "path=$iso" >> "$GITHUB_OUTPUT"
+
+      - name: Print build log on failure
+        if: failure()
+        run: cat /tmp/alkOS_build.log || true
+
+      - name: Collect release assets
+        run: |
+          mkdir -p dist
+          cp "${{ steps.iso.outputs.path }}" dist/
+          cp .github/release/run-qemu.sh .github/release/RUNNING.md dist/
+          cp LICENSE dist/
+          cd dist
+          sha256sum alkos-*.iso run-qemu.sh RUNNING.md LICENSE > SHA256SUMS
+          echo "Release assets:"; ls -l
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          append_body: true
+          body: |
+            ## Quick start
+
+            Download the ISO and `run-qemu.sh`, then boot it in QEMU:
+
+            ```bash
+            chmod +x run-qemu.sh
+            ./run-qemu.sh alkos-x86_64-*.iso
+            ```z
+
+            Verify your download with `sha256sum -c SHA256SUMS`.
+          files: dist/*
