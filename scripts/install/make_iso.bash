@@ -92,12 +92,16 @@ main() {
     exit 1
   fi
 
-  pretty_info "Creating boot directory"
-  base_runner "Failed to create boot directory" "$(argparse_get "v|verbose")" mkdir -p "$(argparse_get "sysroot")/boot"
+  pretty_info "Creating grub directory"
+  base_runner "Failed to create grub directory" "$(argparse_get "v|verbose")" \
+    mkdir -p "$(dirname "$(argparse_get "sysroot")/${MAKE_ISO_SCRIPT_GRUB_PATH_IN_ISO}")"
 
   pretty_info "Creating grub.cfg file"
-  base_runner "Failed to create grub.cfg" "$(argparse_get "v|verbose")" \
-    echo "${MAKE_ISO_SCRIPT_GRUB_CONTENTS}" > "$(argparse_get "sysroot")/${MAKE_ISO_SCRIPT_GRUB_PATH_IN_ISO}"
+  if ! printf '%s\n' "${MAKE_ISO_SCRIPT_GRUB_CONTENTS}" \
+      > "$(argparse_get "sysroot")/${MAKE_ISO_SCRIPT_GRUB_PATH_IN_ISO}"; then
+    dump_error "Failed to create grub.cfg"
+    exit 1
+  fi
 
   pretty_info "Creating .iso file: $(argparse_get "iso_file") from source: $(argparse_get "sysroot")"
   base_runner "Failed to create path to .iso file" "$(argparse_get "v|verbose")" mkdir -p "$(dirname "$(argparse_get "iso_file")")"
