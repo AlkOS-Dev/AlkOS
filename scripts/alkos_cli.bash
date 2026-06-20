@@ -38,6 +38,18 @@ alkos_cli_version() {
     fi
 }
 
+alkos_cli_resolve_build_type() {
+    local repo_dir="${ALK_OS_CLI_SCRIPT_DIR}/.."
+    local tag
+    if git -C "${repo_dir}" diff --quiet HEAD 2> /dev/null &&
+       tag="$(git -C "${repo_dir}" describe --exact-match --tags HEAD 2> /dev/null)" &&
+       [[ "${tag}" == v* ]]; then
+        echo "release_official"
+    else
+        echo "release"
+    fi
+}
+
 print_banner() {
     cat << "EOF"
     _    _ _    _____ _____
@@ -79,9 +91,11 @@ validate_args() {
 
 run_default_configuration() {
     if [[ $(argparse_get "c|configure") == true ]]; then
-        pretty_info "Running default configuration"
-        base_runner "Failed to run default configuration" true \
-            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 debug ${ALK_OS_CLI_VERBOSE_FLAG} -p regression_mode
+        local build_type
+        build_type="$(alkos_cli_resolve_build_type)"
+        pretty_info "Running configuration (build type: ${build_type})"
+        base_runner "Failed to run configuration" true \
+            "${ALK_OS_CLI_CONFIGURE_SCRIPT_PATH}" x86_64 "${build_type}" ${ALK_OS_CLI_VERBOSE_FLAG} -p default
     fi
 }
 
