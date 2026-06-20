@@ -21,6 +21,7 @@ LICENSE_LIB_EXCLUDES=(
   "generated/src/*"
   "scripts/completions/output/*"
   "*/__pycache__/*"
+  ".github/release/*"
 )
 
 _license_lib_err() {
