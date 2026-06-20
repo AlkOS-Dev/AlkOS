@@ -4,7 +4,7 @@ All notable changes to AlkOS are documented in this file.
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-06-17
+## [0.1.0] - 2026-06-20
 
 First release of AlkOS - a hobby operating system built from the ground up
 for x86_64, booting into a monolithic higher-half kernel with its own C library and
